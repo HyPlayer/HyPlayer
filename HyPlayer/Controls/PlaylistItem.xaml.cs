@@ -51,8 +51,8 @@ public sealed partial class PlaylistItem : UserControl
     {
         //播放全部歌曲
         HyPlayList.RemoveAllSong();
-        await HyPlayList.AppendPlayList(playList.plid);
-        HyPlayList.PlaySourceId = playList.plid;
+        await HyPlayList.AppendPlayList(playList.PlaylistId);
+        HyPlayList.PlaySourceId = playList.PlaylistId;
         HyPlayList.NowPlaying = -1;
         HyPlayList.SongMoveNext();
     }
@@ -62,7 +62,7 @@ public sealed partial class PlaylistItem : UserControl
         var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistPrivacyApi,
             new PlaylistPrivacyRequest()
             {
-                Id = playList.plid
+                Id = playList.PlaylistId
             });
         if (result.IsError)
         {
@@ -80,7 +80,7 @@ public sealed partial class PlaylistItem : UserControl
         var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistDeleteApi,
             new PlaylistDeleteRequest()
             {
-                Id = playList.plid
+                Id = playList.PlaylistId
             });
         if (result.IsError)
         {
@@ -99,13 +99,13 @@ public sealed partial class PlaylistItem : UserControl
         if (Common.Setting.noImage) ImageContainer.Source = null;
         else
         {
-            if (playList.cover is not null)
+            if (playList.Cover is not null)
                 ImageContainerSource.UriSource =
-                new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER);
+                new Uri(playList.Cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER);
         }
 
-        TextBlockPLName.Text = playList.name;
-        TextBlockPLAuthor.Text = playList.creater.name ?? "网易云音乐";
+        TextBlockPLName.Text = playList.Name;
+        TextBlockPLAuthor.Text = playList.Creator.Name ?? "网易云音乐";
         StoryboardIn.Begin();
     }
 }

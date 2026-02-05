@@ -149,8 +149,8 @@ public sealed partial class Comments : Page
         {
             _cancellationToken.ThrowIfCancellationRequested();
             var cmt = comment.MapToComment();
-            cmt.resourceType = resourcetype;
-            cmt.resourceId = resourceid;
+            cmt.ResourceType = resourcetype;
+            cmt.ResourceId = resourceid;
             if (type == 2 && isHotCommentsPage)
                 hotComments.Add(cmt);
             else normalComments.Add(cmt);
@@ -198,7 +198,7 @@ public sealed partial class Comments : Page
                     new Dictionary<string, object>
                     {
                         {
-                            "id", resourceid
+                            "Id", resourceid
                         },
                         {
                             "type", resourcetype
@@ -207,7 +207,7 @@ public sealed partial class Comments : Page
                             "t", "1"
                         },
                         {
-                            "content", CommentEdit.Text
+                            "Content", CommentEdit.Text
                         }
                     });
 

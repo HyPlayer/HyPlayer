@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<local:HomePageBase
+<Page
     x:Class="HyPlayer.Pages.HomePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -18,7 +18,7 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
-    <local:HomePageBase.Resources>
+    <Page.Resources>
         <muxc:StackLayout
             x:Key="CardListDefaultLayout"
             Orientation="Horizontal"
@@ -52,7 +52,7 @@
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="6">
-                        <Image Source="{x:Bind cover}" Stretch="Uniform" />
+                        <Image Source="{x:Bind Cover}" Stretch="Uniform" />
                     </Border>
                     <Grid
                         Grid.Column="1"
@@ -67,17 +67,17 @@
                             FontSize="14"
                             FontWeight="SemiBold"
                             MaxLines="1"
-                            Text="{x:Bind name}"
+                            Text="{x:Bind Name}"
                             TextTrimming="CharacterEllipsis"
-                            ToolTipService.ToolTip="{x:Bind name}" />
+                            ToolTipService.ToolTip="{x:Bind Name}" />
                         <TextBlock
                             Grid.Row="1"
                             FontSize="14"
                             Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="1"
-                            Text="{x:Bind creater.name}"
+                            Text="{x:Bind Creator.Name}"
                             TextTrimming="CharacterEllipsis"
-                            ToolTipService.ToolTip="{x:Bind creater.name}" />
+                            ToolTipService.ToolTip="{x:Bind Creator.Name}" />
                     </Grid>
 
                     <Grid.ContextFlyout>
@@ -135,7 +135,7 @@
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="6">
-                        <Image Source="{x:Bind cover}" Stretch="Uniform" />
+                        <Image Source="{x:Bind Cover}" Stretch="Uniform" />
                     </Border>
                     <Grid
                         Grid.Column="1"
@@ -150,17 +150,17 @@
                             FontSize="14"
                             FontWeight="SemiBold"
                             MaxLines="1"
-                            Text="{x:Bind name}"
+                            Text="{x:Bind Name}"
                             TextTrimming="CharacterEllipsis"
-                            ToolTipService.ToolTip="{x:Bind name}" />
+                            ToolTipService.ToolTip="{x:Bind Name}" />
                         <TextBlock
                             Grid.Row="1"
                             FontSize="14"
                             Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="1"
-                            Text="{x:Bind desc}"
+                            Text="{x:Bind Description}"
                             TextTrimming="CharacterEllipsis"
-                            ToolTipService.ToolTip="{x:Bind desc}" />
+                            ToolTipService.ToolTip="{x:Bind Description}" />
                     </Grid>
                     <Grid.ContextFlyout>
                         <MenuFlyout>
@@ -232,9 +232,9 @@
                             FontSize="14"
                             FontWeight="SemiBold"
                             MaxLines="1"
-                            Text="{x:Bind songname}"
+                            Text="{x:Bind SongName}"
                             TextTrimming="CharacterEllipsis"
-                            ToolTipService.ToolTip="{x:Bind songname}" />
+                            ToolTipService.ToolTip="{x:Bind SongName}" />
                         <TextBlock
                             Grid.Row="1"
                             FontSize="14"
@@ -247,7 +247,7 @@
                 </Grid>
             </Button>
         </DataTemplate>
-    </local:HomePageBase.Resources>
+    </Page.Resources>
     <muxc:RefreshContainer RefreshRequested="RefreshRequested">
         <ScrollViewer>
             <Grid x:Name="ContentArea" Margin="0,0,0,96">
@@ -502,4 +502,4 @@
             </Grid>
         </ScrollViewer>
     </muxc:RefreshContainer>
-</local:HomePageBase>
+</Page>

@@ -11,9 +11,9 @@ namespace HyPlayer.Classes
         {
             this.user = user;
         }
-        public string UserName => user.name;
-        public string Signature => user.signature;
-        private Uri avatarUri => Common.Setting.noImage ? new("ms-appx:///Assets/icon.png") : new(user.avatar, UriKind.RelativeOrAbsolute);
+        public string UserName => user.Name;
+        public string Signature => user.Signature;
+        private Uri avatarUri => Common.Setting.noImage ? new("ms-appx:///Assets/icon.png") : new(user.Avatar, UriKind.RelativeOrAbsolute);
         public ImageSource AvatarSource => new BitmapImage(avatarUri);
     }
 }

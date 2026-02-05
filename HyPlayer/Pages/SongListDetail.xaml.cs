@@ -51,9 +51,9 @@ public sealed partial class SongListDetail : Page
     private void DataTransferManagerOnDataRequested(DataTransferManager sender, DataRequestedEventArgs args)
     {
         var dp = new DataPackage();
-        dp.Properties.Title = playList.name;
+        dp.Properties.Title = playList.Name;
         dp.SetWebLink(new Uri("https://music.163.com/#/playlist?id=" +
-                              playList.plid));
+                              playList.PlaylistId));
         var request = args.Request;
         request.Data = dp;
     }
@@ -67,7 +67,7 @@ public sealed partial class SongListDetail : Page
     public async Task LoadAlbumImage()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        using var result = await Common.HttpClient!.GetAsync(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER), _cancellationToken);
+        using var result = await Common.HttpClient!.GetAsync(new Uri(playList.Cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER), _cancellationToken);
         if (result.IsSuccessStatusCode)
         {
             using var stream = await result.Content.ReadAsStreamAsync();
@@ -89,17 +89,17 @@ public sealed partial class SongListDetail : Page
         }
         else
         {
-            AlbumImageSource.UriSource = new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
+            AlbumImageSource.UriSource = new Uri(playList.Cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
             _ = Task.Run(LoadAlbumImage);
         }
 
-        TextBoxPLName.Text = playList.name;
-        DescriptionTextBlock.Text = playList.desc;
-        TextBoxAuthor.Content = playList.creater.name;
-        ButtonLike.Tag = playList.subscribed;
+        TextBoxPLName.Text = playList.Name;
+        DescriptionTextBlock.Text = playList.Description;
+        TextBoxAuthor.Content = playList.Creator.Name;
+        ButtonLike.Tag = playList.HasSubscribed;
         UpdateLikeBtnStyle();
-        if (playList.updateTime.Year != 0001)
-            TextBoxUpdateTime.Text = $"{DateConverter.FriendFormat(playList.updateTime)}更新";
+        if (playList.UpdateTime.Year != 0001)
+            TextBoxUpdateTime.Text = $"{DateConverter.FriendFormat(playList.UpdateTime)}更新";
     }
     public void UpdateLikeBtnStyle()
     {
@@ -120,7 +120,7 @@ public sealed partial class SongListDetail : Page
     public async Task LoadSongListItem()
     {
         IsLoading = true;
-        if (playList.plid != "-666")
+        if (playList.PlaylistId != "-666")
         {
             await LoadPlayListItems();
             await LoadPage();
@@ -185,13 +185,13 @@ public sealed partial class SongListDetail : Page
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracks, playList.plid, async () =>
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracks, playList.PlaylistId, async () =>
             {
                 // 歌单详情
                 var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
                     new PlaylistTracksGetRequest()
                     {
-                        Id = playList.plid
+                        Id = playList.PlaylistId
                     }, _cancellationToken);
                 if (rst.IsError)
                 {
@@ -211,7 +211,7 @@ public sealed partial class SongListDetail : Page
                 return;
             }
             if (json.Playlist.SpecialType == 5 &&
-                json.Playlist.Creator?.UserId == Common.LoginedUser?.id)
+                json.Playlist.Creator?.UserId == Common.LoginedUser?.Id)
             {
                 ButtonIntel.Visibility = Visibility.Visible;
                 SongsList.IsMySongList = true;
@@ -232,7 +232,7 @@ public sealed partial class SongListDetail : Page
 
         try
         {
-            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracksDetail, playList.plid + "_" + page, async () =>
+            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracksDetail, playList.PlaylistId + "_" + page, async () =>
             {
                 // 歌单歌曲详情
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
@@ -290,19 +290,19 @@ public sealed partial class SongListDetail : Page
         _cancellationTokenSource.Dispose();
     }
 
-    private async Task LoadPageData(string plid, bool loadPlaylist = false)
+    private async Task LoadPageData(string PlaylistId, bool loadPlaylist = false)
     {
         try
         {
             if (loadPlaylist)
             {
-                var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistDetail, plid, async () =>
+                var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistDetail, PlaylistId, async () =>
                 {
                     // 歌单详情
                     var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistDetailApi,
                         new PlaylistDetailRequest()
                         {
-                            Id = plid
+                            Id = PlaylistId
                         }, _cancellationToken);
                     if (json.IsError)
                     {
@@ -320,7 +320,7 @@ public sealed partial class SongListDetail : Page
         {
             Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
-        SongsList.ListSource = "pl" + playList?.plid;
+        SongsList.ListSource = "pl" + playList?.PlaylistId;
         LoadSongListDetail();
         _ = LoadSongListItem();
     }
@@ -334,7 +334,7 @@ public sealed partial class SongListDetail : Page
             if (e.Parameter is NCPlayList)
             {
                 playList = (NCPlayList)e.Parameter;
-                await LoadPageData(playList.plid, false);
+                await LoadPageData(playList.PlaylistId, false);
             }
             else
             {
@@ -374,18 +374,18 @@ public sealed partial class SongListDetail : Page
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (playList.plid != "-666")
+        if (playList.PlaylistId != "-666")
         {
             HyPlayList.RemoveAllSong();
-            await HyPlayList.AppendPlayList(playList.plid);
-            HyPlayList.PlaySourceId = playList.plid;
+            await HyPlayList.AppendPlayList(playList.PlaylistId);
+            HyPlayList.PlaySourceId = playList.PlaylistId;
             HyPlayList.NowPlaying = -1;
             HyPlayList.SongMoveNext();
         }
         else
         {
             HyPlayList.AppendNcSongs(Songs.ToList());
-            HyPlayList.PlaySourceId = playList.plid;
+            HyPlayList.PlaySourceId = playList.PlaylistId;
             HyPlayList.NowPlaying = -1;
             HyPlayList.SongMoveNext();
         }
@@ -400,7 +400,7 @@ public sealed partial class SongListDetail : Page
 
     private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
+        Common.NavigatePage(typeof(Comments), "pl" + playList.PlaylistId);
     }
 
     private void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)
@@ -418,22 +418,22 @@ public sealed partial class SongListDetail : Page
         var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistSubscribeApi,
             new PlaylistSubscribeRequest()
             {
-                PlaylistId = playList.plid,
-                IsSubscribe = !playList.subscribed
+                PlaylistId = playList.PlaylistId,
+                IsSubscribe = !playList.HasSubscribed
             }, _cancellationToken);
         if (result.IsError)
         {
             Common.AddToTeachingTipLists("操作失败", result.Error.Message);
             return;
         }
-        playList.subscribed = !playList.subscribed;
-        ButtonLike.Tag = playList.subscribed;
+        playList.HasSubscribed = !playList.HasSubscribed;
+        ButtonLike.Tag = playList.HasSubscribed;
         UpdateLikeBtnStyle();
     }
 
     private void TextBoxAuthor_Tapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        Common.NavigatePage(typeof(Me), playList.creater.id);
+        Common.NavigatePage(typeof(Me), playList.Creator.Id);
     }
 
     private void BtnShare_Clicked(object sender, RoutedEventArgs e)
@@ -444,28 +444,28 @@ public sealed partial class SongListDetail : Page
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        if (playList.plid != "-666")
-            await HyPlayList.AppendPlayList(playList.plid);
+        if (playList.PlaylistId != "-666")
+            await HyPlayList.AppendPlayList(playList.PlaylistId);
         else
             HyPlayList.AppendNcSongs(Songs.ToList());
     }
 
     private void BtnComment_OnClick(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
+        Common.NavigatePage(typeof(Comments), "pl" + playList.PlaylistId);
     }
 
     private async void BtnRefreshCache_Clicked(object sender, RoutedEventArgs e)
     {
         try
         {
-            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, playList.plid);
-            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, playList.plid, true);
-            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, playList.plid);
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, playList.PlaylistId);
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, playList.PlaylistId, true);
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, playList.PlaylistId);
             Common.AddToTeachingTipLists("清除缓存成功", "已清除当前歌单的缓存");
             SongsList.Songs.Clear();
             page = 0;
-            _ = LoadPageData(playList.plid, true);
+            _ = LoadPageData(playList.PlaylistId, true);
         }
         catch
         {

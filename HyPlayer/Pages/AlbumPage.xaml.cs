@@ -50,7 +50,7 @@ public sealed partial class AlbumPage : Page
         {
             case NCAlbum album:
                 Album = album;
-                albumid = Album.id;
+                albumid = Album.Id;
                 break;
             case string:
                 albumid = e.Parameter.ToString();
@@ -138,27 +138,27 @@ public sealed partial class AlbumPage : Page
             {
                 BitmapImage image = new BitmapImage();
                 ImageRect.ImageSource = image;
-                image.UriSource = new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER);
+                image.UriSource = new Uri(Album.Cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER);
             }
 
-            TextBoxAlbumName.Text = Album.name;
+            TextBoxAlbumName.Text = Album.Name;
 
             artists = rst.Album.Artists?.Select(t => t.MapToNcArtist()).ToList();
-            TextBoxAuthor.Content = string.Join(" / ", artists?.Select(t => t.name) ?? []);
+            TextBoxAuthor.Content = string.Join(" / ", artists?.Select(t => t.Name) ?? []);
             var converter = new DateConverter();
             TextBlockPublishTime.Text = converter.Convert(rst.Album.PublishTime, null, null, null).ToString();
             TextBlockDesc.Text = (string.Join(" / ", rst.Album.Alias) + rst.Album.Alias != null
                 ? "\r\n"
                 : string.Empty) + rst.Album.Description;
             var idx = 0;
-            SongContainer.ListSource = "al" + Album.id;
+            SongContainer.ListSource = "al" + Album.Id;
 
             AlbumSongsViewSource.Source = rst.Songs?.Select(song =>
                 {
                     return new NCAlbumSong
                     {
                         Album = song.Album.MapToNcAlbum(),
-                        alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
+                        Alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
                         Artist = song.Artists?.Select(artist => artist.MapToNcArtist())
                                      .ToList() ??
                                  [],
@@ -167,12 +167,12 @@ public sealed partial class AlbumPage : Page
                         IsCloud = song.Sid is not "0",
                         IsVip = song.Fee is 1,
                         LengthInMilliseconds = song.Duration,
-                        mvid = song.MvId,
-                        sid = song.Id,
+                        MVId = song.MvId,
+                        SongId = song.Id,
                         Order = ++idx,
-                        songname = song.Name,
+                        SongName = song.Name,
                         TrackId = song.TrackNumber,
-                        transname = song.Translations is not null ? string.Join(",", song.Translations) : null,
+                        TranslatedName = song.Translations is not null ? string.Join(",", song.Translations) : null,
                         IsAvailable = true,
                         Type = HyPlayItemType.Netease,
                     };
@@ -191,8 +191,8 @@ public sealed partial class AlbumPage : Page
         try
         {
             HyPlayList.RemoveAllSong();
-            await HyPlayList.AppendNcSource("al" + Album.id);
-            HyPlayList.PlaySourceId = "al" + Album.id;
+            await HyPlayList.AppendNcSource("al" + Album.Id);
+            HyPlayList.PlaySourceId = "al" + Album.Id;
             HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
         }
         catch (Exception ex)
@@ -212,7 +212,7 @@ public sealed partial class AlbumPage : Page
 
     private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(Comments), "al" + Album.id);
+        Common.NavigatePage(typeof(Comments), "al" + Album.Id);
     }
 
     private async void TextBoxAuthor_OnTapped(object sender, RoutedEventArgs routedEventArgs)
@@ -220,7 +220,7 @@ public sealed partial class AlbumPage : Page
         if (artists.Count > 1)
             await new ArtistSelectDialog(artists).ShowAsync();
         else
-            Common.NavigatePage(typeof(ArtistPage), artists[0].id);
+            Common.NavigatePage(typeof(ArtistPage), artists[0].Id);
     }
 
     private void BtnSub_Click(object sender, RoutedEventArgs e)
@@ -231,7 +231,7 @@ public sealed partial class AlbumPage : Page
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.AppendNcSource("al" + Album.id);
+        await HyPlayList.AppendNcSource("al" + Album.Id);
     }
 }
 

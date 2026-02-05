@@ -70,7 +70,7 @@
                                 VerticalAlignment="Top"
                                 FontSize="24"
                                 FontWeight="Bold"
-                                Text="{x:Bind DspOrder}" />
+                                Text="{x:Bind DisplayOrder}" />
                             <controls:ImageEx
                                 x:Name="ImageRect"
                                 Width="75"

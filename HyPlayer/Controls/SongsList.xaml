@@ -268,7 +268,7 @@
                                     VerticalAlignment="Top"
                                     FontSize="16"
                                     FontWeight="Bold"
-                                    Text="{x:Bind DspOrder}" />
+                                    Text="{x:Bind DisplayOrder}" />
                                 <Grid HorizontalAlignment="Stretch">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -288,14 +288,14 @@
                                             FontSize="19"
                                             FontWeight="Bold"
                                             Style="{ThemeResource SubtitleTextBlockStyle}"
-                                            Text="{x:Bind songname}" />
+                                            Text="{x:Bind SongName}" />
                                         <TextBlock
                                             Name="TextBlockTransName"
                                             Margin="0,2,0,0"
                                             x:Phase="0"
                                             FontSize="14"
                                             Foreground="Gray"
-                                            Text="{x:Bind ConvertTranslate(transname)}" />
+                                            Text="{x:Bind ConvertTranslate(TranslatedName)}" />
                                         <BitmapIcon
                                             Height="20"
                                             Foreground="DeepSkyBlue"
@@ -322,8 +322,8 @@
                                     x:Phase="2"
                                     FontSize="12"
                                     Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                                    Text="{x:Bind alias}"
-                                    Visibility="{x:Bind alias, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
+                                    Text="{x:Bind Alias}"
+                                    Visibility="{x:Bind Alias, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
                                 <StackPanel
                                     Margin="0,1,0,0"
                                     VerticalAlignment="Center"
@@ -338,7 +338,7 @@
                                         Name="TextBlockAlbum"
                                         FontSize="13"
                                         Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                                        Text="{x:Bind Album.name}" />
+                                        Text="{x:Bind Album.Name}" />
                                 </StackPanel>
                             </StackPanel>
                             <StackPanel

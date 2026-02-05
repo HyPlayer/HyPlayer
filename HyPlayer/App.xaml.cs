@@ -2,11 +2,9 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
-using HyPlayer.Contracts.Services;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
 using HyPlayer.Pages;
-using HyPlayer.Services;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using HyPlayer.ViewModels;
 using Kawazu;
@@ -14,16 +12,13 @@ using LiteFM;
 using LiteFM.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Gaming.XboxGameBar;
-//using Microsoft.Gaming.XboxGameBar;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.ExtendedExecution;
-using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.System;
@@ -85,7 +80,7 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton(new NeteaseCloudMusicApiHandler(client));
         serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = "641ef15109503085d966e37b73bdcb72", ApiSecret = "35c02c12c9c0fdc6f6c1de5d0a9227b5" }, Common.HttpClient));
         serviceCollection.AddSingleton<AudioGraphPlayer>();
-        serviceCollection.AddSingleton<INeteaseProviderService, NeteaseProviderService>();
+        serviceCollection.AddTransient<HomeViewModel>();
 
         serviceCollection.AddTransient<HomeViewModel>();
         var provider = serviceCollection.BuildServiceProvider();

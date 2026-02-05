@@ -1,4 +1,5 @@
 using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
@@ -16,12 +17,13 @@ namespace HyPlayer.Pages
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class HomePage : HomePageBase
+    public sealed partial class HomePage : Page
     {
+        private HomeViewModel ViewModel => (HomeViewModel)DataContext;
         public HomePage()
         {
             InitializeComponent();
-
+            DataContext = Ioc.Default.GetRequiredService<HomeViewModel>();
         }
 
         private void RefreshRequested(Microsoft.UI.Xaml.Controls.RefreshContainer sender, Microsoft.UI.Xaml.Controls.RefreshRequestedEventArgs args)
@@ -42,7 +44,6 @@ namespace HyPlayer.Pages
             var button = sender as Button;
             if (button == null) return;
             var playlist = button.CommandParameter as NCPlayList;
-            Debug.WriteLine($"Card_Click: {playlist?.name}");
             Common.NavigatePage(typeof(SongListDetail), playlist, new Windows.UI.Xaml.Media.Animation.DrillInNavigationTransitionInfo());
         }
 
@@ -51,10 +52,9 @@ namespace HyPlayer.Pages
             var button = sender as Button;
             if (button == null) return;
             var song = button.CommandParameter as NCSong;
-            Debug.WriteLine($"Card_Click: {song?.songname}");
             HyPlayList.AppendNcSong(song);
             var targetPlayItem =
-                HyPlayList.List.Find(t => t.PlayItem.Id == song.sid);
+                HyPlayList.List.Find(t => t.PlayItem.Id == song.SongId);
             HyPlayList.SongMoveTo(targetPlayItem);
 
         }
@@ -64,8 +64,8 @@ namespace HyPlayer.Pages
             var playList = (NCPlayList)(sender as MenuFlyoutItem)?.CommandParameter;
             //²¥·ÅÈ«²¿¸èÇú
             HyPlayList.RemoveAllSong();
-            await HyPlayList.AppendPlayList(playList.plid);
-            HyPlayList.PlaySourceId = playList.plid;
+            await HyPlayList.AppendPlayList(playList.PlaylistId);
+            HyPlayList.PlaySourceId = playList.PlaylistId;
             HyPlayList.NowPlaying = -1;
             HyPlayList.SongMoveNext();
         }
@@ -76,7 +76,7 @@ namespace HyPlayer.Pages
             var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistPrivacyApi,
                new PlaylistPrivacyRequest()
                {
-                   Id = playList.plid
+                   Id = playList.PlaylistId
                });
             if (result.IsError)
             {
@@ -95,7 +95,7 @@ namespace HyPlayer.Pages
             var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistDeleteApi,
             new PlaylistDeleteRequest()
             {
-                Id = playList.plid
+                Id = playList.PlaylistId
             });
             if (result.IsError)
             {
@@ -107,14 +107,6 @@ namespace HyPlayer.Pages
                 _ = Common.PageBase?.LoadSongList();
                 Common.NavigateRefresh();
             }
-        }
-    }
-
-    public partial class HomePageBase : AppPageBase<HomeViewModel>
-    {
-        public HomePageBase()
-        {
-
         }
     }
 }

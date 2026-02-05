@@ -123,7 +123,7 @@ public static class ListenTogetherManager
                         .Random,
                     _ => ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportPlayMode.OrderLoop
                 },
-                UserId = Common.LoginedUser?.id!,
+                UserId = Common.LoginedUser?.Id!,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 AnchorPosition = HyPlayList.NowPlaying,
                 AnchorSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
@@ -171,7 +171,7 @@ public static class ListenTogetherManager
                         .Random,
                     _ => ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportPlayMode.OrderLoop
                 },
-                UserId = Common.LoginedUser?.id!,
+                UserId = Common.LoginedUser?.Id!,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 AnchorPosition = HyPlayList.NowPlaying,
                 AnchorSongId = HyPlayList.NowPlayingItem.PlayItem.Id,

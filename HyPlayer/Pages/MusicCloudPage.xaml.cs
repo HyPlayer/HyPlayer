@@ -71,14 +71,14 @@ public sealed partial class MusicCloudPage : Page
                 try
                 {
                     var ret = jToken.SongInfo.MapNcSong();
-                    if (ret.Artist[0].id == "0")
+                    if (ret.Artist[0].Id == "0")
                     {
                         //不是标准歌曲
-                        ret.Album.name = jToken.AlbumName;
+                        ret.Album.Name = jToken.AlbumName;
                         ret.Artist.Clear();
                         ret.Artist.Add(new NCArtist
                         {
-                            name = jToken.ArtistName
+                            Name = jToken.ArtistName
                         });
                     }
 
@@ -156,7 +156,7 @@ public sealed partial class MusicCloudPage : Page
 
     public void OnLoadedAllSongs()
     {
-        if (Common.Setting.AutoAddGreedilyLoadedSongsToPlayList && HyPlayList.PlaySourceId == "content")
+        if (Common.Setting.AutoAddGreedilyLoadedSongsToPlayList && HyPlayList.PlaySourceId == "Content")
         {
             HyPlayList.AppendNcSongRange(SongContainer.Songs.ToList());
         }

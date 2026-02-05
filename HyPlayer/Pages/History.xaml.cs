@@ -96,7 +96,7 @@ public sealed partial class History : Page
         try
         {
             var ret3 = await Common.NeteaseAPI.RequestAsync<UserRecordAllResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
-                new UserRecordRequest() { UserId = Common.LoginedUser.id, RecordType = UserRecordType.All });
+                new UserRecordRequest() { UserId = Common.LoginedUser.Id, RecordType = UserRecordType.All });
             if (ret3.IsError)
             {
                 Common.AddToTeachingTipLists("获取播放记录失败", ret3.Error.Message);
@@ -125,7 +125,7 @@ public sealed partial class History : Page
         try
         {
             var ret2 = await Common.NeteaseAPI!.RequestAsync<UserRecordWeekResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
-                new UserRecordRequest() { UserId = Common.LoginedUser.id, RecordType = UserRecordType.WeekData }, _cancellationToken);
+                new UserRecordRequest() { UserId = Common.LoginedUser.Id, RecordType = UserRecordType.WeekData }, _cancellationToken);
             if (ret2.IsError)
             {
                 Common.AddToTeachingTipLists("获取播放记录失败", ret2.Error.Message);

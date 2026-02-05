@@ -18,7 +18,7 @@ internal class Api
     public static async Task<bool> LikeSong(string songid, bool like)
     {
         var requestResult = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LikeApi,
-            new LikeRequest() { TrackId = songid, Like = like, UserId = Common.LoginedUser.id });
+            new LikeRequest() { TrackId = songid, Like = like, UserId = Common.LoginedUser.Id });
         if (requestResult.IsSuccess)
         {
             return true;
@@ -35,7 +35,7 @@ internal class Api
         HyPlayList.RemoveAllSong();
         try
         {
-            var songList = Common.MySongLists[0].plid;
+            var songList = Common.MySongLists[0].PlaylistId;
             var randomSong = Common.LikedSongs[new Random().Next(0, Common.LikedSongs.Count - 1)];
             var jsoon = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaymodeIntelligenceListApi,
                 new PlaymodeIntelligenceListRequest

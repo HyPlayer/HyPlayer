@@ -10,14 +10,14 @@ namespace HyPlayer.Controls;
 
 public sealed partial class SongListSelect : ContentDialog
 {
-    private readonly string sid;
+    private readonly string SongId;
 
     public SongListSelect(string songid)
     {
         InitializeComponent();
-        sid = songid;
+        SongId = songid;
         ListViewSongList.Items?.Clear();
-        Common.MySongLists.ForEach(t => ListViewSongList.Items?.Add(t.name));
+        Common.MySongLists.ForEach(t => ListViewSongList.Items?.Add(t.Name));
     }
 
     private async void ListViewSongList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -26,8 +26,8 @@ public sealed partial class SongListSelect : ContentDialog
             new PlaylistTracksEditRequest
             {
                 IsAdd = true,
-                PlaylistId = Common.MySongLists[ListViewSongList.SelectedIndex].plid,
-                Id = sid,
+                PlaylistId = Common.MySongLists[ListViewSongList.SelectedIndex].PlaylistId,
+                Id = SongId,
             });
         Hide();
     }

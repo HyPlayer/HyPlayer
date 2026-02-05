@@ -94,23 +94,23 @@ internal static class PersonalFM
                                             Album = new NCAlbum
                                             {
                                                 AlbumType = HyPlayItemType.Netease,
-                                                alias = "私人 DJ",
-                                                cover =
+                                                Alias = "私人 DJ",
+                                                Cover =
                                                     "https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg",
-                                                description = "私人 DJ",
-                                                id = "126368130",
-                                                name = "私人 DJ 推荐语"
+                                                Description = "私人 DJ",
+                                                Id = "126368130",
+                                                Name = "私人 DJ 推荐语"
                                             },
                                             Artist =
                                             [
                                                 new NCArtist()
                                                 {
-                                                    alias = "私人 DJ",
-                                                    avatar =
+                                                    Alias = "私人 DJ",
+                                                    Avatar =
                                                         "https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg",
-                                                    id = "1",
-                                                    name = "私人 DJ",
-                                                    transname = null,
+                                                    Id = "1",
+                                                    Name = "私人 DJ",
+                                                    TranslatedName = null,
                                                     Type = HyPlayItemType.Netease
                                                 }
                                             ],

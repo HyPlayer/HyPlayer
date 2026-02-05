@@ -193,7 +193,7 @@ public sealed partial class SongsList : UserControl
             return;
         }
 
-        var idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.Id);
+        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == playitem.PlayItem.Id);
         if (idx == -1) return;
         _ = Common.Invoke(() =>
         {
@@ -225,7 +225,7 @@ public sealed partial class SongsList : UserControl
     {
         var ncsong = VisibleSongs[int.Parse((sender as Button).Tag.ToString())];
         _ = HyPlayList.AppendNcSong(ncsong);
-        HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem.Id == ncsong.sid));
+        HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem.Id == ncsong.SongId));
         if (ListSource.Substring(0, 2) == "pl" ||
             ListSource.Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ListSource.Substring(2);
@@ -241,7 +241,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
-            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
+            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
             return;
         }
 
@@ -250,7 +250,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItem != null)
         {
             var targetPlayItem =
-                HyPlayList.List.Find(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
+                HyPlayList.List.Find(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).SongId);
             HyPlayList.SongMoveTo(targetPlayItem);
         }
     }
@@ -260,7 +260,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
-            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
+            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
             return;
         }
 
@@ -291,7 +291,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Count() > 0)
         {
             var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable)
-                .Select(t => t.songname).ToArray();
+                .Select(t => t.SongName).ToArray();
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
         }
     }
@@ -301,7 +301,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if ((SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Type == HyPlayItemType.Radio)
         {
-            Common.NavigatePage(typeof(Me), (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().id);
+            Common.NavigatePage(typeof(Me), (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Id);
         }
         else
         {
@@ -309,14 +309,14 @@ public sealed partial class SongsList : UserControl
                 await new ArtistSelectDialog((SongContainer.SelectedItem as NCSong).Artist).ShowAsync();
             else
                 Common.NavigatePage(typeof(ArtistPage),
-                    (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().id);
+                    (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Id);
         }
     }
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        if ((SongContainer.SelectedItem as NCSong).Album.id == "0")
+        if ((SongContainer.SelectedItem as NCSong).Album.Id == "0")
         {
             Common.AddToTeachingTipLists("此歌曲无专辑页面");
         }
@@ -329,7 +329,7 @@ public sealed partial class SongsList : UserControl
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        Common.NavigatePage(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong).sid);
+        Common.NavigatePage(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong).SongId);
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
@@ -347,13 +347,13 @@ public sealed partial class SongsList : UserControl
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        await new SongListSelect((SongContainer.SelectedItem as NCSong).sid).ShowAsync();
+        await new SongListSelect((SongContainer.SelectedItem as NCSong).SongId).ShowAsync();
     }
 
     private async void Btn_Del_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        var ids = SongContainer.SelectedItems.Cast<NCSong>().Select(t => t.sid).ToList();
+        var ids = SongContainer.SelectedItems.Cast<NCSong>().Select(t => t.SongId).ToList();
         await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistTracksEditApi,
             new PlaylistTracksEditRequest()
             {
@@ -393,11 +393,11 @@ public sealed partial class SongsList : UserControl
     private bool Filter(NCSong ncsong)
     {
         if (ncsong == null) return false;
-        return (ncsong.songname ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+        return (ncsong.SongName ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
                (ncsong.ArtistString ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.Album?.name ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.transname ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
+               (ncsong.Album?.Name ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+               (ncsong.TranslatedName ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+               (ncsong.Alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
     }
 
     private GridLength GetSearchHeight(bool IsEnabled)
@@ -417,16 +417,16 @@ public sealed partial class SongsList : UserControl
     {
         if (e.ClickedItem is not NCSong ncSong || IsAddingSongToPlaylist) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        bool shiftSong = ncSong.sid == HyPlayList.NowPlayingItem?.PlayItem?.Id;
+        bool shiftSong = ncSong.SongId == HyPlayList.NowPlayingItem?.PlayItem?.Id;
 
         if (!ncSong.IsAvailable)
         {
-            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {ncSong.songname} 当前不可用");
+            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {ncSong.SongName} 当前不可用");
             return;
         }
 
         IsAddingSongToPlaylist = true;
-        if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
+        if (ListSource != null && ListSource != "Content" && Songs.Count == VisibleSongs.Count)
         {
             if (HyPlayList.PlaySourceId != ListSource.Substring(2) ||
                 HyPlayList.List.Count != VisibleSongs.Count(t => t.IsAvailable))
@@ -441,16 +441,16 @@ public sealed partial class SongsList : UserControl
             var ncsong = VisibleSongs[SongContainer.SelectedIndex];
             _ = HyPlayList.AppendNCSong(ncsong);
             HyPlayList.SongAppendDone();
-            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.Id == ncsong.SongId));
         }*/
         else
         {
-            HyPlayList.AppendNcSongs(VisibleSongs, resetPlaying: !shiftSong, currentSongId: ncSong.sid);
+            HyPlayList.AppendNcSongs(VisibleSongs, resetPlaying: !shiftSong, currentSongId: ncSong.SongId);
         }
 
-        if (ListSource == "content")
+        if (ListSource == "Content")
         {
-            HyPlayList.PlaySourceId = "content";
+            HyPlayList.PlaySourceId = "Content";
         }
 
         if (ListSource?.Substring(0, 2) == "pl" ||
@@ -459,13 +459,13 @@ public sealed partial class SongsList : UserControl
 
         if (!shiftSong)
         {
-            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem?.Id == ncSong.sid));
+            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem?.Id == ncSong.SongId));
         }
         else
         {
             Common.AddToTeachingTipLists("无感歌单切换", "成功无感切换到歌单 " + ListSource);
             HyPlayList.NowPlaying =
-                HyPlayList.List.FindIndex(song => song.PlayItem.Id == ncSong.sid);
+                HyPlayList.List.FindIndex(song => song.PlayItem.Id == ncSong.SongId);
         }
 
         IsAddingSongToPlaylist = false;
@@ -502,13 +502,13 @@ public sealed partial class SongsList : UserControl
         {
             case "FocusingCurrent":
                 if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
-                var idx = VisibleSongs.ToList().FindIndex(t => t.sid == HyPlayList.NowPlayingItem.PlayItem?.Id);
+                var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.PlayItem?.Id);
                 if (idx == -1) return;
                 SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
                 break;
             case "Comments":
                 var page = (SongListDetail)((Grid)Parent).Parent;
-                Common.NavigatePage(typeof(Comments), "pl" + page.playList.plid);
+                Common.NavigatePage(typeof(Comments), "pl" + page.playList.PlaylistId);
                 break;
             default:
                 break;
@@ -518,7 +518,7 @@ public sealed partial class SongsList : UserControl
     private void FocusingCurrent_OnClicked(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
-        var idx = VisibleSongs.ToList().FindIndex(t => t.sid == HyPlayList.NowPlayingItem.PlayItem?.Id);
+        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.PlayItem?.Id);
         if (idx == -1) return;
         SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
     }

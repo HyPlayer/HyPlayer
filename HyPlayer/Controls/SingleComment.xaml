@@ -50,7 +50,7 @@
                             x:Name="CommentContent"
                             FontSize="16"
                             IsTextSelectionEnabled="True"
-                            Text="{x:Bind MainComment.content, Mode=OneWay}"
+                            Text="{x:Bind MainComment.Content, Mode=OneWay}"
                             TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
@@ -83,7 +83,7 @@
                         ToolTipService.ToolTip="点赞">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon FontSize="15" Glyph="&#xE19F;" />
-                            <TextBlock x:Name="LikeCountTB" Text="{x:Bind MainComment.likedCount}" />
+                            <TextBlock x:Name="LikeCountTB" Text="{x:Bind MainComment.LikedCount}" />
                         </StackPanel>
                     </ToggleButton>
                     <ToggleButton

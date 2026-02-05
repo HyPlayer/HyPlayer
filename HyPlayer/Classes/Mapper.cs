@@ -13,7 +13,7 @@ public static class Mapper
         return new NCSong
         {
             Album = song.Album.MapToNcAlbum(),
-            alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
+            Alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
             Artist = song.Artists?.Select(artist => artist.MapToNcArtist())
                          .ToList() ??
                      [],
@@ -21,11 +21,11 @@ public static class Mapper
             IsCloud = song.Sid is not "0" and not null,
             IsVip = false,
             LengthInMilliseconds = song.Duration,
-            mvid = song.MvId,
-            sid = song.Id,
-            songname = song.Name,
+            MVId = song.MvId,
+            SongId = song.Id,
+            SongName = song.Name,
             TrackId = song.TrackNumber,
-            transname = song.Translation,
+            TranslatedName = song.Translation,
             IsAvailable = true,
             Type = HyPlayItemType.Netease,
         };
@@ -36,7 +36,7 @@ public static class Mapper
         return new NCSong
         {
             Album = song.Album.MapToNcAlbum(),
-            alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
+            Alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
             Artist = song.Artists?.Select(artist => artist.MapToNcArtist())
                          .ToList() ??
                      [],
@@ -44,11 +44,11 @@ public static class Mapper
             IsCloud = song.Sid is not "0" and not null,
             IsVip = song.Fee is 1,
             LengthInMilliseconds = song.Duration,
-            mvid = song.MvId,
-            sid = song.Id,
-            songname = song.Name,
+            MVId = song.MvId,
+            SongId = song.Id,
+            SongName = song.Name,
             TrackId = song.TrackNumber,
-            transname = song.Translations is not null ? string.Join(",", song.Translations) : null,
+            TranslatedName = song.Translations is not null ? string.Join(",", song.Translations) : null,
             IsAvailable = true,
             Type = HyPlayItemType.Netease
         };
@@ -58,8 +58,8 @@ public static class Mapper
     {
         return new NCMlog
         {
-            cover = mlog.CoverUrl,
-            id = mlog.Id,
+            Cover = mlog.CoverUrl,
+            Id = mlog.Id,
             title = mlog.Title,
             duration = (int)mlog.Duration,
         };
@@ -69,10 +69,10 @@ public static class Mapper
     {
         return new Comment
         {
-            cid = comment.CommentId,
-            content = comment.Content,
+            CommentId = comment.CommentId,
+            Content = comment.Content,
             HasLiked = comment.Liked,
-            likedCount = comment.LikedCount,
+            LikedCount = comment.LikedCount,
             ReplyCount = comment.ReplyCount,
             SendTime = DateConverter.GetDateTimeFromTimeStamp(comment.Time),
             CommentUser = comment.User.MapToNcUser(),
@@ -83,10 +83,10 @@ public static class Mapper
     {
         return new NCUser
         {
-            avatar = user.AvatarUrl,
-            id = user.UserId,
-            name = user.Nickname,
-            signature = user.Signature
+            Avatar = user.AvatarUrl,
+            Id = user.UserId,
+            Name = user.Nickname,
+            Signature = user.Signature
         };
     }
 
@@ -95,7 +95,7 @@ public static class Mapper
         return new NCSong
         {
             Album = song.Album?.MapToNcAlbum() ?? new(),
-            alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
+            Alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
             Artist = song.Artists?.Select(artist => artist.MapToNcArtist())
                          .ToList() ??
                      [],
@@ -103,11 +103,11 @@ public static class Mapper
             IsCloud = song.Sid is not "0",
             IsVip = song.Fee is 1,
             LengthInMilliseconds = song.Duration,
-            mvid = song.MvId,
-            sid = song.Id,
-            songname = song.Name,
+            MVId = song.MvId,
+            SongId = song.Id,
+            SongName = song.Name,
             TrackId = song.TrackNumber,
-            transname = song.Translations is not null ? string.Join(",", song.Translations) : null,
+            TranslatedName = song.Translations is not null ? string.Join(",", song.Translations) : null,
             IsAvailable = song.Privilege?.St is 0,
             Type = HyPlayItemType.Netease,
         };
@@ -118,7 +118,7 @@ public static class Mapper
         return new NCSong
         {
             Album = song.Album.MapToNcAlbum(),
-            alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
+            Alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
             Artist = song.Artists?.Select(artist => artist.MapToNcArtist())
                          .ToList() ??
                      [],
@@ -126,11 +126,11 @@ public static class Mapper
             IsCloud = song.Sid is not "0",
             IsVip = false,
             LengthInMilliseconds = song.Duration,
-            mvid = song.MvId,
-            sid = song.Id,
-            songname = song.Name,
+            MVId = song.MvId,
+            SongId = song.Id,
+            SongName = song.Name,
             TrackId = song.TrackNumber,
-            transname = song.Translation,
+            TranslatedName = song.Translation,
             IsAvailable = song.Privilege?.St is 0,
             Type = HyPlayItemType.Netease,
         };
@@ -141,11 +141,11 @@ public static class Mapper
         return new NCAlbum
         {
             AlbumType = HyPlayItemType.Netease,
-            alias = album.Translation,
-            cover = album.PictureUrl,
-            description = album.Description,
-            id = album.Id,
-            name = album.Name
+            Alias = album.Translation,
+            Cover = album.PictureUrl,
+            Description = album.Description,
+            Id = album.Id,
+            Name = album.Name
         };
     }
 
@@ -153,11 +153,11 @@ public static class Mapper
     {
         return new NCArtist
         {
-            alias = artist.Translation,
-            avatar = artist.Img1v1Url,
-            id = artist.Id,
-            name = artist.Name,
-            transname = artist.Translation,
+            Alias = artist.Translation,
+            Avatar = artist.Img1v1Url,
+            Id = artist.Id,
+            Name = artist.Name,
+            TranslatedName = artist.Translation,
             Type = HyPlayItemType.Netease
         };
     }
@@ -166,11 +166,11 @@ public static class Mapper
     {
         return new NCArtist
         {
-            alias = artist.Translation,
-            avatar = artist.Img1v1Url,
-            id = artist.Id,
-            name = artist.Name,
-            transname = artist.Translation,
+            Alias = artist.Translation,
+            Avatar = artist.Img1v1Url,
+            Id = artist.Id,
+            Name = artist.Name,
+            TranslatedName = artist.Translation,
             Type = HyPlayItemType.Netease
         };
     }
@@ -180,16 +180,16 @@ public static class Mapper
         return new NCFmItem
         {
             Type = HyPlayItemType.Radio,
-            sid = dto.MainSong?.Id,
-            songname = dto.Name,
+            SongId = dto.MainSong?.Id,
+            SongName = dto.Name,
             Artist = dto.Owner.MapToNCArtists(),
             Album = dto.Radio.MapToNcAlbum(),
             LengthInMilliseconds = dto.Duration,
-            mvid = "-1",
-            alias = null,
-            transname = null,
-            fmId = dto.Id,
-            description = dto.Description,
+            MVId = "-1",
+            Alias = null,
+            TranslatedName = null,
+            FMId = dto.Id,
+            Description = dto.Description,
             RadioId = dto.Radio?.Id,
             RadioName = dto.Radio?.Name
         };
@@ -200,13 +200,13 @@ public static class Mapper
     {
         return new NCRadio
         {
-            cover = dto.CoverUrl,
-            desc = dto.Description,
+            Cover = dto.CoverUrl,
+            Description = dto.Description,
             DJ = dto.DjData.MapToNcUser(),
-            id = dto.Id,
-            lastProgramName = dto.LastProgramName,
-            name = dto.Name,
-            subed = dto.Subscribed,
+            Id = dto.Id,
+            LastProgramName = dto.LastProgramName,
+            Name = dto.Name,
+            HasSubscribed = dto.Subscribed,
         };
     }
 
@@ -217,9 +217,9 @@ public static class Mapper
             new NCArtist
             {
                 Type = HyPlayItemType.Radio,
-                id = dto.UserId,
-                name = dto.Nickname,
-                avatar = dto.AvatarUrl
+                Id = dto.UserId,
+                Name = dto.Nickname,
+                Avatar = dto.AvatarUrl
             }
         ];
     }
@@ -229,27 +229,27 @@ public static class Mapper
         return new NCAlbum
         {
             AlbumType = HyPlayItemType.Radio,
-            id = dto.Id,
-            name = dto.Name,
-            cover = dto.CoverUrl,
-            alias = dto.Id, //咱放在这个奇怪的位置
-            description = dto.Description
+            Id = dto.Id,
+            Name = dto.Name,
+            Cover = dto.CoverUrl,
+            Alias = dto.Id, //咱放在这个奇怪的位置
+            Description = dto.Description
         };
     }
     public static NCPlayList MapToNCPlayList(this PlaylistDto dto)
     {
         var ncp = new NCPlayList
         {
-            cover = dto.CoverUrl,
-            creater = dto.Creator?.MapToNcUser() ?? new(),
-            desc = dto.Description,
-            name = dto.Name,
-            plid = dto.Id,
-            subscribed = dto.Subscribed,
-            playCount = dto.PlayCount,
-            trackCount = dto.TrackCount,
-            bookCount = dto.BookCount,
-            updateTime = DateConverter.GetDateTimeFromTimeStamp(dto.UpdateTime)
+            Cover = dto.CoverUrl,
+            Creator = dto.Creator?.MapToNcUser() ?? new(),
+            Description = dto.Description,
+            Name = dto.Name,
+            PlaylistId = dto.Id,
+            HasSubscribed = dto.Subscribed,
+            PlayCount = dto.PlayCount,
+            TrackCount = dto.TrackCount,
+            BookCount = dto.BookCount,
+            UpdateTime = DateConverter.GetDateTimeFromTimeStamp(dto.UpdateTime)
         };
         return ncp;
     }
@@ -257,16 +257,16 @@ public static class Mapper
     {
         var ncp = new NCPlayList
         {
-            cover = dto.PicUrl,
-            creater = dto.Creator?.MapToNcUser() ?? new(),
-            desc = dto.Description,
-            name = dto.Name,
-            plid = dto.Id,
-            subscribed = dto.Subscribed,
-            playCount = dto.PlayCount,
-            trackCount = dto.TrackCount,
-            bookCount = dto.BookCount,
-            updateTime = DateConverter.GetDateTimeFromTimeStamp(dto.UpdateTime)
+            Cover = dto.PicUrl,
+            Creator = dto.Creator?.MapToNcUser() ?? new(),
+            Description = dto.Description,
+            Name = dto.Name,
+            PlaylistId = dto.Id,
+            HasSubscribed = dto.Subscribed,
+            PlayCount = dto.PlayCount,
+            TrackCount = dto.TrackCount,
+            BookCount = dto.BookCount,
+            UpdateTime = DateConverter.GetDateTimeFromTimeStamp(dto.UpdateTime)
         };
         return ncp;
     }
@@ -274,12 +274,12 @@ public static class Mapper
     {
         var ncp = new NCPlayList
         {
-            cover = dto.CoverUrl,
-            creater = dto.Creator?.MapToNcUser() ?? new(),
-            name = dto.Name,
-            plid = dto.Id,
-            playCount = dto.PlayCount,
-            trackCount = dto.TrackCount
+            Cover = dto.CoverUrl,
+            Creator = dto.Creator?.MapToNcUser() ?? new(),
+            Name = dto.Name,
+            PlaylistId = dto.Id,
+            PlayCount = dto.PlayCount,
+            TrackCount = dto.TrackCount
         };
         return ncp;
     }

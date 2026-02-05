@@ -563,7 +563,7 @@ DoubleAnimation verticalAnimation;
             {
                 if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
                 {
-                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
+                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].Id);
                 }
                 else
                 {
@@ -571,7 +571,7 @@ DoubleAnimation verticalAnimation;
                         await new ArtistSelectDialog(HyPlayList.NowPlayingItem.PlayItem.Artist).ShowAsync();
                     else
                         Common.NavigatePage(typeof(ArtistPage),
-                            HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
+                            HyPlayList.NowPlayingItem.PlayItem.Artist[0].Id);
                 }
 
                 //CollapseExpandedPlayer();
@@ -590,13 +590,13 @@ DoubleAnimation verticalAnimation;
             {
                 if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
                 {
-                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
+                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].Id);
                 }
                 else
                 {
-                    if (HyPlayList.NowPlayingItem.PlayItem.Album.id != "0")
+                    if (HyPlayList.NowPlayingItem.PlayItem.Album.Id != "0")
                         Common.NavigatePage(typeof(AlbumPage),
-                            HyPlayList.NowPlayingItem.PlayItem.Album.id);
+                            HyPlayList.NowPlayingItem.PlayItem.Album.Id);
                 }
             }
         }
@@ -624,7 +624,7 @@ DoubleAnimation verticalAnimation;
         if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.PlayItem.Id);
         else
-            Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.PlayItem.Album.alias);
+            Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.PlayItem.Album.Alias);
         if (Common.Setting.forceMemoryGarbage)
             Common.NavigatePage(typeof(BlankPage));
         CollapseExpandedPlayer();
@@ -639,13 +639,13 @@ DoubleAnimation verticalAnimation;
         dataTransferManager.DataRequested += (manager, args) =>
         {
             var dataPackage = new DataPackage();
-            dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" +
+            dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?Id=" +
                                            HyPlayList.NowPlayingItem.PlayItem.Id));
             dataPackage.Properties.Title = HyPlayList.NowPlayingItem.PlayItem.Name;
             dataPackage.Properties.Description =
                 "歌手: " + string.Join(';',
                     HyPlayList.NowPlayingItem.PlayItem.Artist
-                        .Select(t => t.name));
+                        .Select(t => t.Name));
             var request = args.Request;
             request.Data = dataPackage;
         };

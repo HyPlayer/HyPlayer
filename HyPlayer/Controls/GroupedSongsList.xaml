@@ -186,13 +186,13 @@
                                             x:Phase="0"
                                             FontSize="20"
                                             Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
-                                            Text="{x:Bind songname}" />
+                                            Text="{x:Bind SongName}" />
                                         <TextBlock
                                             Name="TextBlockTransName"
                                             x:Phase="0"
                                             FontSize="20"
                                             Foreground="Gray"
-                                            Text="{x:Bind ConvertTranslate(transname)}" />
+                                            Text="{x:Bind ConvertTranslate(TranslatedName)}" />
                                         <BitmapIcon
                                             Height="20"
                                             Foreground="DeepSkyBlue"
@@ -211,7 +211,7 @@
                                         x:Phase="2"
                                         FontSize="12"
                                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                        Text="{x:Bind alias}"
+                                        Text="{x:Bind Alias}"
                                         Visibility="Visible" />
                                     <TextBlock
                                         Name="TextBlockArtist"
@@ -226,7 +226,7 @@
                                         Margin="0,7,0,0"
                                         FontSize="13"
                                         Foreground="Gray"
-                                        Text="{x:Bind Album.name}" />
+                                        Text="{x:Bind Album.Name}" />
                                 </Grid>
                             </StackPanel>
 

@@ -128,7 +128,7 @@ public sealed partial class GroupedSongsList : UserControl
                 if (GroupedSongs?.Source == null) return;
                 {
 
-                    var nowPlayingItem = disc.Where(t => t.sid == playitem.PlayItem.Id).FirstOrDefault();
+                    var nowPlayingItem = disc.Where(t => t.SongId == playitem.PlayItem.Id).FirstOrDefault();
                     if (nowPlayingItem != null)
                     {
                         SongContainer.SelectedItem = nowPlayingItem;
@@ -153,14 +153,14 @@ public sealed partial class GroupedSongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
-            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
+            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
             return;
         }
         foreach (NCSong ncsong in SongContainer.SelectedItems)
             _ = HyPlayList.AppendNcSong(ncsong);
         if (SongContainer.SelectedItem != null)
         {
-            var targetPlayItem = HyPlayList.List.Find(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
+            var targetPlayItem = HyPlayList.List.Find(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).SongId);
             HyPlayList.SongMoveTo(targetPlayItem);
         }
     }
@@ -170,7 +170,7 @@ public sealed partial class GroupedSongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
-            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
+            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
             return;
         }
         var playItems = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(), HyPlayList.NowPlaying + 1);
@@ -196,7 +196,7 @@ public sealed partial class GroupedSongsList : UserControl
         }
         if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Count() > 0)
         {
-            var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Select(t => t.songname).ToArray();
+            var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Select(t => t.SongName).ToArray();
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
         }
     }
@@ -206,27 +206,27 @@ public sealed partial class GroupedSongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if ((SongContainer.SelectedItem as NCSong)?.Artist[0].Type == HyPlayItemType.Radio)
         {
-            Common.NavigatePage(typeof(Me), (SongContainer.SelectedItem as NCSong)?.Artist[0].id ?? "");
+            Common.NavigatePage(typeof(Me), (SongContainer.SelectedItem as NCSong)?.Artist[0].Id ?? "");
         }
         else
         {
             if ((SongContainer.SelectedItem as NCSong)?.Artist.Count > 1)
                 await new ArtistSelectDialog((SongContainer.SelectedItem as NCSong)?.Artist).ShowAsync();
             else
-                Common.NavigatePage(typeof(ArtistPage), (SongContainer.SelectedItem as NCSong)?.Artist[0].id ?? "");
+                Common.NavigatePage(typeof(ArtistPage), (SongContainer.SelectedItem as NCSong)?.Artist[0].Id ?? "");
         }
     }
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        Common.NavigatePage(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong)?.Album.id ?? "");
+        Common.NavigatePage(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong)?.Album.Id ?? "");
     }
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        Common.NavigatePage(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong)?.sid);
+        Common.NavigatePage(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong)?.SongId);
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
@@ -244,7 +244,7 @@ public sealed partial class GroupedSongsList : UserControl
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        await new SongListSelect((SongContainer.SelectedItem as NCSong)?.sid).ShowAsync();
+        await new SongListSelect((SongContainer.SelectedItem as NCSong)?.SongId).ShowAsync();
     }
 
     private void Grid_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -264,11 +264,11 @@ public sealed partial class GroupedSongsList : UserControl
     {
         if (e.ClickedItem == null) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        bool shiftSong = ((e.ClickedItem as NCSong).sid == HyPlayList.NowPlayingItem?.PlayItem?.Id);
+        bool shiftSong = ((e.ClickedItem as NCSong).SongId == HyPlayList.NowPlayingItem?.PlayItem?.Id);
 
         if (!(e.ClickedItem as NCSong).IsAvailable)
         {
-            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(e.ClickedItem as NCSong).songname} 当前不可用");
+            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(e.ClickedItem as NCSong).SongName} 当前不可用");
             return;
         }
         if (HyPlayList.PlaySourceId != ListSource.Substring(2) || SongContainer.Items.Cast<NCSong>().Where(t => t.IsAvailable).Count() != HyPlayList.List.Count)
@@ -282,9 +282,9 @@ public sealed partial class GroupedSongsList : UserControl
             ListSource.Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ListSource.Substring(2);
         if (!shiftSong)
-            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem?.Id == (e.ClickedItem as NCSong).sid));
+            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem?.Id == (e.ClickedItem as NCSong).SongId));
         else
             HyPlayList.NowPlaying =
-                HyPlayList.List.FindIndex(song => song.PlayItem.Id == ((e.ClickedItem as NCSong).sid));
+                HyPlayList.List.FindIndex(song => song.PlayItem.Id == ((e.ClickedItem as NCSong).SongId));
     }
 }

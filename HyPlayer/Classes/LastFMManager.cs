@@ -31,7 +31,7 @@ namespace HyPlayer.Classes
             var request = new UpdateNowPlayingRequest()
             {
                 Album = item.PlayItem.AlbumString,
-                Artist = item.PlayItem.Artist.FirstOrDefault()?.name ?? string.Empty,
+                Artist = item.PlayItem.Artist.FirstOrDefault()?.Name ?? string.Empty,
                 Track = item.PlayItem.Name
             };
             var response = await Common.LastFMClient.RequestAsync(LastFMApi.UpdateNowPlayingApi, request, Common.Setting.LastFMSession);
@@ -46,7 +46,7 @@ namespace HyPlayer.Classes
             var request = new ScrobbleRequest()
             {
                 Album = item.PlayItem.AlbumString,
-                Artist = item.PlayItem.Artist.FirstOrDefault()?.name ?? string.Empty,
+                Artist = item.PlayItem.Artist.FirstOrDefault()?.Name ?? string.Empty,
                 Track = item.PlayItem.Name,
                 TimeStamp = (uint)(DateTime.UtcNow - DateTime.UnixEpoch - TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds)).TotalSeconds
                 

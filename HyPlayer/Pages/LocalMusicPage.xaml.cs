@@ -126,13 +126,13 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
             var undeterminedAlbum = new NCAlbum
             {
                 AlbumType = HyPlayItemType.LocalProgressive,
-                name = "未知专辑 - 播放后加载"
+                Name = "未知专辑 - 播放后加载"
             };
             var undeterminedArtistList = new List<NCArtist>
             {
                 new()
                 {
-                    name = "未知歌手 - 播放后加载",
+                    Name = "未知歌手 - 播放后加载",
                     Type = HyPlayItemType.LocalProgressive
                 }
             };
@@ -147,7 +147,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                         Album = undeterminedAlbum,
                         Artist = undeterminedArtistList,
                         Bitrate = 0,
-                        DontSetLocalStorageFile = storageFile,
+                        LocalStorageFile = storageFile,
                         IsLocalFile = true,
                         LengthInMilliseconds = 0,
                         Name = storageFile.Name,

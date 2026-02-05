@@ -70,7 +70,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         {
             SetValue(MainCommentProperty, value);
             ReplyCountIndicator.Text = value.ReplyCount.ToString();
-            LikeCountTB.Text = value.likedCount.ToString();
+            LikeCountTB.Text = value.LikedCount.ToString();
         }
     }
 
@@ -79,14 +79,14 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         try
         {
             if (!IsLoadMoreComments) floorComments.Clear();
-            var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.resourceType}_{MainComment.resourceId}_{MainComment.cid}", async () =>
+            var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ResourceType}_{MainComment.ResourceId}_{MainComment.CommentId}", async () =>
             {
                 var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.CommentFloorApi,
                     new CommentFloorRequest()
                     {
-                        ParentCommentId = MainComment.cid,
-                        ResourceId = MainComment.resourceId,
-                        ResourceType = MainComment.resourceType,
+                        ParentCommentId = MainComment.CommentId,
+                        ResourceId = MainComment.ResourceId,
+                        ResourceType = MainComment.ResourceType,
                         Time = !IsLoadMoreComments ? 0 : long.Parse(time ?? "0")
                     }
                 );
@@ -104,8 +104,8 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             foreach (var floorcomment in result.Data?.Comments ?? [])
             {
                 var floorComment = floorcomment.MapToComment();
-                floorComment.resourceId = MainComment.resourceId;
-                floorComment.resourceType = MainComment.resourceType;
+                floorComment.ResourceId = MainComment.ResourceId;
+                floorComment.ResourceType = MainComment.ResourceType;
                 floorComment.IsMainComment = false;
                 floorComments.Add(floorComment);
             }
@@ -124,8 +124,8 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CommentLikeApi,
             new CommentLikeRequest()
             {
-                CommentId = MainComment.cid,
-                ResourceType = MainComment.resourceType,
+                CommentId = MainComment.CommentId,
+                ResourceType = MainComment.ResourceType,
                 IsLike = !MainComment.HasLiked
             });
         if (result.IsError)
@@ -134,9 +134,9 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             return;
         }
 
-        MainComment.likedCount += MainComment.HasLiked ? -1 : 1;
+        MainComment.LikedCount += MainComment.HasLiked ? -1 : 1;
         MainComment.HasLiked = !MainComment.HasLiked;
-        LikeCountTB.Text = MainComment.likedCount.ToString();
+        LikeCountTB.Text = MainComment.LikedCount.ToString();
     }
 
     private void Delete_Click(object sender, RoutedEventArgs e)
@@ -147,7 +147,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private void NavToUser_Click(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(Me), MainComment.CommentUser.id);
+        Common.NavigatePage(typeof(Me), MainComment.CommentUser.Id);
     }
 
     private async void SendReply_Click(object sender, RoutedEventArgs e)

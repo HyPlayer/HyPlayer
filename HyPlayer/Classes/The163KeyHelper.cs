@@ -28,8 +28,8 @@ internal static class The163KeyHelper
     /// <summary>
     ///     尝试获取网易云音乐ID
     /// </summary>
-    /// <param name="tag"></param>
-    /// <param name="trackId"></param>
+    /// <param Name="tag"></param>
+    /// <param Name="trackId"></param>
     /// <returns></returns>
     public static bool TryGetTrackId(Tag tag, out ulong trackId)
     {
@@ -151,8 +151,8 @@ internal static class The163KeyHelper
     /// <summary>
     ///     尝试设置163音乐信息到文件
     /// </summary>
-    /// <param name="tag"></param>
-    /// <param name="trackId"></param>
+    /// <param Name="tag"></param>
+    /// <param Name="trackId"></param>
     /// <returns></returns>
     public static bool TrySetMusicInfo(Tag tag, PlayItem pi)
     {
@@ -163,9 +163,9 @@ internal static class The163KeyHelper
         {
             var key = new The163KeyClass
             {
-                album = pi.Album.name,
-                albumId = ulong.Parse(pi.Album.id),
-                albumPic = pi.Album.cover,
+                album = pi.Album.Name,
+                albumId = ulong.Parse(pi.Album.Id),
+                albumPic = pi.Album.Cover,
                 bitrate = pi.Bitrate,
                 artist = null,
                 duration = pi.LengthInMilliseconds,
@@ -173,7 +173,7 @@ internal static class The163KeyHelper
                 musicName = pi.Name,
                 format = pi.SubExt.ToLower()
             };
-            key.artist = pi.Artist.Select(t => new List<object> { t.name, int.Parse(t.id) }).ToList();
+            key.artist = pi.Artist.Select(t => new List<object> { t.Name, int.Parse(t.Id) }).ToList();
             return TrySetMusicInfo(tag, key);
         }
         catch
@@ -202,7 +202,7 @@ public class The163KeyClass
 {
     public ulong albumId { get; set; }
 
-    //public string[] alias { get; set; }
+    //public string[] Alias { get; set; }
     public string album { get; set; }
     public long musicId { get; set; }
     public string musicName { get; set; }

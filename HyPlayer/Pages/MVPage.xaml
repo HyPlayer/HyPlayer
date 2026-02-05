@@ -14,7 +14,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <ScrollViewer.Resources>
             <DataTemplate x:Key="RelativeTemplate" x:DataType="classes:NCMlog">
-                <Grid Margin="0,12,0,12" Tag="{x:Bind id}">
+                <Grid Margin="0,12,0,12" Tag="{x:Bind Id}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="150" />
                         <ColumnDefinition Width="*" />
@@ -22,7 +22,7 @@
                     <frieren:ImageEx
                         MaxHeight="100"
                         IsCacheEnabled="False"
-                        Source="{x:Bind cover}"
+                        Source="{x:Bind Cover}"
                         Stretch="UniformToFill" />
 
                     <StackPanel Grid.Column="1" Margin="12,0,0,0">
@@ -36,7 +36,7 @@
                             Width="350"
                             FontWeight="Normal"
                             MaxLines="1"
-                            Text="{x:Bind description}" />
+                            Text="{x:Bind Description}" />
                     </StackPanel>
                 </Grid>
             </DataTemplate>

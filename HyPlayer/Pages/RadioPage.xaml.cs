@@ -61,13 +61,13 @@ public sealed partial class RadioPage : Page
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.id + "_" + page + asc,
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.Id + "_" + page + asc,
                 async () =>
                 {
                     var rest = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
                         new DjChannelProgramsRequest()
                         {
-                            RadioId = Radio.id,
+                            RadioId = Radio.Id,
                             Limit = 100,
                             Offset = page * 100,
                             Asc = asc
@@ -134,9 +134,9 @@ public sealed partial class RadioPage : Page
 
         if (e.Parameter is NCRadio radio) Radio = radio;
 
-        TextBoxRadioName.Text = Radio.name;
-        TextBoxDJ.Content = Radio.DJ.name;
-        TextBlockDesc.Text = Radio.desc;
+        TextBoxRadioName.Text = Radio.Name;
+        TextBoxDJ.Content = Radio.DJ.Name;
+        TextBlockDesc.Text = Radio.Description;
         if (Common.Setting.noImage)
         {
             ImageRect.ImageSource = null;
@@ -145,11 +145,11 @@ public sealed partial class RadioPage : Page
         {
             var img = new BitmapImage();
             ImageRect.ImageSource = img;
-            img.UriSource = new Uri(Radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
+            img.UriSource = new Uri(Radio.Cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
         }
 
         Songs.Clear();
-        SongContainer.ListSource = "rd" + Radio.id;
+        SongContainer.ListSource = "rd" + Radio.Id;
         _programLoaderTask = LoadProgram();
         if (Common.Setting.greedlyLoadPlayContainerItems)
             HyPlayList.OnTimerTicked += GreedlyLoad;
@@ -190,7 +190,7 @@ public sealed partial class RadioPage : Page
     {
         try
         {
-            await HyPlayList.AppendNcSource("rd" + Radio.id);
+            await HyPlayList.AppendNcSource("rd" + Radio.Id);
             if (asc) HyPlayList.List.Reverse();
             HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
         }
@@ -202,7 +202,7 @@ public sealed partial class RadioPage : Page
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        Common.NavigatePage(typeof(Me), Radio.DJ.id);
+        Common.NavigatePage(typeof(Me), Radio.DJ.Id);
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)
@@ -216,7 +216,7 @@ public sealed partial class RadioPage : Page
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.AppendRadioList(Radio.id, asc);
+        await HyPlayList.AppendRadioList(Radio.Id, asc);
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
@@ -229,13 +229,13 @@ public sealed partial class RadioPage : Page
             while (hasMore is true)
                 try
                 {
-                    var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.id + "_" + page + asc,
+                    var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.Id + "_" + page + asc,
                         async () =>
                         {
                             var rest = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
                                 new DjChannelProgramsRequest()
                                 {
-                                    RadioId = Radio.id,
+                                    RadioId = Radio.Id,
                                     Limit = 100,
                                     Offset = page * 100,
                                     Asc = asc

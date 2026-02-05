@@ -71,7 +71,7 @@ public sealed partial class Me : Page
         }
         else
         {
-            uid = Common.LoginedUser.id;
+            uid = Common.LoginedUser.Id;
         }
         _loadUserTask = LoadUser();
         _loadPlaylistTask = LoadPlayList();
@@ -136,18 +136,18 @@ public sealed partial class Me : Page
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var playList = valuePlaylist.MapToNCPlayList();
-                if (playList.creater.id != uid)
+                if (playList.Creator.Id != uid)
                 {
                     likedPlayList.Add(
                         new SimpleListItem
                         {
-                            CoverLink = playList.cover,
-                            LineOne = playList.creater.name,
-                            LineThree = $"播放量: {playList.playCount} | 歌曲数: {playList.trackCount}",
-                            LineTwo = playList.desc,
+                            CoverLink = playList.Cover,
+                            LineOne = playList.Creator.Name,
+                            LineThree = $"播放量: {playList.PlayCount} | 歌曲数: {playList.TrackCount}",
+                            LineTwo = playList.Description,
                             Order = subListIdx++,
-                            ResourceId = "pl" + playList.plid,
-                            Title = playList.name,
+                            ResourceId = "pl" + playList.PlaylistId,
+                            Title = playList.Name,
                             CanPlay = true
                         }
                     );
@@ -157,13 +157,13 @@ public sealed partial class Me : Page
                     myPlayList.Add(
                         new SimpleListItem
                         {
-                            CoverLink = playList.cover,
-                            LineOne = playList.creater.name,
-                            LineThree = $"播放量: {playList.playCount} | 歌曲数: {playList.trackCount}",
-                            LineTwo = playList.desc,
+                            CoverLink = playList.Cover,
+                            LineOne = playList.Creator.Name,
+                            LineThree = $"播放量: {playList.PlayCount} | 歌曲数: {playList.TrackCount}",
+                            LineTwo = playList.Description,
                             Order = subListIdx++,
-                            ResourceId = "pl" + playList.plid,
-                            Title = playList.name,
+                            ResourceId = "pl" + playList.PlaylistId,
+                            Title = playList.Name,
                             CanPlay = true
                         }
                     );

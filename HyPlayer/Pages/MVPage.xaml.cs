@@ -25,7 +25,7 @@ namespace HyPlayer.Pages;
 public sealed partial class MVPage : Page
 {
     private readonly List<NCMlog> sources = new();
-    private string mvid;
+    private string MVId;
     private string mvquality = "1080";
     private string songid;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -45,13 +45,13 @@ public sealed partial class MVPage : Page
         base.OnNavigatedTo(e);
         if (e.Parameter is NCSong input)
         {
-            mvid = input.mvid.ToString();
-            songid = input.sid;
+            MVId = input.MVId.ToString();
+            songid = input.SongId;
             _relateiveLoaderTask = LoadRelateive();
         }
         else
         {
-            mvid = e.Parameter.ToString();
+            MVId = e.Parameter.ToString();
             LoadThings();
         }
     }
@@ -72,7 +72,7 @@ public sealed partial class MVPage : Page
             var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogRcmdFeedListApi,
                 new MlogRcmdFeedListRequest()
                 {
-                    Id = mvid,
+                    Id = MVId,
                     SongId = songid,
                     Limit = 10
                 });
@@ -97,10 +97,10 @@ public sealed partial class MVPage : Page
 
     private void LoadComment()
     {
-        if (Regex.IsMatch(mvid, "^[0-9]*$"))
-            CommentFrame.Navigate(typeof(Comments), "mv" + mvid);
+        if (Regex.IsMatch(MVId, "^[0-9]*$"))
+            CommentFrame.Navigate(typeof(Comments), "mv" + MVId);
         else
-            CommentFrame.Navigate(typeof(Comments), "mb" + mvid);
+            CommentFrame.Navigate(typeof(Comments), "mb" + MVId);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -156,12 +156,12 @@ public sealed partial class MVPage : Page
             _cancellationToken.ThrowIfCancellationRequested();
             LoadingControl.IsLoading = true;
             string url;
-            if (Regex.IsMatch(mvid, "^[0-9]*$"))
+            if (Regex.IsMatch(MVId, "^[0-9]*$"))
             {
                 var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.VideoUrlApi,
                     new VideoUrlRequest()
                     {
-                        Id = mvid,
+                        Id = MVId,
                         Resolution = mvquality
                     }, _cancellationToken);
                 if (json.IsError)
@@ -177,7 +177,7 @@ public sealed partial class MVPage : Page
                 var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogUrlApi,
                     new MlogUrlRequest()
                     {
-                        Id = mvid,
+                        Id = MVId,
                         Resolution = mvquality
                     }, _cancellationToken);
                 if (json.IsError)
@@ -186,7 +186,7 @@ public sealed partial class MVPage : Page
                     return;
                 }
 
-                url = json.Value.Data?.GetValueOrDefault(mvid).UrlInfo?.Url;
+                url = json.Value.Data?.GetValueOrDefault(MVId).UrlInfo?.Url;
             }
 
             MediaPlayerElement.Source = MediaSource.CreateFromUri(new Uri(url!));
@@ -203,14 +203,14 @@ public sealed partial class MVPage : Page
     private async Task LoadVideoInfo()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        if (Regex.IsMatch(mvid, "^[0-9]*$"))
+        if (Regex.IsMatch(MVId, "^[0-9]*$"))
         {
             try
             {
                 var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.VideoDetailApi,
                     new VideoDetailRequest()
                     {
-                        Id = mvid
+                        Id = MVId
                     }, _cancellationToken);
                 if (json.IsError)
                 {
@@ -242,7 +242,7 @@ public sealed partial class MVPage : Page
                 var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogDetailApi,
                     new MlogDetailRequest()
                     {
-                        MlogId = mvid
+                        MlogId = MVId
                     }, _cancellationToken);
                 if (json.IsError)
                 {
@@ -272,7 +272,7 @@ public sealed partial class MVPage : Page
 
     private void RelativeList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        mvid = (RelativeList.SelectedItem is NCMlog ? (NCMlog)RelativeList.SelectedItem : default).id;
+        MVId = (RelativeList.SelectedItem is NCMlog ? (NCMlog)RelativeList.SelectedItem : default).Id;
         LoadThings();
     }
 }

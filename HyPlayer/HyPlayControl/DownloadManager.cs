@@ -174,9 +174,9 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 if (Common.Setting.write163Info && DontUsePlayItem is not null)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, DontUsePlayItem);
                 //写相关信息
-                file.Tag.Album = ncsong.Album.name;
-                file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
-                file.Tag.Title = ncsong.songname;
+                file.Tag.Album = ncsong.Album.Name;
+                file.Tag.Performers = ncsong.Artist.Select(t => t.Name).ToArray();
+                file.Tag.Title = ncsong.SongName;
                 file.Tag.Track = (uint)(ncsong.TrackId == -1 ? ncsong.Order + 1 : ncsong.TrackId);
 
                 // 获取 Disc Id
@@ -193,7 +193,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 //file.Save();
 
                 Picture pic;
-                using var responseMessage = await Common.HttpClient.GetAsync(new Uri(ncsong.Album.cover + "?param=" +
+                using var responseMessage = await Common.HttpClient.GetAsync(new Uri(ncsong.Album.Cover + "?param=" +
                                                                         StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
                 using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
                 using var stream = await responseMessage.Content.ReadAsStreamAsync();
@@ -206,14 +206,14 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 encoder.SetSoftwareBitmap(softwareBitmap);
                 await encoder.FlushAsync();
                 pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
-                DownloadManager.AlbumPicturesCache[ncsong.Album.id] = pic;
+                DownloadManager.AlbumPicturesCache[ncsong.Album.Id] = pic;
 
                 file.Tag.Pictures = new IPicture[]
                 {
                     pic
                 };
                 file.Tag.Pictures[0].MimeType = "image/jpeg";
-                file.Tag.Pictures[0].Description = "cover.jpg";
+                file.Tag.Pictures[0].Description = "Cover.jpg";
                 file.Save();
             }
             catch (Exception ex)
@@ -238,7 +238,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         //下载歌词
         return Task.Run(async () =>
         {
-            var lyricRequest = new LyricRequest() { Id = ncsong.sid };
+            var lyricRequest = new LyricRequest() { Id = ncsong.SongId };
             var lyricResult = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LyricApi, lyricRequest);
             if (lyricResult.IsSuccess)
             {
@@ -309,9 +309,9 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         if (HadSize == TotalSize && Status == DownloadStatus.Finished) return;
     }
 
-    public static void DownloadStartToast(string songname)
+    public static void DownloadStartToast(string SongName)
     {
-        Common.AddToTeachingTipLists("下载开始", "歌曲" + songname + "下载开始");
+        Common.AddToTeachingTipLists("下载开始", "歌曲" + SongName + "下载开始");
     }
 
     public async Task StartDownload()
@@ -327,13 +327,13 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         try
         {
             FileName = Common.Setting.downloadFileName
-                .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.name)).EscapeForPath())
-                .Replace("{$SONGNAME}", ncsong.songname.EscapeForPath())
-                .Replace("{$ALBUM}", ncsong.Album.name.EscapeForPath())
+                .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.Name)).EscapeForPath())
+                .Replace("{$SONGNAME}", ncsong.SongName.EscapeForPath())
+                .Replace("{$ALBUM}", ncsong.Album.Name.EscapeForPath())
                 .Replace("{$INDEX}",
                     (ncsong.GetType() == typeof(NCAlbumSong) ? ncsong.Order : ncsong.Order + 1).ToString().EscapeForPath())
                 .Replace("{$CDNAME}", ncsong.CDName?.EscapeForPath())
-                .Replace("{$SONGID}", ncsong.sid?.EscapeForPath());
+                .Replace("{$SONGID}", ncsong.SongId?.EscapeForPath());
             var folderName = Common.Setting.downloadDir;
             var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
             var ses = FileName.Replace('\\', '/').Split('/');
@@ -356,7 +356,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                         await (await nowFolder.GetFileAsync(Path.GetFileName(FileName))).DeleteAsync();
                         break;
                     case 2:
-                        FileName = Path.GetFileNameWithoutExtension(FileName) + ncsong.sid;
+                        FileName = Path.GetFileNameWithoutExtension(FileName) + ncsong.SongId;
                         break;
                     case 3:
                         if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".mp3")))
@@ -377,7 +377,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 HasPaused = false;
                 Message = "正在获取下载链接";
             });
-            var urlRequest = new SongUrlRequest() { Id = ncsong.sid, Level = Common.Setting.downloadAudioRate };
+            var urlRequest = new SongUrlRequest() { Id = ncsong.SongId, Level = Common.Setting.downloadAudioRate };
             var urlResult = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongUrlApi, urlRequest);
 
             if (urlResult.IsError || urlResult.Value?.SongUrls?[0] is null)
@@ -412,11 +412,11 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 QualityTag = "下载",
                 InfoTag = "下载",
                 Album = ncsong.Album,
-                Translation = ncsong.transname,
+                Translation = ncsong.TranslatedName,
                 Artist = ncsong.Artist,
                 SubExt = urlResult.Value.SongUrls[0].Type.ToLowerInvariant(),
-                Id = ncsong.sid,
-                Name = ncsong.songname,
+                Id = ncsong.SongId,
+                Name = ncsong.SongName,
                 Type = HyPlayItemType.Netease,
                 TrackId = ncsong.TrackId,
                 CDName = ncsong.CDName,
@@ -441,7 +441,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         {
             Status = DownloadStatus.Error;
             _ = Common.Invoke(() => { Message = "下载错误: " + ex.Message; });
-            Common.ErrorMessageList.Add("无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除" + ex.Message);
+            Common.ErrorMessageList.Add("无法下载歌曲 " + ncsong.SongName + "\n已自动将其从下载列表中移除" + ex.Message);
         }
     }
 

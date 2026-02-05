@@ -81,7 +81,7 @@ public sealed partial class MainPage : Page
                 Common.NavigatePage(typeof(Me));
                 break;
             case "likedsongs":
-                Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid);
+                Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].PlaylistId);
                 break;
             case "local":
                 Common.NavigatePage(typeof(LocalMusicPage));

@@ -280,7 +280,7 @@ namespace HyPlayer.Classes
         /// <summary>
         /// 时间戳转DateTime
         /// </summary>
-        /// <param name="timestamp">时间戳(精确到毫秒)</param>
+        /// <param Name="timestamp">时间戳(精确到毫秒)</param>
         /// <returns></returns>
         public static DateTime GetDateTimeFromTimeStamp(long timestamp)
         {
@@ -289,7 +289,7 @@ namespace HyPlayer.Classes
         /// <summary>
         /// 将DateTime转换为类似于“x分钟前”的格式
         /// </summary>
-        /// <param name="dateTime">时间</param>
+        /// <param Name="dateTime">时间</param>
         /// <returns></returns>
         public static string FriendFormat(DateTime dateTime)
         {
@@ -362,14 +362,14 @@ namespace HyPlayer.Classes
             {
                 var displayedList = (SongListDetail)value;
                 if (displayedList.playList == null) return Common.PageBase?.NavItemBlank;
-                if (displayedList.playList.name == "每日歌曲推荐")
+                if (displayedList.playList.Name == "每日歌曲推荐")
                     pageNavigationViewItem = Common.PageBase.NavItemDailyRcmd;
-                else if (displayedList.playList.plid == Common.MySongLists[0].plid)
+                else if (displayedList.playList.PlaylistId == Common.MySongLists[0].PlaylistId)
                     pageNavigationViewItem = Common.PageBase.NavItemsMyLovedPlaylist;
                 else
                 {
-                    var item = Common.PageBase.NavItemsMyList.MenuItems.Where(t => (((NavigationViewItem)t)?.Tag as string) == $"Playlist{displayedList.playList.plid}").FirstOrDefault()
-                        ?? Common.PageBase.NavItemsLikeList.MenuItems.Where(t => (((NavigationViewItem)t)?.Tag as string) == $"Playlist{displayedList.playList.plid}").FirstOrDefault();
+                    var item = Common.PageBase.NavItemsMyList.MenuItems.Where(t => (((NavigationViewItem)t)?.Tag as string) == $"Playlist{displayedList.playList.PlaylistId}").FirstOrDefault()
+                        ?? Common.PageBase.NavItemsLikeList.MenuItems.Where(t => (((NavigationViewItem)t)?.Tag as string) == $"Playlist{displayedList.playList.PlaylistId}").FirstOrDefault();
                     if (item != null)
                     {
                         pageNavigationViewItem = (NavigationViewItem)item;

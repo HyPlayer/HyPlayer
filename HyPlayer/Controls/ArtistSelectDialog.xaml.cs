@@ -20,13 +20,13 @@ public sealed partial class ArtistSelectDialog : ContentDialog
         aartists = artists;
         InitializeComponent();
         ListViewArtists.Items?.Clear();
-        artists.ForEach(t => ListViewArtists.Items?.Add(t.name));
+        artists.ForEach(t => ListViewArtists.Items?.Add(t.Name));
     }
 
 
     private void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        Common.NavigatePage(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].id);
+        Common.NavigatePage(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].Id);
         if (Common.isExpanded)
         {
             if (Common.Setting.forceMemoryGarbage)

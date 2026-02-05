@@ -74,7 +74,7 @@
                                 BorderThickness="1"
                                 CornerRadius="4"
                                 EnableLazyLoading="True"
-                                Source="{x:Bind ncsong.Album.cover, Converter={StaticResource ImageUrlToImageSourceConverter}}" />
+                                Source="{x:Bind ncsong.Album.Cover, Converter={StaticResource ImageUrlToImageSourceConverter}}" />
                             <TextBlock
                                 Grid.Row="0"
                                 Grid.Column="1"
@@ -82,7 +82,7 @@
                                 VerticalAlignment="Center"
                                 FontSize="18"
                                 FontWeight="Bold"
-                                Text="{x:Bind ncsong.songname}" />
+                                Text="{x:Bind ncsong.SongName}" />
                             <TextBlock
                                 Grid.Row="1"
                                 Grid.Column="1"
@@ -96,7 +96,7 @@
                                 VerticalAlignment="Center"
                                 FontSize="13"
                                 Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                Text="{x:Bind ncsong.Album.name}" />
+                                Text="{x:Bind ncsong.Album.Name}" />
                             <muxc:ProgressBar
                                 Grid.Row="1"
                                 Grid.Column="2"

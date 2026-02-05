@@ -283,22 +283,22 @@ public sealed partial class BasePage : Page
         else
             Common.LoginedUser = new NCUser
             {
-                avatar = "ms-appx:///Assets/icon.png",
-                id = LoginStatus.Account.Id,
-                name = LoginStatus.Account.UserName,
-                signature = "此账号未进行手机号验证, 请使用网易云音乐客户端登录后再继续操作"
+                Avatar = "ms-appx:///Assets/icon.png",
+                Id = LoginStatus.Account.Id,
+                Name = LoginStatus.Account.UserName,
+                Signature = "此账号未进行手机号验证, 请使用网易云音乐客户端登录后再继续操作"
             };
 
         Common.Logined = true;
-        NavItemLogin.Content = Common.LoginedUser.name;
+        NavItemLogin.Content = Common.LoginedUser.Name;
         NavItemLogin.Icon = new BitmapIcon
         {
-            UriSource = new Uri(Common.LoginedUser.avatar + "?param=" +
+            UriSource = new Uri(Common.LoginedUser.Avatar + "?param=" +
                                                     StaticSource.PICSIZE_NAVITEM_USERAVATAR),
             ShowAsMonochrome = false
         };
         InfoBarLoginHint.Severity = InfoBarSeverity.Success;
-        InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.name;
+        InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.Name;
         DialogLogin.Hide();
         //加载我喜欢的歌
         _ = LoadMyLikelist();
@@ -327,7 +327,7 @@ public sealed partial class BasePage : Page
         {
             var ids = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
             {
-                var js = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = Common.LoginedUser!.id });
+                var js = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = Common.LoginedUser!.Id });
                 if (js.IsError)
                 {
                     Common.AddToTeachingTipLists("获取喜欢列表失败", js.Error?.Message);
@@ -354,7 +354,7 @@ public sealed partial class BasePage : Page
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "mySongList", async () =>
             {
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserPlaylistApi,
-                    new UserPlaylistRequest() { Uid = Common.LoginedUser!.id });
+                    new UserPlaylistRequest() { Uid = Common.LoginedUser!.Id });
                 if (json.IsError)
                 {
                     Common.AddToTeachingTipLists("获取歌单失败", json.Error?.Message);
@@ -438,24 +438,23 @@ public sealed partial class BasePage : Page
         if (nowitem.Tag.ToString() == "DailyRcmd")
             Common.NavigatePage(typeof(SongListDetail), new NCPlayList
             {
-                cover = "ms-appx:/Assets/icon.png",
-                creater = new NCUser
+                Cover = "ms-appx:/Assets/icon.png",
+                Creator = new NCUser
                 {
-                    avatar =
-                                                                              "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-                    id = "1",
-                    name = "网易云音乐",
-                    signature = "网易云音乐官方账号 "
+                    Avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
+                    Id = "1",
+                    Name = "网易云音乐",
+                    Signature = "网易云音乐官方账号 "
                 },
-                plid = "-666",
-                subscribed = false,
-                name = "每日歌曲推荐",
-                desc = "根据你的口味生成，每天6:00更新"
+                PlaylistId = "-666",
+                HasSubscribed = false,
+                Name = "每日歌曲推荐",
+                Description = "根据你的口味生成，每天6:00更新"
             });
 
         if (nowitem.Tag.ToString() == "SonglistMyLike")
         {
-            Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid,
+            Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].PlaylistId,
                                 new EntranceNavigationTransitionInfo());
             return;
         }

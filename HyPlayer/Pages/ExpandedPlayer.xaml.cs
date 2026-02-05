@@ -154,8 +154,8 @@ public sealed partial class ExpandedPlayer : Page
             var action = actionLyricLine.ActionUri;
             if (action.StartsWith("hyplayer://"))
             {
-                var resourceId = action.Substring(11);
-                _ = Common.NavigatePageResource(resourceId);
+                var ResourceId = action.Substring(11);
+                _ = Common.NavigatePageResource(ResourceId);
                 Common.BarPlayBar!.CollapseExpandedPlayer();
             }
             else
@@ -814,12 +814,12 @@ public sealed partial class ExpandedPlayer : Page
         try
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-                if (HyPlayList.NowPlayingItem.PlayItem.Album.id != "0")
+                if (HyPlayList.NowPlayingItem.PlayItem.Album.Id != "0")
                     Common.NavigatePage(typeof(AlbumPage),
-                        HyPlayList.NowPlayingItem.PlayItem.Album.id);
+                        HyPlayList.NowPlayingItem.PlayItem.Album.Id);
 
             if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
-                Common.NavigatePage(typeof(RadioPage), HyPlayList.NowPlayingItem.PlayItem.Album.id);
+                Common.NavigatePage(typeof(RadioPage), HyPlayList.NowPlayingItem.PlayItem.Album.Id);
 
             if (Common.Setting.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));
@@ -843,11 +843,11 @@ public sealed partial class ExpandedPlayer : Page
                 }
 
                 Common.NavigatePage(typeof(ArtistPage),
-                    HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
+                    HyPlayList.NowPlayingItem.PlayItem.Artist[0].Id);
             }
 
             if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
-                Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
+                Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].Id);
 
             if (Common.Setting.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));
@@ -864,7 +864,7 @@ public sealed partial class ExpandedPlayer : Page
         try
         {
             var filepicker = new FileSavePicker();
-            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.PlayItem.Name + "-cover.jpg";
+            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.PlayItem.Name + "-Cover.jpg";
             filepicker.FileTypeChoices.Add("图片文件", new List<string> { ".png", ".jpg" });
             var file = await filepicker.PickSaveFileAsync();
             if (file == null) return;
@@ -872,11 +872,11 @@ public sealed partial class ExpandedPlayer : Page
                 HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.LocalProgressive)
             {
                 using var coverResult =
-                    await Common.HttpClient!.GetAsync(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
+                    await Common.HttpClient!.GetAsync(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.Cover));
                 if (coverResult.IsSuccessStatusCode)
                 {
-                    var cover = (await coverResult.Content.ReadAsByteArrayAsync()).AsBuffer();
-                    await FileIO.WriteBufferAsync(file, cover);
+                    var Cover = (await coverResult.Content.ReadAsByteArrayAsync()).AsBuffer();
+                    await FileIO.WriteBufferAsync(file, Cover);
                 }
                 else
                 {

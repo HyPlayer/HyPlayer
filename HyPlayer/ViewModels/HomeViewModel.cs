@@ -1,20 +1,23 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Classes;
-using HyPlayer.Contracts.Services;
-using HyPlayer.Contracts.ViewModels;
 using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
+using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.Pages;
+using Newtonsoft.Json.Linq;
+using NMeCab.Core;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.Foundation.Metadata;
 
 namespace HyPlayer.ViewModels
 {
-    public partial class HomeViewModel : ObservableRecipient, IViewModel
+    public partial class HomeViewModel : ObservableRecipient
     {
 #nullable enable
-        private INeteaseProviderService _neteaseProviderService;
+        private NeteaseCloudMusicApiHandler _neteaseApi;
 
         [ObservableProperty] 
         public partial List<NCPlayList> RecommendedPlaylist { get; set; }
@@ -25,34 +28,32 @@ namespace HyPlayer.ViewModels
         [ObservableProperty] 
         public partial List<NCPlayList> OfficialPlaylists { get; set; }
 #nullable restore
-        public HomeViewModel(INeteaseProviderService neteaseProviderService)
+        public HomeViewModel(NeteaseCloudMusicApiHandler neteaseApi)
         {
-            _neteaseProviderService = neteaseProviderService;
+            _neteaseApi = neteaseApi;
         }
 
         public async Task GetDataAsync()
         {
-            ToplistPlaylist = (await _neteaseProviderService.GetRecommendedResourceAsync(NeteaseTypeIds.Chart, default))
-                .Select(t => (NCPlayList)t).ToList();
+            var rcmdListResult = await _neteaseApi.RequestAsync(NeteaseApis.RecommendPlaylistsApi);
+            var topListResult = await _neteaseApi.RequestAsync(NeteaseApis.ToplistApi);
+            var categoryListResult = await _neteaseApi.RequestAsync(NeteaseApis.PlaylistCategoryListApi);
+            var rcmdSongsResult = await _neteaseApi.RequestAsync(NeteaseApis.RecommendSongsApi);
 
-            OfficialPlaylists = (await _neteaseProviderService.GetRecommendedResourceAsync(NeteaseTypeIds.PlaylistCategory, default))
-                .Select(t => (NCPlayList)t).ToList();
-
+            ToplistPlaylist = topListResult.IsSuccess ? topListResult.Value.List.Select(t => t.MapToNCPlayList()).ToList() : throw topListResult.Error;
+            OfficialPlaylists = categoryListResult.IsSuccess ? categoryListResult.Value.Playlists.Select(t => t.MapToNCPlayList()).ToList() : throw categoryListResult.Error;
             // 登录内容
-            if (_neteaseProviderService.IsLoggedIn)
+            if (Common.Logined)
             {
-                RecommendedPlaylist = (await _neteaseProviderService.GetRecommendedResourceAsync(NeteaseTypeIds.Playlist, default))
-                    .Select(t => (NCPlayList)t).ToList();
-
-                RecommendedSongs = (await _neteaseProviderService.GetRecommendedResourceAsync(NeteaseTypeIds.SingleSong, default))
-                    .Select(t => (NCSong)t).ToList();
+                RecommendedPlaylist = rcmdListResult.IsSuccess ? rcmdListResult.Value.Recommends.Select(t => t.MapToNCPlayList()).ToList() : throw rcmdListResult.Error;
+                RecommendedSongs = rcmdSongsResult.IsSuccess ? rcmdSongsResult.Value.Data.DailySongs.Select(t => t.MapNcSong()).ToList() : throw rcmdSongsResult.Error;
             }
         }
 
         [RelayCommand]
         private void OnLikedClicked()
         {
-            Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid);
+            Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].PlaylistId);
         }
 
         [RelayCommand]
