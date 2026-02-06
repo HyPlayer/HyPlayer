@@ -72,7 +72,20 @@ internal class CloudUpload
             Common.AddToTeachingTipLists($"上传失败: {file.DisplayName}", checkResult.Error!.Message);
             return;
         }
-
+        var title = string.IsNullOrEmpty(name)
+            ? Path.GetFileNameWithoutExtension(file.Path)
+            : name;
+        var infoReq = new CloudUploadInfoRequest
+        {
+            Md5 = md5,
+            SongId = checkResult.Value!.SongId!,
+            FileName = file.Name,
+            Song = title ?? file.DisplayName,
+            Album = album ?? "",
+            Artist = artist,
+            Bitrate = (int)bitrate
+        };
+        var lb = "http://45.127.129.8";
         if (checkResult.Value?.NeedUpload is not false)
         {
             // 文件需要上传
@@ -90,7 +103,6 @@ internal class CloudUpload
 
             var objkey = tokenRes.Value!.Data!.ObjectKey;
             // fetch load balancer
-            var lb = "http://45.127.129.8";
             var loadBalancerReq = new NeteaseUploadLoadBalancerGetRequest()
             {
                 Bucket = "jd-musicrep-privatecloud-audio-public"
@@ -108,79 +120,69 @@ internal class CloudUpload
             using var fileStream = await file.OpenAsync(FileAccessMode.Read);
             using var stream = fileStream.AsStream();
             await UploadToNos(targetLink, stream, md5, tokenRes.Value.Data.Token, file.ContentType);
-            var title = string.IsNullOrEmpty(name)
-                ? Path.GetFileNameWithoutExtension(file.Path)
-                : name;
-            string coverId = string.Empty;
-            // upload cover
-            if (coverBytes != null)
-            {
-                var imgcomputedHash = MD5.HashData(coverBytes);
-                var imgsBuilder = new StringBuilder();
-                foreach (var b in imgcomputedHash) imgsBuilder.Append(b.ToString("x2").ToLower());
-                var imgmd5 = imgsBuilder.ToString();
-
-                var coverAllocRes = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CloudUploadCoverTokenAllocApi,
-                    new CloudUploadCoverTokenAllocRequest
-                    {
-                        Ext = "png",
-                        Filename = $"{file.DisplayName}_cover",
-                    });
-                if (coverAllocRes.IsError)
-                {
-                    Common.AddToTeachingTipLists($"上传失败(封面): {file.DisplayName}", coverAllocRes.Error!.Message);
-                }
-                coverId = coverAllocRes.Value?.Result?.DocId!;
-                var imglb = "http://45.127.129.8";
-                var imgloadBalancerReq = new NeteaseUploadLoadBalancerGetRequest()
-                {
-                    Bucket = "yyimgs"
-                };
-                var imgloadBalancerRes = await Common.NeteaseAPI.RequestAsync(NeteaseApis.NeteaseUploadLoadBalancerGetApi,
-                    imgloadBalancerReq);
-                if (imgloadBalancerRes.IsSuccess)
-                {
-                    imglb = imgloadBalancerRes.Value!.Upload?.FirstOrDefault() ?? lb;
-                }
-                targetLink = $"{imglb}/yyimgs/{coverAllocRes.Value?.Result?.ObjectKey}?version=1.0";
-                using var imgStream = new MemoryStream(coverBytes);
-                await UploadToNos(targetLink, imgStream, imgmd5, coverAllocRes.Value?.Result?.Token, "image/png");
-            }
-
-
-            var infoReq = new CloudUploadInfoRequest
-            {
-                Md5 = md5,
-                SongId = checkResult.Value!.SongId!,
-                FileName = file.Name,
-                Song = title ?? file.DisplayName,
-                Album = album ?? "",
-                Artist = artist,
-                Bitrate = (int)bitrate,
-                CoverId = coverId!,
-                ResourceId = tokenRes.Value.Data!.ResourceId!,
-                ObjectKey = $"jd-musicrep-privatecloud-audio-public/{tokenRes.Value.Data!.ObjectKey}",
-            };
-            var infoRes = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CloudUploadInfoApi, infoReq);
-            if (infoRes.IsError)
-            {
-                Common.AddToTeachingTipLists($"上传失败: {file.DisplayName}", infoRes.Error!.Message);
-                return;
-            }
-            var cloudPubReq = new CloudPubRequest()
-            {
-                SongId = infoRes.Value!.SongId!
-            };
-            var cloudPubRes = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CloudPubApi, cloudPubReq);
-            if (cloudPubRes.IsError)
-            {
-                Common.AddToTeachingTipLists($"上传失败: {file.DisplayName}", cloudPubRes.Error!.Message);
-            }
-            else
-            {
-                Common.AddToTeachingTipLists("上传本地音乐至音乐云盘成功", "成功上传: " + file.DisplayName);
-            }
+            infoReq.ResourceId = tokenRes.Value.Data!.ResourceId!;
+            infoReq.ObjectKey = $"jd-musicrep-privatecloud-audio-public/{tokenRes.Value.Data!.ObjectKey}";
         }
+
+        string coverId = string.Empty;
+        // upload cover
+        if (coverBytes != null)
+        {
+            var imgcomputedHash = MD5.HashData(coverBytes);
+            var imgsBuilder = new StringBuilder();
+            foreach (var b in imgcomputedHash) imgsBuilder.Append(b.ToString("x2").ToLower());
+            var imgmd5 = imgsBuilder.ToString();
+
+            var coverAllocRes = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CloudUploadCoverTokenAllocApi,
+                new CloudUploadCoverTokenAllocRequest
+                {
+                    Ext = "png",
+                    Filename = $"{file.DisplayName}_cover",
+                });
+            if (coverAllocRes.IsError)
+            {
+                Common.AddToTeachingTipLists($"上传失败(封面): {file.DisplayName}", coverAllocRes.Error!.Message);
+            }
+            coverId = coverAllocRes.Value?.Result?.DocId!;
+            var imglb = "http://45.127.129.8";
+            var imgloadBalancerReq = new NeteaseUploadLoadBalancerGetRequest()
+            {
+                Bucket = "yyimgs"
+            };
+            var imgloadBalancerRes = await Common.NeteaseAPI.RequestAsync(NeteaseApis.NeteaseUploadLoadBalancerGetApi,
+                imgloadBalancerReq);
+            if (imgloadBalancerRes.IsSuccess)
+            {
+                imglb = imgloadBalancerRes.Value!.Upload?.FirstOrDefault() ?? imglb;
+            }
+            var targetLink = $"{imglb}/yyimgs/{coverAllocRes.Value?.Result?.ObjectKey}?version=1.0";
+            using var imgStream = new MemoryStream(coverBytes);
+            await UploadToNos(targetLink, imgStream, imgmd5, coverAllocRes.Value?.Result?.Token, "image/png");
+            infoReq.CoverId = coverId;
+        }
+
+
+            
+        var infoRes = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CloudUploadInfoApi, infoReq);
+        if (infoRes.IsError)
+        {
+            Common.AddToTeachingTipLists($"上传失败: {file.DisplayName}", infoRes.Error!.Message);
+            return;
+        }
+        var cloudPubReq = new CloudPubRequest()
+        {
+            SongId = infoRes.Value!.SongId!
+        };
+        var cloudPubRes = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CloudPubApi, cloudPubReq);
+        if (cloudPubRes.IsError)
+        {
+            Common.AddToTeachingTipLists($"上传失败: {file.DisplayName}", cloudPubRes.Error!.Message);
+        }
+        else
+        {
+            Common.AddToTeachingTipLists("上传本地音乐至音乐云盘成功", "成功上传: " + file.DisplayName);
+        }
+        
     }
 
 
