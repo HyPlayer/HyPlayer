@@ -1,6 +1,7 @@
 ﻿using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Classes;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using System;
@@ -20,11 +21,19 @@ namespace HyPlayer.ViewModels
         public partial List<SimpleListItem> MyPlaylist { get; set; }
         [ObservableProperty]
         public partial NCUser User { get; set; }
+
+        private NeteaseCloudMusicApiHandler _neteaseApi;
+        private Setting _settings;
+        public MeViewModel(NeteaseCloudMusicApiHandler api, Setting settings)
+        {
+            _neteaseApi = api;
+            _settings = settings;
+        }
         public async Task InitializeUserInfo(string uid)
         {
             var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserDetail, uid, async () =>
             {
-                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserDetailApi,
+                var json = await _neteaseApi.RequestAsync(NeteaseApis.UserDetailApi,
                     new UserDetailRequest()
                     {
                         UserId = uid
@@ -38,6 +47,7 @@ namespace HyPlayer.ViewModels
                 return json.Value;
             });
             User = resp?.Profile?.MapToNcUser();
+            if (_settings.noImage) User.Avatar = null;
             LoadPlayList().SafeFireAndForget();
         }
         public async Task LoadPlayList()
@@ -46,7 +56,7 @@ namespace HyPlayer.ViewModels
             {
                 var val = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserPlaylist, User.Id, async () =>
                 {
-                    var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserPlaylistApi,
+                    var json = await _neteaseApi.RequestAsync(NeteaseApis.UserPlaylistApi,
                         new UserPlaylistRequest()
                         {
                             Uid = User.Id,
@@ -72,7 +82,7 @@ namespace HyPlayer.ViewModels
                         likedList.Add(
                             new SimpleListItem
                             {
-                                CoverLink = playList.Cover,
+                                CoverLink = _settings.noImage ? null : playList.Cover,
                                 LineOne = playList.Creator.Name,
                                 LineThree = $"播放量: {playList.PlayCount} | 歌曲数: {playList.TrackCount}",
                                 LineTwo = playList.Description,
@@ -88,7 +98,7 @@ namespace HyPlayer.ViewModels
                         myList.Add(
                             new SimpleListItem
                             {
-                                CoverLink = playList.Cover,
+                                CoverLink = _settings.noImage ? null : playList.Cover,
                                 LineOne = playList.Creator.Name,
                                 LineThree = $"播放量: {playList.PlayCount} | 歌曲数: {playList.TrackCount}",
                                 LineTwo = playList.Description,
@@ -103,10 +113,17 @@ namespace HyPlayer.ViewModels
                 LikedPlaylist = likedList;
                 MyPlaylist = myList;
             }
+            catch (TaskCanceledException)
+            {
+                //Ignore
+            }
+            catch (OperationCanceledException)
+            {
+                //Ignore
+            }
             catch (Exception ex)
             {
-                if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
     }

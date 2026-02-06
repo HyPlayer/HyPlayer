@@ -171,6 +171,8 @@ public static class Mapper
             Id = artist.Id,
             Name = artist.Name,
             TranslatedName = artist.Translation,
+            Information = "歌曲数: " + artist.MusicSize + " | 专辑数: " + artist.AlbumSize + " | 视频数: " + artist.MvSize,
+            Description = artist.BriefDesc,
             Type = HyPlayItemType.Netease
         };
     }

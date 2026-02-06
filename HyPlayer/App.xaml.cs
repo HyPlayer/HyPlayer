@@ -50,14 +50,13 @@ public sealed partial class App : Application
     public App()
     {
         InitializeComponent();
-
+        InitializeServices();
+        Common.InitializeHttpClientAndAPI();
         if (Common.Setting.xboxHidePointer)
         {
             RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
             FocusVisualKind = FocusVisualKind.Reveal;
         }
-        InitializeServices();
-        Common.InitializeHttpClientAndAPI();
         Suspending += OnSuspending;
         MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
         MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
@@ -73,15 +72,19 @@ public sealed partial class App : Application
     private void InitializeServices()
     {
         var serviceCollection = new ServiceCollection();
+        var setting = new Setting();
         var handler = NeteaseCloudMusicApiHandler.HttpClientHandler;
-        handler.UseProxy = Common.Setting.EnableProxy;
+        handler.UseProxy = setting.EnableProxy;
         var client = new HttpClient(handler);
         serviceCollection.AddSingleton(client);
         serviceCollection.AddSingleton(new NeteaseCloudMusicApiHandler(client));
         serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = "641ef15109503085d966e37b73bdcb72", ApiSecret = "35c02c12c9c0fdc6f6c1de5d0a9227b5" }, Common.HttpClient));
+        serviceCollection.AddSingleton(setting);
         serviceCollection.AddSingleton<AudioGraphPlayer>();
         serviceCollection.AddTransient<HomeViewModel>();
         serviceCollection.AddTransient<MeViewModel>();
+        serviceCollection.AddTransient<ExpandedPlayerViewModel>();
+        serviceCollection.AddTransient<ArtistPageViewModel>();
         var provider = serviceCollection.BuildServiceProvider();
         Ioc.Default.ConfigureServices(provider);
     }

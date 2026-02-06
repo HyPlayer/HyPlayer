@@ -13,6 +13,7 @@
 
 	<PropertyGroup>
 		<CsWinRTIncludes>Microsoft.Gaming.XboxGameBar</CsWinRTIncludes>
+		<DefaultLanguage>zh-CN</DefaultLanguage>
 	</PropertyGroup>
 
 	<ItemGroup>

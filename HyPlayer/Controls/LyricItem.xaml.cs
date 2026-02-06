@@ -80,18 +80,18 @@ public sealed partial class LyricItem : UserControl
 
 
     public double actualsize => Common.PageExpandedPlayer == null
-        ? Common.Setting.lyricSize <= 0 ? 23 : Common.Setting.lyricSize
-        : Common.PageExpandedPlayer.showsize;
+        ? Common.Setting!.lyricSize <= 0 ? 23 : Common.Setting!.lyricSize
+        : Common.PageExpandedPlayer.LyricShowSize;
 
     public TextAlignment LyricAlignment =>
-        Common.Setting.lyricAlignment switch
+        Common.Setting!.lyricAlignment switch
         {
             1 => TextAlignment.Center,
             2 => TextAlignment.Right,
             _ => TextAlignment.Left
         };
     public HorizontalAlignment GridAlignment =>
-        Common.Setting.lyricAlignment switch
+        Common.Setting!.lyricAlignment switch
         {
             1 => HorizontalAlignment.Center,
             2 => HorizontalAlignment.Right,
@@ -109,10 +109,10 @@ public sealed partial class LyricItem : UserControl
         TextBoxTranslation.TextAlignment = LyricAlignment;
         TextBoxSound.TextAlignment = LyricAlignment;
         MainGrid.HorizontalAlignment = GridAlignment;
-        TextBoxPureLyric.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
-        WordLyricContainer.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
-        TextBoxTranslation.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
-        TextBoxSound.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
+        TextBoxPureLyric.FontSize = _lyricIsOnShow ? actualsize + Common.Setting!.lyricScaleSize : actualsize;
+        WordLyricContainer.FontSize = _lyricIsOnShow ? actualsize + Common.Setting!.lyricScaleSize : actualsize;
+        TextBoxTranslation.FontSize = _lyricIsOnShow ? actualsize + Common.Setting!.lyricScaleSize : actualsize;
+        TextBoxSound.FontSize = _lyricIsOnShow ? actualsize + Common.Setting!.lyricScaleSize : actualsize;
     }
 
     public void RefreshWordColor(TimeSpan position)
@@ -170,15 +170,15 @@ public sealed partial class LyricItem : UserControl
             }
             HyPlayList.OnPlayPositionChange += RefreshWordColor;
         }
-        //TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
-        if (Common.Setting.PerformanceMode == 0)
+        //TextBoxPureLyric.FontSize = actualsize + Common.Setting!.lyricScaleSize;
+        if (Common.Setting!.PerformanceMode == 0)
         {
-            TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
-            WordLyricContainer.FontSize = actualsize + Common.Setting.lyricScaleSize;
+            TextBoxTranslation.FontSize = actualsize + Common.Setting!.lyricScaleSize;
+            WordLyricContainer.FontSize = actualsize + Common.Setting!.lyricScaleSize;
         }
-        if (Common.Setting.PerformanceMode == 1)
+        if (Common.Setting!.PerformanceMode == 1)
         {
-            TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
+            TextBoxTranslation.FontSize = actualsize + Common.Setting!.lyricScaleSize;
         }
         TextBoxPureLyric.FontWeight = FontWeights.Bold;
         WordLyricContainer.FontWeight = FontWeights.Bold;
@@ -192,22 +192,22 @@ public sealed partial class LyricItem : UserControl
         TextBoxTranslation.Foreground = AccentBrush;
         PlayEnterAni();
         // shadowColor = AccentBrush.Color == Color.FromArgb(255, 0, 0, 0)
-        //     ? Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 255, 255, 255)
-        //     : Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
+        //     ? Color.FromArgb((byte)(Common.Setting!.lyricDropshadow ? 255 : 0), 255, 255, 255)
+        //     : Color.FromArgb((byte)(Common.Setting!.lyricDropshadow ? 255 : 0), 0, 0, 0);
     }
     public void PlayEnterAni()
     {
         double durationInSeconds = 0.6;
         if (_lyricIsKaraokeLyric)
         {
-            if (Common.Setting.PerformanceMode != 0)
+            if (Common.Setting!.PerformanceMode != 0)
             {
                 WordTextBlocks.ForEach(w =>
                 {
                     var wordStoryboard = new Storyboard();
                     var wordScaleAni = new DoubleAnimation
                     {
-                        To = actualsize + Common.Setting.lyricScaleSize,
+                        To = actualsize + Common.Setting!.lyricScaleSize,
                         Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
                         EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
                         EnableDependentAnimation = true
@@ -221,20 +221,20 @@ public sealed partial class LyricItem : UserControl
             else
             {
                 WordTextBlocks.ForEach(w =>
-                w.FontSize = actualsize + Common.Setting.lyricScaleSize
+                w.FontSize = actualsize + Common.Setting!.lyricScaleSize
                 ); ;
             }
         }
 
 
-        if (Common.Setting.PerformanceMode == 0)
+        if (Common.Setting!.PerformanceMode == 0)
         { }
-        if (Common.Setting.PerformanceMode == 1)
+        if (Common.Setting!.PerformanceMode == 1)
         {
             var wordStoryboard = new Storyboard();
             var wordScaleAni = new DoubleAnimation
             {
-                To = actualsize + Common.Setting.lyricScaleSize,
+                To = actualsize + Common.Setting!.lyricScaleSize,
                 Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
                 EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
                 EnableDependentAnimation = true
@@ -244,12 +244,12 @@ public sealed partial class LyricItem : UserControl
             wordStoryboard.Children.Add(wordScaleAni);
             wordStoryboard?.Begin();
         }
-        if (Common.Setting.PerformanceMode == 2)
+        if (Common.Setting!.PerformanceMode == 2)
         {
             var wordStoryboard = new Storyboard();
             var wordScaleAni = new DoubleAnimation
             {
-                To = actualsize + Common.Setting.lyricScaleSize,
+                To = actualsize + Common.Setting!.lyricScaleSize,
                 Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
                 EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
                 EnableDependentAnimation = true
@@ -262,7 +262,7 @@ public sealed partial class LyricItem : UserControl
             var transscaleani = new DoubleAnimation
             {
                 From = actualsize,
-                To = actualsize + Common.Setting.lyricScaleSize - 3,
+                To = actualsize + Common.Setting!.lyricScaleSize - 3,
                 Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
                 EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
                 EnableDependentAnimation = true
@@ -293,7 +293,7 @@ public sealed partial class LyricItem : UserControl
         double durationInSeconds = 0.8;
         if (_lyricIsKaraokeLyric)
         {
-            if (Common.Setting.PerformanceMode != 0)
+            if (Common.Setting!.PerformanceMode != 0)
             {
                 WordTextBlocks.ForEach(w =>
                 {
@@ -321,8 +321,8 @@ public sealed partial class LyricItem : UserControl
         }
 
 
-        if (Common.Setting.PerformanceMode == 0) { }
-        if (Common.Setting.PerformanceMode == 1)
+        if (Common.Setting!.PerformanceMode == 0) { }
+        if (Common.Setting!.PerformanceMode == 1)
         {
             var wordStoryboard = new Storyboard();
             var wordScaleAni = new DoubleAnimation
@@ -337,7 +337,7 @@ public sealed partial class LyricItem : UserControl
             wordStoryboard.Children.Add(wordScaleAni);
             wordStoryboard?.Begin();
         }
-        if (Common.Setting.PerformanceMode == 2)
+        if (Common.Setting!.PerformanceMode == 2)
         {
             var wordStoryboard = new Storyboard();
             var wordScaleAni = new DoubleAnimation
@@ -355,7 +355,7 @@ public sealed partial class LyricItem : UserControl
             var transscaleani = new DoubleAnimation
             {
                 To = actualsize - 3,
-                From = actualsize + Common.Setting.lyricScaleSize,
+                From = actualsize + Common.Setting!.lyricScaleSize,
                 Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
                 EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
                 EnableDependentAnimation = true
@@ -394,12 +394,12 @@ public sealed partial class LyricItem : UserControl
                 }
 
                 //TextBoxPureLyric.FontSize = actualsize;
-                if (Common.Setting.PerformanceMode == 0)
+                if (Common.Setting!.PerformanceMode == 0)
                 {
                     TextBoxTranslation.FontSize = actualsize;
                     WordLyricContainer.FontSize = actualsize;
                 }
-                if (Common.Setting.PerformanceMode == 1)
+                if (Common.Setting!.PerformanceMode == 1)
                 {
                     TextBoxTranslation.FontSize = actualsize;
                 }
@@ -416,7 +416,7 @@ public sealed partial class LyricItem : UserControl
                 TextBoxTranslation.Foreground = IdleBrush;
                 TextBoxSound.Foreground = IdleBrush;
                 PlayLeaveAni();
-                //shadowColor = Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
+                //shadowColor = Color.FromArgb((byte)(Common.Setting!.lyricDropshadow ? 255 : 0), 0, 0, 0);
                 WordTextBlocks.ForEach(w =>
                 {
                     var storyboard = new Storyboard();

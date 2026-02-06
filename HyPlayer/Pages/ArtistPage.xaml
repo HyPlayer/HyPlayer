@@ -43,7 +43,7 @@
                         x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                         Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
                         <Rectangle.Fill>
-                            <ImageBrush x:Name="ImageRect1" Stretch="UniformToFill" />
+                            <ImageBrush x:Name="ImageRect1" Stretch="UniformToFill" ImageSource="{x:Bind ViewModel.Image, Mode=OneWay}"/>
                         </Rectangle.Fill>
                     </Rectangle>
                     <Rectangle
@@ -67,7 +67,7 @@
                             RadiusX="10"
                             RadiusY="10">
                             <Rectangle.Fill>
-                                <ImageBrush x:Name="ImageRect" Stretch="UniformToFill" />
+                                <ImageBrush x:Name="ImageRect" Stretch="UniformToFill" ImageSource="{x:Bind ViewModel.Image, Mode=OneWay}"/>
                             </Rectangle.Fill>
                             <Rectangle.RenderTransform>
                                 <ScaleTransform x:Name="UserScale" CenterX="100" CenterY="100" />
@@ -81,19 +81,19 @@
                             <TextBlock
                                 x:Name="TextBoxArtistName"
                                 Style="{StaticResource TitleTextBlockStyle}"
-                                Text="歌手名"
+                                Text="{x:Bind ViewModel.Artist.Name, Mode=OneWay}"
                                 TextWrapping="Wrap" />
                             <TextBlock
                                 x:Name="TextboxArtistNameTranslated"
                                 Margin="0,2,0,0"
                                 Style="{StaticResource SubtitleTextBlockStyle}"
-                                Text="歌手别名" />
+                                Text="{x:Bind ViewModel.Artist.TranslatedName, Mode=OneWay}" />
                             <TextBlock
                                 x:Name="TextBlockInfo"
                                 Margin="0,10,5,0"
                                 FontSize="15"
                                 MaxLines="7"
-                                Text="歌手简略信息" />
+                                Text="{x:Bind ViewModel.Artist.Information, Mode=OneWay}" />
 
                             <StackPanel.RenderTransform>
                                 <ScaleTransform x:Name="UserInfoScale" CenterY="125" />
@@ -109,7 +109,7 @@
                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                         MaxLines="7"
                         Selectable="True"
-                        Text="歌手简介"
+                        Text="{x:Bind ViewModel.Artist.Description}"
                         TextWrapping="WrapWholeWords">
                         <controls1:ExpandableTextBox.RenderTransform>
                             <ScaleTransform x:Name="DescScale" CenterX="125" CenterY="0" />
@@ -125,12 +125,16 @@
                 </Grid>
 
             </controls1:PivotView.Header>
-            <controls1:PivotEx x:Name="mp" SelectionChanged="Pivot_SelectionChanged">
+            <controls1:PivotEx x:Name="MainPivot" 
+                               SelectionChanged="Pivot_SelectionChanged" 
+                               SelectedIndex="{x:Bind ViewModel.CurrentPivotIndex, Mode=TwoWay}"
+                               AllowFocusOnInteraction="False"
+                               IsTabStop="False">
                 <PivotItem Header="热门50首">
                     <controls1:SongsList
                         x:Name="HotSongContainer"
                         Margin="-12,65,0,0"
-                        Songs="{x:Bind hotSongs, Mode=OneWay}">
+                        Songs="{x:Bind ViewModel.HotSongs}">
                         <controls1:SongsList.ListHeader>
                             <Rectangle Height="{x:Bind PivotView.HeaderHeight, Mode=OneWay}" Margin="0,-20,0,0" />
                         </controls1:SongsList.ListHeader>
@@ -140,7 +144,7 @@
                     <controls1:SongsList
                         x:Name="AllSongContainer"
                         Margin="-12,65,0,0"
-                        Songs="{x:Bind allSongs, Mode=OneWay}">
+                        Songs="{x:Bind ViewModel.AllSongs}">
                         <controls1:SongsList.ListHeader>
                             <Rectangle Height="{x:Bind PivotView.HeaderHeight, Mode=OneWay}" Margin="0,-20,0,0" />
                         </controls1:SongsList.ListHeader>
@@ -150,16 +154,16 @@
                                 HorizontalAlignment="Center"
                                 Orientation="Horizontal">
                                 <Button
-                                    Click="NextPage_Click"
+                                    Command="{x:Bind ViewModel.NextPageCommand}"
                                     Content="加载更多"
                                     Style="{StaticResource ButtonRevealStyle}"
-                                    Visibility="{x:Bind SongHasMore, Mode=OneWay}" />
+                                    Visibility="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" />
                             </StackPanel>
                         </controls1:SongsList.Footer>
                     </controls1:SongsList>
                 </PivotItem>
                 <PivotItem Header="专辑">
-                    <controls1:SimpleLinerList x:Name="AlbumContainer">
+                    <controls1:SimpleLinerList x:Name="AlbumContainer" ListItems="{x:Bind ViewModel.Albums}">
                         <controls1:SimpleLinerList.ListHeader>
                             <Rectangle Height="{x:Bind PivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:SimpleLinerList.ListHeader>
@@ -170,14 +174,15 @@
                                 Orientation="Horizontal">
                                 <Button
                                     x:Name="PrevPage"
-                                    Click="PrevPage_Click"
+                                    Command="{x:Bind ViewModel.PreviousPageCommand}"
                                     Content="上一页"
-                                    Style="{StaticResource ButtonRevealStyle}" />
+                                    Visibility="{x:Bind ViewModel.HasPreviousPage, Mode=OneWay}" />
                                 <Button
                                     x:Name="NextPage"
-                                    Click="NextPage_Click"
+                                    Command="{x:Bind ViewModel.NextPageCommand}"
                                     Content="下一页"
-                                    Style="{StaticResource ButtonRevealStyle}" />
+                                    Style="{StaticResource ButtonRevealStyle}" 
+                                    Visibility="{x:Bind ViewModel.HasNextPage, Mode=OneWay}"/>
                             </StackPanel>
                         </controls1:SimpleLinerList.Footer>
                     </controls1:SimpleLinerList>

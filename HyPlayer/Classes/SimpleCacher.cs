@@ -15,13 +15,13 @@ public static class SimpleCacher
 
     public static async Task InitializeAsync()
     {
-        cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
+        cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(Common.Setting!.cacheDir);
         // cacheFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("cache", CreationCollisionOption.OpenIfExists);
     }
 
     public static async Task<T?> GetOrCreateCacheAsync<T>(CacheType cacheType, string id, Func<Task<T?>> creator, TimeSpan? expiration = null, bool forceRefresh = false, bool forceUseCache = false, CancellationToken cancellationToken = default) where T : class
     {
-        if (!Common.Setting.enableApiCache)
+        if (!Common.Setting!.enableApiCache)
         {
             return await creator();
         }

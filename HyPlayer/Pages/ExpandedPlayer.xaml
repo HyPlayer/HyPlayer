@@ -80,7 +80,7 @@
             x:Name="AlbumCoverDropShadow"
             BlurRadius="48"
             CornerRadius="16"
-            Opacity="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Converter={StaticResource ShadowConverter}}"
+            Opacity="{x:Bind _settings.expandedCoverShadowDepth, Converter={StaticResource ShadowConverter}}"
             Offset="0, 4"
             Color="Black" />
     </Page.Resources>
@@ -218,6 +218,7 @@
                     <Border x:Name="ShadowTarget" Grid.Row="1" />
                     <frieren:ImageEx
                         x:Name="ImageAlbum"
+                        Source="{x:Bind ViewModel.Cover, Mode=OneWay}"
                         Grid.Row="1"
                         MaxWidth="600"
                         MaxHeight="600"
@@ -270,9 +271,6 @@
                                     Text="复制歌名" />
                             </MenuFlyout>
                         </frieren:ImageEx.ContextFlyout>
-                        <frieren:ImageEx.Source>
-                            <BitmapImage UriSource="/Assets/icon.png" />
-                        </frieren:ImageEx.Source>
                     </frieren:ImageEx>
                     <StackPanel
                         x:Name="SongInfo"
@@ -294,6 +292,7 @@
                             <StackPanel x:Name="SongInfoContainer" Spacing="12">
                                 <TextBlock
                                     x:Name="TextBlockSongTitle"
+                                    Text="{x:Bind ViewModel.SongName, Mode=OneWay}"
                                     HorizontalAlignment="Center"
                                     FontSize="46"
                                     FontWeight="Bold"
@@ -317,7 +316,7 @@
                                         Foreground="{x:Bind hyplayer:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                                         Style="{StaticResource TextBlockButtonStyle}">
                                         <controls1:AutoScrollView IsPlaying="True">
-                                            <TextBlock Name="SingerTextBlock" />
+                                            <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist}"/>
                                         </controls1:AutoScrollView>
                                     </HyperlinkButton>
                                     <HyperlinkButton
@@ -327,7 +326,7 @@
                                         Foreground="{x:Bind hyplayer:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                                         Style="{StaticResource TextBlockButtonStyle}">
                                         <controls1:AutoScrollView IsPlaying="True">
-                                            <TextBlock x:Name="AlbumTextBlock" />
+                                            <TextBlock x:Name="AlbumTextBlock" Text="{x:Bind ViewModel.Album, Mode=OneWay}"/>
                                         </controls1:AutoScrollView>
 
                                     </HyperlinkButton>
@@ -335,53 +334,6 @@
                                 </controls1:AlignableWrapPanel>
 
                             </StackPanel>
-                            <!--<controls1:SelectableTextBox
-                                Grid.Row="0"
-                                Margin="0,-10,0,0"
-                                HorizontalAlignment="Left"
-                                x:FieldModifier="public"
-                                FontSize="36"
-                                FontWeight="Bold"
-                                Text="歌曲名"
-                                TextWrapping="Wrap"
-                                Visibility="Collapsed" />
-                            <StackPanel
-                                Grid.Row="1"
-                                MaxWidth="600"
-                                Orientation="Horizontal"
-                                Spacing="4"
-                                Visibility="Collapsed">
-                                <TextBlock
-                                    x:Name="TextBlockSingerNameTip"
-                                    Padding="0,6,0,6"
-                                    FontSize="18"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                    Text="歌手: "
-                                    TextAlignment="Center" />
-                                <HyperlinkButton
-                                    Click="TextBlockSinger_OnTapped"
-                                    FontSize="18"
-                                    Style="{StaticResource TextBlockButtonStyle}" />
-                            </StackPanel>
-                            <StackPanel
-                                Grid.Row="2"
-                                MaxWidth="600"
-                                Orientation="Horizontal"
-                                Spacing="5"
-                                Visibility="Collapsed">
-                                <TextBlock
-                                    x:Name="AlbumHyperlinkBtnNameTip"
-                                    Padding="0,6,0,6"
-                                    FontSize="18"
-                                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                                    Text="专辑: "
-                                    TextAlignment="Center" />
-                                <HyperlinkButton
-
-                                    Click="AlbumHyperlinkBtn_OnTapped"
-                                    FontSize="18"
-                                    Style="{StaticResource TextBlockButtonStyle}" />
-                            </StackPanel>-->
                         </Grid>
                     </StackPanel>
                 </Grid>
@@ -508,7 +460,7 @@
                         <MenuFlyoutSeparator />
                         <ToggleMenuFlyoutItem
                             x:Name="ABRepeatState"
-                            IsChecked="{x:Bind hyplayer:Common.Setting.ABRepeatStatus, Mode=TwoWay}"
+                            IsChecked="{x:Bind _settings.ABRepeatStatus, Mode=TwoWay}"
                             Text="AB循环" />
                         <MenuFlyoutItem
                             HorizontalContentAlignment="Left"
@@ -517,7 +469,7 @@
                         <MenuFlyoutItem
                             Name="ABStartPointItem"
                             HorizontalAlignment="Left"
-                            Text="{x:Bind hyplayer:Common.Setting.ABStartPointFriendlyValue, Mode=OneWay}" />
+                            Text="{x:Bind _settings.ABStartPointFriendlyValue, Mode=OneWay}" />
                         <MenuFlyoutItem
                             HorizontalContentAlignment="Left"
                             Click="SetABEndPointButton_Click"
@@ -525,7 +477,7 @@
                         <MenuFlyoutItem
                             Name="ABEndPointItem"
                             HorizontalAlignment="Left"
-                            Text="{x:Bind hyplayer:Common.Setting.ABEndPointFriendlyValue, Mode=OneWay}" />
+                            Text="{x:Bind _settings.ABEndPointFriendlyValue, Mode=OneWay}" />
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>
