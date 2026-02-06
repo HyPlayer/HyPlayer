@@ -1152,10 +1152,23 @@ namespace HyPlayer
             }
         }
 
-        public string ABStartPointFriendlyValue =>
-            ABStartPoint.Hours + ":"
-                               + ABStartPoint.Minutes + ":"
-                               + ABStartPoint.Seconds;
+        public string ABStartPointFriendlyValue
+        {
+            get
+            {
+                if (_abStartPoint.Hours == 0)
+                {
+                    if (_abStartPoint.Minutes < 10)
+                        return _abStartPoint.ToString(@"m\:ss") ?? string.Empty;
+                    else
+                        return _abStartPoint.ToString(@"mm\:ss") ?? string.Empty;
+                }
+                else
+                {
+                    return _abStartPoint.ToString(@"hh\:mm\:ss") ?? string.Empty;
+                }
+            }
+        }
 
         private TimeSpan _abStartPoint = TimeSpan.Zero;
 
@@ -1171,10 +1184,23 @@ namespace HyPlayer
 
         private TimeSpan _abEndPoint = TimeSpan.Zero;
 
-        public string ABEndPointFriendlyValue =>
-            ABEndPoint.Hours + ":"
-                             + ABEndPoint.Minutes + ":"
-                             + ABEndPoint.Seconds;
+        public string ABEndPointFriendlyValue
+        {
+            get
+            {
+                if (_abEndPoint.Hours == 0)
+                {
+                    if (_abEndPoint.Minutes < 10)
+                        return _abStartPoint.ToString(@"m\:ss") ?? string.Empty;
+                    else
+                        return _abStartPoint.ToString(@"mm\:ss") ?? string.Empty;
+                }
+                else
+                {
+                    return _abStartPoint.ToString(@"hh\:mm\:ss") ?? string.Empty;
+                }
+            }
+        }
 
         public bool ABRepeatStatus
         {

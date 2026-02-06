@@ -4,6 +4,7 @@
 using ALRC.Abstraction;
 using ALRC.Converters;
 using ALRC.Converters.Enhancers;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.Animations;
 using CommunityToolkit.WinUI.Media;
 using HyPlayer.Classes;
@@ -16,13 +17,14 @@ using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using HyPlayer.UWP.Chopin.Utils;
+using HyPlayer.ViewModels;
 using Impressionist.Abstractions;
 using Impressionist.Implementations;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -44,14 +46,11 @@ using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
-using Windows.UI.Xaml.Navigation;
-using HyALRCLyricInfo = HyPlayer.Classes.HyALRCLyricInfo;
-using Buffer = Windows.Storage.Streams.Buffer;
-using LrcConverter = HyPlayer.Classes.LrcConverter;
 using Windows.UI.Xaml.Media.Imaging;
-using System.Diagnostics;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.ViewModels;
+using Windows.UI.Xaml.Navigation;
+using Buffer = Windows.Storage.Streams.Buffer;
+using HyALRCLyricInfo = HyPlayer.Classes.HyALRCLyricInfo;
+using LrcConverter = HyPlayer.Classes.LrcConverter;
 
 #endregion
 
@@ -281,7 +280,6 @@ public sealed partial class ExpandedPlayer : Page
         {
             ImageAlbumAni?.Stop();
         }
-        _shaderEffect = null;
     }
 
     private void HyPlayList_OnLyricLoaded()
@@ -940,31 +938,46 @@ public sealed partial class ExpandedPlayer : Page
             PaletteResult palette;
             if (_settings.expandedPlayerBackgroundType != BackgroundType.Animated && _settings.expandedPlayerBackgroundType != BackgroundType.Isolation)
             {
-                if (_settings.ColorGeneratorType is 0)
+                switch (_settings.ColorGeneratorType)
                 {
-                    themeColor = await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, _settings.ImpressionistIgnoreWhite, _settings.ImpressionistLABSpace);
-                }
-                else
-                {
-                    themeColor = await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, _settings.ImpressionistIgnoreWhite);
+                    case 0:
+                    case 2:
+                    default:
+                        themeColor = await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, _settings.ImpressionistIgnoreWhite, _settings.ImpressionistLABSpace);
+                        break;
+                    case 1:
+                        themeColor = await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, _settings.ImpressionistIgnoreWhite);
+                        break;
                 }
                 albumMainColor = Color.FromArgb(255, (byte)themeColor.Color.X, (byte)themeColor.Color.Y, (byte)themeColor.Color.Z);
             }
             else
             {
-                if (_settings.ColorGeneratorType is 0)
+                switch (_settings.ColorGeneratorType)
                 {
-                    palette = await PaletteGenerators.KMeansPaletteGenerator.CreatePalette(colors,
-                                                                                           _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                                                           _settings.ImpressionistIgnoreWhite,
-                                                                                           _settings.ImpressionistLABSpace,
-                                                                                           _settings.ImpressionistUseKMeansPP);
-                }
-                else
-                {
-                    palette = await PaletteGenerators.OctTreePaletteGenerator.CreatePalette(colors,
-                                                                                           _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                                                           _settings.ImpressionistIgnoreWhite);
+                    case 0:
+                        palette = await PaletteGenerators.KMeansPaletteGenerator.CreatePalette(
+                            colors,
+                            _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
+                            _settings.ImpressionistIgnoreWhite,
+                            _settings.ImpressionistLABSpace,
+                            _settings.ImpressionistUseKMeansPP);
+                        break;
+                    case 1:
+                        palette = palette = await PaletteGenerators.OctTreePaletteGenerator.CreatePalette(
+                            colors,
+                            _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
+                            _settings.ImpressionistIgnoreWhite);
+                        break;
+                    case 2:
+                    default:
+                        palette = await AutoPaletteGenerator.CreatePalette(
+                            colors,
+                            _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
+                            _settings.ImpressionistIgnoreWhite,
+                            _settings.ImpressionistLABSpace,
+                            _settings.ImpressionistUseKMeansPP);
+                        break;
                 }
                 themeColor = palette.ThemeColor;
                 _albumColors = palette.Palette.Select(quantizedColor => Color.FromArgb(255, (byte)quantizedColor.X, (byte)quantizedColor.Y, (byte)quantizedColor.Z))
@@ -1245,7 +1258,7 @@ public sealed partial class ExpandedPlayer : Page
                         { Stretch = Stretch.UniformToFill };
                         Background = brush;
                     }
-                    if(Background is ImageBrush imageBrush)
+                    if (Background is ImageBrush imageBrush)
                     {
                         imageBrush.ImageSource = bitmap;
                     }
@@ -1350,6 +1363,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         LuminousBackground.RemoveFromVisualTree();
         LuminousBackground = null;
+        _shaderEffect = null;
     }
     public Task Show()
     {
@@ -1492,7 +1506,7 @@ public sealed partial class ExpandedPlayer : Page
         session.DrawImage(lyricCommand, _lyricRenderXOffset, _lyricRenderYOffset);
     }
 
-    
+
     private void DrawAudioFFTGraph(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, CanvasDrawingSession session)
     {
         var fftTrans = HyPlayList.Player.FFTProcessor;

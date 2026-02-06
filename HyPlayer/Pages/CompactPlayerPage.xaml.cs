@@ -4,7 +4,6 @@ using HyPlayer.Classes.LyricParser.Abstraction;
 using HyPlayer.HyPlayControl;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
-using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.WindowManagement;

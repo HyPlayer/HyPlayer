@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
 using Windows.UI;

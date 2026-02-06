@@ -6,9 +6,6 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace HyPlayer.ViewModels

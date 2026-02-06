@@ -5,12 +5,9 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.Pages;
-using Newtonsoft.Json.Linq;
-using NMeCab.Core;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.Foundation.Metadata;
 
 namespace HyPlayer.ViewModels
 {
@@ -19,13 +16,13 @@ namespace HyPlayer.ViewModels
 #nullable enable
         private NeteaseCloudMusicApiHandler _neteaseApi;
 
-        [ObservableProperty] 
+        [ObservableProperty]
         public partial List<NCPlayList> RecommendedPlaylist { get; set; }
-        [ObservableProperty] 
+        [ObservableProperty]
         public partial List<NCPlayList> ToplistPlaylist { get; set; }
         [ObservableProperty]
         public partial List<NCSong> RecommendedSongs { get; set; }
-        [ObservableProperty] 
+        [ObservableProperty]
         public partial List<NCPlayList> OfficialPlaylists { get; set; }
 #nullable restore
         public HomeViewModel(NeteaseCloudMusicApiHandler neteaseApi)

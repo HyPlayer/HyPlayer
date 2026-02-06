@@ -6,12 +6,9 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Pages;
 using Kawazu;
 using LiteFM;
-using LiteFM.Abstractions;
 using Microsoft.Gaming.XboxGameBar;
 
 
@@ -23,23 +20,16 @@ using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
-using Windows.Storage;
 using Windows.System.Display;
 using Windows.UI;
 using Windows.UI.Core;
-using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -78,7 +68,7 @@ namespace HyPlayer
         public static Setting? Setting;
 #nullable restore
         public static BrushManagement BrushManagement = new();
-        
+
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;
         public static List<string> LikedSongs = new();

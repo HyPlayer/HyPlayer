@@ -316,7 +316,7 @@
                                         Foreground="{x:Bind hyplayer:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                                         Style="{StaticResource TextBlockButtonStyle}">
                                         <controls1:AutoScrollView IsPlaying="True">
-                                            <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist}"/>
+                                            <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist, Mode=OneWay}"/>
                                         </controls1:AutoScrollView>
                                     </HyperlinkButton>
                                     <HyperlinkButton

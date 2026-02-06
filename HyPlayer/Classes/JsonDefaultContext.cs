@@ -11,7 +11,6 @@ using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.NeteaseApi.Models.ResponseModels;
 using LiteFM.Abstractions;
-using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using static HyPlayer.Classes.UpdateManager;

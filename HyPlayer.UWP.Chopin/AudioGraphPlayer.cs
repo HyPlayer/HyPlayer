@@ -3,7 +3,6 @@ using HyPlayer.UWP.Chopin.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Media;
@@ -239,7 +238,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 foreach (var kvp in newNodesReverse) _audioInputNodesReverseDictionary[kvp.Key] = kvp.Value;
 
                 _currentDeviceId = audioGraphSetting.DefaultDeviceId;
-                if(GlobalPlaybackStatus == PlaybackStatus.Playing) newPlayer.Start();
+                if (GlobalPlaybackStatus == PlaybackStatus.Playing) newPlayer.Start();
             }
             finally
             {

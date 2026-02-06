@@ -1,12 +1,7 @@
-﻿using HyPlayer.HyPlayControl;
-using LiteFM.Abstractions.ApiContracts;
+﻿using LiteFM.Abstractions.ApiContracts;
 using LiteFM.Api;
-using NMeCab.Core;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace HyPlayer.Classes
@@ -25,7 +20,7 @@ namespace HyPlayer.Classes
                 Common.AddToTeachingTipLists("Last.FM 登录失败", response.Error.Message);
             }
         }
-        public static async Task UpdateNowPlaying(HyPlayItem item) 
+        public static async Task UpdateNowPlaying(HyPlayItem item)
         {
             if (!Common.Setting.LastFMSession.HasLogined || !Common.Setting.UpdateLastFMNowPlaying) return;
             var request = new UpdateNowPlayingRequest()
@@ -35,7 +30,7 @@ namespace HyPlayer.Classes
                 Track = item.PlayItem.Name
             };
             var response = await Common.LastFMClient.RequestAsync(LastFMApi.UpdateNowPlayingApi, request, Common.Setting.LastFMSession);
-            if (!response.IsSuccess) 
+            if (!response.IsSuccess)
             {
                 Common.AddToTeachingTipLists("Last.FM 上传正在播放失败", response.Error.Message);
             }
@@ -49,7 +44,7 @@ namespace HyPlayer.Classes
                 Artist = item.PlayItem.Artist.FirstOrDefault()?.Name ?? string.Empty,
                 Track = item.PlayItem.Name,
                 TimeStamp = (uint)(DateTime.UtcNow - DateTime.UnixEpoch - TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds)).TotalSeconds
-                
+
             };
             var response = await Common.LastFMClient.RequestAsync(LastFMApi.ScrobbleApi, request, Common.Setting.LastFMSession);
             if (!response.IsSuccess)

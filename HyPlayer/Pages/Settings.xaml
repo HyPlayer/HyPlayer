@@ -751,6 +751,7 @@
                                             <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.ColorGeneratorType, Mode=TwoWay}">
                                                 <ComboBoxItem Content="KMeans" />
                                                 <ComboBoxItem Content="OctTree" />
+                                                <ComboBoxItem Content="Auto" />
                                             </ComboBox>
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Description="关闭则为RGB空间，仅在KMeans模式下生效" Header="Impressionist (背景取色) 使用LAB空间">

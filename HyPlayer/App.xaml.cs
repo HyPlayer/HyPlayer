@@ -177,7 +177,7 @@ public sealed partial class App : Application
                         widgetArgs,
                         Window.Current.CoreWindow,
                         widgetFrame);
-                    widgetFrame.Navigate(typeof(WidgetSettingsPage), settingsWidget );
+                    widgetFrame.Navigate(typeof(WidgetSettingsPage), settingsWidget);
                 }
                 else
                 {
@@ -197,7 +197,7 @@ public sealed partial class App : Application
                 // You can perform whatever behavior you need based on the URI payload.
             }
         }
-        
+
         base.OnActivated(args);
         if (args.Kind == ActivationKind.ToastNotification)
         {
@@ -220,7 +220,7 @@ public sealed partial class App : Application
         if (args.Kind == ActivationKind.Protocol)
         {
             var launchUri = (args as ProtocolActivatedEventArgs)?.Uri;
-            if (launchUri?.Host == "link.last.fm") 
+            if (launchUri?.Host == "link.last.fm")
                 _ = LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
         }
     }
