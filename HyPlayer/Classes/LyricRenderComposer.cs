@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using HyPlayer.Classes.LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;

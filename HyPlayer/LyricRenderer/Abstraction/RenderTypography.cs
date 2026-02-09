@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;

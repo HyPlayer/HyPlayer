@@ -1,4 +1,4 @@
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
+﻿using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.Models.ResponseModels;
 using System.Collections.Generic;

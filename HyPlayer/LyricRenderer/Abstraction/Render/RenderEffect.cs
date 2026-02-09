@@ -1,4 +1,4 @@
-namespace HyPlayer.LyricRenderer.Abstraction.Render;
+﻿namespace HyPlayer.LyricRenderer.Abstraction.Render;
 
 // 特技特技加特技
 public class RenderEffects

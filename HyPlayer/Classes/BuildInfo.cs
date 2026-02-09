@@ -1,4 +1,4 @@
-namespace HyPlayer.Classes
+﻿namespace HyPlayer.Classes
 {
     /// <summary>
     /// 编译信息类，包含编译时的 GitHub Commit SHA、编译时间和编译的 JobId

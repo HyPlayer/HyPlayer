@@ -1,4 +1,4 @@
-#region
+﻿#region
 
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;

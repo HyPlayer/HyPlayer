@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.ListenTogether;

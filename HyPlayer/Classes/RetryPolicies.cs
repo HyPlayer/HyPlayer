@@ -1,4 +1,4 @@
-using Polly;
+﻿using Polly;
 using Polly.Retry;
 using System;
 using System.Threading.Tasks;

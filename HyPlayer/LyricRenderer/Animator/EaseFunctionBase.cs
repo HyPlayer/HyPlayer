@@ -1,4 +1,4 @@
-using Windows.UI.Xaml.Media.Animation;
+﻿using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.Animator;
 

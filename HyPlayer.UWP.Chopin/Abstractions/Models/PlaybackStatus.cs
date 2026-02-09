@@ -1,4 +1,4 @@
-namespace HyPlayer.UWP.Chopin.Abstractions.Models
+﻿namespace HyPlayer.UWP.Chopin.Abstractions.Models
 {
     public enum PlaybackStatus
     {

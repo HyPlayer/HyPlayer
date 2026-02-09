@@ -1,4 +1,4 @@
-namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+﻿namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 
 public interface IAudioQuantumProcessor
 {

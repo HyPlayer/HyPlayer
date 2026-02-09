@@ -1,4 +1,4 @@
-#region
+﻿#region
 
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;

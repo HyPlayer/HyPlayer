@@ -1,4 +1,4 @@
-using AsyncAwaitBestPractices;
+锘縰sing AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
@@ -61,7 +61,7 @@ namespace HyPlayer.Pages
         private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
             var playList = (NCPlayList)(sender as MenuFlyoutItem)?.CommandParameter;
-            //播放全部歌曲
+            //鎾斁鍏ㄩ儴姝屾洸
             HyPlayList.RemoveAllSong();
             await HyPlayList.AppendPlayList(playList.PlaylistId);
             HyPlayList.PlaySourceId = playList.PlaylistId;
@@ -79,11 +79,11 @@ namespace HyPlayer.Pages
                });
             if (result.IsError)
             {
-                Common.AddToTeachingTipLists("公开歌单失败", result.Error?.Message ?? "未知错误");
+                Common.AddToTeachingTipLists("鍏紑姝屽崟澶辫触", result.Error?.Message ?? "鏈煡閿欒");
             }
             else
             {
-                Common.AddToTeachingTipLists("成功公开歌单");
+                Common.AddToTeachingTipLists("鎴愬姛鍏紑姝屽崟");
                 _ = Common.PageBase?.LoadSongList();
             }
         }
@@ -98,11 +98,11 @@ namespace HyPlayer.Pages
             });
             if (result.IsError)
             {
-                Common.AddToTeachingTipLists("删除歌单失败", result.Error?.Message ?? "未知错误");
+                Common.AddToTeachingTipLists("鍒犻櫎姝屽崟澶辫触", result.Error?.Message ?? "鏈煡閿欒");
             }
             else
             {
-                Common.AddToTeachingTipLists("成功删除");
+                Common.AddToTeachingTipLists("鎴愬姛鍒犻櫎");
                 _ = Common.PageBase?.LoadSongList();
                 Common.NavigateRefresh();
             }

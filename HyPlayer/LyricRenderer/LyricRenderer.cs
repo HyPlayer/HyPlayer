@@ -1,4 +1,4 @@
-using HyPlayer.LyricRenderer.Abstraction;
+﻿using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using Microsoft.Graphics.Canvas;

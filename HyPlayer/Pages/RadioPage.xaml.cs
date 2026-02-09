@@ -1,4 +1,4 @@
-#region
+ï»¿#region
 
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
@@ -76,12 +76,12 @@ public sealed partial class RadioPage : Page
                     {
                         treashold = ++cooldownTime * 10;
                         page--;
-                        Common.AddToTeachingTipLists("Ì°À·¼ÓÔØÀäÈ´", $"½¥½ø¼ÓÔØËÙ¶È¹ıÓÚ¿ì, ½«ÔÚ {cooldownTime * 10} Ãëºó³¢ÊÔ¼ÌĞø¼ÓÔØ, ÕıÔÚÇåÏ´ÇëÇó");
+                        Common.AddToTeachingTipLists("è´ªå©ªåŠ è½½å†·å´", $"æ¸è¿›åŠ è½½é€Ÿåº¦è¿‡äºå¿«, å°†åœ¨ {cooldownTime * 10} ç§’åå°è¯•ç»§ç»­åŠ è½½, æ­£åœ¨æ¸…æ´—è¯·æ±‚");
                         return null;
                     }
                     else if (rest.IsError)
                     {
-                        Common.AddToTeachingTipLists("¼ÓÔØµçÌ¨½ÚÄ¿´íÎó", rest.Error?.Message ?? "Î´Öª´íÎó");
+                        Common.AddToTeachingTipLists("åŠ è½½ç”µå°èŠ‚ç›®é”™è¯¯", rest.Error?.Message ?? "æœªçŸ¥é”™è¯¯");
                         return null;
                     }
 
@@ -118,7 +118,7 @@ public sealed partial class RadioPage : Page
                         new DjChannelDetailRequest() { Id = rid }, _cancellationToken);
                     if (json.IsError)
                     {
-                        Common.AddToTeachingTipLists("»ñÈ¡µçÌ¨ĞÅÏ¢Ê§°Ü", json.Error?.Message ?? "Î´Öª´íÎó");
+                        Common.AddToTeachingTipLists("è·å–ç”µå°ä¿¡æ¯å¤±è´¥", json.Error?.Message ?? "æœªçŸ¥é”™è¯¯");
                         return null;
                     }
 
@@ -242,7 +242,7 @@ public sealed partial class RadioPage : Page
                                 }, _cancellationToken);
                             if (rest.IsError)
                             {
-                                Common.AddToTeachingTipLists("¼ÓÔØµçÌ¨½ÚÄ¿´íÎó", rest.Error?.Message ?? "Î´Öª´íÎó");
+                                Common.AddToTeachingTipLists("åŠ è½½ç”µå°èŠ‚ç›®é”™è¯¯", rest.Error?.Message ?? "æœªçŸ¥é”™è¯¯");
                                 return null;
                             }
 

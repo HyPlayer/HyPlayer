@@ -1,4 +1,4 @@
-using HyPlayer.LyricRenderer.Abstraction.Render;
+﻿using HyPlayer.LyricRenderer.Abstraction.Render;
 using System.Collections.Generic;
 
 namespace HyPlayer.LyricRenderer.Abstraction;
