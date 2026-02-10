@@ -79,21 +79,22 @@ jobs:
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Create the app package
       run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}" /p:Platform=$env:Platform /p:RuntimeIdentifier=win-x64
+      if: matrix.platform == 'x64'
       env:
         Appx_Bundle: Never
         Appx_Package_Build_Mode: SideloadOnly
         Configuration: ${{ matrix.configuration }}
         Platform: ${{ matrix.platform }}
-        if: matrix.platform == 'x64'
         
     - name: Create the app package
       run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}" /p:Platform=$env:Platform /p:RuntimeIdentifier=win-arm64
+      if: matrix.platform == 'arm64'
       env:
         Appx_Bundle: Never
         Appx_Package_Build_Mode: SideloadOnly
         Configuration: ${{ matrix.configuration }}
         Platform: ${{ matrix.platform }}
-        if: matrix.platform == 'arm64'
+
 
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload build artifacts
