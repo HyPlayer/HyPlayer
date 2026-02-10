@@ -1468,7 +1468,6 @@ public sealed partial class ExpandedPlayer : Page
         LuminousBackground.DpiScale = _settings.IsolationScale;
         _shaderEffect?.Properties["Width"] = (float)LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, Microsoft.Graphics.Canvas.CanvasDpiRounding.Round);
         _shaderEffect?.Properties["Height"] = (float)LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, Microsoft.Graphics.Canvas.CanvasDpiRounding.Round);
-        _shaderEffect?.Properties["EnableLightWave"] = _settings.IsolationLightWave;
         var random = new Random();
         _shaderEffect?.Properties["RandomValue1"] = (float)random.Next(-50, +50);
         _shaderEffect?.Properties["RandomValue2"] = (float)random.Next(-50, +50);
