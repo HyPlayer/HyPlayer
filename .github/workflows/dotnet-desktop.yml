@@ -81,7 +81,7 @@ jobs:
       env:
         Appx_Bundle: Always
         Appx_Bundle_Platforms: arm64|x64
-        Appx_Package_Build_Mode: StoreUpload
+        Appx_Package_Build_Mode: SideloadOnly
         Configuration: ${{ matrix.configuration }}
 
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
