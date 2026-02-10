@@ -47,7 +47,7 @@ jobs:
         script: |
               $MANIFEST = [xml](Get-Content HyPlayer.Package\Package.appxmanifest)
               $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
-              $VERSION = $MAINVERSION + $(github.run_id)
+              $VERSION = $MAINVERSION + "${{github.run_id}}"
               Write-Host("##vso[task.setvariable variable=VERSION]$VERSION")
               echo "Currently Building Version Is"
               echo $VERSION
@@ -61,9 +61,9 @@ jobs:
               $buildInfoPath = "HyPlayer/Classes/BuildInfo.cs"
               if (Test-Path $buildInfoPath) {
                 $content = Get-Content $buildInfoPath -Raw
-              $commitSha = "$(github.sha)"
+              $commitSha = "${{github.sha}}"
               $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-              $jobId = "$(github.run_id)"
+              $jobId = "${{github.run_id}}"
               $content = $content -replace 'CommitSha = "__COMMIT_SHA__"', "CommitSha = `"$commitSha`""
               $content = $content -replace 'BuildTime = "__BUILD_TIME__"', "BuildTime = `"$buildTime`""
               $content = $content -replace 'BuildJobId = "__BUILD_JOB_ID__"', "BuildJobId = `"$jobId`""
