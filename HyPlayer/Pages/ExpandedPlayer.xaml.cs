@@ -1344,6 +1344,7 @@ public sealed partial class ExpandedPlayer : Page
                             _shaderEffect.Properties["color2"] = _albumColorVectors[1];
                             _shaderEffect.Properties["color3"] = _albumColorVectors[2];
                             _shaderEffect.Properties["color4"] = _albumColorVectors[3];
+                            _shaderEffect.Properties["UseHSVBlending"] = UseHSVBlending();
                             var random = new Random();
                             _shaderEffect.Properties["RandomValue1"] = (float)random.Next(-50, +50);
                             _shaderEffect.Properties["RandomValue2"] = (float)random.Next(-50, +50);
@@ -1457,21 +1458,10 @@ public sealed partial class ExpandedPlayer : Page
             }
             _shaderEffect = Common.PixelShaderShareEffect;
             _randomValue = new Random().Next(100);
-            if (_albumColorVectors.Count != 0)
-            {
-                _shaderEffect.Properties["color1"] = _albumColorVectors[0];
-                _shaderEffect.Properties["color2"] = _albumColorVectors[1];
-                _shaderEffect.Properties["color3"] = _albumColorVectors[2];
-                _shaderEffect.Properties["color4"] = _albumColorVectors[3];
-            }
         }
         LuminousBackground.DpiScale = _settings.IsolationScale;
         _shaderEffect?.Properties["Width"] = (float)LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, Microsoft.Graphics.Canvas.CanvasDpiRounding.Round);
         _shaderEffect?.Properties["Height"] = (float)LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, Microsoft.Graphics.Canvas.CanvasDpiRounding.Round);
-        var random = new Random();
-        _shaderEffect?.Properties["RandomValue1"] = (float)random.Next(-50, +50);
-        _shaderEffect?.Properties["RandomValue2"] = (float)random.Next(-50, +50);
-        _shaderEffect?.Properties["RandomValue3"] = (float)random.Next(-50, +50);
         if (!_settings.IsolationFullThrottle)
         {
             LuminousBackground.IsFixedTimeStep = true;
@@ -1487,7 +1477,14 @@ public sealed partial class ExpandedPlayer : Page
             _shaderEffect?.Properties["iTime"] = progress;
         }
     }
-
+    private bool UseHSVBlending()
+    {
+        var hueList = _albumColorVectors.Select(t => t.RGBVectorToHSVColor().H).ToList();
+        var avg = hueList.Average();
+        var sum = hueList.Sum(d => Math.Pow(d - avg, 2));
+        var variance = Math.Sqrt(sum / 4);
+        return variance <= 90;
+    }
     private void LuminousBackground_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
     {
         using var session = args.DrawingSession;
