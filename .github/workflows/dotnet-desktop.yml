@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         configuration: [Release]
+        platform: [x64, arm64]
     runs-on: windows-2025-vs2026  # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
     env:
@@ -77,12 +78,12 @@ jobs:
               }
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Create the app package
-      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}"
+      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}" /p:GenerateAppxPackageOnBuild=true /p:Platform=$env:Platform
       env:
-        Appx_Bundle: Always
-        Appx_Bundle_Platforms: arm64|x64
+        Appx_Bundle: Never
         Appx_Package_Build_Mode: SideloadOnly
         Configuration: ${{ matrix.configuration }}
+        Platform: ${{ matrix.platform }}
 
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload build artifacts
