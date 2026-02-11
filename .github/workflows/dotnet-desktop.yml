@@ -38,16 +38,18 @@ jobs:
       
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=win-x64
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=win-x64 /p:Platform=$env:Platform
       if: ${{matrix.platform == 'x64'}}
       env:
         Configuration: ${{ matrix.configuration }}
+        Platform: ${{ matrix.platform }}
         
     - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=win-arm64
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=win-arm64 /p:Platform=$env:Platform
       if: ${{matrix.platform == 'arm64'}}
       env:
         Configuration: ${{ matrix.configuration }}
+        Platform: ${{ matrix.platform }}
         
     - name: Set AppxManifest Version
       uses: Amadevus/pwsh-script@v2.0.3
