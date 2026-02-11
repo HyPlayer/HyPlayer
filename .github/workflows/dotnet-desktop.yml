@@ -35,10 +35,17 @@ jobs:
     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v2
-
+      
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=win-x64
+      if: ${{matrix.platform == 'x64'}}
+      env:
+        Configuration: ${{ matrix.configuration }}
+        
+    - name: Restore the application
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=win-arm64
+      if: ${{matrix.platform == 'arm64'}}
       env:
         Configuration: ${{ matrix.configuration }}
         
@@ -78,8 +85,8 @@ jobs:
               }
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Create the app package
-      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}" /p:Platform=$env:Platform /p:RuntimeIdentifier=win-x64 /t:Publish
-      if: matrix.platform == 'x64'
+      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}" /p:Platform=$env:Platform /p:RuntimeIdentifier=win-x64
+      if: ${{matrix.platform == 'x64'}}
       env:
         Appx_Bundle: Never
         Appx_Package_Build_Mode: SideloadOnly
@@ -87,8 +94,8 @@ jobs:
         Platform: ${{ matrix.platform }}
         
     - name: Create the app package
-      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}" /p:Platform=$env:Platform /p:RuntimeIdentifier=win-arm64 /t:Publish
-      if: matrix.platform == 'arm64'
+      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}" /p:Platform=$env:Platform /p:RuntimeIdentifier=win-arm64
+      if: ${{matrix.platform == 'arm64'}}
       env:
         Appx_Bundle: Never
         Appx_Package_Build_Mode: SideloadOnly
