@@ -74,9 +74,9 @@ jobs:
               $commitSha = "${{github.sha}}"
               $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
               $jobId = "${{github.run_number}}"
-              $content = $content -replace 'CommitSha = "__COMMIT_SHA__"', "CommitSha = `"$commitSha`""
-              $content = $content -replace 'BuildTime = "__BUILD_TIME__"', "BuildTime = `"$buildTime`""
-              $content = $content -replace 'BuildJobId = "__BUILD_JOB_ID__"', "BuildJobId = `"$jobId`""
+              $content = $content -replace "__COMMIT_SHA__", "$commitSha"
+              $content = $content -replace "__BUILD_TIME__", "$buildTime"
+              $content = $content -replace "__BUILD_JOB_ID__", "$jobId"
               Set-Content -Path $buildInfoPath -Value $content
               echo "BuildInfo.cs has been updated with:"
               echo "  Commit SHA: $commitSha"
