@@ -20,7 +20,7 @@ namespace HyPlayer
     {
         public int ColorGeneratorType
         {
-            get => GetSettings(nameof(ColorGeneratorType), 3);
+            get => GetSettings(nameof(ColorGeneratorType), 2);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(ColorGeneratorType)] = value;
