@@ -1,5 +1,6 @@
 ﻿#region
 
+using AsyncAwaitBestPractices;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
@@ -465,7 +466,10 @@ public sealed partial class SongListDetail : Page
             Common.AddToTeachingTipLists("清除缓存成功", "已清除当前歌单的缓存");
             SongsList.Songs.Clear();
             page = 0;
-            _ = LoadPageData(playList.PlaylistId, true);
+            if (playList.PlaylistId != "-666")
+                _ = LoadPageData(playList.PlaylistId, true);
+            else
+                LoadSongListItem().SafeFireAndForget();
         }
         catch
         {
