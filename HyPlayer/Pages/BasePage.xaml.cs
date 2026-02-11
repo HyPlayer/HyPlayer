@@ -601,8 +601,7 @@ public sealed partial class BasePage : Page
         }
         catch(Exception e)
         {
-            Common.AddToTeachingTipLists("二维码登录时发生错误", e.Message);
-            Debug.WriteLine(e);
+            Common.AddToTeachingTipLists("加载二维码时发生错误", e.Message);
         }
     }
 

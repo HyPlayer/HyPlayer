@@ -77,10 +77,10 @@ public sealed partial class Settings : Page
         else
         {
             ComboBoxSongBr.SelectedIndex = ComboBoxSongBr.Items.IndexOf(ComboBoxSongBr.Items.First(t =>
-                ((ComboBoxItem)t).Tag.ToString() == Common.Setting.audioRate));
+                t.As<ComboBoxItem>().Tag.ToString() == Common.Setting.audioRate));
             ComboBoxSongDownloadBr.SelectedIndex = ComboBoxSongDownloadBr.Items.IndexOf(
                 ComboBoxSongDownloadBr.Items.First(t =>
-                    ((ComboBoxItem)t).Tag.ToString() == Common.Setting.downloadAudioRate));
+                    t.As<ComboBoxItem>().Tag.ToString() == Common.Setting.downloadAudioRate));
         }
 
         TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
@@ -400,14 +400,14 @@ public sealed partial class Settings : Page
     private void ComboBoxSongBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (isbyprogram) return;
-        var selectedItem = (ComboBoxItem)((ComboBox)sender).SelectedItem;
+        var selectedItem = sender.As<ComboBox>().SelectedItem.As<ComboBoxItem>();
         Common.Setting.audioRate = selectedItem.Tag.ToString();
     }
 
     private void ComboBoxSongDownloadBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (isbyprogram) return;
-        var selectedItem = (ComboBoxItem)((ComboBox)sender).SelectedItem;
+        var selectedItem = sender.As<ComboBox>().SelectedItem.As<ComboBoxItem>();
         Common.Setting.downloadAudioRate = selectedItem.Tag.ToString();
     }
 
