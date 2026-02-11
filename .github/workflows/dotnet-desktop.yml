@@ -63,8 +63,6 @@ jobs:
               echo $VERSION
               $MANIFEST.Package.Identity.Version = $VERSION
               Set-Content -Path HyPlayer.Package\Package.appxmanifest -Value $MANIFEST.OuterXml
-
-                  - name: Set BuildInfo Version
     - name: Set BuildInfo Version
       uses: Amadevus/pwsh-script@v2.0.3
       with:
