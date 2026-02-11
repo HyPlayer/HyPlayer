@@ -542,24 +542,13 @@ public sealed partial class BasePage : Page
         try
         {
             // 保持与原逻辑一致：不显式声明 Key 的泛型类型，避免在 UI 层引入额外类型依赖
-            dynamic key;
-            try
-            {
-                key = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginQrCodeUnikeyApi, new LoginQrCodeUnikeyRequest());
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists("获取UniKey失败", ex.ToString());
-                Debug.WriteLine(ex);
-                return;
-            }
-
+            var key = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginQrCodeUnikeyApi, new LoginQrCodeUnikeyRequest());
             if (key.IsError)
             {
                 Common.AddToTeachingTipLists("获取UniKey失败", key.Error.Message);
                 return;
             }
-            _ = ReFreshQr(key.Value.Unikey);
+            await ReFreshQr(key.Value.Unikey);
             nowqrkey = key.Value.Unikey;
             while (!Common.Logined && nowqrkey == key.Value.Unikey)
             {
@@ -573,14 +562,7 @@ public sealed partial class BasePage : Page
                         Common.AddToTeachingTipLists("获取UniKey失败", key.Error.Message);
                         return;
                     }
-                    try
-                    {
-                        _ = ReFreshQr(key.Value.Unikey);
-                    }
-                    catch (Exception ex)
-                    {
-                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                    }
+                    await ReFreshQr(key.Value.Unikey);
                 }
                 else if (res.Value.Code == 801)
                 {
@@ -613,13 +595,14 @@ public sealed partial class BasePage : Page
 
                     InfoBarLoginHint.Title = "请在手机上授权登录";
                 }
-
                 await Task.Delay(2000);
             }
+
         }
-        catch
+        catch(Exception e)
         {
-            InfoBarLoginHint.Title = "请点击二维码刷新";
+            Common.AddToTeachingTipLists("二维码登录时发生错误", e.Message);
+            Debug.WriteLine(e);
         }
     }
 
