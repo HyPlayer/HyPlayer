@@ -919,7 +919,7 @@ public static class HyPlayList
                     return;
                 }
 
-                if (Player.PrimaryPlaybackSource != null && !Common.Setting.CrossFade && !FadeManager.FadeProcessing)
+                if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || !FadeManager.FadeProcessing))
                 {
                     var primaryPlaybackSource = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
                     Player.PausePlaybackSource(primaryPlaybackSource);
