@@ -241,7 +241,7 @@ public static class HyPlayList
             Player.OnPositionChanged += PlaybackSession_PositionChanged;
 
             Player.OnPrimaryPlaybackSourceChanged += Player_SourceChanged;
-            SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
+            SecTimer.Elapsed += (sender, args) => OnTimerTicked?.Invoke();
             SecTimer.Start();
             if (Common.Setting.highPreciseLyricTimer)
             {
@@ -1600,7 +1600,7 @@ public static class HyPlayList
             if (Common.Setting.enableAmllTtmlDb && hpi.ItemType == HyPlayItemType.Netease)
             {
                 var ttml = await Common.HttpClient!.GetStringAsync(
-                    $"https://gcore.jsdelivr.net/gh/Steve-xmh/amll-ttml-db@main/ncm-lyrics/{hpi.PlayItem.Id}.ttml");
+                    $"https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/{hpi.PlayItem.Id}.ttml");
                 var ttmlConverter = new AppleSyllableConverter();
                 var lrcConverter = new LrcConverter();
                 var lrcTranslationConverter = new LrcTranslationEnhancer();
@@ -1627,7 +1627,7 @@ public static class HyPlayList
                             Value = "amll-ttml-db",
                             DisplayName = "歌词来源",
                             ActionUri =
-                                $"https://github.com/Steve-xmh/amll-ttml-db/blob/main/ncm-lyrics/{hpi.PlayItem.Id}.ttml"
+                                $"https://github.com/amll-dev/amll-ttml-db/blob/main/ncm-lyrics/{hpi.PlayItem.Id}.ttml"
                         }
                     ],
                     SongMetadata = []
@@ -1641,7 +1641,7 @@ public static class HyPlayList
 
                 OnLyricLoaded?.Invoke();
                 OnLyricChange?.Invoke();
-                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.PlayItem.Id, () => Task.FromResult(HyLyricInfo), cancellationToken: CancellationToken.None);
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.PlayItem.Id, () => Task.FromResult(HyLyricInfo), forceRefresh: true, cancellationToken: CancellationToken.None);
             }
         }
         catch

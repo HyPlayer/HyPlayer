@@ -1380,7 +1380,7 @@ namespace HyPlayer
         }
         public bool IsolationLightWave
         {
-            get => GetSettings(nameof(IsolationLightWave), true);
+            get => GetSettings(nameof(IsolationLightWave), false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(IsolationLightWave)] = value;

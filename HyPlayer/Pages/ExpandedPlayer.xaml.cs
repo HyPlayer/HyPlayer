@@ -256,7 +256,7 @@ public sealed partial class ExpandedPlayer : Page
         if (_needRedesign > 0)
         {
             _needRedesign--;
-            Redesign();
+            _ = Common.Invoke(Redesign);
         }
     }
 
@@ -1345,6 +1345,7 @@ public sealed partial class ExpandedPlayer : Page
                             _shaderEffect.Properties["color3"] = _albumColorVectors[2];
                             _shaderEffect.Properties["color4"] = _albumColorVectors[3];
                             _shaderEffect.Properties["UseHSVBlending"] = UseHSVBlending();
+                            _shaderEffect.Properties["EnableLightWave"] = _settings.IsolationLightWave;
                             var random = new Random();
                             _shaderEffect.Properties["RandomValue1"] = (float)random.Next(-50, +50);
                             _shaderEffect.Properties["RandomValue2"] = (float)random.Next(-50, +50);
