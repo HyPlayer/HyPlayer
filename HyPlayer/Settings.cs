@@ -20,7 +20,7 @@ namespace HyPlayer
     {
         public int ColorGeneratorType
         {
-            get => GetSettings(nameof(ColorGeneratorType), 0);
+            get => GetSettings(nameof(ColorGeneratorType), 3);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(ColorGeneratorType)] = value;
@@ -578,7 +578,7 @@ namespace HyPlayer
 
         public bool lyricRenderSimpleLineScanning
         {
-            get => GetSettings(nameof(lyricRenderSimpleLineScanning), true);
+            get => GetSettings(nameof(lyricRenderSimpleLineScanning), false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderSimpleLineScanning)] = value;
@@ -1344,7 +1344,7 @@ namespace HyPlayer
         }
         public bool IsolationFullThrottle
         {
-            get => GetSettings(nameof(IsolationFullThrottle), false);
+            get => GetSettings(nameof(IsolationFullThrottle), true);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(IsolationFullThrottle)] = value;

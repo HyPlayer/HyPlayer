@@ -735,7 +735,7 @@
                                         </TransitionCollection>
                                     </controls3:SettingsExpander.Transitions>
                                     <controls3:SettingsExpander.Items>
-                                        <controls3:SettingsCard Header="背景显示设置 (本次测试强制选择 Isolation)">
+                                        <controls3:SettingsCard Header="背景显示设置">
                                             <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.expandedPlayerBackgroundType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                                 <ComboBoxItem Content="专辑封面模糊" />
                                                 <ComboBoxItem Content="跟随唱片主色调" />
@@ -772,7 +772,7 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind hyplayer:Common.Setting.ImpressionistUseKMeansPP, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="歌词页面特效渲染帧率 (本次测试最低 60 FPS)">
+                                        <controls3:SettingsCard Header="歌词页面特效渲染帧率">
                                             <controls:NumberBox
                                                 Width="64"
                                                 HorizontalAlignment="Right"
@@ -787,7 +787,7 @@
                                                 Minimum="0.1"
                                                 Value="{x:Bind hyplayer:Common.Setting.IsolationScale, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="仅在背景设置为Isolation时生效" Header="停用Isolation帧率限制">
+                                        <controls3:SettingsCard Header="停用Win2D帧率限制">
                                             <ToggleSwitch
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
