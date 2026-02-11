@@ -63,6 +63,32 @@ jobs:
               echo $VERSION
               $MANIFEST.Package.Identity.Version = $VERSION
               Set-Content -Path HyPlayer.Package\Package.appxmanifest -Value $MANIFEST.OuterXml
+
+                  - name: Set BuildInfo Version
+    - name: Set BuildInfo Version
+      uses: Amadevus/pwsh-script@v2.0.3
+      with:
+        script: |
+              # 替换 BuildInfo.cs 中的占位符
+              $buildInfoPath = "HyPlayer/Classes/BuildInfo.cs"
+              if (Test-Path $buildInfoPath) {
+                $content = Get-Content $buildInfoPath -Raw
+              $commitSha = "${{github.sha}}"
+              $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+              $jobId = "${{github.run_number}}"
+              $branchId = "${{github.ref_name}}"
+              $content = $content -replace "__COMMIT_SHA__", "$commitSha"
+              $content = $content -replace "__BUILD_TIME__", "$buildTime"
+              $content = $content -replace "__BUILD_JOB_ID__", "$jobId"
+              $content = $content -replace "__BUILD_BRANCH_ID__", "$branchId"
+              Set-Content -Path $buildInfoPath -Value $content
+              echo "BuildInfo.cs has been updated with:"
+              echo "  Commit SHA: $commitSha"
+              echo "  Build Time: $buildTime"
+              echo "  Job ID: $jobId"
+              } else {
+              echo "BuildInfo.cs not found at $buildInfoPath"
+              }
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Create the app package
       run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}" /p:Platform=$env:Platform /p:RuntimeIdentifier=win-x64
