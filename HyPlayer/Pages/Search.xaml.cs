@@ -14,6 +14,7 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 
 #endregion
 
@@ -677,7 +678,7 @@ public sealed partial class Search : Page
 
     private void HistoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if ((sender as ComboBox) is not null)
+        if ((sender?.As<ComboBox>()) is not null)
         {
             _loadResultTask = LoadResult();
         }

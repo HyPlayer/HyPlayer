@@ -26,6 +26,7 @@ using Windows.UI.StartScreen;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 #endregion
 
@@ -153,11 +154,11 @@ public sealed partial class App : Application
         XboxGameBarWidgetActivatedEventArgs widgetArgs = null;
         if (args.Kind == ActivationKind.Protocol)
         {
-            var protocolArgs = args as IProtocolActivatedEventArgs;
+            var protocolArgs = args?.As<IProtocolActivatedEventArgs>();
             string scheme = protocolArgs.Uri.Scheme;
             if (scheme.Equals("ms-gamebarwidget"))
             {
-                widgetArgs = args as XboxGameBarWidgetActivatedEventArgs;
+                widgetArgs = args.As<XboxGameBarWidgetActivatedEventArgs>();
             }
         }
         if (widgetArgs != null)
@@ -201,7 +202,7 @@ public sealed partial class App : Application
         base.OnActivated(args);
         if (args.Kind == ActivationKind.ToastNotification)
         {
-            rootFrame = Window.Current.Content as Frame;
+            rootFrame = Window.Current.Content?.As<Frame>();
             if (rootFrame == null)
             {
                 rootFrame = new Frame();
@@ -219,7 +220,7 @@ public sealed partial class App : Application
         }
         if (args.Kind == ActivationKind.Protocol)
         {
-            var launchUri = (args as ProtocolActivatedEventArgs)?.Uri;
+            var launchUri = (args?.As<ProtocolActivatedEventArgs>())?.Uri;
             if (launchUri?.Host == "link.last.fm")
                 _ = LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
         }
@@ -234,7 +235,7 @@ public sealed partial class App : Application
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
 #if RELEASE
-            //Crashes.TrackError((Exception)e.ExceptionObject);
+        //Crashes.TrackError((Exception)e.ExceptionObject);
 #endif
 
         var Dialog = new ContentDialog
@@ -249,7 +250,7 @@ public sealed partial class App : Application
     private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
     {
 #if RELEASE
-            //Crashes.TrackError(e.Exception);
+        //Crashes.TrackError(e.Exception);
 #endif
         e.Handled = true;
         /*
@@ -299,7 +300,7 @@ public sealed partial class App : Application
 
         base.OnActivated(args);
 
-        rootFrame = Window.Current.Content as Frame;
+        rootFrame = Window.Current.Content?.As<Frame>();
         if (rootFrame == null)
         {
             rootFrame = new Frame();
@@ -336,7 +337,7 @@ public sealed partial class App : Application
             {
                 HyPlayList.InitializeHyPlaylist();
             }
-            foreach (var storageItem in (args as FileActivatedEventArgs).Files)
+            foreach (var storageItem in (args?.As<FileActivatedEventArgs>()).Files)
             {
                 var file = (StorageFile)storageItem;
                 var folder = await file.GetParentAsync();
@@ -365,7 +366,7 @@ public sealed partial class App : Application
 
     private void NavigateToRootPage(IActivatedEventArgs args = null)
     {
-        rootFrame.Navigate(typeof(MainPage), (args as LaunchActivatedEventArgs)?.Arguments);
+        rootFrame.Navigate(typeof(MainPage), (args?.As<LaunchActivatedEventArgs>())?.Arguments);
     }
 
     /// <summary>

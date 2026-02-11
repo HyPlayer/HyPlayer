@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 
 #endregion
 
@@ -65,7 +66,7 @@ public sealed partial class History : Page
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
-        switch ((sender.SelectedItem as NavigationViewItem).Name)
+        switch ((sender.SelectedItem?.As<NavigationViewItem>()).Name)
         {
             case "SongHis":
                 Songs.Clear();

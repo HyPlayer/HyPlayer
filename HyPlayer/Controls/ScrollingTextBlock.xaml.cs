@@ -2,6 +2,7 @@
 
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using WinRT;
 
 #endregion
 
@@ -35,12 +36,12 @@ public sealed partial class ScrollingTextBlock : UserControl
 
     public static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        var distance = (d as ScrollingTextBlock).scrolviewer.ScrollableWidth;
+        var distance = (d?.As<ScrollingTextBlock>()).scrolviewer.ScrollableWidth;
         if (!(e.NewValue is 0) || distance > (double)e.NewValue)
         {
-            var ret = (d as ScrollingTextBlock).scrolviewer.ChangeView((double)e.NewValue,
-                (d as ScrollingTextBlock).scrolviewer.VerticalOffset,
-                (d as ScrollingTextBlock).scrolviewer.ZoomFactor);
+            var ret = (d?.As<ScrollingTextBlock>()).scrolviewer.ChangeView((double)e.NewValue,
+                (d?.As<ScrollingTextBlock>()).scrolviewer.VerticalOffset,
+                (d?.As<ScrollingTextBlock>()).scrolviewer.ZoomFactor);
         }
     }
 }

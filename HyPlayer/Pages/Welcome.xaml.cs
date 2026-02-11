@@ -3,6 +3,7 @@ using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 
 #endregion
 
@@ -35,9 +36,9 @@ public sealed partial class Welcome : Page
 
     private async void LoginBtn_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
     {
-        var frame = Window.Current.Content as Frame;
-        var mainpage = frame.Content as MainPage;
-        var content = mainpage.MainFrame.Content as BasePage;
+        var frame = Window.Current.Content?.As<Frame>();
+        var mainpage = frame.Content?.As<MainPage>();
+        var content = mainpage.MainFrame.Content?.As<BasePage>();
         await content.DialogPreLoginHint.ShowAsync();
     }
 }

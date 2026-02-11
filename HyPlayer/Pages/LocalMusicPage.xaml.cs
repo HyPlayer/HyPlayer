@@ -15,6 +15,7 @@ using Windows.Storage.Search;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 
 #endregion
 
@@ -180,7 +181,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private async void UploadCloud_Click(object sender, RoutedEventArgs e)
     {
-        var sf = await StorageFile.GetFileFromPathAsync((sender as Button).Tag as string);
+        var sf = await StorageFile.GetFileFromPathAsync((sender?.As<Button>()).Tag as string);
         await CloudUpload.UploadMusic(sf);
     }
 

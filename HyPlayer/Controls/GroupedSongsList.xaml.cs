@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
+using WinRT;
 
 #endregion
 
@@ -248,7 +249,7 @@ public sealed partial class GroupedSongsList : UserControl
 
     private void Grid_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        var element = sender as Grid;
+        var element = sender?.As<Grid>();
         if (SongContainer.SelectionMode == ListViewSelectionMode.Single)
         {
             SongContainer.SelectedItem = element.DataContext;

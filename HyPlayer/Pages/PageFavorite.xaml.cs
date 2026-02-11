@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 
 #endregion
 
@@ -71,7 +72,7 @@ public sealed partial class PageFavorite : Page
     private async Task RealLoad()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        switch ((NavView.SelectedItem as NavigationViewItem)?.Tag.ToString())
+        switch ((NavView.SelectedItem?.As<NavigationViewItem>())?.Tag.ToString())
         {
             case "Album":
                 await LoadAlbumResult();

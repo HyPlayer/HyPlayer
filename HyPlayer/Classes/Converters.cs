@@ -9,6 +9,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+using WinRT;
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 
 namespace HyPlayer.Classes
@@ -30,7 +31,7 @@ namespace HyPlayer.Classes
                 return Brush;
             }
             if (value is true && Common.Setting.CustomAcrylic is false)
-                return Application.Current.Resources["NormalWindowBackgroundAcrylic"] as Brush;
+                return Application.Current.Resources["NormalWindowBackgroundAcrylic"]?.As<Brush>();
             return null;
         }
 
@@ -43,7 +44,7 @@ namespace HyPlayer.Classes
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is true) return Application.Current.Resources["SystemControlAcrylicWindowBrush"] as Brush;
+            if (value is true) return Application.Current.Resources["SystemControlAcrylicWindowBrush"]?.As<Brush>();
             return null;
         }
 
@@ -56,8 +57,8 @@ namespace HyPlayer.Classes
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is false && Common.Setting.acrylicBackgroundStatus is true && Common.isExpanded is false) return Application.Current.Resources["GridPlayBarBackgroundAcrylic"] as Brush;
-            if (value is false && Common.Setting.acrylicBackgroundStatus is false && Common.isExpanded is false) return Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
+            if (value is false && Common.Setting.acrylicBackgroundStatus is true && Common.isExpanded is false) return Application.Current.Resources["GridPlayBarBackgroundAcrylic"]?.As<Brush>();
+            if (value is false && Common.Setting.acrylicBackgroundStatus is false && Common.isExpanded is false) return Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"]?.As<Brush>();
             return null;
         }
 
@@ -368,8 +369,8 @@ namespace HyPlayer.Classes
                     pageNavigationViewItem = Common.PageBase.NavItemsMyLovedPlaylist;
                 else
                 {
-                    var item = Common.PageBase.NavItemsMyList.MenuItems.Where(t => (((NavigationViewItem)t)?.Tag as string) == $"Playlist{displayedList.playList.PlaylistId}").FirstOrDefault()
-                        ?? Common.PageBase.NavItemsLikeList.MenuItems.Where(t => (((NavigationViewItem)t)?.Tag as string) == $"Playlist{displayedList.playList.PlaylistId}").FirstOrDefault();
+                    var item = Common.PageBase.NavItemsMyList.MenuItems.Where(t => (t?.As<NavigationViewItem>()?.Tag as string) == $"Playlist{displayedList.playList.PlaylistId}").FirstOrDefault()
+                        ?? Common.PageBase.NavItemsLikeList.MenuItems.Where(t => (t?.As<NavigationViewItem>()?.Tag as string) == $"Playlist{displayedList.playList.PlaylistId}").FirstOrDefault();
                     if (item != null)
                     {
                         pageNavigationViewItem = (NavigationViewItem)item;

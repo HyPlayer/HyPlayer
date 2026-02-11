@@ -63,9 +63,9 @@ public partial class PivotExHeaderView : ListView
     {
         base.OnApplyTemplate();
 
-        LayoutRoot = GetTemplateChild(nameof(LayoutRoot)) as Border;
-        DefaultHeaderTemplate = LayoutRoot?.Resources["DefaultHeaderTemplate"] as DataTemplate;
-        EmptyHeaderTemplate = LayoutRoot?.Resources["EmptyHeaderTemplate"] as DataTemplate;
+        LayoutRoot = GetTemplateChild(nameof(LayoutRoot))?.As<Border>();
+        DefaultHeaderTemplate = LayoutRoot?.Resources["DefaultHeaderTemplate"]?.As<DataTemplate>();
+        EmptyHeaderTemplate = LayoutRoot?.Resources["EmptyHeaderTemplate"]?.As<DataTemplate>();
 
         ItemTemplateSelector = new PivotHeaderTemplateSelector(this);
     }
@@ -77,7 +77,7 @@ public partial class PivotExHeaderView : ListView
 
     private void PivotExHeaderView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        var container = ContainerFromIndex(SelectedIndex) as FrameworkElement;
+        var container = ContainerFromIndex(SelectedIndex)?.As<FrameworkElement>();
         if (container != null) container.StartBringIntoView();
 
         if (Pivot != null && SelectedIndex != Pivot.SelectedIndex)

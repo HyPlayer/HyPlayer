@@ -14,6 +14,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 using Point = Windows.Foundation.Point;
 
 #endregion
@@ -286,10 +287,10 @@ public sealed partial class Comments : Page
         var transform = AllCmtsTB.TransformToVisual(MainScroll);
         var point = transform.TransformPoint(new Point(0, 0));
         var y = point.Y + MainScroll.VerticalOffset;
-        if ((sender as ScrollViewer).VerticalOffset > y + 25)
+        if ((sender?.As<ScrollViewer>()).VerticalOffset > y + 25)
             BackToTop.Visibility = Visibility.Visible;
         else BackToTop.Visibility = Visibility.Collapsed;
-        if ((sender as ScrollViewer).VerticalOffset < 15)
+        if ((sender?.As<ScrollViewer>()).VerticalOffset < 15)
         {
             TimeSpan delay = TimeSpan.FromMilliseconds(90);//先别急，如果是回到顶部触发的会滚回去一点
             ThreadPoolTimer DelayTimer = ThreadPoolTimer.CreateTimer(
@@ -300,7 +301,7 @@ public sealed partial class Comments : Page
             CoreDispatcherPriority.Low,
             () =>
             {
-                if ((sender as ScrollViewer).VerticalOffset < 15)
+                if ((sender?.As<ScrollViewer>()).VerticalOffset < 15)
                     ShiftCommentList(false);//回到热评
             });
 

@@ -5,6 +5,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Markup;
+using WinRT;
 
 namespace HyPlayer.Controls.Primitives;
 
@@ -195,11 +196,11 @@ public partial class RedirectVisualView : Control
 
         DetachVisuals();
 
-        LayoutRoot = GetTemplateChild(nameof(LayoutRoot)) as Grid;
-        ChildPresenter = GetTemplateChild(nameof(ChildPresenter)) as ContentPresenter;
-        ChildPresenterContainer = GetTemplateChild(nameof(ChildPresenterContainer)) as Grid;
-        ChildHost = GetTemplateChild(nameof(ChildHost)) as Canvas;
-        OpacityMaskContainer = GetTemplateChild(nameof(OpacityMaskContainer)) as Canvas;
+        LayoutRoot = GetTemplateChild(nameof(LayoutRoot))?.As<Grid>();
+        ChildPresenter = GetTemplateChild(nameof(ChildPresenter))?.As<ContentPresenter>();
+        ChildPresenterContainer = GetTemplateChild(nameof(ChildPresenterContainer))?.As<Grid>();
+        ChildHost = GetTemplateChild(nameof(ChildHost))?.As<Canvas>();
+        OpacityMaskContainer = GetTemplateChild(nameof(OpacityMaskContainer))?.As<Canvas>();
 
         if (RedirectVisualEnabled)
         {

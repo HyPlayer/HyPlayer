@@ -8,6 +8,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Media;
+using WinRT;
 #nullable enable
 
 namespace HyPlayer.Behaviors
@@ -117,7 +118,7 @@ namespace HyPlayer.Behaviors
             if (contentPresenter != null)
             {
                 contentChangedEventToken = contentPresenter.RegisterPropertyChangedCallback(ContentPresenter.ContentProperty, OnContentChanged);
-                var actualContent = VisualTreeHelper.GetChild(contentPresenter, 0) as UIElement;
+                var actualContent = VisualTreeHelper.GetChild(contentPresenter, 0)?.As<UIElement>();
 
                 if (actualContent != null)
                 {
@@ -199,7 +200,7 @@ namespace HyPlayer.Behaviors
                     contentVisual = null;
                 }
 
-                var actualContent = VisualTreeHelper.GetChild(contentPresenter, 0) as UIElement;
+                var actualContent = VisualTreeHelper.GetChild(contentPresenter, 0)?.As<UIElement>();
 
                 if (actualContent != null)
                 {

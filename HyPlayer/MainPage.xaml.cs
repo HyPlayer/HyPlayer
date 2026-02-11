@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 using ColorStop = (float offset, Windows.UI.Color color);
 
 #endregion
@@ -48,7 +49,7 @@ public sealed partial class MainPage : Page
 
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
-        UIElement PlayBarMarginRect = PlayBarMarginBackground as UIElement;
+        UIElement PlayBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
         ActualThemeChanged += MainPage_ActualThemeChanged;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;

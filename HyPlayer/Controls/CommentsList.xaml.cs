@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using WinRT;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -31,7 +32,7 @@ namespace HyPlayer.Controls
         public ScrollViewer CommentPresentScrollViewer
 
         {
-            get => (VisualTreeHelper.GetChild(CommentsContainer, 0) as Border).Child as ScrollViewer;
+            get => (VisualTreeHelper.GetChild(CommentsContainer, 0)?.As<Border>()).Child?.As<ScrollViewer>();
         }
     }
 }

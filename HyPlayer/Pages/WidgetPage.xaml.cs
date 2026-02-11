@@ -16,6 +16,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -45,7 +46,7 @@ public sealed partial class WidgetPage : Page
         base.OnNavigatedTo(e);
 
         FindLyricButton.Click += FindLyricButton_Click;
-        _widget = e.Parameter as XboxGameBarWidget;
+        _widget = e.Parameter?.As<XboxGameBarWidget>();
         Common.XboxGameBarWidget = _widget;
         if (HyPlayList.NowPlayingItem.PlayItem is null) return;
         Initialize();
@@ -294,12 +295,12 @@ public sealed partial class WidgetPage : Page
 
     private SolidColorBrush GetAccentBrush()
     {
-        return Resources["AccentBrush"] as SolidColorBrush;
+        return Resources["AccentBrush"]?.As<SolidColorBrush>();
     }
 
     private SolidColorBrush GetIdleBrush()
     {
-        return Resources["IdleBrush"] as SolidColorBrush;
+        return Resources["IdleBrush"]?.As<SolidColorBrush>();
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)

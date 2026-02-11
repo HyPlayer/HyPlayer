@@ -6,6 +6,7 @@ using System.Linq;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using WinRT;
 
 #endregion
 
@@ -35,7 +36,7 @@ public sealed partial class DownloadPage : Page
 
     private void PauseBtn_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as Button)?.DataContext is not DownloadObject downloadObject) return;
+        if ((sender?.As<Button>())?.DataContext is not DownloadObject downloadObject) return;
         switch (downloadObject.Status)
         {
             case DownloadObject.DownloadStatus.Downloading or DownloadObject.DownloadStatus.Queueing:
@@ -54,7 +55,7 @@ public sealed partial class DownloadPage : Page
 
     private void RemoveBtn_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as Button)?.DataContext is not DownloadObject downloadObject) return;
+        if ((sender?.As<Button>())?.DataContext is not DownloadObject downloadObject) return;
         downloadObject.Remove();
     }
 

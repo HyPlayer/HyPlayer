@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
+using WinRT;
 
 namespace HyPlayer.Classes
 {
@@ -26,7 +27,7 @@ namespace HyPlayer.Classes
                 }
                 return karaokAccentBrush != null
                 ? (Windows.UI.Color)karaokAccentBrush
-                : (Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush)!.Color;
+                : (Application.Current.Resources["SystemControlPageTextBaseHighBrush"]?.As<SolidColorBrush>())!.Color;
             }
             set
             {
@@ -60,7 +61,7 @@ namespace HyPlayer.Classes
                     return new SolidColorBrush(Common.Setting.pureLyricFocusingColor.Value);
                 }
 
-                return (accentBrush ?? Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush);
+                return (accentBrush ?? Application.Current.Resources["SystemControlPageTextBaseHighBrush"]?.As<SolidColorBrush>());
             }
             set
             {
@@ -77,7 +78,7 @@ namespace HyPlayer.Classes
                     return new SolidColorBrush(Common.Setting.pureLyricIdleColor.Value);
                 }
 
-                return (idleBrush ?? Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush);
+                return (idleBrush ?? Application.Current.Resources["TextFillColorTertiaryBrush"]?.As<SolidColorBrush>());
             }
             set
             {

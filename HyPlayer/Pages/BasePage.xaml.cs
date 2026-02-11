@@ -13,7 +13,6 @@ using Microsoft.UI.Xaml.Controls;
 using QRCoder;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -30,6 +29,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackButtonVisible = Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible;
 using NavigationViewDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode;
@@ -421,7 +421,7 @@ public sealed partial class BasePage : Page
                                                   NavigationViewSelectionChangedEventArgs args)
     {
         if (Common.NavigatingBack) return;
-        var nowitem = sender.SelectedItem as NavigationViewItem;
+        var nowitem = sender.SelectedItem?.As<NavigationViewItem>();
         if (Common.NavigationHistory.Count > 1)
             NavMain.IsBackEnabled = true;
         if (nowitem.Tag is null) return;
@@ -494,7 +494,7 @@ public sealed partial class BasePage : Page
     private async void NavMain_ItemInvoked(NavigationView sender,
                                            NavigationViewItemInvokedEventArgs args)
     {
-        var invokedItemTag = (args.InvokedItemContainer as NavigationViewItem)?.Tag?.ToString();
+        var invokedItemTag = (args.InvokedItemContainer?.As<NavigationViewItem>())?.Tag?.ToString();
         if (invokedItemTag is null || invokedItemTag == string.Empty) return;
         switch (invokedItemTag)
         {
@@ -531,7 +531,7 @@ public sealed partial class BasePage : Page
 
     private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if ((sender as Pivot).SelectedIndex == 1)
+        if ((sender?.As<Pivot>()).SelectedIndex == 1)
             LoadQr(null, null);
         else
             InfoBarLoginHint.Title = "登录代表你同意相关条款";
@@ -599,7 +599,7 @@ public sealed partial class BasePage : Page
             }
 
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Common.AddToTeachingTipLists("加载二维码时发生错误", e.Message);
         }
@@ -633,7 +633,7 @@ public sealed partial class BasePage : Page
     private void ThirdPartyLogin_Click(object sender, RoutedEventArgs e)
     {
         DialogLogin.Hide();
-        BaseFrame.Navigate(typeof(ThirdPartyLogin), (sender as Button).Tag.ToString());
+        BaseFrame.Navigate(typeof(ThirdPartyLogin), (sender?.As<Button>()).Tag.ToString());
     }
 
     private void NavigationViewItem_Tapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)

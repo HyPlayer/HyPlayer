@@ -25,6 +25,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
+using WinRT;
 
 #endregion
 
@@ -246,7 +247,7 @@ DoubleAnimation verticalAnimation;
                     : Visibility.Collapsed;
                 FlyoutLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    : Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
                 FlyoutLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
@@ -468,7 +469,7 @@ DoubleAnimation verticalAnimation;
         Common.PageMain.GridPlayBar.BorderThickness = new Thickness(1);
         Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-        var region = Common.PageBase.AppTitleBar.FindDescendant("PART_DragRegion") as Grid;
+        var region = Common.PageBase.AppTitleBar.FindDescendant("PART_DragRegion")?.As<Grid>();
         Window.Current.SetTitleBar(region);
         Common.isExpanded = false;
         RefreshPlayBarCover(HyPlayList.NowPlayingItem);
@@ -767,8 +768,8 @@ DoubleAnimation verticalAnimation;
 
         if (Common.Setting.playButtonAccentColor)
         {
-            BtnPlayStateChange.Background = Resources["SolidPlayButtonColor"] as Brush;
-            PlayStateIcon.Foreground = Resources["SolidPlayButtonIconColor"] as Brush;
+            BtnPlayStateChange.Background = Resources["SolidPlayButtonColor"]?.As<Brush>();
+            PlayStateIcon.Foreground = Resources["SolidPlayButtonIconColor"]?.As<Brush>();
         }
         else
             PlayBarBackgroundAni.Children.RemoveAt(2);
@@ -838,7 +839,7 @@ DoubleAnimation verticalAnimation;
             : Visibility.Collapsed;
         FlyoutLiked.Foreground = isLiked
             ? new SolidColorBrush(Colors.Red)
-            : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+            : Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
         FlyoutLiked.Glyph = isLiked
             ? "\uE00B"
             : "\uE006";
@@ -913,7 +914,7 @@ DoubleAnimation verticalAnimation;
     private void CopySongDetailFlyoutItem_Click(object sender, RoutedEventArgs e)
     {
         DataPackage package = new DataPackage();
-        switch ((sender as MenuFlyoutItem).Name)
+        switch ((sender?.As<MenuFlyoutItem>()).Name)
         {
             case "CopySongNameFlyoutItem":
                 if (TbSongName.Text == null) return;

@@ -8,6 +8,7 @@ using HyPlayer.ViewModels;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 
 
 
@@ -40,7 +41,7 @@ namespace HyPlayer.Pages
 
         private void Card_Click(object sender, RoutedEventArgs e)
         {
-            var button = sender as Button;
+            var button = sender?.As<Button>();
             if (button == null) return;
             var playlist = button.CommandParameter as NCPlayList;
             Common.NavigatePage(typeof(SongListDetail), playlist, new Windows.UI.Xaml.Media.Animation.DrillInNavigationTransitionInfo());
@@ -48,7 +49,7 @@ namespace HyPlayer.Pages
 
         private void SongCard_Click(object sender, RoutedEventArgs e)
         {
-            var button = sender as Button;
+            var button = sender?.As<Button>();
             if (button == null) return;
             var song = button.CommandParameter as NCSong;
             HyPlayList.AppendNcSong(song);
@@ -60,7 +61,7 @@ namespace HyPlayer.Pages
 
         private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
-            var playList = (NCPlayList)(sender as MenuFlyoutItem)?.CommandParameter;
+            var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
             //播放全部歌曲
             HyPlayList.RemoveAllSong();
             await HyPlayList.AppendPlayList(playList.PlaylistId);
@@ -71,7 +72,7 @@ namespace HyPlayer.Pages
 
         private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
         {
-            var playList = (NCPlayList)(sender as MenuFlyoutItem)?.CommandParameter;
+            var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
             var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistPrivacyApi,
                new PlaylistPrivacyRequest()
                {
@@ -90,7 +91,7 @@ namespace HyPlayer.Pages
 
         private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
         {
-            var playList = (NCPlayList)(sender as MenuFlyoutItem)?.CommandParameter;
+            var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
             var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistDeleteApi,
             new PlaylistDeleteRequest()
             {

@@ -6,6 +6,7 @@ using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
+using WinRT;
 
 namespace HyPlayer.Controls;
 
@@ -88,7 +89,7 @@ public partial class PivotEx : Pivot
 
     private async Task UpdateCurrentScrollViewer()
     {
-        var container = ContainerFromIndex(SelectedIndex) as PivotItem;
+        var container = ContainerFromIndex(SelectedIndex)?.As<PivotItem>();
 
         var sv = container?.FindDescendant<ScrollViewer>();
 
@@ -185,7 +186,7 @@ public partial class PivotEx : Pivot
             TryScrollVerticalOffsetAsync(sv);
         }
 
-        var container = ContainerFromIndex(SelectedIndex) as PivotItem;
+        var container = ContainerFromIndex(SelectedIndex)?.As<PivotItem>();
         if (container == args.Item) _ = UpdateCurrentScrollViewer();
     }
 

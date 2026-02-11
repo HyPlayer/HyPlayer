@@ -35,6 +35,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
+using WinRT;
 using Color = Windows.UI.Color;
 using HttpClient = System.Net.Http.HttpClient;
 #if !DEBUG
@@ -269,14 +270,14 @@ namespace HyPlayer
 
         public static void UIElement_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            var element = sender as UIElement;
+            var element = sender?.As<UIElement>();
             try
             {
                 element?.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
             }
             catch
             {
-                var flyout = FlyoutBase.GetAttachedFlyout((FrameworkElement)element!);
+                var flyout = FlyoutBase.GetAttachedFlyout(element?.As<FrameworkElement>()!);
                 flyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
             }
         }

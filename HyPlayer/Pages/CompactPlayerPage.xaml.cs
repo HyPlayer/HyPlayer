@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -154,7 +155,7 @@ public sealed partial class CompactPlayerPage : Page
         {
             IconLiked.Foreground = isLiked
                 ? new SolidColorBrush(Colors.Red)
-                : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                : Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
             IconLiked.Glyph = isLiked
                 ? "\uE00B"
                 : "\uE006";
@@ -266,7 +267,7 @@ public sealed partial class CompactPlayerPage : Page
             {
                 IconLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    : Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
                 IconLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
@@ -299,7 +300,7 @@ public sealed partial class CompactPlayerPage : Page
         HyPlayList_OnSongCoverChanged(HyPlayList.NowPlayingItem);
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB4" : "\uEDB5";
         //Common.BarPlayBar.Visibility = Visibility.Collapsed;
-        (e.Parameter as AppWindow).TitleBar.ExtendsContentIntoTitleBar = true;
+        (e.Parameter?.As<AppWindow>()).TitleBar.ExtendsContentIntoTitleBar = true;
         //Window.Current.SetTitleBar(MainGrid);
     }
 

@@ -162,7 +162,7 @@ internal class CloudUpload
         }
 
 
-            
+
         var infoRes = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CloudUploadInfoApi, infoReq);
         if (infoRes.IsError)
         {
@@ -182,7 +182,7 @@ internal class CloudUpload
         {
             Common.AddToTeachingTipLists("上传本地音乐至音乐云盘成功", "成功上传: " + file.DisplayName);
         }
-        
+
     }
 
 

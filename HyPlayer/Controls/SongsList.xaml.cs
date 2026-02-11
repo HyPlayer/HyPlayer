@@ -18,6 +18,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using WinRT;
 
 #endregion
 
@@ -223,7 +224,7 @@ public sealed partial class SongsList : UserControl
 
     private void BtnPlay_Click(object sender, RoutedEventArgs e)
     {
-        var ncsong = VisibleSongs[int.Parse((sender as Button).Tag.ToString())];
+        var ncsong = VisibleSongs[int.Parse((sender?.As<Button>()).Tag.ToString())];
         _ = HyPlayList.AppendNcSong(ncsong);
         HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem.Id == ncsong.SongId));
         if (ListSource.Substring(0, 2) == "pl" ||
@@ -366,7 +367,7 @@ public sealed partial class SongsList : UserControl
 
     private void Grid_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        var element = sender as Grid;
+        var element = sender?.As<Grid>();
         if (SongContainer.SelectionMode == ListViewSelectionMode.Single)
         {
             //IsManualSelect = false;
