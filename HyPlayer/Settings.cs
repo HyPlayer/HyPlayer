@@ -1378,6 +1378,15 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public bool IsolationLightWave
+        {
+            get => GetSettings(nameof(IsolationLightWave), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(IsolationLightWave)] = value;
+                OnPropertyChanged();
+            }
+        }
         public bool ImpressionistLABSpace
         {
             get => GetSettings(nameof(ImpressionistLABSpace), true);
