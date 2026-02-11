@@ -23,7 +23,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0
+        fetch-depth: 1
         submodules: true
 
     # Install the .NET Core workload
@@ -57,7 +57,7 @@ jobs:
         script: |
               $MANIFEST = [xml](Get-Content HyPlayer.Package\Package.appxmanifest)
               $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
-              $VERSION = $MAINVERSION + "${{github.run_id}}"
+              $VERSION = $MAINVERSION + "${{github.run_number}}"
               Write-Host("##vso[task.setvariable variable=VERSION]$VERSION")
               echo "Currently Building Version Is"
               echo $VERSION
@@ -73,7 +73,7 @@ jobs:
                 $content = Get-Content $buildInfoPath -Raw
               $commitSha = "${{github.sha}}"
               $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-              $jobId = "${{github.run_id}}"
+              $jobId = "${{github.run_number}}"
               $content = $content -replace 'CommitSha = "__COMMIT_SHA__"', "CommitSha = `"$commitSha`""
               $content = $content -replace 'BuildTime = "__BUILD_TIME__"', "BuildTime = `"$buildTime`""
               $content = $content -replace 'BuildJobId = "__BUILD_JOB_ID__"', "BuildJobId = `"$jobId`""
