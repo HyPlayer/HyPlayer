@@ -6,11 +6,13 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
+using ObservableCollections;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
@@ -36,7 +38,7 @@ public sealed partial class SongListDetail : Page
 
     private int page;
     public NCPlayList playList;
-    public ObservableCollection<NCSong> Songs;
+    public ObservableList<NCSong> Songs = new();
     private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -44,7 +46,6 @@ public sealed partial class SongListDetail : Page
     public SongListDetail()
     {
         InitializeComponent();
-        Songs = new ObservableCollection<NCSong>();
         _dataTransferManager.DataRequested += DataTransferManagerOnDataRequested;
         _cancellationToken = _cancellationTokenSource.Token;
     }
@@ -162,14 +163,17 @@ public sealed partial class SongListDetail : Page
             }
 
             var idx = 0;
+            var list = new List<NCSong>(items?.Data?.DailySongs?.Length ?? 0);
             foreach (var song in items?.Data?.DailySongs ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var ncSong = song.MapNcSong();
                 ncSong.IsAvailable = true;
                 ncSong.Order = idx++;
-                Songs.Add(ncSong);
+                list.Add(ncSong);
             }
+
+            Songs.AddRange(list);
             NextPage.Visibility = Visibility.Collapsed;
         }
         catch (Exception ex)
@@ -263,14 +267,18 @@ public sealed partial class SongListDetail : Page
             var privileges = rst.Privileges;
             var idx = page * 500;
             var i = 0;
+            var list = new List<NCSong>(rst.Songs?.Length ?? 0);
             foreach (var jToken in rst.Songs ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var ncSong = jToken.MapToNcSong();
                 ncSong.IsAvailable = privileges?[i++].St is 0;
                 ncSong.Order = idx++;
-                Songs.Add(ncSong);
+                list.Add(ncSong);
             }
+
+            Songs.AddRange(list);
+
             if (_songListIds.Count <= Songs.Count)
             {
                 NextPage.Visibility = Visibility.Collapsed;

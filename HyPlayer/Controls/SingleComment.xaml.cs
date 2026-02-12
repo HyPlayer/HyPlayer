@@ -4,7 +4,9 @@ using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Comment;
 using HyPlayer.Pages;
+using ObservableCollections;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -41,21 +43,15 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     }
 
 
-    private ObservableCollection<Comment> floorComments = new ObservableCollection<Comment>();
+    private ObservableList<Comment> floorComments = new ObservableList<Comment>();
     public UserDisplay CommentUserDisplay;
     private string time = "0";
 
     public SingleComment()
     {
         InitializeComponent();
-        floorComments.CollectionChanged += FloorComments_CollectionChanged;
     }
 
-    private void FloorComments_CollectionChanged(object sender,
-        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        OnPropertyChanged(nameof(floorComments));
-    }
 
     public BitmapImage AvatarSource
     {
@@ -101,15 +97,16 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             {
                 return;
             }
+            var list = new List<Comment>(result.Data?.Comments.Length ?? 0);
             foreach (var floorcomment in result.Data?.Comments ?? [])
             {
                 var floorComment = floorcomment.MapToComment();
                 floorComment.ResourceId = MainComment.ResourceId;
                 floorComment.ResourceType = MainComment.ResourceType;
                 floorComment.IsMainComment = false;
-                floorComments.Add(floorComment);
+                list.Add(floorComment);
             }
-
+            floorComments.AddRange(list);
             time = result?.Data?.Time.ToString();
             LoadMore.Visibility = result?.Data?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
         }

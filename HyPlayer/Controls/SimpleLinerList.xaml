@@ -15,7 +15,6 @@
         Padding="10"
         Header="{x:Bind ListHeader, Mode=OneWay}"
         ItemContainerStyle="{StaticResource ListViewItemStyle}"
-        ItemsSource="{x:Bind ListItems}"
         SelectionChanged="ItemList_SelectionChanged"
         ShowsScrollingPlaceholders="True">
         <interactivity:Interaction.Behaviors>

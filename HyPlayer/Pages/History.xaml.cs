@@ -1,10 +1,13 @@
 ﻿#region
 
 using HyPlayer.Classes;
+using HyPlayer.Controls;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.NeteaseApi.Bases;
+using ObservableCollections;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +26,7 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class History : Page
 {
-    private readonly ObservableCollection<NCSong> Songs = new();
+    private readonly ObservableList<NCSong> Songs = new();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _songRankWeekLoaderTask;
@@ -75,9 +78,8 @@ public sealed partial class History : Page
                 foreach (var song in Songsl)
                 {
                     song.Order = songorder++;
-                    Songs.Add(song);
                 }
-                Songsl.Clear();
+                Songs.AddRange(Songsl);
                 break;
             case "SongRankWeek":
                 //听歌排行加载部分 - 优先级靠下
@@ -104,13 +106,15 @@ public sealed partial class History : Page
                 return;
             }
             var weekData = ret3.Value?.AllData;
+            var list = new List<NCSong>(weekData.Length);
             for (var i = 0; i < weekData.Length; i++)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var song = weekData[i].Song.MapNcSong();
                 song.Order = i;
-                Songs.Add(song);
+                list.Add(song);
             }
+            Songs.AddRange(list);
         }
         catch (Exception ex)
         {
@@ -133,13 +137,15 @@ public sealed partial class History : Page
                 return;
             }
             var weekData = ret2.Value?.WeekData;
+            var list = new List<NCSong>(weekData.Length);
             for (var i = 0; i < weekData.Length; i++)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var song = weekData[i].Song.MapNcSong();
                 song.Order = i;
-                Songs.Add(song);
+                list.Add(song);
             }
+            Songs.AddRange(list);
         }
         catch (Exception ex)
         {

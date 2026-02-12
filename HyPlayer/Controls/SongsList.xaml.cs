@@ -5,11 +5,13 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Pages;
+using ObservableCollections;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI;
@@ -39,9 +41,9 @@ public sealed partial class SongsList : UserControl
     );
 
     public static readonly DependencyProperty SongsProperty = DependencyProperty.Register(
-        "Songs", typeof(ObservableCollection<NCSong>),
+        "Songs", typeof(ObservableList<NCSong>),
         typeof(SongsList),
-        new PropertyMetadata(null)
+        new PropertyMetadata(new())
     );
 
     public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
@@ -64,7 +66,8 @@ public sealed partial class SongsList : UserControl
     public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
         "Footer", typeof(UIElement), typeof(SongsList), new PropertyMetadata(default(UIElement)));
 
-    private readonly ObservableCollection<NCSong> VisibleSongs = new();
+    private readonly IWritableSynchronizedView<NCSong, NCSong> VisibleSongsView;
+    private readonly ISynchronizedViewList<NCSong> VisibleSongsList;
 
     public static readonly DependencyProperty CanViewCommentsProperty = DependencyProperty.Register(
         "CanViewComments", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
@@ -73,6 +76,9 @@ public sealed partial class SongsList : UserControl
     public SongsList()
     {
         InitializeComponent();
+        VisibleSongsView = Songs.CreateWritableView(t=>t);
+        VisibleSongsList = VisibleSongsView.ToViewList();
+        SongContainer.ItemsSource = VisibleSongsView.ToNotifyCollectionChanged().As<IList<NCSong>>();
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
         Unloaded += SongsList_Unloaded;
     }
@@ -128,24 +134,10 @@ public sealed partial class SongsList : UserControl
         }
     }
 
-    public ObservableCollection<NCSong> Songs
+    public ObservableList<NCSong> Songs
     {
-        get => (ObservableCollection<NCSong>)GetValue(SongsProperty);
-        set
-        {
-            SetValue(SongsProperty, value);
-            try
-            {
-                Songs.CollectionChanged -= Songs_CollectionChanged;
-            }
-            catch
-            {
-            }
-            finally
-            {
-                Songs.CollectionChanged += Songs_CollectionChanged;
-            }
-        }
+        get => (ObservableList<NCSong>)GetValue(SongsProperty);
+        set => SetValue(SongsProperty, value);
     }
 
     public bool CanViewComments
@@ -194,7 +186,7 @@ public sealed partial class SongsList : UserControl
             return;
         }
 
-        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == playitem.PlayItem.Id);
+        var idx = VisibleSongsView.ToList().FindIndex(t => t.SongId == playitem.PlayItem.Id);
         if (idx == -1) return;
         _ = Common.Invoke(() =>
         {
@@ -204,27 +196,9 @@ public sealed partial class SongsList : UserControl
         });
     }
 
-    private void Songs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void BtnPlay_Click(object sender, RoutedEventArgs e)
     {
-        if (e.NewItems != null)
-        {
-            foreach (var item in e.NewItems)
-                if (item is NCSong ncSong)
-                {
-                    VisibleSongs.Add(ncSong);
-                }
-        }
-
-        else
-        {
-            VisibleSongs.Clear();
-        }
-    }
-
-
-    private void BtnPlay_Click(object sender, RoutedEventArgs e)
-    {
-        var ncsong = VisibleSongs[int.Parse((sender?.As<Button>()).Tag.ToString())];
+        var ncsong = VisibleSongsList[int.Parse((sender?.As<Button>()).Tag.ToString())];
         _ = HyPlayList.AppendNcSong(ncsong);
         HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem.Id == ncsong.SongId));
         if (ListSource.Substring(0, 2) == "pl" ||
@@ -362,7 +336,7 @@ public sealed partial class SongsList : UserControl
                 IsAdd = false,
                 PlaylistId = ListSource.Substring(2)
             });
-        VisibleSongs.Remove(SongContainer.SelectedItem as NCSong);
+        Songs.Remove(SongContainer.SelectedItem as NCSong);
     }
 
     private void Grid_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -391,15 +365,6 @@ public sealed partial class SongsList : UserControl
     {
     }
 
-    private bool Filter(NCSong ncsong)
-    {
-        if (ncsong == null) return false;
-        return (ncsong.SongName ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.ArtistString ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.Album?.Name ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.TranslatedName ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.Alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
-    }
 
     private GridLength GetSearchHeight(bool IsEnabled)
     {
@@ -427,10 +392,10 @@ public sealed partial class SongsList : UserControl
         }
 
         IsAddingSongToPlaylist = true;
-        if (ListSource != null && ListSource != "Content" && Songs.Count == VisibleSongs.Count)
+        if (ListSource != null && ListSource != "Content" && Songs.Count == VisibleSongsView.Count)
         {
             if (HyPlayList.PlaySourceId != ListSource.Substring(2) ||
-                HyPlayList.List.Count != VisibleSongs.Count(t => t.IsAvailable))
+                HyPlayList.List.Count != VisibleSongsView.Count(t => t.IsAvailable))
             {
                 // Change Music Source
                 HyPlayList.RemoveAllSong(!shiftSong);
@@ -446,7 +411,7 @@ public sealed partial class SongsList : UserControl
         }*/
         else
         {
-            HyPlayList.AppendNcSongs(VisibleSongs, resetPlaying: !shiftSong, currentSongId: ncSong.SongId);
+            HyPlayList.AppendNcSongs([.. VisibleSongsList], resetPlaying: !shiftSong, currentSongId: ncSong.SongId);
         }
 
         if (ListSource == "Content")
@@ -478,21 +443,21 @@ public sealed partial class SongsList : UserControl
 
     private void FilterBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        var vpos = -1;
-        for (var b = 0; b < VisibleSongs.Count; b++)
-            if (!Songs.Contains(VisibleSongs[b]))
-                VisibleSongs.RemoveAt(b);
-
-        for (var i = 0; i < Songs.Count; i++)
-            if (string.IsNullOrWhiteSpace(FilterBox.Text) || Filter(Songs[i]))
+        if (!string.IsNullOrWhiteSpace(FilterBox.Text))
+        {
+            VisibleSongsView.AttachFilter((ncsong) =>
             {
-                vpos++;
-                if (!VisibleSongs.Contains(Songs[i])) VisibleSongs.Insert(vpos, Songs[i]);
-            }
-            else
-            {
-                VisibleSongs.Remove(Songs[i]);
-            }
+                return (ncsong.SongName ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+               (ncsong.ArtistString ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+               (ncsong.Album?.Name ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+               (ncsong.TranslatedName ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+               (ncsong.Alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
+            });
+        }
+        else
+        {
+            VisibleSongsView.ResetFilter();
+        }
     }
 
     private void ToolbarNavigationView_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender,
@@ -503,9 +468,9 @@ public sealed partial class SongsList : UserControl
         {
             case "FocusingCurrent":
                 if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
-                var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.PlayItem?.Id);
+                var idx = VisibleSongsList.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.PlayItem?.Id);
                 if (idx == -1) return;
-                SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
+                SongContainer.ScrollIntoView(VisibleSongsList[idx], ScrollIntoViewAlignment.Leading);
                 break;
             case "Comments":
                 var page = (SongListDetail)((Grid)Parent).Parent;
@@ -519,8 +484,8 @@ public sealed partial class SongsList : UserControl
     private void FocusingCurrent_OnClicked(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
-        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.PlayItem?.Id);
+        var idx = VisibleSongsList.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.PlayItem?.Id);
         if (idx == -1) return;
-        SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
+        SongContainer.ScrollIntoView(VisibleSongsList[idx], ScrollIntoViewAlignment.Leading);
     }
 }

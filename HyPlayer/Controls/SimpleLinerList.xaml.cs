@@ -2,6 +2,7 @@
 
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using ObservableCollections;
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -13,9 +14,9 @@ namespace HyPlayer.Controls;
 public partial class SimpleLinerList : UserControl
 {
     public static readonly DependencyProperty ListItemsProperty = DependencyProperty.Register(
-        "ListItems", typeof(ObservableCollection<SimpleListItem>),
+        "ListItems", typeof(ObservableList<SimpleListItem>),
         typeof(SimpleListItem),
-        new PropertyMetadata(new ObservableCollection<SimpleListItem>())
+        new PropertyMetadata(new ObservableList<SimpleListItem>())
     );
 
     public static readonly DependencyProperty ListHeaderProperty = DependencyProperty.Register(
@@ -27,6 +28,7 @@ public partial class SimpleLinerList : UserControl
     public SimpleLinerList()
     {
         InitializeComponent();
+        ItemList.ItemsSource = ListItems.ToNotifyCollectionChanged();
     }
 
     public UIElement ListHeader
@@ -41,9 +43,9 @@ public partial class SimpleLinerList : UserControl
         set => SetValue(FooterProperty, value);
     }
 
-    public ObservableCollection<SimpleListItem> ListItems
+    public ObservableList<SimpleListItem> ListItems
     {
-        get => (ObservableCollection<SimpleListItem>)GetValue(ListItemsProperty);
+        get => (ObservableList<SimpleListItem>)GetValue(ListItemsProperty);
         set => SetValue(ListItemsProperty, value);
     }
 

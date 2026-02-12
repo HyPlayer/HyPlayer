@@ -4,7 +4,9 @@ using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Comment;
 using HyPlayer.NeteaseApi.Models;
+using ObservableCollections;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,8 +37,8 @@ public sealed partial class Comments : Page
     private int sortType = 1;
     private bool IsShiftingPage = false;
     private ScrollViewer MainScroll, HotCommentsScroll;
-    private ObservableCollection<Comment> hotComments = new ObservableCollection<Comment>();
-    private ObservableCollection<Comment> normalComments = new ObservableCollection<Comment>();
+    private ObservableList<Comment> hotComments = new();
+    private ObservableList<Comment> normalComments = new();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _commentLoaderTask;
@@ -146,15 +148,14 @@ public sealed partial class Comments : Page
             hotComments.Clear();
         else normalComments.Clear();
 
+        var cmts = new List<Comment>(result.Value?.Data?.Comments.Length ?? 0);
         foreach (var comment in result.Value?.Data?.Comments ?? [])
         {
             _cancellationToken.ThrowIfCancellationRequested();
             var cmt = comment.MapToComment();
             cmt.ResourceType = resourcetype;
             cmt.ResourceId = resourceid;
-            if (type == 2 && isHotCommentsPage)
-                hotComments.Add(cmt);
-            else normalComments.Add(cmt);
+            cmts.Add(cmt);
         }
 
         if (type == 3)
@@ -169,6 +170,10 @@ public sealed partial class Comments : Page
             PrevPage.IsEnabled = true;
         else
             PrevPage.IsEnabled = false;
+
+        if (type == 2 && isHotCommentsPage)
+            hotComments.AddRange(cmts);
+        else normalComments.AddRange(cmts);
     }
 
 

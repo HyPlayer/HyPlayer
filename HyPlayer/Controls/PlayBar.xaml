@@ -1133,7 +1133,6 @@
                                     Width="400"
                                     Height="500"
                                     ItemContainerStyle="{ThemeResource ListViewItemStyle}"
-                                    ItemsSource="{x:Bind PlayItems, Mode=OneWay}"
                                     SelectionChanged="ListBoxPlayList_OnSelectionChanged"
                                     SelectionMode="Single">
                                     <ListView.ItemTemplate>

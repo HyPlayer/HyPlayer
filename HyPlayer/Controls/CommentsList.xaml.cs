@@ -1,4 +1,5 @@
 ﻿using HyPlayer.Classes;
+using ObservableCollections;
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -14,16 +15,17 @@ namespace HyPlayer.Controls
         public CommentsList()
         {
             this.InitializeComponent();
+            CommentsContainer.ItemsSource = Comments.ToNotifyCollectionChanged();
         }
         public static readonly DependencyProperty CommentsProperty = DependencyProperty.Register
             (
-            "Comment", typeof(ObservableCollection<Comment>),
+            "Comment", typeof(ObservableList<Comment>),
             typeof(CommentsList),
             new PropertyMetadata(null)
         );
-        public ObservableCollection<Comment> Comments//列表下评论
+        public ObservableList<Comment> Comments
         {
-            get => (ObservableCollection<Comment>)GetValue(CommentsProperty);
+            get => (ObservableList<Comment>)GetValue(CommentsProperty);
             set
             {
                 SetValue(CommentsProperty, value);

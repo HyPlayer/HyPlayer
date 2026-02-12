@@ -1,6 +1,7 @@
 ﻿#region
 
 using HyPlayer.HyPlayControl;
+using ObservableCollections;
 using System;
 using System.Linq;
 using Windows.System;
@@ -22,6 +23,7 @@ public sealed partial class DownloadPage : Page
     public DownloadPage()
     {
         InitializeComponent();
+        DownloadList.ItemsSource = DownloadManager.DownloadLists.ToNotifyCollectionChanged();
     }
 
     private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)

@@ -5,7 +5,9 @@ using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
+using ObservableCollections;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,9 +17,9 @@ namespace HyPlayer.ViewModels
 {
     public partial class ArtistPageViewModel : ObservableRecipient
     {
-        public ObservableCollection<NCSong> AllSongs { get; set; } = [];
-        public ObservableCollection<NCSong> HotSongs { get; set; } = [];
-        public ObservableCollection<SimpleListItem> Albums { get; set; } = [];
+        public ObservableList<NCSong> AllSongs { get; set; } = new();
+        public ObservableList<NCSong> HotSongs { get; set; } = new();
+        public ObservableList<SimpleListItem> Albums { get; set; } = [];
         [ObservableProperty]
         public partial NCArtist Artist { get; set; }
         [ObservableProperty]
@@ -117,15 +119,17 @@ namespace HyPlayer.ViewModels
                 {
                     return;
                 }
-
+                var list = new List<NCSong>(jv?.Songs?.Length ?? 0);
                 foreach (var item in jv?.Songs ?? [])
                 {
                     var ncSong = item.MapToNcSong();
                     ncSong.IsAvailable =
                         jv!.Privileges?[idx].St == 0;
                     ncSong.Order = idx++;
-                    HotSongs.Add(ncSong);
+                    list.Add(ncSong);
                 }
+
+                HotSongs.AddRange(list);
             }
             catch (Exception ex)
             {
@@ -152,13 +156,16 @@ namespace HyPlayer.ViewModels
                         return resp.Value;
                     });
                 var idx = 0;
+                var list = new List<NCSong>(j1?.Songs?.Length ?? 0);
                 foreach (var item in j1.Songs)
                 {
                     var ncSong = item.MapToNcSong();
                     ncSong.IsAvailable = item.Privilege.St == 0;
                     ncSong.Order = CurrentPage * 50 + idx++;
-                    AllSongs.Add(ncSong);
+                    list.Add(ncSong);
                 }
+
+                AllSongs.AddRange(list);
                 HasNextPage = j1.HasMore;
             }
             catch (Exception ex)
@@ -187,22 +194,19 @@ namespace HyPlayer.ViewModels
                     });
 
                 var i = 0;
-                foreach (var album in jv?.Albums ?? [])
+                Albums.AddRange(jv?.Albums?.Select(album => new SimpleListItem
                 {
-                    Albums.Add(new SimpleListItem
-                    {
-                        Title = album.Name,
-                        LineOne = string.Join("/", album.Artists?.Select(t => t.Name) ?? []),
-                        LineTwo = album.Alias != null
+                    Title = album.Name,
+                    LineOne = string.Join("/", album.Artists?.Select(t => t.Name) ?? []),
+                    LineTwo = album.Alias != null
                             ? string.Join(" / ", album.Alias)
                             : "",
-                        LineThree = album.Paid ? "付费专辑" : "",
-                        ResourceId = "al" + album.Id,
-                        CoverLink = album.PictureUrl,
-                        Order = CurrentPage * 50 + i++,
-                        CanPlay = true
-                    });
-                }
+                    LineThree = album.Paid ? "付费专辑" : "",
+                    ResourceId = "al" + album.Id,
+                    CoverLink = album.PictureUrl,
+                    Order = CurrentPage * 50 + i++,
+                    CanPlay = true
+                }).ToArray());
                 HasNextPage = jv?.HasMore ?? false;
                 HasPreviousPage = CurrentPage > 0;
             }

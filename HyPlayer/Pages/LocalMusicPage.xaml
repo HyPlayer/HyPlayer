@@ -53,7 +53,6 @@
                     <Grid Grid.Row="1">
                         <ListView
                             Name="ListBoxLocalMusicContainer"
-                            ItemsSource="{x:Bind localHyItems}"
                             SelectionChanged="ListBoxLocalMusicContainer_SelectionChanged"
                             SelectionMode="Single">
                             <ListView.ItemTemplate>

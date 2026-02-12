@@ -2,6 +2,7 @@
 
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using ObservableCollections;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -29,7 +30,7 @@ namespace HyPlayer.Pages;
 public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 {
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
-    private readonly ObservableCollection<HyPlayItem> localHyItems = new();
+    private readonly ObservableList<HyPlayItem> localHyItems = new();
     private string _notificationText;
     private Task CurrentFileScanTask;
     private CancellationTokenSource cancellationTokenSource = new();
@@ -38,6 +39,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     public LocalMusicPage()
     {
         InitializeComponent();
+        ListBoxLocalMusicContainer.ItemsSource = localHyItems.ToNotifyCollectionChanged();
         _cancellationToken = cancellationTokenSource.Token;
     }
     public string NotificationText
@@ -107,19 +109,21 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
         if (!Common.Setting.localProgressiveLoad)
         {
+            var list = new List<HyPlayItem>(files.Count);
             foreach (var storageFile in files)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
                     var item = await HyPlayList.LoadStorageFile(storageFile);
-                    localHyItems.Add(item);
+                    list.Add(item);
                 }
                 catch
                 {
                     //ignore
                 }
             }
+            localHyItems.AddRange(list);
 
         }
         else
@@ -137,6 +141,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                     Type = HyPlayItemType.LocalProgressive
                 }
             };
+            var list = new List<HyPlayItem>(files.Count);
             foreach (var storageFile in files)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
@@ -161,8 +166,9 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                         Url = storageFile.Path
                     }
                 };
-                localHyItems.Add(item);
+                list.Add(item);
             }
+            localHyItems.AddRange(list);
         }
         NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
         FileLoadingIndicateRing.IsActive = false;

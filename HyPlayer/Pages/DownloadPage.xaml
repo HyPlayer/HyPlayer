@@ -31,7 +31,7 @@
                 Foreground="OrangeRed" />
 
         </StackPanel>
-        <ListView Grid.Row="1" ItemsSource="{x:Bind hyPlayControl:DownloadManager.DownloadLists}">
+        <ListView Grid.Row="1" x:Name="DownloadList">
             <ListView.Resources>
                 <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
                     <Setter Property="Background" Value="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}" />

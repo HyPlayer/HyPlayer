@@ -1,4 +1,5 @@
 ﻿using HyPlayer.Classes;
+using ObservableCollections;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,14 +19,15 @@ public sealed partial class LyricShareDialog : ContentDialog
         new PropertyMetadata(default(List<SongLyric>)));
 
     public static readonly DependencyProperty ShareLyricItemProperty = DependencyProperty.Register(
-        "ShareLyricItem", typeof(ObservableCollection<LyricShareItem>), typeof(LyricShareDialog),
-        new PropertyMetadata(new ObservableCollection<LyricShareItem>()));
+        "ShareLyricItem", typeof(ObservableList<LyricShareItem>), typeof(LyricShareDialog),
+        new PropertyMetadata(new ObservableList<LyricShareItem>()));
 
     public Dictionary<SongLyric, string> OutputLines = new();
 
     public LyricShareDialog()
     {
         InitializeComponent();
+        MainListView.ItemsSource = ShareLyricItem.ToNotifyCollectionChanged();
     }
 
     public List<SongLyric> Lyrics
@@ -38,18 +40,19 @@ public sealed partial class LyricShareDialog : ContentDialog
         }
     }
 
-    public ObservableCollection<LyricShareItem> ShareLyricItem
+    public ObservableList<LyricShareItem> ShareLyricItem
     {
-        get => (ObservableCollection<LyricShareItem>)GetValue(ShareLyricItemProperty);
+        get => (ObservableList<LyricShareItem>)GetValue(ShareLyricItemProperty);
         set => SetValue(ShareLyricItemProperty, value);
     }
 
     private void LoadLyricsList()
     {
         ShareLyricItem.Clear();
+        var list = new List<LyricShareItem>(Lyrics.Count);
         foreach (var songLyric in Lyrics)
         {
-            ShareLyricItem.Add(new LyricShareItem
+            list.Add(new LyricShareItem
             {
                 Type = LyricShareItemType.Original,
                 Text = songLyric.LyricLine.CurrentLyric,
@@ -57,7 +60,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                 OriginalLyric = songLyric
             });
             if (songLyric.HaveTranslation)
-                ShareLyricItem.Add(new LyricShareItem
+                list.Add(new LyricShareItem
                 {
                     Type = LyricShareItemType.Translation,
                     Text = songLyric.Translation,
@@ -65,6 +68,8 @@ public sealed partial class LyricShareDialog : ContentDialog
                     OriginalLyric = songLyric
                 });
         }
+
+        ShareLyricItem.AddRange(list);
     }
 
     private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)

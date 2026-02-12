@@ -58,7 +58,7 @@
             </NavigationView.MenuItems>
             <Grid>
                 <Grid Margin="0,-30,0,0" VerticalAlignment="Stretch">
-                    <hycontrol:SimpleLinerList x:Name="SearchResultContainer" Margin="0,30,0,0">
+                    <hycontrol:SimpleLinerList x:Name="SearchResultContainer" ListItems="{x:Bind SimpleLinerListItems}" Margin="0,30,0,0">
                         <hycontrol:SimpleLinerList.Footer>
                             <StackPanel
                                 HorizontalAlignment="Center"

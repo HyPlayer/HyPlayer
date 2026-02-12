@@ -7,6 +7,7 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
 using HyPlayer.Pages;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
+using ObservableCollections;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -39,7 +40,7 @@ public sealed partial class PlayBar
     private bool _isSliding = false;
     public PlayMode NowPlayType = PlayMode.DefaultRoll;
     private TimeSpan StartingTimeSpan = TimeSpan.Zero;
-    public ObservableCollection<HyPlayItem> PlayItems = new();
+    public ObservableList<HyPlayItem> PlayItems = new();
 #nullable enable
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
 #nullable restore
@@ -55,6 +56,7 @@ DoubleAnimation verticalAnimation;
     {
         Common.BarPlayBar = this;
         InitializeComponent();
+        ListBoxPlayList.ItemsSource = PlayItems.ToNotifyCollectionChanged();
         HyPlayList.Player.OnGlobalPlaybackStatusChanged += Player_OnGlobalPlaybackStatusChanged;
     }
 
@@ -302,7 +304,7 @@ DoubleAnimation verticalAnimation;
 
             realSelectSong = false;
             PlayItems.Clear();
-            targetingList.ForEach(PlayItems.Add);
+            PlayItems.AddRange(targetingList);
             realSelectSong = true;
 
             if (targetingIndex == -1 || targetingIndex >= PlayItems.Count) return;

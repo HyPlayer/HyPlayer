@@ -4,7 +4,9 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Cloud;
+using ObservableCollections;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -25,7 +27,7 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class MusicCloudPage : Page
 {
-    private readonly ObservableCollection<NCSong> Items = new();
+    private readonly ObservableList<NCSong> Items = new();
     private int page;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -65,6 +67,7 @@ public sealed partial class MusicCloudPage : Page
 
 
             var idx = page * 200;
+            var list = new List<NCSong>(jv.Songs?.Length ?? 0);
             foreach (var jToken in jv.Songs ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
@@ -84,15 +87,17 @@ public sealed partial class MusicCloudPage : Page
 
                     ret.IsCloud = true;
                     ret.Order = idx++;
-                    SongContainer.Songs.Add(ret);
+                    list.Add(ret);
                 }
                 catch
                 {
                     //ignore
                 }
 
-                NextPage.Visibility = jv.HasMore ? Visibility.Visible : Visibility.Collapsed;
+                
             }
+            NextPage.Visibility = jv.HasMore ? Visibility.Visible : Visibility.Collapsed;
+            Items.AddRange(list);
         }
         catch (Exception ex)
         {

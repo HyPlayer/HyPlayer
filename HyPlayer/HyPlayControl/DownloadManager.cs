@@ -4,6 +4,7 @@ using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using Microsoft.Toolkit.Uwp.Helpers;
+using ObservableCollections;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -465,7 +466,7 @@ internal static class DownloadManager
 {
     private static readonly Timer _timer = new(1000);
     private static bool Timered;
-    public static ObservableCollection<DownloadObject> DownloadLists = new();
+    public static ObservableList<DownloadObject> DownloadLists = new();
     public static BackgroundDownloader Downloader = new();
     public static List<Task> WritingTasks = new();
     public static Dictionary<string, Picture> AlbumPicturesCache = new();
@@ -526,8 +527,7 @@ internal static class DownloadManager
             _timer.Start();
             Timered = true;
         }
-
-        songs.ForEach(t => { DownloadLists.Add(new DownloadObject(t)); });
+        DownloadLists.AddRange([.. songs.Select(t => new DownloadObject(t))]);
     }
 }
 

@@ -5,11 +5,14 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.Bases;
 using HyPlayer.NeteaseApi.Models;
+using ObservableCollections;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TagLib.Ape;
+using Windows.Media.Playlists;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -33,7 +36,8 @@ public sealed partial class Search : Page
     public static readonly DependencyProperty HasPreviousPageProperty = DependencyProperty.Register(
         "HasPreviousPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
 
-    private readonly ObservableCollection<NCSong> SongResults = new ObservableCollection<NCSong>();
+    private readonly ObservableList<NCSong> SongResults = new ObservableList<NCSong>();
+    private readonly ObservableList<SimpleListItem> SimpleLinerListItems = new ObservableList<SimpleListItem>();
     private int page;
     private string searchText = "";
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -102,7 +106,7 @@ public sealed partial class Search : Page
         TBNoRes.Visibility = Visibility.Collapsed;
         HistoryManagement.AddSearchHistory(searchText);
 
-        SearchResultContainer.ListItems.Clear();
+        SimpleLinerListItems.Clear();
         SongResults.Clear();
         try
         {
@@ -169,30 +173,16 @@ public sealed partial class Search : Page
             return;
         }
 
-        foreach (var songJs in json.Value.Result?.Items ?? [])
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SongResults.Add(songJs.MapNcSong());
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = songJs.Name,
-                    LineTwo = string.Join(" / ", songJs.Artists?.Select(t => t.Name) ?? []),
-                    LineThree = songJs.Album?.Name,
-                    LineOne = string.Join(" ", songJs.Translations ?? []) + " / " + string.Join("", songJs.Alias ?? []),
-                    ResourceId = "ns" + songJs.Id,
-                    CoverLink = songJs.Album?.PictureUrl,
-                    Order = i++
-                });
-            if (json.Value.Result?.Count >= (page + 1) * 30)
-                HasNextPage = true;
-            else
-                HasNextPage = false;
-            if (page > 0)
-                HasPreviousPage = true;
-            else
-                HasPreviousPage = false;
-        }
+        SongResults.AddRange(json.Value.Result?.Items?.Select(t => t.MapNcSong()).ToList() ?? []);
+
+        if (json.Value.Result?.Count >= (page + 1) * 30)
+            HasNextPage = true;
+        else
+            HasNextPage = false;
+        if (page > 0)
+            HasPreviousPage = true;
+        else
+            HasPreviousPage = false;
     }
 
     private async Task LoadAlbumResult()
@@ -220,21 +210,21 @@ public sealed partial class Search : Page
             return;
         }
 
-        foreach (var albumJs in json.Value.Result?.Items ?? [])
+        SimpleLinerListItems.AddRange(json.Value.Result?.Items?.Select(albumJs =>
         {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = albumJs.Name,
-                    LineOne = string.Join(" / ", albumJs.Artists?.Select(t => t.Name) ?? []),
-                    LineTwo = string.Join(" / ", albumJs.Alias ?? []),
-                    LineThree = $"歌曲数:{albumJs.Size}",
-                    ResourceId = "al" + albumJs.Id,
-                    CoverLink = albumJs.PictureUrl,
-                    Order = i++
-                });
-        }
+            return new SimpleListItem
+            {
+                Title = albumJs.Name,
+                LineOne = string.Join(" / ", albumJs.Artists?.Select(t => t.Name) ?? []),
+                LineTwo = string.Join(" / ", albumJs.Alias ?? []),
+                LineThree = $"歌曲数:{albumJs.Size}",
+                ResourceId = "al" + albumJs.Id,
+                CoverLink = albumJs.PictureUrl,
+                Order = i++
+            };
+        }).ToArray());
+
+ 
 
         if (json.Value.Result?.Count >= (page + 1) * 30)
             HasNextPage = true;
@@ -272,10 +262,9 @@ public sealed partial class Search : Page
             return;
         }
 
-        foreach (var singerjson in json.Value.Result?.Items ?? [])
+        SimpleLinerListItems.AddRange(json.Value.Result?.Items?.Select(singerjson =>
         {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SearchResultContainer.ListItems.Add(new SimpleListItem
+            return new SimpleListItem
             {
                 Title = singerjson.Name,
                 LineOne = singerjson.Translation,
@@ -285,8 +274,8 @@ public sealed partial class Search : Page
                 CoverLink = singerjson.Img1v1Url,
                 Order = i++,
                 CanPlay = true
-            });
-        }
+            };
+        }).ToArray());
 
         if (json.Value.Result?.Count >= (page + 1) * 30)
             HasNextPage = true;
@@ -324,21 +313,19 @@ public sealed partial class Search : Page
             return;
         }
 
-        foreach (var playlistJs in json.Value.Result?.Items ?? [])
+        SimpleLinerListItems.AddRange(json.Value.Result?.Items?.Select(playlistJs =>
         {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = playlistJs.Name,
-                    LineOne = playlistJs.Creator?.Nickname,
-                    LineTwo = playlistJs.Description,
-                    LineThree = $"歌曲数:{playlistJs.TrackCount}",
-                    ResourceId = "pl" + playlistJs.Id,
-                    CoverLink = playlistJs.CoverUrl,
-                    Order = i++
-                });
-        }
+            return new SimpleListItem
+            {
+                Title = playlistJs.Name,
+                LineOne = playlistJs.Creator?.Nickname,
+                LineTwo = playlistJs.Description,
+                LineThree = $"歌曲数:{playlistJs.TrackCount}",
+                ResourceId = "pl" + playlistJs.Id,
+                CoverLink = playlistJs.CoverUrl,
+                Order = i++
+            };
+        }).ToArray());
 
         if (json.Value.Result?.Count >= (page + 1) * 30)
             HasNextPage = true;
@@ -376,19 +363,19 @@ public sealed partial class Search : Page
             return;
         }
 
-        foreach (var userJs in json.Value.Result?.Items ?? [])
+        SimpleLinerListItems.AddRange(json.Value.Result?.Items?.Select(userJs =>
         {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = userJs.Nickname,
-                    LineOne = userJs.Signature,
-                    ResourceId = "us" + userJs.UserId,
-                    CoverLink = userJs.AvatarUrl,
-                    Order = i++
-                });
-        }
+            return new SimpleListItem
+            {
+                Title = userJs.Nickname,
+                LineOne = userJs.Signature,
+                ResourceId = "us" + userJs.UserId,
+                CoverLink = userJs.AvatarUrl,
+                Order = i++
+            };
+        }).ToArray());
+
+        
 
         if (json.Value.Result?.Count >= (page + 1) * 30)
             HasNextPage = true;
@@ -426,21 +413,20 @@ public sealed partial class Search : Page
             return;
         }
 
-        foreach (var radioJs in json.Value.Result?.Items ?? [])
+        SimpleLinerListItems.AddRange(json.Value.Result?.Items?.Select(radioJs =>
         {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = radioJs.Name,
-                    LineOne = radioJs.DjData?.Nickname,
-                    LineTwo = radioJs.Description,
-                    LineThree = $"节目数:{radioJs.ProgramCount}",
-                    ResourceId = "rd" + radioJs.Id,
-                    CoverLink = radioJs.CoverUrl,
-                    Order = i++
-                });
-        }
+            return new SimpleListItem
+            {
+                Title = radioJs.Name,
+                LineOne = radioJs.DjData?.Nickname,
+                LineTwo = radioJs.Description,
+                LineThree = $"节目数:{radioJs.ProgramCount}",
+                ResourceId = "rd" + radioJs.Id,
+                CoverLink = radioJs.CoverUrl,
+                Order = i++
+            };
+        }).ToArray());
+
 
         if (json.Value.Result?.Count >= (page + 1) * 30)
             HasNextPage = true;
@@ -480,28 +466,29 @@ public sealed partial class Search : Page
             return;
         }
 
-        foreach (var item in json.Value.Result?.Items ?? [])
+        SimpleLinerListItems.AddRange(json.Value.Result?.Items?.Select(item =>
         {
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = item.Name,
-                    LineOne = item.ArtistName,
-                    LineTwo = item.Description,
-                    LineThree = string.Join(" / ", item.TransNames),
-                    ResourceId = "ml" + item.Id,
-                    CoverLink = item.Cover.ToString(),
-                    Order = i++
-                });
-            if (json.Value.Result?.Count >= (page + 1) * 30)
-                HasNextPage = true;
-            else
-                HasNextPage = false;
-            if (page > 0)
-                HasPreviousPage = true;
-            else
-                HasPreviousPage = false;
-        }
+            return new SimpleListItem
+            {
+                Title = item.Name,
+                LineOne = item.ArtistName,
+                LineTwo = item.Description,
+                LineThree = string.Join(" / ", item.TransNames),
+                ResourceId = "ml" + item.Id,
+                CoverLink = item.Cover.ToString(),
+                Order = i++
+            };
+        }).ToArray());
+
+
+        if (json.Value.Result?.Count >= (page + 1) * 30)
+            HasNextPage = true;
+        else
+            HasNextPage = false;
+        if (page > 0)
+            HasPreviousPage = true;
+        else
+            HasPreviousPage = false;
     }
 
     private async Task LoadMlogResult()
@@ -529,29 +516,29 @@ public sealed partial class Search : Page
             return;
         }
 
-        foreach (var item in json.Value.Result?.Items ?? [])
+
+        SimpleLinerListItems.AddRange(json.Value.Result?.Items?.Select(item =>
         {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = item.Title,
-                    LineOne = string.Join(" / ", item.Artists?.Select(t => t.UserName) ?? []),
-                    LineTwo = null,
-                    LineThree = null,
-                    ResourceId = "ml" + item.Id,
-                    CoverLink = item.CoverUrl,
-                    Order = i++
-                });
-            if (json.Value.Result?.Count >= (page + 1) * 30)
-                HasNextPage = true;
-            else
-                HasNextPage = false;
-            if (page > 0)
-                HasPreviousPage = true;
-            else
-                HasPreviousPage = false;
-        }
+            return new SimpleListItem
+            {
+                Title = item.Title,
+                LineOne = string.Join(" / ", item.Artists?.Select(t => t.UserName) ?? []),
+                LineTwo = null,
+                LineThree = null,
+                ResourceId = "ml" + item.Id,
+                CoverLink = item.CoverUrl,
+                Order = i++
+            };
+        }).ToArray());
+
+        if (json.Value.Result?.Count >= (page + 1) * 30)
+            HasNextPage = true;
+        else
+            HasNextPage = false;
+        if (page > 0)
+            HasPreviousPage = true;
+        else
+            HasPreviousPage = false;
     }
 
     private async Task LoadLyricResult()
@@ -579,21 +566,22 @@ public sealed partial class Search : Page
             return;
         }
 
-        foreach (var songJs in json.Value?.Result?.Items ?? [])
+        SimpleLinerListItems.AddRange(json.Value.Result?.Items?.Select(lyricJs =>
         {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = songJs.Name,
-                    LineOne = string.Join(" / ", songJs.Artists?.Select(t => t.Name) ?? []),
-                    LineTwo = songJs.Lyrics?.First(t => t.Contains("</b>")),
-                    LineThree = string.Join("   ", songJs.Lyrics?.ToList() ?? []),
-                    ResourceId = "ns" + songJs.Id,
-                    CoverLink = songJs.Album?.PictureUrl,
-                    Order = i++
-                });
-        }
+            return new SimpleListItem
+            {
+                Title = lyricJs.Name,
+                LineOne = string.Join(" / ", lyricJs.Artists?.Select(t => t.Name) ?? []),
+                LineTwo = lyricJs.Lyrics?.First(t => t.Contains("</b>")),
+                LineThree = string.Join("   ", lyricJs.Lyrics?.ToList() ?? []),
+                ResourceId = "ns" + lyricJs.Id,
+                CoverLink = lyricJs.Album?.PictureUrl,
+                Order = i++
+            };
+        }).ToArray());
+
+
+        
 
         if (json.Value?.Result?.Count >= (page + 1) * 30)
             HasNextPage = true;

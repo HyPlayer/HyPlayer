@@ -4,6 +4,7 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
+using ObservableCollections;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -29,7 +30,7 @@ public sealed partial class RadioPage : Page
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
 
-    public ObservableCollection<NCSong> Songs = new();
+    public ObservableList<NCSong> Songs = new();
 
     public RadioPage()
     {
@@ -90,14 +91,16 @@ public sealed partial class RadioPage : Page
 
 
             NextPage.Visibility = json.Data?.More is true ? Visibility.Visible : Visibility.Collapsed;
+            var list = new List<NCFmItem>(json.Data?.Programs?.Length ?? 0);
             foreach (var jToken in json.Data?.Programs ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var song = jToken.MapToNCFmItem();
                 song.Order = i++;
                 song.TrackId = i;
-                Songs.Add(song);
+                list.Add(song);
             }
+            Songs.AddRange(list);
         }
         catch (Exception ex)
         {
