@@ -611,7 +611,6 @@
             x:Name="PlayBarBackground"
             Grid.ColumnSpan="4"
             VerticalAlignment="Top"
-            EnableLazyLoading="True"
             IsCacheEnabled="False"
             Source="{x:Bind AlbumImage.Source, Mode=OneWay}"
             Stretch="UniformToFill"
@@ -762,7 +761,6 @@
                                     Glyph="&#xE90B;" />
                                 <frieren:ImageEx
                                     x:Name="AlbumImage"
-                                    EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     PlaceholderStretch="Uniform"
                                     Stretch="UniformToFill">

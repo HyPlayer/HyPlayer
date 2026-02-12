@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.WinUI.Converters;
 using HyPlayer.Pages;
+using HyPlayer.ViewModels;
 using LiteFM.Abstractions;
 using System;
 using System.Linq;
@@ -362,15 +363,15 @@ namespace HyPlayer.Classes
             else if (pageType == typeof(SongListDetail))
             {
                 var displayedList = (SongListDetail)value;
-                if (displayedList.playList == null) return Common.PageBase?.NavItemBlank;
-                if (displayedList.playList.Name == "每日歌曲推荐")
+                if (displayedList.ViewModel.PlayList == null) return Common.PageBase?.NavItemBlank;
+                if (displayedList.ViewModel.PlayList.Name == "每日歌曲推荐")
                     pageNavigationViewItem = Common.PageBase.NavItemDailyRcmd;
-                else if (displayedList.playList.PlaylistId == Common.MySongLists[0].PlaylistId)
+                else if (displayedList.ViewModel.PlayList.PlaylistId == Common.MySongLists[0].PlaylistId)
                     pageNavigationViewItem = Common.PageBase.NavItemsMyLovedPlaylist;
                 else
                 {
-                    var item = Common.PageBase.NavItemsMyList.MenuItems.Where(t => (t?.As<NavigationViewItem>()?.Tag as string) == $"Playlist{displayedList.playList.PlaylistId}").FirstOrDefault()
-                        ?? Common.PageBase.NavItemsLikeList.MenuItems.Where(t => (t?.As<NavigationViewItem>()?.Tag as string) == $"Playlist{displayedList.playList.PlaylistId}").FirstOrDefault();
+                    var item = Common.PageBase.NavItemsMyList.MenuItems.Where(t => (t?.As<NavigationViewItem>()?.Tag as string) == $"Playlist{displayedList.ViewModel.PlayList.PlaylistId}").FirstOrDefault()
+                        ?? Common.PageBase.NavItemsLikeList.MenuItems.Where(t => (t?.As<NavigationViewItem>()?.Tag as string) == $"Playlist{displayedList.ViewModel.PlayList.PlaylistId}").FirstOrDefault();
                     if (item != null)
                     {
                         pageNavigationViewItem = (NavigationViewItem)item;
@@ -506,6 +507,36 @@ namespace HyPlayer.Classes
         {
             if ((value is LastFMSession session) && session.HasLogined) return session.Name;
             else return string.Empty;
+        }
+
+        public object ConvertBack(object value, Type targetType,
+                                  object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public partial class BoolToLikeIconConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType,
+                              object parameter, string language)
+        {
+            if (value is true) return "\uE10B";
+            else return "\uE0B4";
+        }
+
+        public object ConvertBack(object value, Type targetType,
+                                  object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public partial class BoolToLikeStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType,
+                              object parameter, string language)
+        {
+            if (value is true) return "已收藏";
+            else return "收藏";
         }
 
         public object ConvertBack(object value, Type targetType,

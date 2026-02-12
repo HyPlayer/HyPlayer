@@ -39,7 +39,6 @@
                                     Margin="0"
                                     x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                                     CornerRadius="12"
-                                    EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     Stretch="UniformToFill"
                                     Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}">
@@ -68,7 +67,6 @@
                                             Height="70"
                                             Margin="8,0,0,0"
                                             CornerRadius="8"
-                                            EnableLazyLoading="True"
                                             IsCacheEnabled="False"
                                             Stretch="UniformToFill">
                                             <frieren:ImageEx.Source>

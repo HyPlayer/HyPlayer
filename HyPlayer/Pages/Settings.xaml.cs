@@ -44,7 +44,6 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class Settings : Page
 {
-    private LyricItem _lyricItem;
     private bool isbyprogram;
     private int _elapse = 10;
 
@@ -93,15 +92,6 @@ public sealed partial class Settings : Page
             $"Version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}  (#{BuildInfo.CommitSha.Substring(0, 8)}@{BuildInfo.BuildBranchId})";
         var deviceInfo = new EasClientDeviceInformation();
         DeviceInfo.Text = deviceInfo.Id.ToString();
-        _lyricItem = new LyricItem(new SongLyric
-        {
-            LyricLine = new LrcLyricsLine("歌词大小示例 AaBbCcDd 約束の言葉", TimeSpan.Zero),
-            Translation = "翻译大小示例"
-        });
-        _lyricItem.Transitions.Add(new RepositionThemeTransition());
-        _lyricItem.IsHitTestVisible = false;
-        _lyricItem.OnShow();
-        StackPanelLyricSet.Children.Add(_lyricItem);
         isbyprogram = false;
 #if DEBUG
         VersionCode.Text += " Debug";
@@ -290,13 +280,6 @@ public sealed partial class Settings : Page
         Clipboard.SetContent(dp);
     }
 
-    private async void LyricSize_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
-    {
-        if (isbyprogram) return;
-        await Task.Delay(20);
-        _lyricItem.RefreshFontSize();
-    }
-
     private void NBShadowDepth_OnValueChanged(object o, RangeBaseValueChangedEventArgs rangeBaseValueChangedEventArgs)
     {
         if (isbyprogram) return;
@@ -474,13 +457,6 @@ public sealed partial class Settings : Page
     private void TintOpacityLuminosity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         ApplyNewAcrylic();
-    }
-
-    private async void LyricAlignment_OnToggled(object sender, RoutedEventArgs e)
-    {
-        if (isbyprogram) return;
-        await Task.Delay(20);
-        _lyricItem.RefreshFontSize();
     }
 
     private async void AboutRomaji_Click(object sender, RoutedEventArgs e)

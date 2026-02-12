@@ -80,6 +80,7 @@ public sealed partial class SongsList : UserControl
     private void SongsList_Unloaded(object sender, RoutedEventArgs e)
     {
         HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
+        Songs?.CollectionChanged -= Songs_CollectionChanged;
     }
 
     public bool MultiSelect
@@ -133,17 +134,15 @@ public sealed partial class SongsList : UserControl
         get => (ObservableCollection<NCSong>)GetValue(SongsProperty);
         set
         {
-            SetValue(SongsProperty, value);
             try
             {
-                Songs.CollectionChanged -= Songs_CollectionChanged;
+                Songs?.CollectionChanged -= Songs_CollectionChanged;
+                SetValue(SongsProperty, value);
+                Songs.CollectionChanged += Songs_CollectionChanged;
             }
             catch
             {
-            }
-            finally
-            {
-                Songs.CollectionChanged += Songs_CollectionChanged;
+                
             }
         }
     }
@@ -509,7 +508,7 @@ public sealed partial class SongsList : UserControl
                 break;
             case "Comments":
                 var page = (SongListDetail)((Grid)Parent).Parent;
-                Common.NavigatePage(typeof(Comments), "pl" + page.playList.PlaylistId);
+                Common.NavigatePage(typeof(Comments), "pl" + page.ViewModel.PlayList.PlaylistId);
                 break;
             default:
                 break;

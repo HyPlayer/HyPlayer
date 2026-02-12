@@ -86,6 +86,7 @@ public sealed partial class App : Application
         serviceCollection.AddTransient<MeViewModel>();
         serviceCollection.AddTransient<ExpandedPlayerViewModel>();
         serviceCollection.AddTransient<ArtistPageViewModel>();
+        serviceCollection.AddTransient<SongListViewModel>();
         var provider = serviceCollection.BuildServiceProvider();
         Ioc.Default.ConfigureServices(provider);
     }

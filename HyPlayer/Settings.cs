@@ -1469,16 +1469,10 @@ namespace HyPlayer
         {
             try
             {
-                if (ApplicationData.Current.LocalSettings.Values.ContainsKey(propertyName) &&
-                    ApplicationData.Current.LocalSettings.Values[propertyName] != null &&
-                    !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values[propertyName].ToString()))
+                var success = ApplicationData.Current.LocalSettings.Values.TryGetValue(propertyName, out object value);
+                if(success)
                 {
-                    if (typeof(T).ToString() == "System.Boolean")
-                        return (T)(object)bool.Parse(ApplicationData.Current.LocalSettings.Values[propertyName]
-                            .ToString());
-
-                    //超长的IF
-                    return (T)ApplicationData.Current.LocalSettings.Values[propertyName];
+                    return (T)value;
                 }
 
                 return defaultValue;

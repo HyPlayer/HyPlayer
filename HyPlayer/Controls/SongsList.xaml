@@ -225,7 +225,6 @@
                                 x:Load="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                                 x:Phase="4"
                                 CornerRadius="12"
-                                EnableLazyLoading="True"
                                 IsCacheEnabled="False"
                                 Opacity="1"
                                 Stretch="Fill"
@@ -252,7 +251,6 @@
                                     Margin="6,0,0,0"
                                     x:Phase="4"
                                     CornerRadius="9"
-                                    EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     IsEnabled="{x:Bind IsAvailable}"
                                     Stretch="UniformToFill">

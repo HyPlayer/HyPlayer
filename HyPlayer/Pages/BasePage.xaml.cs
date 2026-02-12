@@ -446,7 +446,7 @@ public sealed partial class BasePage : Page
                     Name = "网易云音乐",
                     Signature = "网易云音乐官方账号 "
                 },
-                PlaylistId = "-666",
+                IsDailyRecommend = true,
                 HasSubscribed = false,
                 Name = "每日歌曲推荐",
                 Description = "根据你的口味生成，每天6:00更新"

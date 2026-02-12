@@ -25,4 +25,6 @@
     <classes:SessionToStringConverter x:Key="SessionToStringConverter" />
     <classes:SessionToVisibilityConverter x:Key="SessionToVisibilityConverter" />
     <classes:SessionToVisibilityReverseConverter x:Key="SessionToVisibilityReverseConverter" />
+    <classes:BoolToLikeIconConverter x:Key="BoolToLikeIconConverter" />
+    <classes:BoolToLikeStringConverter x:Key="BoolToLikeStringConverter" />
 </ResourceDictionary>

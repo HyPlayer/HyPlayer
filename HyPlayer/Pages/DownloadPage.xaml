@@ -73,7 +73,6 @@
                                 BorderBrush="Gray"
                                 BorderThickness="1"
                                 CornerRadius="4"
-                                EnableLazyLoading="True"
                                 Source="{x:Bind ncsong.Album.Cover, Converter={StaticResource ImageUrlToImageSourceConverter}}" />
                             <TextBlock
                                 Grid.Row="0"

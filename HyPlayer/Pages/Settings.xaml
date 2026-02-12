@@ -117,7 +117,6 @@
                                                 Minimum="0"
                                                 SmallChange="1"
                                                 SpinButtonPlacementMode="Compact"
-                                                ValueChanged="LyricSize_OnValueChanged"
                                                 Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Description="0为自动" Header="翻译大小">
@@ -128,7 +127,6 @@
                                                 Minimum="0"
                                                 SmallChange="1"
                                                 SpinButtonPlacementMode="Compact"
-                                                ValueChanged="LyricSize_OnValueChanged"
                                                 Value="{x:Bind hyplayer:Common.Setting.translationSize, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Description="0为自动" Header="罗马字大小">
@@ -140,7 +138,6 @@
                                                 Minimum="0"
                                                 SmallChange="1"
                                                 SpinButtonPlacementMode="Compact"
-                                                ValueChanged="LyricSize_OnValueChanged"
                                                 Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
 

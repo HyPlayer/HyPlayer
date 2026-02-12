@@ -44,7 +44,6 @@
                             x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                             x:Phase="4"
                             CornerRadius="10"
-                            EnableLazyLoading="True"
                             IsCacheEnabled="False"
                             Stretch="UniformToFill"
                             Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}">
@@ -76,7 +75,6 @@
                                 Width="75"
                                 Height="75"
                                 CornerRadius="10"
-                                EnableLazyLoading="True"
                                 IsCacheEnabled="False"
                                 Stretch="UniformToFill">
                                 <controls:ImageEx.Source>

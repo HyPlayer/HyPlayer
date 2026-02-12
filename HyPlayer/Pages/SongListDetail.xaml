@@ -46,13 +46,14 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             IsActive="True"
-            Visibility="{x:Bind IsLoading, Mode=OneWay}" />
+            Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
         <controls1:SongsList
             x:Name="SongsList"
             Grid.RowSpan="2"
             CanViewComments="True"
+            IsMySongList="{x:Bind ViewModel.IsMySongList, Mode=OneWay}"
             IsSearchEnabled="True"
-            Songs="{x:Bind Songs}">
+            Songs="{x:Bind ViewModel.Songs, Mode=OneWay}">
             <controls1:SongsList.ListHeader>
                 <Grid>
                     <Border
@@ -63,7 +64,7 @@
                         Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
                         <Border.Background>
                             <LinearGradientBrush Opacity="0.5" StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop x:Name="AlbumColor" Offset="0" Color="Transparent" />
+                                <GradientStop x:Name="AlbumColor" Offset="0" Color="{x:Bind ViewModel.AlbumColor, Mode=OneWay}" />
                                 <GradientStop Offset="1" Color="Transparent" />
                             </LinearGradientBrush>
                         </Border.Background>
@@ -82,10 +83,8 @@
                             Width="120"
                             Height="120"
                             HorizontalAlignment="Left"
-                            CornerRadius="8">
-                            <frieren:ImageEx.Source>
-                                <BitmapImage x:Name="AlbumImageSource" />
-                            </frieren:ImageEx.Source>
+                            CornerRadius="8"
+                            Source="{x:Bind ViewModel.CoverUri, Mode=OneWay}">
                             <ui:Effects.Shadow>
                                 <media:AttachedCardShadow
                                     CornerRadius="8"
@@ -101,7 +100,7 @@
                             <TextBlock
                                 x:Name="TextBoxPLName"
                                 Style="{ThemeResource TitleTextBlockStyle}"
-                                Text="歌单名" />
+                                Text="{x:Bind ViewModel.PlayList.Name, Mode=OneWay}" />
                             <StackPanel
                                 Margin="0,4,0,0"
                                 Orientation="Horizontal"
@@ -109,15 +108,15 @@
                                 <HyperlinkButton
                                     x:Name="TextBoxAuthor"
                                     Padding="0"
-                                    Click="TextBoxAuthor_Tapped"
-                                    Content="歌单创建者"
+                                    Command="{x:Bind ViewModel.NavigateToAuthorCommand}"
+                                    Content="{x:Bind ViewModel.PlayList.Creator.Name, Mode=OneWay}"
                                     FontSize="16"
                                     Style="{StaticResource TextBlockButtonStyle}" />
                                 <TextBlock
                                     x:Name="TextBoxUpdateTime"
                                     Margin="0,2,0,0"
                                     FontSize="16"
-                                    Text="更新日期" />
+                                    Text="{x:Bind ViewModel.UpdateTime, Mode=OneWay}" />
 
                             </StackPanel>
                             <StackPanel
@@ -127,17 +126,17 @@
                                 <Button
                                     x:Name="ButtonLike"
                                     Margin="0,6,0,0"
-                                    Click="LikeBtnClick">
+                                    Command="{x:Bind ViewModel.LikePlaylistCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <FontIcon
                                             x:Name="LikedIcon"
                                             Margin="0,0,8,0"
                                             FontSize="12"
-                                            Glyph="&#xE10B;" />
-                                        <TextBlock x:Name="LikeBtnText" Text="已收藏" />
+                                            Glyph="{x:Bind ViewModel.PlayList.HasSubscribed, Mode=OneWay, Converter={StaticResource BoolToLikeIconConverter}}" />
+                                        <TextBlock x:Name="LikeBtnText" Text="{x:Bind ViewModel.PlayList.HasSubscribed, Mode=OneWay, Converter={StaticResource BoolToLikeStringConverter}}" />
                                     </StackPanel>
                                 </Button>
-                                <Button Margin="0,6,0,0" Click="ButtonPlayAll_OnClick">
+                                <Button Margin="0,6,0,0" Command="{x:Bind ViewModel.PlayAllCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <FontIcon
                                             x:Name="IconPlay"
@@ -152,8 +151,8 @@
                                 <Button
                                     x:Name="ButtonIntel"
                                     Margin="0,6,0,0"
-                                    Click="ButtonHeartBeat_OnClick"
-                                    Visibility="Collapsed">
+                                    Command="{x:Bind ViewModel.EnterIntelligencePlayCommand}"
+                                    Visibility="{x:Bind ViewModel.IntelligenceModeVisible, Mode=OneWay}">
                                     <StackPanel Orientation="Horizontal">
                                         <!--  ReSharper disable once Xaml.InvalidResourceType  -->
                                         <FontIcon
@@ -184,11 +183,11 @@
                                 <Button.Flyout>
                                     <MenuFlyout Placement="BottomEdgeAlignedRight">
                                         <MenuFlyoutItem
-                                            Click="BtnAddAll_Clicked"
+                                            Command="{x:Bind ViewModel.PlayAllCommand}"
                                             Icon="Add"
                                             Text="添加" />
                                         <MenuFlyoutItem
-                                            Click="ButtonDownloadAll_OnClick"
+                                            Command="{x:Bind ViewModel.DownloadAllCommand}"
                                             Icon="Download"
                                             Text="下载" />
                                         <MenuFlyoutItem
@@ -196,7 +195,7 @@
                                             Icon="Share"
                                             Text="分享" />
                                         <MenuFlyoutItem
-                                            Click="BtnRefreshCache_Clicked"
+                                            Command="{x:Bind ViewModel.ResetCacheCommand}"
                                             Icon="Refresh"
                                             Text="刷新缓存" />
 
@@ -214,170 +213,10 @@
                             FontSize="16"
                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="4"
-                            Text="简介"
+                            Text="{x:Bind ViewModel.DescriptionBoxContent, Mode=OneWay}"
                             TextWrapping="Wrap" />
                     </Grid>
-                    <!--<ui:Effects.Shadow>
-                        <media:AttachedCardShadow
-                            CornerRadius="0"
-                            Opacity="0.5"
-                            Offset="0,1,0"
-                            Color="Black" />
-                    </ui:Effects.Shadow>-->
                 </Grid>
-                <!--<Grid x:Name="GridPersonalInformation" Margin="0,15,0,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border
-                        x:Name="RectangleImageBack"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="2"
-                        Margin="30,0,30,0"
-                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" >
-                        <Border.Background>
-                            <ImageBrush ImageSource="{x:Bind ImageSource}"/>
-                        </Border.Background>
-                    </Border>
-                    <Border
-                        x:Name="RectangleImageAcrylic"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="2"
-                        Background="{ThemeResource SongListPageAcrylicBrush}"
-                        CornerRadius="12"
-                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
-                    <controls:ImageEx
-                        x:Name="RectangleImage"
-                        Grid.Column="2"
-                        Width="130"
-                        Height="130"
-                        Margin="20,20,0,20"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        CornerRadius="16"
-                        IsCacheEnabled="False">
-                        <controls:ImageEx.Source>
-                            <BitmapImage x:Name="ImageSource"/>
-                        </controls:ImageEx.Source>
-                    </controls:ImageEx>
-                    <StackPanel
-                        Name="StackPanelUserInfo"
-                        Grid.Column="1"
-                        Margin="166,20,40,20"
-                        HorizontalAlignment="Left"
-                        Orientation="Vertical">
-                        <TextBlock
-                            IsTextSelectionEnabled="True"
-                            Margin="0,0,-30,0"
-                            x:Name="TextBoxPLName"
-                            FontWeight="Bold"
-                            Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
-                            Text="歌单名"
-                            Style="{StaticResource TitleTextBlockStyle}"
-                            TextWrapping="NoWrap" />
-                        <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
-                            <TextBlock
-                                Padding="0,8,0,4"
-                                Text="创建者:" />
-                            <HyperlinkButton
-                                Style="{StaticResource TextBlockButtonStyle}"
-                                x:Name="TextBoxAuthor"
-                                Click="TextBoxAuthor_Tapped"
-                                Content="歌单创建者"/>
-                            <TextBlock x:Name="TextBoxPlayCount"
-                                Margin="12,0,0,0"
-                                Padding="0,8,0,4" />
-
-                            <TextBlock x:Name="TextBoxUpdateTime"
-                                Margin="12,0,0,0"
-                                Padding="0,8,0,4"/>
-                        </StackPanel>
-                        <controls1:ExpandableTextBox
-                            x:Name="DescriptionWrapper"
-                            MaxWidth="700"
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Left"
-                            FontSize="13"
-                            MaxLines="3" />
-
-                    </StackPanel>
-                    <StackPanel
-                        x:Name="Btns"
-                        Grid.Column="2"
-                        Margin="0,25,20,25"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Spacing="10">
-                        <Button
-                            x:Name="ButtonIntel"
-                            Background="OrangeRed"
-                            Click="ButtonHeartBeat_OnClick"
-                            Visibility="Collapsed">
-                            <StackPanel Orientation="Horizontal">
-                                <FontIcon
-                                    x:Name="IconLiked"
-                                    FontSize="14"
-                                    Foreground="White"
-                                    Glyph="&#xE00B;" />
-                                <TextBlock
-                                    Foreground="White"
-                                    Margin="6,0,0,0"
-                                    Text="心动模式" />
-                            </StackPanel>
-                        </Button>
-                        <Button
-                            Background="{ThemeResource SystemAccentColorLight1}"
-                            Click="ButtonPlayAll_OnClick">
-                            <StackPanel Orientation="Horizontal">
-                                <FontIcon
-                                    x:Name="IconPlay"
-                                    FontSize="14"
-                                    Foreground="White"
-                                    Glyph="&#xF5B0;"/>
-                                <TextBlock
-                                    Margin="6,0,0,0"
-                                    Text="播放"
-                                    Foreground="White"
-                                    ToolTipService.ToolTip="播放全部"/>
-                            </StackPanel>
-                        </Button>
-                        <Button
-                            Click="BtnAddAll_Clicked"
-                            Content="添加"
-                            ToolTipService.ToolTip="添加全部"/>
-
-                        <Button
-                            Click="ButtonDownloadAll_OnClick"
-                            Content="下载"
-                            ToolTipService.ToolTip="下载全部"/>
-                        <ToggleButton
-                            x:Name="ToggleButtonLike"
-                            Background="Transparent"
-                            BorderBrush="Transparent"
-                            Click="LikeBtnClick"
-                            ToolTipService.ToolTip="收藏">
-                            <FontIcon Glyph="&#xE728;"/>
-                        </ToggleButton>
-                        <Button
-                            Click="ButtonComment_OnClick"
-                            Background="Transparent"
-                            BorderBrush="Transparent"
-                            Visibility="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=OneWay}"
-                            ToolTipService.ToolTip="评论">
-                            <FontIcon Glyph="&#xE134;" />
-                        </Button>
-                        <Button
-                            Background="Transparent"
-                            BorderBrush="Transparent"
-                            Click="BtnShare_Clicked"
-                            ToolTipService.ToolTip="分享">
-                            <FontIcon Glyph="&#xE72D;" />
-                        </Button>
-                    </StackPanel>
-
-                </Grid>-->
             </controls1:SongsList.ListHeader>
             <controls1:SongsList.Footer>
                 <Button
@@ -385,10 +224,10 @@
                     Grid.Row="1"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Top"
-                    Click="NextPage_OnClickPage_OnClick"
+                    Command="{x:Bind ViewModel.NextPageCommand}"
                     Content="加载更多"
                     Style="{StaticResource ButtonRevealStyle}"
-                    Visibility="Visible" />
+                    Visibility="{x:Bind ViewModel.HasMore}" />
             </controls1:SongsList.Footer>
         </controls1:SongsList>
         <VisualStateManager.VisualStateGroups>

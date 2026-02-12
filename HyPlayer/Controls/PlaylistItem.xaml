@@ -53,7 +53,6 @@
                 Width="200"
                 Height="200"
                 CornerRadius="8"
-                EnableLazyLoading="True"
                 IsCacheEnabled="False"
                 Tapped="UIElement_OnTapped">
                 <controls:ImageEx.RenderTransform>

@@ -342,7 +342,7 @@ public class NCPlayList
     public long TrackCount { get; set; }
     public DateTime CreateTime { get; set; }
     public DateTime UpdateTime { get; set; }
-
+    public bool IsDailyRecommend {  get; set; }
 }
 
 public class NCUser

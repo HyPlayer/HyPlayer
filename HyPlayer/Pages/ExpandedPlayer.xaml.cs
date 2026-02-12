@@ -1460,6 +1460,11 @@ public sealed partial class ExpandedPlayer : Page
             _randomValue = new Random().Next(100);
         }
         LuminousBackground.DpiScale = _settings.IsolationScale;
+        _shaderEffect?.Properties["color1"] = _albumColorVectors[0];
+        _shaderEffect?.Properties["color2"] = _albumColorVectors[1];
+        _shaderEffect?.Properties["color3"] = _albumColorVectors[2];
+        _shaderEffect?.Properties["color4"] = _albumColorVectors[3];
+        _shaderEffect?.Properties["UseHSVBlending"] = UseHSVBlending();
         _shaderEffect?.Properties["iResolution"] = new Vector2(LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, CanvasDpiRounding.Round), LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, CanvasDpiRounding.Round));
         if (!_settings.IsolationFullThrottle)
         {

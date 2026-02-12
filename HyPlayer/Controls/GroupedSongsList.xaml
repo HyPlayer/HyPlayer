@@ -159,7 +159,6 @@
                                     Height="75"
                                     x:Phase="4"
                                     CornerRadius="4"
-                                    EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     IsEnabled="{x:Bind IsAvailable}"
                                     Stretch="UniformToFill">
