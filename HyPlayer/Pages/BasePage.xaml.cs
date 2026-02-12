@@ -662,25 +662,6 @@ public sealed partial class BasePage : Page
         QrContainer.Width = QrContainer.Height;
     }
 
-    private void NavMain_DisplayModeChanged(NavigationView sender,
-                                            NavigationViewDisplayModeChangedEventArgs args)
-    {
-        const int topIndent = 16;
-        const int expandedIndent = 0;
-        var minimalIndent = 104;
-        if (NavMain.IsBackButtonVisible.Equals(NavigationViewBackButtonVisible
-                                                   .Collapsed))
-            minimalIndent = 48;
-
-        var currMargin = AppTitleBar.Margin;
-        if (sender.PaneDisplayMode == NavigationViewPaneDisplayMode.Top)
-            AppTitleBar.Margin = new Thickness(topIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
-        else if (sender.DisplayMode == NavigationViewDisplayMode.Minimal)
-            AppTitleBar.Margin = new Thickness(minimalIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
-        else
-            AppTitleBar.Margin = new Thickness(expandedIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
-    }
-
     private void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
     {
         /*

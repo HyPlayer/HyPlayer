@@ -678,8 +678,10 @@ public sealed partial class Search : Page
 
     private void HistoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if ((sender?.As<ComboBox>()) is not null)
+        var item = sender?.As<ComboBox>()?.SelectedItem;
+        if (item is not null)
         {
+            searchText = item.ToString();
             _loadResultTask = LoadResult();
         }
     }

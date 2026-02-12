@@ -93,7 +93,6 @@
                 Grid.Row="1"
                 x:FieldModifier="public"
                 Canvas.ZIndex="0"
-                DisplayModeChanged="NavMain_DisplayModeChanged"
                 FlowDirection="LeftToRight"
                 IsBackButtonVisible="Collapsed"
                 IsBackEnabled="True"
