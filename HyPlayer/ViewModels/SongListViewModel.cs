@@ -264,10 +264,8 @@ namespace HyPlayer.ViewModels
                 Common.AddToTeachingTipLists("清除缓存成功", "已清除当前歌单的缓存");
                 Songs.Clear();
                 CurrentPage = 0;
-                if (!PlayList.IsDailyRecommend)
-                    LoadPageData(PlayList.PlaylistId, true).SafeFireAndForget();
-                else
-                    LoadSongListItem().SafeFireAndForget();
+                LoadSongListItem().SafeFireAndForget();
+
             }
             catch
             {

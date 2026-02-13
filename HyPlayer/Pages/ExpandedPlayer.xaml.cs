@@ -91,7 +91,7 @@ public sealed partial class ExpandedPlayer : Page
     private float _lyricRenderYOffset = 0;
     private readonly Color _darkSpectrumColor = Color.FromArgb(32, 0, 0, 0);
     private readonly Color _lightSpectrumColor = Color.FromArgb(32, 255, 255, 255);
-    public List<LyricItemModel> _lyricList = new();
+    public List<SongLyric> _lyricList = new();
     private LyricRenderView _lyricBox = new LyricRenderView();
     private Setting _settings;
     private List<Vector3> _albumColorVectors = new();
@@ -613,7 +613,7 @@ public sealed partial class ExpandedPlayer : Page
                     lock (_lyricList)
                     {
                         _lyricList.Clear();
-                        _lyricList.Add(new LyricItemModel(SongLyric.LoadingLyric));
+                        _lyricList.Add(SongLyric.LoadingLyric);
                     }
 
                     _lyricBox.Redesign((float)LyricWidth, _nowHeight);
@@ -1069,6 +1069,7 @@ public sealed partial class ExpandedPlayer : Page
     private void ExpandedPlayerClosed(AppWindow sender, AppWindowClosedEventArgs args)
     {
         BtnToggleTinyMode.IsChecked = false;
+        expandedPlayerWindow?.Closed -= ExpandedPlayerClosed;
     }
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
@@ -1400,7 +1401,7 @@ public sealed partial class ExpandedPlayer : Page
                 await Task.Delay(10);
             }
 
-            _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            _ = Common.Invoke(() =>
             {
                 MainGrid.Margin = new Thickness(0);
 

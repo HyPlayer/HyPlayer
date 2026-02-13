@@ -765,7 +765,7 @@ public sealed partial class BasePage : Page
     public async Task RefreshNavItemCover(HyPlayItem playItem)
     {
         if (HyPlayList.CoverStream == null) return;
-        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+        _ = Common.Invoke(async () =>
         {
             if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage)
             {
@@ -784,7 +784,7 @@ public sealed partial class BasePage : Page
 
     public async Task RefreshNavItemCover(double collapseTime, HyPlayItem playItem)
     {
-        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+        _ = Common.Invoke(async () =>
         {
             var time = TimeSpan.FromSeconds(collapseTime + 0.25);
             await Task.Delay(time);
@@ -806,7 +806,7 @@ public sealed partial class BasePage : Page
     private async void BaseFrame_Navigated(object sender, NavigationEventArgs e)
     {
         await Task.Delay(1000);
-        _ = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+        _ = Common.Invoke(() =>
             {
                 try
                 {

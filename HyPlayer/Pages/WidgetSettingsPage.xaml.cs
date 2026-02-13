@@ -24,15 +24,21 @@ namespace HyPlayer.Pages
         {
             this.InitializeComponent();
             _settings = new GameBarSettings(Dispatcher);
+            Unloaded += WidgetSettingsPage_Unloaded;
 
         }
+
+        private void WidgetSettingsPage_Unloaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            _settings.PropertyChanged -= OnSettingsChanged;
+        }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             _settings.PropertyChanged += OnSettingsChanged;
             FontComboBox.ItemsSource = GetAllFonts();
         }
-
 
         private void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -160,20 +166,14 @@ namespace HyPlayer.Pages
                 () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
         }
 
-        public T GetSettings<T>(string propertyName, T defaultValue)
+        public static T GetSettings<T>(string propertyName, T defaultValue)
         {
             try
             {
-                if (_container.Values.ContainsKey(propertyName) &&
-                    _container.Values[propertyName] != null &&
-                    !string.IsNullOrEmpty(_container.Values[propertyName].ToString()))
+                var success = ApplicationData.Current.LocalSettings.Values.TryGetValue(propertyName, out object value);
+                if (success)
                 {
-                    if (typeof(T).ToString() == "System.Boolean")
-                        return (T)(object)bool.Parse(_container.Values[propertyName]
-                            .ToString());
-
-                    //超长的IF
-                    return (T)_container.Values[propertyName];
+                    return (T)value;
                 }
 
                 return defaultValue;

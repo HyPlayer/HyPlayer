@@ -9,6 +9,7 @@
     d:DesignHeight="670"
     d:DesignWidth="800"
     Loaded="UserControl_Loaded"
+    Unloaded="UserControl_Unloaded"
     mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical">
@@ -102,7 +103,7 @@
                 </StackPanel>
             </muxc:Expander.Header>
             <StackPanel Orientation="Vertical">
-                <Grid Visibility="Collapsed" Margin="0,12,0,12">
+                <Grid Margin="0,12,0,12" Visibility="Collapsed">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
                         <ColumnDefinition Width="80" />

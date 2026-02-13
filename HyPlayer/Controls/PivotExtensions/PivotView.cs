@@ -78,6 +78,12 @@ internal partial class PivotView : Control
     public PivotView()
     {
         DefaultStyleKey = typeof(PivotView);
+        Unloaded += PivotView_Unloaded;
+    }
+
+    private void PivotView_Unloaded(object sender, RoutedEventArgs e)
+    {
+        Pivot.HeaderScrollOffsetChanged -= Pivot_HeaderScrollOffsetChanged;
     }
 
     public PivotEx Pivot

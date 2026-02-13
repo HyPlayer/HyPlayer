@@ -297,6 +297,8 @@ public partial class RedirectVisualView : Control
     private void RedirectVisualView_Unloaded(object sender, RoutedEventArgs e)
     {
         DetachVisuals();
+        layoutRoot.SizeChanged -= LayoutRoot_SizeChanged;
+        childPresenter.SizeChanged -= ChildPresenter_SizeChanged;
     }
 
     private void RedirectVisualView_Loaded(object sender, RoutedEventArgs e)

@@ -25,7 +25,7 @@
 		<PackageReference Include="Microsoft.Gaming.XboxGameBar" Version="7.3.2511061" GeneratePathProperty="true">
 			<ExcludeAssets>all</ExcludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.0-prerelease.251115.2" />
 	</ItemGroup>
 
 	<ItemGroup>

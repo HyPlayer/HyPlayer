@@ -13,6 +13,7 @@
     x:Name="SongListRoot"
     d:DesignHeight="300"
     Loaded="SongListRoot_Loaded"
+    Unloaded="SongsList_Unloaded"
     mc:Ignorable="d">
     <Grid>
         <ListView

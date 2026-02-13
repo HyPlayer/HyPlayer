@@ -52,7 +52,6 @@ public sealed partial class GroupedSongsList : UserControl
         InitializeComponent();
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
         _ = IndicateNowPlayingItem();
-        Unloaded += GroupedSongsList_Unloaded;
     }
 
     private void GroupedSongsList_Unloaded(object sender, RoutedEventArgs e)

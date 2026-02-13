@@ -29,6 +29,7 @@ public partial class PivotExHeaderView : ListView
 
                     if (a.NewValue is PivotEx newValue)
                     {
+                        sender._currentPivotEx = newValue;
                         newValue.SelectionChanged += sender.Pivot_SelectionChanged;
                         newValue.Items.VectorChanged += sender.Pivot_ItemsChanged;
                         sender.pivotHeaderTemplateEventToken = newValue.RegisterPropertyChangedCallback(
@@ -45,12 +46,20 @@ public partial class PivotExHeaderView : ListView
 
     private Border LayoutRoot;
     private long pivotHeaderTemplateEventToken;
+    private PivotEx _currentPivotEx;
 
     public PivotExHeaderView()
     {
         DefaultStyleKey = typeof(PivotExHeaderView);
 
         SelectionChanged += PivotExHeaderView_SelectionChanged;
+        Unloaded += PivotExHeaderView_Unloaded;
+    }
+
+    private void PivotExHeaderView_Unloaded(object sender, RoutedEventArgs e)
+    {
+        _currentPivotEx?.SelectionChanged -= Pivot_SelectionChanged;
+        _currentPivotEx?.Items?.VectorChanged -= Pivot_ItemsChanged;
     }
 
     public PivotEx Pivot

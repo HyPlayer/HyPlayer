@@ -138,7 +138,7 @@ namespace HyPlayer.Behaviors
 
             attached = false;
 
-            button.LayoutUpdated += AssociatedObject_LayoutUpdated;
+            button.LayoutUpdated -= AssociatedObject_LayoutUpdated;
 
             button.UnregisterPropertyChangedCallback(Control.PaddingProperty, paddingChangedEventToken);
             paddingChangedEventToken = 0;

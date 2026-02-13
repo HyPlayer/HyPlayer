@@ -221,7 +221,7 @@ public sealed partial class App : Application
         }
         if (args.Kind == ActivationKind.Protocol)
         {
-            var launchUri = (args?.As<ProtocolActivatedEventArgs>())?.Uri;
+            var launchUri = (args?.As<IProtocolActivatedEventArgs>())?.Uri;
             if (launchUri?.Host == "link.last.fm")
                 _ = LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
         }

@@ -10,6 +10,8 @@
     xmlns:ui="using:CommunityToolkit.WinUI"
     xmlns:win2d="using:Microsoft.Graphics.Canvas.UI.Xaml"
     Background="Transparent"
+    PointerEntered="WidgetPage_PointerEntered"
+    PointerExited="WidgetPage_PointerExited"
     mc:Ignorable="d">
     <Page.Resources>
         <SolidColorBrush x:Key="AccentBrush" Color="{ThemeResource SystemBaseHighColor}" />
@@ -50,6 +52,7 @@
                 <Button
                     x:Name="FindLyricButton"
                     HorizontalAlignment="Center"
+                    Click="FindLyricButton_Click"
                     Content="重试" />
             </StackPanel>
         </Grid>
@@ -85,7 +88,8 @@
                     Width="42"
                     Height="36"
                     Background="Transparent"
-                    BorderBrush="Transparent">
+                    BorderBrush="Transparent"
+                    Click="MovePreviousButton_Click">
                     <FontIcon FontSize="14" Glyph="&#xE892;" />
                 </Button>
                 <!--  暂停/继续  -->
@@ -95,7 +99,8 @@
                     Width="45"
                     Height="36"
                     Background="Transparent"
-                    BorderBrush="Transparent">
+                    BorderBrush="Transparent"
+                    Click="ChangePlayStateButton_Click">
                     <FontIcon x:Name="PlayStateIcon" Glyph="&#xE769;" />
                 </Button>
                 <!--  下一首  -->
@@ -105,7 +110,8 @@
                     Width="42"
                     Height="36"
                     Background="Transparent"
-                    BorderBrush="Transparent">
+                    BorderBrush="Transparent"
+                    Click="MoveNextButton_Click">
                     <FontIcon FontSize="14" Glyph="&#xE893;" />
                 </Button>
 

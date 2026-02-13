@@ -204,4 +204,9 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     {
         floorComments.Clear();
     }
+
+    private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+    {
+        floorComments.CollectionChanged -= FloorComments_CollectionChanged;
+    }
 }

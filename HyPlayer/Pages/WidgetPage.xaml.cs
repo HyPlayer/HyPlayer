@@ -8,6 +8,7 @@ using Microsoft.Gaming.XboxGameBar;
 using Microsoft.Gaming.XboxGameBar.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
@@ -45,7 +46,6 @@ public sealed partial class WidgetPage : Page
     {
         base.OnNavigatedTo(e);
 
-        FindLyricButton.Click += FindLyricButton_Click;
         _widget = e.Parameter?.As<XboxGameBarWidget>();
         Common.XboxGameBarWidget = _widget;
         if (HyPlayList.NowPlayingItem.PlayItem is null) return;
@@ -78,11 +78,6 @@ public sealed partial class WidgetPage : Page
         HyPlayList.OnPause += HyPlayList_OnPause;
         HyPlayList.OnPlay += HyPlayList_OnPlay;
         HyPlayList.OnLyricLoaded += OnPlaylistLyricLoaded;
-        ChangePlayStateButton.Click += ChangePlayStateButton_Click;
-        MoveNextButton.Click += MoveNextButton_Click;
-        MovePreviousButton.Click += MovePreviousButton_Click;
-        this.PointerEntered += WidgetPage_PointerEntered;
-        this.PointerExited += WidgetPage_PointerExited;
         TipContent.Visibility = Visibility.Collapsed;
         LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
         PlayStateIcon.Glyph =
@@ -119,6 +114,7 @@ public sealed partial class WidgetPage : Page
 
     private void Widget_CloseRequested(XboxGameBarWidget sender, XboxGameBarWidgetCloseRequestedEventArgs args)
     {
+        Debug.WriteLine("GameBar Close Requested.");
         _hotkeyWatcher.Stop();
         _widget.CloseRequested -= Widget_CloseRequested;
         _widget.SettingsClicked -= OnSettingsChecked;

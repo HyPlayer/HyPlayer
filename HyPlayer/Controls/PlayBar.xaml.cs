@@ -815,7 +815,7 @@ DoubleAnimation verticalAnimation;
     public async void RefreshPlayBarCover(HyPlayItem playItem)
     {
         if (HyPlayList.CoverStream == null) return;
-        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+        _ = Common.Invoke(async () =>
         {
             if (GridSongInfo.Visibility == Visibility.Visible && Opacity != 0)
             {

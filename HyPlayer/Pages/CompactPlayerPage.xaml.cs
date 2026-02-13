@@ -86,7 +86,7 @@ public sealed partial class CompactPlayerPage : Page
 
     private void Player_OnGlobalPlaybackStatusChanged(PlaybackStatus status)
     {
-        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+        _ = Common.Invoke(() =>
         {
             PlayStateIcon.Glyph =
                 HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
@@ -98,7 +98,7 @@ public sealed partial class CompactPlayerPage : Page
     private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem)
     {
         if (HyPlayList.CoverStream == null) return;
-        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+        _ = Common.Invoke(async ()  =>
         {
             if (!Common.Setting.noImage)
             {
@@ -113,13 +113,12 @@ public sealed partial class CompactPlayerPage : Page
 
                 }
             }
-
         });
     }
 
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+        _ = Common.Invoke(() =>
         {
             NowProgress = position.TotalMilliseconds;
         });
@@ -151,7 +150,7 @@ public sealed partial class CompactPlayerPage : Page
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
     {
-        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+        _ = Common.Invoke(() =>
         {
             IconLiked.Foreground = isLiked
                 ? new SolidColorBrush(Colors.Red)
@@ -221,7 +220,7 @@ public sealed partial class CompactPlayerPage : Page
             LyricControl.QuickRenderMode = false;
             if (kara.Duration.TotalSeconds > 1)
             {
-                _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { ChangeLyric(); });
+                _ = Common.Invoke(() => { ChangeLyric(); });
                 return;
             }
         }
@@ -230,7 +229,7 @@ public sealed partial class CompactPlayerPage : Page
             if (lrcLine.StartTime.TotalSeconds - HyPlayList.HyLyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime.TotalSeconds > 1)
             {
                 LyricControl.QuickRenderMode = false;
-                _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { ChangeLyric(); });
+                _ = Common.Invoke(() => { ChangeLyric(); });
                 return;
             }
             else
@@ -245,7 +244,7 @@ public sealed partial class CompactPlayerPage : Page
     private void ChangeLyric()
     {
 
-        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+        _ = Common.Invoke(() =>
         {
             LyricText = HyPlayList.HyLyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
             LyricControl.Lyric = HyPlayList.HyLyricInfo.Lyrics[HyPlayList.LyricPos];
@@ -255,7 +254,7 @@ public sealed partial class CompactPlayerPage : Page
 
     private void OnChangePlayItem(HyPlayItem item)
     {
-        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+        _ = Common.Invoke(() =>
         {
             NowPlayingName = item?.PlayItem?.Name;
             NowPlayingArtists = item?.PlayItem?.ArtistString;
@@ -263,7 +262,7 @@ public sealed partial class CompactPlayerPage : Page
         if (item.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
         {
             var isLiked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-            _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            _ = Common.Invoke(() =>
             {
                 IconLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)

@@ -1456,8 +1456,7 @@ namespace HyPlayer
         {
             try
             {
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                    () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+                await Common.Invoke(() => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
             }
             catch
             {

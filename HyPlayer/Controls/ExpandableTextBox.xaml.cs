@@ -31,7 +31,6 @@ public sealed partial class ExpandableTextBox : UserControl
     public ExpandableTextBox()
     {
         InitializeComponent();
-        MyTextBlock.IsTextTrimmedChanged += MyTextBlock_IsTextTrimmedChanged;
         ExpandButton.Visibility = Visibility.Collapsed;
     }
 

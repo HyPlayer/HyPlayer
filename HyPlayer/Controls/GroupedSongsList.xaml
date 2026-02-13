@@ -11,6 +11,7 @@
     xmlns:pages="using:HyPlayer.Pages"
     x:Name="SongListRoot"
     d:DesignHeight="300"
+    Unloaded="GroupedSongsList_Unloaded"
     mc:Ignorable="d">
     <Grid>
         <ListView

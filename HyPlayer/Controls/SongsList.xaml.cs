@@ -74,7 +74,6 @@ public sealed partial class SongsList : UserControl
     {
         InitializeComponent();
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
-        Unloaded += SongsList_Unloaded;
     }
 
     private void SongsList_Unloaded(object sender, RoutedEventArgs e)

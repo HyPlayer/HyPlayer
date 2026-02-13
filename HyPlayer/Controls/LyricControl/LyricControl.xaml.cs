@@ -15,22 +15,11 @@ namespace HyPlayer.Controls.LyricControl
         public LyricControl()
         {
             this.InitializeComponent();
-            this.Unloaded += LyricControl_Unloaded;
-            this.Loaded += LyricControl_Loaded;
-        }
-
-        private void LyricControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            CanvasControl.Update += CanvasControl_Update;
-            CanvasControl.Draw += CanvasControl_Draw;
-            CanvasControl.Paused = false;
         }
 
         private void LyricControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            CanvasControl.Update -= CanvasControl_Update;
-            CanvasControl.Draw -= CanvasControl_Draw;
-            CanvasControl.Paused = true;
+            CanvasControl.RemoveFromVisualTree();
         }
 
         private void CanvasControl_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender,

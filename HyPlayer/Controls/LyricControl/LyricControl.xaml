@@ -8,9 +8,12 @@
     xmlns:xaml="using:Microsoft.Graphics.Canvas.UI.Xaml"
     d:DesignHeight="300"
     d:DesignWidth="400"
+    Unloaded="LyricControl_Unloaded"
     mc:Ignorable="d">
     <xaml:CanvasAnimatedControl
         x:Name="CanvasControl"
         HorizontalAlignment="Stretch"
-        VerticalAlignment="Stretch" />
+        VerticalAlignment="Stretch"
+        Draw="CanvasControl_Draw"
+        Update="CanvasControl_Update" />
 </UserControl>

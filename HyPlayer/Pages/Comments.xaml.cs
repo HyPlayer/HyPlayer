@@ -264,8 +264,7 @@ public sealed partial class Comments : Page
     (source) =>
 
     {
-        _ = Dispatcher.RunAsync(
-        CoreDispatcherPriority.Low,
+        _ = Common.Invoke(
         () =>
         {
             point = transform.TransformPoint(new Point(0, 25));//要超过判定区域，还要预留一点
@@ -297,8 +296,7 @@ public sealed partial class Comments : Page
         (source) =>
 
         {
-            _ = Dispatcher.RunAsync(
-            CoreDispatcherPriority.Low,
+            _ = Common.Invoke(
             () =>
             {
                 if ((sender?.As<ScrollViewer>()).VerticalOffset < 15)
@@ -325,9 +323,8 @@ public sealed partial class Comments : Page
     (source) =>
 
         {
-            _ = Dispatcher.RunAsync(
-            CoreDispatcherPriority.Low,
-            () =>
+             _ = Common.Invoke(
+             () =>
             {
                 HotCommentsScroll = HotComments.CommentPresentScrollViewer;
                 HotCommentsScroll.ViewChanged += HotCommentsScroll_ViewChanged;
@@ -341,6 +338,12 @@ public sealed partial class Comments : Page
     {
         if (HotCommentsScroll.ScrollableHeight - HotCommentsScroll.VerticalOffset <= 14)
             ShiftCommentList(true);
+    }
+
+    private void Page_Unloaded(object sender, RoutedEventArgs e)
+    {
+        HotCommentsScroll.ViewChanged -= HotCommentsScroll_ViewChanged;
+        MainScroll.ViewChanged -= MainScroll_ViewChanged;
     }
 
     private void ShiftCommentList(bool direction)
@@ -357,8 +360,7 @@ public sealed partial class Comments : Page
             (source) =>
 
             {
-                _ = Dispatcher.RunAsync(
-                CoreDispatcherPriority.Low,
+                _ = Common.Invoke(
                 () =>
                 {
                     MainScroll = NormalComments.CommentPresentScrollViewer;
