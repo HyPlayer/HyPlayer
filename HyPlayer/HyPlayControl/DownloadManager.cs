@@ -168,7 +168,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         return Task.Run(async () =>
         {
             using var streamAbstraction = new UwpStorageFileAbstraction(ResultFile);
-            using var file = File.Create(streamAbstraction);
+            using var file = TagLibHelper.Create(streamAbstraction, ResultFile.FileType);
             try
             {
                 if (Common.Setting.write163Info && DontUsePlayItem is not null)

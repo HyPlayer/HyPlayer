@@ -42,7 +42,7 @@ internal class CloudUpload
         byte[]? coverBytes = null;
         try
         {
-            using var tagFile = File.Create(abstraction);
+            using var tagFile = TagLibHelper.Create(abstraction, file.FileType);
             var tag = tagFile?.Tag;
             album = tag?.Album;
             name = tag?.Title;
