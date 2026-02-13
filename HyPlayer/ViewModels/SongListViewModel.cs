@@ -82,6 +82,7 @@ namespace HyPlayer.ViewModels
             {
                 CoverUri = PlayList.IsDailyRecommend ? new Uri(PlayList.Cover) : new Uri(PlayList.Cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
             }
+            LoadAlbumImage().SafeFireAndForget();
             UpdateTime = $"{DateConverter.FriendFormat(PlayList.UpdateTime)}更新";
             LoadSongListItem().SafeFireAndForget();
         }
