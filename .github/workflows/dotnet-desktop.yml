@@ -111,10 +111,16 @@ jobs:
       with:
         name: HyPlayer Actions Build-${{ matrix.platform }}
         path: ${{ env.Wap_Project_Directory }}\AppPackages
+        
+    - name: Zip artifacts
+      shell: pwsh
+      run: |
+             Compress-Archive -Path "${{ env.Wap_Project_Directory }}\\AppPackages*" -Destination "HyPlayer-ActionsBuild-${{ matrix.platform }}.zip"
+             
     - name: Upload build artifacts 
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "${{ env.Wap_Project_Directory }}\\AppPackages\\HyPlayer.Package*.msixbundle"
+        artifacts: "HyPlayer-ActionsBuild-${{ matrix.platform }}.zip"
         allowUpdates: true
         artifactErrorsFailBuild: true
         generateReleaseNotes: true
