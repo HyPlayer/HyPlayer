@@ -131,7 +131,7 @@ DoubleAnimation verticalAnimation;
 
     public void LoadPlayingFile(HyPlayItem mpi)
     {
-        if (HyPlayList.NowPlayingItem.PlayItem == null) return;
+        if (HyPlayList.NowPlayingItem == null) return;
         try
         {
             _ = Common.Invoke(() => ApplicationView.GetForCurrentView().Title =
@@ -180,7 +180,7 @@ DoubleAnimation verticalAnimation;
             }
 
             // 恢复播放音量
-            if (HyPlayList.NowPlayingItem.PlayItem == null)
+            if (HyPlayList.NowPlayingItem == null)
             {
                 TbSingerName.Content = null;
                 TbSongName.Text = null;
@@ -317,7 +317,7 @@ DoubleAnimation verticalAnimation;
 
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
-        if (!HyPlayList.Player.PlayerCreated || HyPlayList.NowPlayingItem.PlayItem == null) return;
+        if (!HyPlayList.Player.PlayerCreated || HyPlayList.NowPlayingItem == null) return;
         if (HyPlayList.NowPlayingItem?.Name != null && HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Closed)
             _ = HyPlayList.LoadMediaSource(HyPlayList.List[HyPlayList.NowPlaying]);
         if (HyPlayList.IsPlaying)
@@ -860,8 +860,6 @@ DoubleAnimation verticalAnimation;
                     HyPlayList.AppendNcSongs(list);
                     HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
                 }
-
-                list.Clear();
             }
             catch
             {

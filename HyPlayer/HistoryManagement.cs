@@ -149,7 +149,7 @@ namespace HyPlayer
                 trackIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                     .Values["curPlayingListHistory"].ToString(), Common.DefaultOptions) ?? new List<string>();
 
-            if (trackIds == null || string.IsNullOrEmpty(trackIds.FirstOrDefault()))
+            if (trackIds == null || trackIds.Count == 0)
                 return retsongs;
             var nowIndex = 0;
             while (nowIndex * 500 < trackIds.Count)

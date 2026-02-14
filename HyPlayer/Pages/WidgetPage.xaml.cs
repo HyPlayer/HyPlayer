@@ -48,7 +48,7 @@ public sealed partial class WidgetPage : Page
 
         _widget = e.Parameter?.As<XboxGameBarWidget>();
         Common.XboxGameBarWidget = _widget;
-        if (HyPlayList.NowPlayingItem.PlayItem is null) return;
+        if (HyPlayList.NowPlayingItem is null) return;
         Initialize();
     }
 
@@ -59,7 +59,7 @@ public sealed partial class WidgetPage : Page
 
     private void FindLyricButton_Click(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.PlayItem is null) return;
+        if (HyPlayList.NowPlayingItem is null) return;
         Initialize();
     }
 
@@ -137,7 +137,7 @@ public sealed partial class WidgetPage : Page
 
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        if (HyPlayList.NowPlayingItem.PlayItem == null) return;
+        if (HyPlayList.NowPlayingItem == null) return;
         var progress = position.TotalMilliseconds / HyPlayList.NowPlayingItem.LengthInMilliseconds * 100;
         var text = $"{position.ToString(@"mm\:ss")}/{TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.LengthInMilliseconds).ToString(@"mm\:ss")}";
         _ = Dispatcher.RunAsync(

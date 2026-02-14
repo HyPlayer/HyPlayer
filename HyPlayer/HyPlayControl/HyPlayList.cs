@@ -173,7 +173,7 @@ public static class HyPlayList
             }
 
             if (List.Count <= NowPlaying || NowPlaying == -1)
-                return new HyPlayItem { ItemType = HyPlayItemType.Netease };
+                return null;
             return List[NowPlaying];
         }
     }
@@ -1121,7 +1121,7 @@ public static class HyPlayList
     public static void Player_SourceChanged(IPlaybackSource source)
     {
         if (List.Count <= NowPlaying) return;
-        if (NowPlayingItem.PlayItem == null || source == null)
+        if (NowPlayingItem == null || source == null)
         {
             return;
         }
@@ -1129,7 +1129,7 @@ public static class HyPlayList
         var playItemWhenRequested = NowPlayingItem;
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
         //加载 SystemMediaTransportControls
-        if (NowPlayingItem.PlayItem != null)
+        if (NowPlayingItem != null)
         {
             _controlsDisplayUpdater.Type = MediaPlaybackType.Music;
             _controlsDisplayUpdater.MusicProperties.Artist = NowPlayingItem.ArtistString;

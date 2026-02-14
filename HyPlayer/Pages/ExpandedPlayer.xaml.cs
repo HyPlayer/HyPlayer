@@ -924,7 +924,7 @@ public sealed partial class ExpandedPlayer : Page
             finalResult = _settings.lyricColor == 2;
             resultGenerated = true;
         }
-        if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
+        if (HyPlayList.NowPlayingItem == null) return false;
         if (_settings.expandedPlayerBackgroundType == BackgroundType.DesktopAcrylic)
         {
             return ActualTheme == ElementTheme.Light;
@@ -1007,7 +1007,7 @@ public sealed partial class ExpandedPlayer : Page
     }
     private void BtnSpeedMinusClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.PlayItem == null) return;
+        if (HyPlayList.NowPlayingItem == null) return;
         var currentSpeed = HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
         var newSpeed = Math.Max(0.5, currentSpeed - 0.1);
         HyPlayList.Player.SetPlaybackSourceSpeed(newSpeed, HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
@@ -1016,7 +1016,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void BtnSpeedPlusClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.PlayItem == null) return;
+        if (HyPlayList.NowPlayingItem == null) return;
         var currentSpeed = HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
         var newSpeed = Math.Min(2.0, currentSpeed + 0.1);
         HyPlayList.Player.SetPlaybackSourceSpeed(newSpeed, HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
