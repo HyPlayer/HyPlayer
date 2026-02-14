@@ -111,4 +111,14 @@ jobs:
       with:
         name: HyPlayer Actions Build-${{ matrix.platform }}
         path: ${{ env.Wap_Project_Directory }}\AppPackages
+    - name: Upload build artifacts 
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "HyPlayer Actions Build-*.zip"
+        allowUpdates: true
+        artifactErrorsFailBuild: true
+        generateReleaseNotes: true
+        name: "actions-build"
+        prerelease: true
+        replacesArtifacts: true
         
