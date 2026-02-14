@@ -491,8 +491,7 @@ public sealed partial class ExpandedPlayer : Page
                 (Brush)new BooleanToWindowBrushesConverter().Convert(
                     _settings.acrylicBackgroundStatus, null, null,
                     null);
-
-        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
         if (_settings.pureLyricFocusingColor is not null)
         {
             _pureAccentBrushCache ??= Common.BrushManagement.AccentBrush;
@@ -593,10 +592,10 @@ public sealed partial class ExpandedPlayer : Page
         _lyricHasBeenLoaded = lyricIsReady;
         _ = Common.Invoke(() =>
         {
-            var artistText = mpi?.PlayItem?.ArtistString;
+            var artistText = mpi?.ArtistString;
             ViewModel.Artist = artistText;
-            ViewModel.SongName = mpi?.PlayItem?.Name;
-            ViewModel.Album = mpi?.PlayItem?.AlbumString;
+            ViewModel.SongName = mpi?.Name;
+            ViewModel.Album = mpi?.AlbumString;
             if (mpi?.PlayItem == null)
             {
                 _lyricList.Clear();
@@ -626,7 +625,7 @@ public sealed partial class ExpandedPlayer : Page
             }
 
             _needRedesign++;
-            NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+            NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
         });
     }
 
@@ -711,12 +710,12 @@ public sealed partial class ExpandedPlayer : Page
         try
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-                if (HyPlayList.NowPlayingItem.PlayItem.Album.Id != "0")
+                if (HyPlayList.NowPlayingItem.Album.Id != "0")
                     Common.NavigatePage(typeof(AlbumPage),
-                        HyPlayList.NowPlayingItem.PlayItem.Album.Id);
+                        HyPlayList.NowPlayingItem.Album.Id);
 
-            if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
-                Common.NavigatePage(typeof(RadioPage), HyPlayList.NowPlayingItem.PlayItem.Album.Id);
+            if (HyPlayList.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
+                Common.NavigatePage(typeof(RadioPage), HyPlayList.NowPlayingItem.Album.Id);
 
             if (_settings.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));
@@ -733,18 +732,18 @@ public sealed partial class ExpandedPlayer : Page
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                if (HyPlayList.NowPlayingItem.PlayItem.Artist.Count > 1)
+                if (HyPlayList.NowPlayingItem.Artist.Count > 1)
                 {
-                    await new ArtistSelectDialog(HyPlayList.NowPlayingItem.PlayItem.Artist).ShowAsync();
+                    await new ArtistSelectDialog(HyPlayList.NowPlayingItem.Artist).ShowAsync();
                     return;
                 }
 
                 Common.NavigatePage(typeof(ArtistPage),
-                    HyPlayList.NowPlayingItem.PlayItem.Artist[0].Id);
+                    HyPlayList.NowPlayingItem.Artist[0].Id);
             }
 
-            if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
-                Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].Id);
+            if (HyPlayList.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
+                Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.Artist[0].Id);
 
             if (_settings.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));
@@ -761,7 +760,7 @@ public sealed partial class ExpandedPlayer : Page
         try
         {
             var filepicker = new FileSavePicker();
-            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.PlayItem.Name + "-Cover.jpg";
+            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.Name + "-Cover.jpg";
             filepicker.FileTypeChoices.Add("图片文件", new List<string> { ".png", ".jpg" });
             var file = await filepicker.PickSaveFileAsync();
             if (file == null) return;
@@ -769,7 +768,7 @@ public sealed partial class ExpandedPlayer : Page
                 HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.LocalProgressive)
             {
                 using var coverResult =
-                    await Common.HttpClient!.GetAsync(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.Cover));
+                    await Common.HttpClient!.GetAsync(new Uri(HyPlayList.NowPlayingItem.Album.Cover));
                 if (coverResult.IsSuccessStatusCode)
                 {
                     var Cover = (await coverResult.Content.ReadAsByteArrayAsync()).AsBuffer();
@@ -891,7 +890,7 @@ public sealed partial class ExpandedPlayer : Page
             Utils.ConvertTranslation(ttmlLyric.TrLyrics, HyPlayList.HyLyricInfo.Lyrics);
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, HyPlayList.NowPlayingItem.PlayItem.Id,
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, HyPlayList.NowPlayingItem.Id,
                     () => Task.FromResult(HyPlayList.HyLyricInfo)!, forceRefresh: true);
             }
 
@@ -1008,26 +1007,26 @@ public sealed partial class ExpandedPlayer : Page
     }
     private void BtnSpeedMinusClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource == null) return;
-        var currentSpeed = HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        if (HyPlayList.NowPlayingItem.PlayItem == null) return;
+        var currentSpeed = HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
         var newSpeed = Math.Max(0.5, currentSpeed - 0.1);
-        HyPlayList.Player.SetPlaybackSourceSpeed(newSpeed, HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
-        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        HyPlayList.Player.SetPlaybackSourceSpeed(newSpeed, HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
+        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
     }
 
     private void BtnSpeedPlusClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource == null) return;
-        var currentSpeed = HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        if (HyPlayList.NowPlayingItem.PlayItem == null) return;
+        var currentSpeed = HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
         var newSpeed = Math.Min(2.0, currentSpeed + 0.1);
-        HyPlayList.Player.SetPlaybackSourceSpeed(newSpeed, HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
-        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        HyPlayList.Player.SetPlaybackSourceSpeed(newSpeed, HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
+        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
     }
 
     private void TbNowSpeed_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        HyPlayList.Player.SetPlaybackSourceSpeed(1, HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
-        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        HyPlayList.Player.SetPlaybackSourceSpeed(1, HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
+        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
     }
 
     private void BtnCopyLyricClicked(object sender, RoutedEventArgs e)

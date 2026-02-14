@@ -42,7 +42,7 @@ internal class Api
                 {
                     PlaylistId = songList,
                     SongId = randomSong,
-                    StartMusicId = HyPlayList.NowPlayingItem.PlayItem?.Id ?? randomSong,
+                    StartMusicId = HyPlayList.NowPlayingItem?.Id ?? randomSong,
                     Count = Common.LikedSongs.Count
                 }, cancellationToken);
 

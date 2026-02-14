@@ -28,7 +28,7 @@
                 IsBackButtonVisible="Collapsed"
                 IsSettingsVisible="False"
                 PaneDisplayMode="Top"
-                SelectionChanged="NavView_OnSelectionChanged">
+                SelectionChanged="NavView_SelectionChanged">
                 <NavigationView.MenuItems>
                     <NavigationViewItem Content="专辑" Tag="Album" />
                     <NavigationViewItem Content="歌手" Tag="Artist" />
@@ -38,15 +38,17 @@
             <controls:SimpleLinerList
                 x:Name="ItemContainer"
                 Grid.Row="1"
-                Margin="-15,0,0,0">
+                Margin="-15,0,0,0"
+                ListItems="{x:Bind ViewModel.Content}">
                 <controls:SimpleLinerList.Footer>
                     <Button
                         x:Name="BtnLoadMore"
                         Grid.Row="2"
                         HorizontalAlignment="Center"
-                        Click="BtnLoadMore_OnClick"
+                        Command="{x:Bind ViewModel.LoadMoreCommand}"
                         Content="加载更多"
-                        Style="{StaticResource ButtonRevealStyle}" />
+                        Style="{StaticResource ButtonRevealStyle}"
+                        Visibility="{x:Bind ViewModel.HasMore, Mode=OneWay}" />
                 </controls:SimpleLinerList.Footer>
             </controls:SimpleLinerList>
         </Grid>

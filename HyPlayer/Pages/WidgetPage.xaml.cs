@@ -138,8 +138,8 @@ public sealed partial class WidgetPage : Page
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
         if (HyPlayList.NowPlayingItem.PlayItem == null) return;
-        var progress = position.TotalMilliseconds / HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds * 100;
-        var text = $"{position.ToString(@"mm\:ss")}/{TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds).ToString(@"mm\:ss")}";
+        var progress = position.TotalMilliseconds / HyPlayList.NowPlayingItem.LengthInMilliseconds * 100;
+        var text = $"{position.ToString(@"mm\:ss")}/{TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.LengthInMilliseconds).ToString(@"mm\:ss")}";
         _ = Dispatcher.RunAsync(
             CoreDispatcherPriority.Normal,
             () =>
@@ -151,8 +151,8 @@ public sealed partial class WidgetPage : Page
 
     private void HyPlayList_OnPlayItemChange(HyPlayItem playItem)
     {
-        var playItemName = HyPlayList.NowPlayingItem.PlayItem.Name;
-        var artistName = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
+        var playItemName = HyPlayList.NowPlayingItem.Name;
+        var artistName = HyPlayList.NowPlayingItem.ArtistString;
         _ = Dispatcher.RunAsync(
            CoreDispatcherPriority.Normal,
            () =>

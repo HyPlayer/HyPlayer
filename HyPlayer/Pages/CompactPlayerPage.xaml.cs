@@ -256,12 +256,12 @@ public sealed partial class CompactPlayerPage : Page
     {
         _ = Common.Invoke(() =>
         {
-            NowPlayingName = item?.PlayItem?.Name;
-            NowPlayingArtists = item?.PlayItem?.ArtistString;
+            NowPlayingName = item?.Name;
+            NowPlayingArtists = item?.ArtistString;
         });
         if (item.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
         {
-            var isLiked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+            var isLiked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.Id);
             _ = Common.Invoke(() =>
             {
                 IconLiked.Foreground = isLiked
@@ -270,7 +270,7 @@ public sealed partial class CompactPlayerPage : Page
                 IconLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
-                TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
+                TotalProgress = item?.LengthInMilliseconds ?? 0;
             });
         }
     }

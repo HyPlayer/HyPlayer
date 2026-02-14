@@ -73,20 +73,7 @@ public sealed partial class App : Application
     private void InitializeServices()
     {
         var serviceCollection = new ServiceCollection();
-        var setting = new Setting();
-        var handler = NeteaseCloudMusicApiHandler.HttpClientHandler;
-        handler.UseProxy = setting.EnableProxy;
-        var client = new HttpClient(handler);
-        serviceCollection.AddSingleton(client);
-        serviceCollection.AddSingleton(new NeteaseCloudMusicApiHandler(client));
-        serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = "641ef15109503085d966e37b73bdcb72", ApiSecret = "35c02c12c9c0fdc6f6c1de5d0a9227b5" }, client));
-        serviceCollection.AddSingleton(setting);
-        serviceCollection.AddSingleton<AudioGraphPlayer>();
-        serviceCollection.AddTransient<HomeViewModel>();
-        serviceCollection.AddTransient<MeViewModel>();
-        serviceCollection.AddTransient<ExpandedPlayerViewModel>();
-        serviceCollection.AddTransient<ArtistPageViewModel>();
-        serviceCollection.AddTransient<SongListViewModel>();
+        InitializeServices(serviceCollection);
         var provider = serviceCollection.BuildServiceProvider();
         Ioc.Default.ConfigureServices(provider);
     }
@@ -101,6 +88,24 @@ public sealed partial class App : Application
         GC.Collect();
     }
 
+    private void InitializeServices(ServiceCollection serviceCollection)
+    {
+        var setting = new Setting();
+        var handler = NeteaseCloudMusicApiHandler.HttpClientHandler;
+        handler.UseProxy = setting.EnableProxy;
+        var client = new HttpClient(handler);
+        serviceCollection.AddSingleton(client);
+        serviceCollection.AddSingleton(new NeteaseCloudMusicApiHandler(client));
+        serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = "641ef15109503085d966e37b73bdcb72", ApiSecret = "35c02c12c9c0fdc6f6c1de5d0a9227b5" }, client));
+        serviceCollection.AddSingleton(setting);
+        serviceCollection.AddSingleton<AudioGraphPlayer>();
+        serviceCollection.AddTransient<HomeViewModel>();
+        serviceCollection.AddTransient<MeViewModel>();
+        serviceCollection.AddTransient<ExpandedPlayerViewModel>();
+        serviceCollection.AddTransient<ArtistPageViewModel>();
+        serviceCollection.AddTransient<SongListViewModel>();
+        serviceCollection.AddTransient<FavoriteViewModel>();
+    }
     private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
     {
         if (!Common.Setting.forceMemoryGarbage) return;
@@ -392,7 +397,7 @@ public sealed partial class App : Application
         var deferral = e.SuspendingOperation.GetDeferral();
         await HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
             .Where(t => t.ItemType == HyPlayItemType.Netease)
-            .Select(t => t.PlayItem.Id).ToList());
+            .Select(t => t.Id).ToList());
         if (Common.XboxGameBarWidget != null)
         {
             Common.XboxGameBarWidget.Close();

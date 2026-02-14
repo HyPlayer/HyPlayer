@@ -143,23 +143,19 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                 var item = new HyPlayItem
                 {
                     ItemType = HyPlayItemType.LocalProgressive,
-                    PlayItem = new PlayItem
-                    {
-                        Album = undeterminedAlbum,
-                        Artist = undeterminedArtistList,
-                        Bitrate = 0,
-                        LocalStorageFile = storageFile,
-                        IsLocalFile = true,
-                        LengthInMilliseconds = 0,
-                        Name = storageFile.Name,
-                        CDName = "01",
-                        Size = 0,
-                        SubExt = storageFile.FileType,
-                        TrackId = 0,
-                        InfoTag = "本地歌曲",
-                        Type = HyPlayItemType.LocalProgressive,
-                        Url = storageFile.Path
-                    }
+                    Album = undeterminedAlbum,
+                    Artist = undeterminedArtistList,
+                    Bitrate = 0,
+                    LocalStorageFile = storageFile,
+                    IsLocalFile = true,
+                    LengthInMilliseconds = 0,
+                    Name = storageFile.Name,
+                    CDName = "01",
+                    Size = 0,
+                    SubExt = storageFile.FileType,
+                    TrackId = 0,
+                    InfoTag = "本地歌曲",
+                    Url = storageFile.Path
                 };
                 localHyItems.Add(item);
             }

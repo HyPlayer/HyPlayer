@@ -54,7 +54,7 @@ namespace HyPlayer.Pages
             var song = button.CommandParameter as NCSong;
             HyPlayList.AppendNcSong(song);
             var targetPlayItem =
-                HyPlayList.List.Find(t => t.PlayItem.Id == song.SongId);
+                HyPlayList.List.Find(t => t.Id == song.SongId);
             HyPlayList.SongMoveTo(targetPlayItem);
 
         }

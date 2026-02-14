@@ -756,8 +756,8 @@ public sealed partial class BasePage : Page
         {
             if (item.PlayItem != null)
             {
-                NavItemSongName.Text = item.PlayItem.Name;
-                NavItemArtist.Text = item.PlayItem.ArtistString;
+                NavItemSongName.Text = item.Name;
+                NavItemArtist.Text = item.ArtistString;
             }
         });
     }

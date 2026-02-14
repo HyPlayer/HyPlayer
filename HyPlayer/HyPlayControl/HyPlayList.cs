@@ -293,7 +293,7 @@ public static class HyPlayList
         {
             if (Common.Setting.shuffleNoRepeating)
             {
-                CreateShufflePlayLists(NowPlayingItem.PlayItem.Id);
+                CreateShufflePlayLists(NowPlayingItem.Id);
             }
             else
             {
@@ -317,8 +317,8 @@ public static class HyPlayList
 
     private static void PlayerOnMediaFailed(string reason)
     {
-        Common.ErrorMessageList.Add($"歌曲播放失败: {NowPlayingItem.PlayItem.Name}\n{reason}");
-        Common.AddToTeachingTipLists($"播放失败 切到下一曲 \n 歌曲: {NowPlayingItem.PlayItem.Name}\n{reason}");
+        Common.ErrorMessageList.Add($"歌曲播放失败: {NowPlayingItem.Name}\n{reason}");
+        Common.AddToTeachingTipLists($"播放失败 切到下一曲 \n 歌曲: {NowPlayingItem.Name}\n{reason}");
         SongMoveNext();
     }
 
@@ -366,30 +366,26 @@ public static class HyPlayList
                             var hyitem = new HyPlayItem
                             {
                                 ItemType = HyPlayItemType.Netease,
-                                PlayItem = new PlayItem
+                                Album = new NCAlbum
                                 {
-                                    LocalStorageFile = file,
-                                    Album = new NCAlbum
-                                    {
-                                        Name = Info.album,
-                                        Id = Info.albumId.ToString(),
-                                        Cover = Info.albumPic
-                                    },
-                                    Url = file.Path,
-                                    SubExt = Info.format,
-                                    Bitrate = Info.bitrate,
-                                    IsLocalFile = true,
-                                    Type = HyPlayItemType.Netease,
-                                    LengthInMilliseconds = Info.duration,
-                                    Id = Info.musicId.ToString(),
-                                    TrackId = -1,
-                                    CDName = "01",
-                                    Artist = null,
-                                    Name = Info.musicName,
-                                    InfoTag = file.Provider.DisplayName + " NCM"
-                                }
+                                    Name = Info.album,
+                                    Id = Info.albumId.ToString(),
+                                    Cover = Info.albumPic
+                                },
+                                LocalStorageFile = file,
+                                Url = file.Path,
+                                SubExt = Info.format,
+                                Bitrate = Info.bitrate,
+                                IsLocalFile = true,
+                                LengthInMilliseconds = Info.duration,
+                                Id = Info.musicId.ToString(),
+                                TrackId = -1,
+                                CDName = "01",
+                                Artist = null,
+                                Name = Info.musicName,
+                                InfoTag = file.Provider.DisplayName + " NCM"
                             };
-                            hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
+                            hyitem.Artist = Info.artist.Select(t => new NCArtist
                             { Name = t[0].ToString(), Id = t[1].ToString() })
                                 .ToList();
 
@@ -431,27 +427,27 @@ public static class HyPlayList
             ctk.ThrowIfCancellationRequested();
 
             // 此处可以改进
-            if (targetItem.PlayItem.LocalStorageFile.FileType == ".ncm")
+            if (targetItem.LocalStorageFile.FileType == ".ncm")
                 throw new ArgumentException("不支持的文件类型");
 
-            if (targetItem.PlayItem.LocalStorageFile != null)
+            if (targetItem.LocalStorageFile != null)
             {
                 if (targetItem.ItemType != HyPlayItemType.LocalProgressive)
                 {
-                    NowPlayingStorageFile = targetItem.PlayItem.LocalStorageFile;
+                    NowPlayingStorageFile = targetItem.LocalStorageFile;
                 }
                 else
                 {
-                    NowPlayingStorageFile = targetItem.PlayItem.LocalStorageFile;
-                    var item = await LoadStorageFile(targetItem.PlayItem.LocalStorageFile, ctk);
+                    NowPlayingStorageFile = targetItem.LocalStorageFile;
+                    var item = await LoadStorageFile(targetItem.LocalStorageFile, ctk);
                     targetItem.ItemType = HyPlayItemType.Local;
                     targetItem.PlayItem = item.PlayItem;
-                    targetItem.PlayItem.LocalStorageFile = NowPlayingStorageFile;
+                    targetItem.LocalStorageFile = NowPlayingStorageFile;
                 }
             }
             else
             {
-                NowPlayingStorageFile = await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
+                NowPlayingStorageFile = await StorageFile.GetFileFromPathAsync(targetItem.Url);
             }
         });
     }
@@ -464,7 +460,7 @@ public static class HyPlayList
             ctk.ThrowIfCancellationRequested();
 
             // 脑残Music解析
-            using var stream = await targetItem.PlayItem.LocalStorageFile.OpenStreamForReadAsync();
+            using var stream = await targetItem.LocalStorageFile.OpenStreamForReadAsync();
             if (!NCMFile.IsCorrectNCMFile(stream))
             {
                 throw new Exception("NCM 文件格式不正确");
@@ -483,11 +479,13 @@ public static class HyPlayList
             using var encStream = NCMFile.GetEncryptedStream(stream);
             encStream.Seek(0, SeekOrigin.Begin);
             var songDataStream = new InMemoryRandomAccessStream();
-            var targetSongDataStream = songDataStream.AsStream();
+            using var targetSongDataStream = songDataStream.AsStream();
             encStream.CopyTo(targetSongDataStream);
-            targetItem.PlayItem.NcmPlayableStream = songDataStream;
-            NowPlayingStorageFile = targetItem.PlayItem.LocalStorageFile;
-            targetItem.PlayItem.NcmPlayableStreamMIMEType = MIMEHelper.GetNCMFileMimeType(info.format);
+            var playItem = new PlayItem();
+            targetItem.PlayItem = playItem;
+            playItem.NcmPlayableStream = songDataStream;
+            NowPlayingStorageFile = targetItem.LocalStorageFile;
+            playItem.NcmPlayableStreamMIMEType = MIMEHelper.GetNCMFileMimeType(info.format);
         });
     }
 
@@ -588,8 +586,8 @@ public static class HyPlayList
         if (resetPlaying)
         {
             Player.RemoveAllPlaybackSource();
-            var songsToBeFree = List.Where(t => t.PlayItem.AudioGraphPlaybackSource != null).ToList();
-            songsToBeFree.ForEach(t => t.PlayItem?.FreePlaybackResources());
+            var songsToBeFree = List.Select(t => t.PlayItem).ToList();
+            songsToBeFree.ForEach(t => t?.Dispose());
         }
         List.Clear();
         NowPlaying = -1;
@@ -599,7 +597,7 @@ public static class HyPlayList
 
     public static async void LikeSong()
     {
-        var isLiked = Common.LikedSongs.Contains(NowPlayingItem.PlayItem.Id);
+        var isLiked = Common.LikedSongs.Contains(NowPlayingItem.Id);
 
         try
         {
@@ -610,13 +608,13 @@ public static class HyPlayList
                 {
                     case HyPlayItemType.Netease:
                         {
-                            bool res = await Api.LikeSong(NowPlayingItem.PlayItem.Id, !isLiked);
+                            bool res = await Api.LikeSong(NowPlayingItem.Id, !isLiked);
                             if (res)
                             {
                                 if (isLiked)
-                                    Common.LikedSongs.Remove(NowPlayingItem.PlayItem.Id);
+                                    Common.LikedSongs.Remove(NowPlayingItem.Id);
                                 else
-                                    Common.LikedSongs.Add(NowPlayingItem.PlayItem.Id);
+                                    Common.LikedSongs.Add(NowPlayingItem.Id);
 
                                 _ = Common.Invoke(() => OnSongLikeStatusChange?.Invoke(!isLiked));
                             }
@@ -737,19 +735,19 @@ public static class HyPlayList
 
     private static async Task<(string, long)> GetNowPlayingUrl(HyPlayItem targetItem, CancellationToken ctk)
     {
-        var playUrl = targetItem.PlayItem.Url;
-        var size = targetItem.PlayItem.Size;
+        var playUrl = targetItem.Url;
+        var size = targetItem.Size;
 
         // 对了,先看看是否要刷新播放链接
-        if ((string.IsNullOrEmpty(targetItem.PlayItem.Url) ||
-             Common.Setting.songUrlLazyGet) && targetItem.PlayItem.Id != "-1")
+        if ((string.IsNullOrEmpty(targetItem.Url) ||
+             Common.Setting.songUrlLazyGet) && targetItem.Id != "-1")
         {
             // 使用 Polly 重试策略优化 URL 获取
             var songResult = await RetryPolicies.UrlFetchPolicy.ExecuteAsync(async () =>
             {
                 var result = await SimpleCacher.GetOrCreateCacheAsync(
                     CacheType.SongUrl,
-                    string.Format(SONG_URL_CACHE_KEY_FORMAT, targetItem.PlayItem.Id, Common.Setting.audioRate),
+                    string.Format(SONG_URL_CACHE_KEY_FORMAT, targetItem.Id, Common.Setting.audioRate),
                     async () =>
                     {
                         ctk.ThrowIfCancellationRequested();
@@ -757,7 +755,7 @@ public static class HyPlayList
                         var songRequest = new SongUrlRequest
                         {
                             Level = Common.Setting.audioRate,
-                            Id = targetItem.PlayItem.Id
+                            Id = targetItem.Id
                         };
 
                         var songRes = await Common.NeteaseAPI!.RequestAsync(
@@ -823,14 +821,14 @@ public static class HyPlayList
             _ => "在线"
         };
 
-        targetItem.PlayItem.QualityTag = tag;
-        targetItem.PlayItem.Size = urlInfo.Size;
-        targetItem.PlayItem.SubExt = urlInfo.Type?.ToLowerInvariant();
+        targetItem.QualityTag = tag;
+        targetItem.Size = urlInfo.Size;
+        targetItem.SubExt = urlInfo.Type?.ToLowerInvariant();
 
         var volume = GetAudioGainMultiplier(urlInfo.Gain ?? 0f);
-        targetItem.PlayItem.Volume = volume;
+        targetItem.PlayItem?.Volume = volume;
 
-        UpdatePlayBarQualityDisplay(targetItem.PlayItem.QualityTag);
+        UpdatePlayBarQualityDisplay(targetItem.QualityTag);
     }
 
     private static void UpdatePlayBarQualityDisplay(string qualityTag)
@@ -882,7 +880,7 @@ public static class HyPlayList
     /// </summary>
     private static bool ValidatePlayItem(HyPlayItem targetItem)
     {
-        return targetItem?.PlayItem != null && !string.IsNullOrEmpty(targetItem.PlayItem.Name);
+        return targetItem?.PlayItem != null && !string.IsNullOrEmpty(targetItem.Name);
     }
 
     /// <summary>
@@ -913,7 +911,7 @@ public static class HyPlayList
             await RetryPolicies.MediaSourceLoadPolicy.ExecuteAsync(async () =>
             {
                 if (ctk.IsCancellationRequested) return;
-                if (targetItem.PlayItem?.Name == null)
+                if (targetItem?.Name == null)
                 {
                     MoveSongPointer();
                     return;
@@ -927,11 +925,14 @@ public static class HyPlayList
                     if (primaryPlaybackSource != null)
                     {
                         var item = primaryPlaybackSource.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                        item?.PlayItem?.FreePlaybackResources();
+                        item?.PlayItem?.Dispose();
+                        item.PlayItem = null;
                     }
                 }
 
                 var mediaSource = await CreateMediaSourceAsync(targetItem, ctk);
+                var playItem = new PlayItem();
+                targetItem.PlayItem = playItem;
                 ctk.ThrowIfCancellationRequested();
                 mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
                 MediaSystemControls.IsEnabled = true;
@@ -941,9 +942,9 @@ public static class HyPlayList
                 UpdatePlayItemDuration(targetItem, mediaSource);
 
                 var playbackSource = new AudioGraphPlaybackSource(mediaSource);
-                targetItem.PlayItem.AudioGraphPlaybackSource = playbackSource;
+                playItem.AudioGraphPlaybackSource = playbackSource;
 
-                var targetVolume = Common.Setting.EnableAudioGain ? targetItem.PlayItem.Volume : 1d;
+                var targetVolume = Common.Setting.EnableAudioGain ? playItem.Volume : 1d;
                 if (Common.Setting.CrossFade && FadeManager.FadeProcessing)
                 {
                     targetVolume = 0;
@@ -976,7 +977,7 @@ public static class HyPlayList
 
     private static async Task<MediaSource> CreateNeteaseMediaSourceAsync(HyPlayItem targetItem, CancellationToken ctk)
     {
-        if (targetItem.PlayItem.IsLocalFile)
+        if (targetItem.IsLocalFile)
         {
             return await CreateLocalFileMediaSourceAsync(targetItem, ctk);
         }
@@ -992,10 +993,11 @@ public static class HyPlayList
 
     private static async Task<MediaSource> CreateLocalFileMediaSourceAsync(HyPlayItem targetItem, CancellationToken ctk)
     {
-        if (targetItem.PlayItem.LocalStorageFile.FileType == ".ncm")
+        if (targetItem.LocalStorageFile.FileType == ".ncm")
         {
             await LoadNCMFile(targetItem, ctk);
-            return MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, targetItem.PlayItem.NcmPlayableStreamMIMEType);
+            return MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream,
+                targetItem.PlayItem.NcmPlayableStreamMIMEType);
         }
         else
         {
@@ -1025,11 +1027,11 @@ public static class HyPlayList
         try
         {
             var cacheFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
-            var fileName = string.Format(CACHE_FILE_NAME_FORMAT, targetItem.PlayItem.Id, targetItem.PlayItem?.SubExt);
+            var fileName = string.Format(CACHE_FILE_NAME_FORMAT, targetItem.Id, targetItem?.SubExt);
             var cacheFile = await cacheFolder.GetFileAsync(fileName);
 
             var properties = await cacheFile.GetBasicPropertiesAsync();
-            if (properties.Size == (ulong)(targetItem.PlayItem?.Size ?? -1))
+            if (properties.Size == (ulong)(targetItem?.Size ?? -1))
             {
                 return cacheFile;
             }
@@ -1057,7 +1059,7 @@ public static class HyPlayList
         }
 
         var destinationFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
-        var fileName = string.Format(CACHE_FILE_NAME_FORMAT, targetItem.PlayItem.Id, targetItem.PlayItem?.SubExt);
+        var fileName = string.Format(CACHE_FILE_NAME_FORMAT, targetItem.Id, targetItem?.SubExt);
         var destinationFile = await destinationFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
         var operation = Downloader.CreateDownload(new Uri(playUrl), destinationFile);
         //operation.IsRandomAccessRequired = true;
@@ -1071,13 +1073,13 @@ public static class HyPlayList
 
     private static async Task<MediaSource> CreateLocalMediaSourceAsync(HyPlayItem targetItem, CancellationToken ctk)
     {
-        if (targetItem.PlayItem.LocalStorageFile == null && targetItem.PlayItem.Url != null)
+        if (targetItem.LocalStorageFile == null && targetItem.Url != null)
         {
-            targetItem.PlayItem.LocalStorageFile =
-                await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
+            targetItem.LocalStorageFile =
+                await StorageFile.GetFileFromPathAsync(targetItem.Url);
         }
 
-        if (targetItem.PlayItem.LocalStorageFile.FileType == ".ncm")
+        if (targetItem.LocalStorageFile.FileType == ".ncm")
         {
             await LoadNCMFile(targetItem, ctk);
             return MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, targetItem.PlayItem.NcmPlayableStreamMIMEType);
@@ -1098,9 +1100,9 @@ public static class HyPlayList
     private static void UpdatePlayItemDuration(HyPlayItem targetItem, MediaSource mediaSource)
     {
         var duration = mediaSource.Duration?.TotalMilliseconds;
-        if (duration != null && targetItem.PlayItem.LengthInMilliseconds != duration.Value)
+        if (duration != null && targetItem.LengthInMilliseconds != duration.Value)
         {
-            targetItem.PlayItem.LengthInMilliseconds = duration.Value;
+            targetItem.LengthInMilliseconds = duration.Value;
         }
     }
     private static void ProgressCallback(DownloadOperation obj)
@@ -1130,15 +1132,15 @@ public static class HyPlayList
         if (NowPlayingItem.PlayItem != null)
         {
             _controlsDisplayUpdater.Type = MediaPlaybackType.Music;
-            _controlsDisplayUpdater.MusicProperties.Artist = NowPlayingItem.PlayItem.ArtistString;
-            _controlsDisplayUpdater.MusicProperties.AlbumTitle = NowPlayingItem.PlayItem.AlbumString;
-            _controlsDisplayUpdater.MusicProperties.Title = NowPlayingItem.PlayItem.Name;
+            _controlsDisplayUpdater.MusicProperties.Artist = NowPlayingItem.ArtistString;
+            _controlsDisplayUpdater.MusicProperties.AlbumTitle = NowPlayingItem.AlbumString;
+            _controlsDisplayUpdater.MusicProperties.Title = NowPlayingItem.Name;
             _controlsDisplayUpdater.MusicProperties.TrackNumber = (uint)NowPlaying;
             _controlsDisplayUpdater.MusicProperties.AlbumTrackCount = (uint)List.Count;
             _controlsDisplayUpdater.MusicProperties.Genres.Clear();
             _controlsDisplayUpdater.Thumbnail = null;
             if (NowPlayingItem.ItemType == HyPlayItemType.Netease)
-                _controlsDisplayUpdater.MusicProperties.Genres.Add("NCM-" + NowPlayingItem.PlayItem.Id);
+                _controlsDisplayUpdater.MusicProperties.Genres.Add("NCM-" + NowPlayingItem.Id);
             // 第一次刷新, 以便热词切歌词
             _controlsDisplayUpdater.Update();
 
@@ -1199,8 +1201,8 @@ public static class HyPlayList
             {
                 if (NowPlayingStorageFile != null)
                 {
-                    if (!Common.Setting.useTaglibPicture || playItem.PlayItem.LocalFileTag is null ||
-                        playItem.PlayItem.LocalFileTag.Pictures.Length == 0)
+                    if (!Common.Setting.useTaglibPicture || playItem.LocalFileTag is null ||
+                        playItem.LocalFileTag.Pictures.Length == 0)
                     {
                         if (NowPlayingStorageFile != null)
                         {
@@ -1239,7 +1241,7 @@ public static class HyPlayList
                     }
                     else
                     {
-                        var bufferByte = playItem.PlayItem.LocalFileTag.Pictures[0].Data.Data;
+                        var bufferByte = playItem.LocalFileTag.Pictures[0].Data.Data;
                         var buffer = bufferByte.AsBuffer();
                         if (playItem == NowPlayingItem)
                         {
@@ -1257,7 +1259,7 @@ public static class HyPlayList
             else
             {
                 using var result =
-                    await Common.HttpClient.GetAsync(new Uri(playItem.PlayItem.Album.Cover + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
+                    await Common.HttpClient.GetAsync(new Uri(playItem.Album.Cover + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
                 if (!result.IsSuccessStatusCode)
                 {
                     throw new Exception("更新SMTC图片时发生异常");
@@ -1292,19 +1294,19 @@ public static class HyPlayList
         try
         {
             if (targetItem?.PlayItem == null || !Common.Setting.enableTile) return;
-            string fileName = targetItem.PlayItem.IsLocalFile
+            string fileName = targetItem.IsLocalFile
                 ? null
-                : targetItem.PlayItem.Album.Id;
+                : targetItem.Album.Id;
             bool coverStreamIsAvailable = coverStream.Size != 0 && fileName != null && fileName != "0" &&
                                           itemWhenRequested == NowPlayingItem;
             bool localCoverIsAvailable = false;
             string downloadLink = string.Empty;
             if (Common.Setting.saveTileBackgroundToLocalFolder
                 && Common.Setting.tileBackgroundAvailability
-                && !targetItem.PlayItem.IsLocalFile
+                && !targetItem.IsLocalFile
                 && coverStreamIsAvailable)
             {
-                downloadLink = targetItem.PlayItem.Album.Cover;
+                downloadLink = targetItem.Album.Cover;
                 StorageFolder storageFolder =
                     await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground",
                         CreationCollisionOption.OpenIfExists);
@@ -1335,7 +1337,7 @@ public static class HyPlayList
                 }
             }
 
-            var Cover = Common.Setting.tileBackgroundAvailability && !targetItem.PlayItem.IsLocalFile &&
+            var Cover = Common.Setting.tileBackgroundAvailability && !targetItem.IsLocalFile &&
                         localCoverIsAvailable
                 ? new TileBackgroundImage()
                 {
@@ -1367,19 +1369,19 @@ public static class HyPlayList
                             {
                                 new AdaptiveText()
                                 {
-                                    Text = targetItem?.PlayItem.Name,
+                                    Text = targetItem?.Name,
                                     HintStyle = AdaptiveTextStyle.Base
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = targetItem?.PlayItem.ArtistString,
+                                    Text = targetItem?.ArtistString,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                     HintWrap = true,
                                     HintMaxLines = 2
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = targetItem?.PlayItem.AlbumString,
+                                    Text = targetItem?.AlbumString,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                     HintWrap = true,
                                     HintMaxLines = 2
@@ -1397,19 +1399,19 @@ public static class HyPlayList
                             {
                                 new AdaptiveText()
                                 {
-                                    Text = targetItem?.PlayItem.Name,
+                                    Text = targetItem?.Name,
                                     HintStyle = AdaptiveTextStyle.Base
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = targetItem?.PlayItem.ArtistString,
+                                    Text = targetItem?.ArtistString,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                     HintWrap = true,
                                     HintMaxLines = 3
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = targetItem?.PlayItem.AlbumString,
+                                    Text = targetItem?.AlbumString,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle
                                 }
                             }
@@ -1425,19 +1427,19 @@ public static class HyPlayList
                             {
                                 new AdaptiveText()
                                 {
-                                    Text = targetItem?.PlayItem.Name,
+                                    Text = targetItem?.Name,
                                     HintStyle = AdaptiveTextStyle.Base
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = targetItem?.PlayItem.ArtistString,
+                                    Text = targetItem?.ArtistString,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                     HintWrap = true,
                                     HintMaxLines = 3
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = targetItem?.PlayItem.AlbumString,
+                                    Text = targetItem?.AlbumString,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle
                                 }
                             }
@@ -1515,7 +1517,7 @@ public static class HyPlayList
     }
     private static async Task LoadLyrics(HyPlayItem hpi, CancellationToken ctk = default)
     {
-        var cache = await SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.PlayItem.Id, () => Task.FromResult<HyLyricInfo>(null), cancellationToken: ctk);
+        var cache = await SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.Id, () => Task.FromResult<HyLyricInfo>(null), cancellationToken: ctk);
         if (cache is not null)
         {
             HyLyricInfo = cache;
@@ -1534,12 +1536,12 @@ public static class HyPlayList
                 try
                 {
                     var folder =
-                        StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(NowPlayingItem.PlayItem.Url));
-                    var fileName = Path.GetFileNameWithoutExtension(NowPlayingItem.PlayItem.Url);
+                        StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(NowPlayingItem.Url));
+                    var fileName = Path.GetFileNameWithoutExtension(NowPlayingItem.Url);
                     pureLyricInfo = new PureLyricInfo
                     {
                         PureLyrics = await FileIO.ReadTextAsync(
-                            await StorageFile.GetFileFromPathAsync(Path.ChangeExtension(NowPlayingItem.PlayItem.Url,
+                            await StorageFile.GetFileFromPathAsync(Path.ChangeExtension(NowPlayingItem.Url,
                                 "lrc")))
                     };
                     unionTranslation = true;
@@ -1567,7 +1569,7 @@ public static class HyPlayList
             if (Common.Setting.showComposerInLyric)
                 HyLyricInfo.Lyrics.Add(new SongLyric
                 {
-                    LyricLine = new LrcLyricsLine(NowPlayingItem.PlayItem.ArtistString, TimeSpan.Zero)
+                    LyricLine = new LrcLyricsLine(NowPlayingItem.ArtistString, TimeSpan.Zero)
                 });
         }
         else
@@ -1592,7 +1594,7 @@ public static class HyPlayList
         OnLyricChange?.Invoke();
         if (hpi.ItemType == HyPlayItemType.Netease)
         {
-            _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.PlayItem.Id, () => Task.FromResult(HyLyricInfo), cancellationToken: CancellationToken.None);
+            _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.Id, () => Task.FromResult(HyLyricInfo), cancellationToken: CancellationToken.None);
         }
 
         try
@@ -1600,7 +1602,7 @@ public static class HyPlayList
             if (Common.Setting.enableAmllTtmlDb && hpi.ItemType == HyPlayItemType.Netease)
             {
                 var ttml = await Common.HttpClient!.GetStringAsync(
-                    $"https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/{hpi.PlayItem.Id}.ttml");
+                    $"https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/{hpi.Id}.ttml");
                 var ttmlConverter = new AppleSyllableConverter();
                 var lrcConverter = new LrcConverter();
                 var lrcTranslationConverter = new LrcTranslationEnhancer();
@@ -1627,7 +1629,7 @@ public static class HyPlayList
                             Value = "amll-ttml-db",
                             DisplayName = "歌词来源",
                             ActionUri =
-                                $"https://github.com/amll-dev/amll-ttml-db/blob/main/ncm-lyrics/{hpi.PlayItem.Id}.ttml"
+                                $"https://github.com/amll-dev/amll-ttml-db/blob/main/ncm-lyrics/{hpi.Id}.ttml"
                         }
                     ],
                     SongMetadata = []
@@ -1641,7 +1643,7 @@ public static class HyPlayList
 
                 OnLyricLoaded?.Invoke();
                 OnLyricChange?.Invoke();
-                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.PlayItem.Id, () => Task.FromResult(HyLyricInfo), forceRefresh: true, cancellationToken: CancellationToken.None);
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.Id, () => Task.FromResult(HyLyricInfo), forceRefresh: true, cancellationToken: CancellationToken.None);
             }
         }
         catch
@@ -1665,8 +1667,8 @@ public static class HyPlayList
             try
             {
                 PureLyricInfo res = new PureLyricInfo();
-                var lyricRequest = new LyricRequest() { Id = ncp.PlayItem.Id };
-                var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricApi, ncp.PlayItem.Id,
+                var lyricRequest = new LyricRequest() { Id = ncp.Id };
+                var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricApi, ncp.Id,
                     async () =>
                     {
                         var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LyricApi, lyricRequest);
@@ -1836,7 +1838,7 @@ public static class HyPlayList
         try
         {
             var ncp = NCSongToPlayItem(ncSong);
-            return LoadNcPlayItem(ncp);
+            return ncp;
         }
         catch (Exception ex)
         {
@@ -1846,27 +1848,16 @@ public static class HyPlayList
         return null;
     }
 
-    public static void AppendNcPlayItem(PlayItem ncp)
+    public static void AppendNcPlayItem(HyPlayItem playItem)
     {
-        var hpi = LoadNcPlayItem(ncp);
-        List.Add(hpi);
+        List.Add(playItem);
     }
 
-    private static HyPlayItem LoadNcPlayItem(PlayItem ncp)
+    public static HyPlayItem NCSongToPlayItem(NCSong ncSong)
     {
-        var hpi = new HyPlayItem
+        return new HyPlayItem
         {
-            ItemType = ncp.Type,
-            PlayItem = ncp
-        };
-        return hpi;
-    }
-
-    public static PlayItem NCSongToPlayItem(NCSong ncSong)
-    {
-        return new PlayItem
-        {
-            Type = ncSong.Type,
+            ItemType = ncSong.Type,
             InfoTag = ncSong.Alias,
             Album = ncSong.Album,
             Artist = ncSong.Artist,
@@ -1875,10 +1866,7 @@ public static class HyPlayList
             Name = ncSong.SongName,
             TrackId = ncSong.TrackId,
             CDName = ncSong.CDName,
-            //url = token["url"].ToString(),
             LengthInMilliseconds = ncSong.LengthInMilliseconds
-            //size = token["size"].ToString(),
-            //md5 = token["md5"].ToString()
         };
     }
 
@@ -2190,40 +2178,36 @@ public static class HyPlayList
 
             var hyPlayItem = new HyPlayItem
             {
-                PlayItem = new PlayItem
+                IsLocalFile = true,
+                LocalFileTag = tagFile.Tag,
+                Bitrate = tagFile.Properties.AudioBitrate,
+                InfoTag = sf.Provider.DisplayName,
+                Id = null,
+                Name = tagFile.Tag.Title,
+                Artist = songPerformersList,
+                Album = new NCAlbum
                 {
-                    IsLocalFile = true,
-                    LocalFileTag = tagFile.Tag,
-                    Bitrate = tagFile.Properties.AudioBitrate,
-                    InfoTag = sf.Provider.DisplayName,
-                    Id = null,
-                    Name = tagFile.Tag.Title,
-                    Type = HyPlayItemType.Local,
-                    Artist = songPerformersList,
-                    Album = new NCAlbum
-                    {
-                        Name = tagFile.Tag.Album
-                    },
-                    TrackId = (int)tagFile.Tag.Track,
-                    CDName = "01",
-                    Url = sf.Path,
-                    SubExt = sf.FileType,
-                    Size = 0,
-                    LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds
+                    Name = tagFile.Tag.Album
                 },
+                TrackId = (int)tagFile.Tag.Track,
+                CDName = "01",
+                Url = sf.Path,
+                SubExt = sf.FileType,
+                Size = 0,
+                LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds,
                 ItemType = HyPlayItemType.Local
             };
             if (sf.Provider.Id == "network" || Common.Setting.safeFileAccess)
-                hyPlayItem.PlayItem.LocalStorageFile = sf;
+                hyPlayItem.LocalStorageFile = sf;
             tagFile.Dispose();
             abstraction.Dispose();
             return hyPlayItem;
         }
 
         if (string.IsNullOrEmpty(mi.musicName)) return await LoadStorageFile(sf, CancellationToken.None, true);
-
-        var hpi = new PlayItem
+        return new HyPlayItem
         {
+            ItemType = HyPlayItemType.Local,
             Album = new NCAlbum
             {
                 Name = mi.album,
@@ -2235,26 +2219,16 @@ public static class HyPlayList
             LocalFileTag = tagFile.Tag,
             Bitrate = mi.bitrate,
             IsLocalFile = true,
-            Type = HyPlayItemType.Netease,
             LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds,
             Id = mi.musicId.ToString(),
-            Artist = null,
+            Artist = mi.artist
+            .Select(t => new NCArtist { Name = t[0].ToString(), Id = t[1].ToString() })
+            .ToList(),
             Name = mi.musicName,
+            LocalStorageFile = sf,
             TrackId = (int)tagFile.Tag.Track,
             CDName = "01",
             InfoTag = sf.Provider.DisplayName
-        };
-        hpi.Artist = mi.artist
-            .Select(t => new NCArtist { Name = t[0].ToString(), Id = t[1].ToString() })
-            .ToList();
-        if (sf.Provider.Id == "network")
-            hpi.LocalStorageFile = sf;
-        tagFile.Dispose();
-        abstraction.Dispose();
-        return new HyPlayItem
-        {
-            ItemType = HyPlayItemType.Local,
-            PlayItem = hpi
         };
     }
 

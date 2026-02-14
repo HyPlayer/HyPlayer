@@ -154,7 +154,7 @@ internal static class The163KeyHelper
     /// <param Name="tag"></param>
     /// <param Name="trackId"></param>
     /// <returns></returns>
-    public static bool TrySetMusicInfo(Tag tag, PlayItem pi)
+    public static bool TrySetMusicInfo(Tag tag, HyPlayItem pi)
     {
         if (tag is null)
             throw new ArgumentNullException(nameof(tag));

@@ -192,7 +192,7 @@ public sealed partial class SongsList : UserControl
             return;
         }
 
-        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == playitem.PlayItem.Id);
+        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == playitem.Id);
         if (idx == -1) return;
         _ = Common.Invoke(() =>
         {
@@ -224,7 +224,7 @@ public sealed partial class SongsList : UserControl
     {
         var ncsong = VisibleSongs[int.Parse((sender?.As<Button>()).Tag.ToString())];
         _ = HyPlayList.AppendNcSong(ncsong);
-        HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem.Id == ncsong.SongId));
+        HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.Id == ncsong.SongId));
         if (ListSource.Substring(0, 2) == "pl" ||
             ListSource.Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ListSource.Substring(2);
@@ -249,7 +249,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItem != null)
         {
             var targetPlayItem =
-                HyPlayList.List.Find(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).SongId);
+                HyPlayList.List.Find(t => t.Id == (SongContainer.SelectedItem as NCSong).SongId);
             HyPlayList.SongMoveTo(targetPlayItem);
         }
     }
@@ -416,7 +416,7 @@ public sealed partial class SongsList : UserControl
     {
         if (e.ClickedItem is not NCSong ncSong || IsAddingSongToPlaylist) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        bool shiftSong = ncSong.SongId == HyPlayList.NowPlayingItem?.PlayItem?.Id;
+        bool shiftSong = ncSong.SongId == HyPlayList.NowPlayingItem?.Id;
 
         if (!ncSong.IsAvailable)
         {
@@ -440,7 +440,7 @@ public sealed partial class SongsList : UserControl
             var ncsong = VisibleSongs[SongContainer.SelectedIndex];
             _ = HyPlayList.AppendNCSong(ncsong);
             HyPlayList.SongAppendDone();
-            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.Id == ncsong.SongId));
+            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.Id == ncsong.SongId));
         }*/
         else
         {
@@ -458,13 +458,13 @@ public sealed partial class SongsList : UserControl
 
         if (!shiftSong)
         {
-            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem?.Id == ncSong.SongId));
+            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t?.Id == ncSong.SongId));
         }
         else
         {
             Common.AddToTeachingTipLists("无感歌单切换", "成功无感切换到歌单 " + ListSource);
             HyPlayList.NowPlaying =
-                HyPlayList.List.FindIndex(song => song.PlayItem.Id == ncSong.SongId);
+                HyPlayList.List.FindIndex(song => song.Id == ncSong.SongId);
         }
 
         IsAddingSongToPlaylist = false;
@@ -501,7 +501,7 @@ public sealed partial class SongsList : UserControl
         {
             case "FocusingCurrent":
                 if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
-                var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.PlayItem?.Id);
+                var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.Id);
                 if (idx == -1) return;
                 SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
                 break;
@@ -517,7 +517,7 @@ public sealed partial class SongsList : UserControl
     private void FocusingCurrent_OnClicked(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
-        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.PlayItem?.Id);
+        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.Id);
         if (idx == -1) return;
         SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
     }

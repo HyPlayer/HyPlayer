@@ -29,11 +29,13 @@ namespace HyPlayer.Classes
             if (HyPlayList.NowPlayType == PlayMode.SinglePlay || HyPlayList.List.Count <= 1) return;
             if (FadeProcessing)
             {
-                if (hpi.PlayItem.AudioGraphPlaybackSource != null)
+                var playItem = hpi.PlayItem;
+                if (playItem.AudioGraphPlaybackSource != null)
                 {
-                    HyPlayList.Player.DisconnectPlaybackSource(hpi.PlayItem.AudioGraphPlaybackSource);
-                    var item = hpi.PlayItem.AudioGraphPlaybackSource.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                    item?.PlayItem?.FreePlaybackResources();
+                    HyPlayList.Player.DisconnectPlaybackSource(playItem?.AudioGraphPlaybackSource);
+                    var item = playItem?.AudioGraphPlaybackSource.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
+                    item?.PlayItem?.Dispose();
+                    item?.PlayItem = null;
                 }
                 if (_initialVolume.Count > 0 && _currentPlayItem != null)
                 {
@@ -67,16 +69,18 @@ namespace HyPlayer.Classes
                     {
                         HyPlayList.Player.DisconnectPlaybackSource(keySource);
                     }
-                    keyItem.PlayItem.FreePlaybackResources();
+                    keyItem?.PlayItem?.Dispose();
+                    keyItem?.PlayItem = null;
                 }
                 if (valueItem?.PlayItem is not null)
                 {
-                    var valueSource = valueItem?.PlayItem.AudioGraphPlaybackSource;
+                    var valueSource = valueItem.PlayItem.AudioGraphPlaybackSource;
                     if (valueSource != null)
                     {
                         HyPlayList.Player.DisconnectPlaybackSource(valueSource);
                     }
-                    valueItem.PlayItem.FreePlaybackResources();
+                    valueItem?.PlayItem?.Dispose();
+                    valueItem?.PlayItem = null;
                 }
             }
             _currentNode = null;
@@ -103,7 +107,7 @@ namespace HyPlayer.Classes
                     HyPlayList.MoveSongPointer();
                     var nextItem = HyPlayList.List[HyPlayList.NowPlaying];
                     await HyPlayList.LoadMediaSource(nextItem, false, false);
-                    _currentPlayItem = new Tuple<AudioGraphPlaybackSource, AudioGraphPlaybackSource>(current, nextItem.PlayItem.AudioGraphPlaybackSource);
+                    _currentPlayItem = new Tuple<AudioGraphPlaybackSource, AudioGraphPlaybackSource>(current, nextItem.PlayItem?.AudioGraphPlaybackSource);
                     var node1 = HyPlayList.Player.GetAudioInputNode(_currentPlayItem.Item1);
                     var node2 = HyPlayList.Player.GetAudioInputNode(_currentPlayItem.Item2);
                     _currentNode = new Tuple<MediaSourceAudioInputNode, MediaSourceAudioInputNode>(node1, node2);
@@ -168,7 +172,8 @@ namespace HyPlayer.Classes
             PauseProcessing = true;
             HyPlayList.Player.DisconnectPlaybackSource(_currentPlayItem.Item1);
             var keyItem = _currentPlayItem.Item1.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
-            keyItem.PlayItem.FreePlaybackResources();
+            keyItem.PlayItem?.Dispose();
+            keyItem.PlayItem = null;
             _currentPlayItem = null;
             _currentNode = null;
             FadeProcessing = false;

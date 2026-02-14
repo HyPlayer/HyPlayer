@@ -42,8 +42,8 @@ public static class ListenTogetherManager
                 RoomId = CurrentRoomInfo.RoomId,
                 CommandType = ListenTogetherPlayCommandRequest.ListenTogetherPlayCommandRequestCommandType.Next,
                 PlayStatus = ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Play,
-                FormerSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
-                TargetSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
+                FormerSongId = HyPlayList.NowPlayingItem.Id,
+                TargetSongId = HyPlayList.NowPlayingItem.Id,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 Progress = 0
             };
@@ -65,8 +65,8 @@ public static class ListenTogetherManager
                 RoomId = CurrentRoomInfo.RoomId,
                 CommandType = ListenTogetherPlayCommandRequest.ListenTogetherPlayCommandRequestCommandType.Pause,
                 PlayStatus = ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Pause,
-                FormerSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
-                TargetSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
+                FormerSongId = HyPlayList.NowPlayingItem.Id,
+                TargetSongId = HyPlayList.NowPlayingItem.Id,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 Progress = (long)HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds
             };
@@ -88,8 +88,8 @@ public static class ListenTogetherManager
                 RoomId = CurrentRoomInfo.RoomId,
                 CommandType = ListenTogetherPlayCommandRequest.ListenTogetherPlayCommandRequestCommandType.Play,
                 PlayStatus = ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Play,
-                FormerSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
-                TargetSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
+                FormerSongId = HyPlayList.NowPlayingItem.Id,
+                TargetSongId = HyPlayList.NowPlayingItem.Id,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 Progress = (long)HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds
             };
@@ -126,19 +126,19 @@ public static class ListenTogetherManager
                 UserId = Common.LoginedUser?.Id!,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 AnchorPosition = HyPlayList.NowPlaying,
-                AnchorSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
-                DisplaySongList = HyPlayList.List.Select(t => t.PlayItem.Id).ToArray()
+                AnchorSongId = HyPlayList.NowPlayingItem.Id,
+                DisplaySongList = HyPlayList.List.Select(t => t.Id).ToArray()
             };
 
             if (HyPlayList.NowPlayType == PlayMode.Shuffled)
             {
                 if (HyPlayList.ShuffleList.Count > 0)
                 {
-                    req.RandomSongList = HyPlayList.ShuffleList.Select(t => HyPlayList.List[t].PlayItem.Id).ToArray();
+                    req.RandomSongList = HyPlayList.ShuffleList.Select(t => HyPlayList.List[t].Id).ToArray();
                 }
                 else
                 {
-                    req.RandomSongList = HyPlayList.List.Select(t => t.PlayItem.Id).ToArray();
+                    req.RandomSongList = HyPlayList.List.Select(t => t.Id).ToArray();
                 }
             }
 
@@ -174,19 +174,19 @@ public static class ListenTogetherManager
                 UserId = Common.LoginedUser?.Id!,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 AnchorPosition = HyPlayList.NowPlaying,
-                AnchorSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
-                DisplaySongList = HyPlayList.List.Select(t => t.PlayItem.Id).ToArray()
+                AnchorSongId = HyPlayList.NowPlayingItem.Id,
+                DisplaySongList = HyPlayList.List.Select(t => t.Id).ToArray()
             };
 
             if (HyPlayList.NowPlayType == PlayMode.Shuffled)
             {
                 if (HyPlayList.ShuffleList.Count > 0)
                 {
-                    req.RandomSongList = HyPlayList.ShuffleList.Select(t => HyPlayList.List[t].PlayItem.Id).ToArray();
+                    req.RandomSongList = HyPlayList.ShuffleList.Select(t => HyPlayList.List[t].Id).ToArray();
                 }
                 else
                 {
-                    req.RandomSongList = HyPlayList.List.Select(t => t.PlayItem.Id).ToArray();
+                    req.RandomSongList = HyPlayList.List.Select(t => t.Id).ToArray();
                 }
             }
 
@@ -212,8 +212,8 @@ public static class ListenTogetherManager
                     PlayStatus = HyPlayList.IsPlaying
                         ? ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Play
                         : ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Pause,
-                    FormerSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
-                    TargetSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
+                    FormerSongId = HyPlayList.NowPlayingItem.Id,
+                    TargetSongId = HyPlayList.NowPlayingItem.Id,
                     ClientSeq = ++CurrentRoomInfo.ClientSeq
                 });
         }
@@ -237,8 +237,8 @@ public static class ListenTogetherManager
                 PlayStatus = HyPlayList.IsPlaying
                     ? ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Play
                     : ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Pause,
-                FormerSongId = HyPlayList.NowPlayingItem.PlayItem.Id,
-                TargetSongId = playItem.PlayItem.Id,
+                FormerSongId = HyPlayList.NowPlayingItem.Id,
+                TargetSongId = playItem.Id,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 Progress = 0
             };
@@ -347,7 +347,7 @@ public static class ListenTogetherManager
         {
             RoomId = roomId,
             ClientSeq = 0,
-            CurrentSongId = HyPlayList.NowPlayingItem.PlayItem.Id
+            CurrentSongId = HyPlayList.NowPlayingItem.Id
         };
         IsInRoom = true;
     }

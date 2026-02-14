@@ -135,7 +135,7 @@ DoubleAnimation verticalAnimation;
         try
         {
             _ = Common.Invoke(() => ApplicationView.GetForCurrentView().Title =
-                $"{HyPlayList.NowPlayingItem.PlayItem.Name} - {HyPlayList.NowPlayingItem.PlayItem.ArtistString}");
+                $"{HyPlayList.NowPlayingItem.Name} - {HyPlayList.NowPlayingItem.ArtistString}");
         }
         catch (Exception)
         {
@@ -190,7 +190,7 @@ DoubleAnimation verticalAnimation;
                 return;
             }
 
-            var totalTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds);
+            var totalTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.LengthInMilliseconds);
             if (totalTime.Hours == 0)
             {
                 if (totalTime.Minutes < 10)
@@ -213,15 +213,15 @@ DoubleAnimation verticalAnimation;
             }
 
             SliderProgress.Minimum = 0;
-            SliderProgress.Maximum = HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds;
+            SliderProgress.Maximum = HyPlayList.NowPlayingItem.LengthInMilliseconds;
             SliderProgress.Value = HyPlayList.Player.PrimaryAudioInputNode?.Position.TotalMilliseconds ?? 0;
 
             TextBlockNowTime.Text =
                 HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"m\:ss") ?? "0:00";
 
-            TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
-            TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
-            TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
+            TbSingerName.Content = HyPlayList.NowPlayingItem.ArtistString;
+            TbSongName.Text = HyPlayList.NowPlayingItem.Name;
+            TbAlbumName.Content = HyPlayList.NowPlayingItem.AlbumString;
 
             // 新版随机播放算法
             realSelectSong = false;
@@ -233,11 +233,11 @@ DoubleAnimation verticalAnimation;
 
             realSelectSong = true;
 
-            TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.QualityTag ?? "";
+            TbSongTag.Text = HyPlayList.NowPlayingItem.QualityTag ?? "";
             Btn_Share.IsEnabled =
                 HyPlayList.NowPlayingItem?.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive;
         });
-        var isLiked = Common.LikedSongs.Contains(mpi.PlayItem.Id);
+        var isLiked = Common.LikedSongs.Contains(mpi.Id);
         if (mpi.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
         {
             _ = Common.Invoke(() =>
@@ -251,9 +251,9 @@ DoubleAnimation verticalAnimation;
                 FlyoutLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
-                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.Id);
             });
-            HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
+            HistoryManagement.AddNCSongHistory(mpi.Id);
         }
 
         /*
@@ -318,7 +318,7 @@ DoubleAnimation verticalAnimation;
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
         if (!HyPlayList.Player.PlayerCreated || HyPlayList.NowPlayingItem.PlayItem == null) return;
-        if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Closed)
+        if (HyPlayList.NowPlayingItem?.Name != null && HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Closed)
             _ = HyPlayList.LoadMediaSource(HyPlayList.List[HyPlayList.NowPlaying]);
         if (HyPlayList.IsPlaying)
         {
@@ -539,7 +539,7 @@ DoubleAnimation verticalAnimation;
             _ = Common.NeteaseAPI.RequestAsync(NeteaseApis.PersonalFmTrashApi,
                 new FmTrashRequest
                 {
-                    Id = HyPlayList.NowPlayingItem.PlayItem.Id
+                    Id = HyPlayList.NowPlayingItem.Id
                 });
             PersonalFM.LoadNextFM();
         }
@@ -561,17 +561,17 @@ DoubleAnimation verticalAnimation;
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
+                if (HyPlayList.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
                 {
-                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].Id);
+                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.Artist[0].Id);
                 }
                 else
                 {
-                    if (HyPlayList.NowPlayingItem.PlayItem.Artist.Count > 1)
-                        await new ArtistSelectDialog(HyPlayList.NowPlayingItem.PlayItem.Artist).ShowAsync();
+                    if (HyPlayList.NowPlayingItem.Artist.Count > 1)
+                        await new ArtistSelectDialog(HyPlayList.NowPlayingItem.Artist).ShowAsync();
                     else
                         Common.NavigatePage(typeof(ArtistPage),
-                            HyPlayList.NowPlayingItem.PlayItem.Artist[0].Id);
+                            HyPlayList.NowPlayingItem.Artist[0].Id);
                 }
 
                 //CollapseExpandedPlayer();
@@ -588,15 +588,15 @@ DoubleAnimation verticalAnimation;
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
+                if (HyPlayList.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
                 {
-                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].Id);
+                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.Artist[0].Id);
                 }
                 else
                 {
-                    if (HyPlayList.NowPlayingItem.PlayItem.Album.Id != "0")
+                    if (HyPlayList.NowPlayingItem.Album.Id != "0")
                         Common.NavigatePage(typeof(AlbumPage),
-                            HyPlayList.NowPlayingItem.PlayItem.Album.Id);
+                            HyPlayList.NowPlayingItem.Album.Id);
                 }
             }
         }
@@ -608,7 +608,7 @@ DoubleAnimation verticalAnimation;
     private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            await new SongListSelect(HyPlayList.NowPlayingItem.PlayItem.Id).ShowAsync();
+            await new SongListSelect(HyPlayList.NowPlayingItem.Id).ShowAsync();
     }
 
     private void Btn_Down_OnClick(object sender, RoutedEventArgs e)
@@ -622,9 +622,9 @@ DoubleAnimation verticalAnimation;
     private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.PlayItem.Id);
+            Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.Id);
         else
-            Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.PlayItem.Album.Alias);
+            Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.Album.Alias);
         if (Common.Setting.forceMemoryGarbage)
             Common.NavigatePage(typeof(BlankPage));
         CollapseExpandedPlayer();
@@ -640,11 +640,11 @@ DoubleAnimation verticalAnimation;
         {
             var dataPackage = new DataPackage();
             dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?Id=" +
-                                           HyPlayList.NowPlayingItem.PlayItem.Id));
-            dataPackage.Properties.Title = HyPlayList.NowPlayingItem.PlayItem.Name;
+                                           HyPlayList.NowPlayingItem.Id));
+            dataPackage.Properties.Title = HyPlayList.NowPlayingItem.Name;
             dataPackage.Properties.Description =
                 "歌手: " + string.Join(';',
-                    HyPlayList.NowPlayingItem.PlayItem.Artist
+                    HyPlayList.NowPlayingItem.Artist
                         .Select(t => t.Name));
             var request = args.Request;
             request.Data = dataPackage;

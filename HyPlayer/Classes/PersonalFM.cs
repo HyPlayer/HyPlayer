@@ -89,19 +89,17 @@ internal static class PersonalFM
                                     var playItem = new HyPlayItem()
                                     {
                                         ItemType = HyPlayItemType.Netease,
-                                        PlayItem = new PlayItem
+                                        Album = new NCAlbum
                                         {
-                                            Album = new NCAlbum
-                                            {
-                                                AlbumType = HyPlayItemType.Netease,
-                                                Alias = "私人 DJ",
-                                                Cover =
+                                            AlbumType = HyPlayItemType.Netease,
+                                            Alias = "私人 DJ",
+                                            Cover =
                                                     "https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg",
-                                                Description = "私人 DJ",
-                                                Id = "126368130",
-                                                Name = "私人 DJ 推荐语"
-                                            },
-                                            Artist =
+                                            Description = "私人 DJ",
+                                            Id = "126368130",
+                                            Name = "私人 DJ 推荐语"
+                                        },
+                                        Artist =
                                             [
                                                 new NCArtist()
                                                 {
@@ -114,17 +112,15 @@ internal static class PersonalFM
                                                     Type = HyPlayItemType.Netease
                                                 }
                                             ],
-                                            Bitrate = 0,
-                                            CDName = null,
-                                            Id = "-1",
-                                            IsLocalFile = false,
-                                            LengthInMilliseconds = audioItem.Duration,
-                                            Name = "私人 DJ 推荐语",
-                                            InfoTag = "私人 DJ",
-                                            Type = HyPlayItemType.Netease,
-                                            Url = audioItem.Url,
-                                            Size = audioItem.Size ?? 0
-                                        }
+                                        Bitrate = 0,
+                                        CDName = null,
+                                        Id = "-1",
+                                        IsLocalFile = false,
+                                        LengthInMilliseconds = audioItem.Duration,
+                                        Name = "私人 DJ 推荐语",
+                                        InfoTag = "私人 DJ",
+                                        Url = audioItem.Url,
+                                        Size = audioItem.Size ?? 0
                                     };
                                     HyPlayList.List.Add(playItem);
                                 }

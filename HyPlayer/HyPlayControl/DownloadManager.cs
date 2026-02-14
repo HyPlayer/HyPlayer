@@ -27,7 +27,7 @@ namespace HyPlayer.HyPlayControl;
 
 internal sealed class DownloadObject : INotifyPropertyChanged
 {
-    public PlayItem DontUsePlayItem;
+    public HyPlayItem PlayItem;
     private DownloadOperation _downloadOperation;
 
     private IStorageFile _resultFileBackingField;
@@ -171,8 +171,8 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             using var file = TagLibHelper.Create(streamAbstraction, ResultFile.FileType);
             try
             {
-                if (Common.Setting.write163Info && DontUsePlayItem is not null)
-                    The163KeyHelper.TrySetMusicInfo(file.Tag, DontUsePlayItem);
+                if (Common.Setting.write163Info && PlayItem is not null)
+                    The163KeyHelper.TrySetMusicInfo(file.Tag, PlayItem);
                 //写相关信息
                 file.Tag.Album = ncsong.Album.Name;
                 file.Tag.Performers = ncsong.Artist.Select(t => t.Name).ToArray();
@@ -406,7 +406,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             }
 
             FileName += "." + urlResult.Value.SongUrls[0].Type?.ToLowerInvariant();
-            DontUsePlayItem = new PlayItem
+            PlayItem = new HyPlayItem
             {
                 Bitrate = Convert.ToInt32(urlResult.Value.SongUrls[0].BitRate),
                 QualityTag = "下载",
@@ -417,7 +417,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 SubExt = urlResult.Value.SongUrls[0].Type.ToLowerInvariant(),
                 Id = ncsong.SongId,
                 Name = ncsong.SongName,
-                Type = HyPlayItemType.Netease,
+                ItemType = HyPlayItemType.Netease,
                 TrackId = ncsong.TrackId,
                 CDName = ncsong.CDName,
                 Url = urlResult.Value.SongUrls[0].Url,

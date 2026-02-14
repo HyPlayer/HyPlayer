@@ -127,7 +127,7 @@ public sealed partial class GroupedSongsList : UserControl
                 if (GroupedSongs?.Source == null) return;
                 {
 
-                    var nowPlayingItem = disc.Where(t => t.SongId == playitem.PlayItem.Id).FirstOrDefault();
+                    var nowPlayingItem = disc.Where(t => t.SongId == playitem.Id).FirstOrDefault();
                     if (nowPlayingItem != null)
                     {
                         SongContainer.SelectedItem = nowPlayingItem;
@@ -159,7 +159,7 @@ public sealed partial class GroupedSongsList : UserControl
             _ = HyPlayList.AppendNcSong(ncsong);
         if (SongContainer.SelectedItem != null)
         {
-            var targetPlayItem = HyPlayList.List.Find(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).SongId);
+            var targetPlayItem = HyPlayList.List.Find(t => t.Id == (SongContainer.SelectedItem as NCSong).SongId);
             HyPlayList.SongMoveTo(targetPlayItem);
         }
     }
@@ -263,7 +263,7 @@ public sealed partial class GroupedSongsList : UserControl
     {
         if (e.ClickedItem == null) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        bool shiftSong = ((e.ClickedItem as NCSong).SongId == HyPlayList.NowPlayingItem?.PlayItem?.Id);
+        bool shiftSong = ((e.ClickedItem as NCSong).SongId == HyPlayList.NowPlayingItem?.Id);
 
         if (!(e.ClickedItem as NCSong).IsAvailable)
         {
@@ -281,9 +281,9 @@ public sealed partial class GroupedSongsList : UserControl
             ListSource.Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ListSource.Substring(2);
         if (!shiftSong)
-            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem?.Id == (e.ClickedItem as NCSong).SongId));
+            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t?.Id == (e.ClickedItem as NCSong).SongId));
         else
             HyPlayList.NowPlaying =
-                HyPlayList.List.FindIndex(song => song.PlayItem.Id == ((e.ClickedItem as NCSong).SongId));
+                HyPlayList.List.FindIndex(song => song.Id == ((e.ClickedItem as NCSong).SongId));
     }
 }

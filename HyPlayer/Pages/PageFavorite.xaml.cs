@@ -1,14 +1,6 @@
 ﻿#region
-
-using HyPlayer.Classes;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Album;
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Windows.UI.Xaml;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.ViewModels;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using WinRT;
@@ -24,16 +16,12 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class PageFavorite : Page
 {
-    private int i;
-    private int page;
-    private Task _listLoaderTask;
-    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-    private CancellationToken _cancellationToken;
+    private FavoriteViewModel ViewModel => (FavoriteViewModel)DataContext; 
 
     public PageFavorite()
     {
         InitializeComponent();
-        _cancellationToken = _cancellationTokenSource.Token;
+        DataContext = Ioc.Default.GetRequiredService<FavoriteViewModel>();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -42,186 +30,9 @@ public sealed partial class PageFavorite : Page
         NavView.SelectedItem = NavView.MenuItems[0];
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        base.OnNavigatedFrom(e);
-        if (_listLoaderTask != null && !_listLoaderTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _listLoaderTask;
-            }
-            catch
-            {
-                //Ignore
-            }
-        }
-
-        _cancellationTokenSource.Dispose();
-    }
-
-    private void NavView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-    {
-        page = 0;
-        i = 0;
-        ItemContainer.ListItems.Clear();
-        _listLoaderTask = RealLoad();
-    }
-
-    private async Task RealLoad()
-    {
-        _cancellationToken.ThrowIfCancellationRequested();
-        switch ((NavView.SelectedItem?.As<NavigationViewItem>())?.Tag.ToString())
-        {
-            case "Album":
-                await LoadAlbumResult();
-                break;
-            case "Artist":
-                await LoadArtistResult();
-                break;
-            case "Radio":
-                await LoadRadioResult();
-                break;
-        }
-    }
-
-    private async Task LoadRadioResult()
-    {
-        try
-        {
-            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "djchannel_subscribed",
-                async () =>
-                {
-                    var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.DjChannelSubscribedApi, _cancellationToken);
-                    if (json.IsError)
-                    {
-                        Common.AddToTeachingTipLists("加载订阅播客列表错误", json.Error.Message);
-                        return null;
-                    }
-
-                    return json.Value;
-                });
-
-
-            BtnLoadMore.Visibility = jv.Data?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var pljs in jv.Data?.Data ?? [])
-            {
-                _cancellationToken.ThrowIfCancellationRequested();
-                ItemContainer.ListItems.Add(new SimpleListItem
-                {
-                    Title = pljs.Name,
-                    LineOne = pljs.UserName,
-                    LineTwo = pljs.Description,
-                    LineThree =
-                        $"{DateConverter.FriendFormat(DateConverter.GetDateTimeFromTimeStamp(pljs.LastProgramCreateTime))}前 | 最后一个节目: " +
-                        pljs.LastVoiceName,
-                    ResourceId = "rd" + pljs.Id,
-                    CoverLink = pljs.CoverUrl,
-                    Order = i++,
-                    CanPlay = true
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
-    }
-
-    private async Task LoadArtistResult()
-    {
-        try
-        {
-            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "artist_sublist",
-                async () =>
-                {
-                    var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ArtistSublistApi,
-                        new ArtistSublistRequest()
-                        {
-                            Limit = 25,
-                            Offset = page * 25
-                        });
-                    if (json.IsError)
-                    {
-                        Common.AddToTeachingTipLists("加载关注歌手列表错误", json.Error.Message);
-                        return null;
-                    }
-
-                    return json.Value;
-                });
-
-            BtnLoadMore.Visibility = jv.HasMore ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var singerjson in jv.Artists ?? [])
-            {
-                _cancellationToken.ThrowIfCancellationRequested();
-                ItemContainer.ListItems.Add(new SimpleListItem
-                {
-                    Title = singerjson.Name,
-                    LineOne = singerjson.Translation,
-                    LineTwo = string.Join("/", singerjson.Alias ?? []),
-                    LineThree = $"专辑数 {singerjson.AlbumSize} | MV 数 {singerjson.MvSize}",
-                    ResourceId = "ar" + singerjson.Id,
-                    CoverLink = singerjson.Img1v1Url,
-                    Order = i++,
-                    CanPlay = true
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
-    }
-
-    private async Task LoadAlbumResult()
-    {
-        try
-        {
-            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "album_sublist",
-                async () =>
-                {
-                    var jv = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumSublistApi,
-                        new AlbumSublistRequest()
-                        {
-                            Limit = 25,
-                            Offset = page * 25
-                        }, _cancellationToken);
-                    if (jv.IsError)
-                    {
-                        Common.AddToTeachingTipLists("加载收藏专辑列表错误", jv.Error?.Message);
-                        return null;
-                    }
-
-                    return jv.Value;
-                });
-
-            BtnLoadMore.Visibility = json?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var albumjson in json?.Data ?? [])
-            {
-                _cancellationToken.ThrowIfCancellationRequested();
-                ItemContainer.ListItems.Add(new SimpleListItem
-                {
-                    Title = albumjson.Name,
-                    LineOne = string.Join(" / ", albumjson.Artists?.Select(t => t.Name) ?? []),
-                    LineTwo = string.Join(" / ", albumjson.Alias ?? []),
-                    LineThree = $"歌曲数:{albumjson.Size}",
-                    ResourceId = "al" + albumjson.Id,
-                    CoverLink = albumjson.PictureUrl,
-                    Order = i++,
-                    CanPlay = true
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
-    }
-
-    private void BtnLoadMore_OnClick(object sender, RoutedEventArgs e)
-    {
-        page++;
-        _listLoaderTask = RealLoad();
+        var item = args.SelectedItem.As<NavigationViewItem>();
+        ViewModel.OnSelectionChanged(item);
     }
 }
