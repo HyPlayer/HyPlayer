@@ -118,7 +118,8 @@ jobs:
         allowUpdates: true
         artifactErrorsFailBuild: true
         generateReleaseNotes: true
-        name: "actions-build"
+        name: "HyPlayer GitHub Actions Build"
         prerelease: true
         replacesArtifacts: true
+        tag: "actions-build"
         
