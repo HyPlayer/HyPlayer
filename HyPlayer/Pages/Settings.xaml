@@ -175,7 +175,14 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind hyplayer:Common.Setting.enableAmllTtmlDb, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
-
+                                        <controls3:SettingsCard
+                                            Visibility="{x:Bind hyplayer:Common.Setting.enableAmllTtmlDb, Mode=OneWay}"
+                                            Description=" [NCM_ID] 为网易云音乐 ID 占位符"
+                                            Header="AMLL TTML 镜像地址">
+                                            <TextBox
+                                                HorizontalAlignment="Left"
+                                                Text="{x:Bind hyplayer:Common.Setting.amllTtmlMirrorUrl, Mode=OneWay}" />
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="歌词主色调">
                                             <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay}">
                                                 <ComboBoxItem Content="自动" />

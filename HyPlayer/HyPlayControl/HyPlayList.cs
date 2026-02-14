@@ -1602,7 +1602,7 @@ public static class HyPlayList
             if (Common.Setting.enableAmllTtmlDb && hpi.ItemType == HyPlayItemType.Netease)
             {
                 var ttml = await Common.HttpClient!.GetStringAsync(
-                    $"https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/{hpi.Id}.ttml");
+                    Common.Setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", hpi.Id));
                 var ttmlConverter = new AppleSyllableConverter();
                 var lrcConverter = new LrcConverter();
                 var lrcTranslationConverter = new LrcTranslationEnhancer();

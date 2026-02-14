@@ -38,6 +38,16 @@ namespace HyPlayer
             }
         }
 
+        public string amllTtmlMirrorUrl
+        {
+            get => GetSettings(nameof(amllTtmlMirrorUrl), "https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/[NCM_ID].ttml");
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(amllTtmlMirrorUrl)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public int lyricPaddingTopRatio
         {
             get => GetSettings(nameof(lyricPaddingTopRatio), 30);
@@ -997,7 +1007,7 @@ namespace HyPlayer
 
         public bool enableApiCache
         {
-            get => GetSettings(nameof(enableApiCache), true);
+            get => GetSettings(nameof(enableApiCache), false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(enableApiCache)] = value;
