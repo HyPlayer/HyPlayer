@@ -52,9 +52,8 @@ jobs:
         Platform: ${{ matrix.platform }}
         
     - name: Set AppxManifest Version
-      uses: Amadevus/pwsh-script@v2.0.3
-      with:
-        script: |
+      shell: pwsh
+      run: |
               $MANIFEST = [xml](Get-Content HyPlayer.Package\Package.appxmanifest)
               $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
               $VERSION = $MAINVERSION + "${{github.run_number}}"
@@ -64,9 +63,8 @@ jobs:
               $MANIFEST.Package.Identity.Version = $VERSION
               Set-Content -Path HyPlayer.Package\Package.appxmanifest -Value $MANIFEST.OuterXml
     - name: Set BuildInfo Version
-      uses: Amadevus/pwsh-script@v2.0.3
-      with:
-        script: |
+      shell: pwsh
+      run: |
               # 替换 BuildInfo.cs 中的占位符
               $buildInfoPath = "HyPlayer/Classes/BuildInfo.cs"
               if (Test-Path $buildInfoPath) {
@@ -113,3 +111,4 @@ jobs:
       with:
         name: HyPlayer Actions Build-${{ matrix.platform }}
         path: ${{ env.Wap_Project_Directory }}\AppPackages
+        
