@@ -112,6 +112,27 @@ public static class Mapper
             Type = HyPlayItemType.Netease,
         };
     }
+    public static NCSong MapNcSong(this ArtistSongDto song)
+    {
+        return new NCSong
+        {
+            Album = song.Album?.MapToNcAlbum() ?? new(),
+            Alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
+            Artist = song.Artists?.Select(artist => artist.MapToNcArtist())
+                         .ToList() ??
+                     [],
+            IsCloud = false,
+            IsVip = song.Privilege.Fee is 1,
+            LengthInMilliseconds = song.Duration,
+            MVId = song.MvId,
+            SongId = song.Id,
+            SongName = song.Name,
+            TrackId = song.TrackNumber,
+            TranslatedName = song.Translations is not null ? string.Join(",", song.Translations) : null,
+            IsAvailable = song.Privilege?.St is 0,
+            Type = HyPlayItemType.Netease,
+        };
+    }
 
     public static NCSong MapToNcSong(this SongWithPrivilegeDto song)
     {

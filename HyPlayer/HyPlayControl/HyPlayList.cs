@@ -2120,19 +2120,10 @@ public static class HyPlayList
                     }, cancellationToken: CancellationToken.None);
 
                     var songs = songDetailResp.Songs;
-                    var privileges = songDetailResp.Privileges;
 
                     nowIndex++;
 
-                    var result = new List<NCSong>();
-                    if (privileges is null) return false;
-                    for (var i = 0; i < privileges.Length; i++)
-                    {
-                        if (privileges[i].St == 0)
-                        {
-                            result.Add(songs![i].MapToNcSong());
-                        }
-                    }
+                    var result = songs.Select(t => t.MapToNcSong()).ToList();
 
                     AppendNcSongs(result, false);
                 }

@@ -121,8 +121,6 @@ namespace HyPlayer.ViewModels
                 foreach (var item in jv?.Songs ?? [])
                 {
                     var ncSong = item.MapToNcSong();
-                    ncSong.IsAvailable =
-                        jv!.Privileges?[idx].St == 0;
                     ncSong.Order = idx++;
                     HotSongs.Add(ncSong);
                 }
@@ -154,7 +152,7 @@ namespace HyPlayer.ViewModels
                 var idx = 0;
                 foreach (var item in j1.Songs)
                 {
-                    var ncSong = item.MapToNcSong();
+                    var ncSong = item.MapNcSong();
                     ncSong.IsAvailable = item.Privilege.St == 0;
                     ncSong.Order = CurrentPage * 50 + idx++;
                     AllSongs.Add(ncSong);

@@ -201,13 +201,10 @@ namespace HyPlayer.ViewModels
             {
                 return;
             }
-            var privileges = rst.Privileges;
             var idx = CurrentPage * 500;
-            var i = 0;
             foreach (var jToken in rst.Songs ?? [])
             {
                 var ncSong = jToken.MapToNcSong();
-                ncSong.IsAvailable = privileges?[i++].St is 0;
                 ncSong.Order = idx++;
                 Songs.Add(ncSong);
             }
