@@ -34,7 +34,7 @@ public sealed partial class Comments : Page
     private NeteaseResourceType resourcetype;
     private int sortType = 1;
     private bool IsShiftingPage = false;
-    private ScrollViewer MainScroll, HotCommentsScroll;
+    private ScrollViewer? MainScroll, HotCommentsScroll;
     private ObservableCollection<Comment> hotComments = new ObservableCollection<Comment>();
     private ObservableCollection<Comment> normalComments = new ObservableCollection<Comment>();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -342,8 +342,8 @@ public sealed partial class Comments : Page
 
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
-        HotCommentsScroll.ViewChanged -= HotCommentsScroll_ViewChanged;
-        MainScroll.ViewChanged -= MainScroll_ViewChanged;
+        HotCommentsScroll?.ViewChanged -= HotCommentsScroll_ViewChanged;
+        MainScroll?.ViewChanged -= MainScroll_ViewChanged;
     }
 
     private void ShiftCommentList(bool direction)

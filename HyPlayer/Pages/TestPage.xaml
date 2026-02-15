@@ -9,7 +9,7 @@
      NavigationCacheMode="Disabled"
      mc:Ignorable="d">
     <ScrollViewer VerticalScrollMode="Auto" Margin="0,0,0,150">
-        <StackPanel Orientation="Vertical">
+        <StackPanel x:Name="MainStackPanel" Orientation="Vertical">
             <TextBlock
                 Text="此页面仅用于调试使用，如果你不知道此页面的用途，请返回上一页 | This page is for debugging use only, if you do not know the purpose of this page, please go back" />
             <Button Click="TestTeachingTip_OnClick">TestTeachingTips</Button>
@@ -27,6 +27,10 @@
                     x:Name="ForceGC"
                     Click="ForceGC_Click"
                     Content="强制执行GC" />
+                <Button
+                    x:Name="TestGCLeak"
+                    Click="TestGCLeak_Click"
+                    Content="测试内存泄漏" />
                 <TextBlock Text="AdditionalApiParameters" />
                 <TextBox Height="500" x:Name="TbAdditionalApiParameters" AcceptsReturn="True" />
                 <Button Click="SaveApiAdditionalParameters_OnClick">Save AdditionalApiParameters</Button>

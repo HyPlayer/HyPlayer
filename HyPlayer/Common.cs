@@ -6,6 +6,7 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
+using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.Pages;
 using Kawazu;
 using LiteFM;
@@ -24,6 +25,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
@@ -78,7 +80,7 @@ namespace HyPlayer
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
         public static JsonSerializerOptions DefaultOptions = new()
         {
-            TypeInfoResolver = JsonDefaultContext.Default
+            TypeInfoResolver = JsonTypeInfoResolver.Combine(JsonDefaultContext.Default, NeteaseApiContractJsonContext.Default)
         };
 
         public static void InitializeHttpClientAndAPI()

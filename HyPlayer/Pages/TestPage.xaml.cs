@@ -2,8 +2,11 @@
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
 using Windows.System;
@@ -26,6 +29,30 @@ public sealed partial class TestPage : Page
 
     private int _teachingTipIndex;
 
+    static List<KeyValuePair<string, WeakReference<FrameworkElement>>> controlsReferences = new List<KeyValuePair<string, WeakReference<FrameworkElement>>>();
+
+    static Dictionary<Type, object> typeParams = new Dictionary<Type, object>()
+    {
+        [typeof(AlbumPage)] = "97767168",
+        [typeof(ArtistPage)] = "159692",
+        [typeof(BlankPage)] = null,
+        [typeof(Comments)] = "sg211277",
+        // [typeof(CompactPlayerPage)] = null, // need new app window
+        [typeof(DownloadPage)] = null,
+        // [typeof(ExpandedPlayer)] = null,
+        [typeof(History)] = null,
+        [typeof(HomePage)] = null,
+        [typeof(LocalMusicPage)] = null,
+        [typeof(Me)] = null,
+        [typeof(MusicCloudPage)] = null,
+        [typeof(MVPage)] = "14417823",
+        [typeof(PageFavorite)] = null,
+        [typeof(RadioPage)] = "793914432",
+        [typeof(Search)] = "初音未来",
+        [typeof(Settings)] = null,
+        [typeof(SongListDetail)] = "897784673",
+        [typeof(Welcome)] = null
+    };
 
     public TestPage()
     {
@@ -46,6 +73,45 @@ public sealed partial class TestPage : Page
     private void TestTeachingTip_OnClick(object sender, RoutedEventArgs e)
     {
         Common.AddToTeachingTipLists("TestTeachingTip", _teachingTipIndex++.ToString());
+    }
+
+    private async void TestGCLeak_Click(object sender, RoutedEventArgs e)
+    {
+        var leakCheckFrame = new Frame();
+        leakCheckFrame.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+        leakCheckFrame.Height = 500;
+        MainStackPanel.Children.Insert(0, leakCheckFrame);
+        leakCheckFrame.Visibility = Visibility.Visible;
+        foreach (var (type, param) in typeParams)
+        {
+            leakCheckFrame.Navigate(type, param);
+            await Task.Delay(500);
+            var page = leakCheckFrame.Content as Page;
+            controlsReferences.Add(new KeyValuePair<string, WeakReference<FrameworkElement>>(type.Name, new WeakReference<FrameworkElement>(page as FrameworkElement)));
+            await Task.Delay(5000);
+            GC.Collect();
+        }
+        MainStackPanel.Children.Remove(leakCheckFrame);
+        var resultSb = new StringBuilder();
+        foreach (var (name, reference) in controlsReferences)
+        {
+            resultSb.AppendLine(name + ": " + (reference.TryGetTarget(out var target) ? "Alive" : "Collected"));
+        }
+        var result = resultSb.ToString();
+        var contentDialog = new ContentDialog
+        {
+            Title = "GC Leak Check Result",
+            Content = new ScrollViewer
+            {
+                Content = new TextBlock
+                {
+                    Text = result,
+                    FontSize = 14
+                }
+            },
+            CloseButtonText = "OK"
+        };
+        _ = contentDialog.ShowAsync();
     }
 
     private void NavigateResourceId(object sender, RoutedEventArgs e)
