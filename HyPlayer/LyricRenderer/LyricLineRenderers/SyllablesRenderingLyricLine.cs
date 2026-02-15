@@ -324,7 +324,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 finalEffectBuilder.AddGaussianBlurEffect(Math.Clamp(gap, 0, 250));
             }
 
-            if (Common.Setting.lyricRenderFade && !context.IsScrolling)
+            if (Common.Setting!.lyricRenderFade && !context.IsScrolling)
             {
                 finalEffectBuilder.AddOpacityEffect(1 -
                                                     Math.Clamp(gap / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0,
@@ -389,10 +389,10 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                    * Matrix3x2.CreateTranslation(XCenter, YCenter);
         }
 
-        private CanvasGeometry beforeCurrentSyllableGeometry;
-        private CanvasGeometry currentSyllableGeometry;
+        private CanvasGeometry? beforeCurrentSyllableGeometry;
+        private CanvasGeometry? currentSyllableGeometry;
         private Rect currentSyllableSize;
-        private CanvasGeometry afterCurrentSyllableGeometry;
+        private CanvasGeometry? afterCurrentSyllableGeometry;
 
         /// <summary>
         /// 获取基础矩形
@@ -529,7 +529,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         }
 
         private List<Rect[]> _syllableBound = [];
-        private float _theoryFlatLineWidth;
         private float _drawingOffsetY;
         private bool _isInitialized = false;
         private string? _transliterationActual;
@@ -647,13 +646,12 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             if (textLayout is null || _sizeChanged)
             {
                 _sizeChanged = false;
-                _text = IsSyllable ? string.Join("", Syllables.Select(t => t.Syllable)) : Text ?? "";
+                _text = IsSyllable ? string.Join("", Syllables!.Select(t => t.Syllable)) : Text ?? "";
                 textLayout = new CanvasTextLayout(session, _text, textFormat,
                     Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
                 // 创建所有行矩形
                 if (IsSyllable)
                 {
-                    _theoryFlatLineWidth = 0;
                     // accumulate letter widths
                     _syllableBound.Clear();
                     var alreadyLetterCount = 0;

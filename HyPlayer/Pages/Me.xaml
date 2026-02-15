@@ -37,19 +37,14 @@
                                     x:Name="RectangleImageBack"
                                     Height="82"
                                     Margin="0"
-                                    x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                                     CornerRadius="12"
                                     IsCacheEnabled="False"
+                                    Source="{x:Bind CoverUri}"
                                     Stretch="UniformToFill"
-                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}">
-                                    <frieren:ImageEx.Source>
-                                        <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}" />
-                                    </frieren:ImageEx.Source>
-                                </frieren:ImageEx>
+                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
                                 <Rectangle
                                     x:Name="RectangleImageAcrylic"
                                     Margin="0,-1,0,-1"
-                                    x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                                     Fill="{ThemeResource SystemControlAcrylicElementBrush}"
                                     RadiusX="10"
                                     RadiusY="10"
@@ -68,11 +63,8 @@
                                             Margin="8,0,0,0"
                                             CornerRadius="8"
                                             IsCacheEnabled="False"
-                                            Stretch="UniformToFill">
-                                            <frieren:ImageEx.Source>
-                                                <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}" />
-                                            </frieren:ImageEx.Source>
-                                        </frieren:ImageEx>
+                                            Source="{x:Bind CoverUri, Mode=OneTime}"
+                                            Stretch="UniformToFill" />
                                         <Grid Padding="7,0,0,0">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition />
@@ -167,30 +159,26 @@
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0">
                     <Grid x:Name="AcrylicGrid" Visibility="{x:Bind hyplayer:Common.Setting.acrylicAvailabiliity}">
-                        <Border
-                            x:Name="RectangleImageBack"
-                            x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
-                            Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
+                        <Border x:Name="RectangleImageBack" Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
                             <Border.Background>
-                                <ImageBrush Stretch="UniformToFill" >
+                                <ImageBrush Stretch="UniformToFill">
                                     <ImageBrush.ImageSource>
-                                        <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}"/>
+                                        <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}" />
                                     </ImageBrush.ImageSource>
                                 </ImageBrush>
                             </Border.Background>
                         </Border>
                         <Border
                             x:Name="RectangleImageAcrylic"
-                            x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                             Background="{ThemeResource MePageAcrylicBrush}"
                             Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
                     </Grid>
 
                     <Border x:Name="RectangleImageFallback" Visibility="{x:Bind hyplayer:Common.Setting.acrylicAvailabiliity, Converter={StaticResource BoolToVisibilityInverseConverter}}">
                         <Border.Background>
-                            <ImageBrush Stretch="UniformToFill" >
+                            <ImageBrush Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
-                                    <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}"/>
+                                    <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}" />
                                 </ImageBrush.ImageSource>
                             </ImageBrush>
                         </Border.Background>
