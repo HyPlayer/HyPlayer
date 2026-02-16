@@ -106,7 +106,7 @@ public sealed partial class CompactPlayerPage : Page
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
                     using var stream = HyPlayList.CoverStream.CloneStream();
-                    await AlbumImageBrushSource.SetSourceAsync(HyPlayList.CoverStream);
+                    await AlbumImageBrushSource.SetSourceAsync(stream);
                 }
                 catch
                 {

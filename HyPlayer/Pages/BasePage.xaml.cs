@@ -772,7 +772,7 @@ public sealed partial class BasePage : Page
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
                     using var stream = HyPlayList.CoverStream.CloneStream();
-                    await NavItemImageSource.SetSourceAsync(HyPlayList.CoverStream);
+                    await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
                 {
