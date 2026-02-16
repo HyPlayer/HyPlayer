@@ -138,4 +138,9 @@ public class RenderContext
     /// 播放位置改变是否由Seek操作引起
     /// </summary>
     public bool IsSeek { get; set; } = false;
+
+    /// <summary>
+    /// DPI
+    /// </summary>
+    public float Dpi { get; set; } = 96f;
 }

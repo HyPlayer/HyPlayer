@@ -393,6 +393,7 @@ namespace HyPlayer.LyricRenderer
                     session.DrawText($"滚动偏移: {Context.ScrollingDelta}", 0, 15, Colors.Yellow);
                     session.DrawText($"歌词时间: {Context.CurrentLyricTime}", 0, 30, Colors.Yellow);
                     session.DrawText($"绘制行数: {Context.RenderingLyricLines.Count}", 0, 45, Colors.Yellow);
+                    session.DrawText($"英寸点数: {Context.Dpi}", 0, 60, Colors.Yellow);
                     // 绘制绘制边框
                     session.DrawRectangle(0, 0, Context.ViewWidth, Context.ViewHeight, Colors.Red, 5);
                 }
@@ -418,10 +419,11 @@ namespace HyPlayer.LyricRenderer
             }
         }
 
-        public void Redesign(float width, float height)
+        public void Redesign(float width, float height, float dpi)
         {
             Context.ViewWidth = width;
             Context.ViewHeight = height;
+            Context.Dpi = dpi;
             _needRecalculateSize = true;
             _needRecalculate = true;
         }

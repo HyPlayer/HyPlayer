@@ -342,6 +342,6 @@ public sealed partial class WidgetPage : Page
 
     private void LyricView_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        LyricBox.Redesign((float)e.NewSize.Width, (float)e.NewSize.Height);
+        LyricBox.Redesign((float)e.NewSize.Width, (float)e.NewSize.Height, LyricView.Dpi);
     }
 }

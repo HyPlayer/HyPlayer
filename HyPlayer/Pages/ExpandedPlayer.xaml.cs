@@ -394,7 +394,7 @@ public sealed partial class ExpandedPlayer : Page
         {
             _lyricRenderXOffset = RightPanel.ActualOffset.X;
             _lyricRenderYOffset = RightPanel.ActualOffset.Y;
-            _lyricBox.Redesign((float)LyricWidth, _nowHeight);
+            _lyricBox.Redesign((float)LyricWidth, _nowHeight, LuminousBackground.Dpi);
             _lyricBox.ChangeRenderFontSize((float)LyricShowSize,
                 (_settings.translationSize > 0) ? _settings.translationSize : (float)LyricShowSize / 2,
                 (_settings.romajiSize > 0) ? _settings.romajiSize : (float)LyricShowSize / 2);
@@ -530,7 +530,7 @@ public sealed partial class ExpandedPlayer : Page
             });
             _lyricBox.ReflowTime(0);
             if (HyPlayList.NowPlayingItem == null) return;
-            _lyricBox.Redesign((float)LyricWidth, _nowHeight);
+            _lyricBox.Redesign((float)LyricWidth, _nowHeight, LuminousBackground.Dpi);
             _lyricBox.ChangeRenderColor(Common.BrushManagement.IdleBrush.Color, Common.BrushManagement.AccentBrush.Color);
             Redesign();
             _lyricHasBeenLoaded = true;
@@ -615,7 +615,7 @@ public sealed partial class ExpandedPlayer : Page
                         _lyricList.Add(SongLyric.LoadingLyric);
                     }
 
-                    _lyricBox.Redesign((float)LyricWidth, _nowHeight);
+                    _lyricBox.Redesign((float)LyricWidth, _nowHeight, LuminousBackground.Dpi);
                     _lyricIsCleaning = false;
                     if (_lyricHasBeenLoaded)
                     {
@@ -1502,7 +1502,7 @@ public sealed partial class ExpandedPlayer : Page
         }
         using var lyricCommand = new CanvasCommandList(session);
         using var lyricSession = lyricCommand.CreateDrawingSession();
-        _lyricBox.Draw(lyricSession, args.Timing); ;
+        _lyricBox.Draw(lyricSession, args.Timing);
         session.DrawImage(lyricCommand, _lyricRenderXOffset, _lyricRenderYOffset);
     }
 
