@@ -217,8 +217,9 @@
                                 Style="{StaticResource TitleTextBlockStyle}"
                                 Text="{x:Bind ViewModel.User.Name, Mode=OneWay}"
                                 TextWrapping="NoWrap" />
-                            <controls1:SelectableTextBox
+                            <TextBlock
                                 x:Name="TextBoxSignature"
+                                IsTextSelectionEnabled="True"
                                 FontSize="16"
                                 Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
                                 Text="{x:Bind ViewModel.User.Signature, Mode=OneWay}" />

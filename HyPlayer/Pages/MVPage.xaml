@@ -83,12 +83,14 @@
                     Margin="15"
                     Orientation="Vertical"
                     Spacing="15">
-                    <controls1:SelectableTextBox
+                    <TextBlock
+                        IsTextSelectionEnabled="True"
                         x:Name="TextBoxVideoName"
                         FontSize="35"
                         FontWeight="Bold"
                         TextWrapping="Wrap" />
-                    <controls1:SelectableTextBox
+                    <TextBlock
+                        IsTextSelectionEnabled="True"
                         x:Name="TextBoxSinger"
                         FontSize="18"
                         Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
@@ -97,7 +99,8 @@
                         FontSize="15"
                         Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                         TextWrapping="Wrap" />
-                    <controls1:SelectableTextBox
+                    <TextBlock
+                        IsTextSelectionEnabled="True"
                         x:Name="TextBoxOtherInfo"
                         FontSize="15"
                         Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"

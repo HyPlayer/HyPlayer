@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Timers;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
 using Windows.System;
@@ -82,6 +83,10 @@ public sealed partial class TestPage : Page
         leakCheckFrame.Height = 500;
         MainStackPanel.Children.Insert(0, leakCheckFrame);
         leakCheckFrame.Visibility = Visibility.Visible;
+        var timer = new Timer();
+        timer.Interval = 100;
+        timer.Elapsed += (_,_) => { GC.Collect(); };
+        timer.Start();
         foreach (var (type, param) in typeParams)
         {
             leakCheckFrame.Navigate(type, param);
@@ -89,9 +94,11 @@ public sealed partial class TestPage : Page
             var page = leakCheckFrame.Content as Page;
             controlsReferences.Add(new KeyValuePair<string, WeakReference<FrameworkElement>>(type.Name, new WeakReference<FrameworkElement>(page as FrameworkElement)));
             await Task.Delay(5000);
-            GC.Collect();
         }
         MainStackPanel.Children.Remove(leakCheckFrame);
+        Common.AddToTeachingTipLists("正在生成报告", "等待 GC 处理中");
+        await Task.Delay(5000);
+        timer.Stop();
         var resultSb = new StringBuilder();
         foreach (var (name, reference) in controlsReferences)
         {

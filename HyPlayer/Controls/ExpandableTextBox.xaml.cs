@@ -11,16 +11,16 @@ public sealed partial class ExpandableTextBox : UserControl
         "ButtonText", typeof(string), typeof(ExpandableTextBox), new PropertyMetadata("展开"));
 
     public static readonly DependencyProperty SelectableProperty = DependencyProperty.Register(
-        "Selectable", typeof(bool), typeof(SelectableTextBox), new PropertyMetadata(true));
+        "Selectable", typeof(bool), typeof(ExpandableTextBox), new PropertyMetadata(true));
 
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
-        "Text", typeof(string), typeof(SelectableTextBox), new PropertyMetadata(default(string)));
+        "Text", typeof(string), typeof(ExpandableTextBox), new PropertyMetadata(default(string)));
 
     public static readonly DependencyProperty MaxLinesProperty = DependencyProperty.Register(
-        "MaxLines", typeof(int), typeof(SelectableTextBox), new PropertyMetadata(3));
+        "MaxLines", typeof(int), typeof(ExpandableTextBox), new PropertyMetadata(3));
 
     public static readonly DependencyProperty TextWrappingProperty = DependencyProperty.Register(
-        "TextWrapping", typeof(TextWrapping), typeof(SelectableTextBox),
+        "TextWrapping", typeof(TextWrapping), typeof(ExpandableTextBox),
         new PropertyMetadata(default(TextWrapping)));
 
     private static readonly DependencyProperty ActualMaxLineProperty = DependencyProperty.Register(
