@@ -58,8 +58,7 @@ public sealed partial class BasePage : Page
         InitializeComponent();
         Common.PageBase = this;
         Common.GlobalTip = TheTeachingTip;
-        HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
-        HyPlayList.OnTimerTicked += Common.ChangePlaybarVisibillity;
+
         if (!HyPlayList.Player.PlayerCreated)
         {
             HyPlayList.InitializeHyPlaylist();
@@ -794,7 +793,7 @@ public sealed partial class BasePage : Page
                 {
                     if (playItem != HyPlayList.NowPlayingItem || HyPlayList.CoverStream == null) return;
                     using var stream = HyPlayList.CoverStream.CloneStream();
-                    await NavItemImageSource.SetSourceAsync(HyPlayList.CoverStream);
+                    await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
                 {

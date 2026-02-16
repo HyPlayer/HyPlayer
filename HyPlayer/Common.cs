@@ -83,7 +83,7 @@ namespace HyPlayer
             TypeInfoResolver = JsonTypeInfoResolver.Combine(JsonDefaultContext.Default, NeteaseApiContractJsonContext.Default, LastFMJsonDefaultContext.Default)
         };
 
-        public static void InitializeHttpClientAndAPI()
+        public static void InitializeCommon()
         {
             Setting = Ioc.Default.GetRequiredService<Setting>();
             HttpClient = Ioc.Default.GetRequiredService<HttpClient>();
@@ -91,6 +91,8 @@ namespace HyPlayer
             LastFMClient = Ioc.Default.GetRequiredService<LastFMClient>();
             NeteaseAPI.Option.AdditionalParameters = Setting.ApiAdditionalParameters;
             NeteaseAPI.Option.FakeCheckToken = Setting.EnableCheckTokenApi;
+            HyPlayList.OnTimerTicked += () => RollTeachingTip();
+            HyPlayList.OnTimerTicked += ChangePlaybarVisibillity;
         }
         public static bool isExpanded
         {
@@ -116,7 +118,6 @@ namespace HyPlayer
         public static int PlaybarSecondCounter = 0;
         public static int PlaybarSecondSetting => Setting.AutoHidePlaybarTime;
         public static bool PlaybarIsVisible = true;
-        public static bool PointerIsInMainPage = false;
 
         public static IAsyncAction Invoke(Action action,
             CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
@@ -180,11 +181,6 @@ namespace HyPlayer
 
         public static void ChangePlaybarVisibillity()
         {
-            if (PointerIsInMainPage)
-            {
-                PlaybarSecondCounter = 0;
-                return;
-            }
             if (++PlaybarSecondCounter >= PlaybarSecondSetting)
             {
                 if (PlaybarIsVisible)

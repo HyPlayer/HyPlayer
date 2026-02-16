@@ -92,37 +92,24 @@ public sealed partial class MainPage : Page
     private void OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (!Common.Setting.AutoHidePlaybar) return;
-        if (isActivated)
-        {
-            ShowBar();
-        }
-        else
-        {
-            _ = CollapseBar(3);
-        }
+        _ = Common.Invoke(() =>
+        { 
+            if (isActivated)
+            {
+                ShowBar();
+            }
+            else
+            {
+                _ = CollapseBar(3);
+            }
+        });
     }
 
     private void ShowBar()
     {
         Common.PageBase.NavItemBlank.IsEnabled = false;
-        if (IsPlaybarOnShow)
-        { }
-        else
+        if (!IsPlaybarOnShow)
         {
-
-            //var ExpandedPlayerLyricAni = new DoubleAnimation
-            //{
-            //    BeginTime = TimeSpan.FromSeconds(3.1),
-            //    To = 0,
-            //    EnableDependentAnimation = true,
-            //    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            //};
-            //Storyboard.SetTarget(ExpandedPlayerLyricAni, Common.PageExpandedPlayer.LyricBoxContainer);
-            //Storyboard.SetTargetProperty(ExpandedPlayerLyricAni, "(FrameworkElement.MarginProperty).Bottom");
-            //var lyricstoryboard = new Storyboard();
-            //lyricstoryboard.Children.Add(ExpandedPlayerLyricAni);
-            //lyricstoryboard.Begin();
-
             PointerInAni.Begin();
             Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingItem);
             var BlankAni = new DoubleAnimation
@@ -143,19 +130,6 @@ public sealed partial class MainPage : Page
     private async Task CollapseBar(double time)
     {
         IsPlaybarOnShow = false;
-
-        //var ExpandedPlayerLyricAni = new DoubleAnimation
-        //{
-        //    BeginTime = TimeSpan.FromSeconds(3.1),
-        //    To = -140,
-        //    EnableDependentAnimation = true,
-        //    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-        //};
-        //var lyricstoryboard = new Storyboard();
-        //Storyboard.SetTarget(ExpandedPlayerLyricAni, Common.PageExpandedPlayer.LyricBoxContainer);
-        //Storyboard.SetTargetProperty(ExpandedPlayerLyricAni, "(FrameworkElement.MarginProperty).Bottom");
-        //lyricstoryboard.Children.Add(ExpandedPlayerLyricAni);
-        //lyricstoryboard.Begin();
         var PlayBarAni = new DoubleAnimation
         {
             BeginTime = TimeSpan.FromSeconds(time),
@@ -203,20 +177,6 @@ public sealed partial class MainPage : Page
         storyboard.Begin();
         await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingItem);
 
-    }
-    private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        Common.PointerIsInMainPage = true;
-        Common.PlaybarSecondCounter = 0;
-        if (!Common.PlaybarIsVisible)
-        {
-            Common.OnPlaybarVisibilityChanged?.Invoke(true);
-            Common.PlaybarIsVisible = true;
-        }
-    }
-    private void Page_PointerExited(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        Common.PointerIsInMainPage = false;
     }
 
     private void SetPlayBarMarginBlurEffect(UIElement sender)
@@ -375,6 +335,17 @@ public sealed partial class MainPage : Page
             visual.RelativeSizeAdjustment = Vector2.One;
             visual.Brush = brush;
             return visual;
+        }
+    }
+
+    private void Page_PointerMoved(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (e.IsGenerated) return;
+        Common.PlaybarSecondCounter = 0;
+        if (!Common.PlaybarIsVisible)
+        {
+            Common.OnPlaybarVisibilityChanged?.Invoke(true);
+            Common.PlaybarIsVisible = true;
         }
     }
 }

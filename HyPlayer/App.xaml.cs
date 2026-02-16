@@ -52,7 +52,7 @@ public sealed partial class App : Application
     {
         InitializeComponent();
         InitializeServices();
-        Common.InitializeHttpClientAndAPI();
+        Common.InitializeCommon();
         if (Common.Setting.xboxHidePointer)
         {
             RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;

@@ -9,8 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-    PointerEntered="Page_PointerEntered"
-    PointerExited="Page_PointerExited"
+    PointerMoved="Page_PointerMoved"
     mc:Ignorable="d">
     <Page.Resources>
         <LinearGradientBrush x:Key="OpacityGradientBrush" StartPoint="0,0" EndPoint="0,1">
