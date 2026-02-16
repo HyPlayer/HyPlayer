@@ -80,7 +80,7 @@ namespace HyPlayer
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
         public static JsonSerializerOptions DefaultOptions = new()
         {
-            TypeInfoResolver = JsonTypeInfoResolver.Combine(JsonDefaultContext.Default, NeteaseApiContractJsonContext.Default)
+            TypeInfoResolver = JsonTypeInfoResolver.Combine(JsonDefaultContext.Default, NeteaseApiContractJsonContext.Default, LastFMJsonDefaultContext.Default)
         };
 
         public static void InitializeHttpClientAndAPI()
