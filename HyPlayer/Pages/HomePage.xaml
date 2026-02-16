@@ -19,12 +19,8 @@
     xmlns:ui="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
     <Page.Resources>
-        <muxc:StackLayout
-            x:Key="CardListDefaultLayout"
-            Orientation="Horizontal"
-            Spacing="16" />
         <DataTemplate x:Key="RecommendedCardTemplate" x:DataType="classes:NCPlayList">
-            <Button
+            <ListViewItem
                 x:Name="Card"
                 Width="256"
                 Height="128"
@@ -32,9 +28,9 @@
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                Click="Card_Click"
-                CommandParameter="{x:Bind}"
-                CornerRadius="8">
+                CornerRadius="8"
+                Tag="{x:Bind}"
+                Tapped="Card_Tapped">
                 <ui:Effects.Shadow>
                     <media:AttachedCardShadow
                         BlurRadius="0"
@@ -103,11 +99,11 @@
                         </MenuFlyout>
                     </Grid.ContextFlyout>
                 </Grid>
-            </Button>
+            </ListViewItem>
         </DataTemplate>
 
         <DataTemplate x:Key="ToplistCardTemplate" x:DataType="classes:NCPlayList">
-            <Button
+            <ListViewItem
                 x:Name="Card"
                 Width="256"
                 Height="128"
@@ -115,9 +111,9 @@
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                Click="Card_Click"
-                CommandParameter="{x:Bind}"
-                CornerRadius="8">
+                CornerRadius="8"
+                Tag="{x:Bind}"
+                Tapped="Card_Tapped">
                 <ui:Effects.Shadow>
                     <media:AttachedCardShadow
                         BlurRadius="0"
@@ -185,10 +181,10 @@
                         </MenuFlyout>
                     </Grid.ContextFlyout>
                 </Grid>
-            </Button>
+            </ListViewItem>
         </DataTemplate>
         <DataTemplate x:Key="RecommendedSongCardTemplate" x:DataType="classes:NCSong">
-            <Button
+            <ListViewItem
                 x:Name="Card"
                 Width="256"
                 Height="352"
@@ -197,9 +193,9 @@
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                Click="SongCard_Click"
-                CommandParameter="{x:Bind}"
-                CornerRadius="8">
+                CornerRadius="8"
+                Tag="{x:Bind}"
+                Tapped="Card_Tapped">
                 <ui:Effects.Shadow>
                     <media:AttachedCardShadow
                         BlurRadius="0"
@@ -245,7 +241,7 @@
                             ToolTipService.ToolTip="{x:Bind ArtistString}" />
                     </Grid>
                 </Grid>
-            </Button>
+            </ListViewItem>
         </DataTemplate>
     </Page.Resources>
     <muxc:RefreshContainer RefreshRequested="RefreshRequested">
@@ -365,18 +361,18 @@
                                             Style="{ThemeResource SubtitleTextBlockStyle}"
                                             Text="官方歌单" />
                                     </StackPanel>
-                                    <ScrollViewer
+                                    <ListView
                                         Grid.Row="1"
-                                        HorizontalScrollBarVisibility="Visible"
-                                        HorizontalScrollMode="Enabled"
-                                        VerticalScrollMode="Disabled"
-                                        ZoomMode="Disabled">
-                                        <muxc:ItemsRepeater
-                                            x:Name="CategryItemsRepeater"
-                                            ItemTemplate="{StaticResource ToplistCardTemplate}"
-                                            ItemsSource="{x:Bind ViewModel.OfficialPlaylists, Mode=OneWay}"
-                                            Layout="{StaticResource CardListDefaultLayout}" />
-                                    </ScrollViewer>
+                                        ItemTemplate="{StaticResource ToplistCardTemplate}"
+                                        ItemsSource="{x:Bind ViewModel.OfficialPlaylists, Mode=OneWay}"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                        ScrollViewer.HorizontalScrollMode="Enabled">
+                                        <ListView.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <VirtualizingStackPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ListView.ItemsPanel>
+                                    </ListView>
                                 </Grid>
                                 <Grid Grid.Row="1" Margin="8,16">
                                     <Grid.RowDefinitions>
@@ -393,19 +389,18 @@
                                             Style="{ThemeResource SubtitleTextBlockStyle}"
                                             Text="推荐歌单" />
                                     </StackPanel>
-                                    <ScrollViewer
+                                    <ListView
                                         Grid.Row="1"
-                                        HorizontalScrollBarVisibility="Visible"
-                                        HorizontalScrollMode="Enabled"
-                                        VerticalScrollMode="Disabled"
-                                        ZoomMode="Disabled">
-                                        <muxc:ItemsRepeater
-                                            x:Name="RecommendedItemsRepeater"
-                                            ItemTemplate="{StaticResource RecommendedCardTemplate}"
-                                            ItemsSource="{x:Bind ViewModel.RecommendedPlaylist, Mode=OneWay}"
-                                            Layout="{StaticResource CardListDefaultLayout}" />
-
-                                    </ScrollViewer>
+                                        ItemTemplate="{StaticResource ToplistCardTemplate}"
+                                        ItemsSource="{x:Bind ViewModel.RecommendedPlaylist, Mode=OneWay}"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                        ScrollViewer.HorizontalScrollMode="Enabled">
+                                        <ListView.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <VirtualizingStackPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ListView.ItemsPanel>
+                                    </ListView>
                                 </Grid>
                             </Grid>
 
@@ -484,18 +479,18 @@
                                     Style="{ThemeResource SubtitleTextBlockStyle}"
                                     Text="排行榜" />
                             </StackPanel>
-                            <ScrollViewer
+                            <ListView
                                 Grid.Row="1"
-                                HorizontalScrollBarVisibility="Visible"
-                                HorizontalScrollMode="Enabled"
-                                VerticalScrollMode="Disabled"
-                                ZoomMode="Disabled">
-                                <muxc:ItemsRepeater
-                                    x:Name="ToplistItemsRepeater"
-                                    ItemTemplate="{StaticResource ToplistCardTemplate}"
-                                    ItemsSource="{x:Bind ViewModel.ToplistPlaylist, Mode=OneWay}"
-                                    Layout="{StaticResource CardListDefaultLayout}" />
-                            </ScrollViewer>
+                                ItemTemplate="{StaticResource ToplistCardTemplate}"
+                                ItemsSource="{x:Bind ViewModel.ToplistPlaylist, Mode=OneWay}"
+                                ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                ScrollViewer.HorizontalScrollMode="Enabled">
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+                            </ListView>
                         </Grid>
                     </Grid>
                 </Grid>

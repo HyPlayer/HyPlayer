@@ -39,26 +39,6 @@ namespace HyPlayer.Pages
             ViewModel.GetDataAsync().SafeFireAndForget();
         }
 
-        private void Card_Click(object sender, RoutedEventArgs e)
-        {
-            var button = sender?.As<Button>();
-            if (button == null) return;
-            var playlist = button.CommandParameter as NCPlayList;
-            Common.NavigatePage(typeof(SongListDetail), playlist, new Windows.UI.Xaml.Media.Animation.DrillInNavigationTransitionInfo());
-        }
-
-        private void SongCard_Click(object sender, RoutedEventArgs e)
-        {
-            var button = sender?.As<Button>();
-            if (button == null) return;
-            var song = button.CommandParameter as NCSong;
-            HyPlayList.AppendNcSong(song);
-            var targetPlayItem =
-                HyPlayList.List.Find(t => t.Id == song.SongId);
-            HyPlayList.SongMoveTo(targetPlayItem);
-
-        }
-
         private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
             var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
@@ -107,6 +87,14 @@ namespace HyPlayer.Pages
                 _ = Common.PageBase?.LoadSongList();
                 Common.NavigateRefresh();
             }
+        }
+
+        private void Card_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            var button = sender?.As<ListViewItem>();
+            if (button == null) return;
+            var playlist = button.Tag as NCPlayList;
+            Common.NavigatePage(typeof(SongListDetail), playlist, new Windows.UI.Xaml.Media.Animation.DrillInNavigationTransitionInfo());
         }
     }
 }
