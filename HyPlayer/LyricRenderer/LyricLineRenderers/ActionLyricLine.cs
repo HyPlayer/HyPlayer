@@ -43,12 +43,12 @@ public class ActionLyricLine : RenderingLyricLine
             var color = new Color
             {
                 A = 40,
-                R = 0,
-                G = 0,
-                B = 0
+                R = 135,
+                G = 206,
+                B = 255
             };
-            session.FillRoundedRectangle(actualOffsetX + 16, offset.Y,
-                RenderingWidth + 32, RenderingHeight + 8, 6, 6, color);
+            session.FillRoundedRectangle(0, offset.Y,
+                RenderingWidth + 32, RenderingHeight, 6, 6, color);
         }
         actualOffsetX += 16;
         var drawingTop = offset.Y;

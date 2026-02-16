@@ -123,14 +123,14 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                             using var textLayoutSession = textLayoutCommandList.CreateDrawingSession();
                             using (textLayoutSession.CreateLayer(1, beforeCurrentSyllableGeometry, matrix))
                             {
-                                textLayoutSession.DrawTextLayout(textLayout, 0, textTop - lift,
-                                    TypographySelector(t => t?.FocusingColor, context)!.Value);
+                                textLayoutSession.DrawImage(_defaultLyricPersistCache, 0, textTop - lift, _sizePixelRect, 1);
+                                //textLayoutSession.DrawTextLayout(textLayout, 0, textTop - lift,
+                                //    TypographySelector(t => t?.FocusingColor, context)!.Value);
                                 // Colors.Red);
                             }
                             using (textLayoutSession.CreateLayer(1, afterCurrentSyllableGeometry, matrix))
                             {
-                                textLayoutSession.DrawTextLayout(textLayout, 0, textTop,
-                                    TypographySelector(t => t?.IdleColor, context)!.Value);
+                                textLayoutSession.DrawImage(_defaultLyricPersistCache, 0, textTop, _sizePixelRect, 0.3f);
                                 // Colors.Green);
                             }
 
@@ -147,17 +147,13 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 // 叠底
                                 using (currentDrawingSession.CreateLayer(1, currentSyllableGeometry, matrix))
                                 {
-                                    var color = TypographySelector(t => t?.FocusingColor, context)!.Value;
-                                    color.A = (byte)(128 * percentage);
-                                    currentDrawingSession.DrawTextLayout(textLayout, 0, textTop,
-                                        TypographySelector(t => t?.IdleColor, context)!.Value);
+                                    currentDrawingSession.DrawImage(_defaultLyricPersistCache, 0, textTop, _sizePixelRect, 0.3f);
                                 }
 
                                 // 高亮
                                 using (currentDrawingSession.CreateLayer(1, currentHighlightGeometry, matrix))
                                 {
-                                    currentDrawingSession.DrawTextLayout(textLayout, 0, textTop,
-                                        TypographySelector(t => t?.FocusingColor, context)!.Value);
+                                    currentDrawingSession.DrawImage(_defaultLyricPersistCache, 0, textTop);
                                 }
 
                                 if (Syllables[currentSyllableIndex].Duration >= 500 && false)
@@ -206,19 +202,19 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 else
                                 {
                                     var normalLift = -lift * Math.Clamp(1.0f * (context.CurrentLyricTime - Syllables[currentSyllableIndex].StartTime) / Syllables[currentSyllableIndex].Duration, 0, 1);
-                                    clds.DrawImage(currentCommandList, 0, normalLift);
+                                    clds.DrawImage(currentCommandList, 0, normalLift + textTop);
                                 }
                                 clds.DrawImage(textLayoutCommandList);
                             }
                         }
                         else
                         {
-                            clds.DrawImage(_defaultLyricPersistCache, 0, 0, _sizePixelRect, opacity);
+                            clds.DrawImage(_defaultLyricPersistCache, 0, textTop, _sizePixelRect, opacity);
                         }
                     }
                     else
                     {
-                        clds.DrawImage(_defaultLyricPersistCache, 0, 0, _sizePixelRect, opacity);
+                        clds.DrawImage(_defaultLyricPersistCache, 0, textTop, _sizePixelRect, opacity);
                     }
 
                     
@@ -678,8 +674,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 }
                 _lyricTextRenderActualTop = actualTop;
 
-                dftLyricDs.DrawTextLayout(textLayout, 0, actualTop,
-                                TypographySelector(t => t?.FocusingColor, context)!.Value);
+                dftLyricDs.DrawTextLayout(textLayout, 0, 0, TypographySelector(t => t?.FocusingColor, context)!.Value);
                 actualTop += (float)textLayout.LayoutBounds.Height;
 
                 
