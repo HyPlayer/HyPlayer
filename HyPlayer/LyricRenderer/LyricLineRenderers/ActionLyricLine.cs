@@ -98,7 +98,7 @@ public class ActionLyricLine : RenderingLyricLine
         }
 
         _staticPersistCache?.Dispose();
-        _staticPersistCache = new CanvasRenderTarget(session, _canvasWidth, _canvasWidth, context.Dpi);
+        _staticPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
 
         using (var pstDs = _staticPersistCache.CreateDrawingSession())
         {

@@ -367,6 +367,10 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             List<CanvasGeometry> currentSyllable = [];
             if (IsSyllable && syllables is not null)
             {
+                beforeCurrentSyllableGeometry?.Dispose();
+                afterCurrentSyllableGeometry?.Dispose();
+                currentSyllableGeometry?.Dispose();
+
                 // 空行快速返回
                 if (syllables.Count <= 0) return;
                 // join before
@@ -652,9 +656,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             // create static persist
             _staticPersistCache?.Dispose();
             _defaultLyricPersistCache?.Dispose();
-            _sizePixelRect = new Rect(0, 0, _canvasWidth, _canvasWidth);
-            _staticPersistCache = new CanvasRenderTarget(session, _canvasWidth, _canvasWidth, context.Dpi);
-            _defaultLyricPersistCache = new CanvasRenderTarget(session, _canvasWidth, _canvasWidth, context.Dpi);
+            _sizePixelRect = new Rect(0, 0, RenderingWidth, RenderingHeight);
+            _staticPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+            _defaultLyricPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
             
             using (var pstDs = _staticPersistCache.CreateDrawingSession())
             using (var dftLyricDs = _defaultLyricPersistCache.CreateDrawingSession())
