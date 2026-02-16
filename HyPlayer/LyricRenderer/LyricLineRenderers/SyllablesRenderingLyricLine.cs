@@ -12,16 +12,12 @@ using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using System.Security.Cryptography.X509Certificates;
-using TagLib.Riff;
 using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers
@@ -202,7 +198,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 else
                                 {
                                     var normalLift = -lift * Math.Clamp(1.0f * (context.CurrentLyricTime - Syllables[currentSyllableIndex].StartTime) / Syllables[currentSyllableIndex].Duration, 0, 1);
-                                    clds.DrawImage(currentCommandList, 0, normalLift + textTop);
+                                    clds.DrawImage(currentCommandList, 0, normalLift);
                                 }
                                 clds.DrawImage(textLayoutCommandList);
                             }
