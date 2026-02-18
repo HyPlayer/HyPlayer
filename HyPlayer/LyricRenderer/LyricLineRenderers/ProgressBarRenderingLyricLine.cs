@@ -133,6 +133,16 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
-        // ignore
+        //Ignore
+    }
+
+    public override void DisposeRenderCache()
+    {
+        //Ignore
+    }
+
+    public override void CreateRenderCache(CanvasDrawingSession session, RenderContext context)
+    {
+        //Ignore
     }
 }

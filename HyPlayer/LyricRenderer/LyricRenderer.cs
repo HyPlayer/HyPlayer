@@ -63,7 +63,7 @@ namespace HyPlayer.LyricRenderer
         }
 
 
-        private bool _isTypographyChanged = true;
+        private bool _isTypographyChanged = false;
 
         public void ChangeRenderColor(Color idleColor, Color focusingColor, Color? shadowColor = null)
         {
@@ -235,11 +235,13 @@ namespace HyPlayer.LyricRenderer
                     renderedAfterStartPosition <= Context.ViewHeight)
                 {
                     Context.RenderingLyricLines.Add(currentLine);
+                    if (!currentLine.CacheCreated) currentLine.CreateRenderCache(session, Context);
                     currentLine.Rendering = true;
                 }
                 else
                 {
                     currentLine.Rendering = false;
+                    if (currentLine.CacheCreated) currentLine.DisposeRenderCache();
                 }
                 theoryRenderAfterPosition += currentLine.RenderingHeight + Context.LineSpacing;
                 renderedAfterStartPosition += currentLine.RenderingHeight + Context.LineSpacing;
@@ -287,20 +289,23 @@ namespace HyPlayer.LyricRenderer
                         {
                             currentLine.Rendering = true;
                             Context.RenderingLyricLines.Add(currentLine);
+                            if (!currentLine.CacheCreated) currentLine.CreateRenderCache(session, Context);
                         }
                         else
                         {
                             currentLine.Rendering = false;
+                            if (currentLine.CacheCreated) currentLine.DisposeRenderCache();
                         }
                     }
-                }
-                else
-                {
-                    renderedBeforeStartPosition = theoryRenderBeforePosition;
-                }
+                    else
+                    {
+                        renderedBeforeStartPosition = theoryRenderBeforePosition;
+                        if (currentLine.CacheCreated) currentLine.DisposeRenderCache();
+                    }
 
 
-                Context.RenderOffsets[currentLine.Id].Y = renderedBeforeStartPosition;
+                    Context.RenderOffsets[currentLine.Id].Y = renderedBeforeStartPosition;
+                }
             }
         }
 

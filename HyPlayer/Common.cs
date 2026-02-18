@@ -67,7 +67,6 @@ namespace HyPlayer
         public static NeteaseCloudMusicApiHandler? NeteaseAPI;
         public static LastFMClient? LastFMClient;
         public static XboxGameBarWidget? XboxGameBarWidget;
-        public static PixelShaderEffect? PixelShaderShareEffect;
         public static Setting? Setting;
 #nullable restore
         public static BrushManagement BrushManagement = new();

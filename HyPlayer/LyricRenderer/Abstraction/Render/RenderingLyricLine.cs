@@ -12,6 +12,7 @@ public abstract class RenderingLyricLine
     public float RenderingHeight { get; set; }
     public float RenderingWidth { get; set; }
     public bool Rendering { get; set; } = false;
+    public bool CacheCreated {  get; set; } = false;
 
     public bool Hidden { get; set; }
 
@@ -25,6 +26,8 @@ public abstract class RenderingLyricLine
     public abstract void OnKeyFrame(CanvasDrawingSession session, RenderContext context);
     public abstract void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context);
     public abstract void OnTypographyChanged(CanvasDrawingSession session, RenderContext context);
+    public abstract void DisposeRenderCache();
+    public abstract void CreateRenderCache(CanvasDrawingSession session, RenderContext context);
     public T TypographySelector<T>(Func<RenderTypography?, T?> expression, RenderContext context)
     {
         return (expression(Typography) ??

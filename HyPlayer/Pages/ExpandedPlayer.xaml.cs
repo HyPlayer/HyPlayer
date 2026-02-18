@@ -1449,22 +1449,23 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (_shaderEffect == null && _settings.expandedPlayerBackgroundType == BackgroundType.Isolation)
         {
-            if (Common.PixelShaderShareEffect == null)
-            {
-                StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Shaders/BackgroundShader.bin"));
-                IBuffer buffer = await FileIO.ReadBufferAsync(file);
-                var bytes = buffer.ToArray();
-                Common.PixelShaderShareEffect = new PixelShaderEffect(bytes);
-            }
-            _shaderEffect = Common.PixelShaderShareEffect;
+            StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Shaders/BackgroundShader.bin"));
+            IBuffer buffer = await FileIO.ReadBufferAsync(file);
+            var bytes = buffer.ToArray();
+            _shaderEffect = new PixelShaderEffect(bytes);
             _randomValue = new Random().Next(100);
         }
         LuminousBackground.DpiScale = _settings.IsolationScale;
-        _shaderEffect?.Properties["color1"] = _albumColorVectors[0];
-        _shaderEffect?.Properties["color2"] = _albumColorVectors[1];
-        _shaderEffect?.Properties["color3"] = _albumColorVectors[2];
-        _shaderEffect?.Properties["color4"] = _albumColorVectors[3];
-        _shaderEffect?.Properties["UseHSVBlending"] = UseHSVBlending();
+        if(_albumColorVectors?.Count == 4)
+        {
+            _shaderEffect?.Properties["color1"] = _albumColorVectors[0];
+            _shaderEffect?.Properties["color2"] = _albumColorVectors[1];
+            _shaderEffect?.Properties["color3"] = _albumColorVectors[2];
+            _shaderEffect?.Properties["color4"] = _albumColorVectors[3];
+            _shaderEffect?.Properties["UseHSVBlending"] = UseHSVBlending();
+
+        }
+        
         _shaderEffect?.Properties["iResolution"] = new Vector2(LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, CanvasDpiRounding.Round), LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, CanvasDpiRounding.Round));
         if (!_settings.IsolationFullThrottle)
         {

@@ -12,6 +12,7 @@ using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using Windows.Foundation;
@@ -62,12 +63,10 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             _reactionState = state;
         }
 
-        private const long ReactionDurationTick = 2000000;
-
         private const long ScaleAnimationDuration = 500;
 
-        private CanvasRenderTarget? _staticPersistCache;
-        private CanvasRenderTarget? _defaultLyricPersistCache;
+        private CanvasCommandList? _staticPersistCache;
+        private CanvasCommandList? _defaultLyricPersistCache;
         private Rect _sizePixelRect = Rect.Empty;
         private float _lyricTextRenderActualTop = 0.0f;
 
@@ -87,12 +86,12 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
             actualOffsetX += 16; // padding left
 
-            var totalCommand = new CanvasCommandList(session);
+            using var totalCommand = new CanvasCommandList(session);
             var actualTop = _lyricTextRenderActualTop;
             using (CanvasDrawingSession targetDrawingSession = totalCommand.CreateDrawingSession())
             {
-                
-                var cl = new CanvasCommandList(targetDrawingSession);
+
+                using var cl = new CanvasCommandList(targetDrawingSession);
                 using (var clds = cl.CreateDrawingSession())
                 {
                     var textTop = actualTop;
@@ -115,7 +114,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                             var matrix = Matrix3x2.CreateTranslation(0, textTop);
 
                             // before
-                            var textLayoutCommandList = new CanvasCommandList(clds);
+                            using var textLayoutCommandList = new CanvasCommandList(clds);
                             using var textLayoutSession = textLayoutCommandList.CreateDrawingSession();
                             using (textLayoutSession.CreateLayer(1, beforeCurrentSyllableGeometry, matrix))
                             {
@@ -138,7 +137,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 var currentHighlightGeometry =
                                     CreateHighlightGeometry(session, percentage,
                                         _syllableBound.ElementAtOrDefault(currentSyllableIndex) ?? []);
-                                var currentCommandList = new CanvasCommandList(clds);
+                                using var currentCommandList = new CanvasCommandList(clds);
                                 using var currentDrawingSession = currentCommandList.CreateDrawingSession();
                                 // 叠底
                                 using (currentDrawingSession.CreateLayer(1, currentSyllableGeometry, matrix))
@@ -155,7 +154,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 if (Syllables[currentSyllableIndex].Duration >= 500 && false)
                                 {
                                     // 绘制 Displacement Map
-                                    var displacementMap = new CanvasCommandList(clds);
+                                    using var displacementMap = new CanvasCommandList(clds);
                                     using (var displacementSession = displacementMap.CreateDrawingSession())
                                     {
                                         displacementSession.Clear(Colors.Black);
@@ -462,10 +461,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         {
             _isFocusing = (context.CurrentKeyframe >= StartTime) && (context.CurrentKeyframe < EndTime);
             Hidden = HiddenOnBlur && !_isFocusing;
-
-            if (_canvasWidth == 0.0f) return;
-            if (textFormat is null)
-                OnTypographyChanged(session, context);
         }
 
         public bool HiddenOnBlur { get; set; }
@@ -652,14 +647,30 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 Math.Max(tll?.LayoutBounds.Width ?? 0, tl?.LayoutBounds.Width ?? 0));
             RenderingWidth = renderW + 32;
 
-            
+            _sizeChangedWithoutNextRender = true;
+            _isInitialized = true;
+            CreateRenderCache(session, context);
+        }
+
+        public override void DisposeRenderCache()
+        {
+            _defaultLyricPersistCache?.Dispose();
+            _staticPersistCache?.Dispose();
+            _defaultLyricPersistCache = null;
+            _staticPersistCache = null;
+            CacheCreated = false;
+            Debug.WriteLine($"Disposed {Text}");
+        }
+
+        public override void CreateRenderCache(CanvasDrawingSession session, RenderContext context)
+        {
             // create static persist
             _staticPersistCache?.Dispose();
             _defaultLyricPersistCache?.Dispose();
             _sizePixelRect = new Rect(0, 0, RenderingWidth, RenderingHeight);
-            _staticPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
-            _defaultLyricPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
-            
+            _staticPersistCache = new CanvasCommandList(session);
+            _defaultLyricPersistCache = new CanvasCommandList(session);
+
             using (var pstDs = _staticPersistCache.CreateDrawingSession())
             using (var dftLyricDs = _defaultLyricPersistCache.CreateDrawingSession())
             {
@@ -675,9 +686,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 _lyricTextRenderActualTop = actualTop;
 
                 dftLyricDs.DrawTextLayout(textLayout, 0, 0, TypographySelector(t => t?.FocusingColor, context)!.Value);
-                actualTop += (float)textLayout.LayoutBounds.Height;
+                actualTop += (float)(textLayout?.LayoutBounds.Height ?? 0);
 
-                
+
 
                 //翻译
                 if (tl != null)
@@ -685,10 +696,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     pstDs.DrawTextLayout(tl, 0, actualTop, TypographySelector(t => t?.FocusingColor, context)!.Value);
                 }
             }
-
-
-            _sizeChangedWithoutNextRender = true;
-            _isInitialized = true;
+            CacheCreated = true;
         }
     }
 }

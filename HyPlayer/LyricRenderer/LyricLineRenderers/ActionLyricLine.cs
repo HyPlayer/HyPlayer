@@ -4,7 +4,7 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using Polly.Caching;
 using System;
-using Windows.Foundation;
+using System.Diagnostics;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
@@ -21,7 +21,7 @@ public class ActionLyricLine : RenderingLyricLine
     private bool _sizeChanged;
     private float _canvasHeight;
 
-    private CanvasRenderTarget _staticPersistCache = null;
+    private CanvasCommandList _staticPersistCache = null;
 
     public string Text { get; set; }
     public string ActionUri { get; set; }
@@ -58,9 +58,7 @@ public class ActionLyricLine : RenderingLyricLine
 
     public override void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
     {
-        if (_canvasWidth == 0.0f) return;
-        if (textFormat is null)
-            OnTypographyChanged(session, context);
+        //Ignore
     }
 
     public override void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context)
@@ -95,10 +93,22 @@ public class ActionLyricLine : RenderingLyricLine
             _sizeChanged = false;
             textLayout = new CanvasTextLayout(session, Text, textFormat,
                 Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
+            if (CacheCreated) CreateRenderCache(session, context);
         }
 
+    }
+    public override void DisposeRenderCache()
+    {
+        CacheCreated = false;
         _staticPersistCache?.Dispose();
-        _staticPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+        _staticPersistCache = null;
+    }
+
+    public override void CreateRenderCache(CanvasDrawingSession session, RenderContext context)
+    {
+
+        _staticPersistCache?.Dispose();
+        _staticPersistCache = new CanvasCommandList(session);
 
         using (var pstDs = _staticPersistCache.CreateDrawingSession())
         {
@@ -107,5 +117,7 @@ public class ActionLyricLine : RenderingLyricLine
 
         RenderingHeight = (float)(textLayout?.LayoutBounds.Height ?? 0);
         RenderingWidth = (float)(textLayout?.LayoutBounds.Width ?? 0);
+        CacheCreated = true;
+        Debug.WriteLine($"Created {Text}");
     }
 }
