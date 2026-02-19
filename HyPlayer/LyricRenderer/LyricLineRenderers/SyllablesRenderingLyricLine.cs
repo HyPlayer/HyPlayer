@@ -1,5 +1,4 @@
 ﻿#nullable enable
-#nullable enable
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
@@ -12,7 +11,6 @@ using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using Windows.Foundation;
@@ -57,16 +55,20 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         public string? Transliteration { get; set; }
         public string? Translation { get; set; }
 
+        private float _renderStartX = 0f;
+
         public override void GoToReactionState(ReactionState state, RenderContext context)
         {
             _lastReactionTime = context.CurrentLyricTime;
             _reactionState = state;
         }
 
+        private const long ReactionDurationTick = 2000000;
+
         private const long ScaleAnimationDuration = 500;
 
-        private CanvasCommandList? _staticPersistCache;
-        private CanvasCommandList? _defaultLyricPersistCache;
+        private CanvasRenderTarget? _staticPersistCache;
+        private CanvasRenderTarget? _defaultLyricPersistCache;
         private Rect _sizePixelRect = Rect.Empty;
         private float _lyricTextRenderActualTop = 0.0f;
 
@@ -76,22 +78,25 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
             var drawingTop = offset.Y + _drawingOffsetY;
 
-            float actualOffsetX = offset.X - (float)textLayout.LayoutBounds.Left;
+            float actualOffsetX = offset.X;
+
+            if (TypographySelector(t => t?.Alignment, context) is not TextAlignment.Center)
+                actualOffsetX += 16;
+
             if (_sizeChangedWithoutNextRender)
             {
-                _unfocusMatrix = GetCenterMatrix(0, 0, _scalingCenterX + offset.X,
+                // 缩放中心对齐到实际位置
+                _unfocusMatrix = GetCenterMatrix(0, 0, actualOffsetX + _scalingCenterX,
                     (float)textLayout.LayoutBounds.Height / 2, 0.8F, 0.8F);
                 _sizeChangedWithoutNextRender = false;
             }
 
-            actualOffsetX += 16; // padding left
-
-            using var totalCommand = new CanvasCommandList(session);
+            var totalCommand = new CanvasCommandList(session);
             var actualTop = _lyricTextRenderActualTop;
             using (CanvasDrawingSession targetDrawingSession = totalCommand.CreateDrawingSession())
             {
 
-                using var cl = new CanvasCommandList(targetDrawingSession);
+                var cl = new CanvasCommandList(targetDrawingSession);
                 using (var clds = cl.CreateDrawingSession())
                 {
                     var textTop = actualTop;
@@ -114,19 +119,15 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                             var matrix = Matrix3x2.CreateTranslation(0, textTop);
 
                             // before
-                            using var textLayoutCommandList = new CanvasCommandList(clds);
+                            var textLayoutCommandList = new CanvasCommandList(clds);
                             using var textLayoutSession = textLayoutCommandList.CreateDrawingSession();
                             using (textLayoutSession.CreateLayer(1, beforeCurrentSyllableGeometry, matrix))
                             {
                                 textLayoutSession.DrawImage(_defaultLyricPersistCache, 0, textTop - lift, _sizePixelRect, 1);
-                                //textLayoutSession.DrawTextLayout(textLayout, 0, textTop - lift,
-                                //    TypographySelector(t => t?.FocusingColor, context)!.Value);
-                                // Colors.Red);
                             }
                             using (textLayoutSession.CreateLayer(1, afterCurrentSyllableGeometry, matrix))
                             {
                                 textLayoutSession.DrawImage(_defaultLyricPersistCache, 0, textTop, _sizePixelRect, 0.3f);
-                                // Colors.Green);
                             }
 
                             // current
@@ -137,7 +138,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 var currentHighlightGeometry =
                                     CreateHighlightGeometry(session, percentage,
                                         _syllableBound.ElementAtOrDefault(currentSyllableIndex) ?? []);
-                                using var currentCommandList = new CanvasCommandList(clds);
+                                var currentCommandList = new CanvasCommandList(clds);
                                 using var currentDrawingSession = currentCommandList.CreateDrawingSession();
                                 // 叠底
                                 using (currentDrawingSession.CreateLayer(1, currentSyllableGeometry, matrix))
@@ -154,7 +155,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 if (Syllables[currentSyllableIndex].Duration >= 500 && false)
                                 {
                                     // 绘制 Displacement Map
-                                    using var displacementMap = new CanvasCommandList(clds);
+                                    var displacementMap = new CanvasCommandList(clds);
                                     using (var displacementSession = displacementMap.CreateDrawingSession())
                                     {
                                         displacementSession.Clear(Colors.Black);
@@ -178,7 +179,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
                                             // 将渐变绘制到位移图上
                                             displacementSession.FillRectangle((float)currentSyllableSize.Left, 0, (float)currentSyllableSize.Width + lift, context.ViewHeight, gradientBrush);
-                                            // clds.FillRectangle((float)currentSyllableSize.Left, 0, (float)currentSyllableSize.Width + lift, context.ViewHeight, gradientBrush);
                                         }
                                     }
 
@@ -190,9 +190,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                         YChannelSelect = EffectChannelSelect.Green,
                                         Amount = lift * 2
                                     };
-                                    // 整体 x 轴偏移回去, 是不是我算反了
+                                    // 整体 x 轴偏移回去
                                     clds.DrawImage(displacementEffect, -lift, 0);
-                                    //clds.DrawImage(textLayoutCommandList);
                                 }
                                 else
                                 {
@@ -212,7 +211,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         clds.DrawImage(_defaultLyricPersistCache, 0, textTop, _sizePixelRect, opacity);
                     }
 
-                    
+
                 }
 
                 if (_isFocusing && context.Effects.FocusHighlighting)
@@ -225,19 +224,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         .AddOpacityEffect(0.4f);
                     targetDrawingSession.DrawImage(highlightEffectBuilder.Build(), actualOffsetX, 0);
                 }
-                //结束时的扫词动画
-                //if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime <= ScaleAnimationDuration)
-                //{
-                //    using (targetDrawingSession.CreateLayer(1, highlightGeometry1))
-                //    {
-                //        var progress = (EaseFunction.Ease(Math.Clamp(
-                //            (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1)));
 
-                //        var effectBuilder = new CanvasImageBuilder(cl);
-                //        effectBuilder.AddCropEffect(new Rect(RenderingWidth * progress, 0, RenderingWidth * (1 - progress), RenderingHeight));
-                //        targetDrawingSession.DrawImage(effectBuilder.Build(), actualOffsetX, 0);
-                //    }
-                //}
                 targetDrawingSession.DrawImage(cl, actualOffsetX, 0);
             }
 
@@ -261,10 +248,10 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         (context.CurrentLyricTime - StartTime) * 1.0f / 1000, 0, 1));
                 }
 
-
                 var scaling = 0.8F + progress * 0.2F;
+
                 finalEffectBuilder
-                    .AddTransform2DEffect(GetCenterMatrix(0, 0, _scalingCenterX + offset.X,
+                    .AddTransform2DEffect(GetCenterMatrix(0, 0, actualOffsetX + _scalingCenterX,
                         (float)textLayout.LayoutBounds.Height / 2, scaling, scaling))
                     .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f, 0, 1));
             }
@@ -281,7 +268,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 finalEffectBuilder.AddGaussianBlurEffect(Math.Clamp(gap, 0, 250));
             }
 
-            if (Common.Setting.lyricRenderFade && !context.IsScrolling)
+            if (Common.Setting!.lyricRenderFade && !context.IsScrolling)
             {
                 finalEffectBuilder.AddOpacityEffect(1 -
                                                     Math.Clamp(gap / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0,
@@ -346,18 +333,14 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                    * Matrix3x2.CreateTranslation(XCenter, YCenter);
         }
 
-        private CanvasGeometry beforeCurrentSyllableGeometry;
-        private CanvasGeometry currentSyllableGeometry;
+        private CanvasGeometry? beforeCurrentSyllableGeometry;
+        private CanvasGeometry? currentSyllableGeometry;
         private Rect currentSyllableSize;
-        private CanvasGeometry afterCurrentSyllableGeometry;
+        private CanvasGeometry? afterCurrentSyllableGeometry;
 
         /// <summary>
         /// 获取基础矩形
         /// </summary>
-        /// <param name="creator"></param>
-        /// <param name="index"></param>
-        /// <param name="syllables">目标歌词</param>
-        /// <returns></returns>
         private void CreateSimpleGeometries(ICanvasResourceCreator creator, int index,
             List<RenderingSyllable>? syllables)
         {
@@ -461,6 +444,10 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         {
             _isFocusing = (context.CurrentKeyframe >= StartTime) && (context.CurrentKeyframe < EndTime);
             Hidden = HiddenOnBlur && !_isFocusing;
+
+            if (_canvasWidth == 0.0f) return;
+            if (textFormat is null)
+                OnTypographyChanged(session, context);
         }
 
         public bool HiddenOnBlur { get; set; }
@@ -486,7 +473,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         }
 
         private List<Rect[]> _syllableBound = [];
-        private float _theoryFlatLineWidth;
         private float _drawingOffsetY;
         private bool _isInitialized = false;
         private string? _transliterationActual;
@@ -604,23 +590,26 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             if (textLayout is null || _sizeChanged)
             {
                 _sizeChanged = false;
-                _text = IsSyllable ? string.Join("", Syllables.Select(t => t.Syllable)) : Text ?? "";
+                _text = IsSyllable ? string.Join("", Syllables!.Select(t => t.Syllable)) : Text ?? "";
                 textLayout = new CanvasTextLayout(session, _text, textFormat,
                     Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
+
+                // 抓取文字在排版中的起步点，用于后续画在 Cache 时将空白切除
+                _renderStartX = (float)textLayout.LayoutBounds.X;
+                if (tll != null) _renderStartX = Math.Min(_renderStartX, (float)tll.LayoutBounds.X);
+                if (tl != null) _renderStartX = Math.Min(_renderStartX, (float)tl.LayoutBounds.X);
+
                 // 创建所有行矩形
                 if (IsSyllable)
                 {
-                    _theoryFlatLineWidth = 0;
-                    // accumulate letter widths
                     _syllableBound.Clear();
                     var alreadyLetterCount = 0;
                     foreach (var syllable in Syllables ?? [])
                     {
-                        // get region
                         var region = textLayout.GetCharacterRegions(alreadyLetterCount, syllable.Syllable.Length);
                         if (region is { Length: > 0 })
                         {
-                            _syllableBound.Add(region.Select(t => t.LayoutBounds).ToArray());
+                            _syllableBound.Add(region.Select(t => new Rect(t.LayoutBounds.X - _renderStartX + 16, t.LayoutBounds.Y, t.LayoutBounds.Width, t.LayoutBounds.Height)).ToArray());
                             alreadyLetterCount += syllable.Syllable.Length;
                         }
                         else
@@ -632,14 +621,16 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             }
 
             if (textLayout is null) return;
+
             _scalingCenterX = (float)(TypographySelector(t => t?.Alignment, context)!.Value switch
             {
-                TextAlignment.Center => textLayout.LayoutBounds.Width / 2,
-                TextAlignment.Right => textLayout.LayoutBounds.Width,
-                _ => 0
+                TextAlignment.Center => textLayout.LayoutBounds.Width / 2 + 16,
+                TextAlignment.Right => textLayout.LayoutBounds.Width + 16,
+                _ => 16
             });
             _unfocusMatrix = GetCenterMatrix(0, 0, _scalingCenterX,
                 (float)textLayout.LayoutBounds.Height / 2, 0.8F, 0.8F);
+
             _drawingOffsetY =
                 (HiddenOnBlur
                     ? TypographySelector(t => t?.LyricFontSize, context)!.Value / 2
@@ -649,56 +640,45 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 Math.Max(tll?.LayoutBounds.Width ?? 0, tl?.LayoutBounds.Width ?? 0));
             RenderingWidth = renderW + 32;
 
-            _sizeChangedWithoutNextRender = true;
-            _isInitialized = true;
-            CreateRenderCache(session, context);
-        }
 
-        public override void DisposeRenderCache()
-        {
-            _defaultLyricPersistCache?.Dispose();
-            _staticPersistCache?.Dispose();
-            _defaultLyricPersistCache = null;
-            _staticPersistCache = null;
-            CacheCreated = false;
-            Debug.WriteLine($"Disposed {Text}");
-        }
-
-        public override void CreateRenderCache(CanvasDrawingSession session, RenderContext context)
-        {
             // create static persist
             _staticPersistCache?.Dispose();
             _defaultLyricPersistCache?.Dispose();
-            _sizePixelRect = new Rect(0, 0, RenderingWidth, RenderingHeight);
-            _staticPersistCache = new CanvasCommandList(session);
-            _defaultLyricPersistCache = new CanvasCommandList(session);
+            _staticPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+            _defaultLyricPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
 
+
+            _sizePixelRect = new Rect(0, 0, RenderingWidth, RenderingHeight);
             using (var pstDs = _staticPersistCache.CreateDrawingSession())
             using (var dftLyricDs = _defaultLyricPersistCache.CreateDrawingSession())
             {
                 var actualTop = _drawingOffsetY;
+
+                var drawOffsetX = -_renderStartX + 16;
+
                 //罗马字
                 if (tll != null)
                 {
-                    pstDs.DrawTextLayout(tll, 0, actualTop,
+                    pstDs.DrawTextLayout(tll, drawOffsetX, actualTop,
                             TypographySelector(t => t?.FocusingColor, context)!.Value);
 
                     actualTop += (float)tll.LayoutBounds.Height;
                 }
                 _lyricTextRenderActualTop = actualTop;
 
-                dftLyricDs.DrawTextLayout(textLayout, 0, 0, TypographySelector(t => t?.FocusingColor, context)!.Value);
-                actualTop += (float)(textLayout?.LayoutBounds.Height ?? 0);
-
-
+                dftLyricDs.DrawTextLayout(textLayout, drawOffsetX, 0, TypographySelector(t => t?.FocusingColor, context)!.Value);
+                actualTop += (float)textLayout.LayoutBounds.Height;
 
                 //翻译
                 if (tl != null)
                 {
-                    pstDs.DrawTextLayout(tl, 0, actualTop, TypographySelector(t => t?.FocusingColor, context)!.Value);
+                    pstDs.DrawTextLayout(tl, drawOffsetX, actualTop, TypographySelector(t => t?.FocusingColor, context)!.Value);
                 }
             }
-            CacheCreated = true;
+
+
+            _sizeChangedWithoutNextRender = true;
+            _isInitialized = true;
         }
     }
 }

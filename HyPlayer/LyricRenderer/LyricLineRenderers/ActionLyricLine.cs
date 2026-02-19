@@ -4,7 +4,7 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using Polly.Caching;
 using System;
-using System.Diagnostics;
+using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
@@ -21,11 +21,13 @@ public class ActionLyricLine : RenderingLyricLine
     private bool _sizeChanged;
     private float _canvasHeight;
 
-    private CanvasCommandList _staticPersistCache = null;
+    private CanvasRenderTarget _staticPersistCache = null;
 
     public string Text { get; set; }
     public string ActionUri { get; set; }
 
+    // 新增：用于记录文本排版的实际起始 X 坐标
+    private float _renderStartX = 0f;
 
     public override void GoToReactionState(ReactionState state, RenderContext context)
     {
@@ -35,11 +37,12 @@ public class ActionLyricLine : RenderingLyricLine
 
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
-        float actualOffsetX = offset.X - (float)(textLayout?.LayoutBounds.Left ?? 0);
+        if (textLayout is null) return true;
+
+        float actualOffsetX = offset.X;
 
         if (_reactionState == ReactionState.Enter)
         {
-
             var color = new Color
             {
                 A = 40,
@@ -47,10 +50,10 @@ public class ActionLyricLine : RenderingLyricLine
                 G = 206,
                 B = 255
             };
-            session.FillRoundedRectangle(0, offset.Y,
-                RenderingWidth + 32, RenderingHeight, 6, 6, color);
+            session.FillRoundedRectangle(offset.X, offset.Y,
+                RenderingWidth, RenderingHeight, 6, 6, color);
         }
-        actualOffsetX += 16;
+
         var drawingTop = offset.Y;
         session.DrawImage(_staticPersistCache, actualOffsetX, drawingTop);
         return true;
@@ -58,7 +61,9 @@ public class ActionLyricLine : RenderingLyricLine
 
     public override void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
     {
-        //Ignore
+        if (_canvasWidth == 0.0f) return;
+        if (textFormat is null)
+            OnTypographyChanged(session, context);
     }
 
     public override void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context)
@@ -93,31 +98,19 @@ public class ActionLyricLine : RenderingLyricLine
             _sizeChanged = false;
             textLayout = new CanvasTextLayout(session, Text, textFormat,
                 Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
-            if (CacheCreated) CreateRenderCache(session, context);
-        }
 
-    }
-    public override void DisposeRenderCache()
-    {
-        CacheCreated = false;
-        _staticPersistCache?.Dispose();
-        _staticPersistCache = null;
-    }
-
-    public override void CreateRenderCache(CanvasDrawingSession session, RenderContext context)
-    {
-
-        _staticPersistCache?.Dispose();
-        _staticPersistCache = new CanvasCommandList(session);
-
-        using (var pstDs = _staticPersistCache.CreateDrawingSession())
-        {
-            pstDs.DrawTextLayout(textLayout, 0, 0, TypographySelector(t => t?.IdleColor, context)!.Value);
+            _renderStartX = (float)textLayout.LayoutBounds.X;
         }
 
         RenderingHeight = (float)(textLayout?.LayoutBounds.Height ?? 0);
-        RenderingWidth = (float)(textLayout?.LayoutBounds.Width ?? 0);
-        CacheCreated = true;
-        Debug.WriteLine($"Created {Text}");
+        RenderingWidth = (float)(textLayout?.LayoutBounds.Width ?? 0) + 32; // 加上 32 作为左右各 16 的 Padding 留白
+
+        _staticPersistCache?.Dispose();
+        _staticPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+
+        using (var pstDs = _staticPersistCache.CreateDrawingSession())
+        {
+            pstDs.DrawTextLayout(textLayout, -_renderStartX + 16, 0, TypographySelector(t => t?.IdleColor, context)!.Value);
+        }
     }
 }
