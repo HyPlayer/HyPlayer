@@ -314,8 +314,7 @@ public sealed partial class BasePage : Page
         }
         else
         {
-            // NavMain.SelectedItem = NavItemLogin;
-            Common.NavigatePage(typeof(TestPage));
+            NavMain.SelectedItem = NavItemLogin;
         }
 
         return true;

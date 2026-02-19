@@ -378,6 +378,16 @@ namespace HyPlayer
             }
         }
 
+        public bool lyricCacheRenderTarget
+        {
+            get => GetSettings(nameof(lyricCacheRenderTarget), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricCacheRenderTarget)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool shuffleNoRepeating
         {
             get => GetSettings(nameof(shuffleNoRepeating), true);

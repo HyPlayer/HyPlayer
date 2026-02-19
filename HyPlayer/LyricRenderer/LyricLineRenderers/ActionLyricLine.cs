@@ -21,7 +21,7 @@ public class ActionLyricLine : RenderingLyricLine
     private bool _sizeChanged;
     private float _canvasHeight;
 
-    private CanvasRenderTarget _staticPersistCache = null;
+    private ICanvasImage _staticPersistCache = null;
 
     public string Text { get; set; }
     public string ActionUri { get; set; }
@@ -106,9 +106,22 @@ public class ActionLyricLine : RenderingLyricLine
         RenderingWidth = (float)(textLayout?.LayoutBounds.Width ?? 0) + 32; // 加上 32 作为左右各 16 的 Padding 留白
 
         _staticPersistCache?.Dispose();
-        _staticPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+        CanvasDrawingSession pstDs;
+        if (!context.Effects.CacheRenderTarget)
+        {
+            var staticPersistCacheCCL = new CanvasCommandList(session);
+            _staticPersistCache = staticPersistCacheCCL;
+            pstDs = staticPersistCacheCCL.CreateDrawingSession();
+        }
+        else
+        {
+            var staticPersistCacheTarget = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+            _staticPersistCache = staticPersistCacheTarget;
+            pstDs = staticPersistCacheTarget.CreateDrawingSession();
+        }
+        
 
-        using (var pstDs = _staticPersistCache.CreateDrawingSession())
+        using (pstDs)
         {
             pstDs.DrawTextLayout(textLayout, -_renderStartX + 16, 0, TypographySelector(t => t?.IdleColor, context)!.Value);
         }

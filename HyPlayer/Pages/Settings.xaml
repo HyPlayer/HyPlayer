@@ -392,11 +392,18 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderTransliterationScanning, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="非逐字行扫词">
+                                    <controls3:SettingsCard
+                                        Header="音译扫词">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderSimpleLineScanning, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderTransliterationScanning, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="预渲染合成" Description="将会把每一行歌词预渲染, 将会造成大量内存占用">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricCacheRenderTarget, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="焦点歌词整体放大">
                                         <ToggleSwitch

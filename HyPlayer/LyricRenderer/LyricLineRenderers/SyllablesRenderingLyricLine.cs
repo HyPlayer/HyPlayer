@@ -76,8 +76,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
         private const long ScaleAnimationDuration = 500;
 
-        private CanvasRenderTarget? _staticPersistCache;
-        private CanvasRenderTarget? _defaultLyricPersistCache;
+        private ICanvasImage? _staticPersistCache;
+        private ICanvasImage? _defaultLyricPersistCache;
         private Rect _sizePixelRect = Rect.Empty;
         private float _lyricTextRenderActualTop = 0.0f;
 
@@ -659,13 +659,32 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             // create static persist
             _staticPersistCache?.Dispose();
             _defaultLyricPersistCache?.Dispose();
-            _staticPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
-            _defaultLyricPersistCache = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+            CanvasDrawingSession pstDs;
+            CanvasDrawingSession dftLyricDs;
+            if (!context.Effects.CacheRenderTarget)
+            {
+                var staticPersistCacheCCL = new CanvasCommandList(session);
+                _staticPersistCache = staticPersistCacheCCL;
+                pstDs = staticPersistCacheCCL.CreateDrawingSession();
+                var defaultLyricPersistCacheCCL = new CanvasCommandList(session);
+                _defaultLyricPersistCache = defaultLyricPersistCacheCCL;
+                dftLyricDs = defaultLyricPersistCacheCCL.CreateDrawingSession();
+            }
+            else
+            {
+                var staticPersistCacheTarget = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+                var defaultLyricPersistCacheTarget = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+                _staticPersistCache = staticPersistCacheTarget;
+                _defaultLyricPersistCache = defaultLyricPersistCacheTarget;
+                pstDs = staticPersistCacheTarget.CreateDrawingSession();
+                dftLyricDs = defaultLyricPersistCacheTarget.CreateDrawingSession();
+            }
+
 
 
             _sizePixelRect = new Rect(0, 0, RenderingWidth, RenderingHeight);
-            using (var pstDs = _staticPersistCache.CreateDrawingSession())
-            using (var dftLyricDs = _defaultLyricPersistCache.CreateDrawingSession())
+            using(pstDs)
+            using (dftLyricDs)
             {
                 var actualTop = _drawingOffsetY;
 
@@ -690,6 +709,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     pstDs.DrawTextLayout(tl, drawOffsetX, actualTop, _cachedFocusingColor);
                 }
             }
+
 
 
             _sizeChangedWithoutNextRender = true;

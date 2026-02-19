@@ -27,4 +27,9 @@ public class RenderEffects
     /// 歌词模糊
     /// </summary>
     public bool Blur { get; set; } = true;
+
+    /// <summary>
+    /// 预渲染合成
+    /// </summary>
+    public bool CacheRenderTarget { get; set; } = false;
 }
