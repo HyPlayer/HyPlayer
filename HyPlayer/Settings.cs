@@ -16,7 +16,7 @@ using Windows.UI.ViewManagement;
 
 namespace HyPlayer
 {
-    public partial class Setting : INotifyPropertyChanged
+    public class Setting : INotifyPropertyChanged
     {
         public int ColorGeneratorType
         {

@@ -1,0 +1,39 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Controls">
+
+    <Style TargetType="local:PivotView">
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:PivotView">
+                    <Grid x:Name="LayoutRoot">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Border
+                            x:Name="HeaderContainer"
+                            Canvas.ZIndex="1"
+                            Child="{TemplateBinding Header}" />
+                        <local:PivotExHeaderView
+                            x:Name="PivotExHeaderView"
+                            Grid.Row="1"
+                            Margin="8,0"
+                            Canvas.ZIndex="1"
+                            Pivot="{TemplateBinding Pivot}" />
+                        <Border
+                            x:Name="PivotContainer"
+                            Grid.RowSpan="3"
+                            Child="{TemplateBinding Pivot}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
