@@ -52,15 +52,4 @@ public partial class SimpleLinerList : UserControl
         if (ItemList.SelectedIndex >= 0)
             _ = Common.NavigatePageResource(ListItems[ItemList.SelectedIndex].ResourceId);
     }
-
-    private async void BtnPlayClick(object sender, RoutedEventArgs e)
-    {
-        HyPlayList.RemoveAllSong();
-        await HyPlayList.AppendNcSource(((Button)sender).Tag.ToString());
-        if (((Button)sender).Tag.ToString().Substring(0, 2) == "pl" ||
-            ((Button)sender).Tag.ToString().Substring(0, 2) == "al")
-            HyPlayList.PlaySourceId = ((Button)sender).Tag.ToString().Substring(2);
-        HyPlayList.NowPlaying = -1;
-        HyPlayList.SongMoveNext();
-    }
 }

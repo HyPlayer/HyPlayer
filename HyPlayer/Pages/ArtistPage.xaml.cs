@@ -4,6 +4,7 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.ViewModels;
 using System;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
@@ -23,6 +24,7 @@ public sealed partial class ArtistPage : Page
     {
         InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<ArtistPageViewModel>();
+        Unloaded += ArtistPage_Unloaded;
     }
     private ArtistPageViewModel ViewModel => (ArtistPageViewModel)DataContext;
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -41,6 +43,14 @@ public sealed partial class ArtistPage : Page
     {
         ViewModel.CurrentPage = 0;
     }
+
+    private void ArtistPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        PivotView.HeaderScrollProgressChanged -= PivotView_HeaderScrollProgressChanged;
+        MainPivot.SelectionChanged -= Pivot_SelectionChanged;
+        Bindings?.StopTracking();
+    }
+
 
     private void PivotView_HeaderScrollProgressChanged(object sender, EventArgs e)
     {

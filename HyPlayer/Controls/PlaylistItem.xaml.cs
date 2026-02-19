@@ -52,7 +52,7 @@ public sealed partial class PlaylistItem : UserControl
         //播放全部歌曲
         HyPlayList.RemoveAllSong();
         await HyPlayList.AppendPlayList(playList.PlaylistId);
-        HyPlayList.PlaySourceId = playList.PlaylistId;
+        HyPlayList.PlaySourceId = $"pl{playList.PlaylistId}";
         HyPlayList.NowPlaying = -1;
         HyPlayList.SongMoveNext();
     }

@@ -1,13 +1,17 @@
 ﻿#region
 
 using ALRC.Abstraction;
+using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Classes.LyricParser.Abstraction;
+using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.Models;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using TagLib;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -281,7 +285,7 @@ public class NCAlbumSong : NCSong
     public string DiscName { get; set; }
 }
 
-public class SimpleListItem
+public partial class SimpleListItem
 {
     public bool CanPlay { get; set; }
     public string CoverLink { get; set; }
@@ -302,6 +306,17 @@ public class SimpleListItem
                       StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM);
 
     public int DisplayOrder => Order + 1;
+
+    [RelayCommand]
+    public async Task Play()
+    {
+        HyPlayList.RemoveAllSong(true);
+        HyPlayList.PlaySourceId = ResourceId;
+        await HyPlayList.AppendNcSource(ResourceId);
+        HyPlayList.NowPlaying = -1;
+        HyPlayList.SongMoveNext();
+
+    }
 }
 
 public partial class PlayItem : IDisposable

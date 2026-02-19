@@ -134,9 +134,8 @@
                             Width="45"
                             Height="35"
                             Background="{ThemeResource SystemRevealAltLowColor}"
-                            Click="BtnPlayClick"
+                            Command="{x:Bind PlayCommand}"
                             CornerRadius="10"
-                            Tag="{x:Bind ResourceId}"
                             ToolTipService.ToolTip="播放"
                             Visibility="{x:Bind CanPlay}">
                             <FontIcon

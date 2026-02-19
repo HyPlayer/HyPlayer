@@ -5,10 +5,13 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.ViewModels;
+using Microsoft.UI.Xaml.Controls;
+using System.Collections;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 #endregion
@@ -26,6 +29,7 @@ public sealed partial class Me : Page
     {
         InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<MeViewModel>();
+        Unloaded += Me_Unloaded;
     }
     private MeViewModel ViewModel => (MeViewModel)DataContext;
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -63,26 +67,43 @@ public sealed partial class Me : Page
         }
     }
 
-    private async void BtnPlayClick(object sender, RoutedEventArgs e)
-    {
-        HyPlayList.RemoveAllSong();
-        await HyPlayList.AppendNcSource(((Button)sender).Tag.ToString());
-        if (((Button)sender).Tag.ToString().Substring(0, 2) == "pl" ||
-            ((Button)sender).Tag.ToString().Substring(0, 2) == "al")
-            HyPlayList.PlaySourceId = ((Button)sender).Tag.ToString().Substring(2);
-
-        HyPlayList.NowPlaying = -1;
-        HyPlayList.SongMoveNext();
-    }
-
-    private void SongListItemClicked(object sender, TappedRoutedEventArgs e)
-    {
-        _ = Common.NavigatePageResource(((Grid)sender).Tag.ToString());
-    }
-
     private void RectangleImage_OnRightTapped(object sender, RightTappedRoutedEventArgs e)
     {
         Common.Setting.IsOldThemeEnabled = false;
         Common.AddToTeachingTipLists("已重置, 请重启");
+    }
+
+    private void Me_Unloaded(object sender, RoutedEventArgs e)
+    {
+        ViewModel.LikedPlaylist.Clear();
+        ViewModel.MyPlaylist.Clear();
+        ViewModel.LikedPlaylist = null;
+        ViewModel.MyPlaylist = null;
+        ClearItemsRepeater(MySongListBox);
+        ClearItemsRepeater(LikedSongList);
+        ClearImageBrush(RectangleImageBack);
+        ClearImageBrush(RectangleImageFallback);
+        AcrylicGrid.Children.Clear();
+        UserAvatar.ProfilePicture = null;
+        ButtonLogout.Click -= Logout_OnClick;
+        DataContext = null;
+    }
+
+
+    private void ClearItemsRepeater(ItemsRepeater repeater)
+    {
+        if (repeater == null) return;
+        repeater.ItemsSource = null;
+        repeater.Layout = null;
+        repeater.UpdateLayout();
+    }
+
+    private void ClearImageBrush(Border border)
+    {
+        if (border?.Background is ImageBrush brush)
+        {
+            brush.ImageSource = null;
+            border.Background = null;
+        }
     }
 }

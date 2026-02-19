@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Windows.Foundation.Collections;
@@ -58,8 +59,23 @@ public partial class PivotExHeaderView : ListView
 
     private void PivotExHeaderView_Unloaded(object sender, RoutedEventArgs e)
     {
-        _currentPivotEx?.SelectionChanged -= Pivot_SelectionChanged;
-        _currentPivotEx?.Items?.VectorChanged -= Pivot_ItemsChanged;
+        if (_currentPivotEx != null)
+        {
+            _currentPivotEx.SelectionChanged -= Pivot_SelectionChanged;
+            _currentPivotEx.Items.VectorChanged -= Pivot_ItemsChanged;
+            _currentPivotEx.UnregisterPropertyChangedCallback(
+                Windows.UI.Xaml.Controls.Pivot.HeaderTemplateProperty,
+                pivotHeaderTemplateEventToken);
+
+            ItemsSource = null;
+            ItemTemplateSelector = null;
+            _currentPivotEx = null;
+        }
+        
+        ItemTemplateSelector = null;
+        SelectionChanged -= PivotExHeaderView_SelectionChanged;
+        DisposeCurrentItemsSource();
+        ItemsSource = null;
     }
 
     public PivotEx Pivot
@@ -109,8 +125,22 @@ public partial class PivotExHeaderView : ListView
         if (Pivot != null) ItemTemplateSelector = new PivotHeaderTemplateSelector(this);
     }
 
+    private void DisposeCurrentItemsSource()
+    {
+        if (ItemsSource is IEnumerable<object> items)
+        {
+            foreach (var item in items.OfType<IDisposable>())
+            {
+                item.Dispose();
+            }
+        }
+    }
+
     private void UpdateHeaderItemsSource()
     {
+
+        DisposeCurrentItemsSource();
+
         ItemsSource = Pivot.Items?
             .Select(c => c switch
             {
@@ -123,7 +153,7 @@ public partial class PivotExHeaderView : ListView
 
 
     [GeneratedBindableCustomProperty]
-    private partial class PivotItemHeaderWrapper : INotifyPropertyChanged
+    private partial class PivotItemHeaderWrapper : INotifyPropertyChanged, IDisposable
     {
         private static readonly PropertyChangedEventArgs headerPropertyChangedEventArgs = new(nameof(Header));
 
@@ -147,10 +177,19 @@ public partial class PivotExHeaderView : ListView
             PropertyChanged?.Invoke(this, headerPropertyChangedEventArgs);
         }
 
-        ~PivotItemHeaderWrapper()
+        private bool _disposed;
+
+        public void Dispose()
         {
-            pivotItem.UnregisterPropertyChangedCallback(PivotItem.HeaderProperty, pivotItemHeaderEventToken);
-            pivotItem = null!;
+            if (!_disposed)
+            {
+                if (pivotItem != null)
+                {
+                    pivotItem.UnregisterPropertyChangedCallback(PivotItem.HeaderProperty, pivotItemHeaderEventToken);
+                    pivotItem = null!;
+                }
+                _disposed = true;
+            }
         }
     }
 

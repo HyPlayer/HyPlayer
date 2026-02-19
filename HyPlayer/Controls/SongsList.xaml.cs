@@ -220,16 +220,6 @@ public sealed partial class SongsList : UserControl
     }
 
 
-    private void BtnPlay_Click(object sender, RoutedEventArgs e)
-    {
-        var ncsong = VisibleSongs[int.Parse((sender?.As<Button>()).Tag.ToString())];
-        _ = HyPlayList.AppendNcSong(ncsong);
-        HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.Id == ncsong.SongId));
-        if (ListSource.Substring(0, 2) == "pl" ||
-            ListSource.Substring(0, 2) == "al")
-            HyPlayList.PlaySourceId = ListSource.Substring(2);
-    }
-
     private void More_Click(object sender, RoutedEventArgs e)
     {
         Grid_RightTapped(((StackPanel)((Button)sender)?.Parent)?.Parent, null);
@@ -454,7 +444,7 @@ public sealed partial class SongsList : UserControl
 
         if (ListSource?.Substring(0, 2) == "pl" ||
             ListSource?.Substring(0, 2) == "al")
-            HyPlayList.PlaySourceId = ListSource.Substring(2);
+            HyPlayList.PlaySourceId = ListSource;
 
         if (!shiftSong)
         {

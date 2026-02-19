@@ -36,7 +36,6 @@ public sealed partial class TestPage : Page
     {
         [typeof(AlbumPage)] = "97767168",
         [typeof(ArtistPage)] = "159692",
-        [typeof(BlankPage)] = null,
         [typeof(Comments)] = "sg211277",
         // [typeof(CompactPlayerPage)] = null, // need new app window
         [typeof(DownloadPage)] = null,
@@ -52,7 +51,8 @@ public sealed partial class TestPage : Page
         [typeof(Search)] = "初音未来",
         [typeof(Settings)] = null,
         [typeof(SongListDetail)] = "897784673",
-        [typeof(Welcome)] = null
+        [typeof(Welcome)] = null,
+        [typeof(BlankPage)] = null,
     };
 
     public TestPage()
@@ -83,22 +83,20 @@ public sealed partial class TestPage : Page
         leakCheckFrame.Height = 500;
         MainStackPanel.Children.Insert(0, leakCheckFrame);
         leakCheckFrame.Visibility = Visibility.Visible;
-        var timer = new Timer();
-        timer.Interval = 100;
-        timer.Elapsed += (_,_) => { GC.Collect(); };
-        timer.Start();
         foreach (var (type, param) in typeParams)
         {
             leakCheckFrame.Navigate(type, param);
             await Task.Delay(500);
             var page = leakCheckFrame.Content as Page;
             controlsReferences.Add(new KeyValuePair<string, WeakReference<FrameworkElement>>(type.Name, new WeakReference<FrameworkElement>(page as FrameworkElement)));
+            GC.Collect();
             await Task.Delay(5000);
         }
         MainStackPanel.Children.Remove(leakCheckFrame);
         Common.AddToTeachingTipLists("正在生成报告", "等待 GC 处理中");
+        GC.Collect();
         await Task.Delay(5000);
-        timer.Stop();
+        GC.Collect();
         var resultSb = new StringBuilder();
         foreach (var (name, reference) in controlsReferences)
         {
@@ -128,6 +126,7 @@ public sealed partial class TestPage : Page
 
     private async void PlayResourceId(object sender, RoutedEventArgs e)
     {
+        HyPlayList.RemoveAllSong();
         await HyPlayList.AppendNcSource(ResourceId);
     }
 

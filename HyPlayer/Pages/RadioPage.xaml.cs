@@ -40,6 +40,7 @@ public sealed partial class RadioPage : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+
         if (_programLoaderTask != null && !_programLoaderTask.IsCompleted)
         {
             try

@@ -40,8 +40,7 @@
             FontSize="40"
             FontWeight="Bold"
             Text="设置" />
-        <controls1:PivotView Grid.Row="1"  FontFamily="Black">
-            <controls1:PivotEx>
+        <Pivot Grid.Row="1">
             <PivotItem FontFamily="Thick" Header="歌词设置">
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
@@ -1567,22 +1566,23 @@
                                                     IsTextSelectionEnabled="True"
                                                     Text="设备识别码" />
                                             </StackPanel>
-                                            <controls1:SelectableTextBox
+                                            <TextBlock
+                                                IsTextSelectionEnabled="True"
                                                 x:Name="DeviceInfo"
                                                 Grid.Row="1"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
                                                 Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                                                 TextWrapping="Wrap">
-                                                <controls1:SelectableTextBox.ContextFlyout>
+                                                <TextBlock.ContextFlyout>
                                                     <MenuFlyout>
                                                         <MenuFlyoutItem
                                                             Click="CopyDeviceCode_Click"
                                                             Icon="Copy"
                                                             Text="复制设备识别码" />
                                                     </MenuFlyout>
-                                                </controls1:SelectableTextBox.ContextFlyout>
-                                            </controls1:SelectableTextBox>
+                                                </TextBlock.ContextFlyout>
+                                            </TextBlock>
                                         </Grid>
                                     </Border>
                                 </Grid>
@@ -1621,7 +1621,8 @@
                                                     FontWeight="SemiBold"
                                                     Text="用户交流反馈 QQ 群" />
                                             </StackPanel>
-                                            <controls1:SelectableTextBox
+                                            <TextBlock
+                                                IsTextSelectionEnabled="True"
                                                 Grid.Row="1"
                                                 HorizontalAlignment="Left"
                                                 VerticalAlignment="Top"
@@ -1978,7 +1979,6 @@
                     </ScrollViewer>
                 </Grid>
             </PivotItem>
-            </controls1:PivotEx>
-        </controls1:PivotView>
+        </Pivot>
     </Grid>
 </Page>

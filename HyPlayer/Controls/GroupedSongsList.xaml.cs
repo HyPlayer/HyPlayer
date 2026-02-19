@@ -270,7 +270,7 @@ public sealed partial class GroupedSongsList : UserControl
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(e.ClickedItem as NCSong).SongName} 当前不可用");
             return;
         }
-        if (HyPlayList.PlaySourceId != ListSource.Substring(2) || SongContainer.Items.Cast<NCSong>().Where(t => t.IsAvailable).Count() != HyPlayList.List.Count)
+        if (HyPlayList.PlaySourceId != ListSource || SongContainer.Items.Cast<NCSong>().Where(t => t.IsAvailable).Count() != HyPlayList.List.Count)
         {
             // Change Music Source
             HyPlayList.RemoveAllSong(!shiftSong);
@@ -279,7 +279,7 @@ public sealed partial class GroupedSongsList : UserControl
 
         if (ListSource.Substring(0, 2) == "pl" ||
             ListSource.Substring(0, 2) == "al")
-            HyPlayList.PlaySourceId = ListSource.Substring(2);
+            HyPlayList.PlaySourceId = ListSource;
         if (!shiftSong)
             HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t?.Id == (e.ClickedItem as NCSong).SongId));
         else

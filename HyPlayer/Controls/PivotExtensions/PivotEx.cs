@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.WinUI;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -89,6 +90,7 @@ public partial class PivotEx : Pivot
 
     private async Task UpdateCurrentScrollViewer()
     {
+
         var container = ContainerFromIndex(SelectedIndex)?.As<PivotItem>();
 
         var sv = container?.FindDescendant<ScrollViewer>();
@@ -190,36 +192,51 @@ public partial class PivotEx : Pivot
         if (container == args.Item) _ = UpdateCurrentScrollViewer();
     }
 
-    private Task<double?> TryScrollVerticalOffsetAsync(ScrollViewer scrollViewer)
+    TaskCompletionSource<double?>  tcs = new ();
+
+    private async Task<double?> TryScrollVerticalOffsetAsync(ScrollViewer scrollViewer, CancellationToken cancellationToken = default)
     {
         if (scrollViewer == null) return null;
 
         double? offsetY = null;
-
         if (lastScrollOffsetY < MaxHeaderScrollOffset)
             offsetY = Math.Min(MaxHeaderScrollOffset, lastScrollOffsetY);
-        else if (scrollViewer.VerticalOffset < MaxHeaderScrollOffset) offsetY = MaxHeaderScrollOffset;
+        else if (scrollViewer.VerticalOffset < MaxHeaderScrollOffset)
+            offsetY = MaxHeaderScrollOffset;
 
         if (offsetY.HasValue)
         {
             if (scrollViewer.ChangeView(null, offsetY.Value, null, true))
             {
                 var tcs = new TaskCompletionSource<double?>();
-                scrollViewer.ViewChanged += ScrollViewer_ViewChanged;
 
-                return tcs.Task;
+                // 注册当 CancellationToken 被取消时，强制完成 Task
+                using var reg = cancellationToken.Register(() => tcs.TrySetResult(scrollViewer.VerticalOffset));
 
                 void ScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
                 {
                     scrollViewer.ViewChanged -= ScrollViewer_ViewChanged;
-                    tcs.SetResult(scrollViewer.VerticalOffset);
+                    tcs.TrySetResult(scrollViewer.VerticalOffset);
                 }
-            }
 
+                scrollViewer.ViewChanged += ScrollViewer_ViewChanged;
+
+                // 为了防止死锁，可以加一个短超时 (例如 500ms)，如果一直不触发，则自动释放
+                var delayTask = Task.Delay(1000, cancellationToken);
+                var completedTask = await Task.WhenAny(tcs.Task, delayTask);
+
+                if (completedTask == delayTask)
+                {
+                    // 超时处理：手动卸载事件并返回当前进度
+                    scrollViewer.ViewChanged -= ScrollViewer_ViewChanged;
+                    return scrollViewer.VerticalOffset;
+                }
+
+                return await tcs.Task;
+            }
             scrollViewer.UpdateLayout();
         }
-
-        return Task.FromResult<double?>(null);
+        return null;
     }
 
     private void UpdateInternalProgress()
@@ -233,6 +250,38 @@ public partial class PivotEx : Pivot
 
     private void PivotEx_Unloaded(object sender, RoutedEventArgs e)
     {
+        Unloaded -= PivotEx_Unloaded;
+        cts?.Cancel();
+        cts?.Dispose();
+        cts = null;
+
+        try
+        {
+            internalPropSet?.Dispose();
+            progressPropSet?.StopAnimation("OffsetY");
+            progressPropSet?.StopAnimation("Progress");
+            progressPropSet?.Dispose();            
+        }
+        catch (Exception)
+        {
+            // ignore
+        }
+
+        offsetYBind?.Dispose();
+        scrollProgressBind?.Dispose();
+        offsetYBind = null;
+        scrollProgressBind = null;
+
+        if (currentScrollViewer != null)
+        {
+            currentScrollViewer.ViewChanging -= CurrentScrollViewer_ViewChanging;
+            currentScrollViewer = null;
+        }
+
+        SelectionChanged -= PivotEx_SelectionChanged;
+        PivotItemLoaded -= PivotEx_PivotItemLoaded;
+
+        currentScrollPropSet = null;
         lastScrollOffsetY = 0;
     }
 

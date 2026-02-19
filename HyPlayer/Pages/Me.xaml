@@ -13,6 +13,8 @@
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:CommunityToolkit.WinUI"
+    xmlns:core="using:Microsoft.Xaml.Interactivity"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Page.Resources>
@@ -56,10 +58,7 @@
                                     Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
                                 <Grid
                                     Grid.Column="0"
-                                    Background="Transparent"
-                                    Tag="{x:Bind ResourceId}"
-                                    Tapped="SongListItemClicked">
-                                    <Grid />
+                                    Background="Transparent">                                    
                                     <StackPanel Orientation="Horizontal">
                                         <frieren:ImageEx
                                             x:Name="ImageRect"
@@ -131,10 +130,10 @@
                                     VerticalAlignment="Top"
                                     Background="{ThemeResource SystemAltLowColor}"
                                     BorderBrush="Transparent"
-                                    Click="BtnPlayClick"
                                     CornerRadius="9"
                                     FocusVisualSecondaryBrush="AliceBlue"
                                     Tag="{x:Bind ResourceId}"
+                                    Command="{x:Bind PlayCommand}"
                                     ToolTipService.ToolTip="播放">
                                     <FontIcon
                                         Name="PlayStateIcon"

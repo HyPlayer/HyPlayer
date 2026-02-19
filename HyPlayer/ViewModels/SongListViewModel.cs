@@ -278,14 +278,14 @@ namespace HyPlayer.ViewModels
             {
                 HyPlayList.RemoveAllSong();
                 await HyPlayList.AppendPlayList(PlayList.PlaylistId);
-                HyPlayList.PlaySourceId = PlayList.PlaylistId;
+                HyPlayList.PlaySourceId = $"pl{PlayList.PlaylistId}";
                 HyPlayList.NowPlaying = -1;
                 HyPlayList.SongMoveNext();
             }
             else
             {
                 HyPlayList.AppendNcSongs(Songs.ToList());
-                HyPlayList.PlaySourceId = PlayList.PlaylistId;
+                HyPlayList.PlaySourceId = $"{PlayList.PlaylistId}";
                 HyPlayList.NowPlaying = -1;
                 HyPlayList.SongMoveNext();
             }

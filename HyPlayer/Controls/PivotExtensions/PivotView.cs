@@ -83,7 +83,35 @@ internal partial class PivotView : Control
 
     private void PivotView_Unloaded(object sender, RoutedEventArgs e)
     {
+        Unloaded -= PivotView_Unloaded;
         Pivot.HeaderScrollOffsetChanged -= Pivot_HeaderScrollOffsetChanged;
+
+        if (HeaderContainer != null)
+        {
+            var visual = ElementCompositionPreview.GetElementVisual(HeaderContainer);
+            visual?.StopAnimation("Translation");
+            ElementCompositionPreview.SetIsTranslationEnabled(HeaderContainer, false);
+        }
+
+        if (PivotExHeaderView != null)
+        {
+            var visual = ElementCompositionPreview.GetElementVisual(PivotExHeaderView);
+            visual?.StopAnimation("Translation");
+            ElementCompositionPreview.SetIsTranslationEnabled(PivotExHeaderView, false);
+        }
+
+        Pivot.HeaderScrollOffsetChanged -= Pivot_HeaderScrollOffsetChanged;
+
+        // 释放 Composition 对象
+        offsetBind?.Dispose();
+        progressPropSet?.Dispose(); // 如果实现了 IDisposable
+        offsetBind = null;
+        progressPropSet = null;
+
+        // 清除引用
+        HeaderContainer = null;
+        PivotExHeaderView = null;
+        PivotContainer = null;
     }
 
     public PivotEx Pivot
