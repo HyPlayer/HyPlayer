@@ -57,6 +57,15 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
         private float _renderStartX = 0f;
 
+        // Backing fields for Typography caching
+        private TextAlignment _cachedAlignment;
+        private float _cachedLyricFontSize;
+        private float _cachedTransliterationFontSize;
+        private float _cachedTranslationFontSize;
+        private string? _cachedFontFamily;
+        private Color _cachedFocusingColor;
+        private Color? _cachedShadowColor;
+
         public override void GoToReactionState(ReactionState state, RenderContext context)
         {
             _lastReactionTime = context.CurrentLyricTime;
@@ -79,9 +88,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             var drawingTop = offset.Y + _drawingOffsetY;
 
             float actualOffsetX = offset.X;
-
-            if (TypographySelector(t => t?.Alignment, context) is not TextAlignment.Center)
-                actualOffsetX += 16;
 
             if (_sizeChangedWithoutNextRender)
             {
@@ -220,7 +226,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     //画发光效果
                     highlightEffectBuilder
                         .AddShadowEffect(6,
-                            context.PreferTypography.ShadowColor ?? context.PreferTypography.FocusingColor!.Value)
+                            _cachedShadowColor ?? _cachedFocusingColor)
                         .AddOpacityEffect(0.4f);
                     targetDrawingSession.DrawImage(highlightEffectBuilder.Build(), actualOffsetX, 0);
                 }
@@ -479,15 +485,24 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
         public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
         {
+            // Cache all Typography values to avoid repeated delegate invocations
+            _cachedAlignment = TypographySelector(t => t?.Alignment, context)!.Value;
+            _cachedLyricFontSize = TypographySelector(t => t?.LyricFontSize, context)!.Value;
+            _cachedTransliterationFontSize = TypographySelector(t => t?.TransliterationFontSize, context)!.Value;
+            _cachedTranslationFontSize = TypographySelector(t => t?.TranslationFontSize, context)!.Value;
+            _cachedFontFamily = TypographySelector(t => t?.Font, context);
+            _cachedFocusingColor = TypographySelector(t => t?.FocusingColor, context)!.Value;
+            _cachedShadowColor = TypographySelector(t => t?.ShadowColor, context);
+
             var add = 0.0f;
             var renderW = 0.0f;
             textFormat = new CanvasTextFormat
             {
                 FontSize = HiddenOnBlur
-                    ? TypographySelector(t => t?.LyricFontSize, context)!.Value / 2
-                    : TypographySelector(t => t?.LyricFontSize, context)!.Value,
+                    ? _cachedLyricFontSize / 2
+                    : _cachedLyricFontSize,
                 HorizontalAlignment =
-                    TypographySelector(t => t?.Alignment, context)!.Value switch
+                    _cachedAlignment switch
                     {
                         TextAlignment.Right => CanvasHorizontalAlignment.Right,
                         TextAlignment.Center => CanvasHorizontalAlignment.Center,
@@ -496,7 +511,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 VerticalAlignment = CanvasVerticalAlignment.Top,
                 WordWrapping = CanvasWordWrapping.Wrap,
                 Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
-                FontFamily = TypographySelector(t => t?.Font, context),
+                FontFamily = _cachedFontFamily,
                 FontWeight = HiddenOnBlur ? FontWeights.Normal : FontWeights.SemiBold
             };
             if (!_isInitialized)
@@ -509,9 +524,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     transliterationFormat = new CanvasTextFormat
                     {
                         FontSize = HiddenOnBlur
-                            ? TypographySelector(t => t?.TransliterationFontSize, context)!.Value / 2
-                            : TypographySelector(t => t?.TransliterationFontSize, context)!.Value,
-                        HorizontalAlignment = TypographySelector(t => t?.Alignment, context)!.Value switch
+                            ? _cachedTransliterationFontSize / 2
+                            : _cachedTransliterationFontSize,
+                        HorizontalAlignment = _cachedAlignment switch
                         {
                             TextAlignment.Right => CanvasHorizontalAlignment.Right,
                             TextAlignment.Center => CanvasHorizontalAlignment.Center,
@@ -520,7 +535,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         VerticalAlignment = CanvasVerticalAlignment.Top,
                         WordWrapping = CanvasWordWrapping.Wrap,
                         Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
-                        FontFamily = TypographySelector(t => t?.Font, context),
+                        FontFamily = _cachedFontFamily,
                         FontWeight = FontWeights.Normal
                     };
                     if (!_isInitialized)
@@ -550,9 +565,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     translationFormat = new CanvasTextFormat
                     {
                         FontSize = HiddenOnBlur
-                            ? TypographySelector(t => t?.TranslationFontSize, context)!.Value / 2
-                            : TypographySelector(t => t?.TranslationFontSize, context)!.Value,
-                        HorizontalAlignment = TypographySelector(t => t?.Alignment, context)!.Value switch
+                            ? _cachedTranslationFontSize / 2
+                            : _cachedTranslationFontSize,
+                        HorizontalAlignment = _cachedAlignment switch
                         {
                             TextAlignment.Right => CanvasHorizontalAlignment.Right,
                             TextAlignment.Center => CanvasHorizontalAlignment.Center,
@@ -561,7 +576,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         VerticalAlignment = CanvasVerticalAlignment.Top,
                         WordWrapping = CanvasWordWrapping.Wrap,
                         Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
-                        FontFamily = TypographySelector(t => t?.Font, context),
+                        FontFamily = _cachedFontFamily,
                         FontWeight = FontWeights.Normal
                     };
                     string? trimmedText = Translation?.ToString().TrimEnd();
@@ -622,7 +637,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
             if (textLayout is null) return;
 
-            _scalingCenterX = (float)(TypographySelector(t => t?.Alignment, context)!.Value switch
+            _scalingCenterX = (float)(_cachedAlignment switch
             {
                 TextAlignment.Center => textLayout.LayoutBounds.Width / 2 + 16,
                 TextAlignment.Right => textLayout.LayoutBounds.Width + 16,
@@ -633,8 +648,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
             _drawingOffsetY =
                 (HiddenOnBlur
-                    ? TypographySelector(t => t?.LyricFontSize, context)!.Value / 2
-                    : TypographySelector(t => t?.LyricFontSize, context)!.Value) / 8f;
+                    ? _cachedLyricFontSize / 2
+                    : _cachedLyricFontSize) / 8f;
             RenderingHeight = (float)textLayout.LayoutBounds.Height + _drawingOffsetY + add;
             renderW = (float)Math.Max(textLayout.LayoutBounds.Width,
                 Math.Max(tll?.LayoutBounds.Width ?? 0, tl?.LayoutBounds.Width ?? 0));
@@ -660,19 +675,19 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 if (tll != null)
                 {
                     pstDs.DrawTextLayout(tll, drawOffsetX, actualTop,
-                            TypographySelector(t => t?.FocusingColor, context)!.Value);
+                            _cachedFocusingColor);
 
                     actualTop += (float)tll.LayoutBounds.Height;
                 }
                 _lyricTextRenderActualTop = actualTop;
 
-                dftLyricDs.DrawTextLayout(textLayout, drawOffsetX, 0, TypographySelector(t => t?.FocusingColor, context)!.Value);
+                dftLyricDs.DrawTextLayout(textLayout, drawOffsetX, 0, _cachedFocusingColor);
                 actualTop += (float)textLayout.LayoutBounds.Height;
 
                 //翻译
                 if (tl != null)
                 {
-                    pstDs.DrawTextLayout(tl, drawOffsetX, actualTop, TypographySelector(t => t?.FocusingColor, context)!.Value);
+                    pstDs.DrawTextLayout(tl, drawOffsetX, actualTop, _cachedFocusingColor);
                 }
             }
 
