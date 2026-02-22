@@ -695,13 +695,12 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 pstDs = staticPersistCacheTarget.CreateDrawingSession();
                 dftLyricDs = defaultLyricPersistCacheTarget.CreateDrawingSession();
             }
-
-
-
             _sizePixelRect = new Rect(0, 0, RenderingWidth, RenderingHeight);
             using(pstDs)
             using (dftLyricDs)
             {
+                pstDs.Clear(Colors.Transparent);
+                dftLyricDs.Clear(Colors.Transparent);
                 var actualTop = _drawingOffsetY;
 
                 var drawOffsetX = -_renderStartX + 16;

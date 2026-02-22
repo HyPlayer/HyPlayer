@@ -123,6 +123,7 @@ public class ActionLyricLine : RenderingLyricLine
 
         using (pstDs)
         {
+            pstDs.Clear(Colors.Transparent);
             pstDs.DrawTextLayout(textLayout, -_renderStartX + 16, 0, TypographySelector(t => t?.IdleColor, context)!.Value);
         }
     }
