@@ -15,7 +15,6 @@
 		<PublishAot>true</PublishAot>
 		<DiableRuntimeMarshaling>true</DiableRuntimeMarshaling>
 		<NoWarn>IL2026;IL3050</NoWarn>
-		<WindowsSdkPackageVersion>10.0.26100.73-preview</WindowsSdkPackageVersion>
 		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
 	</PropertyGroup>
 	<ItemGroup>

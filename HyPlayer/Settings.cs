@@ -1309,7 +1309,7 @@ namespace HyPlayer
                 {
                     if (value)
                     {
-                        HyPlayList.Player.SetPlaybackSourceOutputVolume(HyPlayList.NowPlayingItem?.PlayItem?.Volume ?? 1, HyPlayList.Player.PrimaryPlaybackSource);
+                        HyPlayList.Player.SetPlaybackSourceOutputVolume(HyPlayList.NowPlayingItem?.Volume ?? 1, HyPlayList.Player.PrimaryPlaybackSource);
                     }
                     else HyPlayList.Player.SetPlaybackSourceOutputVolume(1, HyPlayList.Player.PrimaryPlaybackSource);
                 }

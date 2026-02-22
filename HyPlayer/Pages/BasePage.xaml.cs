@@ -753,7 +753,7 @@ public sealed partial class BasePage : Page
     {
         _ = Common.Invoke(() =>
         {
-            if (item.PlayItem != null)
+          if (item?.PlayItem != null)
             {
                 NavItemSongName.Text = item.Name;
                 NavItemArtist.Text = item.ArtistString;

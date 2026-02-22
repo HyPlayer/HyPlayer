@@ -24,7 +24,6 @@ public sealed partial class ArtistPage : Page
     {
         InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<ArtistPageViewModel>();
-        Unloaded += ArtistPage_Unloaded;
     }
     private ArtistPageViewModel ViewModel => (ArtistPageViewModel)DataContext;
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -42,28 +41,5 @@ public sealed partial class ArtistPage : Page
     private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         ViewModel.CurrentPage = 0;
-    }
-
-    private void ArtistPage_Unloaded(object sender, RoutedEventArgs e)
-    {
-        PivotView.HeaderScrollProgressChanged -= PivotView_HeaderScrollProgressChanged;
-        MainPivot.SelectionChanged -= Pivot_SelectionChanged;
-        Bindings?.StopTracking();
-    }
-
-
-    private void PivotView_HeaderScrollProgressChanged(object sender, EventArgs e)
-    {
-        GridPersonalInformation.Opacity = 1 - PivotView.HeaderScrollProgress * 1.4;
-        RectangleImageBack.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
-        RectangleImageBackAcrylic.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
-        TextBlockDesc.Opacity = 1 - PivotView.HeaderScrollProgress * 0.8;
-
-        UserScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.8;
-        UserScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.8;
-        UserInfoScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.6;
-        UserInfoScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.6;
-        DescScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.4;
-        DescScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.4;
     }
 }

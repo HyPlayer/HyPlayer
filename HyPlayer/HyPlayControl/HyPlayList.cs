@@ -826,7 +826,7 @@ public static class HyPlayList
         targetItem.SubExt = urlInfo.Type?.ToLowerInvariant();
 
         var volume = GetAudioGainMultiplier(urlInfo.Gain ?? 0f);
-        targetItem.PlayItem?.Volume = volume;
+        targetItem.Volume = volume;
 
         UpdatePlayBarQualityDisplay(targetItem.QualityTag);
     }
@@ -944,13 +944,13 @@ public static class HyPlayList
                 var playbackSource = new AudioGraphPlaybackSource(mediaSource);
                 playItem.AudioGraphPlaybackSource = playbackSource;
 
-                var targetVolume = Common.Setting.EnableAudioGain ? playItem.Volume : 1d;
+                var targetVolume = Common.Setting.EnableAudioGain ? targetItem.Volume : 1d;
                 if (Common.Setting.CrossFade && FadeManager.FadeProcessing)
                 {
                     targetVolume = 0;
                 }
 
-                var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary, AutoPlay = autoPlay, Volume = targetVolume };
+                var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary, AutoPlay = autoPlay, Volume = targetVolume ?? 1 };
                 await Player.ConnectPlaybackSourceAsync(playbackSource, options);
             });
         }

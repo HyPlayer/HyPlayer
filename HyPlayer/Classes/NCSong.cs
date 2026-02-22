@@ -127,6 +127,7 @@ public class HyPlayItem
     public string InfoTag { get; set; }
     public int TrackId { get; set; }
     public string Url { get; set; }
+    public double? Volume { get; set; }
 
     public string ArtistString
     {
@@ -322,7 +323,6 @@ public partial class SimpleListItem
 public partial class PlayItem : IDisposable
 {
     private bool disposedValue;
-    public double Volume { get; set; } = 1d;
     public AudioGraphPlaybackSource AudioGraphPlaybackSource { get; set; }
     public InMemoryRandomAccessStream NcmPlayableStream { get; set; }
     public string NcmPlayableStreamMIMEType { get; set; } = string.Empty;

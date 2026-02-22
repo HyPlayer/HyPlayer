@@ -111,8 +111,8 @@ namespace HyPlayer.Classes
                     var node1 = HyPlayList.Player.GetAudioInputNode(_currentPlayItem.Item1);
                     var node2 = HyPlayList.Player.GetAudioInputNode(_currentPlayItem.Item2);
                     _currentNode = new Tuple<MediaSourceAudioInputNode, MediaSourceAudioInputNode>(node1, node2);
-                    _initialVolume[_currentPlayItem?.Item1] = currentItem.PlayItem.Volume;
-                    _initialVolume[_currentPlayItem?.Item2] = nextItem.PlayItem.Volume;
+                    _initialVolume[_currentPlayItem?.Item1] = currentItem.Volume ?? 1;
+                    _initialVolume[_currentPlayItem?.Item2] = nextItem.Volume ?? 1;
                     _loading = false;
                 }
                 catch
