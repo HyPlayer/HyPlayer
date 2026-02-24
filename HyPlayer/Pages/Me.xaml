@@ -6,15 +6,15 @@
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:converters="using:CommunityToolkit.WinUI.Converters"
+    xmlns:core="using:Microsoft.Xaml.Interactivity"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:CommunityToolkit.WinUI"
-    xmlns:core="using:Microsoft.Xaml.Interactivity"
-    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Page.Resources>
@@ -31,10 +31,7 @@
                         TintOpacity="0.5" />
                     <DataTemplate x:Key="ListItemTemplate" x:DataType="classes:SimpleListItem">
                         <ListViewItem CornerRadius="0" Style="{StaticResource ListViewItemStyle}">
-                            <Grid
-                                Margin="0,5"
-                                HorizontalAlignment="Stretch"
-                                Tag="{x:Bind ResourceId}">
+                            <Grid Margin="0,5" HorizontalAlignment="Stretch">
                                 <frieren:ImageEx
                                     x:Name="RectangleImageBack"
                                     Height="82"
@@ -58,7 +55,9 @@
                                     Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
                                 <Grid
                                     Grid.Column="0"
-                                    Background="Transparent">                                    
+                                    Background="Transparent"
+                                    Tag="{x:Bind ResourceId}"
+                                    Tapped="SonglistItem_Tapped">
                                     <StackPanel Orientation="Horizontal">
                                         <frieren:ImageEx
                                             x:Name="ImageRect"
@@ -130,10 +129,10 @@
                                     VerticalAlignment="Top"
                                     Background="{ThemeResource SystemAltLowColor}"
                                     BorderBrush="Transparent"
+                                    Command="{x:Bind PlayCommand}"
                                     CornerRadius="9"
                                     FocusVisualSecondaryBrush="AliceBlue"
                                     Tag="{x:Bind ResourceId}"
-                                    Command="{x:Bind PlayCommand}"
                                     ToolTipService.ToolTip="播放">
                                     <FontIcon
                                         Name="PlayStateIcon"
@@ -171,9 +170,9 @@
                             x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                             Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
                             <Border.Background>
-                                <ImageBrush Stretch="UniformToFill" >
+                                <ImageBrush Stretch="UniformToFill">
                                     <ImageBrush.ImageSource>
-                                        <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}"/>
+                                        <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}" />
                                     </ImageBrush.ImageSource>
                                 </ImageBrush>
                             </Border.Background>
@@ -187,9 +186,9 @@
 
                     <Border x:Name="RectangleImageFallback" Visibility="{x:Bind hyplayer:Common.Setting.acrylicAvailabiliity, Converter={StaticResource BoolToVisibilityInverseConverter}}">
                         <Border.Background>
-                            <ImageBrush Stretch="UniformToFill" >
+                            <ImageBrush Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
-                                    <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}"/>
+                                    <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}" />
                                 </ImageBrush.ImageSource>
                             </ImageBrush>
                         </Border.Background>
@@ -230,9 +229,9 @@
                                 TextWrapping="NoWrap" />
                             <TextBlock
                                 x:Name="TextBoxSignature"
-                                IsTextSelectionEnabled="True"
                                 FontSize="16"
                                 Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                                IsTextSelectionEnabled="True"
                                 Text="{x:Bind ViewModel.User.Signature, Mode=OneWay}" />
                             <Button
                                 x:Name="ButtonLogout"
@@ -332,7 +331,8 @@
                             Margin="0,60,10,0"
                             HorizontalAlignment="Stretch"
                             ItemTemplate="{StaticResource ListItemTemplate}"
-                            ItemsSource="{x:Bind ViewModel.LikedPlaylist, Mode=OneWay}">
+                            ItemsSource="{x:Bind ViewModel.LikedPlaylist, Mode=OneWay}"
+                            Tapped="SonglistItem_Tapped">
                             <muxc:ItemsRepeater.Layout>
                                 <muxc:StackLayout Orientation="Vertical" />
                             </muxc:ItemsRepeater.Layout>

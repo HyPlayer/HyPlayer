@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 
 #endregion
 
@@ -29,7 +30,6 @@ public sealed partial class Me : Page
     {
         InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<MeViewModel>();
-        Unloaded += Me_Unloaded;
     }
     private MeViewModel ViewModel => (MeViewModel)DataContext;
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -73,37 +73,10 @@ public sealed partial class Me : Page
         Common.AddToTeachingTipLists("已重置, 请重启");
     }
 
-    private void Me_Unloaded(object sender, RoutedEventArgs e)
+    private void SonglistItem_Tapped(object sender, TappedRoutedEventArgs e)
     {
-        ViewModel.LikedPlaylist.Clear();
-        ViewModel.MyPlaylist.Clear();
-        ViewModel.LikedPlaylist = null;
-        ViewModel.MyPlaylist = null;
-        ClearItemsRepeater(MySongListBox);
-        ClearItemsRepeater(LikedSongList);
-        ClearImageBrush(RectangleImageBack);
-        ClearImageBrush(RectangleImageFallback);
-        AcrylicGrid.Children.Clear();
-        UserAvatar.ProfilePicture = null;
-        ButtonLogout.Click -= Logout_OnClick;
-        DataContext = null;
-    }
-
-
-    private void ClearItemsRepeater(ItemsRepeater repeater)
-    {
-        if (repeater == null) return;
-        repeater.ItemsSource = null;
-        repeater.Layout = null;
-        repeater.UpdateLayout();
-    }
-
-    private void ClearImageBrush(Border border)
-    {
-        if (border?.Background is ImageBrush brush)
-        {
-            brush.ImageSource = null;
-            border.Background = null;
-        }
+        var target = (sender as FrameworkElement).Tag as string;
+        if (string.IsNullOrEmpty(target)) return;
+        _ = Common.NavigatePageResource(target);
     }
 }

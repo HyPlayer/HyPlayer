@@ -28,13 +28,15 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class Comments : Page
 {
+#nullable enable
+    private ScrollViewer? MainScroll, HotCommentsScroll;
+#nullable restore
     private string cursor;
     private int page = 1;
     private string resourceid;
     private NeteaseResourceType resourcetype;
     private int sortType = 1;
     private bool IsShiftingPage = false;
-    private ScrollViewer? MainScroll, HotCommentsScroll;
     private ObservableCollection<Comment> hotComments = new ObservableCollection<Comment>();
     private ObservableCollection<Comment> normalComments = new ObservableCollection<Comment>();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
