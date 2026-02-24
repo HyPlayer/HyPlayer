@@ -127,18 +127,21 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 _lastSyllableIndex = currentSyllableIndex;
                             }
 
-                            var matrix = Matrix3x2.CreateTranslation(0, textTop);
-
+                            var beforeMatrix = Matrix3x2.CreateTranslation(0, textTop - _liftAmount);
+                            var afterMatrix = Matrix3x2.CreateTranslation(0, textTop);
                             // before
                             var textLayoutCommandList = new CanvasCommandList(clds);
+                            using var textLayoutSession = textLayoutCommandList.CreateDrawingSession();
                             if (beforeCurrentSyllableGeometry is not null)
                             {
-                                using var textLayoutSession = textLayoutCommandList.CreateDrawingSession();
-                                using (textLayoutSession.CreateLayer(1, beforeCurrentSyllableGeometry, matrix))
+                                using (textLayoutSession.CreateLayer(1, beforeCurrentSyllableGeometry, beforeMatrix))
                                 {
                                     textLayoutSession.DrawImage(_defaultLyricPersistCache, 0, textTop - _liftAmount, _sizePixelRect, 1);
                                 }
-                                using (textLayoutSession.CreateLayer(1, afterCurrentSyllableGeometry, matrix))
+                            }
+                            if(afterCurrentSyllableGeometry is not null)
+                            {
+                                using (textLayoutSession.CreateLayer(1, afterCurrentSyllableGeometry, afterMatrix))
                                 {
                                     textLayoutSession.DrawImage(_defaultLyricPersistCache, 0, textTop, _sizePixelRect, 0.3f);
                                 }
@@ -154,13 +157,13 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 var currentCommandList = new CanvasCommandList(clds);
                                 using var currentDrawingSession = currentCommandList.CreateDrawingSession();
                                 // 叠底
-                                using (currentDrawingSession.CreateLayer(1, currentSyllableGeometry, matrix))
+                                using (currentDrawingSession.CreateLayer(1, currentSyllableGeometry, afterMatrix))
                                 {
                                     currentDrawingSession.DrawImage(_defaultLyricPersistCache, 0, textTop, _sizePixelRect, 0.3f);
                                 }
 
                                 // 高亮
-                                using (currentDrawingSession.CreateLayer(1, currentHighlightGeometry, matrix))
+                                using (currentDrawingSession.CreateLayer(1, currentHighlightGeometry, afterMatrix))
                                 {
                                     currentDrawingSession.DrawImage(_defaultLyricPersistCache, 0, textTop);
                                 }
