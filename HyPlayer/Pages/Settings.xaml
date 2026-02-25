@@ -392,14 +392,13 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderTransliterationScanning, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard
-                                        Header="非逐字行扫词">
+                                    <controls3:SettingsCard Header="非逐字行扫词">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderSimpleLineScanning, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="预渲染合成" Description="将会把每一行歌词预渲染, 将会造成大量内存占用">
+                                    <controls3:SettingsCard Description="将会把每一行歌词预渲染, 将会造成大量内存占用" Header="预渲染合成">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -1574,12 +1573,12 @@
                                                     Text="设备识别码" />
                                             </StackPanel>
                                             <TextBlock
-                                                IsTextSelectionEnabled="True"
                                                 x:Name="DeviceInfo"
                                                 Grid.Row="1"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
                                                 Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                                                IsTextSelectionEnabled="True"
                                                 TextWrapping="Wrap">
                                                 <TextBlock.ContextFlyout>
                                                     <MenuFlyout>
@@ -1629,11 +1628,11 @@
                                                     Text="用户交流反馈 QQ 群" />
                                             </StackPanel>
                                             <TextBlock
-                                                IsTextSelectionEnabled="True"
                                                 Grid.Row="1"
                                                 HorizontalAlignment="Left"
                                                 VerticalAlignment="Top"
                                                 Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                                                IsTextSelectionEnabled="True"
                                                 Text="1145646224" />
                                         </Grid>
                                     </Border>
@@ -1671,11 +1670,10 @@
                                                     HorizontalAlignment="Left"
                                                     SelectedIndex="{x:Bind hyplayer:Common.Setting.UpdateSource, Mode=TwoWay}">
                                                     <ComboBoxItem Content="Microsoft Store" />
-                                                    <ComboBoxItem Content="App Center" IsEnabled="False" />
-                                                    <ComboBoxItem Content="App Center(Canary)" IsEnabled="False" />
                                                     <ComboBoxItem Content="Release" />
-                                                    <ComboBoxItem Content="Canary" />
-                                                    <ComboBoxItem Content="Dogfood" />
+                                                    <ComboBoxItem Content="Canary" IsEnabled="{x:Bind hyplayer:Common.Setting.canaryChannelAvailability, Mode=OneWay}" />
+                                                    <ComboBoxItem Content="GitHub" />
+                                                    <ComboBoxItem Content="Countinous Integration" />
                                                 </ComboBox>
                                                 <Button
                                                     x:Name="CheckUpdate"

@@ -25,6 +25,7 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(HyLyricInfo))]
     [JsonSerializable(typeof(HyALRCLyricInfo))]
     [JsonSerializable(typeof(LatestApplicationUpdate))]
+    [JsonSerializable(typeof(GitHubReleaseResponse))]
     public partial class JsonDefaultContext : JsonSerializerContext
     {
     }

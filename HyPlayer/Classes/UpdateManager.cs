@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -14,11 +15,10 @@ public static class UpdateManager
     public enum UpdateSource
     {
         MicrosoftStore,
-        AppCenter,
-        AppCenterCanary,
         Release,
         Canary,
-        Dogfood
+        GitHub,
+        CI,
     }
 
     public class RemoteVersionResult
@@ -28,6 +28,7 @@ public static class UpdateManager
 #nullable enable
         public Version? Version { get; set; }
         public string? UpdateLog { get; set; }
+        public DateTime? UpdateTime { get; set; }
 #nullable restore
         public string DownloadLink { get; set; }
     }
@@ -46,7 +47,7 @@ public static class UpdateManager
                 : new Version(update.Package.Id.Version.Major, update.Package.Id.Version.Minor,
                     update.Package.Id.Version.Build, update.Package.Id.Version.Revision),
             UpdateLog = update?.Package.Description,
-            DownloadLink = "ms-windows-store://pdp/?productid=9N5TD916686K"
+            DownloadLink = "ms-windows-store://pdp/?productid=9N5TD916686K",
         };
     }
 
@@ -65,26 +66,48 @@ public static class UpdateManager
         [JsonPropertyName("size")]
         public int Size { get; set; }
     }
-
-    public static async Task<RemoteVersionResult> GetVersionFromAppCenter(bool isCanary)
+    public class GitHubReleaseResponse
     {
-        using var versionsResponse = await Common.HttpClient.GetAsync(
-            new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(isCanary ? 2 : 3)}/latest"));
+        [JsonPropertyName("html_url")]
+        public string Url { get; set; }
+        [JsonPropertyName("tag_name")]
+        public string Tag { get; set; }
+        [JsonPropertyName("updated_at")]
+        public DateTime UpdateTime { get; set; }
+        [JsonPropertyName("body")]
+        public string Body { get; set; }
+    }
+
+    public static async Task<RemoteVersionResult> GetVersionFromGitHub(UpdateSource source)
+    {
+        using var message = new HttpRequestMessage()
+        {
+            RequestUri = new Uri($"https://api.github.com/repos/HyPlayer/HyPlayer/releases/{source switch
+            {
+                UpdateSource.GitHub => "latest",
+                UpdateSource.CI => "tags/actions-build",
+                _ => "latest"
+            }}"),
+            Method = HttpMethod.Get
+        };
+        message.Headers.Add("User-Agent", "HyPlayer-Update-Client");
+        using var versionsResponse = await Common.HttpClient.SendAsync(message);
         if (!versionsResponse.IsSuccessStatusCode)
         {
             Common.AddToTeachingTipLists("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
-            throw new Exception("获取更新失败");
         }
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
-            JsonSerializer.Deserialize<LatestApplicationUpdate>(resp, Common.DefaultOptions);
+            JsonSerializer.Deserialize<GitHubReleaseResponse>(resp, Common.DefaultOptions);
+        var version = Version.TryParse(versionResp?.Tag, out var versionResult);
         return new RemoteVersionResult
         {
-            UpdateSource = isCanary ? UpdateSource.AppCenterCanary : UpdateSource.AppCenter,
-            IsMandatory = versionResp?.Mandatory ?? false,
-            Version = Version.Parse(versionResp?.Version ?? ""),
-            DownloadLink = versionResp?.DownloadUrl,
-            UpdateLog = versionResp?.UpdateLog ?? ""
+            UpdateSource = source,
+            IsMandatory = false,
+            Version = versionResult,
+            DownloadLink = versionResp?.Url,
+            UpdateLog = versionResp?.Body ?? "",
+            UpdateTime = versionResp?.UpdateTime
         };
     }
 
@@ -93,15 +116,13 @@ public static class UpdateManager
         using var versionsResponse = await Common.HttpClient.GetAsync(
             new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(source switch
             {
-                UpdateSource.Canary => 5,
-                UpdateSource.Release => 4,
-                UpdateSource.Dogfood => 6,
-                _ => 4,
+                UpdateSource.Release => 3,
+                UpdateSource.Canary => 2,
+                _ => 3,
             })}/latest"));
         if (!versionsResponse.IsSuccessStatusCode)
         {
             Common.AddToTeachingTipLists("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
-            throw new Exception("获取更新失败");
         }
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
@@ -112,7 +133,8 @@ public static class UpdateManager
             IsMandatory = versionResp?.Mandatory ?? false,
             Version = Version.Parse(versionResp?.Version ?? ""),
             DownloadLink = versionResp?.DownloadUrl,
-            UpdateLog = versionResp?.UpdateLog ?? ""
+            UpdateLog = versionResp?.UpdateLog ?? "",
+            UpdateTime = versionResp.Date
         };
     }
 
@@ -121,8 +143,8 @@ public static class UpdateManager
         return updateSource switch
         {
             UpdateSource.MicrosoftStore => await GetVersionFromStore(),
-            UpdateSource.AppCenter => await GetVersionFromAppCenter(false),
-            UpdateSource.AppCenterCanary => await GetVersionFromAppCenter(true),
+            UpdateSource.CI => await GetVersionFromGitHub(updateSource),
+            UpdateSource.GitHub => await GetVersionFromGitHub(updateSource),
             _ => await GetVersionFromSelfhost(updateSource)
         };
     }
@@ -141,8 +163,11 @@ public static class UpdateManager
                 title = "你已是最新版";
             }
 
-            var message = remoteResult.UpdateLog + "\r\n最新版本: " + remoteResult.Version + "\r\n当前版本: " +
-                          localVersion + (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
+            var message = remoteResult.UpdateLog + 
+            "\r\n最新版本: " + remoteResult.Version +
+            "\r\n更新时间: " + remoteResult.UpdateTime.ToString() +
+            "\r\n当前版本: " + localVersion + 
+            (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
             if (isStartup)
             {
                 Common.AddToTeachingTipLists(title, message);
