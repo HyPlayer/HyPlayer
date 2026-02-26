@@ -54,6 +54,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         public bool IsSyllable = false;
         private int _lastSyllableIndex = -1;
         private const float _liftAmount = 3;
+        public const float TextPadding = 16;
         private readonly Color _defaultColor = Color.FromArgb(255, 128, 128, 0);
 
         public List<RenderingSyllable> Syllables { get; set; } = [];
@@ -556,7 +557,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                             ? string.Join("", Syllables!.Select(s => s.Transliteration))
                             : Transliteration;
                     tll = new CanvasTextLayout(session, _transliterationActual, transliterationFormat,
-                        Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue),
+                        Math.Clamp(context.ItemWidth - TextPadding, 0, int.MaxValue),
                         _canvasHeight);
                     add += 10;
                 }
@@ -594,7 +595,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     };
                     string? trimmedText = Translation?.ToString().TrimEnd();
                     tl = new CanvasTextLayout(session, trimmedText, translationFormat,
-                        Math.Clamp(context.ItemWidth - 16, 10, int.MaxValue), _canvasHeight);
+                        Math.Clamp(context.ItemWidth - TextPadding, 10, int.MaxValue), _canvasHeight);
                     add += 0;
                 }
                 else
@@ -620,7 +621,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 _sizeChanged = false;
                 _text = IsSyllable ? string.Join("", Syllables!.Select(t => t.Syllable)) : Text ?? "";
                 textLayout = new CanvasTextLayout(session, _text, textFormat,
-                    Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
+                    Math.Clamp(context.ItemWidth - TextPadding, 0, int.MaxValue), _canvasHeight);
 
                 // 抓取文字在排版中的起步点，用于后续画在 Cache 时将空白切除
                 _renderStartX = (float)textLayout.LayoutBounds.X;
@@ -658,9 +659,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
             _scalingCenterX = (float)(_cachedAlignment switch
             {
-                TextAlignment.Center => textLayout.LayoutBounds.Width / 2 + 16,
-                TextAlignment.Right => textLayout.LayoutBounds.Width + 16,
-                _ => 16
+                TextAlignment.Center => textLayout.LayoutBounds.Width / 2 + TextPadding,
+                TextAlignment.Right => textLayout.LayoutBounds.Width + TextPadding,
+                _ => TextPadding
             });
             _unfocusMatrix = GetCenterMatrix(0, 0, _scalingCenterX,
                 (float)textLayout.LayoutBounds.Height / 2, 0.8F, 0.8F);
@@ -706,7 +707,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 dftLyricDs.Clear(Colors.Transparent);
                 var actualTop = _drawingOffsetY;
 
-                var drawOffsetX = -_renderStartX + 16;
+                var drawOffsetX = -_renderStartX + TextPadding;
 
                 //罗马字
                 if (tll != null)

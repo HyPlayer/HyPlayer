@@ -28,34 +28,17 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
-        float actualX = offset.X;
-        switch (TypographySelector(t => t?.Alignment, context)!.Value)
-        {
-            case TextAlignment.Left:
-                actualX += (context.PreferTypography.LyricFontSize! / 10).Value;
-                break;
-            case TextAlignment.Center:
-                actualX += (float)(RenderingWidth / 2 - Width / 2.0);
-                break;
-            case TextAlignment.Right:
-                actualX += RenderingWidth - Width;
-                actualX -= (context.PreferTypography.LyricFontSize! / 10).Value + 15;
-                break;
-            case TextAlignment.Justify:
-            case TextAlignment.DetectFromContent:
-            default:
-                break;
-        }
+        float actualX = offset.X + SyllablesRenderingLyricLine.TextPadding;
 
-        if (context.CurrentLyricTime > EndTime || context.CurrentLyricTime < StartTime) return true;//未激活
+        if (context.CurrentLyricTime > EndTime || context.CurrentLyricTime < StartTime) return true;// 未激活
         var remain = EndTime - context.CurrentLyricTime;
 
 
-        //画个底
+        // 画个底
         var baseColor = context.PreferTypography.IdleColor!.Value;
         baseColor.A = 64;
 
-        if (remain < LeaveAnimationDuration)//结束动画
+        if (remain < LeaveAnimationDuration)// 结束动画
         {
             var surplus = (LeaveAnimationDuration - remain) * 1.0f / LeaveAnimationDuration;
             var prog = AnimationEaseFunction.Ease(Math.Clamp(surplus, 0, 1));
@@ -79,12 +62,12 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         }
 
 
-        //画进度
+        // 画进度
         CanvasGeometry geometryFill;
         double progress;
         var focusingColor = context.PreferTypography.FocusingColor!.Value;
 
-        if (remain < LeaveAnimationDuration * 1.2)//结束动画
+        if (remain < LeaveAnimationDuration * 1.2)// 结束动画
         {
             var surplus = (LeaveAnimationDuration * 1.2 - remain) * 1.0f / (LeaveAnimationDuration * 1.2);
             progress = AnimationEaseFunction.Ease(Math.Clamp(surplus, 0, 1));
