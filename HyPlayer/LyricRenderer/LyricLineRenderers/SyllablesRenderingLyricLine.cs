@@ -657,7 +657,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                             currentLineLength += length;
                             lastSpaceIndex = i;
                         }
-                        lastSpaceIndex = i;
                     }
                 }
                 var wrappedText = sb.ToString();
