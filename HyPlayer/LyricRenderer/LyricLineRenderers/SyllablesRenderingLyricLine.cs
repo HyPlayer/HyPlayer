@@ -15,6 +15,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Text;
@@ -523,7 +524,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         _ => CanvasHorizontalAlignment.Left
                     },
                 VerticalAlignment = CanvasVerticalAlignment.Top,
-                WordWrapping = CanvasWordWrapping.Wrap,
+                WordWrapping = CanvasWordWrapping.WholeWord,
+
                 Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
                 FontFamily = _cachedFontFamily,
                 FontWeight = HiddenOnBlur ? FontWeights.Normal : FontWeights.SemiBold
@@ -620,8 +622,46 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             {
                 _sizeChanged = false;
                 _text = IsSyllable ? string.Join("", Syllables!.Select(t => t.Syllable)) : Text ?? "";
-                textLayout = new CanvasTextLayout(session, _text, textFormat,
-                    Math.Clamp(context.ItemWidth - TextPadding, 0, int.MaxValue), _canvasHeight);
+                var requestedWidth = Math.Clamp(context.ItemWidth - TextPadding, 0, int.MaxValue);
+
+                // 类似于 WrapPanel 的换行逻辑，优先从空格处换行
+                // 此 TextLayout 仅用于测算空格分割后的文字长度
+                var tmpTextLayout = new CanvasTextLayout(session, _text, textFormat, int.MaxValue, _canvasHeight);
+                var span = _text.AsSpan();
+                var lastSpaceIndex = 0;
+                var currentLineLength = 0.0;
+                var sb = new StringBuilder();
+
+                for (int i = 0; i <= span.Length; i++)
+                {
+                    if (i == span.Length || span[i] is ' ' or '　'/*全角空格*/)
+                    {
+                        var region = tmpTextLayout.GetCharacterRegions(lastSpaceIndex, i - lastSpaceIndex);
+                        var length = 0.0;
+                        if (region.Length > 0)
+                        {
+                            length += region[0].LayoutBounds.Width;
+                        }
+                        if(currentLineLength + length > requestedWidth)
+                        {
+                            if (lastSpaceIndex != 0)
+                                sb.Append('\n');
+                            sb.Append(span[(lastSpaceIndex+1)..i]);
+                            currentLineLength = 0;
+                            i++;
+                        }
+                        else
+                        {
+                            sb.Append(span[lastSpaceIndex..i]);
+                            currentLineLength += length;
+                        }
+                        lastSpaceIndex = i;
+                    }
+                }
+                var wrappedText = sb.ToString();
+
+                textLayout = new CanvasTextLayout(session, wrappedText, textFormat,
+                    requestedWidth, _canvasHeight);
 
                 // 抓取文字在排版中的起步点，用于后续画在 Cache 时将空白切除
                 _renderStartX = (float)textLayout.LayoutBounds.X;
