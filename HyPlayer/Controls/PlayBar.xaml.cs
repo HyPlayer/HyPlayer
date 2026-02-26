@@ -235,10 +235,10 @@ DoubleAnimation verticalAnimation;
 
             TbSongTag.Text = HyPlayList.NowPlayingItem.QualityTag ?? "";
             Btn_Share.IsEnabled =
-                HyPlayList.NowPlayingItem?.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive;
+                mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive;
         });
         var isLiked = Common.LikedSongs.Contains(mpi.Id);
-        if (mpi.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+        if (mpi.ItemType !=  HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive)
         {
             _ = Common.Invoke(() =>
             {

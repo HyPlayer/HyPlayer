@@ -67,9 +67,8 @@ namespace HyPlayer.Pages
 
 
     }
-    public class GameBarSettings(CoreDispatcher dispatcher) : INotifyPropertyChanged
+    public partial class GameBarSettings(CoreDispatcher dispatcher) : INotifyPropertyChanged
     {
-        public GameBarSettings Instance { get; set; }
 
         private readonly ApplicationDataContainer _container = ApplicationData.Current.LocalSettings.CreateContainer("game-bar", ApplicationDataCreateDisposition.Always);
 
@@ -166,11 +165,11 @@ namespace HyPlayer.Pages
                 () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
         }
 
-        public static T GetSettings<T>(string propertyName, T defaultValue)
+        public T GetSettings<T>(string propertyName, T defaultValue)
         {
             try
             {
-                var success = ApplicationData.Current.LocalSettings.Values.TryGetValue(propertyName, out object value);
+                var success = _container.Values.TryGetValue(propertyName, out object value);
                 if (success)
                 {
                     return (T)value;
