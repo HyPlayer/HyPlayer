@@ -99,6 +99,7 @@ public sealed partial class ExpandedPlayer : Page
     private SolidColorBrush? _pureIdleBrushCache;
     private Color? _karaokAccentColorCache;
     private SolidColorBrush? _pureAccentBrushCache;
+    private const float LyricBoxRightPadding = 32;
 
     public double LyricShowSize { get; set; }
     public double LyricWidth { get; set; }
@@ -300,7 +301,7 @@ public sealed partial class ExpandedPlayer : Page
                 LyricWidth = _nowWidth * 0.5;
             else
                 LyricWidth = _nowWidth - 15;
-            LyricWidth = Math.Max(LyricWidth, 0);
+            LyricWidth = Math.Max(LyricWidth - LyricBoxRightPadding, 0);
             LyricShowSize = _settings.lyricSize <= 0
                 ? Math.Max(_nowWidth / 40, 40)
                 : _settings.lyricSize;
@@ -323,7 +324,7 @@ public sealed partial class ExpandedPlayer : Page
             LyricWidth = _nowWidth * 0.5;
         else
             LyricWidth = _nowWidth - 30;
-        LyricWidth = Math.Max(LyricWidth, 0);
+        LyricWidth = Math.Max(LyricWidth - LyricBoxRightPadding, 0);
 
         switch (_windowMode)
         {
