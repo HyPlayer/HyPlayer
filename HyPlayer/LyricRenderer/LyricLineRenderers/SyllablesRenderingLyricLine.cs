@@ -648,12 +648,14 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 sb.Append('\n');
                             sb.Append(span[(lastSpaceIndex+1)..i]);
                             currentLineLength = 0;
+                            lastSpaceIndex = i;
                             i++;
                         }
                         else
                         {
                             sb.Append(span[lastSpaceIndex..i]);
                             currentLineLength += length;
+                            lastSpaceIndex = i;
                         }
                         lastSpaceIndex = i;
                     }
