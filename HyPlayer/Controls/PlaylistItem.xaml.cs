@@ -19,7 +19,7 @@ namespace HyPlayer.Controls;
 
 public sealed partial class PlaylistItem : UserControl
 {
-    private NCPlayList playList;
+    private readonly NCPlayList playList;
 
     public PlaylistItem(NCPlayList playList)
     {
@@ -29,7 +29,7 @@ public sealed partial class PlaylistItem : UserControl
 
     private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(SongListDetail), playList, new DrillInNavigationTransitionInfo());
+        Common.NavigatePage(typeof(SongListDetail), playList);
     }
 
     private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)

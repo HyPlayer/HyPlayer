@@ -30,9 +30,9 @@ public sealed partial class TestPage : Page
 
     private int _teachingTipIndex;
 
-    static List<KeyValuePair<string, WeakReference<FrameworkElement>>> controlsReferences = new List<KeyValuePair<string, WeakReference<FrameworkElement>>>();
+    static readonly List<KeyValuePair<string, WeakReference<FrameworkElement>>> controlsReferences = [];
 
-    static Dictionary<Type, object> typeParams = new Dictionary<Type, object>()
+    static readonly Dictionary<Type, object> typeParams = new()
     {
         [typeof(AlbumPage)] = "97767168",
         [typeof(ArtistPage)] = "159692",
@@ -78,9 +78,11 @@ public sealed partial class TestPage : Page
 
     private async void TestGCLeak_Click(object sender, RoutedEventArgs e)
     {
-        var leakCheckFrame = new Frame();
-        leakCheckFrame.HorizontalContentAlignment = HorizontalAlignment.Stretch;
-        leakCheckFrame.Height = 500;
+        var leakCheckFrame = new Frame
+        {
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            Height = 500
+        };
         MainStackPanel.Children.Insert(0, leakCheckFrame);
         leakCheckFrame.Visibility = Visibility.Visible;
         foreach (var (type, param) in typeParams)
@@ -100,7 +102,7 @@ public sealed partial class TestPage : Page
         var resultSb = new StringBuilder();
         foreach (var (name, reference) in controlsReferences)
         {
-            resultSb.AppendLine(name + ": " + (reference.TryGetTarget(out var target) ? "Alive" : "Collected"));
+            resultSb.AppendLine(name + ": " + (reference.TryGetTarget(out _) ? "Alive" : "Collected"));
         }
         var result = resultSb.ToString();
         var contentDialog = new ContentDialog
@@ -140,7 +142,7 @@ public sealed partial class TestPage : Page
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
             IsInBackground = Common.IsInBackground,
             IsLowCache = Common.Setting.forceMemoryGarbage,
-            ErrorMessageList = Common.ErrorMessageList.TakeLast(15).ToList()
+            ErrorMessageList = [.. Common.ErrorMessageList.TakeLast(15)]
         }, Common.DefaultOptions);
         var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("dump-" +
             DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid() + ".txt");
@@ -163,18 +165,21 @@ public sealed partial class TestPage : Page
         try
         {
             var result = JsonSerializer.Deserialize<AdditionalParameters>(TbAdditionalApiParameters.Text, Common.DefaultOptions);
-            if (result == null)
+            if (result != null)
+            {
+                Common.Setting.ApiAdditionalParameters = result;
+                Common.NeteaseAPI!.Option.AdditionalParameters = result;
+                HyPlayList.LoginDoneCall();
+                Common.AddToTeachingTipLists("成功设置API附加参数", "请重启应用以使更改生效");
+            }
+            else
             {
                 throw new Exception("Invalid JSON");
             }
-            Common.Setting.ApiAdditionalParameters = result;
-            Common.NeteaseAPI!.Option.AdditionalParameters = result;
-            HyPlayList.LoginDoneCall();
-            Common.AddToTeachingTipLists("成功设置API附加参数", "请重启应用以使更改生效");
         }
         catch (Exception ex)
         {
-            ContentDialog dialog = new ContentDialog
+            ContentDialog dialog = new()
             {
                 Title = "Error",
                 Content = ex.Message,

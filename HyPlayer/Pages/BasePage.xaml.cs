@@ -1,5 +1,6 @@
 ﻿#region
 
+using AsyncAwaitBestPractices;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
@@ -82,7 +83,7 @@ public sealed partial class BasePage : Page
     private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
     {
         if (args.CurrentPoint.Properties.IsXButton1Pressed)
-            if (Common.isExpanded)
+            if (Common.IsExpanded)
                 Common.BarPlayBar.CollapseExpandedPlayer();
             else
                 Common.NavigateBack();
@@ -92,7 +93,7 @@ public sealed partial class BasePage : Page
     {
         if (args.VirtualKey == VirtualKey.GamepadB)
         {
-            if (Common.isExpanded)
+            if (Common.IsExpanded)
                 Common.BarPlayBar.CollapseExpandedPlayer();
             else
                 Common.NavigateBack();
@@ -105,7 +106,7 @@ public sealed partial class BasePage : Page
             else if (!HyPlayList.IsPlaying) HyPlayList.Player.PlayAll();
 
         if (args.VirtualKey == VirtualKey.Escape)
-            if (Common.isExpanded)
+            if (Common.IsExpanded)
                 Common.BarPlayBar.CollapseExpandedPlayer();
     }
 
@@ -114,13 +115,15 @@ public sealed partial class BasePage : Page
         base.OnNavigatedTo(e);
         if (!Common.Setting.DisablePopUp)
         {
-            var dialog = new ContentDialog();
-            dialog.Title = "重要提示";
-            dialog.Content = "本软件仅供学习交流使用，下载后请在 24 小时内删除。\r\n请勿使用此软件登录网易云音乐或进行违反网易云音乐用户协议的行为";
-            dialog.CloseButtonText = "退出软件";
-            dialog.PrimaryButtonText = "我已知晓";
-            dialog.IsPrimaryButtonEnabled = true;
-            dialog.DefaultButton = ContentDialogButton.Primary;
+            var dialog = new ContentDialog
+            {
+                Title = "重要提示",
+                Content = "本软件仅供学习交流使用，下载后请在 24 小时内删除。\r\n请勿使用此软件登录网易云音乐或进行违反网易云音乐用户协议的行为",
+                CloseButtonText = "退出软件",
+                PrimaryButtonText = "我已知晓",
+                IsPrimaryButtonEnabled = true,
+                DefaultButton = ContentDialogButton.Primary
+            };
             dialog.CloseButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
             _ = dialog.ShowAsync();
         }
@@ -139,7 +142,7 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            if (Common.Setting.LoadCookies() || Common.NeteaseAPI?.Option.AdditionalParameters.Cookies.Count is > 0)
+            if (Setting.LoadCookies() || Common.NeteaseAPI?.Option.AdditionalParameters.Cookies.Count is > 0)
             {
                 try
                 {
@@ -176,14 +179,14 @@ public sealed partial class BasePage : Page
         {
             var queries = new Dictionary<string, object>();
             var account = TextBoxAccount.Text;
-            var isPhone = Regex.Match(account, "^[0-9]+$").Success;
+            var isPhone = IsPhoneRegex().IsMatch(account);
             var contryCode = string.Empty;
             if (account.StartsWith('+'))
             {
                 isPhone = true;
                 // get the string between '+' and ' '
-                contryCode = account.Substring(1, account.IndexOf(' ') - 1);
-                account = account.Substring(account.IndexOf(' ') + 1);
+                contryCode = account[1..account.IndexOf(' ')];
+                account = account[(account.IndexOf(' ') + 1)..];
             }
             if (isPhone)
             {
@@ -237,11 +240,6 @@ public sealed partial class BasePage : Page
     private void ButtonCloseLoginForm_Click(object sender, ContentDialogButtonClickEventArgs args)
     {
         DialogLogin.Hide();
-        NavViewBack();
-    }
-
-    private void NavViewBack()
-    {
         Common.NavigateBack();
     }
 
@@ -276,7 +274,7 @@ public sealed partial class BasePage : Page
         InfoBarLoginHint.IsOpen = true;
         InfoBarLoginHint.Title = "登录成功";
         //存储Cookie
-        Common.Setting.SaveCookies();
+        Setting.SaveCookies();
         if (LoginStatus.Profile != null)
             Common.LoginedUser = LoginStatus.Profile.MapToNcUser();
         else
@@ -307,7 +305,7 @@ public sealed partial class BasePage : Page
         // DoDailySign();
 
         HyPlayList.LoginDoneCall();
-        _ = ((App)Application.Current).InitializeJumpList();
+        App.InitializeJumpList().SafeFireAndForget();
         if (Common.Setting.noImage)
         {
             Common.NavigatePage(typeof(Welcome));
@@ -453,44 +451,42 @@ public sealed partial class BasePage : Page
 
         if (nowitem.Tag.ToString() == "SonglistMyLike")
         {
-            Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].PlaylistId,
-                                new EntranceNavigationTransitionInfo());
+            Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].PlaylistId);
             return;
         }
 
         if (nowitem.Tag.ToString().StartsWith("Playlist"))
-            Common.NavigatePage(typeof(SongListDetail), nowitem.Tag.ToString().Substring(8),
-                                new EntranceNavigationTransitionInfo());
+            Common.NavigatePage(typeof(SongListDetail), nowitem.Tag.ToString()[8..]);
 
         switch (nowitem.Tag.ToString())
         {
             case "PageMe":
-                Common.NavigatePage(typeof(Me), null, new EntranceNavigationTransitionInfo());
+                Common.NavigatePage(typeof(Me), null);
                 break;
             case "PageSearch":
-                Common.NavigatePage(typeof(Search), null, new EntranceNavigationTransitionInfo());
+                Common.NavigatePage(typeof(Search), null);
                 break;
             case "PageHome":
-                Common.NavigatePage(typeof(HomePage), null, new EntranceNavigationTransitionInfo());
+                Common.NavigatePage(typeof(HomePage), null);
                 break;
             case "PageSettings":
-                Common.NavigatePage(typeof(Settings), null, new EntranceNavigationTransitionInfo());
+                Common.NavigatePage(typeof(Settings), null);
                 break;
             case "PageLocal":
-                Common.NavigatePage(typeof(LocalMusicPage), null, new EntranceNavigationTransitionInfo());
+                Common.NavigatePage(typeof(LocalMusicPage), null);
                 break;
             case "PageHistory":
-                Common.NavigatePage(typeof(History), null, new EntranceNavigationTransitionInfo());
+                Common.NavigatePage(typeof(History), null);
                 break;
             case "PageFavorite":
-                Common.NavigatePage(typeof(PageFavorite), null, new EntranceNavigationTransitionInfo());
+                Common.NavigatePage(typeof(PageFavorite), null);
                 break;
         }
     }
 
     // Invoked events of not-for-navigation items can be handled separately.
     // Meanwhile we set "SelectsOnInvoked" property of these items "False" to avoid the navigation pane indicator being set to them.
-    private async void NavMain_ItemInvoked(NavigationView sender,
+    private void NavMain_ItemInvoked(NavigationView sender,
                                            NavigationViewItemInvokedEventArgs args)
     {
         var invokedItemTag = (args.InvokedItemContainer?.As<NavigationViewItem>())?.Tag?.ToString();
@@ -499,7 +495,7 @@ public sealed partial class BasePage : Page
         {
             case "SonglistCreate":
                 {
-                    await new CreateSonglistDialog().ShowAsync();
+                    _ = new CreateSonglistDialog().ShowAsync();
                     break;
                 }
             case "PersonalFM":
@@ -508,14 +504,9 @@ public sealed partial class BasePage : Page
                     break;
                 }
             case "HeartBeat":
-                _ = LoadHeartBeat();
+                Api.EnterIntelligencePlay().SafeFireAndForget();
                 break;
         }
-    }
-
-    private async Task LoadHeartBeat()
-    {
-        await Api.EnterIntelligencePlay();
     }
 
     private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
@@ -643,22 +634,13 @@ public sealed partial class BasePage : Page
 
     private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        Common.NavigatePage(typeof(Search), sender.Text, new EntranceNavigationTransitionInfo());
+        Common.NavigatePage(typeof(Search), sender.Text);
     }
 
     private void SearchAutoSuggestBox_OnSuggestionChosen(AutoSuggestBox sender,
                                                          AutoSuggestBoxSuggestionChosenEventArgs args)
     {
         sender.Text = (string)args.SelectedItem;
-    }
-
-
-    private void BtnScaleQrCode_Click(object sender, RoutedEventArgs e)
-    {
-        DialogLogin.Width = 550;
-        DialogLogin.Height = Window.Current.Bounds.Height;
-        QrContainer.Height = 500;
-        QrContainer.Width = QrContainer.Height;
     }
 
     private void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
@@ -744,11 +726,6 @@ public sealed partial class BasePage : Page
         }
     }
 
-    private Visibility SetVisiblePreview(int updateSource)
-    {
-        return updateSource == 2 ? Visibility.Visible : Visibility.Collapsed; //Canary更新就设置预览显示
-    }
-
     private void OnChangePlayItem(HyPlayItem item)
     {
         _ = Common.Invoke(() =>
@@ -766,7 +743,7 @@ public sealed partial class BasePage : Page
         if (HyPlayList.CoverStream == null) return;
         _ = Common.Invoke(async () =>
         {
-            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage)
+            if (NavItemBlank.Opacity != 0 && !Common.IsExpanded && !Common.Setting.noImage)
             {
                 try
                 {
@@ -787,7 +764,7 @@ public sealed partial class BasePage : Page
         {
             var time = TimeSpan.FromSeconds(collapseTime + 0.25);
             await Task.Delay(time);
-            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage)
+            if (NavItemBlank.Opacity != 0 && !Common.IsExpanded && !Common.Setting.noImage)
             {
                 try
                 {
@@ -839,8 +816,8 @@ public sealed partial class BasePage : Page
             // get current device guid
             var deviceInfo = new EasClientDeviceInformation();
             var deviceId = deviceInfo.Id;
-            var androidId = deviceId.ToString("N").Substring(0, 16);
-            var imei = deviceId.ToString("N").Substring(16);
+            var androidId = deviceId.ToString("N")[..16];
+            var imei = deviceId.ToString("N")[16..];
             var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LoginAnnounceDeviceApi, new LoginAnnounceDeviceRequest
             {
                 Imei = imei,
@@ -866,9 +843,9 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            NavViewBack();
+            Common.NavigateBack();
         }
-        catch (Exception)
+        catch
         {
             //ignore
         }
@@ -881,4 +858,7 @@ public sealed partial class BasePage : Page
         else
             NavMain.IsPaneOpen = true;
     }
+
+    [GeneratedRegex("^[0-9]+$")]
+    private static partial Regex IsPhoneRegex();
 }

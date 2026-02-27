@@ -39,7 +39,7 @@ public sealed partial class PlayBar
     private bool _isSliding = false;
     public PlayMode NowPlayType = PlayMode.DefaultRoll;
     private TimeSpan StartingTimeSpan = TimeSpan.Zero;
-    public ObservableCollection<HyPlayItem> PlayItems = new();
+    public ObservableCollection<HyPlayItem> PlayItems = [];
 #nullable enable
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
 #nullable restore
@@ -277,7 +277,7 @@ DoubleAnimation verticalAnimation;
                 Common.Setting.displayShuffledList)
             {
                 targetingIndex = HyPlayList.ShufflingIndex;
-                targetingList = HyPlayList.ShuffleList.Select(t => HyPlayList.List[t]).ToList();
+                targetingList = [.. HyPlayList.ShuffleList.Select(t => HyPlayList.List[t])];
                 PlayListTitle.Text = "随机播放列表 (共" + targetingList.Count + "首)";
             }
             else
@@ -407,7 +407,7 @@ DoubleAnimation verticalAnimation;
 
         if (Common.Setting.forceMemoryGarbage)
             Common.NavigatePage(typeof(BlankPage));
-        Common.isExpanded = true;
+        Common.IsExpanded = true;
         GridSongInfo.Visibility = Visibility.Collapsed;
         GridSongAdvancedOperation.Visibility = Visibility.Visible;
     }
@@ -433,18 +433,14 @@ DoubleAnimation verticalAnimation;
         Common.BrushManagement.AccentBrush = null;
         if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
         {
-            ConnectedAnimation anim1 = null;
-            ConnectedAnimation anim2 = null;
-            ConnectedAnimation anim3 = null;
-            ConnectedAnimation anim4 = null;
-            anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
-            anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
-            anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
-            anim4 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongAlbum");
-            if (anim4 != null) anim4.Configuration = new DirectConnectedAnimationConfiguration();
-            if (anim3 != null) anim3.Configuration = new DirectConnectedAnimationConfiguration();
-            if (anim2 != null) anim2.Configuration = new DirectConnectedAnimationConfiguration();
-            if (anim1 != null) anim1.Configuration = new DirectConnectedAnimationConfiguration();
+            ConnectedAnimation anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
+            ConnectedAnimation anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
+            ConnectedAnimation anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+            ConnectedAnimation anim4 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongAlbum");
+            anim4?.Configuration = new DirectConnectedAnimationConfiguration();
+            anim3?.Configuration = new DirectConnectedAnimationConfiguration();
+            anim2?.Configuration = new DirectConnectedAnimationConfiguration();
+            anim1?.Configuration = new DirectConnectedAnimationConfiguration();
             try
             {
                 anim3?.TryStart(TbSingerName);
@@ -471,7 +467,7 @@ DoubleAnimation verticalAnimation;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
         var region = Common.PageBase.AppTitleBar.FindDescendant("PART_DragRegion")?.As<Grid>();
         Window.Current.SetTitleBar(region);
-        Common.isExpanded = false;
+        Common.IsExpanded = false;
         RefreshPlayBarCover(HyPlayList.NowPlayingItem);
     }
 
@@ -548,11 +544,6 @@ DoubleAnimation verticalAnimation;
     private void BtnLike_OnClick(object sender, RoutedEventArgs e)
     {
         HyPlayList.LikeSong();
-    }
-
-    private void ImageContainer_OnTapped(object sender, RoutedEventArgs tappedRoutedEventArgs)
-    {
-        ButtonExpand_OnClick(sender, null);
     }
 
     private async void TbSingerName_OnTapped(object sender, RoutedEventArgs e)
@@ -780,7 +771,7 @@ DoubleAnimation verticalAnimation;
         realSelectSong = true;
         Common.Logs.Add("Now PlaySource is " + HyPlayList.PlaySourceId);
 
-        if (Common.isExpanded)
+        if (Common.IsExpanded)
             Common.BarPlayBar.ShowExpandedPlayer();
         if (!Common.Setting.playbarBackgroundAcrylic)
             if (Common.Setting.hotlyricOnStartup)
@@ -804,7 +795,7 @@ DoubleAnimation verticalAnimation;
         {
             PointerEntered += (o, args) =>
             {
-                if (Common.isExpanded && Common.Setting.playbarBackgroundElay)
+                if (Common.IsExpanded && Common.Setting.playbarBackgroundElay)
                     GridThis.Background = BackgroundElayBrush;
             };
             PointerExited += (o, args) => { GridThis.Background = new SolidColorBrush(Colors.Transparent); };
@@ -855,10 +846,14 @@ DoubleAnimation verticalAnimation;
                 var list = await HistoryManagement.GetcurPlayingListHistory();
                 if (list.Count > 0)
                 {
-                    int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
-                        out HyPlayList.NowPlaying);
-                    HyPlayList.AppendNcSongs(list);
-                    HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
+                    var success = int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"]?.ToString(),
+                        out var result);
+                    if (success)
+                    {
+                        HyPlayList.NowPlaying = result;
+                        HyPlayList.AppendNcSongs(list);
+                        HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
+                    }
                 }
             }
             catch
@@ -911,7 +906,7 @@ DoubleAnimation verticalAnimation;
 
     private void CopySongDetailFlyoutItem_Click(object sender, RoutedEventArgs e)
     {
-        DataPackage package = new DataPackage();
+        DataPackage package = new();
         switch ((sender?.As<MenuFlyoutItem>()).Name)
         {
             case "CopySongNameFlyoutItem":

@@ -155,8 +155,11 @@ public sealed partial class GroupedSongsList : UserControl
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
             return;
         }
-        foreach (NCSong ncsong in SongContainer.SelectedItems)
+        foreach (NCSong ncsong in SongContainer.SelectedItems.Cast<NCSong>())
+        {
             _ = HyPlayList.AppendNcSong(ncsong);
+        }
+
         if (SongContainer.SelectedItem != null)
         {
             var targetPlayItem = HyPlayList.List.Find(t => t.Id == (SongContainer.SelectedItem as NCSong).SongId);
@@ -172,10 +175,10 @@ public sealed partial class GroupedSongsList : UserControl
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
             return;
         }
-        var playItems = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(), HyPlayList.NowPlaying + 1);
+        var playItems = HyPlayList.AppendNcSongRange([.. SongContainer.SelectedItems.Cast<NCSong>()], HyPlayList.NowPlaying + 1);
         if (HyPlayList.NowPlayType == PlayMode.Shuffled)
         {
-            List<int> playItemIndexes = new List<int>();
+            List<int> playItemIndexes = [];
             foreach (var item in playItems)
             {
                 var index = HyPlayList.List.IndexOf(item);
@@ -193,7 +196,7 @@ public sealed partial class GroupedSongsList : UserControl
                 HyPlayList.ShuffleList[nextIndex] = item;
             }
         }
-        if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Count() > 0)
+        if (SongContainer.SelectedItems.Cast<NCSong>().Any(t => !t.IsAvailable))
         {
             var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Select(t => t.SongName).ToArray();
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
@@ -209,7 +212,7 @@ public sealed partial class GroupedSongsList : UserControl
         }
         else
         {
-            if ((SongContainer.SelectedItem as NCSong)?.Artist.Count > 1)
+            if (SongContainer.SelectedItem is NCSong { Artist.Count: > 1 })
                 await new ArtistSelectDialog((SongContainer.SelectedItem as NCSong)?.Artist).ShowAsync();
             else
                 Common.NavigatePage(typeof(ArtistPage), (SongContainer.SelectedItem as NCSong)?.Artist[0].Id ?? "");
@@ -230,8 +233,10 @@ public sealed partial class GroupedSongsList : UserControl
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
     {
-        foreach (NCSong ncsong in SongContainer.SelectedItems)
+        foreach (NCSong ncsong in SongContainer.SelectedItems.Cast<NCSong>())
+        {
             DownloadManager.AddDownload(ncsong);
+        }
     }
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)
@@ -277,8 +282,8 @@ public sealed partial class GroupedSongsList : UserControl
             await HyPlayList.AppendNcSource(ListSource);
         }
 
-        if (ListSource.Substring(0, 2) == "pl" ||
-            ListSource.Substring(0, 2) == "al")
+        if (ListSource[..2] == "pl" ||
+            ListSource[..2] == "al")
             HyPlayList.PlaySourceId = ListSource;
         if (!shiftSong)
             HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t?.Id == (e.ClickedItem as NCSong).SongId));

@@ -27,7 +27,7 @@ public sealed partial class ArtistSelectDialog : ContentDialog
     private void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         Common.NavigatePage(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].Id);
-        if (Common.isExpanded)
+        if (Common.IsExpanded)
         {
             if (Common.Setting.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));

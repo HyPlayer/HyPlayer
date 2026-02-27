@@ -89,7 +89,7 @@ public sealed partial class Settings : Page
         var packageId = package.Id;
         var version = packageId.Version;
         VersionCode.Text =
-            $"Version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}  (#{BuildInfo.CommitSha.Substring(0, 8)}@{BuildInfo.BuildBranchId})";
+            $"Version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}  (#{BuildInfo.CommitSha[..8]}@{BuildInfo.BuildBranchId})";
         var deviceInfo = new EasClientDeviceInformation();
         DeviceInfo.Text = deviceInfo.Id.ToString();
         isbyprogram = false;
@@ -101,10 +101,10 @@ public sealed partial class Settings : Page
         FontBox.ItemsSource = GetAllFonts();
     }
 
-    private List<FontInfo> GetAllFonts()
+    private static List<FontInfo> GetAllFonts()
     {
         var names = CanvasTextFormat.GetSystemFontFamilies();
-        var displayNames = CanvasTextFormat.GetSystemFontFamilies(new[] { "zh-cn" });
+        var displayNames = CanvasTextFormat.GetSystemFontFamilies(localeList);
         var models = new List<FontInfo>();
         for (var i = 0; i < names.Length; i++)
         {
@@ -115,7 +115,7 @@ public sealed partial class Settings : Page
             });
         }
 
-        return models.OrderBy(t => t.Name).ToList();
+        return [.. models.OrderBy(t => t.Name)];
     }
     [GeneratedBindableCustomProperty]
     public partial class FontInfo
@@ -141,10 +141,10 @@ public sealed partial class Settings : Page
         var downloader = new BackgroundDownloader();
         var dl = downloader.CreateDownload(new Uri("https://api.kengwang.com.cn/hyplayer/getromaji.php"),
             sf);
-        _ = HandleDownloadAsync(dl, true);
+        _ = HandleDownloadAsync(dl);
     }
 
-    private async Task HandleDownloadAsync(DownloadOperation dl, bool b)
+    private async Task HandleDownloadAsync(DownloadOperation dl)
     {
         var process = new Progress<DownloadOperation>(ProgressCallback);
         try
@@ -202,6 +202,8 @@ public sealed partial class Settings : Page
         }
     }
 
+    private static readonly string[] localeList = ["zh-cn"];
+
     private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
     {
         _ = GetRomaji();
@@ -211,16 +213,15 @@ public sealed partial class Settings : Page
     {
         ApplicationData.Current.LocalSettings.Values["xRealIp"] =
             TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
-        if (Common.NeteaseAPI != null)
-        {
-            Common.NeteaseAPI.Option.XRealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
-        }
+        Common.NeteaseAPI?.Option.XRealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
     }
 
     private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)
     {
-        var folderPicker = new FolderPicker();
-        folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+        var folderPicker = new FolderPicker
+        {
+            SuggestedStartLocation = PickerLocationId.Desktop
+        };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
         if (folder != null)
@@ -232,8 +233,10 @@ public sealed partial class Settings : Page
 
     private async void ButtonSearchingSelect_OnClick(object sender, RoutedEventArgs e)
     {
-        var folderPicker = new FolderPicker();
-        folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+        var folderPicker = new FolderPicker
+        {
+            SuggestedStartLocation = PickerLocationId.Desktop
+        };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
         if (folder != null)
@@ -283,16 +286,17 @@ public sealed partial class Settings : Page
     private void NBShadowDepth_OnValueChanged(object o, RangeBaseValueChangedEventArgs rangeBaseValueChangedEventArgs)
     {
         if (isbyprogram) return;
-        var size = 4;
-        if (int.TryParse(SliderAlbumShadowDepth.Value.ToString(), out size))
+        var size = (int)SliderAlbumShadowDepth.Value;
             Common.Setting.expandedCoverShadowDepth = Math.Max(0, size);
     }
 
 
     private async void ButtonCacheSelect_OnClick(object sender, RoutedEventArgs e)
     {
-        var folderPicker = new FolderPicker();
-        folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+        var folderPicker = new FolderPicker
+        {
+            SuggestedStartLocation = PickerLocationId.Desktop
+        };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
         if (folder != null)

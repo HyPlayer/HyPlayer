@@ -57,10 +57,10 @@ public sealed partial class Me : Page
                 container.Values.Clear();
             }
             Common.NeteaseAPI.Option.Cookies.Clear();
-            Common.Setting.SaveCookies();
+            Setting.SaveCookies();
             Common.PageMain.MainFrame.Navigate(typeof(BasePage));
-            _ = SimpleCacher.ClearCacheAsync(CacheType.Login);
-            _ = ((App)Application.Current).InitializeJumpList();
+            SimpleCacher.ClearCacheAsync(CacheType.Login).SafeFireAndForget();
+            App.InitializeJumpList().SafeFireAndForget();
         }
         catch
         {

@@ -12,15 +12,6 @@ namespace HyPlayer.Classes;
 
 public static class UpdateManager
 {
-    public enum UpdateSource
-    {
-        MicrosoftStore,
-        Release,
-        Canary,
-        GitHub,
-        CI,
-    }
-
     public class RemoteVersionResult
     {
         public UpdateSource UpdateSource { get; set; }
@@ -37,7 +28,7 @@ public static class UpdateManager
     {
         var storeContext = StoreContext.GetDefault();
         var packageUpdates = await storeContext.GetAppAndOptionalStorePackageUpdatesAsync();
-        var update = packageUpdates.FirstOrDefault();
+        var update = packageUpdates[0];
         return new RemoteVersionResult
         {
             UpdateSource = UpdateSource.MicrosoftStore,
@@ -176,10 +167,12 @@ public static class UpdateManager
             {
                 _ = Common.Invoke(async () =>
                 {
-                    ContentDialog contentDialog = new ContentDialog();
-                    contentDialog.Title = title;
-                    contentDialog.Content = message;
-                    contentDialog.PrimaryButtonText = "更新";
+                    ContentDialog contentDialog = new()
+                    {
+                        Title = title,
+                        Content = message,
+                        PrimaryButtonText = "更新"
+                    };
                     contentDialog.PrimaryButtonClick += async (_, _) =>
                         await Windows.System.Launcher.LaunchUriAsync(
                             new Uri(remoteResult.DownloadLink));
@@ -203,7 +196,7 @@ public static class UpdateManager
         {
             Common.Setting.canaryChannelAvailability = false;
             Common.AddToTeachingTipLists("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
-            if (Common.Setting.UpdateSource == 2) Common.Setting.UpdateSource = 1;
+            if (Common.Setting.UpdateSource == UpdateSource.Canary) Common.Setting.UpdateSource = UpdateSource.Release;
         }
     }
 }

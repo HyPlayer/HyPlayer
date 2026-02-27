@@ -94,7 +94,7 @@ namespace HyPlayer.Pages
             var button = sender?.As<ListViewItem>();
             if (button == null) return;
             var playlist = button.Tag as NCPlayList;
-            Common.NavigatePage(typeof(SongListDetail), playlist, new Windows.UI.Xaml.Media.Animation.DrillInNavigationTransitionInfo());
+            Common.NavigatePage(typeof(SongListDetail), playlist);
         }
     }
 }

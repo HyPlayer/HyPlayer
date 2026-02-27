@@ -25,7 +25,7 @@ using File = TagLib.File;
 
 namespace HyPlayer.HyPlayControl;
 
-internal sealed class DownloadObject : INotifyPropertyChanged
+internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChanged
 {
     public HyPlayItem PlayItem;
     private DownloadOperation _downloadOperation;
@@ -54,7 +54,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         set => SetField(ref _hadSize, value);
     }
 
-    public NCSong ncsong;
+    public NCSong ncsong = song;
 
     public int Progress
     {
@@ -105,11 +105,6 @@ internal sealed class DownloadObject : INotifyPropertyChanged
     {
         get => _totalSize;
         set => SetField(ref _totalSize, value);
-    }
-
-    public DownloadObject(NCSong song)
-    {
-        ncsong = song;
     }
 
     public void Pause()
@@ -175,12 +170,12 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                     The163KeyHelper.TrySetMusicInfo(file.Tag, PlayItem);
                 //写相关信息
                 file.Tag.Album = ncsong.Album.Name;
-                file.Tag.Performers = ncsong.Artist.Select(t => t.Name).ToArray();
+                file.Tag.Performers = [.. ncsong.Artist.Select(t => t.Name)];
                 file.Tag.Title = ncsong.SongName;
                 file.Tag.Track = (uint)(ncsong.TrackId == -1 ? ncsong.Order + 1 : ncsong.TrackId);
 
                 // 获取 Disc Id
-                var regexRet = Regex.Match(ncsong.CDName ?? "01", "[0-9]+");
+                var regexRet = DiscInfoRegex().Match(ncsong.CDName ?? "01");
                 if (regexRet.Success)
                 {
                     file.Tag.Disc = uint.Parse(regexRet.Value);
@@ -208,10 +203,10 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
                 DownloadManager.AlbumPicturesCache[ncsong.Album.Id] = pic;
 
-                file.Tag.Pictures = new IPicture[]
-                {
+                file.Tag.Pictures =
+                [
                     pic
-                };
+                ];
                 file.Tag.Pictures[0].MimeType = "image/jpeg";
                 file.Tag.Pictures[0].Description = "Cover.jpg";
                 file.Save();
@@ -281,7 +276,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
 
     private static string GetSize(double size)
     {
-        string[] units = { "B", "KB", "MB", "GB", "TB", "PB" };
+        string[] units = ["B", "KB", "MB", "GB", "TB", "PB" ];
         const double mod = 1024.0;
         var i = 0;
         while (size >= mod)
@@ -348,17 +343,17 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".flac")))
                 switch (Common.Setting.downloadNameOccupySolution)
                 {
-                    case 0:
+                    case OccupySolution.Skip:
                         Status = DownloadStatus.Paused;
                         _ = Common.Invoke(() => { Message = "歌曲已存在, 跳过"; });
                         return;
-                    case 1:
+                    case OccupySolution.ReWrite:
                         await (await nowFolder.GetFileAsync(Path.GetFileName(FileName))).DeleteAsync();
                         break;
-                    case 2:
+                    case OccupySolution.AppendID:
                         FileName = Path.GetFileNameWithoutExtension(FileName) + ncsong.SongId;
                         break;
-                    case 3:
+                    case OccupySolution.UpdateInfo:
                         if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".mp3")))
                         {
                             ResultFile = await nowFolder.GetFileAsync(Path.GetFileName(FileName + ".mp3"));
@@ -459,16 +454,19 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         OnPropertyChanged(propertyName);
         return true;
     }
+
+    [GeneratedRegex("[0-9]+")]
+    private static partial Regex DiscInfoRegex();
 }
 
 internal static class DownloadManager
 {
     private static readonly Timer _timer = new(1000);
     private static bool Timered;
-    public static ObservableCollection<DownloadObject> DownloadLists = new();
+    public static ObservableCollection<DownloadObject> DownloadLists = [];
     public static BackgroundDownloader Downloader = new();
-    public static List<Task> WritingTasks = new();
-    public static Dictionary<string, Picture> AlbumPicturesCache = new();
+    public static List<Task> WritingTasks = [];
+    public static Dictionary<string, Picture> AlbumPicturesCache = [];
 
     public static bool CheckDownloadAbilityAndToast()
     {
@@ -511,8 +509,6 @@ internal static class DownloadManager
                 case DownloadObject.DownloadStatus.Paused:
                 case DownloadObject.DownloadStatus.Error:
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException();
             }
         }
     }
@@ -538,8 +534,7 @@ public partial class UwpStorageFileAbstraction : File.IFileAbstraction, IDisposa
 
     public UwpStorageFileAbstraction(IStorageFile file)
     {
-        if (file == null)
-            throw new ArgumentNullException(nameof(file));
+        ArgumentNullException.ThrowIfNull(file);
 
         this.file = file;
         Name = file.Name;

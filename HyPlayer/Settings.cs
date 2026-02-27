@@ -1,5 +1,6 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.NeteaseApi;
 using LiteFM.Abstractions;
 using System;
@@ -8,22 +9,21 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using Windows.ApplicationModel.Core;
 using Windows.Storage;
 using Windows.UI;
-using Windows.UI.Core;
 using Windows.UI.ViewManagement;
+using Windows.UI.Xaml;
 
 namespace HyPlayer
 {
     public partial class Setting : INotifyPropertyChanged
     {
-        public int ColorGeneratorType
+        public ColorGeneratorType ColorGeneratorType
         {
-            get => GetSettings(nameof(ColorGeneratorType), 2);
+            get => GetSettings(nameof(ColorGeneratorType), ColorGeneratorType.Auto);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(ColorGeneratorType)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(ColorGeneratorType)] = (int)value;
                 OnPropertyChanged();
             }
         }
@@ -225,7 +225,7 @@ namespace HyPlayer
                 {
                     if (CustomAcrylic)
                     {
-                        return GetSettings<double>(nameof(CustomTintOpacity), 3d);
+                        return GetSettings(nameof(CustomTintOpacity), 3d);
                     }
                     else
                     {
@@ -279,12 +279,6 @@ namespace HyPlayer
                 ApplicationData.Current.LocalSettings.Values[nameof(downloadLyric)] = value;
                 OnPropertyChanged();
             }
-        }
-
-        public int PerformanceMode
-        {
-            get => GetSettings(nameof(PerformanceMode), 1);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(PerformanceMode)] = value;
         }
 
         public bool karaokLyric
@@ -353,7 +347,7 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableCheckTokenApi)] = value;
-                if (Common.NeteaseAPI != null) Common.NeteaseAPI.Option.FakeCheckToken = value;
+                Common.NeteaseAPI?.Option.FakeCheckToken = value;
                 OnPropertyChanged();
             }
         }
@@ -472,21 +466,21 @@ namespace HyPlayer
             get
             {
                 var folders = GetSettings(nameof(scanLocalFolder), KnownFolders.MusicLibrary.Path);
-                return folders.Split("\r\n").ToList();
+                return [.. folders.Split("\r\n")];
             }
             set => ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = string.Join("\r\n", value);
         }
 
-        public int lyricColor
+        public LyricColor lyricColor
         {
-            get => GetSettings(nameof(lyricColor), 0);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(lyricColor)] = value;
+            get => GetSettings(nameof(lyricColor), LyricColor.Auto);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(lyricColor)] = (int)value;
         }
 
-        public int downloadNameOccupySolution
+        public OccupySolution downloadNameOccupySolution
         {
-            get => GetSettings(nameof(downloadNameOccupySolution), 0);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(downloadNameOccupySolution)] = value;
+            get => GetSettings(nameof(downloadNameOccupySolution), OccupySolution.Skip);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(downloadNameOccupySolution)] = (int)value;
         }
 
 
@@ -556,12 +550,12 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values[nameof(noImage)] = value;
         }
 
-        public int lyricAlignment
+        public LyricAlignment lyricAlignment
         {
-            get => GetSettings(nameof(lyricAlignment), 0);
+            get => GetSettings(nameof(lyricAlignment), LyricAlignment.Left);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricAlignment)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricAlignment)] = (int)value;
                 OnPropertyChanged();
             }
         }
@@ -757,10 +751,10 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values[nameof(highPreciseLyricTimer)] = value;
         }
 
-        public int gestureMode
+        public GestureMode gestureMode
         {
-            get => GetSettings(nameof(gestureMode), 0);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(gestureMode)] = value;
+            get => GetSettings(nameof(gestureMode), GestureMode.Basic);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(gestureMode)] = (int)value;
         }
 
         public int maxDownloadCount
@@ -860,7 +854,7 @@ namespace HyPlayer
 
         public bool CrossFade
         {
-            get => GetSettings("CrossFade", false);
+            get => GetSettings(nameof(CrossFade), false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["CrossFade"] = value;
@@ -930,24 +924,7 @@ namespace HyPlayer
 
         public double CrossFadeTime
         {
-            get
-            {
-                try
-                {
-                    if (CrossFade)
-                    {
-                        return GetSettings<double>(nameof(CrossFadeTime), 3d);
-                    }
-                    else
-                    {
-                        return 0d;
-                    }
-                }
-                catch
-                {
-                    return 3d;
-                }
-            }
+            get => GetSettings(nameof(CrossFadeTime), 3d);
 
             set
             {
@@ -985,12 +962,12 @@ namespace HyPlayer
             }
         }
 
-        public int songRollType
+        public PlayMode songRollType
         {
-            get => GetSettings(nameof(songRollType), 0);
+            get => GetSettings(nameof(songRollType), PlayMode.DefaultRoll);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(songRollType)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(songRollType)] = (int)value;
                 OnPropertyChanged();
             }
         }
@@ -1007,7 +984,7 @@ namespace HyPlayer
 
         public bool enableCache
         {
-            get => GetSettings(nameof(enableCache), false);
+            get => GetSettings(nameof(enableCache), true);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(enableCache)] = value;
@@ -1048,13 +1025,13 @@ namespace HyPlayer
             }
         }
 
-        public int themeRequest
+        public ThemeRequest themeRequest
         {
             // 0 - 未设置   1 - 浅色  2 - 深色
-            get => GetSettings(nameof(themeRequest), 0);
+            get => GetSettings(nameof(themeRequest), ThemeRequest.Auto);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(themeRequest)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(themeRequest)] = (int)value;
                 OnPropertyChanged();
             }
         }
@@ -1096,12 +1073,12 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values[nameof(DisablePopUp)] = value;
         }
 
-        public int UpdateSource
+        public UpdateSource UpdateSource
         {
-            get => GetSettings(nameof(UpdateSource), 1);
+            get => GetSettings(nameof(UpdateSource), UpdateSource.Release);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(UpdateSource)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(UpdateSource)] = (int)value;
                 OnPropertyChanged();
             }
         }
@@ -1268,12 +1245,12 @@ namespace HyPlayer
             }
         }
 
-        public int LineRollingCalculator
+        public RollingCalculator LineRollingCalculator
         {
-            get => GetSettings(nameof(LineRollingCalculator), 0);
+            get => GetSettings(nameof(LineRollingCalculator), RollingCalculator.ElasticEaseRollingCalculator);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(LineRollingCalculator)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(LineRollingCalculator)] = (int)value;
                 OnPropertyChanged();
             }
         }
@@ -1435,7 +1412,7 @@ namespace HyPlayer
             }
         }
 
-        public bool SaveCookies()
+        public static bool SaveCookies()
         {
             var container = ApplicationData.Current.LocalSettings.CreateContainer("LoginedUser", ApplicationDataCreateDisposition.Always);
             container.Values.Clear();
@@ -1445,7 +1422,7 @@ namespace HyPlayer
             }
             return true;
         }
-        public bool LoadCookies()
+        public static bool LoadCookies()
         {
             if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("LoginedUser", out var container))
             {

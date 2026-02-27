@@ -58,8 +58,8 @@ namespace HyPlayer.Classes
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is false && Common.Setting.acrylicBackgroundStatus is true && Common.isExpanded is false) return Application.Current.Resources["GridPlayBarBackgroundAcrylic"]?.As<Brush>();
-            if (value is false && Common.Setting.acrylicBackgroundStatus is false && Common.isExpanded is false) return Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"]?.As<Brush>();
+            if (value is false && Common.Setting.acrylicBackgroundStatus is true && Common.IsExpanded is false) return Application.Current.Resources["GridPlayBarBackgroundAcrylic"]?.As<Brush>();
+            if (value is false && Common.Setting.acrylicBackgroundStatus is false && Common.IsExpanded is false) return Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"]?.As<Brush>();
             return null;
         }
 
@@ -268,9 +268,9 @@ namespace HyPlayer.Classes
             {
                 return FriendFormat(GetDateTimeFromTimeStamp((long)value));
             }
-            else if (value is DateTime)//时间
+            else if (value is DateTime time)//时间
             {
-                return FriendFormat((DateTime)value);
+                return FriendFormat(time);
             }
             else
             {

@@ -27,8 +27,8 @@ public sealed partial class WidgetPage : Page
 {
     private XboxGameBarWidget _widget;
     private XboxGameBarHotkeyWatcher _hotkeyWatcher;
-    private GameBarSettings _settings;
-    private LyricRenderView LyricBox = new LyricRenderView();
+    private readonly GameBarSettings _settings;
+    private readonly LyricRenderView LyricBox = new();
 
 
     public WidgetPage()
@@ -139,7 +139,7 @@ public sealed partial class WidgetPage : Page
     {
         if (HyPlayList.NowPlayingItem == null) return;
         var progress = position.TotalMilliseconds / HyPlayList.NowPlayingItem.LengthInMilliseconds * 100;
-        var text = $"{position.ToString(@"mm\:ss")}/{TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.LengthInMilliseconds).ToString(@"mm\:ss")}";
+        var text = $"{position:mm\\:ss}/{TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.LengthInMilliseconds):mm\\:ss}";
         _ = Dispatcher.RunAsync(
             CoreDispatcherPriority.Normal,
             () =>
@@ -219,10 +219,10 @@ public sealed partial class WidgetPage : Page
         LyricBox.Context.Effects.Blur = Common.Setting.lyricRenderBlur;
         LyricBox.Context.LineRollingEaseCalculator = Common.Setting.LineRollingCalculator switch
         {
-            1 => new SinRollingCalculator(),
-            2 => new LyricifyRollingCalculator(),
-            3 => new SyncRollingCalculator(),
-            4 => new CircleEaseRollingCalculator(),
+            RollingCalculator.SinRollingCalculator => new SinRollingCalculator(),
+            RollingCalculator.LyricifyRollingCalculator => new LyricifyRollingCalculator(),
+            RollingCalculator.SyncRollingCalculator => new SyncRollingCalculator(),
+            RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         LyricBox.Context.Effects.ScaleWhenFocusing = Common.Setting.lyricRenderScaleWhenFocusing;

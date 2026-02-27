@@ -2,6 +2,7 @@
 
 using ALRC.Converters;
 using ALRC.Converters.Enhancers;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.Classes.LyricParser.Abstraction;
@@ -21,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -92,31 +94,30 @@ public static class HyPlayList
 
     public delegate void SongCoverChanged(HyPlayItem playItem);
 
-    public static int NowPlaying = -1;
+    public static int NowPlaying { get; set; } = -1;
     private static readonly Timer SecTimer = new(1000); // 公用秒表
-    public static readonly List<HyPlayItem> List = new();
-    public static readonly List<int> ShuffleList = new();
-    public static int ShufflingIndex = -1;
-    public static HyLyricInfo HyLyricInfo = new();
-    public static TimeSpan LyricOffset = TimeSpan.Zero;
-    public static PropertySet AudioEffectsProperties = new PropertySet();
+    public static readonly List<HyPlayItem> List = [];
+    public static readonly List<int> ShuffleList = [];
+    public static int ShufflingIndex { get; set; } = -1;
+    public static HyLyricInfo HyLyricInfo { get; set; } = new();
+    public static TimeSpan LyricOffset { get; private set; } = TimeSpan.Zero;
 #nullable enable
     private static CancellationTokenSource? _mediaSourceCancellationTokenSource;
 #nullable restore
-    private static SemaphoreSlim SeekerLock = new SemaphoreSlim(1);
-    private static SemaphoreSlim LoaderLock = new SemaphoreSlim(1);
+    private static readonly SemaphoreSlim SeekerLock = new(1);
+    private static readonly SemaphoreSlim LoaderLock = new(1);
 
     /********        API        ********/
-    public static AudioGraphPlayer Player = Ioc.Default.GetService<AudioGraphPlayer>();
-    public static FadeManager FadeManager = new FadeManager(Player);
-    public static BackgroundDownloader Downloader = new();
-    public static SystemMediaTransportControls MediaSystemControls;
+    public static AudioGraphPlayer Player { get; private set; } = Ioc.Default.GetService<AudioGraphPlayer>();
+    public static FadeManager FadeManager { get; private set; } = new FadeManager(Player);
+    public static BackgroundDownloader Downloader { get; private set; } = new();
+    public static SystemMediaTransportControls MediaSystemControls { get; private set; }
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
-    private static Dictionary<HyPlayItem, DownloadOperation> DownloadOperations = new();
-    private static Dictionary<DownloadOperation, HyPlayItem> DownloadOperationsReverseDirectory = new();
+    private static readonly Dictionary<HyPlayItem, DownloadOperation> DownloadOperations = [];
+    private static readonly Dictionary<DownloadOperation, HyPlayItem> DownloadOperationsReverseDirectory = [];
 #nullable enable
-    public static InMemoryRandomAccessStream? CoverStream;
-    public static RandomAccessStreamReference? CoverStreamReference;
+    public static InMemoryRandomAccessStream? CoverStream { get; private set; }
+    public static RandomAccessStreamReference? CoverStreamReference { get; private set; }
 #nullable restore
 
     private static readonly IProgress<DownloadOperation> DefaultProgressCallback = new Progress<DownloadOperation>(ProgressCallback);
@@ -127,9 +128,9 @@ public static class HyPlayList
     private const string SONG_URL_CACHE_KEY_FORMAT = "{0}_{1}";
     private const int SONG_URL_CACHE_MINUTES = 20;
 
-    public static int LyricPos;
+    public static int LyricPos { get; set; }
 
-    public static string PlaySourceId;
+    public static string PlaySourceId { get; set; }
 
 
     private static double _playerOutgoingVolume;
@@ -151,7 +152,7 @@ public static class HyPlayList
     {
         private set
         {
-            Common.Setting.songRollType = (int)value;
+            Common.Setting.songRollType = value;
             OnPlayModeChanged?.Invoke(value);
         }
 
@@ -318,8 +319,7 @@ public static class HyPlayList
     private static void PlayerOnMediaFailed(string reason)
     {
         Common.ErrorMessageList.Add($"歌曲播放失败: {NowPlayingItem.Name}\n{reason}");
-        Common.AddToTeachingTipLists($"播放失败 切到下一曲 \n 歌曲: {NowPlayingItem.Name}\n{reason}");
-        SongMoveNext();
+        Common.AddToTeachingTipLists($"播放失败\n 歌曲: {NowPlayingItem.Name}\n{reason}");
     }
 
     public static async Task PickLocalFile()
@@ -385,9 +385,8 @@ public static class HyPlayList
                                 Name = Info.musicName,
                                 InfoTag = file.Provider.DisplayName + " NCM"
                             };
-                            hyitem.Artist = Info.artist.Select(t => new NCArtist
-                            { Name = t[0].ToString(), Id = t[1].ToString() })
-                                .ToList();
+                            hyitem.Artist = [.. Info.artist.Select(t => new NCArtist
+                            { Name = t[0].ToString(), Id = t[1].ToString() })];
 
                             List.Add(hyitem);
                         }
@@ -439,7 +438,7 @@ public static class HyPlayList
                 else
                 {
                     NowPlayingStorageFile = targetItem.LocalStorageFile;
-                    var item = await LoadStorageFile(targetItem.LocalStorageFile, ctk);
+                    var item = await LoadStorageFile(targetItem.LocalStorageFile, ctk: ctk);
                     targetItem.ItemType = HyPlayItemType.Local;
                     targetItem.PlayItem = item.PlayItem;
                     targetItem.LocalStorageFile = NowPlayingStorageFile;
@@ -708,8 +707,7 @@ public static class HyPlayList
     {
         //当播放结束时,此时你应当进行切歌操作
         //不过在此之前还是把订阅了的时间给返回回去吧
-        var source = playbackSource as AudioGraphPlaybackSource;
-        if (source == null) return;
+        if (playbackSource is not AudioGraphPlaybackSource source) return;
         var item = source.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
         OnMediaEnd?.Invoke(item);
         if (NowPlayType != PlayMode.SinglePlay && !Common.Setting.CrossFade)
@@ -763,7 +761,7 @@ public static class HyPlayList
 
                         if (songRes.IsError)
                         {
-                            throw new Exception("API 请求失败");
+                            throw songRes.Error;
                         }
 
                         return songRes.Value;
@@ -771,12 +769,7 @@ public static class HyPlayList
                     TimeSpan.FromMinutes(SONG_URL_CACHE_MINUTES),
                     cancellationToken: ctk);
 
-                if (result == null)
-                {
-                    throw new Exception("下载链接获取失败");
-                }
-
-                return result;
+                return result ?? throw new Exception("下载链接获取失败");
             });
 
             if (songResult?.SongUrls?[0].Code == 200)
@@ -838,9 +831,11 @@ public static class HyPlayList
             Common.BarPlayBar.TbSongTag.Text = qualityTag;
             if (qualityTag.Length > 2)
             {
-                var backgroundbrush = new LinearGradientBrush();
-                backgroundbrush.StartPoint = new Windows.Foundation.Point(0, 0);
-                backgroundbrush.EndPoint = new Windows.Foundation.Point(1, 1);
+                var backgroundbrush = new LinearGradientBrush
+                {
+                    StartPoint = new Windows.Foundation.Point(0, 0),
+                    EndPoint = new Windows.Foundation.Point(1, 1)
+                };
 
                 backgroundbrush.GradientStops.Add(new GradientStop
                 { Offset = 0, Color = Color.FromArgb(255, 251, 251, 206) });
@@ -861,42 +856,6 @@ public static class HyPlayList
                 Common.BarPlayBar.TbSongTag.Foreground = brush;
             }
         });
-    }
-
-    /// <summary>
-    /// 安全地清理下载操作资源
-    /// </summary>
-    private static void CleanupDownloadOperation(HyPlayItem targetItem)
-    {
-        if (DownloadOperations.TryGetValue(targetItem, out var operation))
-        {
-            DownloadOperations.Remove(targetItem);
-            DownloadOperationsReverseDirectory.Remove(operation);
-        }
-    }
-
-    /// <summary>
-    /// 验证播放项是否有效
-    /// </summary>
-    private static bool ValidatePlayItem(HyPlayItem targetItem)
-    {
-        return targetItem?.PlayItem != null && !string.IsNullOrEmpty(targetItem.Name);
-    }
-
-    /// <summary>
-    /// 处理播放失败的通用方法
-    /// </summary>
-    private static void HandlePlaybackFailure(string message, Exception exception = null)
-    {
-        var errorMessage = $"{message}";
-        if (exception != null)
-        {
-            errorMessage += $"\n{exception.Message}";
-        }
-
-        Common.ErrorMessageList.Add(errorMessage);
-        Common.AddToTeachingTipLists("播放失败", errorMessage);
-        SongMoveNext();
     }
 
     public static async Task LoadMediaSource(HyPlayItem targetItem, bool setAsPrimary = false, bool autoPlay = true)
@@ -960,6 +919,7 @@ public static class HyPlayList
         }
         finally
         {
+            _mediaSourceCancellationTokenSource?.Dispose();
             _mediaSourceCancellationTokenSource = null;
             LoaderLock.Release();
         }
@@ -1057,17 +1017,20 @@ public static class HyPlayList
         {
             return MediaSource.CreateFromDownloadOperation(existingOperation);
         }
-
+        using var message = new HttpRequestMessage(HttpMethod.Head, playUrl);
+        using var preflightResponse = await Common.HttpClient!.SendAsync(message, ctk);
+        var modified = preflightResponse.Content.Headers.LastModified;
+        var headerIsValid = modified is not null;
         var destinationFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
         var fileName = string.Format(CACHE_FILE_NAME_FORMAT, targetItem.Id, targetItem?.SubExt);
         var destinationFile = await destinationFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
         var operation = Downloader.CreateDownload(new Uri(playUrl), destinationFile);
-        //operation.IsRandomAccessRequired = true;
+        operation.IsRandomAccessRequired = headerIsValid;
         DownloadOperations[targetItem] = operation;
         DownloadOperationsReverseDirectory[operation] = targetItem;
-        await operation.StartAsync().AsTask(ctk);
-        _ = operation.AttachAsync().AsTask(ctk, DefaultProgressCallback);
-        var mediaSource = MediaSource.CreateFromDownloadOperation(operation);
+        operation.StartAsync().AsTask(ctk).SafeFireAndForget();
+        operation.AttachAsync().AsTask(ctk, DefaultProgressCallback).SafeFireAndForget();
+        var mediaSource = headerIsValid ? MediaSource.CreateFromDownloadOperation(operation) : MediaSource.CreateFromUri(new Uri(playUrl));
         return mediaSource;
     }
 
@@ -1099,7 +1062,7 @@ public static class HyPlayList
 
     private static void UpdatePlayItemDuration(HyPlayItem targetItem, MediaSource mediaSource)
     {
-        var duration = mediaSource.Duration?.TotalMilliseconds;
+        var duration = mediaSource?.Duration?.TotalMilliseconds;
         if (duration != null && targetItem.LengthInMilliseconds != duration.Value)
         {
             targetItem.LengthInMilliseconds = duration.Value;
@@ -1115,7 +1078,6 @@ public static class HyPlayList
                 DownloadOperationsReverseDirectory.Remove(obj);
                 DownloadOperations.Remove(item);
             }
-            return;
         }
     }
     public static void Player_SourceChanged(IPlaybackSource source)
@@ -1467,7 +1429,7 @@ public static class HyPlayList
     }
 
 
-    static Timer highTimer = new Timer(10);
+    static readonly Timer highTimer = new(10);
 
 
     private static void LoadLyricChange()
@@ -1526,7 +1488,6 @@ public static class HyPlayList
             return;
         }
         var pureLyricInfo = new PureLyricInfo();
-        var unionTranslation = false;
         switch (hpi.ItemType)
         {
             case HyPlayItemType.Netease:
@@ -1544,7 +1505,6 @@ public static class HyPlayList
                             await StorageFile.GetFileFromPathAsync(Path.ChangeExtension(NowPlayingItem.Url,
                                 "lrc")))
                     };
-                    unionTranslation = true;
                 }
                 catch
                 {
@@ -1557,7 +1517,7 @@ public static class HyPlayList
         //先进行歌词转换以免被搞
         if (pureLyricInfo is not KaraokLyricInfo || !Common.Setting.karaokLyric)
         {
-            HyLyricInfo.Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics, unionTranslation);
+            HyLyricInfo.Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics);
         }
         else
         {
@@ -1601,15 +1561,14 @@ public static class HyPlayList
         {
             if (Common.Setting.enableAmllTtmlDb && hpi.ItemType == HyPlayItemType.Netease)
             {
-                var ttml = await Common.HttpClient!.GetStringAsync(
-                    Common.Setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", hpi.Id));
+                var ttml = await Common.HttpClient!.GetStringAsync(Common.Setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", hpi.Id), ctk);
                 var ttmlConverter = new AppleSyllableConverter();
                 var lrcConverter = new LrcConverter();
                 var lrcTranslationConverter = new LrcTranslationEnhancer();
                 var alrc = ttmlConverter.Convert(ttml);
                 var lrc = lrcConverter.ConvertBack(alrc);
                 var trLrc = lrcTranslationConverter.Extract(alrc);
-                HyALRCLyricInfo ttmlLyric = new HyALRCLyricInfo()
+                HyALRCLyricInfo ttmlLyric = new()
                 {
                     PureLyrics = lrc,
                     TrLyrics = trLrc,
@@ -1635,7 +1594,7 @@ public static class HyPlayList
                     SongMetadata = []
                 };
 
-                HyLyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics, true);
+                HyLyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics);
                 Utils.ConvertTranslation(ttmlLyric.TrLyrics, HyLyricInfo.Lyrics);
                 HyLyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
                 HyLyricInfo.SongMetadata = ttmlLyric.SongMetadata;
@@ -1666,7 +1625,7 @@ public static class HyPlayList
                 };
             try
             {
-                PureLyricInfo res = new PureLyricInfo();
+                PureLyricInfo res = new();
                 var lyricRequest = new LyricRequest() { Id = ncp.Id };
                 var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricApi, ncp.Id,
                     async () =>
@@ -1699,11 +1658,11 @@ public static class HyPlayList
                     };
                 }
 
-                string CleanLrc(string text)
+                static string CleanLrc(string text)
                 {
                     return string.Join('\n',
                         text.Split("\n")
-                            .Where(t => !t.StartsWith("{")).ToArray());
+                            .Where(t => !t.StartsWith('{')).ToArray());
                 }
 
 
@@ -1820,7 +1779,7 @@ public static class HyPlayList
         var insertList = ncSongs.Select(LoadNcSong).Where(t => !List.Contains(t)).ToList();
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
         {
-            insertList = insertList.Except(List, new HyPlayerItemComparer()).ToList();
+            insertList = [.. insertList.Except(List, new HyPlayerItemComparer())];
             // 防止重新打乱列表
             if (insertList.Count <= 0)
             {
@@ -1904,21 +1863,21 @@ public static class HyPlayList
          */
         try
         {
-            var prefix = sourceId.Substring(0, 2);
+            var prefix = sourceId[..2];
             switch (prefix)
             {
                 case "pl":
-                    await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
+                    await AppendPlayList(sourceId[2..]);
                     return true;
                 case "ns":
                     var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongDetail,
-                        "ncm" + sourceId.Substring(2, sourceId.Length - 2),
+                        string.Concat("ncm", sourceId.AsSpan(2, sourceId.Length - 2)),
                         async () =>
                         {
                             var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
                                 new SongDetailRequest()
                                 {
-                                    Id = sourceId.Substring(2, sourceId.Length - 2)
+                                    Id = sourceId[2..]
                                 });
                             if (result.IsError)
                             {
@@ -1940,16 +1899,16 @@ public static class HyPlayList
                         AppendNcSong(rst.MapToNcSong());
                     return true;
                 case "al":
-                    await AppendAlbum(sourceId.Substring(2, sourceId.Length - 2));
+                    await AppendAlbum(sourceId[2..]);
                     return true;
                 case "sh":
-                    await AppendSingerHot(sourceId.Substring(2, sourceId.Length - 2));
+                    await AppendSingerHot(sourceId[2..]);
                     return true;
                 case "sa":
-                    await AppendSingerHot(sourceId.Substring(2, sourceId.Length - 2));
+                    await AppendSingerHot(sourceId[2..]);
                     return true;
                 case "rd":
-                    await AppendRadioList(sourceId.Substring(2, sourceId.Length - 2));
+                    await AppendRadioList(sourceId[2..]);
                     return true;
                 default:
                     return false;
@@ -1982,7 +1941,7 @@ public static class HyPlayList
                 return j1.Value?.Songs;
             }, cancellationToken: CancellationToken.None);
 
-            AppendNcSongs(rst.Select(t => t.MapNcSong()).ToList(), false);
+            AppendNcSongs([.. rst.Select(t => t.MapNcSong())], false);
             return true;
         }
         catch (Exception ex)
@@ -2058,7 +2017,7 @@ public static class HyPlayList
                     hasMore = json.Value is { Data.More: true };
                     if (json.Value?.Data?.Programs is { Length: > 0 })
                         AppendNcSongs(
-                            json.Value.Data.Programs.Select(t => (NCSong)t.MapToNCFmItem()).ToList(),
+                            [.. json.Value.Data.Programs.Select(t => (NCSong)t.MapToNCFmItem())],
                             false);
                 }
                 catch (Exception ex)
@@ -2144,13 +2103,13 @@ public static class HyPlayList
         return false;
     }
 
-    public static async Task<bool> AppendStorageFile(StorageFile sf, bool nocheck163 = false)
+    public static async Task<bool> AppendStorageFile(StorageFile sf)
     {
-        List.Add(await LoadStorageFile(sf, CancellationToken.None));
+        List.Add(await LoadStorageFile(sf, ctk: CancellationToken.None));
         return true;
     }
 
-    public static async Task<HyPlayItem> LoadStorageFile(StorageFile sf, CancellationToken ctk = default, bool nocheck163 = false)
+    public static async Task<HyPlayItem> LoadStorageFile(StorageFile sf, bool nocheck163 = false, CancellationToken ctk = default)
     {
         ctk.ThrowIfCancellationRequested();
 
@@ -2195,7 +2154,7 @@ public static class HyPlayList
             return hyPlayItem;
         }
 
-        if (string.IsNullOrEmpty(mi.musicName)) return await LoadStorageFile(sf, CancellationToken.None, true);
+        if (string.IsNullOrEmpty(mi.musicName)) return await LoadStorageFile(sf, true, CancellationToken.None);
         return new HyPlayItem
         {
             ItemType = HyPlayItemType.Local,
@@ -2212,9 +2171,7 @@ public static class HyPlayList
             IsLocalFile = true,
             LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds,
             Id = mi.musicId.ToString(),
-            Artist = mi.artist
-            .Select(t => new NCArtist { Name = t[0].ToString(), Id = t[1].ToString() })
-            .ToList(),
+            Artist = [.. mi.artist.Select(t => new NCArtist { Name = t[0].ToString(), Id = t[1].ToString() })],
             Name = mi.musicName,
             LocalStorageFile = sf,
             TrackId = (int)tagFile.Tag.Track,
@@ -2229,7 +2186,7 @@ public static class HyPlayList
         ShufflingIndex = 0;
         if (List.Count != 0)
         {
-            HashSet<int> shuffledNumbers = new();
+            HashSet<int> shuffledNumbers = [];
             bool hasSpecifiedCorrectCurrentSong = false;
             if (currentSongId != "-1")
             {
@@ -2271,21 +2228,13 @@ public static class HyPlayList
     }
 }
 
-public enum PlayMode
-{
-    DefaultRoll,
-    SinglePlay,
-    Shuffled
-}
-
 public static class Utils
 {
-    public static List<SongLyric> ConvertPureLyric(string lyricAllText, bool hasTranslationsInLyricText = false)
+    public static List<SongLyric> ConvertPureLyric(string lyricAllText)
     {
         var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
-        return parsedlyrics.Lines.OrderBy(t => t.StartTime).Select(lyricsLine => new SongLyric
-        { LyricLine = lyricsLine, Translation = null })
-            .ToList();
+        return [.. parsedlyrics.Lines.OrderBy(t => t.StartTime).Select(lyricsLine => new SongLyric
+        { LyricLine = lyricsLine, Translation = null })];
     }
 
     public static void ConvertTranslation(string lyricAllText, List<SongLyric> lyrics)
@@ -2394,7 +2343,7 @@ public static class Utils
                 if (lyricItem.LyricLine is not KaraokeLyricsLine klyric) continue;
                 var list = await Common.KawazuConv.GetDivisions(lyricItem.LyricLine.CurrentLyric, To.Romaji,
                     Mode.Separated, RomajiSystem.Hepburn, "", "");
-                SetRomajiKaraoke(list, klyric.WordInfos.ToList());
+                SetRomajiKaraoke(list, [.. klyric.WordInfos]);
             }
         }
     }
@@ -2417,7 +2366,7 @@ public static class Utils
             {
                 if (!string.IsNullOrWhiteSpace(curHiraNotation))
                 {
-                    wordInfo[wordInfo.Count - 1].Transliteration +=
+                    wordInfo[^1].Transliteration +=
                         Utilities.ToRawRomaji(curHiraNotation, RomajiSystem.Hepburn, true);
                 }
 
@@ -2439,8 +2388,8 @@ public static class Utils
                 if (curElement.Trim().Length > 0)
                 {
                     wordInfo[i + delta].Transliteration =
-                        Utilities.ToRawRomaji(curHiraNotation.Substring(0, 1), RomajiSystem.Hepburn, true);
-                    curHiraNotation = curHiraNotation.Substring(1);
+                        Utilities.ToRawRomaji(curHiraNotation[..1], RomajiSystem.Hepburn, true);
+                    curHiraNotation = curHiraNotation[1..];
                     delta++;
                     goto parseOneChar;
                 }
@@ -2483,19 +2432,12 @@ public static class Utils
             {
                 var pureLyrics = LrcParser.ParseLrc(pureLyricInfo.PureLyrics.AsSpan());
                 var migrated = MigrationTool.Migrate(parsedLyrics, pureLyrics);
-                return migrated.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
+                return [.. migrated.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t })];
             }
 
-            return parsedLyrics.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
+            return [.. parsedLyrics.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t })];
         }
 
         throw new ArgumentException("HyLyricInfo is not KaraokeLyricInfo");
     }
-}
-
-public class AudioDevices
-{
-    public string DeviceID;
-    public string DeviceName;
-    public bool IsDefaultDevice;
 }

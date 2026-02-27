@@ -91,11 +91,11 @@ public sealed partial class ExpandedPlayer : Page
     private float _lyricRenderYOffset = 0;
     private readonly Color _darkSpectrumColor = Color.FromArgb(32, 0, 0, 0);
     private readonly Color _lightSpectrumColor = Color.FromArgb(32, 255, 255, 255);
-    public List<SongLyric> _lyricList = new();
-    private LyricRenderView _lyricBox = new LyricRenderView();
-    private Setting _settings;
-    private List<Vector3> _albumColorVectors = new();
-    private List<Color> _albumColors = new();
+    public List<SongLyric> _lyricList = [];
+    private readonly LyricRenderView _lyricBox = new();
+    private readonly Setting _settings;
+    private List<Vector3> _albumColorVectors = [];
+    private List<Color> _albumColors = [];
     private SolidColorBrush? _pureIdleBrushCache;
     private Color? _karaokAccentColorCache;
     private SolidColorBrush? _pureAccentBrushCache;
@@ -138,10 +138,10 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.Context.Effects.CacheRenderTarget = _settings.lyricCacheRenderTarget;
         _lyricBox.Context.LineRollingEaseCalculator = _settings.LineRollingCalculator switch
         {
-            1 => new SinRollingCalculator(),
-            2 => new LyricifyRollingCalculator(),
-            3 => new SyncRollingCalculator(),
-            4 => new CircleEaseRollingCalculator(),
+            RollingCalculator.SinRollingCalculator => new SinRollingCalculator(),
+            RollingCalculator.LyricifyRollingCalculator => new LyricifyRollingCalculator(),
+            RollingCalculator.SyncRollingCalculator => new SyncRollingCalculator(),
+            RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         _lyricBox.Context.Effects.ScaleWhenFocusing = _settings.lyricRenderScaleWhenFocusing;
@@ -165,7 +165,7 @@ public sealed partial class ExpandedPlayer : Page
             var action = actionLyricLine.ActionUri;
             if (action.StartsWith("hyplayer://"))
             {
-                var ResourceId = action.Substring(11);
+                var ResourceId = action[11..];
                 _ = Common.NavigatePageResource(ResourceId);
                 Common.BarPlayBar!.CollapseExpandedPlayer();
             }
@@ -274,8 +274,7 @@ public sealed partial class ExpandedPlayer : Page
         Common.OnEnterForegroundFromBackground -= OnEnteringForeground;
         HyPlayList.OnSongCoverChanged -= RefreshAlbumCover;
         Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
-        if (Window.Current != null)
-            Window.Current.SizeChanged -= Current_SizeChanged;
+        Window.Current?.SizeChanged -= Current_SizeChanged;
         if (_settings.albumRotate)
             RotateAnimationSet.Stop();
         if (_settings.expandAlbumBreath)
@@ -444,8 +443,8 @@ public sealed partial class ExpandedPlayer : Page
         Common.PageExpandedPlayer = null;
     }
 
-    private Storyboard luminousColorsRotateStoryBoard = new Storyboard();
-    private DoubleAnimation luminousColorsRotateAnimation = new DoubleAnimation();
+    private readonly Storyboard luminousColorsRotateStoryBoard = new ();
+    private DoubleAnimation luminousColorsRotateAnimation = new ();
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -509,7 +508,7 @@ public sealed partial class ExpandedPlayer : Page
     }
 
 
-    private Storyboard bpmAniStoryboard = new Storyboard();
+    private readonly Storyboard bpmAniStoryboard = new ();
 
     public void LoadLyricsBox()
     {
@@ -526,8 +525,8 @@ public sealed partial class ExpandedPlayer : Page
             }
             _lyricBox.ChangeAlignment(_settings.lyricAlignment switch
             {
-                1 => TextAlignment.Center,
-                2 => TextAlignment.Right,
+                LyricAlignment.Center => TextAlignment.Center,
+                LyricAlignment.Right => TextAlignment.Right,
                 _ => TextAlignment.Left
             });
             _lyricBox.ReflowTime(0);
@@ -565,13 +564,13 @@ public sealed partial class ExpandedPlayer : Page
             lastLine = line;
             if (songLyric.LyricLine is KaraokeLyricsLine lrcLyricsLine)
             {
-                line.Words = lrcLyricsLine.WordInfos.Select(s => new ALRCWord
+                line.Words = [.. lrcLyricsLine.WordInfos.Select(s => new ALRCWord
                 {
                     Start = (long)s.StartTime.TotalMilliseconds,
                     End = (long)(s.StartTime + s.Duration).TotalMilliseconds,
                     Word = s.CurrentWords,
                     Transliteration = string.IsNullOrWhiteSpace(s.Transliteration) ? null : s.Transliteration
-                }).ToList();
+                })];
             }
             lines.Add(line);
         }
@@ -645,7 +644,7 @@ public sealed partial class ExpandedPlayer : Page
         var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
         var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
         if (anim2 != null) anim3.Configuration = new DirectConnectedAnimationConfiguration();
-        if (anim2 != null) anim2.Configuration = new DirectConnectedAnimationConfiguration();
+        anim2?.Configuration = new DirectConnectedAnimationConfiguration();
         if (anim2 != null) anim1.Configuration = new DirectConnectedAnimationConfiguration();
         try
         {
@@ -690,20 +689,14 @@ public sealed partial class ExpandedPlayer : Page
     private void ToggleButtonTranslation_OnClick(object sender, RoutedEventArgs e)
     {
         Common.ShowLyricTrans = ToggleButtonTranslation.IsChecked;
-        if (_lyricBox != null)
-        {
-            _lyricBox.EnableTranslation = Common.ShowLyricTrans;
-        }
+        _lyricBox?.EnableTranslation = Common.ShowLyricTrans;
 
     }
 
     private void ToggleButtonSound_OnClick(object sender, RoutedEventArgs e)
     {
         Common.ShowLyricSound = ToggleButtonSound.IsChecked;
-        if (_lyricBox != null)
-        {
-            _lyricBox.EnableTransliteration = Common.ShowLyricSound;
-        }
+        _lyricBox?.EnableTransliteration = Common.ShowLyricSound;
 
     }
 
@@ -761,9 +754,11 @@ public sealed partial class ExpandedPlayer : Page
     {
         try
         {
-            var filepicker = new FileSavePicker();
-            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.Name + "-Cover.jpg";
-            filepicker.FileTypeChoices.Add("图片文件", new List<string> { ".png", ".jpg" });
+            var filepicker = new FileSavePicker
+            {
+                SuggestedFileName = HyPlayList.NowPlayingItem.Name + "-Cover.jpg"
+            };
+            filepicker.FileTypeChoices.Add("图片文件", [".png", ".jpg"]);
             var file = await filepicker.PickSaveFileAsync();
             if (file == null) return;
             if (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Local ||
@@ -838,7 +833,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private async void BtnLoadLocalLyric(object sender, RoutedEventArgs e)
     {
-        FileOpenPicker picker = new FileOpenPicker();
+        FileOpenPicker picker = new();
         picker.FileTypeFilter.Add(".qrc");
         picker.FileTypeFilter.Add(".lrc");
         picker.FileTypeFilter.Add(".yrc");
@@ -857,7 +852,7 @@ public sealed partial class ExpandedPlayer : Page
                 ".alrc" => new ALRCConverter(),
                 ".ttml" => new AppleSyllableConverter(),
                 ".lys" => new LyricifySyllableConverter(),
-                _ => throw new ArgumentOutOfRangeException()
+                _ => throw new NotImplementedException()
             };
 
             var lrcConverter = new ALRC.Converters.LrcConverter();
@@ -866,7 +861,7 @@ public sealed partial class ExpandedPlayer : Page
             var lrc = lrcConverter.ConvertBack(alrc);
             var trLrc = lrcTranslationConverter.Extract(alrc);
 
-            HyALRCLyricInfo ttmlLyric = new HyALRCLyricInfo()
+            HyALRCLyricInfo ttmlLyric = new()
             {
                 PureLyrics = lrc,
                 TrLyrics = trLrc,
@@ -884,11 +879,13 @@ public sealed partial class ExpandedPlayer : Page
                 SongMetadata = []
             };
 
-            HyPlayList.HyLyricInfo = new HyLyricInfo();
-            HyPlayList.HyLyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
-            HyPlayList.HyLyricInfo.PureLyricInfo = ttmlLyric;
-            HyPlayList.HyLyricInfo.SongMetadata = ttmlLyric.SongMetadata;
-            HyPlayList.HyLyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics, true);
+            HyPlayList.HyLyricInfo = new HyLyricInfo
+            {
+                LyricMetadata = ttmlLyric.LyricMetadata,
+                PureLyricInfo = ttmlLyric,
+                SongMetadata = ttmlLyric.SongMetadata,
+                Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics)
+            };
             Utils.ConvertTranslation(ttmlLyric.TrLyrics, HyPlayList.HyLyricInfo.Lyrics);
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
@@ -906,7 +903,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (_windowMode == ExpandedWindowMode.LyricOnly)
         {
-            UISettings _uiSettings = new UISettings();
+            UISettings _uiSettings = new();
             await Task.Delay((int)(_uiSettings.DoubleClickTime + 55));
             if (!_lyricBox.HasJumpedLyrics)
             {
@@ -921,9 +918,9 @@ public sealed partial class ExpandedPlayer : Page
         _lastSong = HyPlayList.NowPlayingItem;
         var finalResult = false; //在不手动指定背景类型为2至5时需要执行颜色采样
         var resultGenerated = false; //标志返回颜色已经生成
-        if (_settings.lyricColor != 0 && _settings.lyricColor != 3)
+        if (_settings.lyricColor != LyricColor.Auto && _settings.lyricColor != LyricColor.FollowCover)
         {
-            finalResult = _settings.lyricColor == 2;
+            finalResult = _settings.lyricColor == LyricColor.Black;
             resultGenerated = true;
         }
         if (HyPlayList.NowPlayingItem == null) return false;
@@ -939,52 +936,38 @@ public sealed partial class ExpandedPlayer : Page
             PaletteResult palette;
             if (_settings.expandedPlayerBackgroundType != BackgroundType.Animated && _settings.expandedPlayerBackgroundType != BackgroundType.Isolation)
             {
-                switch (_settings.ColorGeneratorType)
+                themeColor = _settings.ColorGeneratorType switch
                 {
-                    case 0:
-                    case 2:
-                    default:
-                        themeColor = await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, _settings.ImpressionistIgnoreWhite, _settings.ImpressionistLABSpace);
-                        break;
-                    case 1:
-                        themeColor = await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, _settings.ImpressionistIgnoreWhite);
-                        break;
-                }
+                    ColorGeneratorType.OctTree => await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, _settings.ImpressionistIgnoreWhite),
+                    _ => await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, _settings.ImpressionistIgnoreWhite, _settings.ImpressionistLABSpace),
+                };
                 albumMainColor = Color.FromArgb(255, (byte)themeColor.Color.X, (byte)themeColor.Color.Y, (byte)themeColor.Color.Z);
             }
             else
             {
-                switch (_settings.ColorGeneratorType)
+                palette = _settings.ColorGeneratorType switch
                 {
-                    case 0:
-                        palette = await PaletteGenerators.KMeansPaletteGenerator.CreatePalette(
-                            colors,
-                            _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                            _settings.ImpressionistIgnoreWhite,
-                            _settings.ImpressionistLABSpace,
-                            _settings.ImpressionistUseKMeansPP);
-                        break;
-                    case 1:
-                        palette = palette = await PaletteGenerators.OctTreePaletteGenerator.CreatePalette(
-                            colors,
-                            _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                            _settings.ImpressionistIgnoreWhite);
-                        break;
-                    case 2:
-                    default:
-                        palette = await AutoPaletteGenerator.CreatePalette(
-                            colors,
-                            _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                            _settings.ImpressionistIgnoreWhite,
-                            _settings.ImpressionistLABSpace,
-                            _settings.ImpressionistUseKMeansPP);
-                        break;
-                }
+                    ColorGeneratorType.KMeans => await PaletteGenerators.KMeansPaletteGenerator.CreatePalette(
+                                                colors,
+                                                _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
+                                                _settings.ImpressionistIgnoreWhite,
+                                                _settings.ImpressionistLABSpace,
+                                                _settings.ImpressionistUseKMeansPP),
+                    ColorGeneratorType.OctTree => palette = await PaletteGenerators.OctTreePaletteGenerator.CreatePalette(
+                                                colors,
+                                                _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
+                                                _settings.ImpressionistIgnoreWhite),
+                    _ => await AutoPaletteGenerator.CreatePalette(
+                                                colors,
+                                                _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
+                                                _settings.ImpressionistIgnoreWhite,
+                                                _settings.ImpressionistLABSpace,
+                                                _settings.ImpressionistUseKMeansPP),
+                };
                 themeColor = palette.ThemeColor;
-                _albumColors = palette.Palette.Select(quantizedColor => Color.FromArgb(255, (byte)quantizedColor.X, (byte)quantizedColor.Y, (byte)quantizedColor.Z))
-                    .ToList();
+                _albumColors = [.. palette.Palette.Select(quantizedColor => Color.FromArgb(255, (byte)quantizedColor.X, (byte)quantizedColor.Y, (byte)quantizedColor.Z))];
                 albumMainColor = Color.FromArgb(255, (byte)themeColor.Color.X, (byte)themeColor.Color.Y, (byte)themeColor.Color.Z);
-                _albumColorVectors = palette.Palette.Select(t => t / 255).ToList();
+                _albumColorVectors = [.. palette.Palette.Select(t => t / 255)];
             }
             if (_settings.expandedPlayerBackgroundType is BackgroundType.CoverTheme)
             {
@@ -1046,7 +1029,7 @@ public sealed partial class ExpandedPlayer : Page
 
         if (BtnToggleTinyMode.IsChecked)
         {
-            Frame expandedPlayerWindowContentFrame = new Frame();
+            Frame expandedPlayerWindowContentFrame = new();
             expandedPlayerWindowContentFrame.Navigate(typeof(CompactPlayerPage), expandedPlayerWindow);
             ElementCompositionPreview.SetAppWindowContent(expandedPlayerWindow, expandedPlayerWindowContentFrame);
 
@@ -1134,7 +1117,7 @@ public sealed partial class ExpandedPlayer : Page
         double manipulationDeltaRotateValue;
         switch (_settings.gestureMode)
         {
-            case 3:
+            case GestureMode.RealDJ:
                 if (!_settings.albumRound) return;
                 manipulationDeltaRotateValue = e.Delta.Rotation;
                 if (manipulationDeltaRotateValue == 0) manipulationDeltaRotateValue = e.Delta.Translation.Y;
@@ -1142,17 +1125,17 @@ public sealed partial class ExpandedPlayer : Page
                 HyPlayList.Seek(HyPlayList.Player.PrimaryAudioInputNode.Position.Add(
                     TimeSpan.FromMilliseconds((int)manipulationDeltaRotateValue) * 100));
                 break;
-            case 2:
+            case GestureMode.DJ:
                 if (!_settings.albumRound) return;
                 manipulationDeltaRotateValue = e.Delta.Rotation;
                 if (manipulationDeltaRotateValue == 0) manipulationDeltaRotateValue = e.Delta.Translation.Y;
                 ImageRotateTransform.Angle += manipulationDeltaRotateValue;
                 return;
-            case 1:
+            case GestureMode.Shift:
                 ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
                 ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
                 break;
-            case 0 when Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X):
+            case GestureMode.Basic when Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X):
                 {
                     // 竖直方向滑动
                     if (e.Cumulative.Translation.Y >= 0)
@@ -1170,7 +1153,7 @@ public sealed partial class ExpandedPlayer : Page
 
                     break;
                 }
-            case 0:
+            case GestureMode.Basic:
                 {
                     ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
                     if (e.Cumulative.Translation.X > 400 || e.Cumulative.Translation.X < -400)
@@ -1274,7 +1257,7 @@ public sealed partial class ExpandedPlayer : Page
                         BlackCover.Fill = new SolidColorBrush(Color.FromArgb(80, 255, 255, 255));
                     else if (_settings.expandedPlayerBackgroundType == BackgroundType.Animated && !isBright)
                         BlackCover.Fill = new SolidColorBrush(Color.FromArgb(80, 0, 0, 0));
-                    if (_settings.lyricColor != 3 || albumMainColor == null)
+                    if (_settings.lyricColor != LyricColor.FollowCover || albumMainColor == null)
                     {
                         if (isBright)
                         {
@@ -1441,10 +1424,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void LuminousBackground_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (_shaderEffect != null)
-        {
-            _shaderEffect.Properties["iResolution"] = new Vector2(LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, CanvasDpiRounding.Round), LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, CanvasDpiRounding.Round));
-        }
+        _shaderEffect?.Properties["iResolution"] = new Vector2(LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, CanvasDpiRounding.Round), LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, CanvasDpiRounding.Round));
     }
 
     private async void LuminousBackground_CreateResources(Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedControl sender, Microsoft.Graphics.Canvas.UI.CanvasCreateResourcesEventArgs args)

@@ -41,9 +41,6 @@ public sealed partial class App : Application
     ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
     ///     已执行，逻辑上等同于 main() 或 WinMain()。
     /// </summary>
-#pragma warning disable CS0169 // 从不使用字段“App.executionSession”
-    private ExtendedExecutionSession executionSession;
-#pragma warning restore CS0169 // 从不使用字段“App.executionSession”
     private Frame rootFrame;
 
     private XboxGameBarWidget widget = null;
@@ -66,11 +63,11 @@ public sealed partial class App : Application
         LeavingBackground += App_LeavingBackground;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         if (Common.Setting.themeRequest != 0)
-            RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Dark;
+            RequestedTheme = Common.Setting.themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
         _ = InitializeThings();
     }
 
-    private void InitializeServices()
+    private static void InitializeServices()
     {
         var serviceCollection = new ServiceCollection();
         InitializeServices(serviceCollection);
@@ -88,7 +85,7 @@ public sealed partial class App : Application
         GC.Collect();
     }
 
-    private void InitializeServices(ServiceCollection serviceCollection)
+    private static void InitializeServices(ServiceCollection serviceCollection)
     {
         var setting = new Setting();
         var handler = NeteaseCloudMusicApiHandler.HttpClientHandler;
@@ -117,7 +114,7 @@ public sealed partial class App : Application
         }
     }
 
-    private async Task InitializeThings()
+    private static async Task InitializeThings()
     {
         try
         {
@@ -130,7 +127,7 @@ public sealed partial class App : Application
             // ignored
         }
 
-        if (Common.isExpanded)
+        if (Common.IsExpanded)
             _ = Common.Invoke(() => { Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer)); });
     }
 
@@ -217,7 +214,7 @@ public sealed partial class App : Application
 
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
-            if (Common.isExpanded) return;
+            if (Common.IsExpanded) return;
             var animation = Common.Setting.expandAnimation;
             Common.Setting.expandAnimation = false;
             Common.BarPlayBar.ShowExpandedPlayer();
@@ -270,7 +267,7 @@ public sealed partial class App : Application
         */
     }
 
-    public async Task InitializeJumpList()
+    public static async Task InitializeJumpList()
     {
         var jumpList = await JumpList.LoadCurrentAsync();
         jumpList.Items.Clear();
@@ -334,7 +331,7 @@ public sealed partial class App : Application
         else if (args is FileActivatedEventArgs)
         {
             HyPlayList.PlaySourceId = "local";
-            Common.isExpanded = true;
+            Common.IsExpanded = true;
             ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
 
             NavigateToRootPage();
@@ -395,13 +392,10 @@ public sealed partial class App : Application
     private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
-        await HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
+        await HistoryManagement.SetcurPlayingListHistory([.. HyPlayList.List
             .Where(t => t.ItemType == HyPlayItemType.Netease)
-            .Select(t => t.Id).ToList());
-        if (Common.XboxGameBarWidget != null)
-        {
-            Common.XboxGameBarWidget.Close();
-        }
+            .Select(t => t.Id)]);
+        Common.XboxGameBarWidget?.Close();
         deferral.Complete();
     }
 }

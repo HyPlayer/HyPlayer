@@ -181,7 +181,7 @@
                                         <TextBox HorizontalAlignment="Left" Text="{x:Bind hyplayer:Common.Setting.amllTtmlMirrorUrl, Mode=OneWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="歌词主色调">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="自动" />
                                             <ComboBoxItem Content="白色" />
                                             <ComboBoxItem Content="黑色" />
@@ -272,7 +272,7 @@
                                         <ComboBox
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}">
+                                            SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="左对齐" />
                                             <ComboBoxItem Content="居中" />
                                             <ComboBoxItem Content="右对齐" />
@@ -424,7 +424,7 @@
                                     </controls3:SettingsCard>
 
                                     <controls3:SettingsCard Description="不同函数有不同的效果" Header="行滚动函数">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.LineRollingCalculator, Mode=TwoWay}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.LineRollingCalculator, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="弹簧函数" />
                                             <ComboBoxItem Content="三角函数" />
                                             <ComboBoxItem Content="Lyricify 函数" />
@@ -520,10 +520,10 @@
                                             HorizontalAlignment="Right"
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=OneWay}"
                                             Maximum="15"
-                                            Minimum="1"
+                                            Minimum="3"
                                             StepFrequency="1"
                                             TickFrequency="1"
-                                            ToolTipService.ToolTip="{x:Bind CrossFadeTime.Value}"
+                                            ToolTipService.ToolTip="{x:Bind CrossFadeTime.Value, Mode=OneWay}"
                                             Value="{x:Bind hyplayer:Common.Setting.CrossFadeTime, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
@@ -697,7 +697,7 @@
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
                                     <controls3:SettingsCard Header="主题色">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="跟随系统" />
                                             <ComboBoxItem Content="亮色" />
                                             <ComboBoxItem Content="暗色" />
@@ -746,16 +746,13 @@
                                         <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.expandedPlayerBackgroundType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="专辑封面模糊" />
                                             <ComboBoxItem Content="跟随唱片主色调" />
-                                            <ComboBoxItem Visibility="Collapsed" />
-                                            <ComboBoxItem Visibility="Collapsed" />
-                                            <ComboBoxItem Visibility="Collapsed" />
                                             <ComboBoxItem Content="桌面亚克力 (不推荐)" />
                                             <ComboBoxItem Content="流光溢彩" />
                                             <ComboBoxItem Content="流光溢彩 (Isolation)" />
                                         </ComboBox>
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="背景取色设置">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.ColorGeneratorType, Mode=TwoWay}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.ColorGeneratorType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="KMeans" />
                                             <ComboBoxItem Content="OctTree" />
                                             <ComboBoxItem Content="Auto" />
@@ -1033,7 +1030,7 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.enableTouchGestureAction, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="触摸手势模式">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.gestureMode, Mode=TwoWay}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.gestureMode, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="基本手势" />
                                             <ComboBoxItem Content="平移" />
                                             <ComboBoxItem Content="搓碟" />
@@ -1170,7 +1167,7 @@
                                         </StackPanel>
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="下载重名解决方法">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.downloadNameOccupySolution, Mode=TwoWay}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.downloadNameOccupySolution, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="跳过" />
                                             <ComboBoxItem Content="覆盖" />
                                             <ComboBoxItem Content="追加 ID" />
@@ -1348,7 +1345,7 @@
                             <controls3:SettingsCard Description="将会在第二次请求时加速请求, 离线时从本地缓存获取" Header="开启请求数据缓存">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.enableApiCache, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Description="可能造成无法播放, 请勿轻易开启" Header="开启播放音频缓存">
+                            <controls3:SettingsCard Header="开启播放音频缓存">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="本地文件扫描渐进式加载 (Progressive Loading)">
@@ -1668,7 +1665,7 @@
                                                 <ComboBox
                                                     x:Name="UpdateSource"
                                                     HorizontalAlignment="Left"
-                                                    SelectedIndex="{x:Bind hyplayer:Common.Setting.UpdateSource, Mode=TwoWay}">
+                                                    SelectedIndex="{x:Bind hyplayer:Common.Setting.UpdateSource, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                                     <ComboBoxItem Content="Microsoft Store" />
                                                     <ComboBoxItem Content="Release" />
                                                     <ComboBoxItem Content="Canary" IsEnabled="{x:Bind hyplayer:Common.Setting.canaryChannelAvailability, Mode=OneWay}" />

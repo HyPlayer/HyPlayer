@@ -73,8 +73,8 @@ namespace HyPlayer
 
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;
-        public static List<string> LikedSongs = new();
-        public static List<NCPlayList> MySongLists = new();
+        public static List<string> LikedSongs = [];
+        public static List<NCPlayList> MySongLists = [];
         public static DisplayRequest DisplayRequest = new();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
         public static JsonSerializerOptions DefaultOptions = new()
@@ -93,7 +93,7 @@ namespace HyPlayer
             HyPlayList.OnTimerTicked += () => RollTeachingTip();
             HyPlayList.OnTimerTicked += ChangePlaybarVisibillity;
         }
-        public static bool isExpanded
+        public static bool IsExpanded
         {
             get => _isExpanded;
             set
@@ -110,8 +110,8 @@ namespace HyPlayer
         public static PlaybarVisibilityChangedEvent? OnPlaybarVisibilityChanged;
         public static readonly Queue<KeyValuePair<string, string?>> TeachingTipList = new();
 #nullable restore
-        public static List<string> ErrorMessageList = new();
-        public static ObservableCollection<string> Logs = new();
+        public static List<string> ErrorMessageList = [];
+        public static ObservableCollection<string> Logs = [];
         public static bool NavigatingBack;
         private static int _teachingTipSecondCounter = 3;
         public static int PlaybarSecondCounter = 0;
@@ -190,7 +190,7 @@ namespace HyPlayer
             }
         }
 
-        public static void NavigatePage(Type SourcePageType, object paratmer = null, object ignore = null)
+        public static void NavigatePage(Type SourcePageType, object paratmer = null)
         {
             if (Setting.forceMemoryGarbage)
             {
@@ -227,29 +227,29 @@ namespace HyPlayer
 
         public static async Task NavigatePageResource(string resourceId)
         {
-            switch (resourceId.Substring(0, 2))
+            switch (resourceId[..2])
             {
                 case "al":
-                    NavigatePage(typeof(AlbumPage), resourceId.Substring(2));
+                    NavigatePage(typeof(AlbumPage), resourceId[2..]);
                     break;
                 case "pl":
-                    NavigatePage(typeof(SongListDetail), resourceId.Substring(2));
+                    NavigatePage(typeof(SongListDetail), resourceId[2..]);
                     break;
                 case "rd":
-                    NavigatePage(typeof(RadioPage), resourceId.Substring(2));
+                    NavigatePage(typeof(RadioPage), resourceId[2..]);
                     break;
                 case "ar":
-                    NavigatePage(typeof(ArtistPage), resourceId.Substring(2));
+                    NavigatePage(typeof(ArtistPage), resourceId[2..]);
                     break;
                 case "us":
-                    NavigatePage(typeof(Me), resourceId.Substring(2));
+                    NavigatePage(typeof(Me), resourceId[2..]);
                     break;
                 case "ns":
                     await HyPlayList.AppendNcSource(resourceId);
                     HyPlayList.SongMoveTo(HyPlayList.List.Find(t => "ns" + t.Id == resourceId));
                     break;
                 case "ml":
-                    NavigatePage(typeof(MVPage), resourceId.Substring(2));
+                    NavigatePage(typeof(MVPage), resourceId[2..]);
                     break;
             }
         }
@@ -337,7 +337,7 @@ namespace HyPlayer
             float x = c * (1 - Math.Abs((h / 60f) % 2f - 1f));
             float m = v - c;
 
-            float r = 0, g = 0, b = 0;
+            float r, g, b;
 
             if (h < 60) { r = c; g = x; b = 0; }
             else if (h < 120) { r = x; g = c; b = 0; }
