@@ -1738,7 +1738,7 @@ public static class HyPlayList
     {
         try
         {
-            FadeManager.PauseFadeProcessing();
+            await FadeManager.PauseFadeProcessing();
             if (string.IsNullOrEmpty(Common.Setting.AudioRenderDevice)) await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume });
             else await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume, DefaultDeviceId = Common.Setting.AudioRenderDevice, EnableFFTProcessing = Common.Setting.EnableFFT });
         }
