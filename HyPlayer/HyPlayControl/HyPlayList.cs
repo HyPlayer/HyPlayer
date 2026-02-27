@@ -500,7 +500,6 @@ public static class HyPlayList
 
     public static void SongMoveNext()
     {
-
         if (List.Count == 0) return;
         OnSongMoveNext?.Invoke();
         MoveSongPointer(true);
@@ -729,72 +728,6 @@ public static class HyPlayList
         return gainValue;
     }
 
-    private static async Task<(string, long)> GetNowPlayingUrl(HyPlayItem targetItem, CancellationToken ctk)
-    {
-        var playUrl = targetItem.Url;
-        var size = targetItem.Size;
-
-        // 对了,先看看是否要刷新播放链接
-        if ((string.IsNullOrEmpty(targetItem.Url) ||
-             Common.Setting.songUrlLazyGet) && targetItem.Id != "-1")
-        {
-            // 使用 Polly 重试策略优化 URL 获取
-            var songResult = await RetryPolicies.UrlFetchPolicy.ExecuteAsync(async () =>
-            {
-                var result = await SimpleCacher.GetOrCreateCacheAsync(
-                    CacheType.SongUrl,
-                    string.Format(SONG_URL_CACHE_KEY_FORMAT, targetItem.Id, Common.Setting.audioRate),
-                    async () =>
-                    {
-                        ctk.ThrowIfCancellationRequested();
-
-                        var songRequest = new SongUrlRequest
-                        {
-                            Level = Common.Setting.audioRate,
-                            Id = targetItem.Id
-                        };
-
-                        var songRes = await Common.NeteaseAPI!.RequestAsync(
-                            NeteaseApis.SongUrlApi, songRequest);
-
-                        if (songRes.IsError)
-                        {
-                            throw songRes.Error;
-                        }
-
-                        return songRes.Value;
-                    },
-                    TimeSpan.FromMinutes(SONG_URL_CACHE_MINUTES),
-                    cancellationToken: ctk);
-
-                return result ?? throw new Exception("下载链接获取失败");
-            });
-
-            if (songResult?.SongUrls?[0].Code == 200)
-            {
-                if (songResult.SongUrls[0].FreeTrialInfo is not null && Common.Setting.jumpVipSongPlaying)
-                {
-                    throw new Exception("当前歌曲为 VIP 试听, 已自动跳过");
-                }
-
-                playUrl = songResult.SongUrls[0].Url;
-                size = songResult.SongUrls[0].Size;
-                if (Common.Setting.UseHttpWhenGettingSongs && playUrl.Contains("https://"))
-                {
-                    playUrl = playUrl.Replace("https://", "http://");
-                }
-
-                UpdatePlayItemQualityInfo(targetItem, songResult.SongUrls[0]);
-            }
-            else
-            {
-                throw new Exception("下载链接获取失败");
-            }
-        }
-
-        return (playUrl, size);
-    }
-
     private static void UpdatePlayItemQualityInfo(HyPlayItem targetItem, SongUrlResponse.SongUrlItem urlInfo)
     {
         if (urlInfo == null) return;
@@ -888,6 +821,7 @@ public static class HyPlayList
                 }
 
                 var mediaSource = await CreateMediaSourceAsync(targetItem, ctk);
+                if (mediaSource == null) return;
                 var playItem = new PlayItem();
                 targetItem.PlayItem = playItem;
                 ctk.ThrowIfCancellationRequested();
@@ -945,7 +879,8 @@ public static class HyPlayList
             return await CreateCachedMediaSourceAsync(targetItem, ctk);
         }
 
-        var playUrl = await GetNowPlayingUrlWithRetry(targetItem, ctk);
+        var playUrl = await GetNowPlayingUrl(targetItem, ctk);
+        if (playUrl.Item1 == null) return null;
         return MediaSource.CreateFromUri(new Uri(playUrl.Item1));
     }
 
@@ -966,16 +901,19 @@ public static class HyPlayList
 
     private static async Task<MediaSource> CreateCachedMediaSourceAsync(HyPlayItem targetItem, CancellationToken ctk = default)
     {
-        var playUrlRes = await GetNowPlayingUrlWithRetry(targetItem, ctk);
+        var playUrlRes = await GetNowPlayingUrl(targetItem, ctk);
 
         var cacheFile = await GetCacheFileAsync(targetItem, ctk);
         if (cacheFile != null)
         {
             return MediaSource.CreateFromStorageFile(cacheFile);
         }
-
+        if (playUrlRes.Item1 == null) 
+        {
+            return null;
+        }
         // 缓存文件无效，重新下载
-        var rst = await RetryPolicies.FastFailPolicy.ExecuteAndCaptureAsync(async () => await DownloadAndCreateMediaSourceAsync(targetItem, playUrlRes.Item1, playUrlRes.Item2, ctk));
+        var rst = await RetryPolicies.FastFailPolicy.ExecuteAndCaptureAsync(async () => await DownloadAndCreateMediaSourceAsync(targetItem, playUrlRes.Item1, ctk));
         return rst.Result;
 
     }
@@ -984,6 +922,7 @@ public static class HyPlayList
     {
         try
         {
+            ctk.ThrowIfCancellationRequested();
             var cacheFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
             var fileName = string.Format(CACHE_FILE_NAME_FORMAT, targetItem.Id, targetItem?.SubExt);
             var cacheFile = await cacheFolder.GetFileAsync(fileName);
@@ -1005,7 +944,7 @@ public static class HyPlayList
         }
     }
 
-    private static async Task<MediaSource> DownloadAndCreateMediaSourceAsync(HyPlayItem targetItem, string playUrl, long size, CancellationToken ctk)
+    private static async Task<MediaSource> DownloadAndCreateMediaSourceAsync(HyPlayItem targetItem, string playUrl, CancellationToken ctk)
     {
         if (string.IsNullOrEmpty(playUrl))
             throw new Exception("Play URL is null");
@@ -1051,13 +990,75 @@ public static class HyPlayList
             return MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
         }
     }
-
-    private static async Task<(string, long)> GetNowPlayingUrlWithRetry(HyPlayItem targetItem, CancellationToken ctk)
+#nullable enable
+    private static async Task<(string?, long)> GetNowPlayingUrl(HyPlayItem targetItem, CancellationToken ctk)
     {
-        return await RetryPolicies.UrlFetchPolicy.ExecuteAsync(async () =>
-            await GetNowPlayingUrl(targetItem, ctk));
-    }
+        var playUrl = targetItem.Url;
+        var size = targetItem.Size;
 
+        // 对了,先看看是否要刷新播放链接
+        if ((string.IsNullOrEmpty(targetItem.Url) ||
+             Common.Setting!.songUrlLazyGet) && targetItem.Id != "-1")
+        {
+            // 使用 Polly 重试策略优化 URL 获取
+            var songResult = await RetryPolicies.UrlFetchPolicy.ExecuteAsync(async () =>
+            {
+                var result = await SimpleCacher.GetOrCreateCacheAsync(
+                    CacheType.SongUrl,
+                    string.Format(SONG_URL_CACHE_KEY_FORMAT, targetItem.Id, Common.Setting!.audioRate),
+                    async () =>
+                    {
+                        ctk.ThrowIfCancellationRequested();
+
+                        var songRequest = new SongUrlRequest
+                        {
+                            Level = Common.Setting.audioRate,
+                            Id = targetItem.Id
+                        };
+
+                        var songRes = await Common.NeteaseAPI!.RequestAsync(
+                            NeteaseApis.SongUrlApi, songRequest);
+
+                        if (songRes.IsError && songRes.Error != null)
+                        {
+                            throw songRes.Error;
+                        }
+
+                        return songRes.Value;
+                    },
+                    TimeSpan.FromMinutes(SONG_URL_CACHE_MINUTES),
+                    cancellationToken: ctk);
+
+                return result ?? throw new Exception("下载链接获取失败");
+            });
+
+            if (songResult?.SongUrls?[0].Code == 200)
+            {
+                if (songResult.SongUrls[0].FreeTrialInfo is not null && Common.Setting!.jumpVipSongPlaying)
+                {
+                    Common.AddToTeachingTipLists("当前歌曲为 VIP 试听, 已自动跳过");
+                    SongMoveNext();
+                    return (null, 0);
+                }
+
+                playUrl = songResult.SongUrls[0].Url;
+                size = songResult.SongUrls[0].Size;
+                if (Common.Setting!.UseHttpWhenGettingSongs && (playUrl?.Contains("https://") ?? false))
+                {
+                    playUrl = playUrl.Replace("https://", "http://");
+                }
+
+                UpdatePlayItemQualityInfo(targetItem, songResult.SongUrls[0]);
+            }
+            else
+            {
+                throw new Exception("下载链接获取失败");
+            }
+        }
+
+        return (playUrl, size);
+    }
+#nullable restore
     private static void UpdatePlayItemDuration(HyPlayItem targetItem, MediaSource mediaSource)
     {
         var duration = mediaSource?.Duration?.TotalMilliseconds;
