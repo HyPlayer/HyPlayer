@@ -815,7 +815,7 @@
                             VerticalAlignment="Top"
                             Click="TbSingerName_OnTapped"
                             FontSize="12"
-                            Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             Style="{StaticResource TextBlockButtonStyle}">
                             <HyperlinkButton.ContextFlyout>
                                 <MenuFlyout>
@@ -837,7 +837,7 @@
                             VerticalAlignment="Top"
                             Click="TbAlbumName_OnTapped"
                             FontSize="12"
-                            Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             Style="{StaticResource TextBlockButtonStyle}">
                             <HyperlinkButton.ContextFlyout>
                                 <MenuFlyout>
@@ -1147,7 +1147,7 @@
                                                                 <Run Text=")" />
                                                             </TextBlock>
                                                         </StackPanel>
-                                                        <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Path=ArtistString}" />
+                                                        <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Path=ArtistString}" />
                                                     </StackPanel>
                                                     <Button
                                                         Width="24"

@@ -62,7 +62,7 @@ public sealed partial class App : Application
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-        if (Common.Setting.themeRequest != 0)
+        if (Common.Setting.themeRequest != ThemeRequest.Auto)
             RequestedTheme = Common.Setting.themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
         _ = InitializeThings();
     }

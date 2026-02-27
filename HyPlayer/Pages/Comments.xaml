@@ -101,7 +101,7 @@
                 <TextBlock
                     x:Name="PageIndicator"
                     HorizontalAlignment="Center"
-                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
+                    Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" />
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <Button
                         x:Name="PrevPage"

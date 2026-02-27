@@ -2,8 +2,8 @@
     <AcrylicBrush
         x:Key="ContentDialogBackground"
         BackgroundSource="Backdrop"
-        FallbackColor="{StaticResource SystemAltMediumLowColor}"
-        TintColor="{StaticResource SystemAltMediumLowColor}"
+        FallbackColor="{ThemeResource SystemAltMediumLowColor}"
+        TintColor="{ThemeResource SystemAltMediumLowColor}"
         TintLuminosityOpacity="0.183000008692034"
         TintOpacity="0.67500003206078" />
 </ResourceDictionary>

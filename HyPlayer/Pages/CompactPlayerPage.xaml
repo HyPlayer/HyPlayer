@@ -414,14 +414,14 @@
                     Grid.Column="1"
                     Margin="12,0,0,0"
                     VerticalAlignment="Center"
-                    Foreground="{StaticResource SystemControlForegroundBaseHighBrush}"
+                    Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
                     Text="{x:Bind NowPlayingName, Mode=OneWay}" />
                 <TextBlock
                     Grid.Column="2"
                     Margin="4,0,64,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
-                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                    Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                     Text="{x:Bind NowPlayingArtists, Mode=OneWay}"
                     TextTrimming="CharacterEllipsis" />
             </Grid>

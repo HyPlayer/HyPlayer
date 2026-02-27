@@ -89,7 +89,7 @@
                     Width="200"
                     Margin="10,37,19,9"
                     FontSize="10"
-                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                    Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                     TextWrapping="WrapWholeWords" />
                 <TextBlock
                     x:Name="TextBlockPLName"

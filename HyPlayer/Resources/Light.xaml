@@ -2,7 +2,7 @@
     <AcrylicBrush
         x:Key="ExpandedPlayerMask"
         BackgroundSource="Backdrop"
-        FallbackColor="{StaticResource SystemChromeMediumColor}"
+        FallbackColor="{ThemeResource SystemChromeMediumColor}"
         TintColor="#FFAAAAAA"
         TintLuminosityOpacity="0.4"
         TintOpacity="0.6" />

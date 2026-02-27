@@ -46,6 +46,8 @@ namespace HyPlayer.Classes
                 isBright = value;
                 NotifyPropertyChanged();
                 NotifyPropertyChanged(nameof(AccentTheme));
+                NotifyPropertyChanged(nameof(AccentBrush));
+                NotifyPropertyChanged(nameof(IdleBrush));
             }
         }
 

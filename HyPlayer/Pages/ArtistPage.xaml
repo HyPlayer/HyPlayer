@@ -115,7 +115,7 @@
                 Grid.Row="1"
                 Margin="0,12,0,0"
                 FontSize="15"
-                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                 MaxLines="7"
                 Selectable="True"
                 Text="{x:Bind ViewModel.Artist.Description}"

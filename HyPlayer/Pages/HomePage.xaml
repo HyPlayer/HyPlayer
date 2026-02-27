@@ -69,7 +69,7 @@
                         <TextBlock
                             Grid.Row="1"
                             FontSize="14"
-                            Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="1"
                             Text="{x:Bind Creator.Name}"
                             TextTrimming="CharacterEllipsis"
@@ -152,7 +152,7 @@
                         <TextBlock
                             Grid.Row="1"
                             FontSize="14"
-                            Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="1"
                             Text="{x:Bind Description}"
                             TextTrimming="CharacterEllipsis"
@@ -234,7 +234,7 @@
                         <TextBlock
                             Grid.Row="1"
                             FontSize="14"
-                            Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="1"
                             Text="{x:Bind ArtistString}"
                             TextTrimming="CharacterEllipsis"

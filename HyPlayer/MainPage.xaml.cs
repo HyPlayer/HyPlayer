@@ -52,6 +52,7 @@ public sealed partial class MainPage : Page
         UIElement PlayBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
         ActualThemeChanged += MainPage_ActualThemeChanged;
+        Common.BrushManagement.IsBright = ActualTheme == ElementTheme.Light;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         if (Common.Setting.displayMaintain)
         {
@@ -64,6 +65,7 @@ public sealed partial class MainPage : Page
     {
         Common.Setting.OnPropertyChanged("acrylicBackgroundStatus");
         Common.Setting.OnPropertyChanged("playbarBackgroundAcrylic");
+        if (!Common.IsExpanded) Common.BrushManagement.IsBright = ActualTheme == ElementTheme.Light;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

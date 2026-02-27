@@ -1505,7 +1505,7 @@
                                         Grid.Column="0"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                         BorderBrush="{StaticResource CardBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{StaticResource ControlCornerRadius}">
@@ -1535,7 +1535,7 @@
                                                 VerticalAlignment="Top"
                                                 d:Text="2.1.30"
                                                 FontSize="13"
-                                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                                                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                                                 IsTextSelectionEnabled="True"
                                                 TextAlignment="Left"
                                                 TextWrapping="Wrap" />
@@ -1545,7 +1545,7 @@
                                         Grid.Column="1"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                         BorderBrush="{StaticResource CardBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{StaticResource ControlCornerRadius}">
@@ -1574,7 +1574,7 @@
                                                 Grid.Row="1"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
-                                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                                                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                                                 IsTextSelectionEnabled="True"
                                                 TextWrapping="Wrap">
                                                 <TextBlock.ContextFlyout>
@@ -1601,7 +1601,7 @@
                                     <Border
                                         Height="80"
                                         Padding="13,10"
-                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                         BorderBrush="{StaticResource CardBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{StaticResource ControlCornerRadius}">
@@ -1628,7 +1628,7 @@
                                                 Grid.Row="1"
                                                 HorizontalAlignment="Left"
                                                 VerticalAlignment="Top"
-                                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                                                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                                                 IsTextSelectionEnabled="True"
                                                 Text="1145646224" />
                                         </Grid>
@@ -1637,7 +1637,7 @@
                                         Grid.Column="1"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                         BorderBrush="{StaticResource CardBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{StaticResource ControlCornerRadius}">
@@ -1688,7 +1688,7 @@
                                     MaxWidth="800"
                                     Margin="9,8,9,0"
                                     Padding="13,10"
-                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{StaticResource CardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}">
@@ -1738,7 +1738,7 @@
 
                                 <Border
                                     Height="64"
-                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{StaticResource CardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
@@ -1754,7 +1754,7 @@
                                                     Text="Kengwang" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="Developer" />
-                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="Stay Cool~" />
+                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="Stay Cool~" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
@@ -1768,7 +1768,7 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{StaticResource CardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
@@ -1785,7 +1785,7 @@
                                                     <TextBlock Text="Design" />
                                                     <TextBlock
                                                         d:Text=""
-                                                        Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                                                        Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                                                         Text="Reap what I sow" />
                                                 </StackPanel>
                                             </StackPanel>
@@ -1799,7 +1799,7 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{StaticResource CardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
@@ -1814,7 +1814,7 @@
                                                     Text="EP012014" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="Developer" />
-                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="Solidarity Forever~" />
+                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="Solidarity Forever~" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
@@ -1825,7 +1825,7 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{StaticResource CardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
@@ -1840,7 +1840,7 @@
                                                     Text="Raspberry Monster" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="Developer" />
-                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="僕が夢を捨てて大人になるまで" />
+                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="僕が夢を捨てて大人になるまで" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
@@ -1854,7 +1854,7 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{StaticResource CardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
@@ -1869,7 +1869,7 @@
                                                     Text="DYNAMIC-CHIN" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="新版图标提供 + 新版 UI 设计" />
-                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="Being Dynamic！" />
+                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="Being Dynamic！" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
@@ -1881,7 +1881,7 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{StaticResource CardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
@@ -1896,7 +1896,7 @@
                                                     Text="叫我蓝火火" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="热词开发者 + 部分功能实现" />
-                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="太阳在晒你的同时，你也在晒太阳" />
+                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="太阳在晒你的同时，你也在晒太阳" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
@@ -1907,7 +1907,7 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{StaticResource CardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
@@ -1922,7 +1922,7 @@
                                                     Text="Betta_Fish" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="部分UI更新" />
-                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="???" />
+                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="???" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
@@ -1949,7 +1949,7 @@
                                                     Text="Claris" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="Developer" />
-                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="Confident, Lively And Really ImpreSsive" />
+                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="Confident, Lively And Really ImpreSsive" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>

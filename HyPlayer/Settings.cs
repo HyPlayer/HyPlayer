@@ -1453,7 +1453,7 @@ namespace HyPlayer
         {
             try
             {
-                await Common.Invoke(() => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));;
             }
             catch
             {

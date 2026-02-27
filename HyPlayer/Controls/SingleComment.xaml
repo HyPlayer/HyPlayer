@@ -41,7 +41,7 @@
                                 Click="NavToUser_Click"
                                 Content="{x:Bind CommentUserDisplay.UserName, Mode=OneWay}"
                                 Style="{StaticResource TextBlockButtonStyle}" />
-                            <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind MainComment.SendTime, Mode=OneWay}" />
+                            <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind MainComment.SendTime, Mode=OneWay}" />
                         </StackPanel>
                     </StackPanel>
 

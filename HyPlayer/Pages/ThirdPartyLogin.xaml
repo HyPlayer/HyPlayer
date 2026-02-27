@@ -17,7 +17,7 @@
         <Border
             x:Name="LoadingRingContainer"
             Margin="0,0,0,120"
-            Background="{StaticResource SystemControlAcrylicElementBrush}">
+            Background="{ThemeResource SystemControlAcrylicElementBrush}">
             <ProgressRing
                 x:Name="LoadingRing"
                 Width="100"
