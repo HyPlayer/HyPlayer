@@ -481,6 +481,15 @@ public sealed partial class Settings : Page
     private async void BtnClearCache_Click(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ClearAllCacheAsync();
+        var folder = await StorageFolder.GetFolderFromPathAsync(Common.Setting!.cacheDir);
+        var files = await folder.GetFilesAsync();
+        foreach(var file in files)
+        {
+            if(file.FileType == ".flac" || file.FileType == ".mp3")
+            {
+                await file.DeleteAsync();
+            }
+        }
     }
 
     private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
