@@ -72,8 +72,8 @@
     public enum ThemeRequest : int
     {
         Auto = 0,
-        Dark = 1,
-        Light = 2
+        Light = 1,
+        Dark = 2
     }
     public enum RollingCalculator : int
     {
