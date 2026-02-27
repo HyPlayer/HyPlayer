@@ -26,7 +26,6 @@ using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Foundation.Collections;
 using Windows.Graphics.Imaging;
 using Windows.Media;
 using Windows.Media.Core;
@@ -40,7 +39,6 @@ using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml.Media;
 using Buffer = Windows.Storage.Streams.Buffer;
-using File = TagLib.File;
 using LrcConverter = ALRC.Converters.LrcConverter;
 using Timer = System.Timers.Timer;
 

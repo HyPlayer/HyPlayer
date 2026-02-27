@@ -16,7 +16,7 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class PageFavorite : Page
 {
-    private FavoriteViewModel ViewModel => (FavoriteViewModel)DataContext; 
+    private FavoriteViewModel ViewModel => (FavoriteViewModel)DataContext;
 
     public PageFavorite()
     {

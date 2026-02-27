@@ -9,7 +9,6 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.System.Threading;
-using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
@@ -325,12 +324,12 @@ public sealed partial class Comments : Page
     (source) =>
 
         {
-             _ = Common.Invoke(
-             () =>
-            {
-                HotCommentsScroll = HotComments.CommentPresentScrollViewer;
-                HotCommentsScroll.ViewChanged += HotCommentsScroll_ViewChanged;
-            });
+            _ = Common.Invoke(
+            () =>
+           {
+               HotCommentsScroll = HotComments.CommentPresentScrollViewer;
+               HotCommentsScroll.ViewChanged += HotCommentsScroll_ViewChanged;
+           });
 
         }, delay);//缓一会再加载，要不然获取不到
 

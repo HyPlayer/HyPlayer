@@ -1,6 +1,5 @@
 ﻿using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
@@ -8,7 +7,6 @@ using HyPlayer.NeteaseApi.ApiContracts.User;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Windows.UI.Xaml.Controls;
 
 namespace HyPlayer.ViewModels
 {

@@ -1,17 +1,5 @@
 ﻿using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts.Album;
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
-using HyPlayer.NeteaseApi.ApiContracts.Cloud;
-using HyPlayer.NeteaseApi.ApiContracts.Comment;
-using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
-using HyPlayer.NeteaseApi.ApiContracts.Login;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.NeteaseApi.ApiContracts.Recommend;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
-using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.NeteaseApi.Extensions.JsonSerializer;
-using HyPlayer.NeteaseApi.Models.ResponseModels;
-using LiteFM.Abstractions;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using static HyPlayer.Classes.UpdateManager;

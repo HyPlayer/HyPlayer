@@ -6,11 +6,8 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Geometry;
 using System;
-using System.Diagnostics;
 using System.Numerics;
 using Windows.Foundation;
-using Windows.UI;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
@@ -54,7 +51,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
             session.FillGeometry(geometry, actualX, actualY, _baseGradientBrush);
             return true;
         }
-        else if(remain > LeaveAnimationDuration)
+        else if (remain > LeaveAnimationDuration)
         {
             var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width, Height), 4, 4);
             session.FillGeometry(geometry, actualX, actualY, _baseGradientBrush);

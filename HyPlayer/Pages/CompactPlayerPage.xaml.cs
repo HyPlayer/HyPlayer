@@ -98,7 +98,7 @@ public sealed partial class CompactPlayerPage : Page
     private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem)
     {
         if (HyPlayList.CoverStream == null) return;
-        _ = Common.Invoke(async ()  =>
+        _ = Common.Invoke(async () =>
         {
             if (!Common.Setting.noImage)
             {

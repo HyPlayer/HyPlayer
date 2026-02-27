@@ -238,7 +238,7 @@ DoubleAnimation verticalAnimation;
                 mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive;
         });
         var isLiked = Common.LikedSongs.Contains(mpi.Id);
-        if (mpi.ItemType !=  HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive)
+        if (mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive)
         {
             _ = Common.Invoke(() =>
             {

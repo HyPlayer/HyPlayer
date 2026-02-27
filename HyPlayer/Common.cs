@@ -15,7 +15,6 @@ using Microsoft.Gaming.XboxGameBar;
 
 
 //using Microsoft.Gaming.XboxGameBar;
-using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.UI.Xaml.Controls;
 using System;

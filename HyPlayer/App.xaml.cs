@@ -18,7 +18,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.ApplicationModel.ExtendedExecution;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.System;

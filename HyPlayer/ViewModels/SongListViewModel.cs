@@ -36,7 +36,7 @@ namespace HyPlayer.ViewModels
         public partial string DescriptionBoxContent { get; set; }
 #nullable enable
         [ObservableProperty]
-        public partial string? ResourceId { get; set;  }
+        public partial string? ResourceId { get; set; }
         [ObservableProperty]
         public partial string? UpdateTime { get; set; }
         [ObservableProperty]

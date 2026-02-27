@@ -45,7 +45,7 @@ public sealed partial class SongListDetail : Page
         _dataTransferManager.DataRequested -= DataTransferManagerOnDataRequested;
     }
 
-    
+
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {

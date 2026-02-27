@@ -141,7 +141,7 @@ public sealed partial class SongsList : UserControl
             }
             catch
             {
-                
+
             }
         }
     }

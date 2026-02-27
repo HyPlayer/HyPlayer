@@ -1,7 +1,6 @@
 ﻿#region
 
 using ALRC.Abstraction;
-using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Classes.LyricParser.Abstraction;
 using HyPlayer.HyPlayControl;
@@ -109,7 +108,7 @@ public static class NeteaseTypeIds
 public class HyPlayItem
 {
     public PlayItem PlayItem { get; set; }
-    public HyPlayItemType ItemType {  get; set; }
+    public HyPlayItemType ItemType { get; set; }
     public NCAlbum Album { get; set; }
     public List<NCArtist> Artist { get; set; }
     public int Bitrate { get; set; }
@@ -346,7 +345,7 @@ public partial class PlayItem : IDisposable
 
     ~PlayItem()
     {
-       // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
         Dispose(disposing: false);
     }
 
@@ -371,7 +370,7 @@ public class NCPlayList
     public long TrackCount { get; set; }
     public DateTime CreateTime { get; set; }
     public DateTime UpdateTime { get; set; }
-    public bool IsDailyRecommend {  get; set; }
+    public bool IsDailyRecommend { get; set; }
 }
 
 public class NCUser

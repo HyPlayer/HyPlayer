@@ -13,8 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using Windows.Foundation;
 using Windows.UI;
@@ -31,7 +29,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         public long EndTime { get; set; } = endTime;
         public long Duration { get; set; } = endTime - startTime;
         public string? Transliteration { get; set; } = transliteration;
-        public int SyllableCount { get; init; } = syllable.Count();
+        public int SyllableCount { get; init; } = syllable.Length;
     }
 
     public class SyllablesRenderingLyricLine : RenderingLyricLine
@@ -46,7 +44,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         private CanvasTextLayout? tl;
         private CanvasTextLayout? tll;
         public EaseFunctionBase EaseFunction { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
-        private CustomElasticEase _elasticEase = new CustomElasticEase { Springiness = 6 };
+        private readonly CustomElasticEase _elasticEase = new() { Springiness = 6 };
 
         private bool _isFocusing;
         private float _canvasWidth;
@@ -141,7 +139,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                     textLayoutSession.DrawImage(_defaultLyricPersistCache, 0, textTop - _liftAmount, _sizePixelRect, 1);
                                 }
                             }
-                            if(afterCurrentSyllableGeometry is not null)
+                            if (afterCurrentSyllableGeometry is not null)
                             {
                                 using (textLayoutSession.CreateLayer(1, afterCurrentSyllableGeometry, afterMatrix))
                                 {
@@ -155,7 +153,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                     currentSyllableIndex);
                                 var currentHighlightGeometry =
                                     CreateHighlightGeometry(session, percentage,
-                                        (currentSyllableIndex == -1  ? null : _syllableBound.ElementAtOrDefault(currentSyllableIndex)) ?? _expandedBound);
+                                        (currentSyllableIndex == -1 ? null : _syllableBound.ElementAtOrDefault(currentSyllableIndex)) ?? _expandedBound);
                                 var currentCommandList = new CanvasCommandList(clds);
                                 using var currentDrawingSession = currentCommandList.CreateDrawingSession();
                                 // 叠底
@@ -180,24 +178,19 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                         var gradientStops = new CanvasGradientStop[]
                                         {
                                             // 抬升开始点
-                                            new CanvasGradientStop
-                                                { Position = percentage - 0.5f, Color = Color.FromArgb(255, 128, 255, 0) },
+                                            new() { Position = percentage - 0.5f, Color = Color.FromArgb(255, 128, 255, 0) },
                                             // 抬升峰值
-                                            new CanvasGradientStop
-                                                { Position = percentage, Color = Color.FromArgb(255, 128, 255, 0) },
+                                            new() { Position = percentage, Color = Color.FromArgb(255, 128, 255, 0) },
                                             // 抬升结束点
-                                            new CanvasGradientStop
-                                                { Position = percentage + 0.5f, Color = Color.FromArgb(255, 128, 128, 0) }
+                                            new() { Position = percentage + 0.5f, Color = Color.FromArgb(255, 128, 128, 0) }
                                         };
-                                        using (var gradientBrush = new CanvasLinearGradientBrush(displacementSession, gradientStops))
-                                        {
-                                            // 创建一个从左到右的渐变
-                                            gradientBrush.StartPoint = new Vector2((float)currentSyllableSize.Left, 0);
-                                            gradientBrush.EndPoint = new Vector2((float)currentSyllableSize.Width + (float)currentSyllableSize.Left, 0);
+                                        using var gradientBrush = new CanvasLinearGradientBrush(displacementSession, gradientStops);
+                                        // 创建一个从左到右的渐变
+                                        gradientBrush.StartPoint = new Vector2((float)currentSyllableSize.Left, 0);
+                                        gradientBrush.EndPoint = new Vector2((float)currentSyllableSize.Width + (float)currentSyllableSize.Left, 0);
 
-                                            // 将渐变绘制到位移图上
-                                            displacementSession.FillGeometry(currentSyllableGeometry, 0, textTop, gradientBrush);
-                                        }
+                                        // 将渐变绘制到位移图上
+                                        displacementSession.FillGeometry(currentSyllableGeometry, 0, textTop, gradientBrush);
                                     }
 
                                     var displacementEffect = new DisplacementMapEffect
@@ -321,7 +314,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
             return true;
         }
-        public List<CanvasGradientStop> GetCanvasGradientStop(float percentage, float start, float end, float witdth)
+        public static List<CanvasGradientStop> GetCanvasGradientStop(float percentage, float start, float end, float witdth)
         {
             float duration = end - start;
             float value = (percentage * duration + start) / witdth;
@@ -345,7 +338,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         /// <summary>
         /// 根据中心点放大
         /// </summary>
-        public Matrix3x2 GetCenterMatrix(float X, float Y, float XCenter, float YCenter, float XScle, float YScle)
+        public static Matrix3x2 GetCenterMatrix(float X, float Y, float XCenter, float YCenter, float XScle, float YScle)
         {
             return Matrix3x2.CreateTranslation(-XCenter, -YCenter)
                    * Matrix3x2.CreateScale(XScle, YScle)
@@ -400,9 +393,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 }
 
 
-                beforeCurrentSyllableGeometry = CanvasGeometry.CreateGroup(creator, beforeCurrentSyllable.ToArray());
-                afterCurrentSyllableGeometry = CanvasGeometry.CreateGroup(creator, afterCurrentSyllable.ToArray());
-                currentSyllableGeometry = CanvasGeometry.CreateGroup(creator, currentSyllable.ToArray());
+                beforeCurrentSyllableGeometry = CanvasGeometry.CreateGroup(creator, [.. beforeCurrentSyllable]);
+                afterCurrentSyllableGeometry = CanvasGeometry.CreateGroup(creator, [.. afterCurrentSyllable]);
+                currentSyllableGeometry = CanvasGeometry.CreateGroup(creator, [.. currentSyllable]);
                 currentSyllableSize = currentSyllableGeometry.ComputeBounds();
             }
         }
@@ -410,7 +403,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         private float GetCurrentSyllableHighlightPercentage(long currentTime, List<RenderingSyllable>? syllables,
             int index)
         {
-            if (syllables is null || syllables.Count <= 0) return (currentTime - StartTime) * 1f/(EndTime - StartTime);
+            if (syllables is null || syllables.Count <= 0) return (currentTime - StartTime) * 1f / (EndTime - StartTime);
             if (index == -1) return 0;
             var currentSyllable = syllables[index];
             var duration = currentSyllable.EndTime - currentSyllable.StartTime;
@@ -419,7 +412,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         }
 
 
-        private CanvasGeometry CreateHighlightGeometry(ICanvasResourceCreator creator, float percentage, Rect[] rects)
+        private static CanvasGeometry CreateHighlightGeometry(ICanvasResourceCreator creator, float percentage, Rect[] rects)
         {
             if (percentage <= 0 || rects.Length == 0) return CanvasGeometry.CreateGroup(creator, []);
             // 首先获取完整宽度
@@ -456,7 +449,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 }
             }
 
-            return CanvasGeometry.CreateGroup(creator, geos.ToArray());
+            return CanvasGeometry.CreateGroup(creator, [.. geos]);
         }
 
 
@@ -492,7 +485,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             OnTypographyChanged(session, context);
         }
 
-        private List<Rect[]> _syllableBound = [];
+        private readonly List<Rect[]> _syllableBound = [];
         private Rect[] _expandedBound = [];
         private float _drawingOffsetY;
         private bool _isInitialized = false;
@@ -642,11 +635,11 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         {
                             length += region[0].LayoutBounds.Width;
                         }
-                        if(currentLineLength + length > requestedWidth)
+                        if (currentLineLength + length > requestedWidth)
                         {
                             if (lastSpaceIndex != 0)
                                 sb.Append('\n');
-                            sb.Append(span[(lastSpaceIndex+1)..i]);
+                            sb.Append(span[(lastSpaceIndex + 1)..i]);
                             currentLineLength = 0;
                             lastSpaceIndex = i;
                             i++;
@@ -679,7 +672,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         var region = textLayout.GetCharacterRegions(alreadyLetterCount, syllable.Syllable.Length);
                         if (region is { Length: > 0 })
                         {
-                            _syllableBound.Add(region.Select(t => new Rect(t.LayoutBounds.X - _renderStartX + 16, t.LayoutBounds.Y + _liftAmount, t.LayoutBounds.Width, t.LayoutBounds.Height)).ToArray());
+                            _syllableBound.Add([.. region.Select(t => new Rect(t.LayoutBounds.X - _renderStartX + 16, t.LayoutBounds.Y + _liftAmount, t.LayoutBounds.Width, t.LayoutBounds.Height))]);
                             alreadyLetterCount += syllable.Syllable.Length;
                         }
                         else
@@ -688,11 +681,11 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         }
                     }
 
-                    _expandedBound = _syllableBound.SelectMany(t => t).ToArray();
+                    _expandedBound = [.. _syllableBound.SelectMany(t => t)];
                 }
                 else
                 {
-                    _expandedBound = textLayout.GetCharacterRegions(0, _text.Length).Select(t => new Rect(t.LayoutBounds.X - _renderStartX + 16, t.LayoutBounds.Y, t.LayoutBounds.Width, t.LayoutBounds.Height)).ToArray();
+                    _expandedBound = [.. textLayout.GetCharacterRegions(0, _text.Length).Select(t => new Rect(t.LayoutBounds.X - _renderStartX + 16, t.LayoutBounds.Y, t.LayoutBounds.Width, t.LayoutBounds.Height))];
                 }
             }
 
@@ -741,7 +734,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 dftLyricDs = defaultLyricPersistCacheTarget.CreateDrawingSession();
             }
             _sizePixelRect = new Rect(0, 0, RenderingWidth, RenderingHeight);
-            using(pstDs)
+            using (pstDs)
             using (dftLyricDs)
             {
                 pstDs.Clear(Colors.Transparent);

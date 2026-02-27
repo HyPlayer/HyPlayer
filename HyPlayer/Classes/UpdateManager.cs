@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -154,10 +153,10 @@ public static class UpdateManager
                 title = "你已是最新版";
             }
 
-            var message = remoteResult.UpdateLog + 
+            var message = remoteResult.UpdateLog +
             "\r\n最新版本: " + remoteResult.Version +
             "\r\n更新时间: " + remoteResult.UpdateTime.ToString() +
-            "\r\n当前版本: " + localVersion + 
+            "\r\n当前版本: " + localVersion +
             (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
             if (isStartup)
             {

@@ -1,11 +1,8 @@
-﻿﻿#region
+﻿#region
 
 using HyPlayer.Classes;
-using HyPlayer.Classes.LyricParser.Abstraction;
-using HyPlayer.Controls;
 using Kawazu;
 using Microsoft.Graphics.Canvas.Text;
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
@@ -28,7 +25,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 using WinRT;
 using Point = Windows.Foundation.Point;
@@ -287,7 +283,7 @@ public sealed partial class Settings : Page
     {
         if (isbyprogram) return;
         var size = (int)SliderAlbumShadowDepth.Value;
-            Common.Setting.expandedCoverShadowDepth = Math.Max(0, size);
+        Common.Setting.expandedCoverShadowDepth = Math.Max(0, size);
     }
 
 
@@ -483,9 +479,9 @@ public sealed partial class Settings : Page
         await SimpleCacher.ClearAllCacheAsync();
         var folder = await StorageFolder.GetFolderFromPathAsync(Common.Setting!.cacheDir);
         var files = await folder.GetFilesAsync();
-        foreach(var file in files)
+        foreach (var file in files)
         {
-            if(file.FileType == ".flac" || file.FileType == ".mp3")
+            if (file.FileType == ".flac" || file.FileType == ".mp3")
             {
                 await file.DeleteAsync();
             }

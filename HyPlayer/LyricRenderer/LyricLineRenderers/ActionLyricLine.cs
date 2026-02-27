@@ -2,9 +2,7 @@
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
-using Polly.Caching;
 using System;
-using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
@@ -119,7 +117,7 @@ public class ActionLyricLine : RenderingLyricLine
             _staticPersistCache = staticPersistCacheTarget;
             pstDs = staticPersistCacheTarget.CreateDrawingSession();
         }
-        
+
 
         using (pstDs)
         {

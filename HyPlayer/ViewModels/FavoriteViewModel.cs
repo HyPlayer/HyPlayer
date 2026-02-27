@@ -5,10 +5,10 @@ using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
-using Windows.UI.Xaml.Controls;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.UI.Xaml.Controls;
 
 namespace HyPlayer.ViewModels
 {

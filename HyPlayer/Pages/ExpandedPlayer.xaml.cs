@@ -443,8 +443,8 @@ public sealed partial class ExpandedPlayer : Page
         Common.PageExpandedPlayer = null;
     }
 
-    private readonly Storyboard luminousColorsRotateStoryBoard = new ();
-    private DoubleAnimation luminousColorsRotateAnimation = new ();
+    private readonly Storyboard luminousColorsRotateStoryBoard = new();
+    private DoubleAnimation luminousColorsRotateAnimation = new();
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -508,7 +508,7 @@ public sealed partial class ExpandedPlayer : Page
     }
 
 
-    private readonly Storyboard bpmAniStoryboard = new ();
+    private readonly Storyboard bpmAniStoryboard = new();
 
     public void LoadLyricsBox()
     {
@@ -1438,7 +1438,7 @@ public sealed partial class ExpandedPlayer : Page
             _randomValue = new Random().Next(100);
         }
         LuminousBackground.DpiScale = _settings.IsolationScale;
-        if(_albumColorVectors?.Count == 4)
+        if (_albumColorVectors?.Count == 4)
         {
             _shaderEffect?.Properties["color1"] = _albumColorVectors[0];
             _shaderEffect?.Properties["color2"] = _albumColorVectors[1];
@@ -1447,7 +1447,7 @@ public sealed partial class ExpandedPlayer : Page
             _shaderEffect?.Properties["UseHSVBlending"] = UseHSVBlending();
 
         }
-        
+
         _shaderEffect?.Properties["iResolution"] = new Vector2(LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, CanvasDpiRounding.Round), LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, CanvasDpiRounding.Round));
         if (!_settings.IsolationFullThrottle)
         {

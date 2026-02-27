@@ -164,7 +164,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0">
-                    <Grid x:Name="AcrylicGrid" Visibility="{x:Bind hyplayer:Common.Setting.acrylicAvailabiliity}">
+                    <Grid x:Name="AcrylicGrid" Visibility="{x:Bind hyplayer:Setting.acrylicAvailabiliity}">
                         <Border
                             x:Name="RectangleImageBack"
                             x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
@@ -184,7 +184,7 @@
                             Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
                     </Grid>
 
-                    <Border x:Name="RectangleImageFallback" Visibility="{x:Bind hyplayer:Common.Setting.acrylicAvailabiliity, Converter={StaticResource BoolToVisibilityInverseConverter}}">
+                    <Border x:Name="RectangleImageFallback" Visibility="{x:Bind hyplayer:Setting.acrylicAvailabiliity, Converter={StaticResource BoolToVisibilityInverseConverter}}">
                         <Border.Background>
                             <ImageBrush Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
@@ -255,7 +255,7 @@
                     <ui:Effects.Shadow>
                         <media:AttachedCardShadow
                             CornerRadius="0"
-                            Opacity="{x:Bind Path=hyplayer:Common.Setting.acrylicAvailabiliity, Converter={StaticResource BoolToOpacityConverter}}"
+                            Opacity="{x:Bind Path=hyplayer:Setting.acrylicAvailabiliity, Converter={StaticResource BoolToOpacityConverter}}"
                             Offset="0,1,0"
                             Color="Black" />
                     </ui:Effects.Shadow>

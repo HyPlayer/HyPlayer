@@ -1,18 +1,15 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
-using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.NeteaseApi;
 using LiteFM.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
 
 namespace HyPlayer
 {
@@ -1012,7 +1009,7 @@ namespace HyPlayer
             }
         }
 
-        public bool acrylicAvailabiliity => new UISettings().AdvancedEffectsEnabled && Windows.UI.Composition.CompositionCapabilities.GetForCurrentView().AreEffectsFast();
+        public static bool acrylicAvailabiliity => new UISettings().AdvancedEffectsEnabled && Windows.UI.Composition.CompositionCapabilities.GetForCurrentView().AreEffectsFast();
 
 
         public bool expandedPlayerFullCover
@@ -1453,7 +1450,7 @@ namespace HyPlayer
         {
             try
             {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); ;
             }
             catch
             {
@@ -1466,7 +1463,7 @@ namespace HyPlayer
             try
             {
                 var success = ApplicationData.Current.LocalSettings.Values.TryGetValue(propertyName, out object value);
-                if(success)
+                if (success)
                 {
                     return (T)value;
                 }

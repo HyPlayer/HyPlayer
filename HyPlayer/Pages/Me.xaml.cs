@@ -3,17 +3,12 @@
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
 using HyPlayer.ViewModels;
-using Microsoft.UI.Xaml.Controls;
-using System.Collections;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using WinRT;
 
 #endregion
 

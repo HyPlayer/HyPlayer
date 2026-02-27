@@ -276,7 +276,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
 
     private static string GetSize(double size)
     {
-        string[] units = ["B", "KB", "MB", "GB", "TB", "PB" ];
+        string[] units = ["B", "KB", "MB", "GB", "TB", "PB"];
         const double mod = 1024.0;
         var i = 0;
         while (size >= mod)
