@@ -356,7 +356,7 @@
                     </Grid.RowDefinitions>
                     <Pivot SelectionChanged="Pivot_SelectionChanged">
                         <PivotItem Header="密码登录">
-                            <Grid Margin="0,48,0,0">
+                            <Grid>
                                 <StackPanel Orientation="Vertical" Spacing="12">
                                     <TextBox
                                         x:Name="TextBoxAccount"
@@ -377,7 +377,7 @@
                             </Grid>
                         </PivotItem>
                         <PivotItem Header="扫码登录" Tapped="LoadQr">
-                            <Grid Margin="0,36,0,0">
+                            <Grid>
                                 <Image
                                     x:Name="QrContainer"
                                     Height="160"
