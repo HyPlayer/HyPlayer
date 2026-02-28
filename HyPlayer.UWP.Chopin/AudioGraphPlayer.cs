@@ -19,13 +19,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
     public partial class AudioGraphPlayer : IPlayer, IDisposable
     {
         #region Private Fields
-        private readonly ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
-        private readonly ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
+        private readonly ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new();
+        private readonly ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new();
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
         private AudioFrameOutputNode _frameOutputNode;
         private bool _disposedValue;
-        private readonly Timer _positionTimer = new Timer() { AutoReset = true, Interval = 100 };
+        private readonly Timer _positionTimer = new() { AutoReset = true, Interval = 100 };
         private TimeSpan _lastPosition = TimeSpan.Zero;
         private string _currentDeviceId = string.Empty;
         private double _volume = 1;
@@ -46,7 +46,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
         }
 
-        public FFTProcessor FFTProcessor = new FFTProcessor();
+        public FFTProcessor FFTProcessor = new();
 
         public IPlaybackSource PrimaryPlaybackSource
         {
@@ -310,8 +310,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             var node = GetAudioInputNodeOrThrow(playbackSource);
 
             node.Start();
-            var source = playbackSource as AudioGraphPlaybackSource;
-            if (source != null)
+            if (playbackSource is AudioGraphPlaybackSource source)
             {
                 source.PlaybackStatus = PlaybackStatus.Playing;
                 OnPlaybackSourceStatusChanged?.Invoke(playbackSource, PlaybackStatus.Playing);
@@ -324,8 +323,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             var node = GetAudioInputNodeOrThrow(playbackSource);
 
             node.Stop();
-            var source = playbackSource as AudioGraphPlaybackSource;
-            if (source != null)
+            if (playbackSource is AudioGraphPlaybackSource source)
             {
                 source.PlaybackStatus = PlaybackStatus.Paused;
                 OnPlaybackSourceStatusChanged?.Invoke(playbackSource, PlaybackStatus.Paused);
@@ -390,8 +388,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             options ??= new PlaybackOptions();
 
             // 验证播放源类型
-            var source = playbackSource as AudioGraphPlaybackSource;
-            if (source == null)
+            if (playbackSource is not AudioGraphPlaybackSource source)
                 throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
 
             // 检查是否已连接
@@ -443,13 +440,10 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public void DisconnectPlaybackSource(IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
-            var source = playbackSource as AudioGraphPlaybackSource;
-            if (source == null)
+            if (playbackSource is not AudioGraphPlaybackSource source)
                 throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
 
-            if (!_audioInputNodes.ContainsKey(source)) return;
-
-            var node = _audioInputNodes[source];
+            if (!_audioInputNodes.TryGetValue(source, out MediaSourceAudioInputNode node)) return;
             node.MediaSourceCompleted -= OnMediaSourceCompleted;
 
             if (PrimaryPlaybackSource == source)
@@ -545,8 +539,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         #region Helper Methods
         private MediaSourceAudioInputNode GetAudioInputNodeOrThrow(IPlaybackSource playbackSource)
         {
-            var source = playbackSource as AudioGraphPlaybackSource;
-            if (source == null)
+            if (playbackSource is not AudioGraphPlaybackSource source)
                 throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
 
             if (!_audioInputNodes.TryGetValue(source, out var node))
@@ -557,8 +550,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         private void ThrowExceptionIfDisposed()
         {
-            if (_disposedValue)
-                throw new ObjectDisposedException(nameof(AudioGraphPlayer));
+            ObjectDisposedException.ThrowIf(_disposedValue, this);
         }
         #endregion
     }

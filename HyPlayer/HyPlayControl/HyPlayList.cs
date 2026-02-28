@@ -807,7 +807,7 @@ public static class HyPlayList
                     return;
                 }
 
-                if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || !FadeManager.FadeProcessing))
+                if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || !FadeManager.Processing))
                 {
                     var primaryPlaybackSource = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
                     Player.PausePlaybackSource(primaryPlaybackSource);
@@ -836,11 +836,6 @@ public static class HyPlayList
                 playItem.AudioGraphPlaybackSource = playbackSource;
 
                 var targetVolume = Common.Setting.EnableAudioGain ? targetItem.Volume : 1d;
-                if (Common.Setting.CrossFade && FadeManager.FadeProcessing)
-                {
-                    targetVolume = 0;
-                }
-
                 var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary, AutoPlay = autoPlay, Volume = targetVolume ?? 1 };
                 await Player.ConnectPlaybackSourceAsync(playbackSource, options);
             });
@@ -1739,7 +1734,7 @@ public static class HyPlayList
     {
         try
         {
-            await FadeManager.PauseFadeProcessing();
+            FadeManager.ForceStopFadeProcess();
             if (string.IsNullOrEmpty(Common.Setting.AudioRenderDevice)) await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume });
             else await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume, DefaultDeviceId = Common.Setting.AudioRenderDevice, EnableFFTProcessing = Common.Setting.EnableFFT });
         }
@@ -1747,10 +1742,6 @@ public static class HyPlayList
         {
             Common.AddToTeachingTipLists("在切换输出设备时发生错误", ex.Message);
             await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume, EnableFFTProcessing = Common.Setting.EnableFFT });
-        }
-        finally
-        {
-            FadeManager.ResumeFadeProcessing();
         }
     }
     /********        播放文件相关        ********/

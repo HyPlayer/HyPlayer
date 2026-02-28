@@ -1,8 +1,10 @@
 ﻿using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.HyPlayControl;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Audio;
@@ -12,14 +14,15 @@ namespace HyPlayer.Classes
     public class FadeManager
     {
 #nullable enable
-        private Tuple<AudioGraphPlaybackSource, AudioGraphPlaybackSource>? _currentPlayItem;
-        private Tuple<MediaSourceAudioInputNode, MediaSourceAudioInputNode>? _currentNode;
+        private AudioGraphPlaybackSource? _currentPlaybackSource;
+        private AudioGraphPlaybackSource? _nextPlaybackSource;
+        private MediaSourceAudioInputNode? _currentPlaybackNode;
+        private MediaSourceAudioInputNode? _nextPlaybackNode;
 #nullable restore
-        private readonly Dictionary<AudioGraphPlaybackSource, double> _initialVolume = [];
-        private readonly SemaphoreSlim _processMutex = new(1);
-        public bool FadeLoading { get; private set; } = false;
-        public bool FadeProcessing { get; private set; } = false;
-        public bool PauseProcessing { get; private set; } = false;
+        private readonly Dictionary<MediaSourceAudioInputNode, double> _initialVolume = [];
+        private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+        private readonly SemaphoreSlim _loaderSemaphore = new(1);
+        public bool Processing { get; private set; } = false;
         public FadeManager(AudioGraphPlayer player)
         {
             player.OnPositionChanged += Player_OnPositionChanged;
@@ -29,198 +32,148 @@ namespace HyPlayer.Classes
 
         private async void HyPlayList_OnMediaEnd(HyPlayItem hpi)
         {
-            try
+            if (HyPlayList.NowPlayType == PlayMode.SinglePlay || HyPlayList.List.Count <= 1) return;
+            var item = _currentPlaybackSource?.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
+            if (hpi == item)
             {
-                await _processMutex.WaitAsync();
-                if (!Common.Setting.CrossFade) return;
-                if (HyPlayList.NowPlayType == PlayMode.SinglePlay || HyPlayList.List.Count <= 1) return;
-                if (FadeProcessing)
-                {
-                    var playItem = hpi.PlayItem;
-                    if (playItem.AudioGraphPlaybackSource != null)
-                    {
-                        HyPlayList.Player.DisconnectPlaybackSource(playItem?.AudioGraphPlaybackSource);
-                        var item = playItem?.AudioGraphPlaybackSource.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                        item?.PlayItem?.Dispose();
-                        item?.PlayItem = null;
-                    }
-                    if (_initialVolume.Count > 0 && _currentPlayItem != null)
-                    {
-                        HyPlayList.Player.SetPlaybackSourceOutputVolume(_initialVolume[_currentPlayItem?.Item2], _currentPlayItem?.Item2);
-                    }
-                    _currentPlayItem = null;
-                    _currentNode = null;
-                    FadeProcessing = false;
-                    _initialVolume.Clear();
-                }
-                else if (_currentPlayItem == null || _currentNode == null || _initialVolume.Count == 0)
-                {
-                    HyPlayList.MoveSongPointer();
-                    var nextItem = HyPlayList.List[HyPlayList.NowPlaying];
-                    await HyPlayList.LoadMediaSource(nextItem, true, true);
-                }
+                HyPlayList.Player.DisconnectPlaybackSource(hpi.PlayItem.AudioGraphPlaybackSource);
+                _initialVolume.Remove(_currentPlaybackNode);
+                item?.PlayItem?.Dispose();
+                item?.PlayItem = null;
+                _currentPlaybackSource = null;
+                _currentPlaybackNode = null;
             }
-            finally
+            else if (item == null)
             {
-                _processMutex.Release();
+                HyPlayList.MoveSongPointer();
+                var nextItem = HyPlayList.List[HyPlayList.NowPlaying];
+                await HyPlayList.LoadMediaSource(nextItem, true, true);
             }
         }
 
         private async void HyPlayList_OnSongMoveNext()
         {
-            try
+            if (!Processing) return;
+            Processing = false;
+            HyPlayList.Player.DisconnectPlaybackSource(_currentPlaybackSource);
+            HyPlayList.Player.DisconnectPlaybackSource(_nextPlaybackSource);
+            var item = _currentPlaybackSource?.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
+            item.PlayItem?.Dispose();
+            item = _nextPlaybackSource?.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
+            item.PlayItem?.Dispose();
+            _currentPlaybackSource = null;
+            _currentPlaybackNode = null;
+            _nextPlaybackSource = null;
+            _nextPlaybackNode = null;
+            _initialVolume.Clear();
+        }
+
+        private void Player_OnPositionChanged(TimeSpan position)
+        {
+            InitializeFade().SafeFireAndForget();
+            if (!Processing)
             {
-                await _processMutex.WaitAsync();
-                var currentPlayItem = _currentPlayItem;
-                _currentPlayItem = null;
-                if (currentPlayItem != null)
-                {
-                    var keyItem = currentPlayItem.Item1.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                    var valueItem = currentPlayItem.Item2.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                    if (keyItem?.PlayItem is not null)
-                    {
-                        var keySource = keyItem?.PlayItem.AudioGraphPlaybackSource;
-                        if (keySource != null)
-                        {
-                            HyPlayList.Player.DisconnectPlaybackSource(keySource);
-                        }
-                        keyItem?.PlayItem?.Dispose();
-                        keyItem?.PlayItem = null;
-                    }
-                    if (valueItem?.PlayItem is not null)
-                    {
-                        var valueSource = valueItem.PlayItem.AudioGraphPlaybackSource;
-                        if (valueSource != null)
-                        {
-                            HyPlayList.Player.DisconnectPlaybackSource(valueSource);
-                        }
-                        valueItem?.PlayItem?.Dispose();
-                        valueItem?.PlayItem = null;
-                    }
-                }
-                _currentNode = null;
-                FadeProcessing = false;
-                _initialVolume.Clear();
+                return;
             }
-            finally
+            if (_currentPlaybackNode != null) 
             {
-                _processMutex.Release();
+                ProcessFadeOut(_currentPlaybackNode);
+            }
+            if (_nextPlaybackNode != null) 
+            {
+                ProcessFadeIn(_nextPlaybackNode);
             }
         }
 
-        private async void ShouldStartFade()
+        private async Task InitializeFade()
         {
-            if (HyPlayList.Player.PrimaryAudioInputNode?.Duration.TotalSeconds - HyPlayList.Player?.PrimaryAudioInputNode?.Position.TotalSeconds <= Common.Setting.CrossFadeTime
-                && ((HyPlayList.Player.PrimaryAudioInputNode?.Duration - HyPlayList.Player.PrimaryAudioInputNode?.Position)?.TotalSeconds ?? 0) > 0.5
-                && _currentPlayItem == null
-                && !FadeLoading
+            await _loaderSemaphore.WaitAsync();
+            if (HyPlayList.Player.PrimaryAudioInputNode?.Duration.TotalSeconds - HyPlayList.Player?.PrimaryAudioInputNode?.Position.TotalSeconds <= _setting.CrossFadeTime
+                && ((HyPlayList.Player.PrimaryAudioInputNode?.Duration - HyPlayList.Player.PrimaryAudioInputNode?.Position)?.TotalSeconds ?? 0) > 2
                 && HyPlayList.NowPlayType != PlayMode.SinglePlay
                 && HyPlayList.List.Count > 1
-                && !PauseProcessing)
+                && !Processing)
             {
-                try
-                {
-                    await _processMutex.WaitAsync();
-                    FadeLoading = true;
-                    FadeProcessing = true;
-                    var current = (AudioGraphPlaybackSource)HyPlayList.Player.PrimaryPlaybackSource;
-                    var currentItem = current.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                    HyPlayList.MoveSongPointer();
-                    var nextItem = HyPlayList.List[HyPlayList.NowPlaying];
-                    await HyPlayList.LoadMediaSource(nextItem, false, false);
-                    _currentPlayItem = new Tuple<AudioGraphPlaybackSource, AudioGraphPlaybackSource>(current, nextItem.PlayItem?.AudioGraphPlaybackSource);
-                    var node1 = HyPlayList.Player.GetAudioInputNode(_currentPlayItem.Item1);
-                    var node2 = HyPlayList.Player.GetAudioInputNode(_currentPlayItem.Item2);
-                    _currentNode = new Tuple<MediaSourceAudioInputNode, MediaSourceAudioInputNode>(node1, node2);
-                    _initialVolume[_currentPlayItem?.Item1] = currentItem.Volume ?? 1;
-                    _initialVolume[_currentPlayItem?.Item2] = nextItem.Volume ?? 1;
-                    FadeLoading = false;
-                }
-                catch
-                {
-                    FadeLoading = false;
-                    FadeProcessing = false;
-                }
-                finally
-                {
-                    _processMutex.Release();
-                }
+                Processing = true;
+                var current = (AudioGraphPlaybackSource)HyPlayList.Player.PrimaryPlaybackSource;
+                var currentItem = current.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
+                _currentPlaybackSource = current;
+                var currentNode = HyPlayList.Player.GetAudioInputNode(current);
+                _initialVolume[currentNode] = currentItem.Volume ?? 1;
+                _currentPlaybackNode = currentNode;
+                HyPlayList.MoveSongPointer();
+                var nextItem = HyPlayList.List[HyPlayList.NowPlaying];
+                await HyPlayList.LoadMediaSource(nextItem, false, false);
+                var nextNode= HyPlayList.Player.GetAudioInputNode(nextItem.PlayItem.AudioGraphPlaybackSource);
+                _nextPlaybackSource = nextItem.PlayItem.AudioGraphPlaybackSource;
+                _initialVolume[nextNode] = nextItem.Volume ?? 1;
+                _nextPlaybackNode = nextNode;
             }
+            _loaderSemaphore.Release();
         }
-        private async Task ProcessFade()
+
+        private void ProcessFadeIn(MediaSourceAudioInputNode node)
         {
             try
             {
-                await _processMutex.WaitAsync();
-                if (HyPlayList.Player.PrimaryPlaybackSource == _currentPlayItem?.Item1 && _currentPlayItem?.Item2 != null && _currentPlayItem?.Item1 != null)
+                if (node == null) return;
+                if (HyPlayList.Player.PrimaryPlaybackSource != _nextPlaybackSource)
                 {
-                    HyPlayList.Player.PrimaryPlaybackSource = _currentPlayItem?.Item2;
-                    HyPlayList.Player?.PlayPlaybackSource(_currentPlayItem?.Item2);
+                    HyPlayList.Player.PrimaryPlaybackSource = _nextPlaybackSource;
+                    HyPlayList.Player?.PlayPlaybackSource(_nextPlaybackSource);
                 }
-                else if (_currentPlayItem?.Item1 != null && _currentPlayItem?.Item2 != null)
+                var time = node.Position.TotalSeconds;
+                var multiplier = Math.Clamp(time / _setting.CrossFadeTime, 0, 1);
+                HyPlayList.Player.SetPlaybackSourceOutputVolume((_setting.EnableAudioGain ? _initialVolume[node] : 1) * multiplier, _nextPlaybackSource);
+                
+                if (multiplier == 1)
                 {
-
-                    var time1 = Common.Setting.CrossFadeTime - (_currentNode.Item1.Duration - _currentNode.Item1.Position).TotalSeconds;
-                    var time2 = _currentNode.Item2.Duration.TotalSeconds;
-                    var time = Math.Min(time1, time2);
-                    var mainMultiplier = Math.Min(1, 1 - (time / Common.Setting.CrossFadeTime));
-                    var subMultiplier = Math.Max(time / Common.Setting.CrossFadeTime, 0);
-                    HyPlayList.Player.SetPlaybackSourceOutputVolume((Common.Setting.EnableAudioGain ? _initialVolume[_currentPlayItem?.Item1] : 1) * mainMultiplier, _currentPlayItem?.Item1);
-                    HyPlayList.Player.SetPlaybackSourceOutputVolume((Common.Setting.EnableAudioGain ? _initialVolume[_currentPlayItem?.Item2] : 1) * subMultiplier, _currentPlayItem?.Item2);
+                    Processing = false;
+                    _initialVolume.Remove(node);
+                    _nextPlaybackSource = null;
+                    _nextPlaybackNode = null;
                 }
             }
             catch
             {
                 //Ignore
             }
-            finally
-            {
-                _processMutex.Release();
-            }
         }
 
-        private void Player_OnPositionChanged(TimeSpan position)
-        {
-            ShouldStartFade();
-            if (_currentPlayItem == null || FadeLoading || PauseProcessing)
-            {
-                return;
-            }
-            else
-            {
-                ProcessFade().SafeFireAndForget();
-            }
-        }
-        public async Task PauseFadeProcessing()
+        private void ProcessFadeOut(MediaSourceAudioInputNode node)
         {
             try
             {
-                await _processMutex.WaitAsync();
-                if (!FadeProcessing)
-                {
-                    return;
-                }
-                HyPlayList.Player.SetPlaybackSourceOutputVolume(Common.Setting.EnableAudioGain ? _initialVolume[_currentPlayItem?.Item1] : 1, _currentPlayItem?.Item1);
-                HyPlayList.Player.SetPlaybackSourceOutputVolume(Common.Setting.EnableAudioGain ? _initialVolume[_currentPlayItem?.Item2] : 1, _currentPlayItem?.Item2);
-                PauseProcessing = true;
-                HyPlayList.Player.DisconnectPlaybackSource(_currentPlayItem.Item1);
-                var keyItem = _currentPlayItem.Item1.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                keyItem.PlayItem?.Dispose();
-                keyItem.PlayItem = null;
-                _currentPlayItem = null;
-                _currentNode = null;
-                FadeProcessing = false;
-                _initialVolume.Clear();
+                if (node == null) return;
+                var time = _setting.CrossFadeTime - (node.Duration - node.Position).TotalSeconds;
+                var multiplier = Math.Clamp(1 - (time / _setting.CrossFadeTime), 0, 1);
+                Debug.WriteLine(multiplier);
+                HyPlayList.Player.SetPlaybackSourceOutputVolume((_setting.EnableAudioGain ? _initialVolume[node] : 1) * multiplier, _currentPlaybackSource);
             }
-            finally
+            catch
             {
-                _processMutex.Release();
+                //Ignore
             }
-            
         }
-        public void ResumeFadeProcessing()
+
+        public void ForceStopFadeProcess()
         {
-            PauseProcessing = false;
+            if (!Processing)
+            {
+                return;
+            }
+            var node = _nextPlaybackNode;
+            var source = _nextPlaybackSource;
+            HyPlayList.Player.DisconnectPlaybackSource(_currentPlaybackSource);
+            HyPlayList.Player.SetPlaybackSourceOutputVolume(Common.Setting.EnableAudioGain ? _initialVolume[node] : 1, source);
+            Processing = false;
+            var item = _currentPlaybackSource.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
+            item?.PlayItem?.Dispose();
+            _currentPlaybackSource = null;
+            _currentPlaybackNode = null;
+            _nextPlaybackSource = null;
+            _nextPlaybackNode = null;
+            _initialVolume.Clear();
         }
     }
 }
