@@ -42,8 +42,6 @@ public sealed partial class App : Application
     /// </summary>
     private Frame rootFrame;
 
-    private XboxGameBarWidget widget = null;
-
     public App()
     {
         InitializeComponent();
@@ -92,7 +90,7 @@ public sealed partial class App : Application
         var client = new HttpClient(handler);
         serviceCollection.AddSingleton(client);
         serviceCollection.AddSingleton(new NeteaseCloudMusicApiHandler(client));
-        serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = "641ef15109503085d966e37b73bdcb72", ApiSecret = "35c02c12c9c0fdc6f6c1de5d0a9227b5" }, client));
+        serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = LastFMConstants.APIKEY, ApiSecret = LastFMConstants.SECRET }, client));
         serviceCollection.AddSingleton(setting);
         serviceCollection.AddSingleton<AudioGraphPlayer>();
         serviceCollection.AddTransient<HomeViewModel>();
@@ -184,12 +182,11 @@ public sealed partial class App : Application
                 }
                 else
                 {
-                    widget = new XboxGameBarWidget(
+                    Common.XboxGameBarWidget = new XboxGameBarWidget(
                         widgetArgs,
                         Window.Current.CoreWindow,
                         widgetFrame);
-                    widgetFrame.Navigate(typeof(WidgetPage), widget);
-                    Window.Current.Closed += WidgetWindowClosed;
+                    widgetFrame.Navigate(typeof(WidgetPage), Common.XboxGameBarWidget);
 
                 }
                 OnLaunchedOrActivatedAsync(args);
@@ -226,12 +223,6 @@ public sealed partial class App : Application
             if (launchUri?.Host == "link.last.fm")
                 _ = LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
         }
-    }
-
-    private void WidgetWindowClosed(object sender, Windows.UI.Core.CoreWindowEventArgs e)
-    {
-        widget = null;
-        Window.Current.Closed -= WidgetWindowClosed;
     }
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

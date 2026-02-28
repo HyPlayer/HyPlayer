@@ -53,7 +53,6 @@ public sealed partial class WidgetPage : Page
         base.OnNavigatedTo(e);
 
         _widget = e.Parameter?.As<XboxGameBarWidget>();
-        Common.XboxGameBarWidget = _widget;
         if (HyPlayList.NowPlayingItem is null) return;
         Initialize();
     }
