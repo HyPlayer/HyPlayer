@@ -14,6 +14,7 @@
     xmlns:win2d="using:Microsoft.Graphics.Canvas.UI.Xaml"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Loaded="Page_Loaded"
+    Unloaded="Page_Unloaded"
     NavigationCacheMode="Disabled">
     <Page.Resources>
         <!--  ReSharper disable once Xaml.RedundantResource  -->

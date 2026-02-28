@@ -262,27 +262,6 @@ public sealed partial class ExpandedPlayer : Page
         }
     }
 
-
-    protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
-    {
-        HyPlayList.OnPause -= HyPlayList_OnPause;
-        HyPlayList.OnPlay -= HyPlayList_OnPlay;
-        HyPlayList.OnPlayItemChange -= OnSongChange;
-        HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
-        HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
-        HyPlayList.OnManualSeek -= HyPlayList_OnManualSeek;
-        Common.OnEnterForegroundFromBackground -= OnEnteringForeground;
-        HyPlayList.OnSongCoverChanged -= RefreshAlbumCover;
-        Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
-        Window.Current?.SizeChanged -= Current_SizeChanged;
-        if (_settings.albumRotate)
-            RotateAnimationSet.Stop();
-        if (_settings.expandAlbumBreath)
-        {
-            ImageAlbumAni?.Stop();
-        }
-    }
-
     private void HyPlayList_OnLyricLoaded()
     {
         LoadLyricsBox();
@@ -1544,5 +1523,25 @@ public sealed partial class ExpandedPlayer : Page
     private void LyricView_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
         _lyricBox.LyricView_PointerReleased(sender, e);
+    }
+
+    private void Page_Unloaded(object sender, RoutedEventArgs e)
+    {
+        HyPlayList.OnPause -= HyPlayList_OnPause;
+        HyPlayList.OnPlay -= HyPlayList_OnPlay;
+        HyPlayList.OnPlayItemChange -= OnSongChange;
+        HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
+        HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
+        HyPlayList.OnManualSeek -= HyPlayList_OnManualSeek;
+        Common.OnEnterForegroundFromBackground -= OnEnteringForeground;
+        HyPlayList.OnSongCoverChanged -= RefreshAlbumCover;
+        Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
+        Window.Current?.SizeChanged -= Current_SizeChanged;
+        if (_settings.albumRotate)
+            RotateAnimationSet.Stop();
+        if (_settings.expandAlbumBreath)
+        {
+            ImageAlbumAni?.Stop();
+        }
     }
 }
