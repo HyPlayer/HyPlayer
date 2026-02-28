@@ -51,7 +51,7 @@ jobs:
         Configuration: ${{ matrix.configuration }}
         Platform: ${{ matrix.platform }}
         
-    - name: Set AppxManifest Version
+    - name: Set AppxManifest Version and Package Name
       shell: pwsh
       run: |
               $MANIFEST = [xml](Get-Content HyPlayer.Package\Package.appxmanifest)
@@ -61,6 +61,7 @@ jobs:
               echo "Currently Building Version Is"
               echo $VERSION
               $MANIFEST.Package.Identity.Version = $VERSION
+              $MANIFEST.Package.Identity.Name = "48848aaaaaaccd.HyPlayer"
               Set-Content -Path HyPlayer.Package\Package.appxmanifest -Value $MANIFEST.OuterXml
     - name: Set BuildInfo Version
       shell: pwsh
