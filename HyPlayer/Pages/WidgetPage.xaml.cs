@@ -36,6 +36,12 @@ public sealed partial class WidgetPage : Page
         this.InitializeComponent();
         _settings = new GameBarSettings(Dispatcher);
         Instance = this;
+        Window.Current.Closed += WidgetPage_Closed;
+    }
+
+    private void WidgetPage_Closed(object sender, CoreWindowEventArgs e)
+    {
+        UnregisterEvents();
     }
 #nullable enable
     public static WidgetPage? Instance { get; private set; }
@@ -114,7 +120,11 @@ public sealed partial class WidgetPage : Page
 
     private void Widget_CloseRequested(XboxGameBarWidget sender, XboxGameBarWidgetCloseRequestedEventArgs args)
     {
-        Debug.WriteLine("GameBar Close Requested.");
+        UnregisterEvents();
+    }
+    private void UnregisterEvents()
+    {
+        Debug.WriteLine("GameBar Close Requested or Unloaded.");
         _hotkeyWatcher.Stop();
         _widget.CloseRequested -= Widget_CloseRequested;
         _widget.SettingsClicked -= OnSettingsChecked;
@@ -127,26 +137,32 @@ public sealed partial class WidgetPage : Page
         HyPlayList.OnPlay -= HyPlayList_OnPlay;
         HyPlayList.OnLyricLoaded -= OnPlaylistLyricLoaded;
         Common.XboxGameBarWidget = null;
+        Window.Current.Closed -= WidgetPage_Closed;
         Instance = null;
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
         {
             LyricView.RemoveFromVisualTree();
         });
-
     }
-
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
         if (HyPlayList.NowPlayingItem == null) return;
         var progress = position.TotalMilliseconds / HyPlayList.NowPlayingItem.LengthInMilliseconds * 100;
         var text = $"{position:mm\\:ss}/{TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.LengthInMilliseconds):mm\\:ss}";
-        _ = Dispatcher.RunAsync(
+        try
+        {
+            _ = Dispatcher.RunAsync(
             CoreDispatcherPriority.Normal,
             () =>
             {
                 PositionProgressBar.Value = progress;
                 CurrentPositionText.Text = text;
             });
+        }
+        catch
+        {
+            //Ignore
+        }
     }
 
     private void HyPlayList_OnPlayItemChange(HyPlayItem playItem)
@@ -343,5 +359,10 @@ public sealed partial class WidgetPage : Page
     private void LyricView_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         LyricBox.Redesign((float)e.NewSize.Width, (float)e.NewSize.Height, LyricView.Dpi);
+    }
+
+    private void Page_Unloaded(object sender, RoutedEventArgs e)
+    {
+        UnregisterEvents();
     }
 }

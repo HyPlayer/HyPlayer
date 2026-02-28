@@ -12,6 +12,7 @@
     Background="Transparent"
     PointerEntered="WidgetPage_PointerEntered"
     PointerExited="WidgetPage_PointerExited"
+    Unloaded="Page_Unloaded"
     mc:Ignorable="d">
     <Page.Resources>
         <SolidColorBrush x:Key="AccentBrush" Color="{ThemeResource SystemBaseHighColor}" />
