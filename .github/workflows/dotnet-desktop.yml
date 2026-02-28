@@ -62,7 +62,7 @@ jobs:
               echo $VERSION
               $MANIFEST.Package.Identity.Version = $VERSION
               $MANIFEST.Package.Identity.Name = "48848aaaaaaccd.HyPlayer"
-              $MANIFEST.Package.Applications.Application.uap:VisualElements.DisplayName = "HyPlayer"
+              $MANIFEST.Package.Applications.Application.uap\:VisualElements.DisplayName = "HyPlayer"
               Set-Content -Path HyPlayer.Package\Package.appxmanifest -Value $MANIFEST.OuterXml
     - name: Set BuildInfo Version
       shell: pwsh
