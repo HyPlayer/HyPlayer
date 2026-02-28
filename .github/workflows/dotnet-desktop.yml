@@ -62,6 +62,7 @@ jobs:
               echo $VERSION
               $MANIFEST.Package.Identity.Version = $VERSION
               $MANIFEST.Package.Identity.Name = "48848aaaaaaccd.HyPlayer"
+              $MANIFEST.Package.Properties.DisplayName = "HyPlayer"
               Set-Content -Path HyPlayer.Package\Package.appxmanifest -Value $MANIFEST.OuterXml
     - name: Set BuildInfo Version
       shell: pwsh
@@ -85,6 +86,22 @@ jobs:
               echo "  Job ID: $jobId"
               } else {
               echo "BuildInfo.cs not found at $buildInfoPath"
+              }
+    - name: Set LastFM Constants
+      shell: pwsh
+      run: |
+              # 替换 LastFMConstants.cs 中的占位符
+              $infoPath = "HyPlayer/Classes/LastFMConstants.cs"
+              if (Test-Path $infoPath) {
+                $content = Get-Content $infoPath -Raw
+              $apiKey = "${{secrets.LAST_FM_APIKEY}}"
+              $secret = "${{secrets.LAST_FM_SECRET}}"
+              $content = $content -replace "LAST_FM_APIKEY", "$apiKey"
+              $content = $content -replace "LAST_FM_SECRET", "$secret"
+              Set-Content -Path $infoPath -Value $content
+              echo "LastFMConstants.cs has been updated."
+              } else {
+              echo "LastFMConstants.cs not found at $infoPath"
               }
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Create the app package
