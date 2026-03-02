@@ -45,12 +45,11 @@ Telegram 频道: https://t.me/hyplayer
 
 |分发方式|分发链接|分发状态|
 |-------|-------|-------|
-| App Center Release (**推荐**) | [申请链接](https://hyplayer.kengwang.com.cn/#/insider) | ![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/AppCenter%20-%20Release?branchName=develop) |
-| App Center Canary | [申请链接](https://hyplayer.kengwang.com.cn/#/insider) | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/AppCenter%20-%20Canary?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=34&branchName=develop) |
+| Release | [申请链接](https://hyplayer.kengwang.com.cn/#/insider) | ![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/AppCenter%20-%20Release?branchName=develop) |
+| Canary | [申请链接](https://hyplayer.kengwang.com.cn/#/insider) | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/AppCenter%20-%20Canary?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=34&branchName=develop) |
 | Microsoft Store | [商店链接](https://www.microsoft.com/store/productId/9N5TD916686K) | **已废弃** |
-| Azure DevOps | [分发链接](https://dev.azure.com/kengwang/HyPlayer/_build) | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/Github%20Nightly?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=33&branchName=develop) |
+| GitHub Actions | [分发链接](https://github.com/HyPlayer/HyPlayer/releases/tag/actions-build) | [![.NET Core Desktop](https://github.com/HyPlayer/HyPlayer/actions/workflows/dotnet-desktop.yml/badge.svg?branch=develop)](https://github.com/HyPlayer/HyPlayer/actions/workflows/dotnet-desktop.yml) |
 | Github Release | [分发链接](https://github.com/HyPlayer/HyPlayer/releases/latest) | ![Release Status](https://img.shields.io/github/v/release/kengwang/HyPlayer) |
-| 基础包 (App Center) | [分发链接](https://install.appcenter.ms/users/kengwang/apps/hyplayer/distribution_groups/base%20packages) | 常驻 |
 
 
 
@@ -101,9 +100,11 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 * Windows Community Toolkit [CommunityToolkit/WindowsCommunityToolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit) (MIT Licence)
 * TagLibSharp [mono/taglib-sharp](https://github.com/mono/taglib-sharp) (LGPL)
 * LyricParser [HyPlayer/LrcParser](https://github.com/HyPlayer/LyricParser) (MIT License)
-* Inflatable Last.fm [inflatablefriends/lastfm](https://github.com/inflatablefriends/lastfm) ([MIT Licence](https://github.com/inflatablefriends/lastfm/blob/next/LICENCE.md))
-* KSemenenko ColorThief [KSemenenko/ColorThief](https://github.com/KSemenenko/ColorThief) ([MIT License](https://github.com/KSemenenko/ColorThief/blob/master/LICENSE))
+* LiteFM [Storyteller-Studios/LiteFM](https://github.com/Storyteller-Studios/LiteFM) ([MIT Licence](https://github.com/Storyteller-Studios/LiteFM/blob/main/LICENSE))
+* Impressionist [Storyteller-Studios/Impressionist](https://github.com/Storyteller-Studios/Impressionist) ([MIT License](https://github.com/Storyteller-Studios/Impressionist/blob/master/LICENSE))
 * StoryTeller-Studios Isolation [StoryTeller-Studios/Isolation](https://github.com/Storyteller-Studios/Isolation) ([MIT License](https://github.com/Storyteller-Studios/Isolation/blob/main/LICENSE))
+* ALRC [kengwang/ALRC](https://github.com/kengwang/ALRC) (Creative Commons Zero v1.0 Universal)
+* AsyncAwaitBestPractices [TheCodeTraveler/AsyncAwaitBestPractices](https://github.com/TheCodeTraveler/AsyncAwaitBestPractices) (MIT License)
 
 
 
