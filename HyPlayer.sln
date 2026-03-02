@@ -1,0 +1,90 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32328.378
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyPlayer", "HyPlayer\HyPlayer.csproj", "{DDD54862-21FE-4810-B8EC-74BF0447E000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kawazu", "Kawazu\Kawazu\Kawazu.csproj", "{2DC18999-32F2-40D4-AD9B-C5A09514E087}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Impressionist", "Impressionist\Impressionist\Impressionist.csproj", "{0F920821-8006-4512-ABCD-1396D1916FED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{FD9060D1-CAC5-41F5-9C66-F2460442E00D}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyPlayer.Frieren", "HyPlayer.Frieren\HyPlayer.Frieren.csproj", "{8DB15C94-9CCA-4B40-91F4-5919BBC67ABB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyPlayer.NeteaseApi", "HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\HyPlayer.NeteaseApi.csproj", "{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyPlayer.UWP.Chopin", "HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj", "{AE7AA571-E532-4F0C-9D51-043DFECF9924}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|ARM64.Build.0 = Debug|ARM64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|x64.ActiveCfg = Debug|x64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|x64.Build.0 = Debug|x64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|x64.Deploy.0 = Debug|x64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Release|ARM64.ActiveCfg = Release|ARM64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Release|ARM64.Build.0 = Release|ARM64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Release|ARM64.Deploy.0 = Release|ARM64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Release|x64.ActiveCfg = Release|x64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Release|x64.Build.0 = Release|x64
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Release|x64.Deploy.0 = Release|x64
+		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Debug|ARM64.Build.0 = Debug|ARM64
+		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Debug|x64.ActiveCfg = Debug|x64
+		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Debug|x64.Build.0 = Debug|x64
+		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Release|ARM64.ActiveCfg = Release|ARM64
+		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Release|ARM64.Build.0 = Release|ARM64
+		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Release|x64.ActiveCfg = Release|x64
+		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Release|x64.Build.0 = Release|x64
+		{0F920821-8006-4512-ABCD-1396D1916FED}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{0F920821-8006-4512-ABCD-1396D1916FED}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{0F920821-8006-4512-ABCD-1396D1916FED}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0F920821-8006-4512-ABCD-1396D1916FED}.Debug|x64.Build.0 = Debug|Any CPU
+		{0F920821-8006-4512-ABCD-1396D1916FED}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{0F920821-8006-4512-ABCD-1396D1916FED}.Release|ARM64.Build.0 = Release|Any CPU
+		{0F920821-8006-4512-ABCD-1396D1916FED}.Release|x64.ActiveCfg = Release|Any CPU
+		{0F920821-8006-4512-ABCD-1396D1916FED}.Release|x64.Build.0 = Release|Any CPU
+		{8DB15C94-9CCA-4B40-91F4-5919BBC67ABB}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{8DB15C94-9CCA-4B40-91F4-5919BBC67ABB}.Debug|ARM64.Build.0 = Debug|ARM64
+		{8DB15C94-9CCA-4B40-91F4-5919BBC67ABB}.Debug|x64.ActiveCfg = Debug|x64
+		{8DB15C94-9CCA-4B40-91F4-5919BBC67ABB}.Debug|x64.Build.0 = Debug|x64
+		{8DB15C94-9CCA-4B40-91F4-5919BBC67ABB}.Release|ARM64.ActiveCfg = Release|ARM64
+		{8DB15C94-9CCA-4B40-91F4-5919BBC67ABB}.Release|ARM64.Build.0 = Release|ARM64
+		{8DB15C94-9CCA-4B40-91F4-5919BBC67ABB}.Release|x64.ActiveCfg = Release|x64
+		{8DB15C94-9CCA-4B40-91F4-5919BBC67ABB}.Release|x64.Build.0 = Release|x64
+		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Debug|x64.Build.0 = Debug|Any CPU
+		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Release|ARM64.Build.0 = Release|Any CPU
+		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Release|x64.ActiveCfg = Release|Any CPU
+		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Release|x64.Build.0 = Release|Any CPU
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Debug|ARM64.Build.0 = Debug|ARM64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Debug|x64.ActiveCfg = Debug|x64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Debug|x64.Build.0 = Debug|x64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Release|ARM64.ActiveCfg = Release|ARM64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Release|ARM64.Build.0 = Release|ARM64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Release|x64.ActiveCfg = Release|x64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {59A63E9B-DC9C-4D7D-8E1A-E67D60ABDA54}
+	EndGlobalSection
+EndGlobal
