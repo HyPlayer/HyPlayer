@@ -1670,8 +1670,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         var fftTrans = HyPlayList.Player.FFTProcessor;
         float width = (float)sender.Size.Width;
-        float height = (float)sender.Size.Height / 2;
-        float remainHeight = (float)sender.Size.Height - height;
+        float height = (float)sender.Size.Height;
         float barWidth = width / FFTProcessor.DisplayBandCount;
         float scaleFactor = height / 80.0f; // 根据分贝值调整高度缩放
         for (int i = 0; i < FFTProcessor.DisplayBandCount; i++)
@@ -1680,10 +1679,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             // 使用渐变色会更好看，这里为了性能演示用纯色
             session.FillRectangle(
                 i * barWidth,
-                remainHeight + height - barHeight,
-                barWidth, // -1 留出间隔
+                height - barHeight,
+                barWidth - 1, // -1 留出间隔
                 barHeight,
-                albumMainColor.GetValueOrDefault());
+                Colors.DeepSkyBlue);
         }
     }
 

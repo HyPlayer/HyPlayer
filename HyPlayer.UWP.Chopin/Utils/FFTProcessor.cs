@@ -11,8 +11,8 @@ namespace HyPlayer.UWP.Chopin.Utils
     public class FFTProcessor : IAudioQuantumProcessor
     {
         
-        public const int FftSize = 2048;           // FFT 窗口大小，必须是2的幂
-        public const int DisplayBandCount = 256;    // 最终显示的柱子数量
+        public const int FftSize = 256;           // FFT 窗口大小，必须是2的幂
+        public const int DisplayBandCount = 64;    // 最终显示的柱子数量
         public const float SmoothingFactor = 0.8f; // 平滑系数 (0-1)，越高越平滑
         
         
@@ -58,19 +58,9 @@ namespace HyPlayer.UWP.Chopin.Utils
 
                 for (int i = 0; i < safeProcessingLimit; i++)
                 {
-                    float sample = dataInFloat[i * 2];
-
-                    // 鲁棒性检查：防止音频流输入 NaN 或 Inf
-                    if (float.IsInfinity(sample)) sample = 0;
-
                     float window = 0.5f * (1.0f - MathF.Cos(2.0f * MathF.PI * i / (safeProcessingLimit - 1)));
-                    _fftBuffer[i] = new Complex(sample * window, 0);
-                }
-
-                // 清空缓冲区剩余部分（Zero Padding），防止旧数据干扰
-                for (int i = safeProcessingLimit; i < FftSize; i++)
-                {
-                    _fftBuffer[i] = Complex.Zero;
+                    // 现在 i * 2 永远不会超过 totalSamples
+                    _fftBuffer[i] = new Complex(dataInFloat[i * 2] * window, 0);
                 }
 
                 // 2. 执行高性能原地 FFT
@@ -80,20 +70,10 @@ namespace HyPlayer.UWP.Chopin.Utils
                 for (var i = 0; i < FftSize / 2; i++)
                 {
                     var magnitude = (float)_fftBuffer[i].Magnitude;
-
-                    // 核心防护：
-                    // 使用 1e-9 避免负无穷
-                    // 使用 Math.Clamp 限制视觉表现范围
-                    float db = 20 * MathF.Log10(magnitude + 1e-9f) + 20;
-
-                    if (float.IsNaN(db) || float.IsNegativeInfinity(db))
-                        _linearMagnitudes[i] = 0;
-                    else if (float.IsPositiveInfinity(db))
-                        _linearMagnitudes[i] = 100; // 给一个视觉上限
-                    else
-                        _linearMagnitudes[i] = MathF.Max(0, db);
+                    // 转换为分贝并适当调整基准线
+                    _linearMagnitudes[i] = MathF.Max(0, 20 * MathF.Log10(magnitude) + 20);
                 }
-
+                 
                 // 4. 将线性频率数据合并为较少的显示频段 (对数映射)
                 // 并应用时间平滑。
                 lock (_bufferLock) // 加锁快速写入显示缓冲区
