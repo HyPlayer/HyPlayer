@@ -26,7 +26,7 @@ namespace HyPlayer.Classes
         private async void HyPlayList_OnMediaEnd(HyPlayItem hpi)
         {
             if (!Common.Setting.CrossFade) return;
-            if (HyPlayList.NowPlayType == PlayMode.SinglePlay || HyPlayList.List.Count <= 1) return;
+            if (HyPlayList.NowPlayType == PlayMode.SinglePlay || HyPlayList.List.Count <=1) return;
             if (FadeProcessing)
             {
                 if (hpi.PlayItem.AudioGraphPlaybackSource != null)
@@ -63,7 +63,7 @@ namespace HyPlayer.Classes
                 if (keyItem?.PlayItem is not null)
                 {
                     var keySource = keyItem?.PlayItem.AudioGraphPlaybackSource;
-                    if (keySource != null)
+                    if (keySource != null) 
                     {
                         HyPlayList.Player.DisconnectPlaybackSource(keySource);
                     }
@@ -72,7 +72,7 @@ namespace HyPlayer.Classes
                 if (valueItem?.PlayItem is not null)
                 {
                     var valueSource = valueItem?.PlayItem.AudioGraphPlaybackSource;
-                    if (valueSource != null)
+                    if(valueSource != null)
                     {
                         HyPlayList.Player.DisconnectPlaybackSource(valueSource);
                     }

@@ -24,7 +24,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
+public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisposable
 {
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
     private readonly ObservableCollection<HyPlayItem> localHyItems = new();
@@ -32,6 +32,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private Task CurrentFileScanTask;
     private CancellationTokenSource cancellationTokenSource = new();
     private CancellationToken _cancellationToken;
+    private bool disposedValue = false;
 
     public LocalMusicPage()
     {
@@ -66,8 +67,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                 CurrentFileScanTask = null;
             }
         }
-        ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
-        cancellationTokenSource.Dispose();
+        Dispose();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -78,6 +78,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private void Playall_Click(object sender, RoutedEventArgs e)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(LocalMusicPage));
         HyPlayList.RemoveAllSong();
         HyPlayList.List.AddRange(localHyItems);
         HyPlayList.SongMoveTo(0);
@@ -191,5 +192,32 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                CurrentFileScanTask = null;
+                cancellationTokenSource.Dispose();
+                NotificationText = null;
+                localHyItems.Clear();
+            }
+            ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
+            disposedValue = true;
+        }
+    }
+
+    ~LocalMusicPage()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

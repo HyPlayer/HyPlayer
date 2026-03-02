@@ -498,6 +498,10 @@
                     <TextBlock>抓取官方客户端登录信息 (稳定, 保存后重启)</TextBlock>
                 </controls:DockPanel>
                 <controls:DockPanel LastChildFill="True">
+                    <HyperlinkButton controls:DockPanel.Dock="Right" Click="BtnRamdomDeviceIdClick">立即生成</HyperlinkButton>
+                    <TextBlock>使用已知设备 ID 伪造 (快捷, 存在风险)</TextBlock>
+                </controls:DockPanel>
+                <controls:DockPanel LastChildFill="True">
                     <HyperlinkButton controls:DockPanel.Dock="Right" Click="BtnCurrentDeviceIdClick">立即生成</HyperlinkButton>
                     <TextBlock>使用当前设备信息尝试伪造 (最新缓解)</TextBlock>
                 </controls:DockPanel>

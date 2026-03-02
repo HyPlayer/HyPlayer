@@ -22,7 +22,7 @@ using SineEase = Windows.UI.Xaml.Media.Animation.SineEase;
 
 namespace HyPlayer.Controls;
 
-public sealed partial class LyricItem : UserControl
+public sealed partial class LyricItem : UserControl, IDisposable
 {
     public SongLyric Lrc;
 
@@ -41,13 +41,6 @@ public sealed partial class LyricItem : UserControl
         _lyricIsKaraokeLyric = lrc.LyricLine is KaraokeLyricsLine;
         HyPlayList.OnLyricColorChange += LyricColorRefresh;
         InitializeComponent();
-        Unloaded += LyricItem_Unloaded;
-    }
-
-    private void LyricItem_Unloaded(object sender, RoutedEventArgs e)
-    {
-        if (_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
-        HyPlayList.OnLyricColorChange -= LyricColorRefresh; throw new NotImplementedException();
     }
 
     private void LyricColorRefresh()
@@ -100,6 +93,7 @@ public sealed partial class LyricItem : UserControl
     private SolidColorBrush AccentBrush => Common.BrushManagement.AccentBrush;
 
     private SolidColorBrush IdleBrush => Common.BrushManagement.IdleBrush;
+    private bool disposedValue;
 
 
     public void RefreshFontSize()
@@ -476,6 +470,33 @@ public sealed partial class LyricItem : UserControl
         OnHoverRectangle.Fill = AccentBrush;
         RefreshFontSize();
         OnHind();
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                WordTextBlocks.Clear();
+                KaraokeDictionary.Clear();
+                StoryboardDictionary.Clear();
+            }
+            if (_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
+            HyPlayList.OnLyricColorChange -= LyricColorRefresh;
+            disposedValue = true;
+        }
+    }
+
+    ~LyricItem()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
     private void PointerIn(object sender, PointerRoutedEventArgs e)
     {

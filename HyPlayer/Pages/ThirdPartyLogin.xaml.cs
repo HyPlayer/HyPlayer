@@ -17,11 +17,12 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class ThirdPartyLogin : Page
+public sealed partial class ThirdPartyLogin : Page, IDisposable
 {
     private string LoginType = "5";
 
     public bool Navigated;
+    private bool disposedValue;
 
     public ThirdPartyLogin()
     {
@@ -32,7 +33,7 @@ public sealed partial class ThirdPartyLogin : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        ThirdPartyLoginWebview.Close();
+        Dispose();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -79,5 +80,30 @@ public sealed partial class ThirdPartyLogin : Page
             await SimpleCacher.ClearCacheAsync(CacheType.Login);
             await Common.PageBase!.LoginDone();
         }
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                ThirdPartyLoginWebview.Close();
+            }
+            ThirdPartyLoginWebview = null;
+            disposedValue = true;
+        }
+    }
+
+    ~ThirdPartyLogin()
+    {
+
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

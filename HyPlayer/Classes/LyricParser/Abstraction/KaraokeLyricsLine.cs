@@ -24,7 +24,7 @@ namespace HyPlayer.Classes.LyricParser.Abstraction
             List<KaraokeWordInfo> WordInfos,
             TimeSpan Duration,
             string CurrentLyric,
-            string LyricWithoutPunc,
+            string LyricWithoutPunc, 
             TimeSpan StartTime,
             TimeSpan? PossibleStartTime)
         {

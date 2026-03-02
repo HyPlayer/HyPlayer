@@ -1,5 +1,4 @@
 ﻿using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
-using HyPlayer.UWP.Chopin.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,7 +7,9 @@ using System.Threading.Tasks;
 using Windows.Media;
 using Windows.Media.Audio;
 using Windows.Media.Effects;
+using HyPlayer.UWP.Chopin.Utils;
 using Timer = System.Timers.Timer;
+using Windows.Media.MediaProperties;
 
 namespace HyPlayer.UWP.Chopin.Abstractions.Models
 {
@@ -35,7 +36,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         #region Public Properties
         public bool PlayerCreated => _defaultPlayer != null;
         public double Volume => _volume;
-
+        
         public bool IsMuted
         {
             get => _outputNode?.OutgoingGain == 0;
@@ -47,7 +48,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         }
 
         public FFTProcessor FFTProcessor = new FFTProcessor();
-
+        
         public IPlaybackSource PrimaryPlaybackSource
         {
             get => _primaryPlaybackSource;
@@ -60,7 +61,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         }
 
         public PlaybackStatus GlobalPlaybackStatus { get; protected set; } = PlaybackStatus.Closed;
-
+        
         public MediaSourceAudioInputNode PrimaryAudioInputNode
         {
             get
@@ -99,7 +100,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 throw new ArgumentException("Setting is not AudioGraphSetting");
 
             _positionTimer.Elapsed += PositionTimer_Elapsed;
-
+            
             // 创建 AudioGraph 和输出节点
             var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
             var graphResult = await AudioGraph.CreateAsync(setting);
@@ -149,7 +150,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 if (newPlayerResult.Status != AudioGraphCreationStatus.Success)
                     throw newPlayerResult.ExtendedError;
                 var newPlayer = newPlayerResult.Graph;
-
+                
 
                 oldPlayer.Stop();
                 oldPlayer.QuantumProcessed -= GraphOnQuantumProcessed;
@@ -274,7 +275,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         {
             ThrowExceptionIfDisposed();
             if (_defaultPlayer == null) return;
-
+            
             _defaultPlayer.Start();
             GlobalPlaybackStatus = PlaybackStatus.Playing;
             OnGlobalPlaybackStatusChanged?.Invoke(PlaybackStatus.Playing);
@@ -285,7 +286,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         {
             ThrowExceptionIfDisposed();
             if (_defaultPlayer == null) return;
-
+            
             _defaultPlayer.Stop();
             GlobalPlaybackStatus = PlaybackStatus.Paused;
             SMTCManager?.OnPauseAll();
@@ -296,7 +297,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         {
             ThrowExceptionIfDisposed();
             var node = GetAudioInputNodeOrThrow(playbackSource);
-
+            
             node.Start();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
@@ -310,7 +311,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         {
             ThrowExceptionIfDisposed();
             var node = GetAudioInputNodeOrThrow(playbackSource);
-
+            
             node.Stop();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
@@ -325,7 +326,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             ThrowExceptionIfDisposed();
             var node = GetAudioInputNodeOrThrow(playbackSource);
             var source = playbackSource as AudioGraphPlaybackSource;
-
+            
             // 确保不超过音频源时长
             if (source?.PlaybackSource?.Duration != null)
             {

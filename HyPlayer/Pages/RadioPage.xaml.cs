@@ -18,12 +18,13 @@ using Windows.UI.Xaml.Navigation;
 
 namespace HyPlayer.Pages;
 
-public sealed partial class RadioPage : Page
+public sealed partial class RadioPage : Page, IDisposable
 {
     private bool asc;
     private int i;
     private int page;
     private NCRadio Radio;
+    private bool disposedValue = false;
     private Task _programLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -48,15 +49,17 @@ public sealed partial class RadioPage : Page
             }
             catch
             {
-                //Ignore
+                Dispose();
+                return;
             }
         }
 
-        _cancellationTokenSource.Dispose();
+        Dispose();
     }
 
     private async Task LoadProgram()
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -167,12 +170,12 @@ public sealed partial class RadioPage : Page
                 return;
             }
 
-            if (Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0)
+            if (Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0 && !disposedValue)
             {
                 NextPage_OnClickPage_OnClick(null, null);
                 treashold = 3;
             }
-            else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
+            else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed || disposedValue)
             {
                 HyPlayList.OnTimerTicked -= GreedlyLoad;
             }
@@ -181,12 +184,14 @@ public sealed partial class RadioPage : Page
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         page++;
         _programLoaderTask = LoadProgram();
     }
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         try
         {
             await HyPlayList.AppendNcSource("rd" + Radio.id);
@@ -201,11 +206,13 @@ public sealed partial class RadioPage : Page
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         Common.NavigatePage(typeof(Me), Radio.DJ.id);
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         Songs.Clear();
         page = 0;
         i = 0;
@@ -215,11 +222,13 @@ public sealed partial class RadioPage : Page
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         await HyPlayList.AppendRadioList(Radio.id, asc);
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         var result = new List<NCSong>();
         try
         {
@@ -271,5 +280,33 @@ public sealed partial class RadioPage : Page
         }
 
         DownloadManager.AddDownload(result);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                ImageRect.ImageSource = null;
+                SongContainer.Dispose();
+                Songs.Clear();
+                _cancellationTokenSource.Dispose();
+            }
+
+            disposedValue = true;
+        }
+    }
+
+    ~RadioPage()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

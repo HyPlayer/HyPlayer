@@ -1,11 +1,13 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.LyricRenderer.Abstraction.Render;
+using HyPlayer.LyricRenderer.RollingCalculators;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Gaming.XboxGameBar;
 using Microsoft.Gaming.XboxGameBar.Input;
 using System;
 using Windows.System;
+using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;

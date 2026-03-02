@@ -1,8 +1,8 @@
 #nullable enable
-using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Threading;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
 
@@ -50,7 +50,7 @@ public static class SimpleCacher
                 using var stream = await cacheFile.OpenStreamForReadAsync();
                 using var reader = new StreamReader(stream);
                 var content = await reader.ReadToEndAsync();
-                if (content.Length == 0)
+                if(content.Length == 0)
                 {
                     return default;
                 }

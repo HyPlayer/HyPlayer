@@ -224,9 +224,10 @@ public sealed partial class MainPage
         ElementCompositionPreview.SetElementChildVisual(sender, helper.RootVisual);
     }
 
-    internal class LinearGradientBlurVisualHelper
+    internal class LinearGradientBlurVisualHelper : IDisposable
     {
         private readonly Compositor compositor;
+        private bool disposeValue;
 
         private Color tintColor;
         private float maxBlurAmount = 64f;
@@ -374,6 +375,17 @@ public sealed partial class MainPage
             visual.RelativeSizeAdjustment = Vector2.One;
             visual.Brush = brush;
             return visual;
+        }
+
+
+        public void Dispose()
+        {
+            if (!disposeValue)
+            {
+                disposeValue = true;
+
+                GC.SuppressFinalize(this);
+            }
         }
     }
 }

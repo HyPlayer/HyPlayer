@@ -20,7 +20,7 @@ using Windows.UI.Xaml.Input;
 
 namespace HyPlayer.Controls;
 
-public sealed partial class GroupedSongsList
+public sealed partial class GroupedSongsList : IDisposable
 {
     public static readonly DependencyProperty GroupedSongsProperty = DependencyProperty.Register(
         "GroupedSongs", typeof(CollectionViewSource), typeof(GroupedSongsList),
@@ -45,18 +45,13 @@ public sealed partial class GroupedSongsList
 
     public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
         "Footer", typeof(UIElement), typeof(GroupedSongsList), new PropertyMetadata(default(UIElement)));
+    private bool disposedValue;
 
     public GroupedSongsList()
     {
         InitializeComponent();
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
         _ = IndicateNowPlayingItem();
-        Unloaded += GroupedSongsList_Unloaded;
-    }
-
-    private void GroupedSongsList_Unloaded(object sender, RoutedEventArgs e)
-    {
-        HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
     }
 
     public CollectionViewSource GroupedSongs
@@ -285,5 +280,37 @@ public sealed partial class GroupedSongsList
         else
             HyPlayList.NowPlaying =
                 HyPlayList.List.FindIndex(song => song.PlayItem.Id == ((e.ClickedItem as NCSong).sid));
+        //else if (ListSource == null)
+        //{
+        //    var ncsong = VisibleSongs[SongContainer.SelectedIndex];
+        //    _ = HyPlayList.AppendNCSong(ncsong);
+        //    HyPlayList.SongAppendDone();
+        //    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+        //}
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+
+            }
+
+            HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
+            disposedValue = true;
+        }
+    }
+
+    ~GroupedSongsList()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

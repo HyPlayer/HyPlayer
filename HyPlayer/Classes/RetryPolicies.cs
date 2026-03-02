@@ -16,8 +16,8 @@ namespace HyPlayer.Classes
         /// 适用于 API 调用、网络下载等场景
         /// </summary>
         public static AsyncRetryPolicy NetworkRequestPolicy { get; } = Policy
-            .Handle<Exception>(ex =>
-                ex is System.Net.Http.HttpRequestException ||
+            .Handle<Exception>(ex => 
+                ex is System.Net.Http.HttpRequestException || 
                 ex is TaskCanceledException ||
                 ex is TimeoutException)
             .WaitAndRetryAsync(
@@ -74,8 +74,8 @@ namespace HyPlayer.Classes
         /// 适用于文件读写、缓存操作
         /// </summary>
         public static AsyncRetryPolicy FileOperationPolicy { get; } = Policy
-            .Handle<Exception>(ex =>
-                ex is System.IO.IOException ||
+            .Handle<Exception>(ex => 
+                ex is System.IO.IOException || 
                 ex is UnauthorizedAccessException ||
                 ex is System.Security.SecurityException)
             .WaitAndRetryAsync(
@@ -206,8 +206,8 @@ namespace HyPlayer.Classes
         /// <param name="exponential">是否使用指数退避</param>
         /// <param name="onRetryAction">重试时的回调动作</param>
         public static AsyncRetryPolicy CreateCustomPolicy(
-            int retryCount,
-            TimeSpan baseDelay,
+            int retryCount, 
+            TimeSpan baseDelay, 
             bool exponential = true,
             Action<Exception, TimeSpan, int, Context>? onRetryAction = null)
         {
@@ -215,7 +215,7 @@ namespace HyPlayer.Classes
                 .Handle<Exception>()
                 .WaitAndRetryAsync(
                     retryCount: retryCount,
-                    sleepDurationProvider: attempt => exponential
+                    sleepDurationProvider: attempt => exponential 
                         ? TimeSpan.FromMilliseconds(baseDelay.TotalMilliseconds * Math.Pow(2, attempt - 1))
                         : baseDelay,
                     onRetry: onRetryAction ?? ((exception, timespan, retryCount, context) =>
@@ -234,8 +234,8 @@ namespace HyPlayer.Classes
         /// <param name="fallbackValue">失败时的回退值</param>
         /// <returns>操作结果或回退值</returns>
         public static async Task<T> ExecuteWithFallbackAsync<T>(
-            Func<Task<T>> action,
-            AsyncRetryPolicy policy,
+            Func<Task<T>> action, 
+            AsyncRetryPolicy policy, 
             T fallbackValue = default!)
         {
             try
@@ -255,7 +255,7 @@ namespace HyPlayer.Classes
         /// <param name="action">要执行的操作</param>
         /// <param name="policy">使用的策略</param>
         public static async Task ExecuteAsync(
-            Func<Task> action,
+            Func<Task> action, 
             AsyncRetryPolicy policy)
         {
             try

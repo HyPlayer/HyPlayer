@@ -21,10 +21,11 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     An empty page that can be used on its own or navigated to within a Frame.
 /// </summary>
-public sealed partial class PageFavorite : Page
+public sealed partial class PageFavorite : Page, IDisposable
 {
     private int i;
     private int page;
+    private bool disposedValue = false;
     private Task _listLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -53,15 +54,17 @@ public sealed partial class PageFavorite : Page
             }
             catch
             {
-                //Ignore
+                Dispose();
+                return;
             }
         }
 
-        _cancellationTokenSource.Dispose();
+        Dispose();
     }
 
     private void NavView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         page = 0;
         i = 0;
         ItemContainer.ListItems.Clear();
@@ -70,6 +73,7 @@ public sealed partial class PageFavorite : Page
 
     private async Task RealLoad()
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         _cancellationToken.ThrowIfCancellationRequested();
         switch ((NavView.SelectedItem as NavigationViewItem)?.Tag.ToString())
         {
@@ -87,6 +91,7 @@ public sealed partial class PageFavorite : Page
 
     private async Task LoadRadioResult()
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "djchannel_subscribed",
@@ -130,6 +135,7 @@ public sealed partial class PageFavorite : Page
 
     private async Task LoadArtistResult()
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "artist_sublist",
@@ -175,6 +181,7 @@ public sealed partial class PageFavorite : Page
 
     private async Task LoadAlbumResult()
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
             var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "album_sublist",
@@ -220,7 +227,33 @@ public sealed partial class PageFavorite : Page
 
     private void BtnLoadMore_OnClick(object sender, RoutedEventArgs e)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         page++;
         _listLoaderTask = RealLoad();
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                ItemContainer.ListItems.Clear();
+                _cancellationTokenSource.Dispose();
+            }
+
+            disposedValue = true;
+        }
+    }
+
+    ~PageFavorite()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

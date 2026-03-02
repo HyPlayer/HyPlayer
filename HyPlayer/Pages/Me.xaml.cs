@@ -23,11 +23,12 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class Me : Page
+public sealed partial class Me : Page, IDisposable
 {
     private readonly ObservableCollection<SimpleListItem> likedPlayList = new();
     private readonly ObservableCollection<SimpleListItem> myPlayList = new();
     private string uid = "";
+    private bool disposedValue = false;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _loadPlaylistTask;
@@ -54,10 +55,11 @@ public sealed partial class Me : Page
             }
             catch
             {
-                //Ignore
+                Dispose();
+                return;
             }
         }
-        _cancellationTokenSource.Dispose();
+        Dispose();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -78,6 +80,7 @@ public sealed partial class Me : Page
     }
     public async Task LoadUser()
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -111,6 +114,7 @@ public sealed partial class Me : Page
     }
     public async Task LoadPlayList()
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
@@ -179,6 +183,7 @@ public sealed partial class Me : Page
 
     private void Logout_OnClick(object sender, RoutedEventArgs e)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         try
         {
             Common.Logined = false;
@@ -200,6 +205,7 @@ public sealed partial class Me : Page
 
     private async void BtnPlayClick(object sender, RoutedEventArgs e)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         HyPlayList.RemoveAllSong();
         await HyPlayList.AppendNcSource(((Button)sender).Tag.ToString());
         if (((Button)sender).Tag.ToString().Substring(0, 2) == "pl" ||
@@ -212,7 +218,35 @@ public sealed partial class Me : Page
 
     private void SongListItemClicked(object sender, TappedRoutedEventArgs e)
     {
+        if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         _ = Common.NavigatePageResource(((Grid)sender).Tag.ToString());
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                UserAvatar.ProfilePicture = null;
+                myPlayList.Clear();
+                likedPlayList.Clear();
+                _cancellationTokenSource.Dispose();
+            }
+            disposedValue = true;
+        }
+    }
+
+    ~Me()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
     private void RectangleImage_OnRightTapped(object sender, RightTappedRoutedEventArgs e)

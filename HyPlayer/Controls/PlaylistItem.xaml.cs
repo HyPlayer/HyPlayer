@@ -17,9 +17,10 @@ using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.Controls;
 
-public sealed partial class PlaylistItem : UserControl
+public sealed partial class PlaylistItem : UserControl, IDisposable
 {
     private NCPlayList playList;
+    private bool disposedValue;
 
     public PlaylistItem(NCPlayList playList)
     {
@@ -107,5 +108,30 @@ public sealed partial class PlaylistItem : UserControl
         TextBlockPLName.Text = playList.name;
         TextBlockPLAuthor.Text = playList.creater.name ?? "网易云音乐";
         StoryboardIn.Begin();
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                playList = null;
+                ImageContainer.Source = null;
+            }
+
+            disposedValue = true;
+        }
+    }
+
+    ~PlaylistItem()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

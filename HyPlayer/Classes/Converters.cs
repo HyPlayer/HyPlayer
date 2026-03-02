@@ -28,7 +28,7 @@ namespace HyPlayer.Classes
                 };
                 return Brush;
             }
-            if (value is true && Common.Setting.CustomAcrylic is false)
+            if (value is true && Common.Setting.CustomAcrylic is false) 
                 return Application.Current.Resources["NormalWindowBackgroundAcrylic"] as Brush;
             return null;
         }

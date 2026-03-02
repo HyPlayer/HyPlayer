@@ -4,14 +4,17 @@ using HyPlayer.Classes.LyricParser.Abstraction;
 using HyPlayer.HyPlayControl;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
+using System.Collections.Generic;
 using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -21,7 +24,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class CompactPlayerPage : Page
+public sealed partial class CompactPlayerPage : Page, IDisposable
 {
     public static readonly DependencyProperty NowProgressProperty = DependencyProperty.Register(
         "NowProgress", typeof(double), typeof(CompactPlayerPage), new PropertyMetadata(default(double)));
@@ -57,6 +60,11 @@ public sealed partial class CompactPlayerPage : Page
     private readonly SolidColorBrush TransparentBrush = new SolidColorBrush(Colors.Transparent);
     public bool _lyricIsKaraokeLyric;
     public SongLyric Lrc;
+    private List<Run> WordTextBlocks = new();
+    private Dictionary<Run, Storyboard> BlockToAnimation = new();
+
+    private bool disposedValue;
+
 
     public CompactPlayerPage()
     {
@@ -69,19 +77,7 @@ public sealed partial class CompactPlayerPage : Page
         //LeaveAnimation.Completed += LeaveAnimation_Completed;
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
-        Unloaded += CompactPlayerPage_Unloaded;
         //CompactPlayerAni.Begin();
-    }
-
-    private void CompactPlayerPage_Unloaded(object sender, RoutedEventArgs e)
-    {
-        HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
-        HyPlayList.OnPlayItemChange -= OnChangePlayItem;
-        HyPlayList.OnSongCoverChanged -= HyPlayList_OnSongCoverChanged;
-        HyPlayList.OnLyricChange -= OnLyricChanged;
-        HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
-        Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
-        HyPlayList.Player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
     }
 
     private void Player_OnGlobalPlaybackStatusChanged(PlaybackStatus status)
@@ -306,6 +302,13 @@ public sealed partial class CompactPlayerPage : Page
         //Window.Current.SetTitleBar(MainGrid);
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        Dispose();
+        //Common.BarPlayBar.Visibility = Visibility.Visible;
+    }
+
     private void OnRightTapped(object sender, RightTappedRoutedEventArgs e)
     {
         Common.Setting.CompactPlayerPageBlurStatus = !Common.Setting.CompactPlayerPageBlurStatus;
@@ -320,6 +323,35 @@ public sealed partial class CompactPlayerPage : Page
     {
         _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
         //Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), false);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+            }
+            HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
+            HyPlayList.OnPlayItemChange -= OnChangePlayItem;
+            HyPlayList.OnSongCoverChanged -= HyPlayList_OnSongCoverChanged;
+            HyPlayList.OnLyricChange -= OnLyricChanged;
+            HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
+            Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
+            HyPlayList.Player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
+            disposedValue = true;
+        }
+    }
+
+    ~CompactPlayerPage()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
     private void Grid_PointerEntered(object sender, PointerRoutedEventArgs e)

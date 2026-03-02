@@ -1,19 +1,22 @@
 using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Windows.Foundation;
 using Windows.Media;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 
 namespace HyPlayer.UWP.Chopin.Utils
 {
     public class FFTProcessor
     {
-
+        
         public const int FftSize = 1024;           // FFT 窗口大小，必须是2的幂
         public int CurrentFftSize = 0;
         public const int DisplayBandCount = 80;    // 最终显示的柱子数量
         public const float SmoothingFactor = 0.85f; // 平滑系数 (0-1)，越高越平滑
-
-
+        
+        
         // --- 数据缓冲区 (全部预分配，避免GC) ---
         // 1. 用于 FFT 计算的复数缓冲区
         private Complex[] _fftBuffer = new Complex[FftSize];
@@ -23,7 +26,7 @@ namespace HyPlayer.UWP.Chopin.Utils
         public float[] DisplayData = new float[DisplayBandCount];
         // 4. 上一帧的显示数据，用于平滑计算
         private float[] _previousDisplayData = new float[DisplayBandCount];
-
+        
         private readonly object _bufferLock = new object();
 
         [ComImport]
@@ -98,7 +101,7 @@ namespace HyPlayer.UWP.Chopin.Utils
                 }
             }
         }
-
+        
         private void ProcessBandsLogarithmically()
         {
             double logBase = Math.Pow(CurrentFftSize / 2.0, 1.0 / DisplayBandCount);
@@ -119,13 +122,13 @@ namespace HyPlayer.UWP.Chopin.Utils
                 fftIndex = nextFftIndex;
 
                 // 应用时间平滑 (让跳动不那么剧烈)
-                DisplayData[i] = _previousDisplayData[i] * SmoothingFactor +
+                DisplayData[i] = _previousDisplayData[i] * SmoothingFactor + 
                                   maxMagnitudeInBand * (1.0f - SmoothingFactor);
                 _previousDisplayData[i] = DisplayData[i];
             }
         }
     }
-
+    
     public static class InPlaceFFT
     {
         public static void Transform(Complex[] data)
@@ -135,9 +138,7 @@ namespace HyPlayer.UWP.Chopin.Utils
             var j = 0;
             for (var i = 0; i < n - 1; i++)
             {
-                if (i < j)
-                {
-                    (data[i], data[j]) = (data[j], data[i]);
+                if (i < j) { (data[i], data[j]) = (data[j], data[i]);
                 }
                 var m = n / 2;
                 while (m >= 1 && j >= m) { j -= m; m /= 2; }

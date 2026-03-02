@@ -25,7 +25,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class Comments : Page
+public sealed partial class Comments : Page, IDisposable
 {
     private string cursor;
     private int page = 1;
@@ -40,6 +40,7 @@ public sealed partial class Comments : Page
     private CancellationToken _cancellationToken;
     private Task _commentLoaderTask;
     private Task _hotCommentLoaderTask;
+    private bool disposedValue = false;
 
     public Comments()
     {
@@ -105,7 +106,7 @@ public sealed partial class Comments : Page
             {
             }
         }
-        _cancellationTokenSource.Dispose();
+        Dispose();
     }
 
 
@@ -379,5 +380,31 @@ public sealed partial class Comments : Page
             BackToTop.Visibility = Visibility.Collapsed;
         }
         IsShiftingPage = false;
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                hotComments.Clear();
+                normalComments.Clear();
+                _cancellationTokenSource.Dispose();
+                cursor = null;
+                resourceid = null;
+            }
+            disposedValue = true;
+        }
+    }
+    ~Comments()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }
