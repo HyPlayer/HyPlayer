@@ -36,6 +36,9 @@ public class Locator
         _servicesCollection.AddSingleton<INeteaseProviderService, NeteaseProviderService>();
 
         _servicesCollection.AddTransient<HomeViewModel>();
+        _servicesCollection.AddTransient<AlbumViewModel>();
+        _servicesCollection.AddTransient<SongListDetailViewModel>();
+        _servicesCollection.AddTransient<ArtistViewModel>();
 
         _services = _servicesCollection.BuildServiceProvider();
 
