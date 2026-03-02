@@ -42,7 +42,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.LyricRenderer;
 using HyPlayer.UWP.Chopin.Utils;
 using Microsoft.Graphics.Canvas;
 using ALRCLyricInfo = HyPlayer.Classes.ALRCLyricInfo;
@@ -95,11 +94,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private PixelShaderEffect? _shaderEffect;
     private float _randomValue = -1;
     private bool _backgroundIsReady = false;
-    
-    private float _lyricRenderXOffset = 0;
-    private float _lyricRenderYOffset = 0;
-
-    private LyricRenderView LyricBox = new LyricRenderView();
 
 
     public ExpandedPlayer()
@@ -124,6 +118,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LyricBox.Context.CurrentLyricTime = 0;
         LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
         LyricBox.Context.Effects.Blur = Common.Setting.lyricRenderBlur;
+        LyricBox.Fps = Common.Setting.LyricRendererFPS;
         LyricBox.Context.LineRollingEaseCalculator = Common.Setting.LineRollingCalculator switch
         {
             1 => new SinRollingCalculator(),
@@ -325,7 +320,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 BtnToggleAlbum.IsChecked = true;
                 BtnToggleLyric.IsChecked = true;
                 RightPanel.Visibility = Visibility.Visible;
+                LyricBox.PauseLyricRender(false);
                 UIAugmentationSys.Visibility = Visibility.Visible;
+                LyricBox.Margin = new Thickness(0);
                 UIAugmentationSys.SetValue(Grid.ColumnProperty, 0);
                 UIAugmentationSys.SetValue(Grid.ColumnSpanProperty, 1);
                 RightPanel.SetValue(Grid.ColumnProperty, 1);
@@ -336,6 +333,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 BtnToggleLyric.IsChecked = false;
                 UIAugmentationSys.Visibility = Visibility.Visible;
                 RightPanel.Visibility = Visibility.Collapsed;
+                LyricBox.PauseLyricRender(true);
                 UIAugmentationSys.SetValue(Grid.ColumnProperty, 0);
                 UIAugmentationSys.SetValue(Grid.ColumnSpanProperty, 2);
                 UIAugmentationSys.VerticalAlignment = VerticalAlignment.Stretch;
@@ -345,9 +343,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 BtnToggleAlbum.IsChecked = false;
                 BtnToggleLyric.IsChecked = true;
                 RightPanel.Visibility = Visibility.Visible;
+                LyricBox.PauseLyricRender(false);
                 UIAugmentationSys.Visibility = Visibility.Collapsed;
                 RightPanel.SetValue(Grid.ColumnProperty, 0);
                 RightPanel.SetValue(Grid.ColumnSpanProperty, 2);
+                LyricBox.Margin = new Thickness(15);
                 break;
         }
 
@@ -436,16 +436,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             PageContainer.Background = Application.Current.Resources["ExpandedPlayerMask"] as AcrylicBrush;
         }
         */
-        if (Math.Abs(lastChangedLyricWidth - LyricWidth) > 0.001f && Math.Abs(_lyricRenderXOffset - RightPanel.ActualOffset.X) > 0.001f )
-        {
-            _lyricRenderXOffset = RightPanel.ActualOffset.X;
-            _lyricRenderYOffset = RightPanel.ActualOffset.Y;
-            LyricBox.Redesign((float)LyricWidth, nowheight);
-            LyricBox.ChangeRenderFontSize((float)showsize,
-                (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : (float)showsize / 2,
-                (Common.Setting.romajiSize > 0) ? Common.Setting.romajiSize : (float)showsize / 2);
-            lastChangedLyricWidth = LyricWidth;
-        }
+        lastChangedLyricWidth = LyricWidth;
 
         //歌词宽度
         if (nowwidth <= 800)
@@ -464,8 +455,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 ChangeWindowMode();
             }
         }
-        
-        
+
+        LyricBox.Width = LyricWidth;
+        LyricBox.ChangeRenderFontSize((float)showsize,
+            (Common.Setting.translationSize > 0) ? (float)Common.Setting.translationSize : (float)showsize / 2,
+            (Common.Setting.romajiSize > 0) ? (float)Common.Setting.romajiSize : (float)showsize / 2);
 
         ImageRotateTransform.CenterX = ImageAlbum.ActualSize.X / 2;
         ImageRotateTransform.CenterY = ImageAlbum.ActualSize.Y / 2;
@@ -610,7 +604,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             });
             LyricBox.ReflowTime(0);
             if (HyPlayList.NowPlayingItem == null) return;
-            LyricBox.Redesign((float)LyricWidth, nowheight);
+            LyricBox.Width = LyricWidth;
             LyricBox.ChangeRenderColor(Common.BrushManagement.IdleBrush.Color, Common.BrushManagement.AccentBrush.Color);
             Redesign();
         });
@@ -703,8 +697,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         LyricList.Clear();
                         LyricList.Add(new LyricItemModel(SongLyric.LoadingLyric));
                     }
-                    
-                    LyricBox.Redesign((float)LyricWidth, nowheight);
+
+                    LyricBox.Width = LyricWidth;
                     _lyricIsCleaning = false;
                     if (_lyricIsReadyToGo)
                     {
@@ -774,7 +768,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void LyricBoxContainer_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
     {
         sclock = 5;
-        LyricBox.LyricView_OnPointerWheelChanged(sender, e);
     }
 
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
@@ -1669,11 +1662,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (_shaderEffect == null) return;
         session.DrawImage(_shaderEffect);
         DrawAudioFFTGraph(sender, session);
-        var lyricCommand = new CanvasCommandList(session);
-        var lyricSession = lyricCommand.CreateDrawingSession();
-        LyricBox.Draw(lyricSession, args.Timing);
-        lyricSession.Dispose();
-        session.DrawImage(lyricCommand, _lyricRenderXOffset, _lyricRenderYOffset);
         if (!HyPlayList.IsPlaying || !_backgroundIsReady) sender.Paused = true;
     }
     
@@ -1707,31 +1695,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             WindowMode = WindowMode == ExpandedWindowMode.LyricOnly ? ExpandedWindowMode.CoverOnly : ExpandedWindowMode.LyricOnly;
             ChangeWindowMode();
         }
-    }
-
-    private void LyricView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-    {
-        LyricBox.OnDoubleTapped(sender, e);
-    }
-
-    private void LyricView_OnPointerExited(object sender, PointerRoutedEventArgs e)
-    {
-        LyricBox.LyricView_OnPointerExited(sender, e);
-    }
-
-    private void LyricView_OnPointerMoved(object sender, PointerRoutedEventArgs e)
-    {
-        LyricBox.LyricView_OnPointerMoved(sender, e);
-    }
-
-    private void LyricView_OnPointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        LyricBox.LyricView_OnPointerPressed(sender, e);
-    }
-
-    private void LyricView_PointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        LyricBox.LyricView_PointerReleased(sender, e);
     }
 }
 

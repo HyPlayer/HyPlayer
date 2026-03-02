@@ -83,8 +83,7 @@ public sealed partial class WidgetPage : Page
         MovePreviousButton.Click += MovePreviousButton_Click;
         TipContent.Visibility = Visibility.Collapsed;
         _widget.CloseRequested += Widget_CloseRequested;
-        // TODO
-        // LyricView.Context.Debug = Common.Setting.LyricRendererDebugMode;
+        LyricView.Context.Debug = Common.Setting.LyricRendererDebugMode;
     }
 
     private void RequestedThemeChanged(XboxGameBarWidget sender, object args)
@@ -92,8 +91,8 @@ public sealed partial class WidgetPage : Page
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
         {
             this.RequestedTheme = _widget.RequestedTheme;
-            // TODO
-            // LyricView.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color, Colors.Black);
+            LyricView.RequestedTheme = _widget.RequestedTheme;
+            LyricView.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color, Colors.Black);
         });
     }
 
@@ -196,8 +195,6 @@ public sealed partial class WidgetPage : Page
 
     public void UpdateLyricViewSettings()
     {
-        // TODO
-        /*
         LyricView.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         LyricView.OnBeforeRender += LyricView_OnBeforeRender;
         LyricView.OnLyricLineClicked += LyricView_OnRequestSeek;
@@ -222,19 +219,15 @@ public sealed partial class WidgetPage : Page
         LyricView.EnableTransliteration = _settings.EnableTransliteration;
         LyricView.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color, Colors.Black);
         UpdateLyricSize();
-        */
     }
 
 
     private void InitializeLyricView()
     {
-        // TODO
-        /*
         LyricView.Context.CurrentLyricTime = 0;
         LyricView.Context.LyricWidthRatio = 1;
         UpdateLyricViewSettings();
         HyPlayList_OnPlayItemChange(null);
-        */
     }
 
     private void UpdateLyricSize()
@@ -245,8 +238,6 @@ public sealed partial class WidgetPage : Page
             : _settings.LyricSize;
         var translationSize = (_settings.TranslationSize > 0) ? _settings.TranslationSize : lyricSize / 1.8;
         var romajiSize = (_settings.RomajiSize > 0) ? _settings.RomajiSize : lyricSize / 2;
-        // TODO
-        /*
         LyricView.ChangeRenderFontSize((float)lyricSize, (float)translationSize, (float)romajiSize);
         LyricView.ChangeAlignment(_settings.LyricAlignment switch
         {
@@ -254,7 +245,6 @@ public sealed partial class WidgetPage : Page
             2 => TextAlignment.Right,
             _ => TextAlignment.Left
         });
-        */
     }
 
     private void LyricView_OnRequestSeek(RenderingLyricLine line)
@@ -269,8 +259,7 @@ public sealed partial class WidgetPage : Page
         if (HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds < view.Context.CurrentLyricTime)
         {
             view.Context.CurrentLyricTime = (long)HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds;
-            // TODO
-            // LyricView.ReflowTime(0);
+            LyricView.ReflowTime(0);
         }
         else
         {
@@ -280,13 +269,10 @@ public sealed partial class WidgetPage : Page
 
     private void LoadLyrics()
     {
-        // TODO
         //_lyricIsReadyToGo = true;
         //if (_lyricIsCleaning) return;
-        /*
         LyricView.SetLyricLines(LrcConverter.Convert(ExpandedPlayer.ConvertToALRC(HyPlayList.LyricInfo.Lyrics)));
         LyricView.ReflowTime(0);
-        */
         //lastlrcid = HyPlayList.NowPlayingHashCode;
 
     }

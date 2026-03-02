@@ -131,19 +131,10 @@
             Visibility="{x:Bind hyplayer:Common.Setting.expandedPlayerBackgroundType, Converter={StaticResource ShaderConverter}}">
             <win2d:CanvasAnimatedControl
                 x:Name="LuminousBackground"
-                RightTapped="LyricBoxContainer_RightTapped"
-                PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
-                Tapped="LyricBox_Tapped"
                 CreateResources="LuminousBackground_CreateResources"
                 Draw="LuminousBackground_Draw"
                 SizeChanged="LuminousBackground_SizeChanged"
-                Update="LuminousBackground_Update"
-                DoubleTapped="LyricView_DoubleTapped"
-                PointerExited="LyricView_OnPointerExited"
-                PointerMoved="LyricView_OnPointerMoved"
-                PointerPressed="LyricView_OnPointerPressed"
-                PointerReleased="LyricView_PointerReleased"
-                />
+                Update="LuminousBackground_Update" />
         </ContentControl>
         <Grid
             x:Name="LuminousBackgroundContainer"
@@ -425,7 +416,10 @@
                     <RowDefinition x:Name="DefaultRow" Height="25*" />
                     <RowDefinition x:Name="ImmersiveRow" Height="1*" />
                 </Grid.RowDefinitions>
-                <Grid></Grid>
+                <lyricrenderer:LyricRenderView
+                    x:Name="LyricBox"
+                    RightTapped="LyricBoxContainer_RightTapped"
+                    Tapped="LyricBox_Tapped" />
             </Grid>
             <Button
                 x:Name="MoreBtn"

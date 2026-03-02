@@ -27,7 +27,8 @@
             BorderBrush="{ThemeResource CardStrokeColorDefault}"
             BorderThickness="1"
             CornerRadius="8" />
-        
+
+        <renderer:LyricRenderView x:Name="LyricView" Grid.Row="0" />
         <Grid x:Name="TipContent" Grid.Row="0">
             <StackPanel
                 HorizontalAlignment="Center"

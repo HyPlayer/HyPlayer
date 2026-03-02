@@ -8,7 +8,7 @@ using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 
 namespace HyPlayer.UWP.Chopin.Utils
 {
-    public class FFTProcessor
+    public class FFTProcessor : IAudioQuantumProcessor
     {
         
         public const int FftSize = 2048;           // FFT 窗口大小，必须是2的幂
