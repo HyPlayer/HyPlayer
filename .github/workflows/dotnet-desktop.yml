@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Delete Actions Build
         run: gh release delete "HyPlayer GitHub Actions Build" --cleanup-tag --yes --repo HyPlayer/HyPlayer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
   ci_build:
     needs: delete_release
