@@ -1503,7 +1503,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             HyPlayList.OnPlayItemChange -= OnSongChange;
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
             HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
-            HyPlayList.OnManualSeek -= HyPlayList_OnManualSeek;
             Common.OnEnterForegroundFromBackground -= OnEnteringForeground;
             HyPlayList.OnSongCoverChanged -= RefreshAlbumCover;
             Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
