@@ -184,7 +184,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     var effects = oldNode.EffectDefinitions.ToList();
 
                     // 清理旧节点
-                    oldNode.MediaSourceCompleted -= OnMediaSourceCompleted;
                     oldNode.Dispose();
                     source.PlaybackSource?.Reset();
 
@@ -204,7 +203,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     newNode.OutgoingGain = gain;
                     newNode.AddOutgoingConnection(newOutputNode);
                     newNode.AddOutgoingConnection(_frameOutputNode);
-                    newNode.MediaSourceCompleted += OnMediaSourceCompleted;
 
                     // 应用效果
                     foreach (var effect in effects)
