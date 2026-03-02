@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Delete Actions Build
-        run: gh release delete "HyPlayer GitHub Actions Build" --cleanup-tag --yes --repo HyPlayer/HyPlayer
+        run: gh release delete actions-build --cleanup-tag --yes --repo HyPlayer/HyPlayer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
