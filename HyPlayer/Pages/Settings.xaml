@@ -741,15 +741,15 @@
                                         </TransitionCollection>
                                     </controls3:SettingsExpander.Transitions>
                                     <controls3:SettingsExpander.Items>
-                                        <controls3:SettingsCard Header="背景显示设置 (本次测试强制选择 Isolation)">
+                                        <controls3:SettingsCard Header="背景显示设置">
                                             <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.expandedPlayerBackgroundType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
-                                                <ComboBoxItem Visibility="Collapsed" Content="专辑封面模糊" />
-                                                <ComboBoxItem Visibility="Collapsed" Content="跟随唱片主色调" />
+                                                <ComboBoxItem Content="专辑封面模糊" />
+                                                <ComboBoxItem Content="跟随唱片主色调" />
                                                 <ComboBoxItem Visibility="Collapsed" />
                                                 <ComboBoxItem Visibility="Collapsed" />
                                                 <ComboBoxItem Visibility="Collapsed" />
-                                                <ComboBoxItem Visibility="Collapsed" Content="桌面亚克力 (不推荐)" />
-                                                <ComboBoxItem Visibility="Collapsed" Content="流光溢彩" />
+                                                <ComboBoxItem Content="桌面亚克力 (不推荐)" />
+                                                <ComboBoxItem Content="流光溢彩" />
                                                 <ComboBoxItem Content="流光溢彩 (Isolation)" />
                                             </ComboBox>
                                         </controls3:SettingsCard>
@@ -777,11 +777,11 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind hyplayer:Common.Setting.ImpressionistUseKMeansPP, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="歌词页面特效渲染帧率 (本次测试最低 60 FPS)">
+                                        <controls3:SettingsCard Description="仅在背景设置为Isolation时生效" Header="Isolation目标帧率">
                                             <controls:NumberBox
                                                 Width="64"
                                                 HorizontalAlignment="Right"
-                                                Minimum="60"
+                                                Minimum="15"
                                                 Value="{x:Bind hyplayer:Common.Setting.IsolationFPS, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Description="仅在背景设置为Isolation时生效" Header="Isolation渲染倍率">

@@ -498,7 +498,7 @@ namespace HyPlayer
 
         public BackgroundType expandedPlayerBackgroundType
         {
-            get => BackgroundType.Isolation;
+            get => GetSettings(nameof(expandedPlayerBackgroundType), BackgroundType.CoverBlur);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerBackgroundType)] = (int)value;
@@ -1679,7 +1679,7 @@ namespace HyPlayer
         }
         public double IsolationFPS
         {
-            get => Math.Max(GetSettings(nameof(IsolationFPS), 60d), 60d);
+            get => GetSettings(nameof(IsolationFPS), 24d);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(IsolationFPS)] = value;
