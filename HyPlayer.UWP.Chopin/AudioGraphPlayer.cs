@@ -407,7 +407,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
             else
             {
-                if (GlobalPlaybackStatus is PlaybackStatus.Closed or PlaybackStatus.Playing)
+                if (GlobalPlaybackStatus == PlaybackStatus.Closed)
                 {
                     PlayAll();
                 }
