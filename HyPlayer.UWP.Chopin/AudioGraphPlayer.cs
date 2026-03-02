@@ -22,6 +22,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         #region Private Fields
         private readonly ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
         private readonly ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
+        private readonly AudioEncodingProperties _frameEncodingProperties = new AudioEncodingProperties()
+        {
+            SampleRate = 48000,
+            BitsPerSample = 16,
+            ChannelCount = 1,
+            Subtype = "Float"
+        };
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
         private AudioFrameOutputNode _frameOutputNode;
@@ -112,9 +119,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (outputResult.Status != AudioDeviceNodeCreationStatus.Success)
                 throw outputResult.ExtendedError;
             _outputNode = outputResult.DeviceOutputNode;
-            var encodingProperties = _outputNode.EncodingProperties.Copy();
-            encodingProperties.ChannelCount = 1;
-            var frameOutputResult = _defaultPlayer.CreateFrameOutputNode(encodingProperties);
+            
+            var frameOutputResult = _defaultPlayer.CreateFrameOutputNode(_frameEncodingProperties);
             _frameOutputNode = frameOutputResult;
 
             _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
@@ -161,10 +167,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     throw deviceNodeCreateResult.ExtendedError;
                 var newOutputNode = deviceNodeCreateResult.DeviceOutputNode;
                 newOutputNode.OutgoingGain = oldOutputNode.OutgoingGain;
-
-                var encodingProperties = _outputNode.EncodingProperties.Copy();
-                encodingProperties.ChannelCount = 1;
-                var frameOutputResult = newPlayer.CreateFrameOutputNode(encodingProperties);
+                
+                var frameOutputResult = newPlayer.CreateFrameOutputNode(_frameEncodingProperties);
                 _frameOutputNode = frameOutputResult;
 
                 // 转移所有播放源

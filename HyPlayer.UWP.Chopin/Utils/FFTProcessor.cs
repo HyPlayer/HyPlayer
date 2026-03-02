@@ -11,8 +11,8 @@ namespace HyPlayer.UWP.Chopin.Utils
     public class FFTProcessor
     {
         
-        public const int FftSize = 1024;           // FFT 窗口大小，必须是2的幂
-        public int CurrentFftSize = 0;
+        public const int FftSize = 512;           // FFT 窗口大小，必须是2的幂
+        public int CurrentFftSize = FftSize;
         public const int DisplayBandCount = 80;    // 最终显示的柱子数量
         public const float SmoothingFactor = 0.85f; // 平滑系数 (0-1)，越高越平滑
         
@@ -48,6 +48,7 @@ namespace HyPlayer.UWP.Chopin.Utils
 
                 // 核心修正：根据实际拿到的内存大小决定处理多少数据
                 int totalSamples = (int)(capacity / sizeof(float));
+
                 // 取 FftSize 和 实际可用数据量 的最小值，防止越界
                 int safeProcessingLimit = Math.Min(FftSize, totalSamples);
                 CurrentFftSize = safeProcessingLimit;
