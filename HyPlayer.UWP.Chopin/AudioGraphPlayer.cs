@@ -233,9 +233,9 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 EnableFFTProcessing = settings.EnableFFTProcessing;
                 _outputNode = newOutputNode;
                 _audioInputNodes.Clear();
-                foreach (var kvp in newNodes) _audioInputNodes[kvp.Key] = kvp.Value;
+                foreach (var kvp in newNodes) _audioInputNodes.TryAdd(kvp.Key, kvp.Value);
                 _audioInputNodesReverseDictionary.Clear();
-                foreach (var kvp in newNodesReverse) _audioInputNodesReverseDictionary[kvp.Key] = kvp.Value;
+                foreach (var kvp in newNodesReverse) _audioInputNodesReverseDictionary.TryAdd(kvp.Key, kvp.Value);
 
                 _currentDeviceId = audioGraphSetting.DefaultDeviceId;
                 if (GlobalPlaybackStatus == PlaybackStatus.Playing) newPlayer.Start();
@@ -415,8 +415,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             node.MediaSourceCompleted += OnMediaSourceCompleted;
 
             // 注册节点
-            _audioInputNodes[source] = node;
-            _audioInputNodesReverseDictionary[node] = source;
+            _audioInputNodes.TryAdd(source, node);
+            _audioInputNodesReverseDictionary.TryAdd(node, source);
 
             // 设置为主播放源
             if (_audioInputNodes.Count == 1 || options.SetAsPrimarySource)
@@ -543,7 +543,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
 
             if (!_audioInputNodes.TryGetValue(source, out var node))
-                throw new ArgumentException("PlaybackSource is not connected to the player.");
+                throw new ArgumentException("PlaybackSource haven't connected to the player.");
 
             return node;
         }

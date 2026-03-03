@@ -785,6 +785,7 @@ public static class HyPlayList
     public static async Task LoadMediaSource(HyPlayItem targetItem, bool setAsPrimary = false, bool autoPlay = true)
     {
         _mediaSourceCancellationTokenSource?.Cancel();
+        _mediaSourceCancellationTokenSource?.Dispose();
         _mediaSourceCancellationTokenSource = new CancellationTokenSource();
         var ctk = _mediaSourceCancellationTokenSource.Token;
         try
