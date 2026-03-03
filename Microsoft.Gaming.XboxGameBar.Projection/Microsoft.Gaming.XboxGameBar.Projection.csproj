@@ -34,9 +34,11 @@
 		</None>
 		<None Include="$(PkgMicrosoft_Gaming_XboxGameBar)\lib\uap10.0\Microsoft.Gaming.XboxGameBar.winmd">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Implementation>Microsoft.Gaming.XboxGameBar.dll</Implementation>
 		</None>
 		<None Include="$(PkgMicrosoft_Gaming_XboxGameBar)\private\Microsoft.Gaming.XboxGameBar.Private.winmd">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Implementation>Microsoft.Gaming.XboxGameBar.Private.dll</Implementation>
 		</None>
 		<Content Include="$(PkgMicrosoft_Gaming_XboxGameBar)\runtimes\win10-$(Platform)\native\Microsoft.Gaming.XboxGameBar.pri" />
 	</ItemGroup>

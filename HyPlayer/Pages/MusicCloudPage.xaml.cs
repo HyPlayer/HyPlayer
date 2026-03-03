@@ -34,7 +34,6 @@ public sealed partial class MusicCloudPage : Page
     public MusicCloudPage()
     {
         InitializeComponent();
-        SongContainer.ListSource = "content";
         _cancellationToken = _cancellationTokenSource.Token;
     }
 
@@ -45,8 +44,8 @@ public sealed partial class MusicCloudPage : Page
             _cancellationToken.ThrowIfCancellationRequested();
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userCloud_" + page, async () =>
             {
-                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserCloudApi,
-                    new UserCloudRequest()
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.CloudGetApi,
+                    new CloudGetRequest()
                     {
                         Limit = 749,
                         Offset = page * 749
@@ -70,19 +69,7 @@ public sealed partial class MusicCloudPage : Page
                 _cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    var ret = jToken.SongInfo.MapNcSong();
-                    if (ret.Artist[0].Id == "0")
-                    {
-                        //不是标准歌曲
-                        ret.Album.Name = jToken.AlbumName;
-                        ret.Artist.Clear();
-                        ret.Artist.Add(new NCArtist
-                        {
-                            Name = jToken.ArtistName
-                        });
-                    }
-
-                    ret.IsCloud = true;
+                    var ret = jToken.MapNCSong();
                     ret.Order = idx++;
                     SongContainer.Songs.Add(ret);
                 }

@@ -6,7 +6,7 @@ using static HyPlayer.Classes.UpdateManager;
 
 namespace HyPlayer.Classes
 {
-    [JsonSourceGenerationOptions(WriteIndented = true, Converters = new[] { typeof(JsonBooleanConverter), typeof(JsonObjectStringConverter), typeof(NumberToStringConverter) })]
+    [JsonSourceGenerationOptions(WriteIndented = true)]
     [JsonSerializable(typeof(The163KeyClass))]
     [JsonSerializable(typeof(AdditionalParameters))]
     [JsonSerializable(typeof(List<string>))]

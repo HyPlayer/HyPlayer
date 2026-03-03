@@ -7,6 +7,7 @@ using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.Extensions.JsonSerializer;
 using HyPlayer.Pages;
 using Kawazu;
 using LiteFM;
@@ -76,8 +77,10 @@ namespace HyPlayer
         public static List<NCPlayList> MySongLists = [];
         public static DisplayRequest DisplayRequest = new();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
-        public static JsonSerializerOptions DefaultOptions = new()
+        public static JsonSerializerOptions DefaultOptions = new(JsonSerializerDefaults.Web)
         {
+            Converters = { new NumberToStringConverter(), new JsonBooleanConverter(), new JsonObjectStringConverter() },
+            WriteIndented = true,
             TypeInfoResolver = JsonTypeInfoResolver.Combine(JsonDefaultContext.Default, NeteaseApiContractJsonContext.Default, LastFMJsonDefaultContext.Default)
         };
 

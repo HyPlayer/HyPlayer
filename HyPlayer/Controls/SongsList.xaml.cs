@@ -3,6 +3,7 @@
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Cloud;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Pages;
 using System;
@@ -56,6 +57,13 @@ public sealed partial class SongsList : UserControl
         ,
         typeof(SongsList),
         new PropertyMetadata(null)
+    );
+
+    public static readonly DependencyProperty IsCloudStorageListProperty = DependencyProperty.Register(
+        "IsCloudStorageList", typeof(bool)
+        ,
+        typeof(SongsList),
+        new PropertyMetadata(false)
     );
 
     public static readonly DependencyProperty ListHeaderProperty = DependencyProperty.Register(
@@ -115,6 +123,12 @@ public sealed partial class SongsList : UserControl
     {
         get => (bool)GetValue(IsMySongListProperty);
         set => SetValue(IsMySongListProperty, value);
+    }
+
+    public bool IsCloudStorageList
+    {
+        get => (bool)GetValue(IsCloudStorageListProperty);
+        set => SetValue(IsCloudStorageListProperty, value);
     }
 
     public bool IsSearchEnabled
@@ -343,13 +357,25 @@ public sealed partial class SongsList : UserControl
     {
         if (SongContainer.SelectedItems.Count == 0) return;
         var ids = SongContainer.SelectedItems.Cast<NCSong>().Select(t => t.SongId).ToList();
-        await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistTracksEditApi,
+        if (!IsCloudStorageList)
+        {
+            await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistTracksEditApi,
             new PlaylistTracksEditRequest()
             {
                 IdList = ids,
                 IsAdd = false,
                 PlaylistId = ListSource.Substring(2)
             });
+        }
+        else
+        {
+            await Common.NeteaseAPI.RequestAsync(NeteaseApis.CloudDeleteApi,
+            new CloudDeleteRequest()
+            {
+                IdList = ids
+            });
+
+        }
         VisibleSongs.Remove(SongContainer.SelectedItem as NCSong);
     }
 

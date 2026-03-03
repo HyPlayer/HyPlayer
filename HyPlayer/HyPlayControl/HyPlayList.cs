@@ -313,13 +313,6 @@ public static class HyPlayList
         _ = Common.Invoke(() => { OnLoginDone?.Invoke(); });
     }
 
-
-    private static void PlayerOnMediaFailed(string reason)
-    {
-        Common.ErrorMessageList.Add($"歌曲播放失败: {NowPlayingItem.Name}\n{reason}");
-        Common.AddToTeachingTipLists($"播放失败\n 歌曲: {NowPlayingItem.Name}\n{reason}");
-    }
-
     public static async Task PickLocalFile()
     {
         var fop = new FileOpenPicker();
@@ -842,7 +835,8 @@ public static class HyPlayList
         }
         catch (Exception e)
         {
-            PlayerOnMediaFailed(e.Message);
+            Common.ErrorMessageList.Add($"歌曲播放失败: {targetItem.Name}\n{e.Message}");
+            Common.AddToTeachingTipLists($"播放失败\n 歌曲: {targetItem.Name}\n{e.Message}");
         }
         finally
         {

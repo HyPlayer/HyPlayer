@@ -33,6 +33,7 @@ namespace HyPlayer.Classes
         private async void HyPlayList_OnMediaEnd(HyPlayItem hpi)
         {
             if (HyPlayList.NowPlayType == PlayMode.SinglePlay || HyPlayList.List.Count <= 1) return;
+            if (_currentPlaybackNode == null && _currentPlaybackSource == null && !_setting.CrossFade) return;
             var item = _currentPlaybackSource?.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
             if (hpi == item)
             {
@@ -43,7 +44,7 @@ namespace HyPlayer.Classes
                 _currentPlaybackSource = null;
                 _currentPlaybackNode = null;
             }
-            else if (item == null)
+            else if (_nextPlaybackSource == null)
             {
                 HyPlayList.MoveSongPointer();
                 var nextItem = HyPlayList.List[HyPlayList.NowPlaying];
@@ -87,12 +88,13 @@ namespace HyPlayer.Classes
 
         private async Task InitializeFade()
         {
+            if (Processing || !_setting.CrossFade) return;
             await _loaderSemaphore.WaitAsync();
-            if (HyPlayList.Player.PrimaryAudioInputNode?.Duration.TotalSeconds - HyPlayList.Player?.PrimaryAudioInputNode?.Position.TotalSeconds <= _setting.CrossFadeTime
-                && ((HyPlayList.Player.PrimaryAudioInputNode?.Duration - HyPlayList.Player.PrimaryAudioInputNode?.Position)?.TotalSeconds ?? 0) > 2
+            var remainTime = HyPlayList.Player.PrimaryAudioInputNode?.Duration.TotalSeconds - HyPlayList.Player?.PrimaryAudioInputNode?.Position.TotalSeconds;
+            if (remainTime <= _setting.CrossFadeTime
+                && remainTime> 2
                 && HyPlayList.NowPlayType != PlayMode.SinglePlay
-                && HyPlayList.List.Count > 1
-                && !Processing)
+                && HyPlayList.List.Count > 1)
             {
                 Processing = true;
                 var current = (AudioGraphPlaybackSource)HyPlayList.Player.PrimaryPlaybackSource;
@@ -165,7 +167,7 @@ namespace HyPlayer.Classes
             var node = _nextPlaybackNode;
             var source = _nextPlaybackSource;
             HyPlayList.Player.DisconnectPlaybackSource(_currentPlaybackSource);
-            HyPlayList.Player.SetPlaybackSourceOutputVolume(Common.Setting.EnableAudioGain ? _initialVolume[node] : 1, source);
+            HyPlayList.Player.SetPlaybackSourceOutputVolume(_setting.EnableAudioGain ? _initialVolume[node] : 1, source);
             Processing = false;
             var item = _currentPlaybackSource.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
             item?.PlayItem?.Dispose();

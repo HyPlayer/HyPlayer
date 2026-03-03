@@ -53,6 +53,7 @@
             CanViewComments="True"
             IsMySongList="{x:Bind ViewModel.IsMySongList, Mode=OneWay}"
             IsSearchEnabled="True"
+            ListSource="{x:Bind ViewModel.SourceId, Mode=OneWay}"
             Songs="{x:Bind ViewModel.Songs, Mode=OneWay}">
             <controls1:SongsList.ListHeader>
                 <Grid>

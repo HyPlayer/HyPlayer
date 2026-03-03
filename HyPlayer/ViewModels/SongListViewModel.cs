@@ -43,6 +43,8 @@ namespace HyPlayer.ViewModels
         public partial Uri? CoverUri { get; set; }
         [ObservableProperty]
         public partial Color AlbumColor { get; set; }
+        [ObservableProperty]
+        public partial string SourceId {  get; set; }
 #nullable restore
 
         private List<string> _songListIds = [];
@@ -55,6 +57,7 @@ namespace HyPlayer.ViewModels
             {
                 var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistDetail, PlaylistId, async () =>
                 {
+                    SourceId = $"pl{PlaylistId}";
                     // 歌单详情
                     var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistDetailApi,
                         new PlaylistDetailRequest()

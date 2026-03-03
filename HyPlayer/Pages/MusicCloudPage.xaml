@@ -2,8 +2,8 @@
     x:Class="HyPlayer.Pages.MusicCloudPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls1="using:HyPlayer.Controls"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:controls1="using:HyPlayer.Controls"
     NavigationCacheMode="Disabled">
 
     <Grid>
@@ -12,37 +12,34 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <controls:DockPanel  LastChildFill="True">
+        <controls:DockPanel LastChildFill="True">
             <Button
-                controls:DockPanel.Dock="Right"
                 x:Name="BtnUpload"
                 Margin="0,-5,30,0"
                 HorizontalAlignment="Right"
+                controls:DockPanel.Dock="Right"
                 Click="BtnUpload_Click"
                 Content="上传本地" />
             <Button
                 x:Name="BtnRefresh"
-                controls:DockPanel.Dock="Right"
                 Margin="0,-5,30,0"
                 HorizontalAlignment="Right"
+                controls:DockPanel.Dock="Right"
                 Click="BtnRefresh_OnClick"
                 Content="刷新列表" />
             <TextBlock
-                controls:DockPanel.Dock="Left"
                 Margin="30,30,35,0"
+                controls:DockPanel.Dock="Left"
                 FontSize="40"
                 FontWeight="Bold"
                 Text="我的云盘"
                 TextWrapping="Wrap" />
         </controls:DockPanel>
-        
-        
-            
 
-            
         <controls1:SongsList
             x:Name="SongContainer"
             Grid.Row="1"
+            IsCloudStorageList="True"
             IsSearchEnabled="True"
             Songs="{x:Bind Items}">
             <controls1:SongsList.Footer>

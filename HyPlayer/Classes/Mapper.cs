@@ -306,4 +306,18 @@ public static class Mapper
         };
         return ncp;
     }
+    public static NCSong MapNCSong(this CloudMusicDto dto)
+    {
+        var song = new NCSong()
+        {
+            Album = dto.Song.Album.MapToNcAlbum(),
+            SongName = dto.SongName,
+            SongId = dto.SongId,
+            IsAvailable = true,
+            IsCloud = true,
+            Artist = [new NCArtist() { Name = dto.Artist }],
+            Type = HyPlayItemType.Netease
+        };
+        return song;
+    }
 }
