@@ -155,7 +155,7 @@ jobs:
         allowUpdates: true
         artifactErrorsFailBuild: true
         body: '> 这是 Azure DevOps 的自动编译,将会在每次Commit之后进行编译. 内容可能不稳定,如非特别需要,请使用加入内测使用 App Center Canary 版本. 使用此版本出现的问题概不负责'
-        name: "HyPlayer GitHub Actions Build ${{github.run_number}}"
+        name: "HyPlayer GitHub Actions Build"
         prerelease: true
         replacesArtifacts: true
         tag: "actions-build"
