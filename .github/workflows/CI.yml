@@ -21,7 +21,6 @@ jobs:
               ${{ secrets.SSH_KEY }}
         
   ci_build:
-    needs: delete_release
     strategy:
       matrix:
         configuration: [Release]
