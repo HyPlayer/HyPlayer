@@ -60,8 +60,8 @@ public static class Mapper
         {
             Cover = mlog.CoverUrl,
             Id = mlog.Id,
-            title = mlog.Title,
-            duration = (int)mlog.Duration,
+            Title = mlog.Title,
+            Duration = (int)mlog.Duration,
         };
     }
 

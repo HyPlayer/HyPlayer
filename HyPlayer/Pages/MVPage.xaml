@@ -31,7 +31,7 @@
                             HorizontalAlignment="Left"
                             FontSize="14"
                             FontWeight="SemiBold"
-                            Text="{x:Bind title}" />
+                            Text="{x:Bind Title}" />
                         <TextBlock
                             Width="350"
                             FontWeight="Normal"
@@ -84,26 +84,26 @@
                     Orientation="Vertical"
                     Spacing="15">
                     <TextBlock
-                        IsTextSelectionEnabled="True"
                         x:Name="TextBoxVideoName"
                         FontSize="35"
                         FontWeight="Bold"
+                        IsTextSelectionEnabled="True"
                         TextWrapping="Wrap" />
                     <TextBlock
-                        IsTextSelectionEnabled="True"
                         x:Name="TextBoxSinger"
                         FontSize="18"
-                        Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
+                        Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                        IsTextSelectionEnabled="True" />
                     <controls1:ExpandableTextBox
                         x:Name="TextBoxDesc"
                         FontSize="15"
                         Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                         TextWrapping="Wrap" />
                     <TextBlock
-                        IsTextSelectionEnabled="True"
                         x:Name="TextBoxOtherInfo"
                         FontSize="15"
                         Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                        IsTextSelectionEnabled="True"
                         TextWrapping="Wrap" />
                     <ComboBox
                         x:Name="VideoQualityBox"

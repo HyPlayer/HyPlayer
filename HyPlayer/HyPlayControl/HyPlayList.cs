@@ -469,7 +469,7 @@ public static class HyPlayList
             using var encStream = NCMFile.GetEncryptedStream(stream);
             encStream.Seek(0, SeekOrigin.Begin);
             var songDataStream = new InMemoryRandomAccessStream();
-            using var targetSongDataStream = songDataStream.AsStream();
+            var targetSongDataStream = songDataStream.AsStream();
             encStream.CopyTo(targetSongDataStream);
             var playItem = new PlayItem();
             targetItem.PlayItem = playItem;
@@ -816,18 +816,17 @@ public static class HyPlayList
 
                 var mediaSource = await CreateMediaSourceAsync(targetItem, ctk);
                 if (mediaSource == null) return;
-                var playItem = new PlayItem();
-                targetItem.PlayItem = playItem;
+                targetItem.PlayItem ??= new PlayItem();
                 ctk.ThrowIfCancellationRequested();
                 mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
                 MediaSystemControls.IsEnabled = true;
 
-                if (!Common.Setting.enableCache) await mediaSource.OpenAsync();
+                await mediaSource.OpenAsync();
 
                 UpdatePlayItemDuration(targetItem, mediaSource);
 
                 var playbackSource = new AudioGraphPlaybackSource(mediaSource);
-                playItem.AudioGraphPlaybackSource = playbackSource;
+                targetItem.PlayItem.AudioGraphPlaybackSource = playbackSource;
 
                 var targetVolume = Common.Setting.EnableAudioGain ? targetItem.Volume : 1d;
                 var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary, AutoPlay = autoPlay, Volume = targetVolume ?? 1 };
@@ -1764,7 +1763,7 @@ public static class HyPlayList
         var insertList = ncSongs.Select(LoadNcSong).Where(t => !List.Contains(t)).ToList();
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
         {
-            insertList = [.. insertList.Except(List, new HyPlayerItemComparer())];
+            insertList = [.. insertList.Except(List)];
             // 防止重新打乱列表
             if (insertList.Count <= 0)
             {

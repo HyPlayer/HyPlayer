@@ -149,7 +149,6 @@ namespace HyPlayer.Classes
                 if (node == null) return;
                 var time = _setting.CrossFadeTime - (node.Duration - node.Position).TotalSeconds;
                 var multiplier = Math.Clamp(1 - (time / _setting.CrossFadeTime), 0, 1);
-                Debug.WriteLine(multiplier);
                 HyPlayList.Player.SetPlaybackSourceOutputVolume((_setting.EnableAudioGain ? _initialVolume[node] : 1) * multiplier, _currentPlaybackSource);
             }
             catch

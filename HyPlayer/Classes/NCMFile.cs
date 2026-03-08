@@ -89,9 +89,9 @@ internal static class NCMFile
         var coreKeyChunk = ReadChunk(stream);
         for (var i = 0; i < coreKeyChunk.Length; i++) coreKeyChunk[i] ^= 0x64;
 
-        var ckcLen = AesDecrypt(coreKeyChunk, _coreBoxKey);
+        coreKeyChunk = AesDecrypt(coreKeyChunk, _coreBoxKey);
 
-        var finalKey = new byte[ckcLen - 17];
+        var finalKey = new byte[coreKeyChunk.Length - 17];
         Array.Copy(coreKeyChunk, 17, finalKey, 0, finalKey.Length);
         _keyBox = new byte[256];
         for (var i = 0; i < _keyBox.Length; i++) _keyBox[i] = (byte)i;
@@ -124,10 +124,10 @@ internal static class NCMFile
 
             var dontModifyDecryptChunk = Convert.FromBase64String(Encoding.UTF8.GetString(dontModifyChunk,
                 startIndex, dontModifyChunk.Length - startIndex));
-            var mdcLen = AesDecrypt(dontModifyDecryptChunk, _modifyBoxKey);
+            dontModifyDecryptChunk = AesDecrypt(dontModifyDecryptChunk, _modifyBoxKey);
 
             // skip `music:`
-            using (var reader = new MemoryStream(dontModifyDecryptChunk, 6, mdcLen - 6))
+            using (var reader = new MemoryStream(dontModifyDecryptChunk, 6, dontModifyDecryptChunk.Length - 6))
             {
                 var infoStr = Encoding.UTF8.GetString(reader.ToArray());
                 keys = JsonSerializer.Deserialize<The163KeyClass>(infoStr, Common.DefaultOptions);
@@ -146,20 +146,11 @@ internal static class NCMFile
     }
 
 
-    private static int AesDecrypt(byte[] data, byte[] key)
+    private static byte[] AesDecrypt(byte[] data, byte[] key)
     {
         var aes = Aes.Create();
-        aes.Mode = CipherMode.ECB;
         aes.Key = key;
-        aes.Padding = PaddingMode.PKCS7;
-
-        using (var stream = new MemoryStream(data))
-        {
-            using (var cs = new CryptoStream(stream, aes.CreateDecryptor(), CryptoStreamMode.Read))
-            {
-                return cs.Read(data, 0, data.Length);
-            }
-        }
+        return aes.DecryptEcb(data, PaddingMode.PKCS7);
     }
 
     private static byte[] ReadChunk(Stream fs)

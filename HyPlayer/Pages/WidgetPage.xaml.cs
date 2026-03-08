@@ -123,7 +123,6 @@ public sealed partial class WidgetPage : Page
     }
     private void UnregisterEvents()
     {
-        Debug.WriteLine("GameBar Close Requested or Unloaded.");
         _hotkeyWatcher.Stop();
         _widget.CloseRequested -= Widget_CloseRequested;
         _widget.SettingsClicked -= OnSettingsChecked;

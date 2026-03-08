@@ -1,4 +1,4 @@
-name: .NET Core Desktop
+name: Actions Build
 
 on:
   push:
@@ -19,14 +19,6 @@ jobs:
           git@gitee.com:kengwang/HyPlayer.git
         ssh_private_key:                                # <-- use 'secrets' to pass credential information.
               ${{ secrets.SSH_KEY }}
-              
-  delete_release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete Actions Build
-        run: gh release delete actions-build --cleanup-tag --yes --repo HyPlayer/HyPlayer
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
   ci_build:
     needs: delete_release
@@ -163,8 +155,8 @@ jobs:
         artifacts: "HyPlayer-ActionsBuild-${{ matrix.platform }}.zip"
         allowUpdates: true
         artifactErrorsFailBuild: true
-        generateReleaseNotes: true
-        name: "HyPlayer GitHub Actions Build"
+        body: '> 这是 Azure DevOps 的自动编译,将会在每次Commit之后进行编译. 内容可能不稳定,如非特别需要,请使用加入内测使用 App Center Canary 版本. 使用此版本出现的问题概不负责'
+        name: "HyPlayer GitHub Actions Build {{github.run_number}}"
         prerelease: true
         replacesArtifacts: true
         tag: "actions-build"
