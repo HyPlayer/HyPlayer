@@ -146,5 +146,5 @@ jobs:
         replacesArtifacts: true
         draft: true
         generateReleaseNotes: true
-        tag: "${{ $GITHUB_ENV.VERSION }}"
+        tag: "${{ vars.VERSION }}"
         
