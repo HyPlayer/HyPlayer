@@ -124,6 +124,7 @@ jobs:
       id: upload-unsigned-artifact
       uses: actions/upload-artifact@v4
       with:
+        name: HyPlayer-Build-${{ matrix.platform }}
         path: ${{ env.Wap_Project_Directory }}\AppPackages\**\HyPlayer.Package_*.msix
 
     - name: Code Signing
@@ -140,7 +141,7 @@ jobs:
     - name: Upload build artifacts 
       uses: ncipollo/release-action@v1
       with:
-        artifacts: 'OutputArtifacts\HyPlayer.Package_*.msix'
+        artifacts: 'OutputArtifacts\**\HyPlayer.Package_*.msix'
         allowUpdates: true
         artifactErrorsFailBuild: true
         name: "HyPlayer Canary Build ${{ env.VERSION }}"
