@@ -85,7 +85,7 @@ public sealed partial class Settings : Page
         var packageId = package.Id;
         var version = packageId.Version;
         VersionCode.Text =
-            $"Version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}  (#{BuildInfo.CommitSha[..8]}@{BuildInfo.BuildBranchId})";
+            $"Version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}  (#{BuildInfo.CommitSha[..7]}@{BuildInfo.BuildBranchId})";
         var deviceInfo = new EasClientDeviceInformation();
         DeviceInfo.Text = deviceInfo.Id.ToString();
         isbyprogram = false;
