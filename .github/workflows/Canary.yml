@@ -51,6 +51,7 @@ jobs:
     - name: Set AppxManifest Version and Package Name
       shell: pwsh
       run: |
+              $MANIFEST = [xml](Get-Content HyPlayer.Package\Package.appxmanifest)
               $VERSION = $MANIFEST.Package.Identity.Version
               "VERSION=$VERSION" >> $env:GITHUB_ENV
               echo "Currently Building Version Is"
