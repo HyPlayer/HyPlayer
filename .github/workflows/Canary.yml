@@ -125,7 +125,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: HyPlayer-Build-${{ matrix.platform }}
-        path: ${{ env.Wap_Project_Directory }}\AppPackages
+        path: ${{ env.Wap_Project_Directory }}\AppPackages\**\HyPlayer.Package_*.msix
 
     - name: Code Signing
       uses: signpath/github-action-submit-signing-request@v2
