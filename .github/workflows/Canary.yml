@@ -136,12 +136,12 @@ jobs:
         signing-policy-slug: 'test'
         github-artifact-id: '${{ steps.upload-unsigned-artifact.outputs.artifact-id }}'
         wait-for-completion: true
-        output-artifact-directory: 'HyPlayer\OutputArtifacts'  
+        output-artifact-directory: 'OutputArtifacts'  
 
     - name: Upload build artifacts 
       uses: ncipollo/release-action@v1
       with:
-        artifacts: 'HyPlayer\OutputArtifacts\HyPlayer-Build-${{ matrix.platform }}.zip'
+        artifacts: 'OutputArtifacts\HyPlayer.Package_*.msix'
         allowUpdates: true
         artifactErrorsFailBuild: true
         name: "HyPlayer Canary Build ${{ env.VERSION }}"
