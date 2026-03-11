@@ -143,9 +143,9 @@ jobs:
         artifacts: 'HyPlayer\OutputArtifacts\HyPlayer-Build-${{ matrix.platform }}.zip'
         allowUpdates: true
         artifactErrorsFailBuild: true
-        name: "HyPlayer Canary Build ${{ VERSION }}"
+        name: "HyPlayer Canary Build ${{ vars.VERSION }}"
         replacesArtifacts: true
         draft: true
         generateReleaseNotes: true
-        tag: "${{ VERSION }}"
+        tag: "${{ vars.VERSION }}"
         
