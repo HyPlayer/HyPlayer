@@ -124,7 +124,6 @@ jobs:
       id: upload-unsigned-artifact
       uses: actions/upload-artifact@v4
       with:
-        name: HyPlayer-Build-${{ matrix.platform }}
         path: ${{ env.Wap_Project_Directory }}\AppPackages\**\HyPlayer.Package_*.msix
 
     - name: Code Signing
