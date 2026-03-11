@@ -1,4 +1,4 @@
-name: Canary Build
+name: Release Build
 
 on:
   - workflow_dispatch
@@ -147,7 +147,7 @@ jobs:
         name: "HyPlayer Canary Build ${{ env.VERSION }}"
         replacesArtifacts: true
         draft: true
-        bodyFile: CHANGELOG.md
+        bodyFile: CHANGELOG_RELEASE.md
         tag: "${{ env.VERSION }}"
         
     - name: Upload to Server
@@ -182,10 +182,10 @@ jobs:
               -Method Put `
               -Headers $headers `
               -InFile $localFilePath
-          $changelog = Get-Content CHANGELOG.md -Raw -Encoding UTF8 | Out-String
+          $changelog = Get-Content CHANGELOG_RELEASE.md -Raw -Encoding UTF8 | Out-String
           Write-Host $changelog
           $bodyObject = @{
-            channels = @(5)
+            channels = @(5,6)
             version  = $VERSION
             authKey  = ${{ secrets.SERVER_API_KEY }}"
             date     = (Get-Date -Format o)
