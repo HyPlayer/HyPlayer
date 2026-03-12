@@ -187,7 +187,7 @@ jobs:
           $bodyObject = @{
             channels = @(5)
             version  = $VERSION
-            authKey  = ${{ secrets.SERVER_API_KEY }}"
+            authKey  = "${{ secrets.SERVER_API_KEY }}"
             date     = (Get-Date -Format o)
             note     = $changelog
             url      = "https://hyplayer-file.kengwang.com.cn$remoteFilePath"
