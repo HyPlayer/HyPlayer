@@ -101,6 +101,16 @@ namespace HyPlayer.Classes
                 TrackId = TrackId
             };
         }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as HyPlayItem);
+        }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
     }
     public enum HyPlayItemType
     {

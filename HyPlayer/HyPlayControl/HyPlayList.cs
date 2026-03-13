@@ -495,28 +495,30 @@ public static class HyPlayList
     {
         if (List.Count == 0) return;
         OnSongMoveNext?.Invoke();
-        MoveSongPointer(true);
-        _ = LoadMediaSource(List[NowPlaying], true);
+        if (!FadeManager.Preloaded) MoveSongPointer(true);
+        LoadMediaSource(List[NowPlaying], true).SafeFireAndForget();
     }
 
     public static void SongMovePrevious()
     {
+        var count = FadeManager.Preloaded && !FadeManager.Processing ? 2 : 1;
         if (List.Count == 0) return;
-        if (NowPlaying - 1 < 0)
-            NowPlaying = List.Count - 1;
+        if (NowPlaying - count < 0)
+            NowPlaying = List.Count - count;
         else
-            NowPlaying--;
+            NowPlaying -= count;
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
         {
             // 新版随机上一曲
-            if (--ShufflingIndex < 0)
-                ShufflingIndex = ShuffleList.Count - 1;
+            ShufflingIndex -= count;
+            if (ShufflingIndex < 0)
+                ShufflingIndex = ShuffleList.Count - count;
             NowPlaying = ShuffleList[ShufflingIndex];
         }
         OnSongMoveNext?.Invoke();
         if (!Common.IsInFm && List.Count != 0)
         {
-            _ = LoadMediaSource(List[NowPlaying], true);
+            LoadMediaSource(List[NowPlaying], true).SafeFireAndForget();
         }
     }
 
@@ -670,7 +672,7 @@ public static class HyPlayList
                 if (Common.Setting.shuffleNoRepeating)
                 {
                     // 新版乱序算法
-                    if (++ShufflingIndex > List.Count - 1)
+                    if (++ShufflingIndex > List.Count)
                         ShufflingIndex = 0;
                     NowPlaying = ShuffleList[ShufflingIndex];
                 }
@@ -801,7 +803,7 @@ public static class HyPlayList
                     return;
                 }
 
-                if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || !FadeManager.Processing))
+                if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || !FadeManager.Preloaded))
                 {
                     var primaryPlaybackSource = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
                     Player.PausePlaybackSource(primaryPlaybackSource);
@@ -820,17 +822,13 @@ public static class HyPlayList
                 ctk.ThrowIfCancellationRequested();
                 mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
                 MediaSystemControls.IsEnabled = true;
-
-                await mediaSource.OpenAsync();
-
-                UpdatePlayItemDuration(targetItem, mediaSource);
-
                 var playbackSource = new AudioGraphPlaybackSource(mediaSource);
                 targetItem.PlayItem.AudioGraphPlaybackSource = playbackSource;
 
                 var targetVolume = Common.Setting.EnableAudioGain ? targetItem.Volume : 1d;
                 var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary, AutoPlay = autoPlay, Volume = targetVolume ?? 1 };
                 await Player.ConnectPlaybackSourceAsync(playbackSource, options);
+                UpdatePlayItemDuration(targetItem, mediaSource);
             });
         }
         catch (Exception e)

@@ -519,7 +519,7 @@
                                             Width="256"
                                             HorizontalAlignment="Right"
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=OneWay}"
-                                            Maximum="15"
+                                            Maximum="10"
                                             Minimum="3"
                                             StepFrequency="1"
                                             TickFrequency="1"

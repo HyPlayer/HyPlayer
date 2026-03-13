@@ -68,9 +68,9 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             {
                 if (disposing)
                 {
-
+                    PlaybackSource?.Dispose();
                 }
-                PlaybackSource?.Dispose();
+                PlaybackSource = null;
                 disposedValue = true;
             }
         }

@@ -35,14 +35,12 @@ namespace HyPlayer
 
         public static void AddNCSongHistory(string songid)
         {
-            var list = new List<string>();
-            list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["songHistory"].ToString(), Common.DefaultOptions);
+            var list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings.Values["songHistory"].ToString(), Common.DefaultOptions);
 
             list.Remove(songid);
             list.Insert(0, songid);
-            if (list.Count >= 300)
-                list.RemoveRange(9, list.Count - 300);
+            if (list.Count >= 100)
+                list.RemoveRange(100, list.Count - 100);
             ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
         }
 
@@ -66,9 +64,8 @@ namespace HyPlayer
 
         public static void AddSonglistHistory(string playListid)
         {
-            var list = new List<string>();
-            list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["songlistHistory"].ToString(), Common.DefaultOptions);
+            var list = JsonSerializer.Deserialize<List<string>>
+                (ApplicationData.Current.LocalSettings.Values["songlistHistory"].ToString(), Common.DefaultOptions);
 
             list.Remove(playListid);
             list.Insert(0, playListid);
@@ -139,15 +136,15 @@ namespace HyPlayer
         public static async Task<List<NCSong>> GetcurPlayingListHistory()
         {
             var retsongs = new List<NCSong>();
-            List<string> trackIds = new();
+            List<string> trackIds = [];
             if (Common.Setting.advancedMusicHistoryStorage)
-                trackIds = (await FileIO.ReadTextAsync(
+                trackIds = [.. (await FileIO.ReadTextAsync(
                     await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory",
-                        CreationCollisionOption.OpenIfExists))).Split("\r\n").ToList();
+                        CreationCollisionOption.OpenIfExists))).Split("\r\n")];
             else
                 //低级音乐存储
                 trackIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
-                    .Values["curPlayingListHistory"].ToString(), Common.DefaultOptions) ?? new List<string>();
+                    .Values["curPlayingListHistory"].ToString(), Common.DefaultOptions) ?? [];
 
             if (trackIds == null || trackIds.Count == 0)
                 return retsongs;
