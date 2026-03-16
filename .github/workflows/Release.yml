@@ -172,7 +172,7 @@ jobs:
             "X-Timestamp" = "$timestamp"
             "X-Extension" = ".msix"
           }
-          $result = Invoke-WebRequest -Uri "http://{{ secrets.FILEHOST_ADDR }}/api/v1/programs/HyPlayer/$version/windows/amd64" `
+          $result = Invoke-WebRequest -Uri "http://${{ secrets.FILEHOST_ADDR }}/api/v1/programs/HyPlayer/$version/windows/amd64" `
               -Method PUT `
               -Headers $headers `
               -InFile $BUNDLEPATH
@@ -201,7 +201,7 @@ jobs:
             "X-Timestamp" = "$timestamp"
             "X-Extension" = ".msix"
           }
-          $result = Invoke-WebRequest -Uri "http://{{ secrets.FILEHOST_ADDR }}/api/v1/programs/HyPlayer/$version/windows/arm64" `
+          $result = Invoke-WebRequest -Uri "http://${{ secrets.FILEHOST_ADDR }}/api/v1/programs/HyPlayer/$version/windows/arm64" `
               -Method PUT `
               -Headers $headers `
               -InFile $BUNDLEPATH
