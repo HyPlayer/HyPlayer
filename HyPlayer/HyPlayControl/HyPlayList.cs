@@ -494,8 +494,8 @@ public static class HyPlayList
     public static void SongMoveNext()
     {
         if (List.Count == 0) return;
-        OnSongMoveNext?.Invoke();
         if (!FadeManager.Preloaded) MoveSongPointer(true);
+        OnSongMoveNext?.Invoke();
         LoadMediaSource(List[NowPlaying], true).SafeFireAndForget();
     }
 

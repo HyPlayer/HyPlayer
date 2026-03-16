@@ -115,10 +115,8 @@ namespace HyPlayer.Classes
             {
                 await _loaderSemaphore.WaitAsync();
                 if (Preloaded || Processing) return;
-
                 var audioInputNode = HyPlayList.Player.PrimaryAudioInputNode;
-                if (audioInputNode == null) return;
-
+                if(audioInputNode == null) return;
                 var totalDuration = audioInputNode.Duration.TotalSeconds;
                 var currentPosition = audioInputNode.Position.TotalSeconds;
                 var remainTime = totalDuration - currentPosition;
@@ -129,7 +127,6 @@ namespace HyPlayer.Classes
                     && HyPlayList.List.Count > 1)
                 {
                     Preloaded = true;
-
                     var current = (AudioGraphPlaybackSource)HyPlayList.Player.PrimaryPlaybackSource;
                     var currentItem = current.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
                     _currentPlaybackSource = current;

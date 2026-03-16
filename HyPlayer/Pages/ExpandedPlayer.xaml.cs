@@ -1201,7 +1201,9 @@ public sealed partial class ExpandedPlayer : Page
 
     public async void RefreshAlbumCover(HyPlayItem playItem)
     {
-        if (HyPlayList.CoverStream == null) return;
+        if (HyPlayList.CoverStream == null || Common.IsInBackground) return;
+        using var stream = HyPlayList.CoverStream.CloneStream();
+        var isBright = await IsBrightAsync(stream);
         _ = Common.Invoke(async () =>
         {
             if (!_settings.noImage)
@@ -1209,14 +1211,12 @@ public sealed partial class ExpandedPlayer : Page
                 try
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
-                    using var stream = HyPlayList.CoverStream.CloneStream();
-                    var isBright = await IsBrightAsync(stream);
+                    using var cover = HyPlayList.CoverStream.CloneStream();
                     Common.BrushManagement.IsBright = isBright;
-                    stream.Seek(0);
                     var bitmap = new BitmapImage();
-                    await bitmap.SetSourceAsync(stream);
+                    await bitmap.SetSourceAsync(cover);
                     ViewModel.Cover = bitmap;
-                    if (_settings.expandedPlayerBackgroundType == 0 && Background is not ImageBrush)
+                    if (_settings.expandedPlayerBackgroundType == BackgroundType.CoverBlur && Background is not ImageBrush)
                     {
                         var brush = new ImageBrush()
                         { Stretch = Stretch.UniformToFill };
@@ -1252,7 +1252,7 @@ public sealed partial class ExpandedPlayer : Page
                     }
                     else
                     {
-                        if (_settings.expandedPlayerBackgroundType != 0)
+                        if (_settings.expandedPlayerBackgroundType != BackgroundType.CoverBlur)
                         {
                             if (isBright)
                             {

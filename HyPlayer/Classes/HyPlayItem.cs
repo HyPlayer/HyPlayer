@@ -30,9 +30,8 @@ namespace HyPlayer.Classes
             {
                 if (disposing)
                 {
-                    // TODO: 释放托管状态(托管对象)
+                    AudioGraphPlaybackSource?.Dispose();
                 }
-                AudioGraphPlaybackSource?.Dispose();
                 NcmPlayableStream?.Dispose();
                 NcmPlayableStreamMIMEType = null;
                 AudioGraphPlaybackSource = null;
