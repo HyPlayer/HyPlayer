@@ -58,7 +58,6 @@ public sealed partial class App : Application
         UnhandledException += App_UnhandledException;
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
-        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         if (Common.Setting.themeRequest != ThemeRequest.Auto)
             RequestedTheme = Common.Setting.themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
         _ = InitializeThings();
@@ -99,6 +98,7 @@ public sealed partial class App : Application
         serviceCollection.AddTransient<ArtistPageViewModel>();
         serviceCollection.AddTransient<SongListViewModel>();
         serviceCollection.AddTransient<FavoriteViewModel>();
+        serviceCollection.AddTransient<AlbumPageViewModel>();
     }
     private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
     {
@@ -225,36 +225,10 @@ public sealed partial class App : Application
         }
     }
 
-    private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-    {
-#if RELEASE
-        //Crashes.TrackError((Exception)e.ExceptionObject);
-#endif
-
-        var Dialog = new ContentDialog
-        {
-            Title = "遇到了错误",
-            Content = e.ExceptionObject.ToString(),
-            PrimaryButtonText = "退出"
-        };
-        _ = Dialog.ShowAsync();
-    }
-
     private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-#if RELEASE
-        //Crashes.TrackError(e.Exception);
-#endif
+        Common.ErrorMessageList.Add(e.Exception.ToString());
         e.Handled = true;
-        /*
-        await new ContentDialog
-        {
-            Title = "发生错误",
-            Content = "Error: " + e.Message + "\r\n" + e.Exception.StackTrace,
-            CloseButtonText = "关闭",
-            DefaultButton = ContentDialogButton.Close
-        }.ShowAsync();
-        */
     }
 
     public static async Task InitializeJumpList()

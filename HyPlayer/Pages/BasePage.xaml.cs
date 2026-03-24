@@ -241,29 +241,21 @@ public sealed partial class BasePage : Page
     public async Task<bool> LoginDone()
     {
         LoginStatusResponse LoginStatus;
-        try
+        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userStatus", async () =>
         {
-            var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userStatus", async () =>
+            var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LoginStatusApi);
+            if (result.IsError)
             {
-                var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LoginStatusApi);
-                if (result.IsError)
-                {
-                    Common.AddToTeachingTipLists("登录失败", result.Error?.Message);
-                    return null;
-                }
-                return result.Value;
-            });
+                Common.AddToTeachingTipLists("登录失败", result.Error?.Message);
+                return null;
+            }
+            return result.Value;
+        });
 
-            if (result is null)
-                return false;
-
-            LoginStatus = result;
-        }
-        catch (Exception e)
-        {
-            Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
+        if (result is null)
             return false;
-        }
+
+        LoginStatus = result;
 
         if (LoginStatus.Account == null) return false;
         InfoBarLoginHint.IsOpen = true;
@@ -315,98 +307,84 @@ public sealed partial class BasePage : Page
 
     private static async Task LoadMyLikelist()
     {
-        try
+        var ids = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
         {
-            var ids = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
+            var js = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = Common.LoginedUser!.Id });
+            if (js.IsError)
             {
-                var js = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = Common.LoginedUser!.Id });
-                if (js.IsError)
-                {
-                    Common.AddToTeachingTipLists("获取喜欢列表失败", js.Error?.Message);
-                    return null;
-                }
+                Common.AddToTeachingTipLists("获取喜欢列表失败", js.Error?.Message);
+                return null;
+            }
 
-                return js.Value;
-            });
+            return js.Value;
+        });
 
-            Common.LikedSongs = ids?.TrackIds?.ToList() ?? [];
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
+        Common.LikedSongs = ids?.TrackIds?.ToList() ?? [];
     }
 
     public async Task LoadSongList()
     {
         //加载用户歌单
         var nowitem = NavItemsMyList;
-        try
+        var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "mySongList", async () =>
         {
-            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "mySongList", async () =>
+            var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserPlaylistApi,
+                new UserPlaylistRequest() { Uid = Common.LoginedUser!.Id });
+            if (json.IsError)
             {
-                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserPlaylistApi,
-                    new UserPlaylistRequest() { Uid = Common.LoginedUser!.Id });
-                if (json.IsError)
-                {
-                    Common.AddToTeachingTipLists("获取歌单失败", json.Error?.Message);
-                    return null;
-                }
+                Common.AddToTeachingTipLists("获取歌单失败", json.Error?.Message);
+                return null;
+            }
 
-                return json.Value;
-            });
+            return json.Value;
+        });
 
-            NavItemsLikeList.MenuItems.Clear();
-            NavItemsMyList.MenuItems.Clear();
-            NavItemsLikeList.Visibility = Visibility.Visible;
-            NavItemsAddPlaylist.Visibility = Visibility.Visible;
-            NavItemsMyList.Visibility = Visibility.Visible;
-            NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
-            Common.MySongLists.Clear();
-            var isliked = false;
-            foreach (var jToken in jv?.Playlists ?? [])
-                if (jToken.Subscribed)
+        NavItemsLikeList.MenuItems.Clear();
+        NavItemsMyList.MenuItems.Clear();
+        NavItemsLikeList.Visibility = Visibility.Visible;
+        NavItemsAddPlaylist.Visibility = Visibility.Visible;
+        NavItemsMyList.Visibility = Visibility.Visible;
+        NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
+        Common.MySongLists.Clear();
+        var isliked = false;
+        foreach (var jToken in jv?.Playlists ?? [])
+            if (jToken.Subscribed)
+            {
+                var item = new NavigationViewItem
                 {
-                    var item = new NavigationViewItem
+                    Content = jToken.Name,
+                    Tag = "Playlist" + jToken.Id,
+                    Icon = new FontIcon
                     {
-                        Content = jToken.Name,
-                        Tag = "Playlist" + jToken.Id,
-                        Icon = new FontIcon
-                        {
-                            Glyph = "\uE142"
-                        }
-                    };
-                    NavItemsLikeList.MenuItems.Add(item);
-                }
-                else
-                {
-                    Common.MySongLists.Add(jToken.MapToNCPlayList());
-                    if (!isliked)
-                    {
-                        isliked = true;
-                        continue;
+                        Glyph = "\uE142"
                     }
-
-                    var item = new NavigationViewItem
-                    {
-                        Icon = new FontIcon
-                        {
-                            Glyph = jToken.Privacy == 0 ? "\uE142" : "\uE72E"
-                        },
-                        Content = jToken.Name,
-                        Tag = "Playlist" + jToken.Id,
-                    };
-                    if (jToken.Privacy == 0)
-                        item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 211, 39, 100));
-
-                    NavItemsMyList.MenuItems.Add(item);
+                };
+                NavItemsLikeList.MenuItems.Add(item);
+            }
+            else
+            {
+                Common.MySongLists.Add(jToken.MapToNCPlayList());
+                if (!isliked)
+                {
+                    isliked = true;
+                    continue;
                 }
 
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
+                var item = new NavigationViewItem
+                {
+                    Icon = new FontIcon
+                    {
+                        Glyph = jToken.Privacy == 0 ? "\uE142" : "\uE72E"
+                    },
+                    Content = jToken.Name,
+                    Tag = "Playlist" + jToken.Id,
+                };
+                if (jToken.Privacy == 0)
+                    item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 211, 39, 100));
+
+                NavItemsMyList.MenuItems.Add(item);
+            }
+
     }
 
     private async void NavMain_OnSelectionChanged(NavigationView sender,
@@ -704,21 +682,14 @@ public sealed partial class BasePage : Page
             return;
         }
 
-        try
+        var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SearchSuggestionApi,
+                                                    new SearchSuggestionRequest() { Keyword = sender.Text });
+        if (json.IsError)
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SearchSuggestionApi,
-                                                        new SearchSuggestionRequest() { Keyword = sender.Text });
-            if (json.IsError)
-            {
-                Common.AddToTeachingTipLists("获取推荐词失败", json.Error.Message);
-                return;
-            }
-            sender.ItemsSource = json.Value.Result.AllMatch?.Select(t => t.Keyword).ToList();
+            Common.AddToTeachingTipLists("获取推荐词失败", json.Error.Message);
+            return;
         }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
+        sender.ItemsSource = json.Value.Result.AllMatch?.Select(t => t.Keyword).ToList();
     }
 
     private void OnChangePlayItem(HyPlayItem item)

@@ -23,9 +23,9 @@ namespace HyPlayer.Classes
                 var a = pixels[offset + 3];
                 if (a == 0) continue;
                 var color = new Vector3(r, g, b);
-                if (vector.ContainsKey(color))
+                if (vector.TryGetValue(color, out int value))
                 {
-                    vector[color]++;
+                    vector[color] = ++value;
                 }
                 else
                 {

@@ -151,7 +151,7 @@ public sealed partial class SongsList : UserControl
             {
                 Songs?.CollectionChanged -= Songs_CollectionChanged;
                 SetValue(SongsProperty, value);
-                Songs.CollectionChanged += Songs_CollectionChanged;
+                Songs?.CollectionChanged += Songs_CollectionChanged;
             }
             catch
             {
@@ -173,24 +173,6 @@ public sealed partial class SongsList : UserControl
     }
 
     public bool IsAddingSongToPlaylist = false;
-
-    private async Task IndicateNowPlayingItem()
-    {
-        var tryCount = 5;
-        while (--tryCount > 0)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            try
-            {
-                HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
-                break;
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-        }
-    }
 
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
     {
@@ -271,7 +253,7 @@ public sealed partial class SongsList : UserControl
             HyPlayList.NowPlaying + 1);
         if (HyPlayList.NowPlayType == PlayMode.Shuffled)
         {
-            List<int> playItemIndexes = new List<int>();
+            List<int> playItemIndexes = [];
             foreach (var item in playItems)
             {
                 var index = HyPlayList.List.IndexOf(item);
@@ -291,7 +273,7 @@ public sealed partial class SongsList : UserControl
             }
         }
 
-        if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Count() > 0)
+        if (SongContainer.SelectedItems.Cast<NCSong>().Any(t => !t.IsAvailable))
         {
             var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable)
                 .Select(t => t.SongName).ToArray();
@@ -337,7 +319,7 @@ public sealed partial class SongsList : UserControl
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
     {
-        foreach (NCSong ncsong in SongContainer.SelectedItems)
+        foreach (NCSong ncsong in SongContainer.SelectedItems.Cast<NCSong>())
             DownloadManager.AddDownload(ncsong);
     }
 
@@ -401,10 +383,6 @@ public sealed partial class SongsList : UserControl
             : new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
     }
 
-    private void FilterBox_OnTextChanged(object sender, RoutedEventArgs e)
-    {
-    }
-
     private bool Filter(NCSong ncsong)
     {
         if (ncsong == null) return false;
@@ -415,17 +393,9 @@ public sealed partial class SongsList : UserControl
                (ncsong.Alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
     }
 
-    private GridLength GetSearchHeight(bool IsEnabled)
-    {
-        if (IsEnabled)
-            return new GridLength(35);
-        return new GridLength(0);
-    }
-
     private void SongListRoot_Loaded(object sender, RoutedEventArgs e)
     {
         MultiSelect = false;
-        _ = IndicateNowPlayingItem();
     }
 
     private async void SongContainer_ItemClick(object sender, ItemClickEventArgs e)
@@ -486,10 +456,6 @@ public sealed partial class SongsList : UserControl
         IsAddingSongToPlaylist = false;
     }
 
-    private void FocusingCurrent_OnClick(object sender, RoutedEventArgs e)
-    {
-    }
-
     private void FilterBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         var vpos = -1;
@@ -528,13 +494,5 @@ public sealed partial class SongsList : UserControl
             default:
                 break;
         }
-    }
-
-    private void FocusingCurrent_OnClicked(object sender, RoutedEventArgs e)
-    {
-        if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
-        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.Id);
-        if (idx == -1) return;
-        SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
     }
 }

@@ -67,30 +67,23 @@ public sealed partial class MVPage : Page
     private async Task LoadRelateive()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        try
-        {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogRcmdFeedListApi,
+        var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogRcmdFeedListApi,
                 new MlogRcmdFeedListRequest()
                 {
                     Id = MVId,
                     SongId = songid,
                     Limit = 10
                 });
-            if (json.IsError)
-            {
-                Common.AddToTeachingTipLists("加载相关视频时出错", json.Error.Message);
-                return;
-            }
-
-            foreach (var jToken in json.Value.Data?.Feeds ?? [])
-                sources.Add(jToken.Resource?.BaseData.MapToNcMlog());
-
-            RelativeList.ItemsSource = sources;
-        }
-        catch (Exception ex)
+        if (json.IsError)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            Common.AddToTeachingTipLists("加载相关视频时出错", json.Error.Message);
+            return;
         }
+
+        foreach (var jToken in json.Value.Data?.Feeds ?? [])
+            sources.Add(jToken.Resource?.BaseData.MapToNcMlog());
+
+        RelativeList.ItemsSource = sources;
 
         RelativeList.SelectedIndex = 0;
     }
@@ -151,116 +144,95 @@ public sealed partial class MVPage : Page
     {
 
         //纯MV
-        try
+        _cancellationToken.ThrowIfCancellationRequested();
+        LoadingControl.IsLoading = true;
+        string url;
+        if (Regex.IsMatch(MVId, "^[0-9]*$"))
         {
-            _cancellationToken.ThrowIfCancellationRequested();
-            LoadingControl.IsLoading = true;
-            string url;
-            if (Regex.IsMatch(MVId, "^[0-9]*$"))
-            {
-                var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.VideoUrlApi,
-                    new VideoUrlRequest()
-                    {
-                        Id = MVId,
-                        Resolution = mvquality
-                    }, _cancellationToken);
-                if (json.IsError)
+            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.VideoUrlApi,
+                new VideoUrlRequest()
                 {
-                    Common.AddToTeachingTipLists("加载视频时出错", json.Error.Message);
-                    return;
-                }
-
-                url = json.Value.Data?.Url;
-            }
-            else
+                    Id = MVId,
+                    Resolution = mvquality
+                }, _cancellationToken);
+            if (json.IsError)
             {
-                var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogUrlApi,
-                    new MlogUrlRequest()
-                    {
-                        Id = MVId,
-                        Resolution = mvquality
-                    }, _cancellationToken);
-                if (json.IsError)
-                {
-                    Common.AddToTeachingTipLists("加载视频时出错", json.Error.Message);
-                    return;
-                }
-
-                url = json.Value.Data?.GetValueOrDefault(MVId).UrlInfo?.Url;
+                Common.AddToTeachingTipLists("加载视频时出错", json.Error.Message);
+                return;
             }
 
-            MediaPlayerElement.Source = MediaSource.CreateFromUri(new Uri(url!));
-            var mediaPlayer = MediaPlayerElement.MediaPlayer;
-            mediaPlayer.Play();
-            LoadingControl.IsLoading = false;
+            url = json.Value.Data?.Url;
         }
-        catch (Exception ex)
+        else
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogUrlApi,
+                new MlogUrlRequest()
+                {
+                    Id = MVId,
+                    Resolution = mvquality
+                }, _cancellationToken);
+            if (json.IsError)
+            {
+                Common.AddToTeachingTipLists("加载视频时出错", json.Error.Message);
+                return;
+            }
+
+            url = json.Value.Data?.GetValueOrDefault(MVId).UrlInfo?.Url;
         }
+
+        MediaPlayerElement.Source = MediaSource.CreateFromUri(new Uri(url!));
+        var mediaPlayer = MediaPlayerElement.MediaPlayer;
+        mediaPlayer.Play();
+        LoadingControl.IsLoading = false;
     }
 
     private async Task LoadVideoInfo()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        if (Regex.IsMatch(MVId, "^[0-9]*$"))
+        if (MvIdRegex().IsMatch(MVId))
         {
-            try
+            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.VideoDetailApi,
+                   new VideoDetailRequest()
+                   {
+                       Id = MVId
+                   }, _cancellationToken);
+            if (json.IsError)
             {
-                var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.VideoDetailApi,
-                    new VideoDetailRequest()
-                    {
-                        Id = MVId
-                    }, _cancellationToken);
-                if (json.IsError)
-                {
-                    Common.AddToTeachingTipLists("加载视频信息时出错", json.Error.Message);
-                    return;
-                }
-
-                TextBoxVideoName.Text = json.Value?.Data?.Resource?.Data?.Name;
-                TextBoxSinger.Text = string.Join(" / ", json.Value?.Data?.Resource?.Data?.ArtistName);
-                TextBoxDesc.Text = json.Value?.Data?.Resource?.Data?.Description;
-                TextBoxOtherInfo.Text =
-                    $"发布时间: {json.Value?.Data?.Resource?.Data?.PublishTime} | 播放量: {json.Value?.Data?.Resource?.Data?.PlayCount}次 | 收藏量: {json.Value?.Data?.Resource?.Data?.SubCount}次";
-                foreach (var br in json.Value?.Data?.Resource?.Data?.Brs ?? [])
-                {
-                    VideoQualityBox.Items?.Add(br.Br.ToString());
-                }
-
-                VideoQualityBox.SelectedItem = json.Value?.Data?.Resource?.Mp?.PlayResolution.ToString();
+                Common.AddToTeachingTipLists("加载视频信息时出错", json.Error.Message);
+                return;
             }
-            catch (Exception ex)
+
+            TextBoxVideoName.Text = json.Value?.Data?.Resource?.Data?.Name;
+            TextBoxSinger.Text = string.Join(" / ", json.Value?.Data?.Resource?.Data?.ArtistName);
+            TextBoxDesc.Text = json.Value?.Data?.Resource?.Data?.Description;
+            TextBoxOtherInfo.Text =
+                $"发布时间: {json.Value?.Data?.Resource?.Data?.PublishTime} | 播放量: {json.Value?.Data?.Resource?.Data?.PlayCount}次 | 收藏量: {json.Value?.Data?.Resource?.Data?.SubCount}次";
+            foreach (var br in json.Value?.Data?.Resource?.Data?.Brs ?? [])
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                VideoQualityBox.Items?.Add(br.Br.ToString());
             }
+
+            VideoQualityBox.SelectedItem = json.Value?.Data?.Resource?.Mp?.PlayResolution.ToString();
         }
         else
         {
-            try
-            {
-                var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogDetailApi,
+            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogDetailApi,
                     new MlogDetailRequest()
                     {
                         MlogId = MVId
                     }, _cancellationToken);
-                if (json.IsError)
-                {
-                    Common.AddToTeachingTipLists("加载视频信息时出错", json.Error.Message);
-                    return;
-                }
-
-                TextBoxVideoName.Text = json.Value?.Data?.Resource?.Content?.Title;
-
-                TextBoxSinger.Text = json.Value?.Data?.Resource?.Profile?.Nickname;
-                TextBoxDesc.Text = json.Value?.Data?.Resource?.Content?.Text;
-                TextBoxOtherInfo.Text =
-                    $"发布时间: {json.Value?.Data?.Resource?.PublishTime} | 播放量: {json.Value?.Data?.Resource?.LikedCount}次";
-            }
-            catch (Exception ex)
+            if (json.IsError)
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists("加载视频信息时出错", json.Error.Message);
+                return;
             }
+
+            TextBoxVideoName.Text = json.Value?.Data?.Resource?.Content?.Title;
+
+            TextBoxSinger.Text = json.Value?.Data?.Resource?.Profile?.Nickname;
+            TextBoxDesc.Text = json.Value?.Data?.Resource?.Content?.Text;
+            TextBoxOtherInfo.Text =
+                $"发布时间: {json.Value?.Data?.Resource?.PublishTime} | 播放量: {json.Value?.Data?.Resource?.LikedCount}次";
         }
     }
 
@@ -275,4 +247,7 @@ public sealed partial class MVPage : Page
         MVId = (RelativeList.SelectedItem is NCMlog ? (NCMlog)RelativeList.SelectedItem : default).Id;
         LoadThings();
     }
+
+    [GeneratedRegex("^[0-9]*$")]
+    private static partial Regex MvIdRegex();
 }

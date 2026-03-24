@@ -69,3 +69,8 @@ public class NCAlbumSong : NCSong
 {
     public string DiscName { get; set; }
 }
+
+public partial class DiscSongs(IEnumerable<NCAlbumSong> items) : List<NCAlbumSong>(items)
+{
+    public string Key { get; set; }
+}

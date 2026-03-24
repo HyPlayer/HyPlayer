@@ -148,9 +148,9 @@ public sealed partial class Settings : Page
             await dl.StartAsync().AsTask(process);
             if (dl.Progress.TotalBytesToReceive > 5000) _ = OnRomajiDownloadDone(dl);
         }
-        catch (Exception E)
+        catch (Exception e)
         {
-            RomajiStatus.Header = "下载错误 " + E.Message;
+            RomajiStatus.Header = "下载错误 " + e.Message;
         }
     }
 

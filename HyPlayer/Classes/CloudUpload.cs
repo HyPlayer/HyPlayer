@@ -246,9 +246,9 @@ internal class CloudUpload
                 offset++;
             }
         }
-        catch (Exception ex) when (!(ex is OperationCanceledException))
+        catch (OperationCanceledException)
         {
-            throw new HttpRequestException("Upload failed", ex);
+            //Ignore
         }
     }
 

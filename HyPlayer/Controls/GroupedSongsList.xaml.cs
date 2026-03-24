@@ -51,7 +51,6 @@ public sealed partial class GroupedSongsList : UserControl
     {
         InitializeComponent();
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
-        _ = IndicateNowPlayingItem();
     }
 
     private void GroupedSongsList_Unloaded(object sender, RoutedEventArgs e)
@@ -66,6 +65,7 @@ public sealed partial class GroupedSongsList : UserControl
         {
             SetValue(GroupedSongsProperty, value);
             SongContainer.SelectedIndex = -1;
+            HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
         }
     }
 
@@ -98,45 +98,19 @@ public sealed partial class GroupedSongsList : UserControl
         set => SetValue(ListSourceProperty, value);
     }
 
-    private async Task IndicateNowPlayingItem()
-    {
-        var tryCount = 5;
-        while (--tryCount > 0)
-        {
-            SongContainer.SelectedItem = null;
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            try
-            {
-                HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
-                break;
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-        }
-    }
-
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
     {
         _ = Common.Invoke(() =>
         {
-            if (playitem.PlayItem == null) return;
+            SongContainer.SelectedItem = null;
+            if (playitem.PlayItem == null || GroupedSongs?.Source == null) return;
             foreach (var disc in GroupedSongs.Source as IEnumerable<DiscSongs>)
             {
-                if (GroupedSongs?.Source == null) return;
+                var nowPlayingItem = disc.FirstOrDefault(t => t.SongId == playitem.Id);
+                if (nowPlayingItem != null)
                 {
-
-                    var nowPlayingItem = disc.Where(t => t.SongId == playitem.Id).FirstOrDefault();
-                    if (nowPlayingItem != null)
-                    {
-                        SongContainer.SelectedItem = nowPlayingItem;
-                        break;
-                    }
-                    else if (SongContainer.SelectedItem != null)
-                    {
-                        SongContainer.SelectedItem = null;
-                    }
+                    SongContainer.SelectedItem = nowPlayingItem;
+                    break;
                 }
             }
         });

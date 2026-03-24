@@ -30,14 +30,7 @@ public static class LrcConverter
         if (Common.Setting.OptimizeLyric)
             foreach (var lyricEnhancer in LyricEnhancers)
             {
-                try
-                {
-                    alrc = lyricEnhancer.Enhance(true, alrc);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
+                alrc = lyricEnhancer.Enhance(true, alrc);
             }
         foreach (var alrcLine in alrc.Lines)
         {

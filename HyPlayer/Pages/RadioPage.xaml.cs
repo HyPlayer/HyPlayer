@@ -60,9 +60,7 @@ public sealed partial class RadioPage : Page
     private async Task LoadProgram()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        try
-        {
-            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.Id + "_" + page + asc,
+        var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.Id + "_" + page + asc,
                 async () =>
                 {
                     var rest = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
@@ -90,20 +88,14 @@ public sealed partial class RadioPage : Page
                 });
 
 
-            NextPage.Visibility = json.Data?.More is true ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var jToken in json.Data?.Programs ?? [])
-            {
-                _cancellationToken.ThrowIfCancellationRequested();
-                var song = jToken.MapToNCFmItem();
-                song.Order = i++;
-                song.TrackId = i;
-                Songs.Add(song);
-            }
-        }
-        catch (Exception ex)
+        NextPage.Visibility = json.Data?.More is true ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var jToken in json.Data?.Programs ?? [])
         {
-            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            _cancellationToken.ThrowIfCancellationRequested();
+            var song = jToken.MapToNCFmItem();
+            song.Order = i++;
+            song.TrackId = i;
+            Songs.Add(song);
         }
     }
 
@@ -111,27 +103,22 @@ public sealed partial class RadioPage : Page
     {
         base.OnNavigatedTo(e);
         if (e.Parameter is string rid)
-            try
+        {
+            var json1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioInfo, rid, async () =>
             {
-                var json1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioInfo, rid, async () =>
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelDetailApi,
+                    new DjChannelDetailRequest() { Id = rid }, _cancellationToken);
+                if (json.IsError)
                 {
-                    var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelDetailApi,
-                        new DjChannelDetailRequest() { Id = rid }, _cancellationToken);
-                    if (json.IsError)
-                    {
-                        Common.AddToTeachingTipLists("获取电台信息失败", json.Error?.Message ?? "未知错误");
-                        return null;
-                    }
+                    Common.AddToTeachingTipLists("获取电台信息失败", json.Error?.Message ?? "未知错误");
+                    return null;
+                }
 
-                    return json.Value;
-                });
+                return json.Value;
+            });
 
-                Radio = json1.RadioData.MapToNCRadio();
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
+            Radio = json1.RadioData.MapToNCRadio();
+        }
 
         if (e.Parameter is NCRadio radio) Radio = radio;
 
@@ -189,16 +176,9 @@ public sealed partial class RadioPage : Page
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            await HyPlayList.AppendNcSource("rd" + Radio.Id);
-            if (asc) HyPlayList.List.Reverse();
-            HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
+        await HyPlayList.AppendNcSource("rd" + Radio.Id);
+        if (asc) HyPlayList.List.Reverse();
+        HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
     }
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
@@ -223,14 +203,11 @@ public sealed partial class RadioPage : Page
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
         var result = new List<NCSong>();
-        try
+        bool? hasMore = true;
+        var page = 0;
+        while (hasMore is true)
         {
-            bool? hasMore = true;
-            var page = 0;
-            while (hasMore is true)
-                try
-                {
-                    var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.Id + "_" + page + asc,
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.Id + "_" + page + asc,
                         async () =>
                         {
                             var rest = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
@@ -249,27 +226,17 @@ public sealed partial class RadioPage : Page
 
                             return rest.Value;
                         });
-                    hasMore = json?.Data?.More is true;
-                    foreach (var jToken in json?.Data?.Programs ?? [])
-                    {
-                        _cancellationToken.ThrowIfCancellationRequested();
-                        var song = jToken.MapToNCFmItem();
-                        song.Order = i++;
-                        song.TrackId = i;
-                        result.Add(song);
-                    }
+            hasMore = json?.Data?.More is true;
+            foreach (var jToken in json?.Data?.Programs ?? [])
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
+                var song = jToken.MapToNCFmItem();
+                song.Order = i++;
+                song.TrackId = i;
+                result.Add(song);
+            }
 
-                    page++;
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message,
-                        (ex.InnerException ?? new Exception()).Message);
-                }
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            page++;
         }
 
         DownloadManager.AddDownload(result);

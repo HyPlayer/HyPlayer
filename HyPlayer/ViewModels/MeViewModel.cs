@@ -110,15 +110,7 @@ namespace HyPlayer.ViewModels
                 LikedPlaylist = likedList;
                 MyPlaylist = myList;
             }
-            catch (TaskCanceledException)
-            {
-                //Ignore
-            }
-            catch (OperationCanceledException)
-            {
-                //Ignore
-            }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
             {
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }

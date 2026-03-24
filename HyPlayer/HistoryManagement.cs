@@ -121,7 +121,7 @@ namespace HyPlayer
             }
             catch (Exception e)
             {
-                Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists("储存歌曲记录时发生错误", e.Message);
             }
 
             return [];
@@ -153,28 +153,20 @@ namespace HyPlayer
             {
                 var nowIds = trackIds.GetRange(nowIndex * 500,
                     Math.Min(500, trackIds.Count - nowIndex * 500));
-                try
+                var json = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.SongDetailApi,
+                         new SongDetailRequest()
+                         {
+                             IdList = nowIds
+                         });
+                nowIndex++;
+                if (json.IsError)
                 {
-                    var json = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.SongDetailApi,
-                        new SongDetailRequest()
-                        {
-                            IdList = nowIds
-                        });
-                    nowIndex++;
-                    if (json.IsError)
-                    {
-                        Common.AddToTeachingTipLists("加载当前播放失败", json.Error.Message);
-                        continue;
-                    }
+                    Common.AddToTeachingTipLists("加载当前播放失败", json.Error.Message);
+                    continue;
+                }
 
-                    var ncSongs = json.Value.Songs?.Select(t => t.MapToNcSong()).ToList();
-                    retsongs.AddRange(ncSongs ?? []);
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message,
-                        (ex.InnerException ?? new Exception()).Message);
-                }
+                var ncSongs = json.Value.Songs?.Select(t => t.MapToNcSong()).ToList();
+                retsongs.AddRange(ncSongs ?? []);
             }
 
             return retsongs;

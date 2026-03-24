@@ -33,110 +33,94 @@ namespace HyPlayer.ViewModels
 
         public async Task InitializeArtistInfo(string artistId)
         {
-            try
+            if (artistId is null)
             {
-                if (artistId is null)
-                {
-                    Common.AddToTeachingTipLists("艺人ID为空", "请检查传入的参数是否正确");
-                    return;
-                }
-                var res = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
-                {
-                    var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistDetailApi,
-                        new ArtistDetailRequest() { ArtistId = artistId });
-                    if (resp.IsError && resp.Error?.ErrorCode.ToString() == "404")
-                    {
-                        Common.AddToTeachingTipLists("艺人不存在", null);
-                        return null;
-                    }
-                    if (resp.IsError)
-                    {
-                        Common.AddToTeachingTipLists("获取艺人信息失败", resp.Error?.Message);
-                        return null;
-                    }
-
-                    return resp.Value;
-                });
-
-                if (res is null)
-                {
-                    return;
-                }
-
-                Artist = res?.Artist.MapToNcArtist();
-                if (res?.Artist?.PicUrl?.StartsWith("http") is true)
-                {
-                    if (Common.Setting.noImage)
-                    {
-                        Image = null;
-                    }
-
-                    BitmapImage image = new BitmapImage(new Uri(res.Artist.PicUrl + "?param=" + StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
-                    Image = image;
-                }
-                LoadHotSongs().SafeFireAndForget();
-                LoadSongs().SafeFireAndForget();
-                LoadAlbum().SafeFireAndForget();
+                Common.AddToTeachingTipLists("艺人ID为空", "请检查传入的参数是否正确");
+                return;
             }
-            catch (Exception ex)
+            var res = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistDetailApi,
+                    new ArtistDetailRequest() { ArtistId = artistId });
+                if (resp.IsError && resp.Error?.ErrorCode.ToString() == "404")
+                {
+                    Common.AddToTeachingTipLists("艺人不存在", null);
+                    return null;
+                }
+                if (resp.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取艺人信息失败", resp.Error?.Message);
+                    return null;
+                }
+
+                return resp.Value;
+            });
+
+            if (res is null)
+            {
+                return;
             }
+
+            Artist = res?.Artist.MapToNcArtist();
+            if (res?.Artist?.PicUrl?.StartsWith("http") is true)
+            {
+                if (Common.Setting.noImage)
+                {
+                    Image = null;
+                }
+
+                BitmapImage image = new(new Uri(res.Artist.PicUrl + "?param=" + StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
+                Image = image;
+            }
+            LoadHotSongs().SafeFireAndForget();
+            LoadSongs().SafeFireAndForget();
+            LoadAlbum().SafeFireAndForget();
         }
         private async Task LoadHotSongs()
         {
-            try
+
+            HotSongs.Clear();
+            var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, Artist.Id, async () =>
             {
-                HotSongs.Clear();
-                var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, Artist.Id, async () =>
+                var j1res = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistTopSongApi,
+                    new ArtistTopSongRequest() { ArtistId = Artist.Id });
+                if (j1res.IsError)
                 {
-                    var j1res = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistTopSongApi,
-                        new ArtistTopSongRequest() { ArtistId = Artist.Id });
-                    if (j1res.IsError)
-                    {
-                        Common.AddToTeachingTipLists("获取歌手热门歌曲失败", j1res.Error?.Message);
-                        return null;
-                    }
-
-                    return j1res.Value?.Songs;
-                });
-                var idx = 0;
-                var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongDetail, Artist.Id, async () =>
-                {
-                    var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
-                        new SongDetailRequest() { IdList = j1?.Select(t => t.Id).ToList() });
-                    if (json.IsError)
-                    {
-                        Common.AddToTeachingTipLists("获取歌手歌曲信息失败", json.Error.Message);
-                        return null;
-                    }
-
-                    return json.Value;
-                });
-                if (jv is null)
-                {
-                    return;
+                    Common.AddToTeachingTipLists("获取歌手热门歌曲失败", j1res.Error?.Message);
+                    return null;
                 }
 
-                foreach (var item in jv?.Songs ?? [])
+                return j1res.Value?.Songs;
+            });
+            var idx = 0;
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongDetail, Artist.Id, async () =>
+            {
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
+                    new SongDetailRequest() { IdList = j1?.Select(t => t.Id).ToList() });
+                if (json.IsError)
                 {
-                    var ncSong = item.MapToNcSong();
-                    ncSong.Order = idx++;
-                    HotSongs.Add(ncSong);
+                    Common.AddToTeachingTipLists("获取歌手歌曲信息失败", json.Error.Message);
+                    return null;
                 }
+
+                return json.Value;
+            });
+            if (jv is null)
+            {
+                return;
             }
-            catch (Exception ex)
+
+            foreach (var item in jv?.Songs ?? [])
             {
-                if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                var ncSong = item.MapToNcSong();
+                ncSong.Order = idx++;
+                HotSongs.Add(ncSong);
             }
         }
 
         private async Task LoadSongs()
         {
-            try
-            {
-                var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial, Artist.Id + "_" + CurrentPage,
+            var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial, Artist.Id + "_" + CurrentPage,
                     async () =>
                     {
                         var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistSongsApi,
@@ -149,21 +133,15 @@ namespace HyPlayer.ViewModels
 
                         return resp.Value;
                     });
-                var idx = 0;
-                foreach (var item in j1.Songs)
-                {
-                    var ncSong = item.MapNcSong();
-                    ncSong.IsAvailable = item.Privilege.St == 0;
-                    ncSong.Order = CurrentPage * 50 + idx++;
-                    AllSongs.Add(ncSong);
-                }
-                HasNextPage = j1.HasMore;
-            }
-            catch (Exception ex)
+            var idx = 0;
+            foreach (var item in j1.Songs)
             {
-                if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                var ncSong = item.MapNcSong();
+                ncSong.IsAvailable = item.Privilege.St == 0;
+                ncSong.Order = CurrentPage * 50 + idx++;
+                AllSongs.Add(ncSong);
             }
+            HasNextPage = j1.HasMore;
         }
         private async Task LoadAlbum()
         {
@@ -204,15 +182,7 @@ namespace HyPlayer.ViewModels
                 HasNextPage = jv?.HasMore ?? false;
                 HasPreviousPage = CurrentPage > 0;
             }
-            catch (TaskCanceledException)
-            {
-                //Ignore
-            }
-            catch (OperationCanceledException)
-            {
-                //Ignore
-            }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
             {
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }

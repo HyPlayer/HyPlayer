@@ -132,15 +132,8 @@ DoubleAnimation verticalAnimation;
     public void LoadPlayingFile(HyPlayItem mpi)
     {
         if (HyPlayList.NowPlayingItem == null) return;
-        try
-        {
-            _ = Common.Invoke(() => ApplicationView.GetForCurrentView().Title =
+        _ = Common.Invoke(() => ApplicationView.GetForCurrentView().Title =
                 $"{HyPlayList.NowPlayingItem.Name} - {HyPlayList.NowPlayingItem.ArtistString}");
-        }
-        catch (Exception)
-        {
-            //IGNORE
-        }
 
         //SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
 
@@ -268,51 +261,32 @@ DoubleAnimation verticalAnimation;
 
     public void RefreshSongList(bool isShuffle = false)
     {
-        try
+        List<HyPlayItem> targetingList;
+        int targetingIndex;
+        // 新版随机播放算法
+        if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
+            Common.Setting.displayShuffledList)
         {
-            List<HyPlayItem> targetingList;
-            int targetingIndex;
-            // 新版随机播放算法
-            if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
-                Common.Setting.displayShuffledList)
-            {
-                targetingIndex = HyPlayList.ShufflingIndex;
-                targetingList = [.. HyPlayList.ShuffleList.Select(t => HyPlayList.List[t])];
-                PlayListTitle.Text = "随机播放列表 (共" + targetingList.Count + "首)";
-            }
-            else
-            {
-                targetingIndex = HyPlayList.NowPlaying;
-                targetingList = HyPlayList.List;
-                PlayListTitle.Text = "播放列表 (共" + targetingList.Count + "首)";
-            }
-
-            /*
-            var vpos = -1;
-            for (var b = 0; b < PlayItems.Count; b++)
-                if (!targetingList.Contains(PlayItems[b]))
-                    PlayItems.RemoveAt(b);
-
-            foreach (var t in targetingList)
-            {
-                vpos++;
-                if (!PlayItems.Contains(t)) PlayItems.Insert(vpos, t);
-            }
-            */
-
-            realSelectSong = false;
-            PlayItems.Clear();
-            targetingList.ForEach(PlayItems.Add);
-            realSelectSong = true;
-
-            if (targetingIndex == -1 || targetingIndex >= PlayItems.Count) return;
-            realSelectSong = false;
-            ListBoxPlayList.SelectedIndex = targetingIndex;
-            realSelectSong = true;
+            targetingIndex = HyPlayList.ShufflingIndex;
+            targetingList = [.. HyPlayList.ShuffleList.Select(t => HyPlayList.List[t])];
+            PlayListTitle.Text = "随机播放列表 (共" + targetingList.Count + "首)";
         }
-        catch
+        else
         {
+            targetingIndex = HyPlayList.NowPlaying;
+            targetingList = HyPlayList.List;
+            PlayListTitle.Text = "播放列表 (共" + targetingList.Count + "首)";
         }
+
+        realSelectSong = false;
+        PlayItems.Clear();
+        targetingList.ForEach(PlayItems.Add);
+        realSelectSong = true;
+
+        if (targetingIndex == -1 || targetingIndex >= PlayItems.Count) return;
+        realSelectSong = false;
+        ListBoxPlayList.SelectedIndex = targetingIndex;
+        realSelectSong = true;
     }
 
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
@@ -400,7 +374,7 @@ DoubleAnimation verticalAnimation;
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
                 Common.PageExpandedPlayer.StartExpandAnimation();
             }
-            catch (Exception)
+            catch
             {
                 //ignore
             }
@@ -483,18 +457,12 @@ DoubleAnimation verticalAnimation;
 
     private void PlayListRemove_OnClick(object sender, RoutedEventArgs e)
     {
-        try
+        if (sender is Button btn)
         {
-            if (sender is Button btn)
-            {
-                var item = btn.DataContext as HyPlayItem;
-                var index = HyPlayList.List.IndexOf(item);
-                HyPlayList.RemoveSong(index);
-                RefreshSongList();
-            }
-        }
-        catch
-        {
+            var item = btn.DataContext as HyPlayItem;
+            var index = HyPlayList.List.IndexOf(item);
+            HyPlayList.RemoveSong(index);
+            RefreshSongList();
         }
     }
 
@@ -818,6 +786,7 @@ DoubleAnimation verticalAnimation;
                 }
                 catch
                 {
+                    //Ignore
                 }
             }
         });
@@ -836,32 +805,28 @@ DoubleAnimation verticalAnimation;
             : "\uE006";
     }
 
-    private void HyPlayListOnOnLoginDone()
+    private async void HyPlayListOnOnLoginDone()
     {
-        _ = Task.Run(async () =>
+        if (HyPlayList.PlaySourceId == "local") return;
+        try
         {
-            if (HyPlayList.PlaySourceId == "local") return;
-            try
+            var list = await HistoryManagement.GetcurPlayingListHistory();
+            if (list.Count > 0)
             {
-                var list = await HistoryManagement.GetcurPlayingListHistory();
-                if (list.Count > 0)
+                var success = int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"]?.ToString(),
+                    out var result);
+                if (success)
                 {
-                    var success = int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"]?.ToString(),
-                        out var result);
-                    if (success)
-                    {
-                        HyPlayList.NowPlaying = result;
-                        HyPlayList.AppendNcSongs(list);
-                        HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
-                    }
+                    HyPlayList.NowPlaying = result;
+                    HyPlayList.AppendNcSongs(list);
+                    HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
                 }
             }
-            catch
-            {
-                // ignored
-            }
-        });
-
+        }
+        catch
+        {
+            // ignored
+        }
     }
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)

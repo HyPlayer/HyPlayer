@@ -76,47 +76,40 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private async Task LoadFloorComments(bool IsLoadMoreComments)
     {
-        try
+        if (!IsLoadMoreComments) floorComments.Clear();
+        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ResourceType}_{MainComment.ResourceId}_{MainComment.CommentId}", async () =>
         {
-            if (!IsLoadMoreComments) floorComments.Clear();
-            var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ResourceType}_{MainComment.ResourceId}_{MainComment.CommentId}", async () =>
-            {
-                var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.CommentFloorApi,
-                    new CommentFloorRequest()
-                    {
-                        ParentCommentId = MainComment.CommentId,
-                        ResourceId = MainComment.ResourceId,
-                        ResourceType = MainComment.ResourceType,
-                        Time = !IsLoadMoreComments ? 0 : long.Parse(time ?? "0")
-                    }
-                );
-                if (rst.IsError)
+            var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.CommentFloorApi,
+                new CommentFloorRequest()
                 {
-                    Common.AddToTeachingTipLists("加载楼层评论错误", rst.Error?.Message ?? "未知错误");
-                    return null;
+                    ParentCommentId = MainComment.CommentId,
+                    ResourceId = MainComment.ResourceId,
+                    ResourceType = MainComment.ResourceType,
+                    Time = !IsLoadMoreComments ? 0 : long.Parse(time ?? "0")
                 }
-                return rst.Value;
-            }, TimeSpan.FromMinutes(5));
-            if (result == null)
+            );
+            if (rst.IsError)
             {
-                return;
+                Common.AddToTeachingTipLists("加载楼层评论错误", rst.Error?.Message ?? "未知错误");
+                return null;
             }
-            foreach (var floorcomment in result.Data?.Comments ?? [])
-            {
-                var floorComment = floorcomment.MapToComment();
-                floorComment.ResourceId = MainComment.ResourceId;
-                floorComment.ResourceType = MainComment.ResourceType;
-                floorComment.IsMainComment = false;
-                floorComments.Add(floorComment);
-            }
-
-            time = result?.Data?.Time.ToString();
-            LoadMore.Visibility = result?.Data?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
-        }
-        catch (Exception ex)
+            return rst.Value;
+        }, TimeSpan.FromMinutes(5));
+        if (result == null)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            return;
         }
+        foreach (var floorcomment in result.Data?.Comments ?? [])
+        {
+            var floorComment = floorcomment.MapToComment();
+            floorComment.ResourceId = MainComment.ResourceId;
+            floorComment.ResourceType = MainComment.ResourceType;
+            floorComment.IsMainComment = false;
+            floorComments.Add(floorComment);
+        }
+
+        time = result?.Data?.Time.ToString();
+        LoadMore.Visibility = result?.Data?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void Like_Click(object sender, RoutedEventArgs e)

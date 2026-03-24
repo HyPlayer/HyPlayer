@@ -1,5 +1,6 @@
 ﻿#region
 
+using AsyncAwaitBestPractices;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
@@ -38,70 +39,66 @@ internal static class PersonalFM
             await LoadNextFM();
     }
 
-    public static Task LoadNextFM()
+    public static async Task LoadNextFM()
     {
-        return Task.Run(async () =>
+        if (HyPlayList.NowPlaying + 1 >= HyPlayList.List.Count)
         {
-            try
+            var finalIndex = Math.Max(HyPlayList.List.Count - 1, 0);
+            if (!Common.Setting.useAiDj)
             {
-                if (HyPlayList.NowPlaying + 1 >= HyPlayList.List.Count)
                 {
-                    var finalIndex = Math.Max(HyPlayList.List.Count - 1, 0);
-                    if (!Common.Setting.useAiDj)
+                    // 预加载下一首
+                    var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PersonalFmApi);
+                    if (result.IsError || result.Value?.Items?.Length is not > 0)
                     {
-                        {
-                            // 预加载下一首
-                            var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PersonalFmApi);
-                            if (result.IsError || result.Value?.Items?.Length is not > 0)
-                            {
-                                Common.AddToTeachingTipLists("加载私人 FM错误", result.Error?.Message ?? "未知错误");
-                                return;
-                            }
-
-                            foreach (var personalFmDataItem in result.Value.Items)
-                            {
-                                HyPlayList.AppendNcSong(personalFmDataItem.MapToNcSong());
-                            }
-                        }
+                        Common.AddToTeachingTipLists("加载私人 FM错误", result.Error?.Message ?? "未知错误");
+                        return;
                     }
-                    else
-                    {
-                        // AIDJ
-                        // 预加载后续内容
-                        var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.AiDjContentRcmdInfoApi,
-                            new AiDjContentRcmdInfoRequest
-                            {
-                                IsNewToAidj = _isNew
-                            });
-                        _isNew = false;
-                        if (result.IsError || result.Value?.Data?.AiDjResources?.Length is not > 0)
-                        {
-                            Common.AddToTeachingTipLists("加载私人 FM错误", result.Error?.Message ?? "未知错误");
-                            return;
-                        }
 
-                        foreach (var aiDjContentRcmdInfoResource in result.Value.Data.AiDjResources)
+                    foreach (var personalFmDataItem in result.Value.Items)
+                    {
+                        HyPlayList.AppendNcSong(personalFmDataItem.MapToNcSong());
+                    }
+                }
+            }
+            else
+            {
+                // AIDJ
+                // 预加载后续内容
+                var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.AiDjContentRcmdInfoApi,
+                    new AiDjContentRcmdInfoRequest
+                    {
+                        IsNewToAidj = _isNew
+                    });
+                _isNew = false;
+                if (result.IsError || result.Value?.Data?.AiDjResources?.Length is not > 0)
+                {
+                    Common.AddToTeachingTipLists("加载私人 FM错误", result.Error?.Message ?? "未知错误");
+                    return;
+                }
+
+                foreach (var aiDjContentRcmdInfoResource in result.Value.Data.AiDjResources)
+                {
+                    if (aiDjContentRcmdInfoResource is AiDjContentRcmdInfoResponse.AiDjContentRcmdInfoData.AiDjContentRcmdAudioResource audioValue)
+                    {
+                        foreach (var audioItem in audioValue.Value?.Audio ?? [])
                         {
-                            if (aiDjContentRcmdInfoResource is AiDjContentRcmdInfoResponse.AiDjContentRcmdInfoData.AiDjContentRcmdAudioResource audioValue)
+                            var playItem = new HyPlayItem()
                             {
-                                foreach (var audioItem in audioValue.Value?.Audio ?? [])
+                                ItemType = HyPlayItemType.Netease,
+                                Album = new NCAlbum
                                 {
-                                    var playItem = new HyPlayItem()
-                                    {
-                                        ItemType = HyPlayItemType.Netease,
-                                        Album = new NCAlbum
-                                        {
-                                            AlbumType = HyPlayItemType.Netease,
-                                            Alias = "私人 DJ",
-                                            Cover =
-                                                    "https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg",
-                                            Description = "私人 DJ",
-                                            Id = "126368130",
-                                            Name = "私人 DJ 推荐语"
-                                        },
-                                        Artist =
-                                            [
-                                                new NCArtist()
+                                    AlbumType = HyPlayItemType.Netease,
+                                    Alias = "私人 DJ",
+                                    Cover =
+                                            "https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg",
+                                    Description = "私人 DJ",
+                                    Id = "126368130",
+                                    Name = "私人 DJ 推荐语"
+                                },
+                                Artist =
+                                    [
+                                        new NCArtist()
                                                 {
                                                     Alias = "私人 DJ",
                                                     Avatar =
@@ -111,48 +108,42 @@ internal static class PersonalFM
                                                     TranslatedName = null,
                                                     Type = HyPlayItemType.Netease
                                                 }
-                                            ],
-                                        Bitrate = 0,
-                                        CDName = null,
-                                        Id = "-1",
-                                        IsLocalFile = false,
-                                        LengthInMilliseconds = audioItem.Duration,
-                                        Name = "私人 DJ 推荐语",
-                                        InfoTag = "私人 DJ",
-                                        Url = audioItem.Url,
-                                        Size = audioItem.Size ?? 0
-                                    };
-                                    HyPlayList.List.Add(playItem);
-                                }
-                            }
-                            else if (aiDjContentRcmdInfoResource is AiDjContentRcmdInfoResponse.AiDjContentRcmdInfoData.AiDjContentRcmdAudioSong songValue)
-                            {
-                                var ncSong = songValue.Value?.SongName?.MapToNcSong();
-                                if (ncSong is not null)
-                                {
-                                    HyPlayList.AppendNcSong(ncSong);
-                                }
-                            }
+                                    ],
+                                Bitrate = 0,
+                                CDName = null,
+                                Id = "-1",
+                                IsLocalFile = false,
+                                LengthInMilliseconds = audioItem.Duration,
+                                Name = "私人 DJ 推荐语",
+                                InfoTag = "私人 DJ",
+                                Url = audioItem.Url,
+                                Size = audioItem.Size ?? 0
+                            };
+                            HyPlayList.List.Add(playItem);
                         }
                     }
-
-                    HyPlayList.SongAppendDone();
-                    var item = HyPlayList.List[finalIndex];
-                    HyPlayList.SongMoveTo(item);
+                    else if (aiDjContentRcmdInfoResource is AiDjContentRcmdInfoResponse.AiDjContentRcmdInfoData.AiDjContentRcmdAudioSong songValue)
+                    {
+                        var ncSong = songValue.Value?.SongName?.MapToNcSong();
+                        if (ncSong is not null)
+                        {
+                            HyPlayList.AppendNcSong(ncSong);
+                        }
+                    }
                 }
+            }
 
-                Common.IsInFm = true;
-            }
-            catch (Exception e)
-            {
-                Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
-            }
-        });
+            HyPlayList.SongAppendDone();
+            var item = HyPlayList.List[finalIndex];
+            HyPlayList.SongMoveTo(item);
+        }
+
+        Common.IsInFm = true;
     }
 
     private static void HyPlayList_OnSongMoveNext()
     {
         if (Common.IsInFm)
-            LoadNextFM();
+            LoadNextFM().SafeFireAndForget();
     }
 }

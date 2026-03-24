@@ -33,48 +33,33 @@ internal class Api
     public static async Task EnterIntelligencePlay(CancellationToken cancellationToken = default)
     {
         HyPlayList.RemoveAllSong();
-        try
+        var songList = Common.MySongLists[0].PlaylistId;
+        var randomSong = Common.LikedSongs[new Random().Next(0, Common.LikedSongs.Count - 1)];
+        var jsoon = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaymodeIntelligenceListApi,
+            new PlaymodeIntelligenceListRequest
+            {
+                PlaylistId = songList,
+                SongId = randomSong,
+                StartMusicId = HyPlayList.NowPlayingItem?.Id ?? randomSong,
+                Count = Common.LikedSongs.Count
+            }, cancellationToken);
+
+        if (jsoon.IsError)
         {
-            var songList = Common.MySongLists[0].PlaylistId;
-            var randomSong = Common.LikedSongs[new Random().Next(0, Common.LikedSongs.Count - 1)];
-            var jsoon = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaymodeIntelligenceListApi,
-                new PlaymodeIntelligenceListRequest
-                {
-                    PlaylistId = songList,
-                    SongId = randomSong,
-                    StartMusicId = HyPlayList.NowPlayingItem?.Id ?? randomSong,
-                    Count = Common.LikedSongs.Count
-                }, cancellationToken);
-
-            if (jsoon.IsError)
-            {
-                Common.AddToTeachingTipLists("加载心动模式列表出错", jsoon.Error.Message);
-                return;
-            }
-
-            foreach (var item in jsoon.Value?.Data ?? [])
-            {
-                if (item.SongInfo is null) continue;
-                var ncSong = item.SongInfo.MapNcSong();
-                var playItem = HyPlayList.NCSongToPlayItem(ncSong);
-                playItem.InfoTag = item.Recommended ? "为你推荐" : "我的喜欢";
-                HyPlayList.AppendNcPlayItem(playItem);
-
-            }
-
-            try
-            {
-                HyPlayList.SongAppendDone();
-                HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
+            Common.AddToTeachingTipLists("加载心动模式列表出错", jsoon.Error.Message);
+            return;
         }
-        catch (Exception ex)
+
+        foreach (var item in jsoon.Value?.Data ?? [])
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (item.SongInfo is null) continue;
+            var ncSong = item.SongInfo.MapNcSong();
+            var playItem = HyPlayList.NCSongToPlayItem(ncSong);
+            playItem.InfoTag = item.Recommended ? "为你推荐" : "我的喜欢";
+            HyPlayList.AppendNcPlayItem(playItem);
+            HyPlayList.SongAppendDone();
+            HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
+
         }
     }
 }

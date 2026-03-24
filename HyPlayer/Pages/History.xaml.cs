@@ -112,10 +112,9 @@ public sealed partial class History : Page
                 Songs.Add(song);
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
         {
-            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            Common.AddToTeachingTipLists("获取播放记录失败", ex.Message);
         }
     }
 
@@ -141,10 +140,9 @@ public sealed partial class History : Page
                 Songs.Add(song);
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
         {
-            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            Common.AddToTeachingTipLists("获取播放记录失败", ex.Message);
         }
     }
 }

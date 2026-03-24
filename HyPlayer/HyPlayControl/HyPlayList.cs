@@ -154,7 +154,7 @@ public static class HyPlayList
             OnPlayModeChanged?.Invoke(value);
         }
 
-        get => (PlayMode)Common.Setting.songRollType;
+        get => Common.Setting.songRollType;
     }
 
     public static bool IsPlaying => Player.GlobalPlaybackStatus == PlaybackStatus.Playing;
@@ -661,18 +661,15 @@ public static class HyPlayList
         {
             case PlayMode.DefaultRoll:
                 //正常Roll的话,Id++
-                if (NowPlaying + 1 >= List.Count)
+                if (++NowPlaying >= List.Count)
                     NowPlaying = 0;
-                else
-                    NowPlaying++;
-
                 break;
             case PlayMode.Shuffled:
                 // 随机播放
                 if (Common.Setting.shuffleNoRepeating)
                 {
                     // 新版乱序算法
-                    if (++ShufflingIndex > List.Count)
+                    if (++ShufflingIndex >= List.Count)
                         ShufflingIndex = 0;
                     NowPlaying = ShuffleList[ShufflingIndex];
                 }
@@ -685,10 +682,8 @@ public static class HyPlayList
             case PlayMode.SinglePlay:
                 if (realNext)
                 {
-                    if (NowPlaying + 1 >= List.Count)
+                    if (++NowPlaying >= List.Count)
                         NowPlaying = 0;
-                    else
-                        NowPlaying++;
                 }
 
                 break;
@@ -1711,7 +1706,7 @@ public static class HyPlayList
             }
             catch (Exception ex)
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists("处理歌词时发生错误", ex.Message);
             }
         }
         catch
@@ -1783,7 +1778,7 @@ public static class HyPlayList
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            Common.AddToTeachingTipLists("加载NCSong时发生错误", ex.Message);
         }
 
         return null;
@@ -1829,7 +1824,7 @@ public static class HyPlayList
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            Common.AddToTeachingTipLists("AppendNCSong时发生错误", ex.Message);
         }
     }
 
@@ -1928,7 +1923,7 @@ public static class HyPlayList
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            Common.AddToTeachingTipLists("AppendNCSource时发生错误", ex.Message);
         }
 
         return false;
@@ -1966,7 +1961,7 @@ public static class HyPlayList
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            Common.AddToTeachingTipLists("AppendAlbum时发生错误", ex.Message);
         }
 
         return false;
@@ -1980,9 +1975,7 @@ public static class HyPlayList
             var page = 0;
             while (hasMore is true)
             {
-                try
-                {
-                    var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
                         new DjChannelProgramsRequest()
                         {
                             RadioId = radioId,
@@ -1990,23 +1983,17 @@ public static class HyPlayList
                             Limit = 100,
                             Asc = asc
                         });
-                    if (json.IsError)
-                    {
-                        Common.AddToTeachingTipLists("获取电台节目失败", json.Error.Message);
-                        return false;
-                    }
-
-                    hasMore = json.Value is { Data.More: true };
-                    if (json.Value?.Data?.Programs is { Length: > 0 })
-                        AppendNcSongs(
-                            [.. json.Value.Data.Programs.Select(t => (NCSong)t.MapToNCFmItem())],
-                            false);
-                }
-                catch (Exception ex)
+                if (json.IsError)
                 {
-                    Common.AddToTeachingTipLists(ex.Message,
-                        (ex.InnerException ?? new Exception()).Message);
+                    Common.AddToTeachingTipLists("获取电台节目失败", json.Error.Message);
+                    return false;
                 }
+
+                hasMore = json.Value is { Data.More: true };
+                if (json.Value?.Data?.Programs is { Length: > 0 })
+                    AppendNcSongs(
+                        [.. json.Value.Data.Programs.Select(t => (NCSong)t.MapToNCFmItem())],
+                        false);
 
                 page++;
             }
@@ -2015,7 +2002,7 @@ public static class HyPlayList
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            Common.AddToTeachingTipLists("AppendRadioList时发生错误", ex.Message);
         }
 
         return false;
@@ -2046,40 +2033,32 @@ public static class HyPlayList
             {
                 var nowIds = trackIds.GetRange(nowIndex * 500,
                     Math.Min(500, trackIds.Count - nowIndex * 500));
-                try
+                var songDetailResp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracksDetail, playlistId + "_" + nowIndex, async () =>
                 {
-                    var songDetailResp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracksDetail, playlistId + "_" + nowIndex, async () =>
+                    var songResponse = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
+                        new SongDetailRequest() { IdList = nowIds });
+                    if (songResponse.IsError)
                     {
-                        var songResponse = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
-                            new SongDetailRequest() { IdList = nowIds });
-                        if (songResponse.IsError)
-                        {
-                            Common.AddToTeachingTipLists("获取歌曲失败", songResponse.Error?.Message);
-                        }
+                        Common.AddToTeachingTipLists("获取歌曲失败", songResponse.Error?.Message);
+                    }
 
-                        return songResponse.Value;
-                    }, cancellationToken: CancellationToken.None);
+                    return songResponse.Value;
+                }, cancellationToken: CancellationToken.None);
 
-                    var songs = songDetailResp.Songs;
+                var songs = songDetailResp.Songs;
 
-                    nowIndex++;
+                nowIndex++;
 
-                    var result = songs.Select(t => t.MapToNcSong()).ToList();
+                var result = songs.Select(t => t.MapToNcSong()).ToList();
 
-                    AppendNcSongs(result, false);
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message,
-                        (ex.InnerException ?? new Exception()).Message);
-                }
+                AppendNcSongs(result, false);
             }
 
             return true;
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            Common.AddToTeachingTipLists("AppendPlayList时发生错误", ex.Message);
         }
 
         return false;
@@ -2367,7 +2346,7 @@ public static class Utils
                         curElement = curElement.Remove(idx, trimmedWord.Length);
                 }
 
-                if (curElement.Trim().Length > 0)
+                if (curElement.Trim().Length > 0 && curHiraNotation.Length > 0)
                 {
                     wordInfo[i + delta].Transliteration =
                         Utilities.ToRawRomaji(curHiraNotation[..1], RomajiSystem.Hepburn, true);

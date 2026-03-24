@@ -40,7 +40,7 @@
             <ListView.GroupStyle>
                 <GroupStyle>
                     <GroupStyle.HeaderTemplate>
-                        <DataTemplate x:DataType="pages:DiscSongs">
+                        <DataTemplate x:DataType="classes:DiscSongs">
                             <Border AutomationProperties.Name="{x:Bind Key}">
                                 <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="{x:Bind Key}" />
                             </Border>

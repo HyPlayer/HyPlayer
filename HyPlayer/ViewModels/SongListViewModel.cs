@@ -19,7 +19,7 @@ namespace HyPlayer.ViewModels
 {
     public partial class SongListViewModel : ObservableRecipient
     {
-        public ObservableCollection<NCSong> Songs { get; set; } = new();
+        public ObservableCollection<NCSong> Songs { get; set; } = [];
         [ObservableProperty]
         public partial NCPlayList PlayList { get; set; }
         [ObservableProperty]
@@ -242,7 +242,7 @@ namespace HyPlayer.ViewModels
             }
         }
         [RelayCommand]
-        public void LoadAllSongs()
+        private void LoadAllSongs()
         {
             if (!PlayList.IsDailyRecommend)
                 HyPlayList.AppendPlayList(PlayList.PlaylistId).SafeFireAndForget();
@@ -250,12 +250,12 @@ namespace HyPlayer.ViewModels
                 HyPlayList.AppendNcSongs(Songs.ToList());
         }
         [RelayCommand]
-        public void NavigateToComments()
+        private void NavigateToComments()
         {
             Common.NavigatePage(typeof(Comments), "pl" + PlayList.PlaylistId);
         }
         [RelayCommand]
-        public async Task ResetCacheAsync()
+        private async Task ResetCacheAsync()
         {
             try
             {
@@ -275,7 +275,7 @@ namespace HyPlayer.ViewModels
         }
 
         [RelayCommand]
-        public async Task PlayAllAsync()
+        private async Task PlayAllAsync()
         {
             if (!PlayList.IsDailyRecommend)
             {
@@ -295,26 +295,26 @@ namespace HyPlayer.ViewModels
         }
 
         [RelayCommand]
-        public void NextPage()
+        private void NextPage()
         {
             CurrentPage++;
             LoadCurrentPage().SafeFireAndForget();
         }
 
         [RelayCommand]
-        public void EnterIntelligencePlay()
+        private void EnterIntelligencePlay()
         {
             Api.EnterIntelligencePlay().SafeFireAndForget();
         }
 
         [RelayCommand]
-        public void DownloadAll()
+        private void DownloadAll()
         {
             DownloadManager.AddDownload(Songs.ToList());
         }
 
         [RelayCommand]
-        public async Task LikePlaylist()
+        private async Task LikePlaylist()
         {
             var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistSubscribeApi,
                 new PlaylistSubscribeRequest()
@@ -331,7 +331,7 @@ namespace HyPlayer.ViewModels
         }
 
         [RelayCommand]
-        public void NavigateToAuthor()
+        private void NavigateToAuthor()
         {
             Common.NavigatePage(typeof(Me), PlayList.Creator.Id);
         }

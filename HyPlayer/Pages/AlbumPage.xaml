@@ -15,7 +15,7 @@
             x:Name="SongContainer"
             Grid.Row="1"
             Margin="20,30,0,0"
-            GroupedSongs="{x:Bind AlbumSongsViewSource}">
+            GroupedSongs="{x:Bind ViewModel.AlbumSongsViewSource, Mode=OneWay}">
             <controls1:GroupedSongsList.ListHeader>
                 <controls:DockPanel
                     x:Name="GridPersonalInformation"
@@ -31,11 +31,10 @@
                         RadiusX="12"
                         RadiusY="12">
                         <Rectangle.Fill>
-                            <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
-                                <ImageBrush.ImageSource>
-                                    <BitmapImage UriSource="/Assets/icon.png" />
-                                </ImageBrush.ImageSource>
-                            </ImageBrush>
+                            <ImageBrush
+                                x:Name="ImageRect"
+                                ImageSource="{x:Bind ViewModel.SourceImage, Mode=OneWay}"
+                                Stretch="UniformToFill" />
                         </Rectangle.Fill>
                     </Rectangle>
                     <StackPanel
@@ -46,6 +45,7 @@
                             x:Name="TextBoxAlbumName"
                             IsTextSelectionEnabled="True"
                             Style="{ThemeResource TitleTextBlockStyle}"
+                            Text="{x:Bind ViewModel.Album.Name, Mode=OneWay}"
                             TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
@@ -56,7 +56,7 @@
                             <HyperlinkButton
                                 x:Name="TextBoxAuthor"
                                 Click="TextBoxAuthor_OnTapped"
-                                Content="歌手"
+                                Content="{x:Bind ViewModel.AuthorString, Mode=OneWay}"
                                 FontSize="16"
                                 Style="{ThemeResource TextBlockButtonStyle}" />
                         </StackPanel>
@@ -68,10 +68,11 @@
                             <TextBlock
                                 x:Name="TextBlockPublishTime"
                                 FontSize="16"
-                                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" />
+                                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                Text="{x:Bind ViewModel.PublishTime, Mode=OneWay, Converter={StaticResource DateConverter}}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="15">
-                            <Button Click="ButtonPlayAll_OnClick" Style="{ThemeResource AccentButtonStyle}">
+                            <Button Command="{x:Bind ViewModel.PlayAllCommand}" Style="{ThemeResource AccentButtonStyle}">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
                                         x:Name="IconPlay"
@@ -80,13 +81,13 @@
                                     <TextBlock Margin="4,0,0,0" Text="播放" />
                                 </StackPanel>
                             </Button>
-                            <Button Click="BtnAddAll_Clicked" Content="添加全部" />
-                            <Button Click="ButtonDownloadAll_OnClick" Content="下载全部" />
+                            <Button Command="{x:Bind ViewModel.AddAllToPlaylistCommand}" Content="添加全部" />
+                            <Button Command="{x:Bind ViewModel.DownloadAllCommand}" Content="下载全部" />
                             <ToggleButton
                                 x:Name="BtnSub"
-                                Click="BtnSub_Click"
+                                Command="{x:Bind ViewModel.SubscribeCommand}"
                                 Content="收藏" />
-                            <Button Click="ButtonComment_OnClick" Content="评论" />
+                            <Button Command="{x:Bind ViewModel.NavigateCommentCommand}" Content="评论" />
                         </StackPanel>
                         <controls1:ExpandableTextBox
                             x:Name="TextBlockDesc"

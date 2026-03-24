@@ -25,23 +25,15 @@ public sealed partial class CreateSonglistDialog : ContentDialog
         // This request would return with a 250 error without RealIP set
         Common.NeteaseAPI.Option.XRealIP = "118.88.88.88";
 
-        try
-        {
-            var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistCreateApi,
+        var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistCreateApi,
                 new PlaylistCreateRequest()
                 {
                     Name = SonglistTitle.Text,
                     Privacy = (bool)PrivateCheckBox.IsChecked ? 10 : 0
                 });
-            if (result.IsError)
-            {
-                Common.AddToTeachingTipLists("创建失败", result.Error.Message);
-            }
-        }
-        catch (Exception e)
+        if (result.IsError)
         {
-            Common.AddToTeachingTipLists("创建失败", e.Message);
-            return;
+            Common.AddToTeachingTipLists("创建失败", result.Error.Message);
         }
 
         Common.AddToTeachingTipLists("创建成功");

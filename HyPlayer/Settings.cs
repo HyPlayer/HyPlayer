@@ -252,7 +252,7 @@ namespace HyPlayer
                 {
                     if (CustomAcrylic)
                     {
-                        return GetSettings<double>(nameof(CustomTintLuminosityOpacity), 3d);
+                        return GetSettings(nameof(CustomTintLuminosityOpacity), 3d);
                     }
                     else
                     {
