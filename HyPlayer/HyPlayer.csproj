@@ -34,7 +34,7 @@
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Labs.Uwp.Controls.TitleBar" Version="0.1.251217-build.2433" />
     <PackageReference Include="CommunityToolkit.Mvvm">
-      <Version>8.4.0</Version>
+      <Version>8.4.2</Version>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Uwp.Animations">
       <Version>8.2.251219</Version>
