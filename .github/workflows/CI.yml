@@ -3,8 +3,6 @@ name: Actions Build
 on:
   push:
     branches: [ "develop" ]
-  pull_request:
-    branches: [ "develop" ]
 
 jobs:
   to_gitee:
