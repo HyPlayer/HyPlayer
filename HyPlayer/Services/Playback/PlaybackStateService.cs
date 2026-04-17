@@ -1,0 +1,80 @@
+using System;
+using CommunityToolkit.Mvvm.ComponentModel;
+using HyPlayer.Classes;
+using Windows.Storage.Streams;
+
+namespace HyPlayer.Services.Playback;
+
+/// <summary>
+/// 播放状态中心 — 唯一的播放状态真相来源。
+/// <para>
+/// 所有播放相关服务写入此对象，ViewModel 通过 PropertyChanged 或 x:Bind 观察。
+/// 高频属性（Position、LyricIndex）直接绑定，低频事件走 WeakReferenceMessenger。
+/// </para>
+/// </summary>
+public partial class PlaybackStateService : ObservableObject
+{
+    /// <summary>当前播放曲目</summary>
+    [ObservableProperty]
+    public partial HyPlayItem? NowPlayingItem { get; set; }
+
+    /// <summary>当前播放位置</summary>
+    [ObservableProperty]
+    public partial TimeSpan Position { get; set; }
+
+    /// <summary>当前曲目总时长</summary>
+    [ObservableProperty]
+    public partial TimeSpan Duration { get; set; }
+
+    /// <summary>是否正在播放</summary>
+    [ObservableProperty]
+    public partial bool IsPlaying { get; set; }
+
+    /// <summary>音量 (0.0 ~ 1.0)</summary>
+    [ObservableProperty]
+    public partial double Volume { get; set; }
+
+    /// <summary>当前播放策略 Id (seq/sgl/shf/shn/pfm/ltg)</summary>
+    [ObservableProperty]
+    public partial string ActiveStrategyId { get; set; } = "seq";
+
+    /// <summary>当前过渡策略 Id (dir/xfd/gap)</summary>
+    [ObservableProperty]
+    public partial string ActiveTransitionId { get; set; } = "dir";
+
+    /// <summary>当前播放索引</summary>
+    [ObservableProperty]
+    public partial int NowPlayingIndex { get; set; } = -1;
+
+    /// <summary>当前歌词信息</summary>
+    [ObservableProperty]
+    public partial HyLyricInfo LyricInfo { get; set; } = new();
+
+    /// <summary>当前歌词行索引</summary>
+    [ObservableProperty]
+    public partial int LyricIndex { get; set; }
+
+    /// <summary>是否处于私人 FM 模式</summary>
+    [ObservableProperty]
+    public partial bool IsInFm { get; set; }
+
+    /// <summary>当前音质标签</summary>
+    [ObservableProperty]
+    public partial string QualityTag { get; set; } = string.Empty;
+
+    private InMemoryRandomAccessStream? _coverStream;
+    /// <summary>封面流（异步加载）</summary>
+    public InMemoryRandomAccessStream? CoverStream
+    {
+        get => _coverStream;
+        set => SetProperty(ref _coverStream, value);
+    }
+
+    private RandomAccessStreamReference? _coverStreamReference;
+    /// <summary>封面流引用（用于 SMTC 等）</summary>
+    public RandomAccessStreamReference? CoverStreamReference
+    {
+        get => _coverStreamReference;
+        set => SetProperty(ref _coverStreamReference, value);
+    }
+}

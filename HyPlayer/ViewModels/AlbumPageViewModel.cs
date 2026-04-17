@@ -6,6 +6,7 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,13 @@ namespace HyPlayer.ViewModels
 {
     public partial class AlbumPageViewModel :ObservableRecipient
     {
+        private readonly IPlaylistService _playlist;
+
+        public AlbumPageViewModel(IPlaylistService playlist)
+        {
+            _playlist = playlist;
+        }
+
         [ObservableProperty]
         public partial NCAlbum Album { get; set; }
         [ObservableProperty]
@@ -126,10 +134,11 @@ namespace HyPlayer.ViewModels
         {
             try
             {
-                HyPlayList.RemoveAllSong();
-                await HyPlayList.AppendNcSource("al" + Album.Id);
-                HyPlayList.PlaySourceId = "al" + Album.Id;
-                HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
+                _playlist.Clear();
+                // TODO: Migrate AppendNcSource to IPlaylistService once API-loading logic is extracted
+                await _playlist.AppendNcSourceAsync("al" + Album.Id);
+                _playlist.PlaySourceId = "al" + Album.Id;
+                await _playlist.MoveToAsync(_playlist.Items.FirstOrDefault());
             }
             catch (Exception ex)
             {
@@ -163,7 +172,8 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void AddAllToPlaylist()
         {
-            HyPlayList.AppendNcSource("al" + Album.Id).SafeFireAndForget();
+            // TODO: Migrate AppendNcSource to IPlaylistService once API-loading logic is extracted
+            _playlist.AppendNcSourceAsync("al" + Album.Id).SafeFireAndForget();
         }
     }
 }

@@ -1,6 +1,11 @@
-﻿using HyPlayer.Classes;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.UWP.Chopin;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using LiteFM.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -386,7 +391,8 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(shuffleNoRepeating)] = value;
                 OnPropertyChanged();
-                if (HyPlayList.NowPlayType == PlayMode.Shuffled && value) HyPlayList.CreateShufflePlayLists();
+                var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+                if (_playlist.ActiveStrategyId is "shf" or "shn" && value) HyPlayList.CreateShufflePlayLists();
             }
         }
 
@@ -632,7 +638,8 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableFFT)] = value;
-                HyPlayList.Player?.EnableFFTProcessing = value;
+                var player = Ioc.Default.GetService<AudioGraphPlayer>();
+                if (player != null) player.EnableFFTProcessing = value;
                 OnPropertyChanged();
             }
         }
@@ -1059,7 +1066,7 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["AudioRenderDeviceID"] = value;
-                _ = HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
+                _ = Ioc.Default.GetRequiredService<IPlaybackControlService>().InitializeAsync();
                 OnPropertyChanged();
             }
         }
@@ -1202,13 +1209,18 @@ namespace HyPlayer
             set
             {
                 _abRepeatStatus = value;
-                if (value) HyPlayList.OnPlayPositionChange += HyPlayList.CheckABTimeRemaining;
-                else HyPlayList.OnPlayPositionChange -= HyPlayList.CheckABTimeRemaining;
+                if (value) HyPlayList.OnPlayPositionChange += HyPlayList_CheckABTimeRemaining;
+                else HyPlayList.OnPlayPositionChange -= HyPlayList_CheckABTimeRemaining;
                 OnPropertyChanged();
             }
         }
 
         private static bool _abRepeatStatus = false;
+
+        private static void HyPlayList_CheckABTimeRemaining(TimeSpan currentTime)
+        {
+            HyPlayList.CheckABTimeRemaining(currentTime);
+        }
 
         public bool acrylicBackgroundStatus
         {
@@ -1279,13 +1291,15 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableAudioGain)] = value;
                 OnPropertyChanged();
-                if (HyPlayList.Player.PrimaryPlaybackSource != null)
+                var player = Ioc.Default.GetService<AudioGraphPlayer>();
+                var _state = Ioc.Default.GetService<PlaybackStateService>();
+                if (player?.PrimaryPlaybackSource != null)
                 {
                     if (value)
                     {
-                        HyPlayList.Player.SetPlaybackSourceOutputVolume(HyPlayList.NowPlayingItem?.Volume ?? 1, HyPlayList.Player.PrimaryPlaybackSource);
+                        player.SetPlaybackSourceOutputVolume(_state?.NowPlayingItem?.Volume ?? 1, player.PrimaryPlaybackSource);
                     }
-                    else HyPlayList.Player.SetPlaybackSourceOutputVolume(1, HyPlayList.Player.PrimaryPlaybackSource);
+                    else player.SetPlaybackSourceOutputVolume(1, player.PrimaryPlaybackSource);
                 }
             }
         }

@@ -1,8 +1,14 @@
-﻿using HyPlayer.Classes;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.RollingCalculators;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
+using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Gaming.XboxGameBar;
 using Microsoft.Gaming.XboxGameBar.Input;
@@ -30,6 +36,12 @@ public sealed partial class WidgetPage : Page
     private readonly GameBarSettings _settings;
     private readonly LyricRenderView LyricBox = new();
 
+    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+    private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+    private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+    private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
+
 
     public WidgetPage()
     {
@@ -53,7 +65,7 @@ public sealed partial class WidgetPage : Page
         base.OnNavigatedTo(e);
 
         _widget = e.Parameter?.As<XboxGameBarWidget>();
-        if (HyPlayList.NowPlayingItem is null) return;
+        if (_state.NowPlayingItem is null) return;
         Initialize();
     }
 
@@ -64,7 +76,7 @@ public sealed partial class WidgetPage : Page
 
     private void FindLyricButton_Click(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem is null) return;
+        if (_state.NowPlayingItem is null) return;
         Initialize();
     }
 
@@ -78,15 +90,17 @@ public sealed partial class WidgetPage : Page
         _widget.WindowBoundsChanged += OnResized;
         _widget.RequestedThemeChanged += RequestedThemeChanged;
         _hotkeyWatcher.HotkeySetStateChanged += OnHotkeySetStateChanged;
-        HyPlayList.OnPlayItemChange += HyPlayList_OnPlayItemChange;
-        HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
-        HyPlayList.OnPause += HyPlayList_OnPause;
-        HyPlayList.OnPlay += HyPlayList_OnPlay;
-        HyPlayList.OnLyricLoaded += OnPlaylistLyricLoaded;
+        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => HyPlayList_OnPlayItemChange(m.Item));
+        WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, m) => HyPlayList_OnPlayPositionChange(m.Position));
+        WeakReferenceMessenger.Default.Register<PlaybackStateChangedMessage>(this, (r, m) =>
+        {
+            if (m.IsPlaying) HyPlayList_OnPlay(); else HyPlayList_OnPause();
+        });
+        WeakReferenceMessenger.Default.Register<LyricLoadedMessage>(this, (r, m) => OnPlaylistLyricLoaded());
         TipContent.Visibility = Visibility.Collapsed;
         LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
         PlayStateIcon.Glyph =
-                    HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
+                    _player.GlobalPlaybackStatus == PlaybackStatus.Playing
                         ? "\uF8AE"
                         : "\uF5B0";
         LoadLyrics();
@@ -96,7 +110,7 @@ public sealed partial class WidgetPage : Page
     {
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
         {
-            PlayStateIcon.Glyph = HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing ? "\uF8AE" : "\uF5B0";
+            PlayStateIcon.Glyph = _player.GlobalPlaybackStatus == PlaybackStatus.Playing ? "\uF8AE" : "\uF5B0";
         });
     }
 
@@ -104,7 +118,7 @@ public sealed partial class WidgetPage : Page
     {
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
         {
-            PlayStateIcon.Glyph = HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing ? "\uF8AE" : "\uF5B0";
+            PlayStateIcon.Glyph = _player.GlobalPlaybackStatus == PlaybackStatus.Playing ? "\uF8AE" : "\uF5B0";
         });
     }
 
@@ -129,11 +143,7 @@ public sealed partial class WidgetPage : Page
         _widget.WindowBoundsChanged -= OnResized;
         _widget.RequestedThemeChanged -= RequestedThemeChanged;
         _hotkeyWatcher.HotkeySetStateChanged -= OnHotkeySetStateChanged;
-        HyPlayList.OnPlayItemChange -= HyPlayList_OnPlayItemChange;
-        HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
-        HyPlayList.OnPause -= HyPlayList_OnPause;
-        HyPlayList.OnPlay -= HyPlayList_OnPlay;
-        HyPlayList.OnLyricLoaded -= OnPlaylistLyricLoaded;
+        WeakReferenceMessenger.Default.UnregisterAll(this);
         Common.XboxGameBarWidget = null;
         Window.Current.Closed -= WidgetPage_Closed;
         Instance = null;
@@ -144,9 +154,9 @@ public sealed partial class WidgetPage : Page
     }
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        if (HyPlayList.NowPlayingItem == null) return;
-        var progress = position.TotalMilliseconds / HyPlayList.NowPlayingItem.LengthInMilliseconds * 100;
-        var text = $"{position:mm\\:ss}/{TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.LengthInMilliseconds):mm\\:ss}";
+        if (_state.NowPlayingItem == null) return;
+        var progress = position.TotalMilliseconds / _state.NowPlayingItem.LengthInMilliseconds * 100;
+        var text = $"{position:mm\\:ss}/{TimeSpan.FromMilliseconds(_state.NowPlayingItem.LengthInMilliseconds):mm\\:ss}";
         try
         {
             _ = Dispatcher.RunAsync(
@@ -165,8 +175,8 @@ public sealed partial class WidgetPage : Page
 
     private void HyPlayList_OnPlayItemChange(HyPlayItem playItem)
     {
-        var playItemName = HyPlayList.NowPlayingItem.Name;
-        var artistName = HyPlayList.NowPlayingItem.ArtistString;
+        var playItemName = _state.NowPlayingItem.Name;
+        var artistName = _state.NowPlayingItem.ArtistString;
         _ = Dispatcher.RunAsync(
            CoreDispatcherPriority.Normal,
            () =>
@@ -176,20 +186,19 @@ public sealed partial class WidgetPage : Page
            });
     }
 
-    private void MovePreviousButton_Click(object sender, RoutedEventArgs e)
+    private async void MovePreviousButton_Click(object sender, RoutedEventArgs e)
     {
-        HyPlayList.SongMovePrevious();
+        await _playlist.MovePreviousAsync();
     }
 
-    private void MoveNextButton_Click(object sender, RoutedEventArgs e)
+    private async void MoveNextButton_Click(object sender, RoutedEventArgs e)
     {
-        HyPlayList.SongMoveNext();
+        await _playlist.MoveNextAsync(true);
     }
 
     private void ChangePlayStateButton_Click(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.IsPlaying) HyPlayList.Player.PauseAll();
-        else HyPlayList.Player.PlayAll();
+        _control.TogglePlayPause();
     }
 
     private void WidgetPage_PointerExited(object sender, PointerRoutedEventArgs e)
@@ -218,8 +227,7 @@ public sealed partial class WidgetPage : Page
     {
         if (args.HotkeySetDown)
         {
-            if (HyPlayList.IsPlaying) HyPlayList.Player.PauseAll();
-            else HyPlayList.Player.PlayAll();
+            _control.TogglePlayPause();
         }
     }
 
@@ -253,16 +261,16 @@ public sealed partial class WidgetPage : Page
 
     private void LyricBox_OnBeforeRender(LyricRenderView view)
     {
-        if (HyPlayList.Player.PrimaryAudioInputNode == null) return;
-        LyricBox.Context.IsPlaying = HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing;
-        if (HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds < LyricBox.Context.CurrentLyricTime)
+        if (_player.PrimaryAudioInputNode == null) return;
+        LyricBox.Context.IsPlaying = _player.GlobalPlaybackStatus == PlaybackStatus.Playing;
+        if (_player.PrimaryAudioInputNode.Position.TotalMilliseconds < LyricBox.Context.CurrentLyricTime)
         {
-            LyricBox.Context.CurrentLyricTime = (long)HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds;
+            LyricBox.Context.CurrentLyricTime = (long)_player.PrimaryAudioInputNode.Position.TotalMilliseconds;
             LyricBox.ReflowTime(0);
         }
         else
         {
-            LyricBox.Context.CurrentLyricTime = (long)HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds;
+            LyricBox.Context.CurrentLyricTime = (long)_player.PrimaryAudioInputNode.Position.TotalMilliseconds;
         }
     }
 
@@ -276,7 +284,7 @@ public sealed partial class WidgetPage : Page
 
     private void UpdateLyricSize()
     {
-        if (HyPlayList.NowPlayingItem == null) return;
+        if (_state.NowPlayingItem == null) return;
         var lyricSize = _settings.LyricSize <= 0
             ? Math.Max(_widget.WindowBounds.Width / 20, 40)
             : _settings.LyricSize;
@@ -292,14 +300,14 @@ public sealed partial class WidgetPage : Page
         });
     }
 
-    private void LyricView_OnRequestSeek(RenderingLyricLine line)
+    private async void LyricView_OnRequestSeek(RenderingLyricLine line)
     {
-        HyPlayList.Seek(TimeSpan.FromMilliseconds(line.StartTime));
+        await _control.SeekAsync(TimeSpan.FromMilliseconds(line.StartTime));
     }
 
     private void LoadLyrics()
     {
-        LyricBox.SetLyricLines(LrcConverter.Convert(ExpandedPlayer.ConvertToALRC(HyPlayList.HyLyricInfo.Lyrics)));
+        LyricBox.SetLyricLines(LrcConverter.Convert(ExpandedPlayer.ConvertToALRC(_lyricService.CurrentLyricInfo.Lyrics)));
         LyricBox.ReflowTime(0);
     }
 

@@ -1,9 +1,13 @@
 ﻿#region
 
 using AsyncAwaitBestPractices;
-using HyPlayer.HyPlayControl;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
 using System;
 using System.Threading.Tasks;
 
@@ -11,60 +15,99 @@ using System.Threading.Tasks;
 
 namespace HyPlayer.Classes;
 
-internal static class PersonalFM
+/// <summary>
+/// 私人 FM 控制器。
+/// <para>
+/// 保留静态入口 <see cref="InitPersonalFM"/> / <see cref="ExitFm"/> 以兼容现有调用方，
+/// 内部通过 <see cref="Ioc.Default"/> 解析 DI 服务，不再直接引用 HyPlayList。
+/// </para>
+/// </summary>
+internal sealed class PersonalFM : IRecipient<TrackEndedMessage>
 {
+    private static PersonalFM? _instance;
     private static bool _isNew = true;
+
+    private readonly IPlaylistService _playlist;
+    private readonly PlaybackStateService _state;
+
+    private PersonalFM()
+    {
+        _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+    }
+
+    // ---------------------------------------------------------------
+    //  Static entry points (backward-compatible)
+    // ---------------------------------------------------------------
 
     public static void InitPersonalFM()
     {
-        HyPlayList.ChangePlayMode(PlayMode.DefaultRoll);
-        HyPlayList.OnSongMoveNext += HyPlayList_OnSongMoveNext;
-        HyPlayList.OnMediaEnd += HyPlayList_OnMediaEnd;
-        Common.IsInFm = true;
-        HyPlayList.RemoveAllSong();
-        LoadNextFM();
+        // Tear down any previous instance first
+        CleanupInstance();
+
+        var fm = new PersonalFM();
+        _instance = fm;
+
+        fm._playlist.SetStrategy("pfm");
+        fm._state.IsInFm = true;
+        fm._playlist.Clear();
+
+        // Subscribe to track-ended via messenger
+        WeakReferenceMessenger.Default.Register<TrackEndedMessage>(fm);
+
+        fm.LoadNextFM().SafeFireAndForget();
     }
 
     public static void ExitFm()
     {
-        HyPlayList.OnSongMoveNext -= HyPlayList_OnSongMoveNext;
-        HyPlayList.OnMediaEnd -= HyPlayList_OnMediaEnd;
-        Common.IsInFm = false;
-        HyPlayList.RemoveAllSong();
+        CleanupInstance();
     }
 
-    private static async void HyPlayList_OnMediaEnd(HyPlayItem hpi)
+    /// <summary>
+    /// 静态入口：加载下一首 FM 歌曲（供旧代码调用）
+    /// </summary>
+    public static void LoadNextFMStatic()
     {
-        if (Common.IsInFm)
-            await LoadNextFM();
+        _instance?.LoadNextFM().SafeFireAndForget();
     }
 
-    public static async Task LoadNextFM()
+    // ---------------------------------------------------------------
+    //  Messenger handler
+    // ---------------------------------------------------------------
+
+    void IRecipient<TrackEndedMessage>.Receive(TrackEndedMessage message)
     {
-        if (HyPlayList.NowPlaying + 1 >= HyPlayList.List.Count)
+        if (_state.IsInFm)
+            LoadNextFM().SafeFireAndForget();
+    }
+
+    // ---------------------------------------------------------------
+    //  Core logic
+    // ---------------------------------------------------------------
+
+    public async Task LoadNextFM()
+    {
+        if (_playlist.NowPlayingIndex + 1 >= _playlist.Items.Count)
         {
-            var finalIndex = Math.Max(HyPlayList.List.Count - 1, 0);
+            var finalIndex = Math.Max(_playlist.Items.Count - 1, 0);
             if (!Common.Setting.useAiDj)
             {
+                var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PersonalFmApi);
+                if (result.IsError || result.Value?.Items?.Length is not > 0)
                 {
-                    // 预加载下一首
-                    var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PersonalFmApi);
-                    if (result.IsError || result.Value?.Items?.Length is not > 0)
-                    {
-                        Common.AddToTeachingTipLists("加载私人 FM错误", result.Error?.Message ?? "未知错误");
-                        return;
-                    }
+                    Common.AddToTeachingTipLists("加载私人 FM错误", result.Error?.Message ?? "未知错误");
+                    return;
+                }
 
-                    foreach (var personalFmDataItem in result.Value.Items)
-                    {
-                        HyPlayList.AppendNcSong(personalFmDataItem.MapToNcSong());
-                    }
+                foreach (var personalFmDataItem in result.Value.Items)
+                {
+                    var hpi = NCSongToPlayItem(personalFmDataItem.MapToNcSong());
+                    _playlist.AppendItem(hpi);
                 }
             }
             else
             {
                 // AIDJ
-                // 预加载后续内容
                 var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.AiDjContentRcmdInfoApi,
                     new AiDjContentRcmdInfoRequest
                     {
@@ -119,7 +162,7 @@ internal static class PersonalFM
                                 Url = audioItem.Url,
                                 Size = audioItem.Size ?? 0
                             };
-                            HyPlayList.List.Add(playItem);
+                            _playlist.AppendItem(playItem);
                         }
                     }
                     else if (aiDjContentRcmdInfoResource is AiDjContentRcmdInfoResponse.AiDjContentRcmdInfoData.AiDjContentRcmdAudioSong songValue)
@@ -127,23 +170,57 @@ internal static class PersonalFM
                         var ncSong = songValue.Value?.SongName?.MapToNcSong();
                         if (ncSong is not null)
                         {
-                            HyPlayList.AppendNcSong(ncSong);
+                            var hpi = NCSongToPlayItem(ncSong);
+                            _playlist.AppendItem(hpi);
                         }
                     }
                 }
             }
 
-            HyPlayList.SongAppendDone();
-            var item = HyPlayList.List[finalIndex];
-            HyPlayList.SongMoveTo(item);
+            _playlist.NotifyAppendDone();
+            if (_playlist.Items.Count > finalIndex)
+            {
+                var item = _playlist.Items[finalIndex];
+                await _playlist.MoveToAsync(item);
+            }
         }
 
-        Common.IsInFm = true;
+        _state.IsInFm = true;
     }
 
-    private static void HyPlayList_OnSongMoveNext()
+    // ---------------------------------------------------------------
+    //  Helpers
+    // ---------------------------------------------------------------
+
+    private static void CleanupInstance()
     {
-        if (Common.IsInFm)
-            LoadNextFM().SafeFireAndForget();
+        if (_instance is not null)
+        {
+            WeakReferenceMessenger.Default.Unregister<TrackEndedMessage>(_instance);
+            _instance._state.IsInFm = false;
+            _instance._playlist.Clear();
+            _instance = null;
+        }
+    }
+
+    /// <summary>
+    /// Convert an <see cref="NCSong"/> to a <see cref="HyPlayItem"/>.
+    /// Pure data mapping — no side effects.
+    /// </summary>
+    private static HyPlayItem NCSongToPlayItem(NCSong ncSong)
+    {
+        return new HyPlayItem
+        {
+            ItemType = ncSong.Type,
+            InfoTag = ncSong.Alias,
+            Album = ncSong.Album,
+            Artist = ncSong.Artist,
+            Id = ncSong.SongId,
+            Translation = ncSong.TranslatedName,
+            Name = ncSong.SongName,
+            TrackId = ncSong.TrackId,
+            CDName = ncSong.CDName,
+            LengthInMilliseconds = ncSong.LengthInMilliseconds
+        };
     }
 }

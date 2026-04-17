@@ -1,11 +1,16 @@
 ﻿#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Cloud;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -29,6 +34,9 @@ namespace HyPlayer.Controls;
 
 public sealed partial class SongsList : UserControl
 {
+    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+
     public static readonly DependencyProperty MultiSelectProperty =
         DependencyProperty.Register("MultiSelect", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
 
@@ -81,12 +89,12 @@ public sealed partial class SongsList : UserControl
     public SongsList()
     {
         InitializeComponent();
-        HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
+        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((SongsList)r).HyPlayListOnOnPlayItemChange(m.Item));
     }
 
     private void SongsList_Unloaded(object sender, RoutedEventArgs e)
     {
-        HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
+        WeakReferenceMessenger.Default.UnregisterAll(this);
         Songs?.CollectionChanged -= Songs_CollectionChanged;
     }
 
@@ -221,7 +229,7 @@ public sealed partial class SongsList : UserControl
         Grid_RightTapped(((StackPanel)((Button)sender)?.Parent)?.Parent, null);
     }
 
-    private void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
+    private async void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
@@ -231,12 +239,12 @@ public sealed partial class SongsList : UserControl
         }
 
         foreach (NCSong ncsong in SongContainer.SelectedItems)
-            _ = HyPlayList.AppendNcSong(ncsong);
+            _playlist.AppendNcSong(ncsong);
         if (SongContainer.SelectedItem != null)
         {
             var targetPlayItem =
-                HyPlayList.List.Find(t => t.Id == (SongContainer.SelectedItem as NCSong).SongId);
-            HyPlayList.SongMoveTo(targetPlayItem);
+                _playlist.Items.ToList().Find(t => t.Id == (SongContainer.SelectedItem as NCSong).SongId);
+            await _playlist.MoveToAsync(targetPlayItem);
         }
     }
 
@@ -249,9 +257,9 @@ public sealed partial class SongsList : UserControl
             return;
         }
 
-        var playItems = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(),
-            HyPlayList.NowPlaying + 1);
-        if (HyPlayList.NowPlayType == PlayMode.Shuffled)
+        var playItems = _playlist.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(),
+            _playlist.NowPlayingIndex + 1);
+        if (_state.ActiveStrategyId is "shf" or "shn")
         {
             List<int> playItemIndexes = [];
             foreach (var item in playItems)
@@ -263,7 +271,7 @@ public sealed partial class SongsList : UserControl
             for (int i = 0; i < playItemIndexes.Count; i++)
             {
                 var item = playItemIndexes[i];
-                var currentIndex = HyPlayList.ShuffleList.IndexOf(HyPlayList.NowPlaying);
+                var currentIndex = HyPlayList.ShuffleList.IndexOf(_playlist.NowPlayingIndex);
                 if (currentIndex + playItemIndexes.Count >= HyPlayList.ShuffleList.Count) break; // 如果调不了顺序（歌单剩余空位不足）就算了
                 var nextIndex = currentIndex + i + 1;
                 var targetIndex = HyPlayList.ShuffleList.IndexOf(item);
@@ -402,7 +410,7 @@ public sealed partial class SongsList : UserControl
     {
         if (e.ClickedItem is not NCSong ncSong || IsAddingSongToPlaylist) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        bool shiftSong = ncSong.SongId == HyPlayList.NowPlayingItem?.Id;
+        bool shiftSong = ncSong.SongId == _state.NowPlayingItem?.Id;
 
         if (!ncSong.IsAvailable)
         {
@@ -413,12 +421,12 @@ public sealed partial class SongsList : UserControl
         IsAddingSongToPlaylist = true;
         if (ListSource != null && ListSource != "Content" && Songs.Count == VisibleSongs.Count)
         {
-            if (HyPlayList.PlaySourceId != ListSource.Substring(2) ||
-                HyPlayList.List.Count != VisibleSongs.Count(t => t.IsAvailable))
+            if (_playlist.PlaySourceId != ListSource.Substring(2) ||
+                _playlist.Items.Count != VisibleSongs.Count(t => t.IsAvailable))
             {
                 // Change Music Source
-                HyPlayList.RemoveAllSong(!shiftSong);
-                await HyPlayList.AppendNcSource(ListSource);
+                _playlist.Clear(!shiftSong);
+                await _playlist.AppendNcSourceAsync(ListSource);
             }
         }
         /*else if (ListSource == null)
@@ -430,27 +438,28 @@ public sealed partial class SongsList : UserControl
         }*/
         else
         {
-            HyPlayList.AppendNcSongs(VisibleSongs, resetPlaying: !shiftSong, currentSongId: ncSong.SongId);
+            _playlist.AppendNcSongs(VisibleSongs, clearFirst: !shiftSong, currentSongId: ncSong.SongId);
         }
 
         if (ListSource == "Content")
         {
-            HyPlayList.PlaySourceId = "Content";
+            _playlist.PlaySourceId = "Content";
         }
 
         if (ListSource?.Substring(0, 2) == "pl" ||
             ListSource?.Substring(0, 2) == "al")
-            HyPlayList.PlaySourceId = ListSource;
+            _playlist.PlaySourceId = ListSource;
 
         if (!shiftSong)
         {
-            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t?.Id == ncSong.SongId));
+            await _playlist.MoveToAsync(_playlist.Items.ToList().Find(t => t?.Id == ncSong.SongId));
         }
         else
         {
             Common.AddToTeachingTipLists("无感歌单切换", "成功无感切换到歌单 " + ListSource);
-            HyPlayList.NowPlaying =
-                HyPlayList.List.FindIndex(song => song.Id == ncSong.SongId);
+            // Set index via facade for back-compat
+            HyPlayListFacade.NowPlaying =
+                _playlist.Items.ToList().FindIndex(song => song.Id == ncSong.SongId);
         }
 
         IsAddingSongToPlaylist = false;
@@ -482,8 +491,8 @@ public sealed partial class SongsList : UserControl
         switch (item.Tag)
         {
             case "FocusingCurrent":
-                if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
-                var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == HyPlayList.NowPlayingItem.Id);
+                if (_state.NowPlayingItem?.PlayItem is null) return;
+                var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == _state.NowPlayingItem.Id);
                 if (idx == -1) return;
                 SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
                 break;

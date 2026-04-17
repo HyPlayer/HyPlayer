@@ -5,6 +5,8 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -48,12 +50,12 @@ public sealed partial class PlaylistItem : UserControl
 
     private async void PlayAllBtn_Click(object sender, RoutedEventArgs e)
     {
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         //播放全部歌曲
-        HyPlayList.RemoveAllSong();
-        await HyPlayList.AppendPlayList(playList.PlaylistId);
-        HyPlayList.PlaySourceId = $"pl{playList.PlaylistId}";
-        HyPlayList.NowPlaying = -1;
-        HyPlayList.SongMoveNext();
+        _playlist.Clear();
+        await _playlist.AppendPlayListAsync(playList.PlaylistId);
+        _playlist.PlaySourceId = $"pl{playList.PlaylistId}";
+        await _playlist.MoveNextAsync(true);
     }
 
     private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)

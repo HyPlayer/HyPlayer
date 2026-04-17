@@ -4,6 +4,7 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.Services.Abstractions;
 using HyPlayer.ViewModels;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -42,12 +43,12 @@ namespace HyPlayer.Pages
         private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
             var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
+            var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
             //播放全部歌曲
-            HyPlayList.RemoveAllSong();
-            await HyPlayList.AppendPlayList(playList.PlaylistId);
-            HyPlayList.PlaySourceId = $"pl{playList.PlaylistId}";
-            HyPlayList.NowPlaying = -1;
-            HyPlayList.SongMoveNext();
+            _playlist.Clear();
+            await _playlist.AppendPlayListAsync(playList.PlaylistId);
+            _playlist.PlaySourceId = $"pl{playList.PlaylistId}";
+            await _playlist.MoveNextAsync(true);
         }
 
         private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)

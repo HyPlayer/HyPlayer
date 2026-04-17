@@ -1,6 +1,9 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -127,16 +130,19 @@ public sealed partial class TestPage : Page
 
     private async void PlayResourceId(object sender, RoutedEventArgs e)
     {
-        HyPlayList.RemoveAllSong();
-        await HyPlayList.AppendNcSource(ResourceId);
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _playlist.Clear();
+        await _playlist.AppendNcSourceAsync(ResourceId);
     }
 
     private async void DumpDebugInfo_Click(object sender, RoutedEventArgs e)
     {
+        var _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         var info = JsonSerializer.Serialize(new DumpInfo
         {
-            CurrentSong = HyPlayList.NowPlayingItem,
-            CurrentPlaySource = HyPlayList.PlaySourceId,
+            CurrentSong = _state.NowPlayingItem,
+            CurrentPlaySource = _playlist.PlaySourceId,
             CurrentUser = Common.LoginedUser,
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
             IsInBackground = Common.IsInBackground,

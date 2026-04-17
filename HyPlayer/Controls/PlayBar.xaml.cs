@@ -1,12 +1,19 @@
 ﻿#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.WinUI;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
+using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
+using HyPlayer.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -29,17 +36,27 @@ using WinRT;
 
 #endregion
 
-//https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
+//https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了"用户控件"项模板
 
 namespace HyPlayer.Controls;
 
 public sealed partial class PlayBar
 {
+    // ---------------------------------------------------------------
+    //  ViewModel (resolved from DI; holds all business logic)
+    // ---------------------------------------------------------------
+    public PlayBarViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<PlayBarViewModel>();
+
+    // ---------------------------------------------------------------
+    //  UI-only fields (kept in code-behind)
+    // ---------------------------------------------------------------
+    private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding = false;
-    public PlayMode NowPlayType = PlayMode.DefaultRoll;
+    public PlayMode NowPlayType => ViewModel.NowPlayType;
     private TimeSpan StartingTimeSpan = TimeSpan.Zero;
-    public ObservableCollection<HyPlayItem> PlayItems = [];
+    public ObservableCollection<HyPlayItem> PlayItems => ViewModel.PlaylistItems;
 #nullable enable
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
 #nullable restore
@@ -55,7 +72,7 @@ DoubleAnimation verticalAnimation;
     {
         Common.BarPlayBar = this;
         InitializeComponent();
-        HyPlayList.Player.OnGlobalPlaybackStatusChanged += Player_OnGlobalPlaybackStatusChanged;
+        _player.OnGlobalPlaybackStatusChanged += Player_OnGlobalPlaybackStatusChanged;
     }
 
     private void Player_OnGlobalPlaybackStatusChanged(PlaybackStatus status)
@@ -63,7 +80,7 @@ DoubleAnimation verticalAnimation;
         _ = Common.Invoke(() =>
         {
             PlayStateIcon.Glyph =
-                        HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
+                        _player.GlobalPlaybackStatus == PlaybackStatus.Playing
                             ? "\uF8AE"
                             : "\uF5B0";
             if (status == PlaybackStatus.Playing)
@@ -93,26 +110,26 @@ DoubleAnimation verticalAnimation;
         {
             try
             {
-                if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
+                if (ViewModel.NowPlayingItem?.PlayItem == null) return;
                 var _lyricIsOnShowTimespan = ts;
                 if (!_isSliding)
                 {
-                    SliderProgress.Value = HyPlayList.Player.PrimaryAudioInputNode?.Position.TotalMilliseconds ?? 0;
+                    SliderProgress.Value = _player.PrimaryAudioInputNode?.Position.TotalMilliseconds ?? 0;
                 }
 
-                if ((HyPlayList.Player.PrimaryAudioInputNode?.Position.Hours ?? 0) == 0)
+                if ((_player.PrimaryAudioInputNode?.Position.Hours ?? 0) == 0)
                 {
-                    if ((HyPlayList.Player.PrimaryAudioInputNode?.Position.Minutes ?? 0) < 10)
+                    if ((_player.PrimaryAudioInputNode?.Position.Minutes ?? 0) < 10)
                         TextBlockNowTime.Text =
-                            HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"m\:ss") ?? string.Empty;
+                            _player.PrimaryAudioInputNode?.Position.ToString(@"m\:ss") ?? string.Empty;
                     else
                         TextBlockNowTime.Text =
-                            HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"mm\:ss") ?? string.Empty;
+                            _player.PrimaryAudioInputNode?.Position.ToString(@"mm\:ss") ?? string.Empty;
                 }
                 else
                 {
                     TextBlockNowTime.Text =
-                        HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"hh\:mm\:ss") ?? string.Empty;
+                        _player.PrimaryAudioInputNode?.Position.ToString(@"hh\:mm\:ss") ?? string.Empty;
                 }
             }
             catch
@@ -131,16 +148,16 @@ DoubleAnimation verticalAnimation;
 
     public void LoadPlayingFile(HyPlayItem mpi)
     {
-        if (HyPlayList.NowPlayingItem == null) return;
+        if (ViewModel.NowPlayingItem == null) return;
         _ = Common.Invoke(() => ApplicationView.GetForCurrentView().Title =
-                $"{HyPlayList.NowPlayingItem.Name} - {HyPlayList.NowPlayingItem.ArtistString}");
+                $"{ViewModel.NowPlayingItem.Name} - {ViewModel.NowPlayingItem.ArtistString}");
 
-        //SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
+        //SliderAudioRate.Value = ViewModel.Volume * 100;
 
         _ = Common.Invoke(() =>
         {
             PlayStateIcon.Glyph =
-            HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
+            _player.GlobalPlaybackStatus == PlaybackStatus.Playing
                 ? "\uF8AE"
                 : "\uF5B0";
             if (Common.IsInFm)
@@ -152,7 +169,8 @@ DoubleAnimation verticalAnimation;
             else
             {
                 IconPrevious.Glyph = "\uF8AC";
-                switch (HyPlayList.NowPlayType)
+                var nowPlayType = ViewModel.NowPlayType;
+                switch (nowPlayType)
                 {
                     case PlayMode.Shuffled:
                         //随机
@@ -173,7 +191,7 @@ DoubleAnimation verticalAnimation;
             }
 
             // 恢复播放音量
-            if (HyPlayList.NowPlayingItem == null)
+            if (ViewModel.NowPlayingItem == null)
             {
                 TbSingerName.Content = null;
                 TbSongName.Text = null;
@@ -183,7 +201,7 @@ DoubleAnimation verticalAnimation;
                 return;
             }
 
-            var totalTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.LengthInMilliseconds);
+            var totalTime = TimeSpan.FromMilliseconds(ViewModel.NowPlayingItem.LengthInMilliseconds);
             if (totalTime.Hours == 0)
             {
                 if (totalTime.Minutes < 10)
@@ -197,7 +215,7 @@ DoubleAnimation verticalAnimation;
             }
 
 
-            if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
+            if (ViewModel.NowPlayingItem?.PlayItem == null) return;
 
             if (_isSliding)
             {
@@ -206,27 +224,27 @@ DoubleAnimation verticalAnimation;
             }
 
             SliderProgress.Minimum = 0;
-            SliderProgress.Maximum = HyPlayList.NowPlayingItem.LengthInMilliseconds;
-            SliderProgress.Value = HyPlayList.Player.PrimaryAudioInputNode?.Position.TotalMilliseconds ?? 0;
+            SliderProgress.Maximum = ViewModel.NowPlayingItem.LengthInMilliseconds;
+            SliderProgress.Value = _player.PrimaryAudioInputNode?.Position.TotalMilliseconds ?? 0;
 
             TextBlockNowTime.Text =
-                HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"m\:ss") ?? "0:00";
+                _player.PrimaryAudioInputNode?.Position.ToString(@"m\:ss") ?? "0:00";
 
-            TbSingerName.Content = HyPlayList.NowPlayingItem.ArtistString;
-            TbSongName.Text = HyPlayList.NowPlayingItem.Name;
-            TbAlbumName.Content = HyPlayList.NowPlayingItem.AlbumString;
+            TbSingerName.Content = ViewModel.NowPlayingItem.ArtistString;
+            TbSongName.Text = ViewModel.NowPlayingItem.Name;
+            TbAlbumName.Content = ViewModel.NowPlayingItem.AlbumString;
 
             // 新版随机播放算法
             realSelectSong = false;
-            if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
+            if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
                 Common.Setting.displayShuffledList)
                 ListBoxPlayList.SelectedIndex = HyPlayList.ShufflingIndex;
             else
-                ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
+                ListBoxPlayList.SelectedIndex = ViewModel.NowPlayingIndex;
 
             realSelectSong = true;
 
-            TbSongTag.Text = HyPlayList.NowPlayingItem.QualityTag ?? "";
+            TbSongTag.Text = ViewModel.NowPlayingItem.QualityTag ?? "";
             Btn_Share.IsEnabled =
                 mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive;
         });
@@ -244,7 +262,7 @@ DoubleAnimation verticalAnimation;
                 FlyoutLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
-                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.Id);
+                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(ViewModel.NowPlayingItem.Id);
             });
             HistoryManagement.AddNCSongHistory(mpi.Id);
         }
@@ -261,28 +279,10 @@ DoubleAnimation verticalAnimation;
 
     public void RefreshSongList(bool isShuffle = false)
     {
-        List<HyPlayItem> targetingList;
-        int targetingIndex;
-        // 新版随机播放算法
-        if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
-            Common.Setting.displayShuffledList)
-        {
-            targetingIndex = HyPlayList.ShufflingIndex;
-            targetingList = [.. HyPlayList.ShuffleList.Select(t => HyPlayList.List[t])];
-            PlayListTitle.Text = "随机播放列表 (共" + targetingList.Count + "首)";
-        }
-        else
-        {
-            targetingIndex = HyPlayList.NowPlaying;
-            targetingList = HyPlayList.List;
-            PlayListTitle.Text = "播放列表 (共" + targetingList.Count + "首)";
-        }
+        ViewModel.RefreshPlaylistItems(isShuffle);
+        PlayListTitle.Text = ViewModel.GetPlaylistTitle();
 
-        realSelectSong = false;
-        PlayItems.Clear();
-        targetingList.ForEach(PlayItems.Add);
-        realSelectSong = true;
-
+        var targetingIndex = ViewModel.GetTargetingIndex();
         if (targetingIndex == -1 || targetingIndex >= PlayItems.Count) return;
         realSelectSong = false;
         ListBoxPlayList.SelectedIndex = targetingIndex;
@@ -291,69 +291,49 @@ DoubleAnimation verticalAnimation;
 
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
-        if (!HyPlayList.Player.PlayerCreated || HyPlayList.NowPlayingItem == null) return;
-        if (HyPlayList.NowPlayingItem?.Name != null && HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Closed)
-            _ = HyPlayList.LoadMediaSource(HyPlayList.List[HyPlayList.NowPlaying]);
-        if (HyPlayList.IsPlaying)
-        {
-            HyPlayList.Player.PauseAll();
-        }
-        else
-        {
-            HyPlayList.Player.PlayAll();
-        }
+        if (!_player.PlayerCreated || ViewModel.NowPlayingItem == null) return;
+        ViewModel.TogglePlayPauseCommand.Execute(null);
     }
 
     private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
-        HyPlayList.PlayerOutgoingVolume = e.NewValue / 100;
+        ViewModel.SetVolumeCommand.Execute(e.NewValue);
     }
 
     private void BtnMute_OnCllick(object sender, RoutedEventArgs e)
     {
-        HyPlayList.Player.IsMuted = !HyPlayList.Player.IsMuted;
-        BtnMuteIcon.Glyph = HyPlayList.Player.IsMuted ? "\uE198" : "\uE15D";
-        FlyoutBtnMuteIcon.Glyph = HyPlayList.Player.IsMuted ? "\uE198" : "\uE15D";
-        BtnVolIcon.Glyph = HyPlayList.Player.IsMuted ? "\uE198" : "\uE15D";
-        //SliderAudioRate.Visibility = HyPlayList.Player.IsMuted ? Visibility.Collapsed : Visibility.Visible;
+        _player.IsMuted = !_player.IsMuted;
+        BtnMuteIcon.Glyph = _player.IsMuted ? "\uE198" : "\uE15D";
+        FlyoutBtnMuteIcon.Glyph = _player.IsMuted ? "\uE198" : "\uE15D";
+        BtnVolIcon.Glyph = _player.IsMuted ? "\uE198" : "\uE15D";
+        //SliderAudioRate.Visibility = _player.IsMuted ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void BtnPreviousSong_OnClick(object sender, RoutedEventArgs e)
     {
-        if (Common.IsInFm)
-            PersonalFM.ExitFm();
-        else
-            HyPlayList.SongMovePrevious();
+        ViewModel.MovePreviousCommand.Execute(null);
     }
 
     private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
     {
-        HyPlayList.SongMoveNext();
+        ViewModel.MoveNextCommand.Execute(null);
     }
 
     private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
-            Common.Setting.displayShuffledList)
+        if (ListBoxPlayList.SelectedItem != null && ListBoxPlayList.SelectedItem != ViewModel.NowPlayingItem &&
+            realSelectSong)
         {
-            if (ListBoxPlayList.SelectedItem != null && ListBoxPlayList.SelectedItem != HyPlayList.NowPlayingItem &&
-                realSelectSong)
-            {
-                HyPlayList.SongMoveTo(ListBoxPlayList.SelectedItem as HyPlayItem);
+            ViewModel.MoveToItemCommand.Execute(ListBoxPlayList.SelectedItem as HyPlayItem);
+            if (ViewModel.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
+                Common.Setting.displayShuffledList)
                 HyPlayList.ShufflingIndex = ListBoxPlayList.SelectedIndex;
-            }
-        }
-        else
-        {
-            if (ListBoxPlayList.SelectedItem != null && ListBoxPlayList.SelectedItem != HyPlayList.NowPlayingItem &&
-                realSelectSong)
-                HyPlayList.SongMoveTo(ListBoxPlayList.SelectedItem as HyPlayItem);
         }
     }
 
     public void ShowExpandedPlayer()
     {
-        if (!HyPlayList.Player.PlayerCreated || HyPlayList.NowPlayingItem?.PlayItem?.AudioGraphPlaybackSource == null) return;
+        if (!_player.PlayerCreated || ViewModel.NowPlayingItem?.PlayItem?.AudioGraphPlaybackSource == null) return;
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
         PlayBarBackgroundFadeOut.Begin();
@@ -442,16 +422,17 @@ DoubleAnimation verticalAnimation;
         var region = Common.PageBase.AppTitleBar.FindDescendant("PART_DragRegion")?.As<Grid>();
         Window.Current.SetTitleBar(region);
         Common.IsExpanded = false;
-        RefreshPlayBarCover(HyPlayList.NowPlayingItem);
+        RefreshPlayBarCover(ViewModel.NowPlayingItem);
     }
 
     private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
     {
-        HyPlayList.ManualRemoveAllSong();
+        ViewModel.RemoveAllCommand.Execute(null);
     }
 
     private void ButtonAddLocal_OnClick(object sender, RoutedEventArgs e)
     {
+        // TODO: Migrate PickLocalFile to IPlaylistService.AppendStorageFilesAsync
         _ = HyPlayList.PickLocalFile();
     }
 
@@ -460,8 +441,7 @@ DoubleAnimation verticalAnimation;
         if (sender is Button btn)
         {
             var item = btn.DataContext as HyPlayItem;
-            var index = HyPlayList.List.IndexOf(item);
-            HyPlayList.RemoveSong(index);
+            ViewModel.RemoveItemCommand.Execute(item);
             RefreshSongList();
         }
     }
@@ -470,42 +450,34 @@ DoubleAnimation verticalAnimation;
     {
         if (!Common.IsInFm)
         {
-            switch (NowPlayType)
+            ViewModel.ChangePlayModeCommand.Execute(null);
+            // Update UI icons based on new play mode
+            switch (ViewModel.NowPlayType)
             {
-                case PlayMode.DefaultRoll:
-                    //变成随机
-                    HyPlayList.ChangePlayMode(PlayMode.Shuffled);
-                    NowPlayType = PlayMode.Shuffled;
+                case PlayMode.Shuffled:
                     IconPlayType.Glyph = "\uE14B";
                     FlyoutPlayRollType.Text = "随机播放";
                     RefreshSongList();
                     break;
-                case PlayMode.Shuffled:
-                    //变成单曲
+                case PlayMode.SinglePlay:
                     IconPlayType.Glyph = "\uE1CC";
-                    HyPlayList.ChangePlayMode(PlayMode.SinglePlay);
-                    NowPlayType = PlayMode.SinglePlay;
                     FlyoutPlayRollType.Text = "单曲循环";
                     break;
-                case PlayMode.SinglePlay:
-                    //变成顺序
-                    HyPlayList.ChangePlayMode(PlayMode.DefaultRoll);
-                    NowPlayType = PlayMode.DefaultRoll;
+                case PlayMode.DefaultRoll:
                     IconPlayType.Glyph = "\uE169";
                     FlyoutPlayRollType.Text = "顺序播放";
                     RefreshSongList();
                     break;
             }
-
         }
         else
         {
             _ = Common.NeteaseAPI.RequestAsync(NeteaseApis.PersonalFmTrashApi,
                 new FmTrashRequest
                 {
-                    Id = HyPlayList.NowPlayingItem.Id
+                    Id = ViewModel.NowPlayingItem.Id
                 });
-            PersonalFM.LoadNextFM();
+            PersonalFM.LoadNextFMStatic();
         }
     }
 
@@ -518,19 +490,19 @@ DoubleAnimation verticalAnimation;
     {
         try
         {
-            if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                if (HyPlayList.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
+                if (ViewModel.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
                 {
-                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.Artist[0].Id);
+                    Common.NavigatePage(typeof(Me), ViewModel.NowPlayingItem.Artist[0].Id);
                 }
                 else
                 {
-                    if (HyPlayList.NowPlayingItem.Artist.Count > 1)
-                        await new ArtistSelectDialog(HyPlayList.NowPlayingItem.Artist).ShowAsync();
+                    if (ViewModel.NowPlayingItem.Artist.Count > 1)
+                        await new ArtistSelectDialog(ViewModel.NowPlayingItem.Artist).ShowAsync();
                     else
                         Common.NavigatePage(typeof(ArtistPage),
-                            HyPlayList.NowPlayingItem.Artist[0].Id);
+                            ViewModel.NowPlayingItem.Artist[0].Id);
                 }
 
                 //CollapseExpandedPlayer();
@@ -545,17 +517,17 @@ DoubleAnimation verticalAnimation;
     {
         try
         {
-            if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                if (HyPlayList.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
+                if (ViewModel.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
                 {
-                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.Artist[0].Id);
+                    Common.NavigatePage(typeof(Me), ViewModel.NowPlayingItem.Artist[0].Id);
                 }
                 else
                 {
-                    if (HyPlayList.NowPlayingItem.Album.Id != "0")
+                    if (ViewModel.NowPlayingItem.Album.Id != "0")
                         Common.NavigatePage(typeof(AlbumPage),
-                            HyPlayList.NowPlayingItem.Album.Id);
+                            ViewModel.NowPlayingItem.Album.Id);
                 }
             }
         }
@@ -566,24 +538,24 @@ DoubleAnimation verticalAnimation;
 
     private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            await new SongListSelect(HyPlayList.NowPlayingItem.Id).ShowAsync();
+        if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            await new SongListSelect(ViewModel.NowPlayingItem.Id).ShowAsync();
     }
 
     private void Btn_Down_OnClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.ItemType is HyPlayItemType.Netease or HyPlayItemType.Radio)
+        if (ViewModel.NowPlayingItem.ItemType is HyPlayItemType.Netease or HyPlayItemType.Radio)
         {
-            DownloadManager.AddDownload(HyPlayList.NowPlayingItem.ToNCSong());
+            DownloadManager.AddDownload(ViewModel.NowPlayingItem.ToNCSong());
         }
     }
 
     private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.Id);
+        if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            Common.NavigatePage(typeof(Comments), "sg" + ViewModel.NowPlayingItem.Id);
         else
-            Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.Album.Alias);
+            Common.NavigatePage(typeof(Comments), "fm" + ViewModel.NowPlayingItem.Album.Alias);
         if (Common.Setting.forceMemoryGarbage)
             Common.NavigatePage(typeof(BlankPage));
         CollapseExpandedPlayer();
@@ -592,18 +564,18 @@ DoubleAnimation verticalAnimation;
     private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
     {
         //TODO: 分享电台节目
-        if (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Netease) return;
+        if (ViewModel.NowPlayingItem.ItemType != HyPlayItemType.Netease) return;
         var dataTransferManager = DataTransferManager.GetForCurrentView();
 
         dataTransferManager.DataRequested += (manager, args) =>
         {
             var dataPackage = new DataPackage();
             dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?Id=" +
-                                           HyPlayList.NowPlayingItem.Id));
-            dataPackage.Properties.Title = HyPlayList.NowPlayingItem.Name;
+                                           ViewModel.NowPlayingItem.Id));
+            dataPackage.Properties.Title = ViewModel.NowPlayingItem.Name;
             dataPackage.Properties.Description =
                 "歌手: " + string.Join(';',
-                    HyPlayList.NowPlayingItem.Artist
+                    ViewModel.NowPlayingItem.Artist
                         .Select(t => t.Name));
             var request = args.Request;
             request.Data = dataPackage;
@@ -666,13 +638,16 @@ DoubleAnimation verticalAnimation;
 
     private void ButtonPlayList_OnClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlaying >= 0 && HyPlayList.NowPlaying < PlayItems.Count)
-            if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
+        if (ViewModel.NowPlayingIndex >= 0 && ViewModel.NowPlayingIndex < PlayItems.Count)
+        {
+            var nowPlayType = ViewModel.NowPlayType;
+            if (nowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
                 Common.Setting.displayShuffledList)
                 // 新的随机算法
                 ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.ShufflingIndex]);
             else
-                ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.NowPlaying]);
+                ListBoxPlayList.ScrollIntoView(PlayItems[ViewModel.NowPlayingIndex]);
+        }
     }
 
     private void ImageContainer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -698,23 +673,34 @@ DoubleAnimation verticalAnimation;
 
     private void OnEnteringForeground()
     {
-        LoadPlayingFile(HyPlayList.NowPlayingItem);
-        RefreshPlayBarCover(HyPlayList.NowPlayingItem);
+        LoadPlayingFile(ViewModel.NowPlayingItem);
+        RefreshPlayBarCover(ViewModel.NowPlayingItem);
     }
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
         InitializedAni.Begin();
         PlayBarBackgroundFadeIn.Begin();
-        HyPlayList.PlayerOutgoingVolume = (double)Common.Setting.Volume / 100;
-        SliderAudioRate.Value = HyPlayList.PlayerOutgoingVolume * 100;
-        HyPlayList.OnPlayItemChange += LoadPlayingFile;
-        HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
-        HyPlayList.OnPlayListAddDone += RefreshSongList;
-        HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
-        HyPlayList.OnLoginDone += HyPlayListOnOnLoginDone;
-        HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
-        HyPlayList.OnSongCoverChanged += RefreshPlayBarCover;
+        ViewModel.SetVolumeCommand.Execute((double)Common.Setting.Volume);
+        SliderAudioRate.Value = (double)Common.Setting.Volume;
+
+        // --- Messenger-based event subscriptions (replacing HyPlayList.OnXxx) ---
+        var messenger = WeakReferenceMessenger.Default;
+        messenger.Register<TrackChangedMessage>(this, (_, m) => LoadPlayingFile(m.Item));
+        messenger.Register<PlaylistChangedMessage>(this, (_, m) =>
+        {
+            if (!m.IsShuffleTrigger && ViewModel.Items.Count == 0)
+                HyPlayListOnOnSongRemoveAll();
+            else
+                RefreshSongList(m.IsShuffleTrigger);
+        });
+        messenger.Register<SongLikeStatusChangedMessage>(this, (_, m) => HyPlayList_OnSongLikeStatusChange(m.IsLiked));
+        messenger.Register<CoverChangedMessage>(this, (_, m) => RefreshPlayBarCover(m.Item));
+        messenger.Register<LoginCompletedMessage>(this, (_, _) => HyPlayListOnOnLoginDone());
+
+        // Position updates now use Messenger too
+        messenger.Register<PositionTickMessage>(this, (_, m) => OnPlayPositionChange(m.Position));
+
         Common.OnEnterForegroundFromBackground += OnEnteringForeground;
         if (Common.Setting.playbarButtonsTransparent)
         {
@@ -737,7 +723,7 @@ DoubleAnimation verticalAnimation;
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
         realSelectSong = false;
         realSelectSong = true;
-        Common.Logs.Add("Now PlaySource is " + HyPlayList.PlaySourceId);
+        Common.Logs.Add("Now PlaySource is " + ViewModel.PlaySourceId);
 
         if (Common.IsExpanded)
             Common.BarPlayBar.ShowExpandedPlayer();
@@ -773,15 +759,15 @@ DoubleAnimation verticalAnimation;
 
     public async void RefreshPlayBarCover(HyPlayItem playItem)
     {
-        if (HyPlayList.CoverStream == null) return;
+        if (ViewModel.CoverStream == null) return;
         _ = Common.Invoke(async () =>
         {
             if (GridSongInfo.Visibility == Visibility.Visible && Opacity != 0)
             {
                 try
                 {
-                    if (playItem != HyPlayList.NowPlayingItem) return;
-                    using var stream = HyPlayList.CoverStream.CloneStream();
+                    if (playItem != ViewModel.NowPlayingItem) return;
+                    using var stream = ViewModel.CoverStream.CloneStream();
                     await AlbumImageSource.SetSourceAsync(stream);
                 }
                 catch
@@ -807,7 +793,7 @@ DoubleAnimation verticalAnimation;
 
     private async void HyPlayListOnOnLoginDone()
     {
-        if (HyPlayList.PlaySourceId == "local") return;
+        if (ViewModel.PlaySourceId == "local") return;
         try
         {
             var list = await HistoryManagement.GetcurPlayingListHistory();
@@ -817,6 +803,7 @@ DoubleAnimation verticalAnimation;
                     out var result);
                 if (success)
                 {
+                    // TODO: Migrate AppendNcSongs + NotifyPlayItemChanged to IPlaylistService
                     HyPlayList.NowPlaying = result;
                     HyPlayList.AppendNcSongs(list);
                     HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
@@ -831,12 +818,12 @@ DoubleAnimation verticalAnimation;
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.ABStartPoint = HyPlayList.Player.PrimaryAudioInputNode.Position;
+        Common.Setting.ABStartPoint = _player.PrimaryAudioInputNode.Position;
     }
 
     private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.ABEndPoint = HyPlayList.Player.PrimaryAudioInputNode.Position;
+        Common.Setting.ABEndPoint = _player.PrimaryAudioInputNode.Position;
     }
 
     private void ABRepeatStateButton_Click(object sender, RoutedEventArgs e)
@@ -850,7 +837,7 @@ DoubleAnimation verticalAnimation;
         var value = TimeSpan.FromMilliseconds(SliderProgress.Value);
         if (Math.Abs((value - StartingTimeSpan).TotalMilliseconds) > 250d)
         {
-            HyPlayList.Seek(value);
+            ViewModel.SeekCommand.Execute(value);
         }
 
         _isSliding = false;
@@ -866,7 +853,7 @@ DoubleAnimation verticalAnimation;
     {
         var value = TimeSpan.FromMilliseconds(SliderProgress.Value);
         StartingTimeSpan = value;
-        HyPlayList.Seek(value);
+        ViewModel.SeekCommand.Execute(value);
     }
 
     private void CopySongDetailFlyoutItem_Click(object sender, RoutedEventArgs e)
@@ -894,8 +881,9 @@ DoubleAnimation verticalAnimation;
 
     private void BtnReverse_Click(object sender, RoutedEventArgs e)
     {
+        // TODO: Migrate List.Reverse to IPlaylistService (needs mutable list API or dedicated method)
         HyPlayList.List.Reverse();
-        HyPlayList.SongAppendDone();
+        ViewModel.NotifyAppendDone();
         HyPlayList.NowPlaying = HyPlayList.List.Count - HyPlayList.NowPlaying - 1;
     }
 }

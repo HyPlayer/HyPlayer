@@ -1,12 +1,16 @@
 ﻿using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,6 +23,13 @@ namespace HyPlayer.ViewModels
 {
     public partial class SongListViewModel : ObservableRecipient
     {
+        private readonly IPlaylistService _playlist;
+
+        public SongListViewModel(IPlaylistService playlist)
+        {
+            _playlist = playlist;
+        }
+
         public ObservableCollection<NCSong> Songs { get; set; } = [];
         [ObservableProperty]
         public partial NCPlayList PlayList { get; set; }
@@ -104,7 +115,8 @@ namespace HyPlayer.ViewModels
                 await LoadDailyRcmdItems();
             }
             if (Common.Setting.greedlyLoadPlayContainerItems)
-                HyPlayList.OnTimerTicked += GreedlyLoad;
+                // Use WeakReferenceMessenger for timer-tick driven greedy loading
+                WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((SongListViewModel)r).GreedlyLoad());
             IsLoading = false;
         }
 
@@ -238,16 +250,23 @@ namespace HyPlayer.ViewModels
             }
             else if (HasMore == false)
             {
-                HyPlayList.OnTimerTicked -= GreedlyLoad;
+                // Unregister greedy-load tick handler
+                WeakReferenceMessenger.Default.Unregister<PositionTickMessage>(this);
             }
         }
         [RelayCommand]
         private void LoadAllSongs()
         {
             if (!PlayList.IsDailyRecommend)
-                HyPlayList.AppendPlayList(PlayList.PlaylistId).SafeFireAndForget();
+            {
+                _playlist.AppendPlayListAsync(PlayList.PlaylistId).SafeFireAndForget();
+            }
             else
-                HyPlayList.AppendNcSongs(Songs.ToList());
+            {
+                var items = Songs.Select(s => _playlist.NCSongToPlayItem(s));
+                _playlist.AppendItems(items);
+                _playlist.NotifyAppendDone();
+            }
         }
         [RelayCommand]
         private void NavigateToComments()
@@ -279,18 +298,19 @@ namespace HyPlayer.ViewModels
         {
             if (!PlayList.IsDailyRecommend)
             {
-                HyPlayList.RemoveAllSong();
-                await HyPlayList.AppendPlayList(PlayList.PlaylistId);
-                HyPlayList.PlaySourceId = $"pl{PlayList.PlaylistId}";
-                HyPlayList.NowPlaying = -1;
-                HyPlayList.SongMoveNext();
+                _playlist.Clear();
+                await _playlist.AppendPlayListAsync(PlayList.PlaylistId);
+                _playlist.PlaySourceId = $"pl{PlayList.PlaylistId}";
+                await _playlist.MoveNextAsync(userInitiated: true);
             }
             else
             {
-                HyPlayList.AppendNcSongs(Songs.ToList());
-                HyPlayList.PlaySourceId = $"{PlayList.PlaylistId}";
-                HyPlayList.NowPlaying = -1;
-                HyPlayList.SongMoveNext();
+                _playlist.Clear();
+                var items = Songs.Select(s => _playlist.NCSongToPlayItem(s));
+                _playlist.AppendItems(items);
+                _playlist.PlaySourceId = $"{PlayList.PlaylistId}";
+                _playlist.NotifyAppendDone();
+                await _playlist.MoveNextAsync(userInitiated: true);
             }
         }
 

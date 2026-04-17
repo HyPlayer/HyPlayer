@@ -1,6 +1,8 @@
 ﻿#region
 
 using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
@@ -10,6 +12,11 @@ using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.NeteaseApi.ApiContracts.Utils;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
+using HyPlayer.UWP.Chopin;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.UI.Xaml.Controls;
 using QRCoder;
 using System;
@@ -48,19 +55,25 @@ namespace HyPlayer.Pages;
 public sealed partial class BasePage : Page
 {
     private string nowqrkey;
+    private readonly IPlaybackControlService _playback;
+    private readonly PlaybackStateService _state;
+    private readonly AudioGraphPlayer _player;
 
     public BasePage()
     {
+        _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+        _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
         InitializeComponent();
         Common.PageBase = this;
         Common.GlobalTip = TheTeachingTip;
 
-        if (!HyPlayList.Player.PlayerCreated)
+        if (!_player.PlayerCreated)
         {
             HyPlayList.InitializeHyPlaylist();
         }
-        HyPlayList.OnPlayItemChange += OnChangePlayItem;
-        HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
+        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((BasePage)r).OnChangePlayItem(m.Item));
+        WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (r, m) => ((BasePage)r).HyPlayList_OnSongCoverChanged(m.Item));
 
         ApplicationView.TerminateAppOnFinalViewClose = false;
         Common.BaseFrame = BaseFrame;
@@ -96,9 +109,9 @@ public sealed partial class BasePage : Page
         }
 
         if (args.VirtualKey == VirtualKey.GamepadY)
-            if (HyPlayList.IsPlaying)
-                HyPlayList.Player.PauseAll();
-            else if (!HyPlayList.IsPlaying) HyPlayList.Player.PlayAll();
+            if (_playback.IsPlaying)
+                _player.PauseAll();
+            else if (!_playback.IsPlaying) _player.PlayAll();
 
         if (args.VirtualKey == VirtualKey.Escape)
             if (Common.IsExpanded)
@@ -706,15 +719,15 @@ public sealed partial class BasePage : Page
 
     public async Task RefreshNavItemCover(HyPlayItem playItem)
     {
-        if (HyPlayList.CoverStream == null) return;
+        if (_state.CoverStream == null) return;
         _ = Common.Invoke(async () =>
         {
             if (NavItemBlank.Opacity != 0 && !Common.IsExpanded && !Common.Setting.noImage)
             {
                 try
                 {
-                    if (playItem != HyPlayList.NowPlayingItem) return;
-                    using var stream = HyPlayList.CoverStream.CloneStream();
+                    if (playItem != _state.NowPlayingItem) return;
+                    using var stream = _state.CoverStream.CloneStream();
                     await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
@@ -734,8 +747,8 @@ public sealed partial class BasePage : Page
             {
                 try
                 {
-                    if (playItem != HyPlayList.NowPlayingItem || HyPlayList.CoverStream == null) return;
-                    using var stream = HyPlayList.CoverStream.CloneStream();
+                    if (playItem != _state.NowPlayingItem || _state.CoverStream == null) return;
+                    using var stream = _state.CoverStream.CloneStream();
                     await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch

@@ -4,6 +4,11 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -140,7 +145,7 @@ public sealed partial class RadioPage : Page
         SongContainer.ListSource = "rd" + Radio.Id;
         _programLoaderTask = LoadProgram();
         if (Common.Setting.greedlyLoadPlayContainerItems)
-            HyPlayList.OnTimerTicked += GreedlyLoad;
+            WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((RadioPage)r).GreedlyLoad());
     }
 
     int treashold = 3;
@@ -163,7 +168,7 @@ public sealed partial class RadioPage : Page
             }
             else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
-                HyPlayList.OnTimerTicked -= GreedlyLoad;
+                WeakReferenceMessenger.Default.Unregister<PositionTickMessage>(this);
             }
         });
     }
@@ -176,9 +181,10 @@ public sealed partial class RadioPage : Page
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.AppendNcSource("rd" + Radio.Id);
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        await _playlist.AppendNcSourceAsync("rd" + Radio.Id);
         if (asc) HyPlayList.List.Reverse();
-        HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
+        await _playlist.MoveToAsync(_playlist.Items.FirstOrDefault());
     }
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
@@ -197,7 +203,8 @@ public sealed partial class RadioPage : Page
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.AppendRadioList(Radio.Id, asc);
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        await _playlist.AppendRadioListAsync(Radio.Id, asc);
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)

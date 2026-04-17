@@ -5,6 +5,13 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.MediaProviders;
+using HyPlayer.Services.Playback.Strategies;
+using HyPlayer.Services.Playback.Transitions;
+using HyPlayer.UWP.Chopin;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using HyPlayer.ViewModels;
 using Kawazu;
@@ -92,6 +99,39 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = LastFMConstants.APIKEY, ApiSecret = LastFMConstants.SECRET }, client));
         serviceCollection.AddSingleton(setting);
         serviceCollection.AddSingleton<AudioGraphPlayer>();
+        serviceCollection.AddSingleton<IPlayer>(sp => sp.GetRequiredService<AudioGraphPlayer>());
+
+        // ── 播放核心：状态中心 ──
+        serviceCollection.AddSingleton<PlaybackStateService>();
+
+        // ── 播放核心：媒体源 Provider 链（注册顺序 = 优先级）──
+        serviceCollection.AddSingleton<IMediaSourceProvider, NcmFileProvider>();           // ncm — NCM 加密文件
+        serviceCollection.AddSingleton<IMediaSourceProvider, NeteaseLocalFileProvider>();   // nlo — 网易云已下载到本地
+        serviceCollection.AddSingleton<IMediaSourceProvider, LocalFileProvider>();          // lcl — 普通本地文件
+        serviceCollection.AddSingleton<IMediaSourceProvider, CachedNeteaseProvider>();      // nca — 网易云在线 + 缓存
+        serviceCollection.AddSingleton<IMediaSourceProvider, NeteaseStreamingProvider>();   // nst — 网易云纯流式
+        serviceCollection.AddSingleton<IMediaSourceService, MediaSourceService>();
+
+        // ── 播放核心：播放策略 ──
+        serviceCollection.AddSingleton<IPlayStrategy, SequentialStrategy>();       // seq — 列表循环
+        serviceCollection.AddSingleton<IPlayStrategy, SingleRepeatStrategy>();     // sgl — 单曲循环
+        serviceCollection.AddSingleton<IPlayStrategy, ShuffleStrategy>();          // shf — 随机播放
+        serviceCollection.AddSingleton<IPlayStrategy, ShuffleNoRepeatStrategy>();  // shn — 随机不重复
+        serviceCollection.AddSingleton<IPlayStrategy, PersonalFmStrategy>();       // pfm — 私人 FM
+        serviceCollection.AddSingleton<IPlayStrategy, ListenTogetherStrategy>();   // ltg — 一起听
+
+        // ── 播放核心：曲目过渡策略 ──
+        serviceCollection.AddSingleton<ITrackTransition, DirectTransition>();      // dir — 直接切歌
+        serviceCollection.AddSingleton<ITrackTransition, CrossFadeTransition>();   // xfd — 交叉淡入淡出
+        serviceCollection.AddSingleton<ITrackTransition, GaplessTransition>();     // gap — 无缝衔接
+
+        // ── 播放核心：服务 ──
+        serviceCollection.AddSingleton<IPlaybackControlService, PlaybackControlService>();
+        serviceCollection.AddSingleton<IPlaylistService, PlaylistService>();
+        serviceCollection.AddSingleton<ILyricService, LyricService>();
+        serviceCollection.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
+
+        // ── ViewModels ──
         serviceCollection.AddTransient<HomeViewModel>();
         serviceCollection.AddTransient<MeViewModel>();
         serviceCollection.AddTransient<ExpandedPlayerViewModel>();
@@ -99,6 +139,7 @@ public sealed partial class App : Application
         serviceCollection.AddTransient<SongListViewModel>();
         serviceCollection.AddTransient<FavoriteViewModel>();
         serviceCollection.AddTransient<AlbumPageViewModel>();
+        serviceCollection.AddTransient<PlayBarViewModel>();
     }
     private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
     {

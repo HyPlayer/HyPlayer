@@ -3,6 +3,8 @@
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
+using HyPlayer.Services.Playback;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Graphics.Canvas.Effects;
 using System;
 using System.Numerics;
@@ -113,7 +115,7 @@ public sealed partial class MainPage : Page
         if (!IsPlaybarOnShow)
         {
             PointerInAni.Begin();
-            Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingItem);
+            Common.BarPlayBar.RefreshPlayBarCover(Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
             var BlankAni = new DoubleAnimation
             {
                 To = 0,
@@ -177,7 +179,7 @@ public sealed partial class MainPage : Page
         Storyboard.SetTargetProperty(BlankAni, "Opacity");
         storyboard.Children.Add(BlankAni);
         storyboard.Begin();
-        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingItem);
+        await Common.PageBase.RefreshNavItemCover(3, Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
 
     }
 

@@ -107,7 +107,7 @@ public static class HyPlayList
 
     /********        API        ********/
     public static AudioGraphPlayer Player { get; private set; } = Ioc.Default.GetService<AudioGraphPlayer>();
-    public static FadeManager FadeManager { get; private set; } = new FadeManager(Player);
+    public static FadeManager FadeManager { get; private set; } = new FadeManager();
     public static BackgroundDownloader Downloader { get; private set; } = new();
     public static SystemMediaTransportControls MediaSystemControls { get; private set; }
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;

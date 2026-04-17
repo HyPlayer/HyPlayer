@@ -2,6 +2,8 @@
 
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using HyPlayer.Services.Abstractions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -80,9 +82,10 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private void Playall_Click(object sender, RoutedEventArgs e)
     {
-        HyPlayList.RemoveAllSong();
-        HyPlayList.List.AddRange(localHyItems);
-        HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _playlist.Clear();
+        _playlist.AppendItems(localHyItems);
+        _ = _playlist.MoveToAsync(localHyItems.FirstOrDefault());
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -170,9 +173,10 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
-        HyPlayList.RemoveAllSong();
-        HyPlayList.List.AddRange(localHyItems);
-        HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedItem as HyPlayItem);
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _playlist.Clear();
+        _playlist.AppendItems(localHyItems);
+        _ = _playlist.MoveToAsync(ListBoxLocalMusicContainer.SelectedItem as HyPlayItem);
     }
 
     private async void UploadCloud_Click(object sender, RoutedEventArgs e)

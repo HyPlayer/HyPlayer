@@ -2,10 +2,14 @@
 
 #nullable enable
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.Extensions.JsonSerializer;
 using HyPlayer.Pages;
@@ -21,6 +25,7 @@ using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -53,7 +58,11 @@ namespace HyPlayer
         public delegate void PlaybarVisibilityChangedEvent(bool isActivated);
 
         public static bool Logined = false;
-        public static bool IsInFm = false;
+        public static bool IsInFm
+        {
+            get => Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm;
+            set => Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm = value;
+        }
         public static bool IsInBackground = false;
 #nullable enable
         public static NCUser? LoginedUser;
@@ -70,6 +79,7 @@ namespace HyPlayer
         public static Setting? Setting;
 #nullable restore
         public static BrushManagement BrushManagement = new();
+        private static readonly object _messagingAnchor = new();
 
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;
@@ -92,8 +102,11 @@ namespace HyPlayer
             LastFMClient = Ioc.Default.GetRequiredService<LastFMClient>();
             NeteaseAPI.Option.AdditionalParameters = Setting.ApiAdditionalParameters;
             NeteaseAPI.Option.FakeCheckToken = Setting.EnableCheckTokenApi;
-            HyPlayList.OnTimerTicked += () => RollTeachingTip();
-            HyPlayList.OnTimerTicked += ChangePlaybarVisibillity;
+            WeakReferenceMessenger.Default.Register<PositionTickMessage>(_messagingAnchor, (_, _) =>
+            {
+                RollTeachingTip();
+                ChangePlaybarVisibillity();
+            });
         }
         public static bool IsExpanded
         {
@@ -247,8 +260,9 @@ namespace HyPlayer
                     NavigatePage(typeof(Me), resourceId[2..]);
                     break;
                 case "ns":
-                    await HyPlayList.AppendNcSource(resourceId);
-                    HyPlayList.SongMoveTo(HyPlayList.List.Find(t => "ns" + t.Id == resourceId));
+                    var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+                    await playlist.AppendNcSourceAsync(resourceId);
+                    playlist.MoveToAsync(playlist.Items.FirstOrDefault(t => "ns" + t.Id == resourceId));
                     break;
                 case "ml":
                     NavigatePage(typeof(MVPage), resourceId[2..]);

@@ -4,6 +4,8 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Video;
+using HyPlayer.Services.Abstractions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -58,7 +60,7 @@ public sealed partial class MVPage : Page
 
     private void LoadThings()
     {
-        HyPlayList.Player.PauseAll();
+        Ioc.Default.GetRequiredService<IPlaybackControlService>().Pause();
         _videoLoaderTask = LoadVideo();
         _videoInfoLoaderTask = LoadVideoInfo();
         LoadComment();

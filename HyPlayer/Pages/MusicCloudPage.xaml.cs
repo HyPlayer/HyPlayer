@@ -4,6 +4,11 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Cloud;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -104,7 +109,7 @@ public sealed partial class MusicCloudPage : Page
         base.OnNavigatedTo(e);
         _loadResultTask = LoadMusicCloudItem();
         if (Common.Setting.greedlyLoadPlayContainerItems)
-            HyPlayList.OnTimerTicked += GreedlyLoad;
+            WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((MusicCloudPage)r).GreedlyLoad());
     }
 
     int treashold = 3;
@@ -127,7 +132,7 @@ public sealed partial class MusicCloudPage : Page
             }
             else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
-                HyPlayList.OnTimerTicked -= GreedlyLoad;
+                WeakReferenceMessenger.Default.Unregister<PositionTickMessage>(this);
                 OnLoadedAllSongs();
             }
         });
@@ -135,9 +140,10 @@ public sealed partial class MusicCloudPage : Page
 
     public void OnLoadedAllSongs()
     {
-        if (Common.Setting.AutoAddGreedilyLoadedSongsToPlayList && HyPlayList.PlaySourceId == "Content")
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        if (Common.Setting.AutoAddGreedilyLoadedSongsToPlayList && _playlist.PlaySourceId == "Content")
         {
-            HyPlayList.AppendNcSongRange(SongContainer.Songs.ToList());
+            _playlist.AppendNcSongRange(SongContainer.Songs.ToList());
         }
     }
 

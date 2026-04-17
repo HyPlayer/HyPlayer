@@ -4,6 +4,9 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Linq;
 using System.Threading;
@@ -32,7 +35,9 @@ internal class Api
 
     public static async Task EnterIntelligencePlay(CancellationToken cancellationToken = default)
     {
-        HyPlayList.RemoveAllSong();
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        var _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        _playlist.Clear();
         var songList = Common.MySongLists[0].PlaylistId;
         var randomSong = Common.LikedSongs[new Random().Next(0, Common.LikedSongs.Count - 1)];
         var jsoon = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaymodeIntelligenceListApi,
@@ -40,7 +45,7 @@ internal class Api
             {
                 PlaylistId = songList,
                 SongId = randomSong,
-                StartMusicId = HyPlayList.NowPlayingItem?.Id ?? randomSong,
+                StartMusicId = _state.NowPlayingItem?.Id ?? randomSong,
                 Count = Common.LikedSongs.Count
             }, cancellationToken);
 
@@ -54,11 +59,11 @@ internal class Api
         {
             if (item.SongInfo is null) continue;
             var ncSong = item.SongInfo.MapNcSong();
-            var playItem = HyPlayList.NCSongToPlayItem(ncSong);
+            var playItem = _playlist.NCSongToPlayItem(ncSong);
             playItem.InfoTag = item.Recommended ? "为你推荐" : "我的喜欢";
-            HyPlayList.AppendNcPlayItem(playItem);
-            HyPlayList.SongAppendDone();
-            HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
+            _playlist.AppendItem(playItem);
+            _playlist.NotifyAppendDone();
+            await _playlist.MoveToAsync(_playlist.Items.FirstOrDefault());
 
         }
     }

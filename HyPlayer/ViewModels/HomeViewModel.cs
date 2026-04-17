@@ -5,6 +5,7 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace HyPlayer.ViewModels
     {
 #nullable enable
         private NeteaseCloudMusicApiHandler _neteaseApi;
+        private readonly IPlaylistService _playlist;
 
         [ObservableProperty]
         public partial List<NCPlayList> RecommendedPlaylist { get; set; }
@@ -25,9 +27,10 @@ namespace HyPlayer.ViewModels
         [ObservableProperty]
         public partial List<NCPlayList> OfficialPlaylists { get; set; }
 #nullable restore
-        public HomeViewModel(NeteaseCloudMusicApiHandler neteaseApi)
+        public HomeViewModel(NeteaseCloudMusicApiHandler neteaseApi, IPlaylistService playlist)
         {
             _neteaseApi = neteaseApi;
+            _playlist = playlist;
         }
 
         public async Task GetDataAsync()
@@ -66,12 +69,13 @@ namespace HyPlayer.ViewModels
         }
 
         [RelayCommand]
-        private void OnPlayAllRecommendedSongsClicked()
+        private async Task OnPlayAllRecommendedSongsClickedAsync()
         {
-            HyPlayList.RemoveAllSong();
-            HyPlayList.AppendNcSongs(RecommendedSongs);
-            HyPlayList.NowPlaying = -1;
-            HyPlayList.SongMoveNext();
+            _playlist.Clear();
+            var items = RecommendedSongs.Select(s => _playlist.NCSongToPlayItem(s));
+            _playlist.AppendItems(items);
+            _playlist.NotifyAppendDone();
+            await _playlist.MoveNextAsync(userInitiated: true);
         }
     }
 }
