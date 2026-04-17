@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using System;
 using System.IO;
@@ -130,7 +130,7 @@ internal static class NCMFile
             using (var reader = new MemoryStream(dontModifyDecryptChunk, 6, dontModifyDecryptChunk.Length - 6))
             {
                 var infoStr = Encoding.UTF8.GetString(reader.ToArray());
-                keys = JsonSerializer.Deserialize<The163KeyClass>(infoStr, Common.DefaultOptions);
+                keys = JsonSerializer.Deserialize<The163KeyClass>(infoStr, JsonDefaults.Options);
             }
         }
 

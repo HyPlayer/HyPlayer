@@ -1,10 +1,12 @@
-﻿#region
+#region
 
 using HyPlayer.Classes;
 using HyPlayer.Pages;
 using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
 
+using HyPlayer.Services.Abstractions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
@@ -26,12 +28,12 @@ public sealed partial class ArtistSelectDialog : ContentDialog
 
     private void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        Common.NavigatePage(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].Id);
-        if (Common.IsExpanded)
+        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].Id);
+        if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
         {
-            if (Common.Setting.forceMemoryGarbage)
-                Common.NavigatePage(typeof(BlankPage));
-            Common.BarPlayBar.CollapseExpandedPlayer();
+            if (Ioc.Default.GetRequiredService<Setting>().forceMemoryGarbage)
+                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(BlankPage));
+            (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).CollapseExpandedPlayer();
         }
 
         Hide();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using HyPlayer.Classes;
 using Windows.Storage;
+using Windows.Storage.Pickers;
 
 namespace HyPlayer.Services.Abstractions;
 
@@ -108,4 +109,30 @@ public interface IPlaylistService
 
     /// <summary>追加电台节目</summary>
     Task<bool> AppendRadioListAsync(string radioId, bool asc = false);
+
+    // ────────────── Shuffle / 本地文件 / 通知 ──────────────
+
+    /// <summary>随机播放索引列表</summary>
+    List<int> ShuffleList { get; }
+
+    /// <summary>当前随机播放位置</summary>
+    int ShufflingIndex { get; set; }
+
+    /// <summary>当前正在播放的本地 StorageFile（可为 null）</summary>
+    StorageFile? NowPlayingStorageFile { get; }
+
+    /// <summary>弹出文件选择器并追加本地文件</summary>
+    Task PickLocalFileAsync();
+
+    /// <summary>加载单个 StorageFile 为 HyPlayItem</summary>
+    Task<HyPlayItem> LoadStorageFileAsync(StorageFile file, bool nocheck163 = false);
+
+    /// <summary>生成随机播放列表</summary>
+    Task CreateShufflePlayLists(string currentSongId = "-1");
+
+    /// <summary>反转播放列表</summary>
+    void ReverseList();
+
+    /// <summary>通知当前播放曲目变更（发送 TrackChangedMessage）</summary>
+    void NotifyPlayItemChanged(HyPlayItem item);
 }

@@ -44,4 +44,9 @@ public interface IPlaybackControlService
     /// 初始化播放器（AudioGraph 等底层资源）
     /// </summary>
     Task InitializeAsync();
+
+    /// <summary>
+    /// 检查 A-B 重复区间，若超出则跳回起点
+    /// </summary>
+    void CheckABTimeRemaining(TimeSpan position);
 }

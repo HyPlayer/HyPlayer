@@ -1,10 +1,11 @@
-﻿#region
+#region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.WinUI;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
 using HyPlayer.Pages;
@@ -51,6 +52,8 @@ public sealed partial class PlayBar
     //  UI-only fields (kept in code-behind)
     // ---------------------------------------------------------------
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
 
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding = false;
@@ -70,14 +73,14 @@ DoubleAnimation verticalAnimation;
 
     public PlayBar()
     {
-        Common.BarPlayBar = this;
+        Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar = this;
         InitializeComponent();
         _player.OnGlobalPlaybackStatusChanged += Player_OnGlobalPlaybackStatusChanged;
     }
 
     private void Player_OnGlobalPlaybackStatusChanged(PlaybackStatus status)
     {
-        _ = Common.Invoke(() =>
+        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
         {
             PlayStateIcon.Glyph =
                         _player.GlobalPlaybackStatus == PlaybackStatus.Playing
@@ -85,7 +88,7 @@ DoubleAnimation verticalAnimation;
                             : "\uF5B0";
             if (status == PlaybackStatus.Playing)
             {
-                if (Common.Setting.playbarBackgroundBreath)
+                if (_setting.playbarBackgroundBreath)
                     PlayBarBackgroundAni.Begin();
             }
             else
@@ -97,7 +100,7 @@ DoubleAnimation verticalAnimation;
 
     private void HyPlayListOnOnSongRemoveAll()
     {
-        _ = Common.Invoke(() =>
+        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
         {
             PlayItems.Clear();
             PlayListTitle.Text = "播放列表";
@@ -106,7 +109,7 @@ DoubleAnimation verticalAnimation;
 
     public void OnPlayPositionChange(TimeSpan ts)
     {
-        _ = Common.Invoke(() =>
+        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
         {
             try
             {
@@ -149,18 +152,18 @@ DoubleAnimation verticalAnimation;
     public void LoadPlayingFile(HyPlayItem mpi)
     {
         if (ViewModel.NowPlayingItem == null) return;
-        _ = Common.Invoke(() => ApplicationView.GetForCurrentView().Title =
+        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => ApplicationView.GetForCurrentView().Title =
                 $"{ViewModel.NowPlayingItem.Name} - {ViewModel.NowPlayingItem.ArtistString}");
 
         //SliderAudioRate.Value = ViewModel.Volume * 100;
 
-        _ = Common.Invoke(() =>
+        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
         {
             PlayStateIcon.Glyph =
             _player.GlobalPlaybackStatus == PlaybackStatus.Playing
                 ? "\uF8AE"
                 : "\uF5B0";
-            if (Common.IsInFm)
+            if (Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm)
             {
                 IconPrevious.Glyph = "\uE7E8";
                 IconPlayType.Glyph = "\uE107";
@@ -236,9 +239,9 @@ DoubleAnimation verticalAnimation;
 
             // 新版随机播放算法
             realSelectSong = false;
-            if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
-                Common.Setting.displayShuffledList)
-                ListBoxPlayList.SelectedIndex = HyPlayList.ShufflingIndex;
+            if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating &&
+                _setting.displayShuffledList)
+                ListBoxPlayList.SelectedIndex = ViewModel.GetTargetingIndex();
             else
                 ListBoxPlayList.SelectedIndex = ViewModel.NowPlayingIndex;
 
@@ -248,10 +251,10 @@ DoubleAnimation verticalAnimation;
             Btn_Share.IsEnabled =
                 mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive;
         });
-        var isLiked = Common.LikedSongs.Contains(mpi.Id);
+        var isLiked = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs.Contains(mpi.Id);
         if (mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive)
         {
-            _ = Common.Invoke(() =>
+            _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
             {
                 IconLiked.Visibility = isLiked
                     ? Visibility.Visible
@@ -262,7 +265,7 @@ DoubleAnimation verticalAnimation;
                 FlyoutLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
-                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(ViewModel.NowPlayingItem.Id);
+                //BtnFlyoutLike.IsChecked = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs.Contains(ViewModel.NowPlayingItem.Id);
             });
             HistoryManagement.AddNCSongHistory(mpi.Id);
         }
@@ -325,9 +328,12 @@ DoubleAnimation verticalAnimation;
             realSelectSong)
         {
             ViewModel.MoveToItemCommand.Execute(ListBoxPlayList.SelectedItem as HyPlayItem);
-            if (ViewModel.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
-                Common.Setting.displayShuffledList)
-                HyPlayList.ShufflingIndex = ListBoxPlayList.SelectedIndex;
+            if (ViewModel.NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating &&
+                _setting.displayShuffledList)
+            {
+                var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+                _playlist.ShufflingIndex = ListBoxPlayList.SelectedIndex;
+            }
         }
     }
 
@@ -337,14 +343,14 @@ DoubleAnimation verticalAnimation;
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
         PlayBarBackgroundFadeOut.Begin();
-        //Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
-        Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
-        Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
+        //(Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).MainFrame.Visibility = Visibility.Collapsed;
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Visibility = Visibility.Visible;
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
             new EntranceNavigationTransitionInfo());
-        Common.PageMain.GridPlayBar.BorderThickness = new Thickness(0);
-        Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
-        Common.PageMain.GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;
-        if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).GridPlayBar.BorderThickness = new Thickness(0);
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).MainFrame.Visibility = Visibility.Collapsed;
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;
+        if (_setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
             try
             {
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
@@ -352,16 +358,16 @@ DoubleAnimation verticalAnimation;
                     ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
 
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
-                Common.PageExpandedPlayer.StartExpandAnimation();
+                (Ioc.Default.GetRequiredService<IUIStateService>().PageExpandedPlayer as ExpandedPlayer).StartExpandAnimation();
             }
             catch
             {
                 //ignore
             }
 
-        if (Common.Setting.forceMemoryGarbage)
-            Common.NavigatePage(typeof(BlankPage));
-        Common.IsExpanded = true;
+        if (_setting.forceMemoryGarbage)
+            Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(BlankPage));
+        Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded = true;
         GridSongInfo.Visibility = Visibility.Collapsed;
         GridSongAdvancedOperation.Visibility = Visibility.Visible;
     }
@@ -378,14 +384,14 @@ DoubleAnimation verticalAnimation;
 
     public void CollapseExpandedPlayer()
     {
-        Common.PageMain.IsExpandedPlayerInitialized = false;
-        if (Common.PageExpandedPlayer == null) return;
-        Common.PageExpandedPlayer.StartCollapseAnimation();
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).IsExpandedPlayerInitialized = false;
+        if (Ioc.Default.GetRequiredService<IUIStateService>().PageExpandedPlayer == null) return;
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageExpandedPlayer as ExpandedPlayer).StartCollapseAnimation();
         GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
         GridSongInfo.Visibility = Visibility.Visible;
         PlayBarBackgroundFadeIn.Begin();
-        Common.BrushManagement.AccentBrush = null;
-        if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
+        Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.AccentBrush = null;
+        if (_setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
         {
             ConnectedAnimation anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
             ConnectedAnimation anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
@@ -408,20 +414,20 @@ DoubleAnimation verticalAnimation;
             }
         }
 
-        if (Common.Setting.forceMemoryGarbage)
-            Common.NavigateBack();
+        if (_setting.forceMemoryGarbage)
+            Ioc.Default.GetRequiredService<INavigationService>().NavigateBack();
         ButtonExpand.Visibility = Visibility.Visible;
         ButtonCollapse.Visibility = Visibility.Collapsed;
-        Common.PageMain.GridPlayBarMarginBlur.Visibility = Visibility.Visible;
-        Common.PageBase.AppTitleBar.ReleasePointerCaptures();
-        Common.PageExpandedPlayer = null;
-        Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
-        Common.PageMain.GridPlayBar.BorderThickness = new Thickness(1);
-        Common.PageMain.MainFrame.Visibility = Visibility.Visible;
-        Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-        var region = Common.PageBase.AppTitleBar.FindDescendant("PART_DragRegion")?.As<Grid>();
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).GridPlayBarMarginBlur.Visibility = Visibility.Visible;
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).AppTitleBar.ReleasePointerCaptures();
+        Ioc.Default.GetRequiredService<IUIStateService>().PageExpandedPlayer = null;
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Navigate(typeof(BlankPage));
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).GridPlayBar.BorderThickness = new Thickness(1);
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).MainFrame.Visibility = Visibility.Visible;
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Visibility = Visibility.Collapsed;
+        var region = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).AppTitleBar.FindDescendant("PART_DragRegion")?.As<Grid>();
         Window.Current.SetTitleBar(region);
-        Common.IsExpanded = false;
+        Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded = false;
         RefreshPlayBarCover(ViewModel.NowPlayingItem);
     }
 
@@ -432,8 +438,8 @@ DoubleAnimation verticalAnimation;
 
     private void ButtonAddLocal_OnClick(object sender, RoutedEventArgs e)
     {
-        // TODO: Migrate PickLocalFile to IPlaylistService.AppendStorageFilesAsync
-        _ = HyPlayList.PickLocalFile();
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _ = _playlist.PickLocalFileAsync();
     }
 
     private void PlayListRemove_OnClick(object sender, RoutedEventArgs e)
@@ -448,7 +454,7 @@ DoubleAnimation verticalAnimation;
 
     private void BtnPlayRollType_OnClick(object sender, RoutedEventArgs e)
     {
-        if (!Common.IsInFm)
+        if (!Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm)
         {
             ViewModel.ChangePlayModeCommand.Execute(null);
             // Update UI icons based on new play mode
@@ -472,7 +478,7 @@ DoubleAnimation verticalAnimation;
         }
         else
         {
-            _ = Common.NeteaseAPI.RequestAsync(NeteaseApis.PersonalFmTrashApi,
+            _ = _api.RequestAsync(NeteaseApis.PersonalFmTrashApi,
                 new FmTrashRequest
                 {
                     Id = ViewModel.NowPlayingItem.Id
@@ -483,7 +489,8 @@ DoubleAnimation verticalAnimation;
 
     private void BtnLike_OnClick(object sender, RoutedEventArgs e)
     {
-        HyPlayList.LikeSong();
+        var authService = Ioc.Default.GetRequiredService<IAuthService>();
+        authService.LikeSong();
     }
 
     private async void TbSingerName_OnTapped(object sender, RoutedEventArgs e)
@@ -494,14 +501,14 @@ DoubleAnimation verticalAnimation;
             {
                 if (ViewModel.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
                 {
-                    Common.NavigatePage(typeof(Me), ViewModel.NowPlayingItem.Artist[0].Id);
+                    Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me), ViewModel.NowPlayingItem.Artist[0].Id);
                 }
                 else
                 {
                     if (ViewModel.NowPlayingItem.Artist.Count > 1)
                         await new ArtistSelectDialog(ViewModel.NowPlayingItem.Artist).ShowAsync();
                     else
-                        Common.NavigatePage(typeof(ArtistPage),
+                        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(ArtistPage),
                             ViewModel.NowPlayingItem.Artist[0].Id);
                 }
 
@@ -521,12 +528,12 @@ DoubleAnimation verticalAnimation;
             {
                 if (ViewModel.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
                 {
-                    Common.NavigatePage(typeof(Me), ViewModel.NowPlayingItem.Artist[0].Id);
+                    Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me), ViewModel.NowPlayingItem.Artist[0].Id);
                 }
                 else
                 {
                     if (ViewModel.NowPlayingItem.Album.Id != "0")
-                        Common.NavigatePage(typeof(AlbumPage),
+                        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(AlbumPage),
                             ViewModel.NowPlayingItem.Album.Id);
                 }
             }
@@ -553,17 +560,17 @@ DoubleAnimation verticalAnimation;
     private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
     {
         if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            Common.NavigatePage(typeof(Comments), "sg" + ViewModel.NowPlayingItem.Id);
+            Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Comments), "sg" + ViewModel.NowPlayingItem.Id);
         else
-            Common.NavigatePage(typeof(Comments), "fm" + ViewModel.NowPlayingItem.Album.Alias);
-        if (Common.Setting.forceMemoryGarbage)
-            Common.NavigatePage(typeof(BlankPage));
+            Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Comments), "fm" + ViewModel.NowPlayingItem.Album.Alias);
+        if (_setting.forceMemoryGarbage)
+            Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(BlankPage));
         CollapseExpandedPlayer();
     }
 
     private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
     {
-        //TODO: 分享电台节目
+        // NOTE: 分享电台节目功能尚未实现
         if (ViewModel.NowPlayingItem.ItemType != HyPlayItemType.Netease) return;
         var dataTransferManager = DataTransferManager.GetForCurrentView();
 
@@ -641,10 +648,10 @@ DoubleAnimation verticalAnimation;
         if (ViewModel.NowPlayingIndex >= 0 && ViewModel.NowPlayingIndex < PlayItems.Count)
         {
             var nowPlayType = ViewModel.NowPlayType;
-            if (nowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
-                Common.Setting.displayShuffledList)
+            if (nowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating &&
+                _setting.displayShuffledList)
                 // 新的随机算法
-                ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.ShufflingIndex]);
+                ListBoxPlayList.ScrollIntoView(PlayItems[ViewModel.GetTargetingIndex()]);
             else
                 ListBoxPlayList.ScrollIntoView(PlayItems[ViewModel.NowPlayingIndex]);
         }
@@ -681,10 +688,10 @@ DoubleAnimation verticalAnimation;
     {
         InitializedAni.Begin();
         PlayBarBackgroundFadeIn.Begin();
-        ViewModel.SetVolumeCommand.Execute((double)Common.Setting.Volume);
-        SliderAudioRate.Value = (double)Common.Setting.Volume;
+        ViewModel.SetVolumeCommand.Execute((double)_setting.Volume);
+        SliderAudioRate.Value = (double)_setting.Volume;
 
-        // --- Messenger-based event subscriptions (replacing HyPlayList.OnXxx) ---
+        // --- Messenger-based event subscriptions ---
         var messenger = WeakReferenceMessenger.Default;
         messenger.Register<TrackChangedMessage>(this, (_, m) => LoadPlayingFile(m.Item));
         messenger.Register<PlaylistChangedMessage>(this, (_, m) =>
@@ -701,8 +708,8 @@ DoubleAnimation verticalAnimation;
         // Position updates now use Messenger too
         messenger.Register<PositionTickMessage>(this, (_, m) => OnPlayPositionChange(m.Position));
 
-        Common.OnEnterForegroundFromBackground += OnEnteringForeground;
-        if (Common.Setting.playbarButtonsTransparent)
+        Ioc.Default.GetRequiredService<IUIStateService>().OnEnterForegroundFromBackground += OnEnteringForeground;
+        if (_setting.playbarButtonsTransparent)
         {
             BtnPlayRollType.Background = new SolidColorBrush(Colors.Transparent);
             BtnPreviousSong.Background = new SolidColorBrush(Colors.Transparent);
@@ -711,7 +718,7 @@ DoubleAnimation verticalAnimation;
             BtnLike.Background = new SolidColorBrush(Colors.Transparent);
         }
 
-        if (Common.Setting.playButtonAccentColor)
+        if (_setting.playButtonAccentColor)
         {
             BtnPlayStateChange.Background = Resources["SolidPlayButtonColor"]?.As<Brush>();
             PlayStateIcon.Foreground = Resources["SolidPlayButtonIconColor"]?.As<Brush>();
@@ -723,12 +730,12 @@ DoubleAnimation verticalAnimation;
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
         realSelectSong = false;
         realSelectSong = true;
-        Common.Logs.Add("Now PlaySource is " + ViewModel.PlaySourceId);
+        Ioc.Default.GetRequiredService<IUIStateService>().Logs.Add("Now PlaySource is " + ViewModel.PlaySourceId);
 
-        if (Common.IsExpanded)
-            Common.BarPlayBar.ShowExpandedPlayer();
-        if (!Common.Setting.playbarBackgroundAcrylic)
-            if (Common.Setting.hotlyricOnStartup)
+        if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
+            (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).ShowExpandedPlayer();
+        if (!_setting.playbarBackgroundAcrylic)
+            if (_setting.hotlyricOnStartup)
                 try
                 {
                     var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
@@ -745,11 +752,11 @@ DoubleAnimation verticalAnimation;
                 {
                 }
 
-        if (Common.Setting.playbarBackgroundElay)
+        if (_setting.playbarBackgroundElay)
         {
             PointerEntered += (o, args) =>
             {
-                if (Common.IsExpanded && Common.Setting.playbarBackgroundElay)
+                if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded && _setting.playbarBackgroundElay)
                     GridThis.Background = BackgroundElayBrush;
             };
             PointerExited += (o, args) => { GridThis.Background = new SolidColorBrush(Colors.Transparent); };
@@ -760,7 +767,7 @@ DoubleAnimation verticalAnimation;
     public async void RefreshPlayBarCover(HyPlayItem playItem)
     {
         if (ViewModel.CoverStream == null) return;
-        _ = Common.Invoke(async () =>
+        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(async () =>
         {
             if (GridSongInfo.Visibility == Visibility.Visible && Opacity != 0)
             {
@@ -803,10 +810,11 @@ DoubleAnimation verticalAnimation;
                     out var result);
                 if (success)
                 {
-                    // TODO: Migrate AppendNcSongs + NotifyPlayItemChanged to IPlaylistService
-                    HyPlayList.NowPlaying = result;
-                    HyPlayList.AppendNcSongs(list);
-                    HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
+                    var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+                    _playlist.AppendNcSongs(list);
+                    var nowItem = _playlist.Items.Count > result && result >= 0 ? _playlist.Items[result] : null;
+                    if (nowItem != null)
+                        _playlist.NotifyPlayItemChanged(nowItem);
                 }
             }
         }
@@ -818,17 +826,17 @@ DoubleAnimation verticalAnimation;
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.ABStartPoint = _player.PrimaryAudioInputNode.Position;
+        _setting.ABStartPoint = _player.PrimaryAudioInputNode.Position;
     }
 
     private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.ABEndPoint = _player.PrimaryAudioInputNode.Position;
+        _setting.ABEndPoint = _player.PrimaryAudioInputNode.Position;
     }
 
     private void ABRepeatStateButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.ABRepeatStatus = !Common.Setting.ABRepeatStatus;
+        _setting.ABRepeatStatus = !_setting.ABRepeatStatus;
     }
 
     private void SliderProgress_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
@@ -881,9 +889,15 @@ DoubleAnimation verticalAnimation;
 
     private void BtnReverse_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: Migrate List.Reverse to IPlaylistService (needs mutable list API or dedicated method)
-        HyPlayList.List.Reverse();
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _playlist.ReverseList();
         ViewModel.NotifyAppendDone();
-        HyPlayList.NowPlaying = HyPlayList.List.Count - HyPlayList.NowPlaying - 1;
+    }
+
+    private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+    {
+        WeakReferenceMessenger.Default.UnregisterAll(this);
+        Ioc.Default.GetRequiredService<IUIStateService>().OnEnterForegroundFromBackground -= OnEnteringForeground;
+        _player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
     }
 }

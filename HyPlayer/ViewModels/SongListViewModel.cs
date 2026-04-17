@@ -1,9 +1,10 @@
-﻿using AsyncAwaitBestPractices;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
@@ -16,18 +17,36 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.UI;
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 namespace HyPlayer.ViewModels
 {
     public partial class SongListViewModel : ObservableRecipient
     {
         private readonly IPlaylistService _playlist;
+        private readonly NeteaseCloudMusicApiHandler _api;
+        private readonly Setting _setting;
+        private readonly INotificationService _notification;
+        private readonly INavigationService _navigation;
+        private readonly HttpClient _httpClient;
 
-        public SongListViewModel(IPlaylistService playlist)
+        public SongListViewModel(
+            IPlaylistService playlist,
+            NeteaseCloudMusicApiHandler api,
+            Setting setting,
+            INotificationService notification,
+            INavigationService navigation,
+            HttpClient httpClient)
         {
             _playlist = playlist;
+            _api = api;
+            _setting = setting;
+            _notification = notification;
+            _navigation = navigation;
+            _httpClient = httpClient;
         }
 
         public ObservableCollection<NCSong> Songs { get; set; } = [];
@@ -70,14 +89,14 @@ namespace HyPlayer.ViewModels
                 {
                     SourceId = $"pl{PlaylistId}";
                     // 歌单详情
-                    var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistDetailApi,
+                    var json = await _api.RequestAsync(NeteaseApis.PlaylistDetailApi,
                         new PlaylistDetailRequest()
                         {
                             Id = PlaylistId
                         });
                     if (json.IsError)
                     {
-                        Common.AddToTeachingTipLists("加载歌单出错", json.Error?.Message ?? "未知错误");
+                        _notification.ShowMessage("加载歌单出错", json.Error?.Message ?? "未知错误");
                         return null;
                     }
 
@@ -88,7 +107,7 @@ namespace HyPlayer.ViewModels
             }
             DescriptionBoxContent = PlayList.Description;
             ResourceId = "pl" + PlayList?.PlaylistId;
-            if (Common.Setting.noImage)
+            if (_setting.noImage)
             {
                 CoverUri = null;
             }
@@ -114,7 +133,7 @@ namespace HyPlayer.ViewModels
                 IntelligenceModeVisible = false;
                 await LoadDailyRcmdItems();
             }
-            if (Common.Setting.greedlyLoadPlayContainerItems)
+            if (_setting.greedlyLoadPlayContainerItems)
                 // Use WeakReferenceMessenger for timer-tick driven greedy loading
                 WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((SongListViewModel)r).GreedlyLoad());
             IsLoading = false;
@@ -126,10 +145,10 @@ namespace HyPlayer.ViewModels
             var items = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "recommendSongs", async () =>
             {
                 // 每天推荐歌曲
-                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RecommendSongsApi);
+                var json = await _api.RequestAsync(NeteaseApis.RecommendSongsApi);
                 if (json.IsError)
                 {
-                    Common.AddToTeachingTipLists("加载日推出错", json.Error?.Message);
+                    _notification.ShowMessage("加载日推出错", json.Error?.Message);
                     return null;
                 }
                 return json.Value;
@@ -157,14 +176,14 @@ namespace HyPlayer.ViewModels
             var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracks, PlayList.PlaylistId, async () =>
             {
                 // 歌单详情
-                var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
+                var rst = await _api.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
                     new PlaylistTracksGetRequest()
                     {
                         Id = PlayList.PlaylistId
                     });
                 if (rst.IsError)
                 {
-                    Common.AddToTeachingTipLists("加载歌单出错", rst.Error?.Message ?? "未知错误");
+                    _notification.ShowMessage("加载歌单出错", rst.Error?.Message ?? "未知错误");
                     return null;
                 }
                 return rst.Value;
@@ -173,11 +192,11 @@ namespace HyPlayer.ViewModels
             var playlistDetail = json?.Playlist?.TrackIds;
             if (playlistDetail is null)
             {
-                Common.AddToTeachingTipLists("加载歌单出错", "未找到歌单信息");
+                _notification.ShowMessage("加载歌单出错", "未找到歌单信息");
                 return;
             }
             if (json.Playlist.SpecialType == 5 &&
-                json.Playlist.Creator?.UserId == Common.LoginedUser?.Id)
+                json.Playlist.Creator?.UserId == Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.Id)
             {
                 IntelligenceModeVisible = true;
                 IsMySongList = true;
@@ -192,7 +211,7 @@ namespace HyPlayer.ViewModels
             var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracksDetail, PlayList.PlaylistId + "_" + CurrentPage, async () =>
             {
                 // 歌单歌曲详情
-                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
+                var json = await _api.RequestAsync(NeteaseApis.SongDetailApi,
                     new SongDetailRequest()
                     {
                         IdList = trackIds
@@ -201,12 +220,12 @@ namespace HyPlayer.ViewModels
                 {
                     _greedyLoadTreashold = ++_greedyLoadCooldownTime * 10;
                     CurrentPage--;
-                    Common.AddToTeachingTipLists("贪婪加载被风控", $"渐进加载速度过于快, 将在 {_greedyLoadCooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+                    _notification.ShowMessage("贪婪加载被风控", $"渐进加载速度过于快, 将在 {_greedyLoadCooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
                     return null;
                 }
                 if (json.IsError)
                 {
-                    Common.AddToTeachingTipLists("加载歌单歌曲出错", json.Error?.Message ?? "未知错误");
+                    _notification.ShowMessage("加载歌单歌曲出错", json.Error?.Message ?? "未知错误");
                     return null;
                 }
                 return json.Value;
@@ -231,7 +250,7 @@ namespace HyPlayer.ViewModels
 
         public async Task LoadAlbumImage()
         {
-            using var result = await Common.HttpClient!.GetAsync(new Uri(PlayList.Cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            using var result = await _httpClient.GetAsync(new Uri(PlayList.Cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
             if (result.IsSuccessStatusCode)
             {
                 using var stream = await result.Content.ReadAsStreamAsync();
@@ -271,7 +290,7 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void NavigateToComments()
         {
-            Common.NavigatePage(typeof(Comments), "pl" + PlayList.PlaylistId);
+            _navigation.Navigate(typeof(Comments), "pl" + PlayList.PlaylistId);
         }
         [RelayCommand]
         private async Task ResetCacheAsync()
@@ -281,7 +300,7 @@ namespace HyPlayer.ViewModels
                 await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, PlayList.PlaylistId);
                 await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, PlayList.PlaylistId, true);
                 await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, PlayList.PlaylistId);
-                Common.AddToTeachingTipLists("清除缓存成功", "已清除当前歌单的缓存");
+                _notification.ShowMessage("清除缓存成功", "已清除当前歌单的缓存");
                 Songs.Clear();
                 CurrentPage = 0;
                 LoadSongListItem().SafeFireAndForget();
@@ -336,7 +355,7 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private async Task LikePlaylist()
         {
-            var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistSubscribeApi,
+            var result = await _api.RequestAsync(NeteaseApis.PlaylistSubscribeApi,
                 new PlaylistSubscribeRequest()
                 {
                     PlaylistId = PlayList.PlaylistId,
@@ -344,7 +363,7 @@ namespace HyPlayer.ViewModels
                 });
             if (result.IsError)
             {
-                Common.AddToTeachingTipLists("操作失败", result.Error.Message);
+                _notification.ShowMessage("操作失败", result.Error.Message);
                 return;
             }
             PlayList.HasSubscribed = !PlayList.HasSubscribed;
@@ -353,7 +372,7 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void NavigateToAuthor()
         {
-            Common.NavigatePage(typeof(Me), PlayList.Creator.Id);
+            _navigation.Navigate(typeof(Me), PlayList.Creator.Id);
         }
     }
 }

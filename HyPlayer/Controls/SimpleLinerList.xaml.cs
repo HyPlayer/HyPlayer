@@ -1,10 +1,12 @@
-﻿#region
+#region
 
 using HyPlayer.Classes;
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
+using HyPlayer.Services.Abstractions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 #endregion
 
 namespace HyPlayer.Controls;
@@ -49,6 +51,6 @@ public partial class SimpleLinerList : UserControl
     private void ItemList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ItemList.SelectedIndex >= 0)
-            _ = Common.NavigatePageResource(ListItems[ItemList.SelectedIndex].ResourceId);
+            _ = Ioc.Default.GetRequiredService<INavigationService>().NavigateToResourceAsync(ListItems[ItemList.SelectedIndex].ResourceId);
     }
 }

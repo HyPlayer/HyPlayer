@@ -1,6 +1,6 @@
-﻿#region
+#region
 
-using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
@@ -20,38 +20,42 @@ internal class Api
 {
     public static async Task<bool> LikeSong(string songid, bool like)
     {
-        var requestResult = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LikeApi,
-            new LikeRequest() { TrackId = songid, Like = like, UserId = Common.LoginedUser.Id });
+        var _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        var _notification = Ioc.Default.GetRequiredService<INotificationService>();
+        var requestResult = await _api.RequestAsync(NeteaseApis.LikeApi,
+            new LikeRequest() { TrackId = songid, Like = like, UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser.Id });
         if (requestResult.IsSuccess)
         {
             return true;
         }
         else
         {
-            Common.AddToTeachingTipLists(requestResult.Error.Message);
+            _notification.ShowMessage(requestResult.Error.Message);
             return false;
         }
     }
 
     public static async Task EnterIntelligencePlay(CancellationToken cancellationToken = default)
     {
+        var _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        var _notification = Ioc.Default.GetRequiredService<INotificationService>();
         var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         var _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         _playlist.Clear();
-        var songList = Common.MySongLists[0].PlaylistId;
-        var randomSong = Common.LikedSongs[new Random().Next(0, Common.LikedSongs.Count - 1)];
-        var jsoon = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaymodeIntelligenceListApi,
+        var songList = Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].PlaylistId;
+        var randomSong = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs[new Random().Next(0, Ioc.Default.GetRequiredService<IAuthService>().LikedSongs.Count - 1)];
+        var jsoon = await _api.RequestAsync(NeteaseApis.PlaymodeIntelligenceListApi,
             new PlaymodeIntelligenceListRequest
             {
                 PlaylistId = songList,
                 SongId = randomSong,
                 StartMusicId = _state.NowPlayingItem?.Id ?? randomSong,
-                Count = Common.LikedSongs.Count
+                Count = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs.Count
             }, cancellationToken);
 
         if (jsoon.IsError)
         {
-            Common.AddToTeachingTipLists("加载心动模式列表出错", jsoon.Error.Message);
+            _notification.ShowMessage("加载心动模式列表出错", jsoon.Error.Message);
             return;
         }
 

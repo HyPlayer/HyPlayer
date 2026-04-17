@@ -160,7 +160,7 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
     }
 
     /// <summary>
-    /// 将 NCSong 转换为 HyPlayItem（与 HyPlayList.NCSongToPlayItem 逻辑一致）
+    /// 将 NCSong 转换为 HyPlayItem（与 IPlaylistService.NCSongToPlayItem 逻辑一致）
     /// </summary>
     private static HyPlayItem NcSongToHyPlayItem(NCSong ncSong)
     {

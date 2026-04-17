@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
-using HyPlayer.HyPlayControl;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -21,7 +20,7 @@ namespace HyPlayer.Classes
         public string Title { get; set; }
 
         public Uri CoverUri =>
-            Common.Setting.noImage
+            Ioc.Default.GetRequiredService<Setting>().noImage
                 ? null
                 : new Uri((string.IsNullOrEmpty(CoverLink)
                               ? "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg"

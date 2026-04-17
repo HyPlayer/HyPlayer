@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
@@ -281,10 +282,10 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 finalEffectBuilder.AddGaussianBlurEffect(Math.Clamp(gap, 0, 250));
             }
 
-            if (Common.Setting!.lyricRenderFade && !context.IsScrolling)
+            if (Ioc.Default.GetRequiredService<HyPlayer.Setting>()!.lyricRenderFade && !context.IsScrolling)
             {
                 finalEffectBuilder.AddOpacityEffect(1 -
-                                                    Math.Clamp(gap / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0,
+                                                    Math.Clamp(gap / (10f - (Ioc.Default.GetRequiredService<HyPlayer.Setting>().lyricFadingRatio / 10f)), 0,
                                                         0.9f));
             }
             session.DrawImage(finalEffectBuilder.Build(), 0, drawingTop);

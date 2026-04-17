@@ -37,7 +37,7 @@
                         CornerRadius="0"
                         Opacity="0.4" />
                 </ui:Effects.Shadow>
-                <Grid HorizontalAlignment="Left" RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}">
+                <Grid HorizontalAlignment="Left" RightTapped="{x:Bind hyplayer:XamlHelpers.UIElement_RightTapped}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="100" />
                         <ColumnDefinition Width="*" />

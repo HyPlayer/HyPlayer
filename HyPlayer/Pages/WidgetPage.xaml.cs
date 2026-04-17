@@ -1,7 +1,6 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
 using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.RollingCalculators;
@@ -36,6 +35,7 @@ public sealed partial class WidgetPage : Page
     private readonly GameBarSettings _settings;
     private readonly LyricRenderView LyricBox = new();
 
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
@@ -98,7 +98,7 @@ public sealed partial class WidgetPage : Page
         });
         WeakReferenceMessenger.Default.Register<LyricLoadedMessage>(this, (r, m) => OnPlaylistLyricLoaded());
         TipContent.Visibility = Visibility.Collapsed;
-        LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
+        LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
         PlayStateIcon.Glyph =
                     _player.GlobalPlaybackStatus == PlaybackStatus.Playing
                         ? "\uF8AE"
@@ -144,7 +144,7 @@ public sealed partial class WidgetPage : Page
         _widget.RequestedThemeChanged -= RequestedThemeChanged;
         _hotkeyWatcher.HotkeySetStateChanged -= OnHotkeySetStateChanged;
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        Common.XboxGameBarWidget = null;
+        Ioc.Default.GetRequiredService<IUIStateService>().XboxGameBarWidget = null;
         Window.Current.Closed -= WidgetPage_Closed;
         Instance = null;
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -236,10 +236,10 @@ public sealed partial class WidgetPage : Page
         LyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         LyricBox.OnBeforeRender += LyricBox_OnBeforeRender;
         LyricBox.OnLyricLineClicked += LyricView_OnRequestSeek;
-        LyricBox.Context.LyricPaddingTopRatio = Common.Setting.lyricPaddingTopRatio / 100f;
-        LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
-        LyricBox.Context.Effects.Blur = Common.Setting.lyricRenderBlur;
-        LyricBox.Context.LineRollingEaseCalculator = Common.Setting.LineRollingCalculator switch
+        LyricBox.Context.LyricPaddingTopRatio = _setting.lyricPaddingTopRatio / 100f;
+        LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
+        LyricBox.Context.Effects.Blur = _setting.lyricRenderBlur;
+        LyricBox.Context.LineRollingEaseCalculator = _setting.LineRollingCalculator switch
         {
             RollingCalculator.SinRollingCalculator => new SinRollingCalculator(),
             RollingCalculator.LyricifyRollingCalculator => new LyricifyRollingCalculator(),
@@ -247,10 +247,10 @@ public sealed partial class WidgetPage : Page
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
-        LyricBox.Context.Effects.ScaleWhenFocusing = Common.Setting.lyricRenderScaleWhenFocusing;
-        LyricBox.Context.Effects.FocusHighlighting = Common.Setting.lyricRenderFocusHighlighting;
-        LyricBox.Context.Effects.TransliterationScanning = Common.Setting.lyricRenderTransliterationScanning;
-        LyricBox.Context.Effects.SimpleLineScanning = Common.Setting.lyricRenderSimpleLineScanning;
+        LyricBox.Context.Effects.ScaleWhenFocusing = _setting.lyricRenderScaleWhenFocusing;
+        LyricBox.Context.Effects.FocusHighlighting = _setting.lyricRenderFocusHighlighting;
+        LyricBox.Context.Effects.TransliterationScanning = _setting.lyricRenderTransliterationScanning;
+        LyricBox.Context.Effects.SimpleLineScanning = _setting.lyricRenderSimpleLineScanning;
         LyricBox.Context.PreferTypography.Font = _settings.LyricFontFamily;
         LyricBox.Context.LineSpacing = _settings.LyricLineSpacing;
         LyricBox.EnableTranslation = _settings.EnableTranslation;

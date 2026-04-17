@@ -1,8 +1,9 @@
-﻿#region
+#region
 
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
 using HyPlayer.Services.Abstractions;
@@ -90,12 +91,12 @@ internal sealed class PersonalFM : IRecipient<TrackEndedMessage>
         if (_playlist.NowPlayingIndex + 1 >= _playlist.Items.Count)
         {
             var finalIndex = Math.Max(_playlist.Items.Count - 1, 0);
-            if (!Common.Setting.useAiDj)
+            if (!Ioc.Default.GetRequiredService<Setting>().useAiDj)
             {
-                var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PersonalFmApi);
+                var result = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().RequestAsync(NeteaseApis.PersonalFmApi);
                 if (result.IsError || result.Value?.Items?.Length is not > 0)
                 {
-                    Common.AddToTeachingTipLists("加载私人 FM错误", result.Error?.Message ?? "未知错误");
+                    Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("加载私人 FM错误", result.Error?.Message ?? "未知错误");
                     return;
                 }
 
@@ -108,7 +109,7 @@ internal sealed class PersonalFM : IRecipient<TrackEndedMessage>
             else
             {
                 // AIDJ
-                var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.AiDjContentRcmdInfoApi,
+                var result = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().RequestAsync(NeteaseApis.AiDjContentRcmdInfoApi,
                     new AiDjContentRcmdInfoRequest
                     {
                         IsNewToAidj = _isNew
@@ -116,7 +117,7 @@ internal sealed class PersonalFM : IRecipient<TrackEndedMessage>
                 _isNew = false;
                 if (result.IsError || result.Value?.Data?.AiDjResources?.Length is not > 0)
                 {
-                    Common.AddToTeachingTipLists("加载私人 FM错误", result.Error?.Message ?? "未知错误");
+                    Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("加载私人 FM错误", result.Error?.Message ?? "未知错误");
                     return;
                 }
 

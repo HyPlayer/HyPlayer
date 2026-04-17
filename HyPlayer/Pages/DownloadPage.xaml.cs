@@ -1,5 +1,7 @@
 ﻿#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using System;
 using System.Linq;
@@ -19,6 +21,8 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class DownloadPage : Page
 {
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+
     public DownloadPage()
     {
         InitializeComponent();
@@ -26,7 +30,7 @@ public sealed partial class DownloadPage : Page
 
     private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
     {
-        await Launcher.LaunchFolderPathAsync(Common.Setting.downloadDir);
+        await Launcher.LaunchFolderPathAsync(_setting.downloadDir);
     }
 
     private void Button_CleanAll_Click(object sender, RoutedEventArgs e)

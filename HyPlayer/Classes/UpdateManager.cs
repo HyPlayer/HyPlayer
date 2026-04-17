@@ -1,4 +1,6 @@
-﻿using System;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Services.Abstractions;
+using System;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -81,14 +83,14 @@ public static class UpdateManager
             Method = HttpMethod.Get
         };
         message.Headers.Add("User-Agent", "HyPlayer-Update-Client");
-        using var versionsResponse = await Common.HttpClient.SendAsync(message);
+        using var versionsResponse = await Ioc.Default.GetRequiredService<HttpClient>().SendAsync(message);
         if (!versionsResponse.IsSuccessStatusCode)
         {
-            Common.AddToTeachingTipLists("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
         }
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
-            JsonSerializer.Deserialize<GitHubReleaseResponse>(resp, Common.DefaultOptions);
+            JsonSerializer.Deserialize<GitHubReleaseResponse>(resp, new JsonSerializerOptions(JsonSerializerDefaults.Web));
         var version = Version.TryParse(versionResp?.Tag, out var versionResult);
         return new RemoteVersionResult
         {
@@ -103,7 +105,7 @@ public static class UpdateManager
 
     public static async Task<RemoteVersionResult> GetVersionFromSelfhost(UpdateSource source)
     {
-        using var versionsResponse = await Common.HttpClient.GetAsync(
+        using var versionsResponse = await Ioc.Default.GetRequiredService<HttpClient>().GetAsync(
             new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(source switch
             {
                 UpdateSource.Release => 3,
@@ -112,11 +114,11 @@ public static class UpdateManager
             })}/latest"));
         if (!versionsResponse.IsSuccessStatusCode)
         {
-            Common.AddToTeachingTipLists("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
         }
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
-            JsonSerializer.Deserialize<LatestApplicationUpdate>(resp, Common.DefaultOptions);
+            JsonSerializer.Deserialize<LatestApplicationUpdate>(resp, new JsonSerializerOptions(JsonSerializerDefaults.Web));
         return new RemoteVersionResult
         {
             UpdateSource = source,
@@ -143,7 +145,7 @@ public static class UpdateManager
     {
         return Task.Run(async () =>
         {
-            var remoteResult = await GetRemoteVersion((UpdateSource)Common.Setting.UpdateSource);
+            var remoteResult = await GetRemoteVersion((UpdateSource)Ioc.Default.GetRequiredService<Setting>().UpdateSource);
             var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
                 Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
             var title = "发现新版本";
@@ -160,11 +162,11 @@ public static class UpdateManager
             (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
             if (isStartup)
             {
-                Common.AddToTeachingTipLists(title, message);
+                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage(title, message);
             }
             else
             {
-                _ = Common.Invoke(async () =>
+                _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(async () =>
                 {
                     ContentDialog contentDialog = new()
                     {
@@ -185,17 +187,17 @@ public static class UpdateManager
 
     public static async Task GetUserCanaryChannelAvailability(string userEmail)
     {
-        var userResp = await Common.HttpClient.GetAsync(new Uri($"https://hyplayer.kengwang.com.cn/user/email/{userEmail}"));
+        var userResp = await Ioc.Default.GetRequiredService<HttpClient>().GetAsync(new Uri($"https://hyplayer.kengwang.com.cn/user/email/{userEmail}"));
         if (userResp.IsSuccessStatusCode)
         {
-            Common.AddToTeachingTipLists("Canary版本已解锁", "感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新");
-            Common.Setting.canaryChannelAvailability = true;
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("Canary版本已解锁", "感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新");
+            Ioc.Default.GetRequiredService<Setting>().canaryChannelAvailability = true;
         }
         else
         {
-            Common.Setting.canaryChannelAvailability = false;
-            Common.AddToTeachingTipLists("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
-            if (Common.Setting.UpdateSource == UpdateSource.Canary) Common.Setting.UpdateSource = UpdateSource.Release;
+            Ioc.Default.GetRequiredService<Setting>().canaryChannelAvailability = false;
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
+            if (Ioc.Default.GetRequiredService<Setting>().UpdateSource == UpdateSource.Canary) Ioc.Default.GetRequiredService<Setting>().UpdateSource = UpdateSource.Release;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using System;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -13,7 +14,7 @@ namespace HyPlayer.Classes
         }
         public string UserName => user.Name;
         public string Signature => user.Signature;
-        private Uri avatarUri => Common.Setting.noImage ? new("ms-appx:///Assets/icon.png") : new(user.Avatar, UriKind.RelativeOrAbsolute);
+        private Uri avatarUri => Ioc.Default.GetRequiredService<Setting>().noImage ? new("ms-appx:///Assets/icon.png") : new(user.Avatar, UriKind.RelativeOrAbsolute);
         public ImageSource AvatarSource => new BitmapImage(avatarUri);
     }
 }

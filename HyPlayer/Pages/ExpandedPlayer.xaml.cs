@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 #nullable enable
 using ALRC.Abstraction;
@@ -30,6 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
@@ -72,6 +73,8 @@ public sealed partial class ExpandedPlayer : Page
         new PropertyMetadata("x1"));
 
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
 
     // Services accessed via ViewModel; shortcuts for code-behind convenience
     private IPlaylistService _playlist => ViewModel.Playlist;
@@ -128,7 +131,7 @@ public sealed partial class ExpandedPlayer : Page
         InitializeComponent();
         ViewModel = Ioc.Default.GetRequiredService<ExpandedPlayerViewModel>();
         DataContext = ViewModel;
-        Common.PageExpandedPlayer = this;
+        Ioc.Default.GetRequiredService<IUIStateService>().PageExpandedPlayer = this;
         WeakReferenceMessenger.Default.Register<PlaybackStateChangedMessage>(this, (r, m) =>
         {
             if (m.IsPlaying) ((ExpandedPlayer)r).HyPlayList_OnPlay(); else ((ExpandedPlayer)r).HyPlayList_OnPause();
@@ -139,8 +142,8 @@ public sealed partial class ExpandedPlayer : Page
         WeakReferenceMessenger.Default.Register<SeekRequestedMessage>(this, (r, m) => ((ExpandedPlayer)r).HyPlayList_OnManualSeek(m.Position));
         WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((ExpandedPlayer)r).HyPlayList_OnTimerTicked());
         Window.Current.SizeChanged += Current_SizeChanged;
-        Common.OnEnterForegroundFromBackground += OnEnteringForeground;
-        Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
+        Ioc.Default.GetRequiredService<IUIStateService>().OnEnterForegroundFromBackground += OnEnteringForeground;
+        Ioc.Default.GetRequiredService<IUIStateService>().OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         _lyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         _lyricBox.OnBeforeRender += _lyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked += _lyricBoxOnOnRequestSeek;
@@ -180,8 +183,8 @@ public sealed partial class ExpandedPlayer : Page
             if (action.StartsWith("hyplayer://"))
             {
                 var ResourceId = action[11..];
-                _ = Common.NavigatePageResource(ResourceId);
-                Common.BarPlayBar!.CollapseExpandedPlayer();
+                _ = _navigation.NavigateToResourceAsync(ResourceId);
+                (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar)!.CollapseExpandedPlayer();
             }
             else
             {
@@ -227,7 +230,7 @@ public sealed partial class ExpandedPlayer : Page
     }
     private void HyPlayList_OnPlay()
     {
-        _ = Common.Invoke(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             if (_settings.albumRotate)
                 //网易云音乐圆形唱片
@@ -245,7 +248,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void HyPlayList_OnPause()
     {
-        _ = Common.Invoke(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             if (_settings.albumRotate)
                 RotateAnimationSet.Stop();
@@ -268,11 +271,11 @@ public sealed partial class ExpandedPlayer : Page
 
     private void HyPlayList_OnTimerTicked()
     {
-        if (Common.IsInBackground) return;
+        if (Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground) return;
         if (_needRedesign > 0)
         {
             _needRedesign--;
-            _ = Common.Invoke(Redesign);
+            _ = _notification.InvokeOnUIThread(Redesign);
         }
     }
 
@@ -433,7 +436,7 @@ public sealed partial class ExpandedPlayer : Page
             await ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
         if (ApplicationView.GetForCurrentView().IsFullScreenMode)
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
-        Common.PageExpandedPlayer = null;
+        Ioc.Default.GetRequiredService<IUIStateService>().PageExpandedPlayer = null;
     }
 
     private readonly Storyboard luminousColorsRotateStoryBoard = new();
@@ -442,8 +445,8 @@ public sealed partial class ExpandedPlayer : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        Common.IsInBackground = false;
-        Common.PageExpandedPlayer = this;
+        Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground = false;
+        Ioc.Default.GetRequiredService<IUIStateService>().PageExpandedPlayer = this;
         if (e.Parameter is null || (bool)e.Parameter)
             Window.Current.SetTitleBar(AppTitleBar);
 
@@ -489,15 +492,15 @@ public sealed partial class ExpandedPlayer : Page
         NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
         if (_settings.pureLyricFocusingColor is not null)
         {
-            _pureAccentBrushCache ??= Common.BrushManagement.AccentBrush;
+            _pureAccentBrushCache ??= Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.AccentBrush;
         }
         if (_settings.pureLyricIdleColor is not null)
         {
-            _pureIdleBrushCache ??= Common.BrushManagement.IdleBrush;
+            _pureIdleBrushCache ??= Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IdleBrush;
         }
         if (_settings.karaokLyricFocusingColor is not null)
         {
-            _karaokAccentColorCache ??= Common.BrushManagement.KaraokAccentBrush;
+            _karaokAccentColorCache ??= Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.KaraokAccentBrush;
         }
     }
 
@@ -506,7 +509,7 @@ public sealed partial class ExpandedPlayer : Page
 
     public void LoadLyricsBox()
     {
-        _ = Common.Invoke(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             if (_lyricIsCleaning) return;
             if (_state.LyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
@@ -526,7 +529,7 @@ public sealed partial class ExpandedPlayer : Page
             _lyricBox.ReflowTime(0);
             if (_state.NowPlayingItem == null) return;
             _lyricBox.Redesign((float)LyricWidth, _nowHeight, LuminousBackground.Dpi);
-            _lyricBox.ChangeRenderColor(Common.BrushManagement.IdleBrush.Color, Common.BrushManagement.AccentBrush.Color);
+            _lyricBox.ChangeRenderColor(Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IdleBrush.Color, Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.AccentBrush.Color);
             Redesign();
             _lyricHasBeenLoaded = true;
         });
@@ -585,7 +588,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         var lyricIsReady = _lastSong == _state.NowPlayingItem;
         _lyricHasBeenLoaded = lyricIsReady;
-        _ = Common.Invoke(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             var artistText = mpi?.ArtistString;
             ViewModel.Artist = artistText;
@@ -626,7 +629,7 @@ public sealed partial class ExpandedPlayer : Page
 
     public void RefreshUIColor()
     {
-        _lyricBox.ChangeRenderColor(Common.BrushManagement.IdleBrush.Color, Common.BrushManagement.AccentBrush.Color);
+        _lyricBox.ChangeRenderColor(Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IdleBrush.Color, Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.AccentBrush.Color);
     }
 
     public void StartExpandAnimation()
@@ -657,7 +660,7 @@ public sealed partial class ExpandedPlayer : Page
         try
         {
             if (_settings.expandAnimation &&
-                Common.BarPlayBar!.GridSongInfoContainer.Visibility == Visibility.Visible)
+                (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar)!.GridSongInfoContainer.Visibility == Visibility.Visible)
             {
                 if (TextBlockSongTitle.ActualSize.X != 0 && TextBlockSongTitle.ActualSize.Y != 0)
                     ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
@@ -682,15 +685,15 @@ public sealed partial class ExpandedPlayer : Page
 
     private void ToggleButtonTranslation_OnClick(object sender, RoutedEventArgs e)
     {
-        Common.ShowLyricTrans = ToggleButtonTranslation.IsChecked;
-        _lyricBox?.EnableTranslation = Common.ShowLyricTrans;
+        Ioc.Default.GetRequiredService<IUIStateService>().ShowLyricTrans = ToggleButtonTranslation.IsChecked;
+        _lyricBox?.EnableTranslation = Ioc.Default.GetRequiredService<IUIStateService>().ShowLyricTrans;
 
     }
 
     private void ToggleButtonSound_OnClick(object sender, RoutedEventArgs e)
     {
-        Common.ShowLyricSound = ToggleButtonSound.IsChecked;
-        _lyricBox?.EnableTransliteration = Common.ShowLyricSound;
+        Ioc.Default.GetRequiredService<IUIStateService>().ShowLyricSound = ToggleButtonSound.IsChecked;
+        _lyricBox?.EnableTransliteration = Ioc.Default.GetRequiredService<IUIStateService>().ShowLyricSound;
 
     }
 
@@ -700,15 +703,15 @@ public sealed partial class ExpandedPlayer : Page
         {
             if (_state.NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 if (_state.NowPlayingItem.Album.Id != "0")
-                    Common.NavigatePage(typeof(AlbumPage),
+                    _navigation.Navigate(typeof(AlbumPage),
                         _state.NowPlayingItem.Album.Id);
 
             if (_state.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
-                Common.NavigatePage(typeof(RadioPage), _state.NowPlayingItem.Album.Id);
+                _navigation.Navigate(typeof(RadioPage), _state.NowPlayingItem.Album.Id);
 
             if (_settings.forceMemoryGarbage)
-                Common.NavigatePage(typeof(BlankPage));
-            Common.BarPlayBar!.CollapseExpandedPlayer();
+                _navigation.Navigate(typeof(BlankPage));
+            (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar)!.CollapseExpandedPlayer();
         }
         catch
         {
@@ -727,16 +730,16 @@ public sealed partial class ExpandedPlayer : Page
                     return;
                 }
 
-                Common.NavigatePage(typeof(ArtistPage),
+                _navigation.Navigate(typeof(ArtistPage),
                     _state.NowPlayingItem.Artist[0].Id);
             }
 
             if (_state.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
-                Common.NavigatePage(typeof(Me), _state.NowPlayingItem.Artist[0].Id);
+                _navigation.Navigate(typeof(Me), _state.NowPlayingItem.Artist[0].Id);
 
             if (_settings.forceMemoryGarbage)
-                Common.NavigatePage(typeof(BlankPage));
-            Common.BarPlayBar!.CollapseExpandedPlayer();
+                _navigation.Navigate(typeof(BlankPage));
+            (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar)!.CollapseExpandedPlayer();
         }
         catch
         {
@@ -759,7 +762,7 @@ public sealed partial class ExpandedPlayer : Page
                 _state.NowPlayingItem.ItemType != HyPlayItemType.LocalProgressive)
             {
                 using var coverResult =
-                    await Common.HttpClient!.GetAsync(new Uri(_state.NowPlayingItem.Album.Cover));
+                    await Ioc.Default.GetRequiredService<HttpClient>().GetAsync(new Uri(_state.NowPlayingItem.Album.Cover));
                 if (coverResult.IsSuccessStatusCode)
                 {
                     var Cover = (await coverResult.Content.ReadAsByteArrayAsync()).AsBuffer();
@@ -767,13 +770,14 @@ public sealed partial class ExpandedPlayer : Page
                 }
                 else
                 {
-                    Common.AddToTeachingTipLists("专辑封面保存失败", "专辑封面下载失败");
+                    _notification.ShowMessage("专辑封面保存失败", "专辑封面下载失败");
                 }
             }
             else
             {
+                var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
                 using var thumbnail =
-                    await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999);
+                    await _playlist.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999);
                 var buffer = new Buffer((uint)thumbnail.Size);
                 await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
                 await FileIO.WriteBufferAsync(file, buffer);
@@ -782,7 +786,7 @@ public sealed partial class ExpandedPlayer : Page
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("专辑封面保存失败", ex.Message);
+            _notification.ShowMessage("专辑封面保存失败", ex.Message);
         }
     }
 
@@ -1041,7 +1045,7 @@ public sealed partial class ExpandedPlayer : Page
             await expandedPlayerWindow.CloseAsync();
         }
 
-        //Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
+        //(Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
     }
 
     private void ExpandedPlayerClosed(AppWindow sender, AppWindowClosedEventArgs args)
@@ -1062,9 +1066,9 @@ public sealed partial class ExpandedPlayer : Page
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-        Common.PageMain!.IsExpandedPlayerInitialized = true;
-        ToggleButtonSound.IsChecked = Common.ShowLyricSound;
-        ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage)!.IsExpandedPlayerInitialized = true;
+        ToggleButtonSound.IsChecked = Ioc.Default.GetRequiredService<IUIStateService>().ShowLyricSound;
+        ToggleButtonTranslation.IsChecked = Ioc.Default.GetRequiredService<IUIStateService>().ShowLyricTrans;
         if (_settings.albumRound) ImageAlbum.CornerRadius = new CornerRadius(300);
         ImageAlbum.BorderThickness = new Thickness(_settings.albumBorderLength);
         switch (_settings.expandedPlayerBackgroundType)
@@ -1133,7 +1137,7 @@ public sealed partial class ExpandedPlayer : Page
                 {
                     // 竖直方向滑动
                     if (e.Cumulative.Translation.Y >= 0)
-                        Common.PageMain!.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+                        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage)!.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
                     else
                     {
                         ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
@@ -1142,7 +1146,7 @@ public sealed partial class ExpandedPlayer : Page
                     if (e.Cumulative.Translation.Y > 200)
                     {
                         e.Complete();
-                        Common.BarPlayBar!.CollapseExpandedPlayer();
+                        (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar)!.CollapseExpandedPlayer();
                     }
 
                     break;
@@ -1162,7 +1166,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private async void ImageAlbum_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
     {
-        Common.PageMain!.ImageResetPositionAni.Begin();
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage)!.ImageResetPositionAni.Begin();
         if (_settings.gestureMode == 0)
         {
             if (Math.Abs(e.Cumulative.Translation.Y) < Math.Abs(e.Cumulative.Translation.X))
@@ -1216,10 +1220,10 @@ public sealed partial class ExpandedPlayer : Page
 
     public async void RefreshAlbumCover(HyPlayItem playItem)
     {
-        if (_state.CoverStream == null || Common.IsInBackground) return;
+        if (_state.CoverStream == null || Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground) return;
         using var stream = _state.CoverStream.CloneStream();
         var isBright = await IsBrightAsync(stream);
-        _ = Common.Invoke(async () =>
+        _ = _notification.InvokeOnUIThread(async () =>
         {
             if (!_settings.noImage)
             {
@@ -1227,7 +1231,7 @@ public sealed partial class ExpandedPlayer : Page
                 {
                     if (playItem != _state.NowPlayingItem) return;
                     using var cover = _state.CoverStream.CloneStream();
-                    Common.BrushManagement.IsBright = isBright;
+                    Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IsBright = isBright;
                     var bitmap = new BitmapImage();
                     await bitmap.SetSourceAsync(cover);
                     ViewModel.Cover = bitmap;
@@ -1255,14 +1259,14 @@ public sealed partial class ExpandedPlayer : Page
                     {
                         if (isBright)
                         {
-                            Common.BrushManagement.AccentBrush = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
-                            Common.BrushManagement.IdleBrush = new SolidColorBrush(Color.FromArgb(114, 0, 0, 0));
+                            Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.AccentBrush = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
+                            Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IdleBrush = new SolidColorBrush(Color.FromArgb(114, 0, 0, 0));
                         }
                         else
                         {
-                            Common.BrushManagement.AccentBrush =
+                            Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.AccentBrush =
                                 new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-                            Common.BrushManagement.IdleBrush = new SolidColorBrush(Color.FromArgb(66, 255, 255, 255));
+                            Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IdleBrush = new SolidColorBrush(Color.FromArgb(66, 255, 255, 255));
                         }
                     }
                     else
@@ -1272,35 +1276,35 @@ public sealed partial class ExpandedPlayer : Page
                             if (isBright)
                             {
                                 var AccentColor = AdjustBrightness((Color)albumMainColor, -0.3f);
-                                Common.BrushManagement.AccentBrush = new SolidColorBrush(AccentColor);
+                                Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.AccentBrush = new SolidColorBrush(AccentColor);
                                 var idleColor = AccentColor;
                                 idleColor.A = 150;
-                                Common.BrushManagement.IdleBrush = new SolidColorBrush(idleColor);
+                                Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IdleBrush = new SolidColorBrush(idleColor);
 
                             }
                             else
                             {
                                 var AccentColor = AdjustBrightness((Color)albumMainColor, 0.3f);
-                                Common.BrushManagement.AccentBrush = new SolidColorBrush(AccentColor);
+                                Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.AccentBrush = new SolidColorBrush(AccentColor);
                                 var idleColor = AdjustBrightness((Color)AccentColor, -0.15f);
                                 idleColor.A = 150;
-                                Common.BrushManagement.IdleBrush = new SolidColorBrush(idleColor);
+                                Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IdleBrush = new SolidColorBrush(idleColor);
                             }
                         }
                         else
                         {
                             var AccentColor = AdjustBrightness((Color)albumMainColor, -0.3f);
-                            Common.BrushManagement.AccentBrush = new SolidColorBrush(AccentColor);
+                            Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.AccentBrush = new SolidColorBrush(AccentColor);
                             var idleColor = AccentColor;
                             idleColor.A = 150;
-                            Common.BrushManagement.IdleBrush = new SolidColorBrush(idleColor);
+                            Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IdleBrush = new SolidColorBrush(idleColor);
                         }
                     }
 
 
 
                     if (_settings.playbarBackgroundElay)
-                        Common.BarPlayBar!.SetPlayBarIdleBackground(Common.BrushManagement.IdleBrush);
+                        (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar)!.SetPlayBarIdleBackground(Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IdleBrush);
                     //LoadLyricsBox();
                     RefreshUIColor();
                     if (_settings.expandedPlayerBackgroundType == BackgroundType.Animated)
@@ -1379,7 +1383,7 @@ public sealed partial class ExpandedPlayer : Page
                 await Task.Delay(10);
             }
 
-            _ = Common.Invoke(() =>
+            _ = _notification.InvokeOnUIThread(() =>
             {
                 MainGrid.Margin = new Thickness(0);
 
@@ -1501,7 +1505,7 @@ public sealed partial class ExpandedPlayer : Page
                 remainHeight + height - barHeight,
                 barWidth, // -1 留出间隔
                 barHeight,
-                Common.BrushManagement.IsBright ? _darkSpectrumColor : _lightSpectrumColor);
+                Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IsBright ? _darkSpectrumColor : _lightSpectrumColor);
         }
     }
 
@@ -1543,8 +1547,8 @@ public sealed partial class ExpandedPlayer : Page
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        Common.OnEnterForegroundFromBackground -= OnEnteringForeground;
-        Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
+        Ioc.Default.GetRequiredService<IUIStateService>().OnEnterForegroundFromBackground -= OnEnteringForeground;
+        Ioc.Default.GetRequiredService<IUIStateService>().OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
         Window.Current?.SizeChanged -= Current_SizeChanged;
         if (_settings.albumRotate)
             RotateAnimationSet.Stop();

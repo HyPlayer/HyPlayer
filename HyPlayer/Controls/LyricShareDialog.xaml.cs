@@ -1,4 +1,6 @@
-﻿using HyPlayer.Classes;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Classes;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -74,7 +76,7 @@ public sealed partial class LyricShareDialog : ContentDialog
         var dp = new DataPackage();
         dp.SetText(output);
         Clipboard.SetContent(dp);
-        Common.AddToTeachingTipLists("成功复制");
+        Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("成功复制");
     }
 
     private string LoadSelectedText()

@@ -1,4 +1,4 @@
-﻿using ALRC.Abstraction;
+using ALRC.Abstraction;
 using ALRC.Converters;
 using HyPlayer.Classes.LyricEnhancers;
 using HyPlayer.LyricRenderer.Abstraction;
@@ -12,6 +12,7 @@ using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Color = System.Drawing.Color;
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 namespace HyPlayer.Classes;
 
 public static class LrcConverter
@@ -27,7 +28,7 @@ public static class LrcConverter
         List<LyricInfoMetadata> songMetadata = null)
     {
         var result = new List<RenderingLyricLine>();
-        if (Common.Setting.OptimizeLyric)
+        if (Ioc.Default.GetRequiredService<Setting>().OptimizeLyric)
             foreach (var lyricEnhancer in LyricEnhancers)
             {
                 alrc = lyricEnhancer.Enhance(true, alrc);

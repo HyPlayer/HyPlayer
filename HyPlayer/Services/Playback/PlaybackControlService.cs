@@ -204,6 +204,14 @@ public sealed class PlaybackControlService : IPlaybackControlService, IDisposabl
         }
     }
 
+    /// <inheritdoc />
+    public void CheckABTimeRemaining(TimeSpan position)
+    {
+        if (position >= _setting.ABEndPoint && _setting.ABEndPoint != TimeSpan.Zero &&
+            _setting.ABEndPoint > _setting.ABStartPoint)
+            _ = SeekAsync(_setting.ABStartPoint);
+    }
+
     #endregion
 
     #region Player Event Handlers
@@ -277,18 +285,3 @@ public sealed class PlaybackControlService : IPlaybackControlService, IDisposabl
 
     #endregion
 }
-
-/// <summary>
-/// 当前播放曲目切换
-/// </summary>
-public record TrackChangedMessage(HyPlayItem Item);
-
-/// <summary>
-/// 播放/暂停状态变化
-/// </summary>
-public record PlaybackStateChangedMessage(bool IsPlaying);
-
-/// <summary>
-/// 播放位置更新（高频，由播放器定时器触发）
-/// </summary>
-public record PositionTickMessage(TimeSpan Position);

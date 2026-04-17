@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
@@ -16,6 +18,8 @@ using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
+using Windows.Storage.Pickers;
 
 namespace HyPlayer.Services.Playback;
 
@@ -23,7 +27,7 @@ namespace HyPlayer.Services.Playback;
 /// 播放列表服务 — 编排播放策略 (<see cref="IPlayStrategy"/>) 与过渡策略 (<see cref="ITrackTransition"/>)，
 /// 管理播放列表内容和播放顺序。
 /// </summary>
-public sealed class PlaylistService : IPlaylistService
+public sealed class PlaylistService : IPlaylistService, IDisposable
 {
     private readonly Dictionary<string, IPlayStrategy> _strategies;
     private readonly Dictionary<string, ITrackTransition> _transitions;
@@ -31,6 +35,8 @@ public sealed class PlaylistService : IPlaylistService
     private readonly IPlaybackControlService _control;
     private readonly IPlayer _player;
     private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly INotificationService _notification;
+    private readonly Setting _setting;
 
     private readonly List<HyPlayItem> _items = new();
     private readonly object _lock = new();
@@ -55,7 +61,9 @@ public sealed class PlaylistService : IPlaylistService
         PlaybackStateService state,
         IPlaybackControlService control,
         IPlayer player,
-        NeteaseCloudMusicApiHandler api)
+        NeteaseCloudMusicApiHandler api,
+        INotificationService notification,
+        Setting setting)
     {
         _strategies = strategies.ToDictionary(s => s.Id, StringComparer.Ordinal);
         _transitions = transitions.ToDictionary(t => t.Id, StringComparer.Ordinal);
@@ -63,6 +71,8 @@ public sealed class PlaylistService : IPlaylistService
         _control = control;
         _player = player;
         _api = api;
+        _notification = notification;
+        _setting = setting;
 
         _activeStrategy = _strategies.GetValueOrDefault("seq")
                           ?? _strategies.Values.First();
@@ -405,7 +415,7 @@ public sealed class PlaylistService : IPlaylistService
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("AppendNCSong时发生错误", ex.Message);
+            _notification.ShowMessage("AppendNCSong时发生错误", ex.Message);
         }
     }
 
@@ -450,13 +460,13 @@ public sealed class PlaylistService : IPlaylistService
                                 new SongDetailRequest { Id = sourceId[2..] });
                             if (result.IsError)
                             {
-                                Common.AddToTeachingTipLists("获取歌曲信息失败", result.Error?.Message);
+                                _notification.ShowMessage("获取歌曲信息失败", result.Error?.Message);
                                 return null;
                             }
 
                             if (result.Value?.Songs is not { Length: > 0 })
                             {
-                                Common.AddToTeachingTipLists("获取歌曲信息失败", "歌曲信息为空");
+                                _notification.ShowMessage("获取歌曲信息失败", "歌曲信息为空");
                                 return null;
                             }
 
@@ -481,7 +491,7 @@ public sealed class PlaylistService : IPlaylistService
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
             return false;
         }
     }
@@ -497,7 +507,7 @@ public sealed class PlaylistService : IPlaylistService
                     new PlaylistTracksGetRequest { Id = playlistId });
                 if (detailResponse.IsError)
                 {
-                    Common.AddToTeachingTipLists("获取歌单失败", detailResponse.Error.Message);
+                    _notification.ShowMessage("获取歌单失败", detailResponse.Error.Message);
                     return null;
                 }
 
@@ -516,7 +526,7 @@ public sealed class PlaylistService : IPlaylistService
                         var songResponse = await _api.RequestAsync(NeteaseApis.SongDetailApi,
                             new SongDetailRequest { IdList = nowIds });
                         if (songResponse.IsError)
-                            Common.AddToTeachingTipLists("获取歌曲失败", songResponse.Error?.Message);
+                            _notification.ShowMessage("获取歌曲失败", songResponse.Error?.Message);
                         return songResponse.Value;
                     }, cancellationToken: CancellationToken.None);
 
@@ -530,7 +540,7 @@ public sealed class PlaylistService : IPlaylistService
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("AppendPlayList时发生错误", ex.Message);
+            _notification.ShowMessage("AppendPlayList时发生错误", ex.Message);
         }
 
         return false;
@@ -555,7 +565,7 @@ public sealed class PlaylistService : IPlaylistService
                     });
                 if (json.IsError)
                 {
-                    Common.AddToTeachingTipLists("获取电台节目失败", json.Error.Message);
+                    _notification.ShowMessage("获取电台节目失败", json.Error.Message);
                     return false;
                 }
 
@@ -572,7 +582,7 @@ public sealed class PlaylistService : IPlaylistService
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("AppendRadioList时发生错误", ex.Message);
+            _notification.ShowMessage("AppendRadioList时发生错误", ex.Message);
         }
 
         return false;
@@ -588,7 +598,7 @@ public sealed class PlaylistService : IPlaylistService
                     new ArtistTopSongRequest { ArtistId = id });
                 if (j1.IsError)
                 {
-                    Common.AddToTeachingTipLists("获取歌手热门歌曲失败", j1.Error?.Message);
+                    _notification.ShowMessage("获取歌手热门歌曲失败", j1.Error?.Message);
                     return null;
                 }
 
@@ -600,7 +610,7 @@ public sealed class PlaylistService : IPlaylistService
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("AppendNCSource时发生错误", ex.Message);
+            _notification.ShowMessage("AppendNCSource时发生错误", ex.Message);
         }
 
         return false;
@@ -616,7 +626,7 @@ public sealed class PlaylistService : IPlaylistService
                     new AlbumRequest { Id = albumId });
                 if (json.IsError)
                 {
-                    Common.AddToTeachingTipLists("获取专辑信息失败", json.Error?.Message);
+                    _notification.ShowMessage("获取专辑信息失败", json.Error?.Message);
                     return null;
                 }
 
@@ -631,7 +641,7 @@ public sealed class PlaylistService : IPlaylistService
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("AppendAlbum时发生错误", ex.Message);
+            _notification.ShowMessage("AppendAlbum时发生错误", ex.Message);
         }
 
         return false;
@@ -705,5 +715,224 @@ public sealed class PlaylistService : IPlaylistService
     private static void SendPlaylistChanged(bool isShuffleTrigger = false)
     {
         WeakReferenceMessenger.Default.Send(new PlaylistChangedMessage(isShuffleTrigger));
+    }
+
+    // ────────────── Shuffle / 本地文件 / 通知 ──────────────
+
+    /// <inheritdoc />
+    public List<int> ShuffleList { get; } = [];
+
+    /// <inheritdoc />
+    public int ShufflingIndex { get; set; } = -1;
+
+    /// <inheritdoc />
+    public StorageFile? NowPlayingStorageFile { get; private set; }
+
+    /// <inheritdoc />
+    public async Task PickLocalFileAsync()
+    {
+        var fop = new FileOpenPicker();
+        fop.FileTypeFilter.Add(".flac");
+        fop.FileTypeFilter.Add(".mp3");
+        fop.FileTypeFilter.Add(".ncm");
+        fop.FileTypeFilter.Add(".ape");
+        fop.FileTypeFilter.Add(".m4a");
+        fop.FileTypeFilter.Add(".wav");
+
+        var files = await fop.PickMultipleFilesAsync();
+        if (files == null || files.Count == 0) return;
+
+        foreach (var file in files)
+        {
+            try
+            {
+                var folder = await file.GetParentAsync();
+                if (folder != null)
+                {
+                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
+                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(), folder);
+                }
+                else
+                {
+                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
+                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(), file);
+                }
+
+                if (Path.GetExtension(file.Path) == ".ncm")
+                {
+                    using var stream = await file.OpenStreamForReadAsync();
+                    if (NCMFile.IsCorrectNCMFile(stream))
+                    {
+                        var info = NCMFile.GetNCMMusicInfo(stream);
+                        var hyitem = new HyPlayItem
+                        {
+                            ItemType = HyPlayItemType.Netease,
+                            Album = new NCAlbum
+                            {
+                                Name = info.album,
+                                Id = info.albumId.ToString(),
+                                Cover = info.albumPic
+                            },
+                            LocalStorageFile = file,
+                            Url = file.Path,
+                            SubExt = info.format,
+                            Bitrate = info.bitrate,
+                            IsLocalFile = true,
+                            LengthInMilliseconds = info.duration,
+                            Id = info.musicId.ToString(),
+                            TrackId = -1,
+                            CDName = "01",
+                            Artist = null,
+                            Name = info.musicName,
+                            InfoTag = file.Provider.DisplayName + " NCM"
+                        };
+                        hyitem.Artist = [.. info.artist.Select(t => new NCArtist
+                        { Name = t[0].ToString(), Id = t[1].ToString() })];
+                        lock (_lock) { _items.Add(hyitem); }
+                    }
+                }
+                else
+                {
+                    var item = await LoadStorageFileAsync(file);
+                    lock (_lock) { _items.Add(item); }
+                }
+            }
+            catch (Exception ex)
+            {
+                _notification.ShowMessage($"加载文件 {file.Name} 失败", ex.Message);
+            }
+        }
+
+        NotifyAppendDone();
+        HyPlayItem? lastItem;
+        lock (_lock) { lastItem = _items.LastOrDefault(); }
+        if (lastItem != null)
+            await MoveToAsync(lastItem);
+    }
+
+    /// <inheritdoc />
+    public async Task<HyPlayItem> LoadStorageFileAsync(StorageFile sf, bool nocheck163 = false)
+    {
+        using var abstraction = new UwpStorageFileAbstraction(sf);
+        using var tagFile = TagLibHelper.Create(abstraction, sf.FileType);
+        if (nocheck163 || !The163KeyHelper.TryGetMusicInfo(tagFile.Tag, out var mi))
+        {
+            var songPerformersList = tagFile.Tag.Performers
+                .Select(t => new NCArtist { Name = t, Type = HyPlayItemType.Local }).ToList();
+            if (songPerformersList.Count == 0)
+                songPerformersList.Add(new NCArtist { Name = "未知歌手", Type = HyPlayItemType.Local });
+
+            var hyPlayItem = new HyPlayItem
+            {
+                IsLocalFile = true,
+                LocalFileTag = tagFile.Tag,
+                Bitrate = tagFile.Properties.AudioBitrate,
+                InfoTag = sf.Provider.DisplayName,
+                Id = null,
+                Name = tagFile.Tag.Title,
+                Artist = songPerformersList,
+                Album = new NCAlbum { Name = tagFile.Tag.Album },
+                TrackId = (int)tagFile.Tag.Track,
+                CDName = "01",
+                Url = sf.Path,
+                SubExt = sf.FileType,
+                Size = 0,
+                LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds,
+                ItemType = HyPlayItemType.Local
+            };
+            if (sf.Provider.Id == "network" || _setting.safeFileAccess)
+                hyPlayItem.LocalStorageFile = sf;
+            return hyPlayItem;
+        }
+
+        if (string.IsNullOrEmpty(mi.musicName))
+            return await LoadStorageFileAsync(sf, true);
+
+        return new HyPlayItem
+        {
+            ItemType = HyPlayItemType.Local,
+            Album = new NCAlbum { Name = mi.album, Id = mi.albumId.ToString(), Cover = mi.albumPic },
+            Url = sf.Path,
+            SubExt = sf.FileType,
+            LocalFileTag = tagFile.Tag,
+            Bitrate = mi.bitrate,
+            IsLocalFile = true,
+            LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds,
+            Id = mi.musicId.ToString(),
+            Artist = [.. mi.artist.Select(t => new NCArtist { Name = t[0].ToString(), Id = t[1].ToString() })],
+            Name = mi.musicName,
+            LocalStorageFile = sf,
+            TrackId = (int)tagFile.Tag.Track,
+            CDName = "01",
+            InfoTag = sf.Provider.DisplayName
+        };
+    }
+
+    /// <inheritdoc />
+    public Task CreateShufflePlayLists(string currentSongId = "-1")
+    {
+        ShuffleList.Clear();
+        ShufflingIndex = 0;
+        lock (_lock)
+        {
+            if (_items.Count != 0)
+            {
+                HashSet<int> shuffledNumbers = [];
+                bool hasSpecifiedCorrectCurrentSong = false;
+                if (currentSongId != "-1")
+                {
+                    int playItemIndex = _items.FindIndex(s => s.ToNCSong().SongId == currentSongId);
+                    if (playItemIndex != -1)
+                    {
+                        shuffledNumbers.Add(playItemIndex);
+                        ShuffleList.Add(playItemIndex);
+                        hasSpecifiedCorrectCurrentSong = true;
+                    }
+                }
+
+                while (shuffledNumbers.Count < _items.Count)
+                {
+                    var buffer = Guid.NewGuid().ToByteArray();
+                    var seed = BitConverter.ToInt32(buffer, 0);
+                    var random = new Random(seed);
+                    var indexShuffled = random.Next(_items.Count);
+                    if (shuffledNumbers.Add(indexShuffled))
+                        ShuffleList.Add(indexShuffled);
+                }
+
+                ShufflingIndex = hasSpecifiedCorrectCurrentSong ? 0 : ShuffleList.IndexOf(_nowPlayingIndex);
+            }
+        }
+
+        SendPlaylistChanged(true);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public void ReverseList()
+    {
+        lock (_lock)
+        {
+            _items.Reverse();
+            if (_nowPlayingIndex >= 0 && _nowPlayingIndex < _items.Count)
+                _nowPlayingIndex = _items.Count - _nowPlayingIndex - 1;
+            SyncIndex();
+        }
+    }
+
+    /// <inheritdoc />
+    public void NotifyPlayItemChanged(HyPlayItem item)
+    {
+        WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item));
+    }
+
+    /// <summary>
+    /// Disposes the internal <see cref="CancellationTokenSource"/> used for track-end handling.
+    /// </summary>
+    public void Dispose()
+    {
+        _trackEndCts?.Cancel();
+        _trackEndCts?.Dispose();
+        _trackEndCts = null;
     }
 }

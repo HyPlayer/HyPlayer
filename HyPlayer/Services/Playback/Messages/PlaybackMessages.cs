@@ -52,3 +52,18 @@ public record QualityTagChangedMessage(string Tag);
 /// 歌词行索引变化（由 LyricService.Tick 触发）
 /// </summary>
 public record LyricIndexChangedMessage(int Index);
+
+/// <summary>
+/// 当前播放曲目切换
+/// </summary>
+public record TrackChangedMessage(HyPlayItem Item);
+
+/// <summary>
+/// 播放/暂停状态变化
+/// </summary>
+public record PlaybackStateChangedMessage(bool IsPlaying);
+
+/// <summary>
+/// 播放位置更新（高频，由播放器定时器触发）
+/// </summary>
+public record PositionTickMessage(TimeSpan Position);

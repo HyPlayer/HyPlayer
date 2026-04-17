@@ -1,6 +1,6 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
+using HyPlayer.Classes.Settings;
 using HyPlayer.NeteaseApi;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
@@ -14,294 +14,184 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Windows.Storage;
 using Windows.UI;
-using Windows.UI.ViewManagement;
+using HyPlayerUISettings = HyPlayer.Classes.Settings.UISettings;
 
 namespace HyPlayer
 {
     public partial class Setting : INotifyPropertyChanged
     {
-        public ColorGeneratorType ColorGeneratorType
-        {
-            get => GetSettings(nameof(ColorGeneratorType), ColorGeneratorType.Auto);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(ColorGeneratorType)] = (int)value;
-                OnPropertyChanged();
-            }
-        }
+        /// <summary>
+        /// Playback-related settings (volume, crossfade, audio device, etc.).
+        /// </summary>
+        public PlaybackSettings Playback { get; } = new PlaybackSettings();
 
-        public bool enableAmllTtmlDb
-        {
-            get => GetSettings(nameof(enableAmllTtmlDb), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(enableAmllTtmlDb)] = value;
-                OnPropertyChanged();
-            }
-        }
+        /// <summary>
+        /// UI appearance settings (theme, acrylic, animations, etc.).
+        /// </summary>
+        public HyPlayerUISettings UI { get; } = new HyPlayerUISettings();
 
-        public string amllTtmlMirrorUrl
-        {
-            get => GetSettings(nameof(amllTtmlMirrorUrl), "https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/[NCM_ID].ttml");
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(amllTtmlMirrorUrl)] = value;
-                OnPropertyChanged();
-            }
-        }
+        /// <summary>
+        /// API and network settings (proxy, HTTP, caching, etc.).
+        /// </summary>
+        public ApiSettings Api { get; } = new ApiSettings();
 
-        public int lyricPaddingTopRatio
-        {
-            get => GetSettings(nameof(lyricPaddingTopRatio), 30);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricPaddingTopRatio)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public int lyricFadingRatio
-        {
-            get => GetSettings(nameof(lyricFadingRatio), 5);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricFadingRatio)] = value;
-                OnPropertyChanged();
-            }
-        }
+        /// <summary>
+        /// Lyric display and rendering settings.
+        /// </summary>
+        public LyricSettings Lyric { get; } = new LyricSettings();
 
+        /// <summary>
+        /// Last.FM integration settings.
+        /// </summary>
+        public LastFMSettings LastFM { get; } = new LastFMSettings();
 
-        public AdditionalParameters ApiAdditionalParameters
-        {
-            get => JsonSerializer.Deserialize<AdditionalParameters>(GetSettings(nameof(ApiAdditionalParameters), "{}"), Common.DefaultOptions) ?? new AdditionalParameters();
-            set => ApplicationData.Current.LocalSettings.Values[nameof(ApiAdditionalParameters)] = JsonSerializer.Serialize(value, Common.DefaultOptions);
-        }
+        // ===================================================================
+        // Pass-through delegates — preserves the original public API.
+        // All existing consumers continue to work without changes.
+        // ===================================================================
 
-        public LastFMSession LastFMSession
-        {
-            get => JsonSerializer.Deserialize<LastFMSession>(GetSettings(nameof(LastFMSession), "{}"), Common.DefaultOptions);
-            set
-            {
-                if (value == null)
-                {
-                    ApplicationData.Current.LocalSettings.Values[nameof(LastFMSession)] = null;
-                }
-                else
-                {
-                    ApplicationData.Current.LocalSettings.Values[nameof(LastFMSession)] = JsonSerializer.Serialize(value, Common.DefaultOptions);
-                }
-                OnPropertyChanged();
-            }
-        }
-        public bool UpdateLastFMNowPlaying
-        {
-            get => GetSettings(nameof(UpdateLastFMNowPlaying), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(UpdateLastFMNowPlaying)] = value;
-            }
-        }
-        public bool LastFMScrobble
-        {
-            get => GetSettings(nameof(LastFMScrobble), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(LastFMScrobble)] = value;
-            }
-        }
+        // --- PlaybackSettings delegates ---
 
-        public string lyricFontFamily
-        {
-            get => GetSettings(nameof(lyricFontFamily), "Microsoft YaHei UI");
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricFontFamily)] = value;
-            }
-        }
+        public int Volume { get => Playback.Volume; set => Playback.Volume = value; }
+        public string audioRate { get => Playback.audioRate; set => Playback.audioRate = value; }
+        public bool CrossFade { get => Playback.CrossFade; set => Playback.CrossFade = value; }
+        public double CrossFadeTime { get => Playback.CrossFadeTime; set => Playback.CrossFadeTime = value; }
+        public bool EnableAudioGain { get => Playback.EnableAudioGain; set => Playback.EnableAudioGain = value; }
+        public bool ABRepeatStatus { get => Playback.ABRepeatStatus; set => Playback.ABRepeatStatus = value; }
+        public TimeSpan ABStartPoint { get => Playback.ABStartPoint; set => Playback.ABStartPoint = value; }
+        public string ABStartPointFriendlyValue => Playback.ABStartPointFriendlyValue;
+        public TimeSpan ABEndPoint { get => Playback.ABEndPoint; set => Playback.ABEndPoint = value; }
+        public string ABEndPointFriendlyValue => Playback.ABEndPointFriendlyValue;
+        public bool enableCache { get => Playback.enableCache; set => Playback.enableCache = value; }
+        public string cacheDir { get => Playback.cacheDir; set => Playback.cacheDir = value; }
+        public string AudioRenderDevice { get => Playback.AudioRenderDevice; set => Playback.AudioRenderDevice = value; }
+        public bool EnableFFT { get => Playback.EnableFFT; set => Playback.EnableFFT = value; }
+        public bool shuffleNoRepeating { get => Playback.shuffleNoRepeating; set => Playback.shuffleNoRepeating = value; }
 
-        public int lyricLineSpacing
-        {
-            get => GetSettings(nameof(lyricLineSpacing), 0);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricLineSpacing)] = value;
-                OnPropertyChanged();
-            }
-        }
+        // --- UISettings delegates ---
 
-        public int lyricSize
-        {
-            get => GetSettings(nameof(lyricSize), 0);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricSize)] = value;
-                OnPropertyChanged();
-            }
-        }
+        public ThemeRequest themeRequest { get => UI.themeRequest; set => UI.themeRequest = value; }
+        public bool expandAnimation { get => UI.expandAnimation; set => UI.expandAnimation = value; }
+        public bool forceMemoryGarbage { get => UI.forceMemoryGarbage; set => UI.forceMemoryGarbage = value; }
+        public bool noImage { get => UI.noImage; set => UI.noImage = value; }
+        public LyricAlignment lyricAlignment { get => UI.lyricAlignment; set => UI.lyricAlignment = value; }
+        public int lyricSize { get => UI.lyricSize; set => UI.lyricSize = value; }
+        public LyricColor lyricColor { get => UI.lyricColor; set => UI.lyricColor = value; }
+        public ColorGeneratorType ColorGeneratorType { get => UI.ColorGeneratorType; set => UI.ColorGeneratorType = value; }
+        public bool IsOldThemeEnabled { get => UI.IsOldThemeEnabled; set => UI.IsOldThemeEnabled = value; }
+        public BackgroundType expandedPlayerBackgroundType { get => UI.expandedPlayerBackgroundType; set => UI.expandedPlayerBackgroundType = value; }
+        public bool CustomAcrylic { get => UI.CustomAcrylic; set => UI.CustomAcrylic = value; }
+        public double CustomTintOpacity { get => UI.CustomTintOpacity; set => UI.CustomTintOpacity = value; }
+        public double CustomTintLuminosityOpacity { get => UI.CustomTintLuminosityOpacity; set => UI.CustomTintLuminosityOpacity = value; }
+        public bool acrylicBackgroundStatus { get => UI.acrylicBackgroundStatus; set => UI.acrylicBackgroundStatus = value; }
+        public static bool acrylicAvailabiliity => HyPlayerUISettings.acrylicAvailabiliity;
+        public bool albumRotate { get => UI.albumRotate; set => UI.albumRotate = value; }
+        public bool albumRound { get => UI.albumRound; set => UI.albumRound = value; }
+        public int albumBorderLength { get => UI.albumBorderLength; set => UI.albumBorderLength = value; }
+        public bool expandedUseAcrylic { get => UI.expandedUseAcrylic; set => UI.expandedUseAcrylic = value; }
+        public bool playbarBackgroundBreath { get => UI.playbarBackgroundBreath; set => UI.playbarBackgroundBreath = value; }
+        public bool playbarBackgroundAcrylic { get => UI.playbarBackgroundAcrylic; set => UI.playbarBackgroundAcrylic = value; }
+        public bool expandAlbumBreath { get => UI.expandAlbumBreath; set => UI.expandAlbumBreath = value; }
+        public bool listHeaderAcrylicBlur { get => UI.listHeaderAcrylicBlur; set => UI.listHeaderAcrylicBlur = value; }
+        public bool itemOfListBackgroundAcrylicBlur { get => UI.itemOfListBackgroundAcrylicBlur; set => UI.itemOfListBackgroundAcrylicBlur = value; }
+        public bool playbarButtonsTransparent { get => UI.playbarButtonsTransparent; set => UI.playbarButtonsTransparent = value; }
+        public bool playbarBackgroundElay { get => UI.playbarBackgroundElay; set => UI.playbarBackgroundElay = value; }
+        public bool playButtonAccentColor { get => UI.playButtonAccentColor; set => UI.playButtonAccentColor = value; }
+        public bool expandedPlayerFullCover { get => UI.expandedPlayerFullCover; set => UI.expandedPlayerFullCover = value; }
+        public int expandedCoverShadowDepth { get => UI.expandedCoverShadowDepth; set => UI.expandedCoverShadowDepth = value; }
+        public bool EnableTitleBarImmerse { get => UI.EnableTitleBarImmerse; set => UI.EnableTitleBarImmerse = value; }
+        public bool CompactPlayerPageBlurStatus { get => UI.CompactPlayerPageBlurStatus; set => UI.CompactPlayerPageBlurStatus = value; }
+        public bool notClearMode { get => UI.notClearMode; set => UI.notClearMode = value; }
+        public bool AutoHidePlaybar { get => UI.AutoHidePlaybar; set => UI.AutoHidePlaybar = value; }
+        public int AutoHidePlaybarTime { get => UI.AutoHidePlaybarTime; set => UI.AutoHidePlaybarTime = value; }
+        public bool playBarMargin { get => UI.playBarMargin; set => UI.playBarMargin = value; }
+        public bool uiSound { get => UI.uiSound; set => UI.uiSound = value; }
+        public bool displayShuffledList { get => UI.displayShuffledList; set => UI.displayShuffledList = value; }
+        public bool displayMaintain { get => UI.displayMaintain; set => UI.displayMaintain = value; }
+        public bool xboxHidePointer { get => UI.xboxHidePointer; set => UI.xboxHidePointer = value; }
+        public bool enableTouchGestureAction { get => UI.enableTouchGestureAction; set => UI.enableTouchGestureAction = value; }
+        public GestureMode gestureMode { get => UI.gestureMode; set => UI.gestureMode = value; }
+        public bool animationAdaptBPM { get => UI.animationAdaptBPM; set => UI.animationAdaptBPM = value; }
+        public bool gentleBPMAnimation { get => UI.gentleBPMAnimation; set => UI.gentleBPMAnimation = value; }
+        public bool DisablePopUp { get => UI.DisablePopUp; set => UI.DisablePopUp = value; }
+        public bool enableTile { get => UI.enableTile; set => UI.enableTile = value; }
+        public bool tileBackgroundAvailability { get => UI.tileBackgroundAvailability; set => UI.tileBackgroundAvailability = value; }
+        public bool saveTileBackgroundToLocalFolder { get => UI.saveTileBackgroundToLocalFolder; set => UI.saveTileBackgroundToLocalFolder = value; }
+        public bool canaryChannelAvailability { get => UI.canaryChannelAvailability; set => UI.canaryChannelAvailability = value; }
+        public bool localProgressiveLoad { get => UI.localProgressiveLoad; set => UI.localProgressiveLoad = value; }
+        public bool highQualityCoverInSMTC { get => UI.highQualityCoverInSMTC; set => UI.highQualityCoverInSMTC = value; }
+        public bool useTaglibPicture { get => UI.useTaglibPicture; set => UI.useTaglibPicture = value; }
+        public UpdateSource UpdateSource { get => UI.UpdateSource; set => UI.UpdateSource = value; }
 
-        public int translationSize
-        {
-            get => GetSettings(nameof(translationSize), 0);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(translationSize)] = value;
-                OnPropertyChanged();
-            }
-        }
+        // --- ApiSettings delegates ---
 
-        public bool gentleBPMAnimation
-        {
-            get => GetSettings(nameof(gentleBPMAnimation), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(gentleBPMAnimation)] = value;
-                OnPropertyChanged();
-            }
-        }
+        public bool EnableProxy { get => Api.EnableProxy; set => Api.EnableProxy = value; }
+        public AdditionalParameters ApiAdditionalParameters { get => Api.ApiAdditionalParameters; set => Api.ApiAdditionalParameters = value; }
+        public bool UseHttp { get => Api.UseHttp; set => Api.UseHttp = value; }
+        public bool UseHttpWhenGettingSongs { get => Api.UseHttpWhenGettingSongs; set => Api.UseHttpWhenGettingSongs = value; }
+        public bool EnableCheckTokenApi { get => Api.EnableCheckTokenApi; set => Api.EnableCheckTokenApi = value; }
+        public bool enableApiCache { get => Api.enableApiCache; set => Api.enableApiCache = value; }
+        public bool songUrlLazyGet { get => Api.songUrlLazyGet; set => Api.songUrlLazyGet = value; }
+        public bool greedlyLoadPlayContainerItems { get => Api.greedlyLoadPlayContainerItems; set => Api.greedlyLoadPlayContainerItems = value; }
+        public bool AutoAddGreedilyLoadedSongsToPlayList { get => Api.AutoAddGreedilyLoadedSongsToPlayList; set => Api.AutoAddGreedilyLoadedSongsToPlayList = value; }
+        public bool jumpVipSongPlaying { get => Api.jumpVipSongPlaying; set => Api.jumpVipSongPlaying = value; }
+        public bool jumpVipSongDownloading { get => Api.jumpVipSongDownloading; set => Api.jumpVipSongDownloading = value; }
 
-        public bool hotlyricOnStartup
-        {
-            get => GetSettings(nameof(hotlyricOnStartup), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(hotlyricOnStartup)] = value;
-                OnPropertyChanged();
-            }
-        }
+        // --- LyricSettings delegates ---
 
-        public bool playbarButtonsTransparent
-        {
-            get => GetSettings(nameof(playbarButtonsTransparent), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(playbarButtonsTransparent)] = value;
-                OnPropertyChanged();
-            }
-        }
+        public RomajiSource LyricRomajiSource { get => Lyric.LyricRomajiSource; set => Lyric.LyricRomajiSource = value; }
+        public bool highPreciseLyricTimer { get => Lyric.highPreciseLyricTimer; set => Lyric.highPreciseLyricTimer = value; }
+        public bool karaokLyric { get => Lyric.karaokLyric; set => Lyric.karaokLyric = value; }
+        public bool showComposerInLyric { get => Lyric.showComposerInLyric; set => Lyric.showComposerInLyric = value; }
+        public bool downloadLyric { get => Lyric.downloadLyric; set => Lyric.downloadLyric = value; }
+        public bool downloadTranslation { get => Lyric.downloadTranslation; set => Lyric.downloadTranslation = value; }
+        public bool MigrateLyrics { get => Lyric.MigrateLyrics; set => Lyric.MigrateLyrics = value; }
+        public bool OptimizeLyric { get => Lyric.OptimizeLyric; set => Lyric.OptimizeLyric = value; }
+        public bool lyricDropshadow { get => Lyric.lyricDropshadow; set => Lyric.lyricDropshadow = value; }
+        public bool lyricCacheRenderTarget { get => Lyric.lyricCacheRenderTarget; set => Lyric.lyricCacheRenderTarget = value; }
+        public int lyricScaleSize { get => Lyric.lyricScaleSize; set => Lyric.lyricScaleSize = value; }
+        public string lyricFontFamily { get => Lyric.lyricFontFamily; set => Lyric.lyricFontFamily = value; }
+        public int lyricLineSpacing { get => Lyric.lyricLineSpacing; set => Lyric.lyricLineSpacing = value; }
+        public int translationSize { get => Lyric.translationSize; set => Lyric.translationSize = value; }
+        public int romajiSize { get => Lyric.romajiSize; set => Lyric.romajiSize = value; }
+        public int lyricPaddingTopRatio { get => Lyric.lyricPaddingTopRatio; set => Lyric.lyricPaddingTopRatio = value; }
+        public int lyricFadingRatio { get => Lyric.lyricFadingRatio; set => Lyric.lyricFadingRatio = value; }
+        public bool hotlyricOnStartup { get => Lyric.hotlyricOnStartup; set => Lyric.hotlyricOnStartup = value; }
+        public bool enableAmllTtmlDb { get => Lyric.enableAmllTtmlDb; set => Lyric.enableAmllTtmlDb = value; }
+        public string amllTtmlMirrorUrl { get => Lyric.amllTtmlMirrorUrl; set => Lyric.amllTtmlMirrorUrl = value; }
+        public bool lyricRenderFocusHighlighting { get => Lyric.lyricRenderFocusHighlighting; set => Lyric.lyricRenderFocusHighlighting = value; }
+        public int lyricRenderWidthRatio { get => Lyric.lyricRenderWidthRatio; set => Lyric.lyricRenderWidthRatio = value; }
+        public bool lyricRenderTransliterationScanning { get => Lyric.lyricRenderTransliterationScanning; set => Lyric.lyricRenderTransliterationScanning = value; }
+        public bool lyricRenderSimpleLineScanning { get => Lyric.lyricRenderSimpleLineScanning; set => Lyric.lyricRenderSimpleLineScanning = value; }
+        public bool lyricRenderScaleWhenFocusing { get => Lyric.lyricRenderScaleWhenFocusing; set => Lyric.lyricRenderScaleWhenFocusing = value; }
+        public bool lyricRenderBlur { get => Lyric.lyricRenderBlur; set => Lyric.lyricRenderBlur = value; }
+        public bool lyricRenderFade { get => Lyric.lyricRenderFade; set => Lyric.lyricRenderFade = value; }
+        public RollingCalculator LineRollingCalculator { get => Lyric.LineRollingCalculator; set => Lyric.LineRollingCalculator = value; }
+        public bool LyricRendererDebugMode { get => Lyric.LyricRendererDebugMode; set => Lyric.LyricRendererDebugMode = value; }
+        public int LyricRendererFPS { get => Lyric.LyricRendererFPS; set => Lyric.LyricRendererFPS = value; }
+#nullable enable
+        public Color? pureLyricIdleColor { get => Lyric.pureLyricIdleColor; set => Lyric.pureLyricIdleColor = value; }
+        public Color? pureLyricFocusingColor { get => Lyric.pureLyricFocusingColor; set => Lyric.pureLyricFocusingColor = value; }
+        public Color? karaokLyricFocusingColor { get => Lyric.karaokLyricFocusingColor; set => Lyric.karaokLyricFocusingColor = value; }
+#nullable restore
+        public bool IsolationFullThrottle { get => Lyric.IsolationFullThrottle; set => Lyric.IsolationFullThrottle = value; }
+        public double IsolationFPS { get => Lyric.IsolationFPS; set => Lyric.IsolationFPS = value; }
+        public float IsolationScale { get => Lyric.IsolationScale; set => Lyric.IsolationScale = value; }
+        public bool IsolationLightWave { get => Lyric.IsolationLightWave; set => Lyric.IsolationLightWave = value; }
+        public bool ImpressionistLABSpace { get => Lyric.ImpressionistLABSpace; set => Lyric.ImpressionistLABSpace = value; }
+        public bool ImpressionistIgnoreWhite { get => Lyric.ImpressionistIgnoreWhite; set => Lyric.ImpressionistIgnoreWhite = value; }
+        public bool ImpressionistUseKMeansPP { get => Lyric.ImpressionistUseKMeansPP; set => Lyric.ImpressionistUseKMeansPP = value; }
 
-        public bool playbarBackgroundElay
-        {
-            get => GetSettings(nameof(playbarBackgroundElay), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(playbarBackgroundElay)] = value;
-                OnPropertyChanged();
-            }
-        }
+        // --- LastFMSettings delegates ---
 
-        public bool playButtonAccentColor
-        {
-            get => GetSettings(nameof(playButtonAccentColor), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(playButtonAccentColor)] = value;
-                OnPropertyChanged();
-            }
-        }
+        public LastFMSession LastFMSession { get => LastFM.LastFMSession; set => LastFM.LastFMSession = value; }
+        public bool UpdateLastFMNowPlaying { get => LastFM.UpdateLastFMNowPlaying; set => LastFM.UpdateLastFMNowPlaying = value; }
+        public bool LastFMScrobble { get => LastFM.LastFMScrobble; set => LastFM.LastFMScrobble = value; }
+        public bool useAiDj { get => LastFM.useAiDj; set => LastFM.useAiDj = value; }
 
-        public BackgroundType expandedPlayerBackgroundType
-        {
-            get => GetSettings(nameof(expandedPlayerBackgroundType), BackgroundType.CoverBlur);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerBackgroundType)] = (int)value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool CustomAcrylic
-        {
-            get => GetSettings(nameof(CustomAcrylic), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(CustomAcrylic)] = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(acrylicBackgroundStatus));
-            }
-        }
-
-        public double CustomTintOpacity
-        {
-            get
-            {
-                try
-                {
-                    if (CustomAcrylic)
-                    {
-                        return GetSettings(nameof(CustomTintOpacity), 3d);
-                    }
-                    else
-                    {
-                        return 0d;
-                    }
-                }
-                catch
-                {
-                    return 3d;
-                }
-            }
-
-            set => ApplicationData.Current.LocalSettings.Values[nameof(CustomTintOpacity)] = value;
-            //get => GetSettings(nameof(CustomTintOpacity),0);
-            //set
-            //{
-            //    ApplicationData.Current.LocalSettings.Values[nameof(CustomTintOpacity)] = value;
-            //    OnPropertyChanged();
-            //}
-        }
-
-        public double CustomTintLuminosityOpacity
-        {
-            get
-            {
-                try
-                {
-                    if (CustomAcrylic)
-                    {
-                        return GetSettings(nameof(CustomTintLuminosityOpacity), 3d);
-                    }
-                    else
-                    {
-                        return 0d;
-                    }
-                }
-                catch
-                {
-                    return 3d;
-                }
-            }
-
-            set => ApplicationData.Current.LocalSettings.Values[nameof(CustomTintLuminosityOpacity)] = value;
-        }
-
-        public bool downloadLyric
-        {
-            get => GetSettings(nameof(downloadLyric), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(downloadLyric)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool karaokLyric
-        {
-            get => GetSettings(nameof(karaokLyric), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(karaokLyric)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool downloadTranslation
-        {
-            get => GetSettings(nameof(downloadTranslation), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(downloadTranslation)] = value;
-                OnPropertyChanged();
-            }
-        }
+        // ===================================================================
+        // Properties that remain directly on Setting (not grouped)
+        // ===================================================================
 
         public bool writedownloadFileInfo
         {
@@ -323,465 +213,10 @@ namespace HyPlayer
             }
         }
 
-        public bool displayShuffledList
-        {
-            get => GetSettings(nameof(displayShuffledList), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(displayShuffledList)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool useAiDj
-        {
-            get => GetSettings(nameof(useAiDj), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(useAiDj)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool EnableCheckTokenApi
-        {
-            get => GetSettings(nameof(EnableCheckTokenApi), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(EnableCheckTokenApi)] = value;
-                Common.NeteaseAPI?.Option.FakeCheckToken = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool displayMaintain
-        {
-            get => GetSettings(nameof(displayMaintain), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(displayMaintain)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool localProgressiveLoad
-        {
-            get => GetSettings(nameof(localProgressiveLoad), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(localProgressiveLoad)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool lyricCacheRenderTarget
-        {
-            get => GetSettings(nameof(lyricCacheRenderTarget), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricCacheRenderTarget)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool shuffleNoRepeating
-        {
-            get => GetSettings(nameof(shuffleNoRepeating), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(shuffleNoRepeating)] = value;
-                OnPropertyChanged();
-                var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-                if (_playlist.ActiveStrategyId is "shf" or "shn" && value) HyPlayList.CreateShufflePlayLists();
-            }
-        }
-
-        public int lyricScaleSize
-        {
-            get => GetSettings(nameof(lyricScaleSize), 3);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricScaleSize)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool forceMemoryGarbage
-        {
-            get => GetSettings(nameof(forceMemoryGarbage), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(forceMemoryGarbage)] = value;
-        }
-
-        public bool expandedUseAcrylic
-        {
-            get => GetSettings(nameof(expandedUseAcrylic), true);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(expandedUseAcrylic)] = value;
-        }
-
-        public bool playbarBackgroundBreath
-        {
-            get => GetSettings(nameof(playbarBackgroundBreath), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(playbarBackgroundBreath)] = value;
-        }
-
-        public bool playbarBackgroundAcrylic
-        {
-            get => GetSettings(nameof(playbarBackgroundAcrylic), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(playbarBackgroundAcrylic)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool expandAlbumBreath
-        {
-            get => GetSettings(nameof(expandAlbumBreath), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(expandAlbumBreath)] = value;
-        }
-
-        public bool listHeaderAcrylicBlur
-        {
-            get => GetSettings(nameof(listHeaderAcrylicBlur), true);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(listHeaderAcrylicBlur)] = value;
-        }
-
-        public bool itemOfListBackgroundAcrylicBlur
-        {
-            get => GetSettings(nameof(itemOfListBackgroundAcrylicBlur), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(itemOfListBackgroundAcrylicBlur)] = value;
-        }
-
-        public bool lyricDropshadow
-        {
-            get => GetSettings(nameof(lyricDropshadow), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(lyricDropshadow)] = value;
-        }
-
-        public bool safeFileAccess
-        {
-            get => GetSettings(nameof(safeFileAccess), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = value;
-        }
-
-        public List<string> scanLocalFolder
-        {
-            get
-            {
-                var folders = GetSettings(nameof(scanLocalFolder), KnownFolders.MusicLibrary.Path);
-                return [.. folders.Split("\r\n")];
-            }
-            set => ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = string.Join("\r\n", value);
-        }
-
-        public LyricColor lyricColor
-        {
-            get => GetSettings(nameof(lyricColor), LyricColor.Auto);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(lyricColor)] = (int)value;
-        }
-
         public OccupySolution downloadNameOccupySolution
         {
             get => GetSettings(nameof(downloadNameOccupySolution), OccupySolution.Skip);
             set => ApplicationData.Current.LocalSettings.Values[nameof(downloadNameOccupySolution)] = (int)value;
-        }
-
-
-        public bool albumRotate
-        {
-            get => GetSettings(nameof(albumRotate), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(albumRotate)] = value;
-                if (value) albumRound = true;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool albumRound
-        {
-            get => GetSettings(nameof(albumRound), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(albumRound)] = value;
-                if (!value) albumRotate = false;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool greedlyLoadPlayContainerItems
-        {
-            get => GetSettings(nameof(greedlyLoadPlayContainerItems), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(greedlyLoadPlayContainerItems)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool AutoAddGreedilyLoadedSongsToPlayList
-        {
-            get => GetSettings(nameof(AutoAddGreedilyLoadedSongsToPlayList), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(AutoAddGreedilyLoadedSongsToPlayList)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public int albumBorderLength
-        {
-            get => GetSettings(nameof(albumBorderLength), 0);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(albumBorderLength)] = value;
-        }
-
-        public int romajiSize
-        {
-            get => GetSettings(nameof(romajiSize), 15);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(romajiSize)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-
-
-        public bool noImage
-        {
-            get => GetSettings(nameof(noImage), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(noImage)] = value;
-        }
-
-        public LyricAlignment lyricAlignment
-        {
-            get => GetSettings(nameof(lyricAlignment), LyricAlignment.Left);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricAlignment)] = (int)value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool lyricRenderFocusHighlighting
-        {
-            get => GetSettings(nameof(lyricRenderFocusHighlighting), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderFocusHighlighting)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public int lyricRenderWidthRatio
-        {
-            get => GetSettings(nameof(lyricRenderWidthRatio), 80);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderWidthRatio)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool lyricRenderTransliterationScanning
-        {
-            get => GetSettings(nameof(lyricRenderTransliterationScanning), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderTransliterationScanning)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool lyricRenderSimpleLineScanning
-        {
-            get => GetSettings(nameof(lyricRenderSimpleLineScanning), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderSimpleLineScanning)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool lyricRenderScaleWhenFocusing
-        {
-            get => GetSettings(nameof(lyricRenderScaleWhenFocusing), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderScaleWhenFocusing)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool lyricRenderBlur
-        {
-            get => GetSettings(nameof(lyricRenderBlur), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderBlur)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool lyricRenderFade
-        {
-            get => GetSettings(nameof(lyricRenderFade), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderFade)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool EnableFFT
-        {
-            get => GetSettings(nameof(EnableFFT), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(EnableFFT)] = value;
-                var player = Ioc.Default.GetService<AudioGraphPlayer>();
-                if (player != null) player.EnableFFTProcessing = value;
-                OnPropertyChanged();
-            }
-        }
-#nullable enable
-        public Color? pureLyricIdleColor
-        {
-            get
-            {
-                var bytes = GetSettings<byte[]?>(nameof(pureLyricIdleColor), null);
-                return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
-            }
-            set
-            {
-                if (value.HasValue)
-                    ApplicationData.Current.LocalSettings.Values[nameof(pureLyricIdleColor)] = new[]
-                        { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
-                else ApplicationData.Current.LocalSettings.Values[nameof(pureLyricIdleColor)] = null;
-                OnPropertyChanged();
-            }
-        }
-
-        public Color? pureLyricFocusingColor
-        {
-            get
-            {
-                var bytes = GetSettings<byte[]?>(nameof(pureLyricFocusingColor), null);
-                return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
-            }
-            set
-            {
-                if (value.HasValue)
-                    ApplicationData.Current.LocalSettings.Values[nameof(pureLyricFocusingColor)] = new[]
-                        { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
-                else ApplicationData.Current.LocalSettings.Values[nameof(pureLyricFocusingColor)] = null;
-                OnPropertyChanged();
-            }
-        }
-
-        public Color? karaokLyricFocusingColor
-        {
-            get
-            {
-                var bytes = GetSettings<byte[]?>(nameof(karaokLyricFocusingColor), null);
-                return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
-            }
-            set
-            {
-                if (value.HasValue)
-                    ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricFocusingColor)] = new[]
-                        { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
-                else ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricFocusingColor)] = null;
-                OnPropertyChanged();
-            }
-        }
-#nullable restore
-
-
-        public bool jumpVipSongPlaying
-        {
-            get => GetSettings(nameof(jumpVipSongPlaying), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(jumpVipSongPlaying)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool jumpVipSongDownloading
-        {
-            get => GetSettings(nameof(jumpVipSongDownloading), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(jumpVipSongDownloading)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string audioRate
-        {
-            get => GetSettings(nameof(audioRate), "exhigh");
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(audioRate)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string downloadAudioRate
-        {
-            get => GetSettings(nameof(downloadAudioRate), "hires");
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(downloadAudioRate)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool xboxHidePointer
-        {
-            get => GetSettings(nameof(xboxHidePointer), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(xboxHidePointer)] = value;
-        }
-
-        public bool enableTouchGestureAction
-        {
-            get => GetSettings(nameof(enableTouchGestureAction), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(enableTouchGestureAction)] = value;
-        }
-
-        public bool highPreciseLyricTimer
-        {
-            get => GetSettings(nameof(highPreciseLyricTimer), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(highPreciseLyricTimer)] = value;
-        }
-
-        public GestureMode gestureMode
-        {
-            get => GetSettings(nameof(gestureMode), GestureMode.Basic);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(gestureMode)] = (int)value;
-        }
-
-        public int maxDownloadCount
-        {
-            get => GetSettings(nameof(maxDownloadCount), 1);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(maxDownloadCount)] = value;
-        }
-
-        public int Volume
-        {
-            get
-            {
-                try
-                {
-                    return GetSettings(nameof(Volume), 50);
-                }
-                catch
-                {
-                    return 50;
-                }
-            }
-
-            set => ApplicationData.Current.LocalSettings.Values[nameof(Volume)] = value;
         }
 
         public string downloadDir
@@ -816,6 +251,16 @@ namespace HyPlayer
             }
         }
 
+        public string downloadAudioRate
+        {
+            get => GetSettings(nameof(downloadAudioRate), "hires");
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(downloadAudioRate)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string searchingDir
         {
             get
@@ -836,134 +281,10 @@ namespace HyPlayer
             }
         }
 
-        public string cacheDir
+        public int maxDownloadCount
         {
-            get
-            {
-                try
-                {
-                    return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder.Path);
-                }
-                catch
-                {
-                    return ApplicationData.Current.LocalCacheFolder.Path;
-                }
-            }
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(cacheDir)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool CrossFade
-        {
-            get => GetSettings(nameof(CrossFade), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["CrossFade"] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool notClearMode
-        {
-            get => GetSettings(nameof(notClearMode), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(notClearMode)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool AutoHidePlaybar
-        {
-            get => GetSettings(nameof(AutoHidePlaybar), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybar)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public int AutoHidePlaybarTime
-        {
-            get => GetSettings(nameof(AutoHidePlaybarTime), 3);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybarTime)] = value;
-                Common.PlaybarSecondCounter = 0;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool useTaglibPicture
-        {
-            get => GetSettings(nameof(useTaglibPicture), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(useTaglibPicture)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool showComposerInLyric
-        {
-            get => GetSettings(nameof(showComposerInLyric), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(showComposerInLyric)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool advancedMusicHistoryStorage
-        {
-            get => GetSettings(nameof(advancedMusicHistoryStorage), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(advancedMusicHistoryStorage)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public double CrossFadeTime
-        {
-            get => GetSettings(nameof(CrossFadeTime), 3d);
-
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(CrossFadeTime)] = value;
-            }
-        }
-
-        public bool playBarMargin
-        {
-            get => GetSettings(nameof(playBarMargin), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(playBarMargin)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool expandAnimation
-        {
-            get => GetSettings(nameof(expandAnimation), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(expandAnimation)] = value ? "true" : "false";
-                OnPropertyChanged();
-            }
-        }
-
-        public bool uiSound
-        {
-            get => GetSettings(nameof(uiSound), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(uiSound)] = value;
-                OnPropertyChanged();
-            }
+            get => GetSettings(nameof(maxDownloadCount), 1);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(maxDownloadCount)] = value;
         }
 
         public PlayMode songRollType
@@ -976,463 +297,47 @@ namespace HyPlayer
             }
         }
 
-        public bool songUrlLazyGet
+        public bool safeFileAccess
         {
-            get => GetSettings(nameof(songUrlLazyGet), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(songUrlLazyGet)] = value;
-                OnPropertyChanged();
-            }
+            get => GetSettings(nameof(safeFileAccess), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = value;
         }
 
-        public bool enableCache
-        {
-            get => GetSettings(nameof(enableCache), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(enableCache)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool enableApiCache
-        {
-            get => GetSettings(nameof(enableApiCache), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(enableApiCache)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool highQualityCoverInSMTC
-        {
-            get => GetSettings(nameof(highQualityCoverInSMTC), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(highQualityCoverInSMTC)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public static bool acrylicAvailabiliity => new UISettings().AdvancedEffectsEnabled && Windows.UI.Composition.CompositionCapabilities.GetForCurrentView().AreEffectsFast();
-
-
-        public bool expandedPlayerFullCover
-        {
-            get => GetSettings(nameof(expandedPlayerFullCover), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerFullCover)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public ThemeRequest themeRequest
-        {
-            // 0 - 未设置   1 - 浅色  2 - 深色
-            get => GetSettings(nameof(themeRequest), ThemeRequest.Auto);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(themeRequest)] = (int)value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool IsOldThemeEnabled
-        {
-            get => GetSettings(nameof(IsOldThemeEnabled), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(IsOldThemeEnabled)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public int expandedCoverShadowDepth
-        {
-            get => GetSettings(nameof(expandedCoverShadowDepth), 4);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(expandedCoverShadowDepth)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string AudioRenderDevice
-        {
-            get => GetSettings("AudioRenderDeviceID", "");
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["AudioRenderDeviceID"] = value;
-                _ = Ioc.Default.GetRequiredService<IPlaybackControlService>().InitializeAsync();
-                OnPropertyChanged();
-            }
-        }
-
-        public bool DisablePopUp
-        {
-            get => GetSettings(nameof(DisablePopUp), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(DisablePopUp)] = value;
-        }
-
-        public UpdateSource UpdateSource
-        {
-            get => GetSettings(nameof(UpdateSource), UpdateSource.Release);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(UpdateSource)] = (int)value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool enableTile
-        {
-            get => GetSettings(nameof(enableTile), Environment.OSVersion.Version.Build < 22000);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(enableTile)] = value;
-                if (!value)
-                {
-                    tileBackgroundAvailability = false;
-                    saveTileBackgroundToLocalFolder = false;
-                }
-
-                OnPropertyChanged();
-            }
-        }
-
-        public bool canaryChannelAvailability
-        {
-            get => GetSettings(nameof(canaryChannelAvailability), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(canaryChannelAvailability)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool tileBackgroundAvailability
-        {
-            get => GetSettings(nameof(tileBackgroundAvailability), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(tileBackgroundAvailability)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool saveTileBackgroundToLocalFolder
-        {
-            get => GetSettings(nameof(saveTileBackgroundToLocalFolder), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(saveTileBackgroundToLocalFolder)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool animationAdaptBPM
-        {
-            get => GetSettings(nameof(animationAdaptBPM), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(animationAdaptBPM)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public TimeSpan ABStartPoint
-        {
-            get => _abStartPoint;
-            set
-            {
-                _abStartPoint = value;
-                OnPropertyChanged(nameof(ABStartPointFriendlyValue));
-            }
-        }
-
-        public string ABStartPointFriendlyValue
+        public List<string> scanLocalFolder
         {
             get
             {
-                if (_abStartPoint.Hours == 0)
-                {
-                    if (_abStartPoint.Minutes < 10)
-                        return _abStartPoint.ToString(@"m\:ss") ?? string.Empty;
-                    else
-                        return _abStartPoint.ToString(@"mm\:ss") ?? string.Empty;
-                }
-                else
-                {
-                    return _abStartPoint.ToString(@"hh\:mm\:ss") ?? string.Empty;
-                }
+                var folders = GetSettings(nameof(scanLocalFolder), KnownFolders.MusicLibrary.Path);
+                return [.. folders.Split("\r\n")];
             }
+            set => ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = string.Join("\r\n", value);
         }
 
-        private TimeSpan _abStartPoint = TimeSpan.Zero;
-
-        public TimeSpan ABEndPoint
+        public bool advancedMusicHistoryStorage
         {
-            get => _abEndPoint;
+            get => GetSettings(nameof(advancedMusicHistoryStorage), true);
             set
             {
-                _abEndPoint = value;
-                OnPropertyChanged(nameof(ABEndPointFriendlyValue));
-            }
-        }
-
-        private TimeSpan _abEndPoint = TimeSpan.Zero;
-
-        public string ABEndPointFriendlyValue
-        {
-            get
-            {
-                if (_abEndPoint.Hours == 0)
-                {
-                    if (_abEndPoint.Minutes < 10)
-                        return _abStartPoint.ToString(@"m\:ss") ?? string.Empty;
-                    else
-                        return _abStartPoint.ToString(@"mm\:ss") ?? string.Empty;
-                }
-                else
-                {
-                    return _abStartPoint.ToString(@"hh\:mm\:ss") ?? string.Empty;
-                }
-            }
-        }
-
-        public bool ABRepeatStatus
-        {
-            get => _abRepeatStatus;
-            set
-            {
-                _abRepeatStatus = value;
-                if (value) HyPlayList.OnPlayPositionChange += HyPlayList_CheckABTimeRemaining;
-                else HyPlayList.OnPlayPositionChange -= HyPlayList_CheckABTimeRemaining;
+                ApplicationData.Current.LocalSettings.Values[nameof(advancedMusicHistoryStorage)] = value;
                 OnPropertyChanged();
             }
         }
 
-        private static bool _abRepeatStatus = false;
-
-        private static void HyPlayList_CheckABTimeRemaining(TimeSpan currentTime)
-        {
-            HyPlayList.CheckABTimeRemaining(currentTime);
-        }
-
-        public bool acrylicBackgroundStatus
-        {
-            get => GetSettings(nameof(acrylicBackgroundStatus), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(acrylicBackgroundStatus)] = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(playbarBackgroundAcrylic));
-            }
-        }
-
-        public bool EnableTitleBarImmerse
-        {
-            get => GetSettings("enableTitleBarImmerse", true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["enableTitleBarImmerse"] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public RomajiSource LyricRomajiSource
-        {
-            //  0 - 不进行转换  1 - 自动选择  2 - 网易云优先  3 - Kawazu 转换优先
-            get => GetSettings(nameof(LyricRomajiSource), RomajiSource.None);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(LyricRomajiSource)] = (int)value;
-                OnPropertyChanged();
-            }
-        }
-
-        public RollingCalculator LineRollingCalculator
-        {
-            get => GetSettings(nameof(LineRollingCalculator), RollingCalculator.ElasticEaseRollingCalculator);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(LineRollingCalculator)] = (int)value;
-                OnPropertyChanged();
-            }
-        }
-
-
-
-        public bool UseHttp
-        {
-            get => GetSettings(nameof(UseHttp), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(UseHttp)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool UseHttpWhenGettingSongs
-        {
-            get => GetSettings(nameof(UseHttpWhenGettingSongs), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(UseHttpWhenGettingSongs)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool EnableAudioGain
-        {
-            get => GetSettings(nameof(EnableAudioGain), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(EnableAudioGain)] = value;
-                OnPropertyChanged();
-                var player = Ioc.Default.GetService<AudioGraphPlayer>();
-                var _state = Ioc.Default.GetService<PlaybackStateService>();
-                if (player?.PrimaryPlaybackSource != null)
-                {
-                    if (value)
-                    {
-                        player.SetPlaybackSourceOutputVolume(_state?.NowPlayingItem?.Volume ?? 1, player.PrimaryPlaybackSource);
-                    }
-                    else player.SetPlaybackSourceOutputVolume(1, player.PrimaryPlaybackSource);
-                }
-            }
-        }
-        public bool CompactPlayerPageBlurStatus
-        {
-            get => GetSettings(nameof(CompactPlayerPageBlurStatus), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(CompactPlayerPageBlurStatus)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool EnableProxy
-        {
-            get => GetSettings(nameof(EnableProxy), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(EnableProxy)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool MigrateLyrics
-        {
-            get => GetSettings(nameof(MigrateLyrics), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(MigrateLyrics)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool OptimizeLyric
-        {
-            get => GetSettings(nameof(OptimizeLyric), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(OptimizeLyric)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool LyricRendererDebugMode
-        {
-            get => GetSettings(nameof(LyricRendererDebugMode), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererDebugMode)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool IsolationFullThrottle
-        {
-            get => GetSettings(nameof(IsolationFullThrottle), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(IsolationFullThrottle)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public double IsolationFPS
-        {
-            get => Math.Max(GetSettings(nameof(IsolationFPS), 60d), 60d);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(IsolationFPS)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public int LyricRendererFPS
-        {
-            get => GetSettings(nameof(LyricRendererFPS), 60);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererFPS)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public float IsolationScale
-        {
-            get => GetSettings(nameof(IsolationScale), 1f);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(IsolationScale)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool IsolationLightWave
-        {
-            get => GetSettings(nameof(IsolationLightWave), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(IsolationLightWave)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool ImpressionistLABSpace
-        {
-            get => GetSettings(nameof(ImpressionistLABSpace), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(ImpressionistLABSpace)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool ImpressionistIgnoreWhite
-        {
-            get => GetSettings(nameof(ImpressionistIgnoreWhite), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(ImpressionistIgnoreWhite)] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool ImpressionistUseKMeansPP
-        {
-            get => GetSettings(nameof(ImpressionistUseKMeansPP), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(ImpressionistUseKMeansPP)] = value;
-                OnPropertyChanged();
-            }
-        }
+        // ===================================================================
+        // Static methods
+        // ===================================================================
 
         public static bool SaveCookies()
         {
             var container = ApplicationData.Current.LocalSettings.CreateContainer("LoginedUser", ApplicationDataCreateDisposition.Always);
             container.Values.Clear();
-            foreach (var item in Common.NeteaseAPI.Option.Cookies)
+            foreach (var item in Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.Cookies)
             {
                 container.Values[item.Key] = item.Value;
             }
             return true;
         }
+
         public static bool LoadCookies()
         {
             if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("LoginedUser", out var container))
@@ -1445,7 +350,7 @@ namespace HyPlayer
                 {
                     foreach (var item in container.Values)
                     {
-                        Common.NeteaseAPI.Option.Cookies.Add(item.Key, (string)item.Value);
+                        Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.Cookies.Add(item.Key, (string)item.Value);
                     }
 
                     return true;
@@ -1456,6 +361,10 @@ namespace HyPlayer
                 return false;
             }
         }
+
+        // ===================================================================
+        // INotifyPropertyChanged infrastructure
+        // ===================================================================
 
 #nullable enable
         public event PropertyChangedEventHandler? PropertyChanged;

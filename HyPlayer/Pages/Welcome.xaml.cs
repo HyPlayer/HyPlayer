@@ -1,4 +1,6 @@
 ﻿#region
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Services.Abstractions;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -16,6 +18,8 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class Welcome : Page
 {
+    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+
     public Welcome()
     {
         InitializeComponent();
@@ -24,7 +28,7 @@ public sealed partial class Welcome : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (Common.Logined)
+        if (_auth.IsLoggedIn)
             TBHINT.Text = "点击侧边按钮开始吧~";
     }
 

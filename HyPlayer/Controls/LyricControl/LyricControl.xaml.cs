@@ -1,5 +1,4 @@
 ﻿using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.UWP.Chopin;

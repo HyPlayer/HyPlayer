@@ -1,4 +1,4 @@
-﻿<Page
+<Page
     x:Class="HyPlayer.Pages.Me"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -36,11 +36,11 @@
                                     x:Name="RectangleImageBack"
                                     Height="82"
                                     Margin="0"
-                                    x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                                    x:Load="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}"
                                     CornerRadius="12"
                                     IsCacheEnabled="False"
                                     Stretch="UniformToFill"
-                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}">
+                                    Visibility="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}">
                                     <frieren:ImageEx.Source>
                                         <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}" />
                                     </frieren:ImageEx.Source>
@@ -48,11 +48,11 @@
                                 <Rectangle
                                     x:Name="RectangleImageAcrylic"
                                     Margin="0,-1,0,-1"
-                                    x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                                    x:Load="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}"
                                     Fill="{ThemeResource SystemControlAcrylicElementBrush}"
                                     RadiusX="10"
                                     RadiusY="10"
-                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+                                    Visibility="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}" />
                                 <Grid
                                     Grid.Column="0"
                                     Background="Transparent"
@@ -167,8 +167,8 @@
                     <Grid x:Name="AcrylicGrid" Visibility="{x:Bind hyplayer:Setting.acrylicAvailabiliity}">
                         <Border
                             x:Name="RectangleImageBack"
-                            x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
-                            Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
+                            x:Load="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur}"
+                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur}">
                             <Border.Background>
                                 <ImageBrush Stretch="UniformToFill">
                                     <ImageBrush.ImageSource>
@@ -179,9 +179,9 @@
                         </Border>
                         <Border
                             x:Name="RectangleImageAcrylic"
-                            x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
+                            x:Load="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur}"
                             Background="{ThemeResource MePageAcrylicBrush}"
-                            Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
+                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur}" />
                     </Grid>
 
                     <Border x:Name="RectangleImageFallback" Visibility="{x:Bind hyplayer:Setting.acrylicAvailabiliity, Converter={StaticResource BoolToVisibilityInverseConverter}}">

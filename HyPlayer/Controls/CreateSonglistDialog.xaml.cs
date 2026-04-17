@@ -1,10 +1,13 @@
-﻿#region
+#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
 using System;
 using Windows.UI.Xaml.Controls;
-
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
@@ -21,11 +24,11 @@ public sealed partial class CreateSonglistDialog : ContentDialog
     private async void ContentDialog_PrimaryButtonClick(ContentDialog sender,
         ContentDialogButtonClickEventArgs args)
     {
-        string realIpBackup = Common.NeteaseAPI.Option.XRealIP;
+        string realIpBackup = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.XRealIP;
         // This request would return with a 250 error without RealIP set
-        Common.NeteaseAPI.Option.XRealIP = "118.88.88.88";
+        Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.XRealIP = "118.88.88.88";
 
-        var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistCreateApi,
+        var result = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().RequestAsync(NeteaseApis.PlaylistCreateApi,
                 new PlaylistCreateRequest()
                 {
                     Name = SonglistTitle.Text,
@@ -33,12 +36,12 @@ public sealed partial class CreateSonglistDialog : ContentDialog
                 });
         if (result.IsError)
         {
-            Common.AddToTeachingTipLists("创建失败", result.Error.Message);
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建失败", result.Error.Message);
         }
 
-        Common.AddToTeachingTipLists("创建成功");
-        _ = Common.PageBase.LoadSongList();
-        Common.NeteaseAPI.Option.XRealIP = realIpBackup;// Restore user setting
+        Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建成功");
+        _ = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).LoadSongList();
+        Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.XRealIP = realIpBackup;// Restore user setting
     }
 
     private void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)

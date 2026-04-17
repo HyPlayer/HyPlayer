@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="HyPlayer.Controls.SimpleLinerList"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -41,12 +41,12 @@
                             Grid.ColumnSpan="2"
                             Height="85"
                             Margin="0,-10,0,-10"
-                            x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                            x:Load="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}"
                             x:Phase="4"
                             CornerRadius="10"
                             IsCacheEnabled="False"
                             Stretch="UniformToFill"
-                            Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}">
+                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}">
                             <controls:ImageEx.Source>
                                 <BitmapImage UriSource="{x:Bind CoverUri}" />
                             </controls:ImageEx.Source>
@@ -55,11 +55,11 @@
                             x:Name="RectangleImageAcrylic"
                             Grid.ColumnSpan="2"
                             Margin="0,-10,0,-10"
-                            x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                            x:Load="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}"
                             Fill="{ThemeResource SystemControlAcrylicElementBrush}"
                             RadiusX="10"
                             RadiusY="10"
-                            Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}" />
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
                             <TextBlock
                                 x:Name="OrderId"

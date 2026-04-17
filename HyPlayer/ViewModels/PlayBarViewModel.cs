@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
@@ -13,6 +12,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 namespace HyPlayer.ViewModels;
 
 public partial class PlayBarViewModel : ObservableRecipient
@@ -129,7 +129,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     [RelayCommand]
     private async Task MovePreviousAsync()
     {
-        if (Common.IsInFm)
+        if (Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm)
             PersonalFM.ExitFm();
         else
             await _playlist.MovePreviousAsync();
@@ -138,7 +138,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     [RelayCommand]
     private void ChangePlayMode()
     {
-        if (Common.IsInFm) return;
+        if (Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm) return;
 
         var nextStrategy = ActiveStrategyId switch
         {
@@ -161,7 +161,8 @@ public partial class PlayBarViewModel : ObservableRecipient
     [RelayCommand]
     private void LikeSong()
     {
-        HyPlayList.LikeSong();
+        var authService = CommunityToolkit.Mvvm.DependencyInjection.Ioc.Default.GetRequiredService<IAuthService>();
+        authService.LikeSong();
     }
 
     [RelayCommand]
@@ -292,7 +293,7 @@ public partial class PlayBarViewModel : ObservableRecipient
 
         if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating && _setting.displayShuffledList)
         {
-            foreach (var idx in HyPlayList.ShuffleList)
+            foreach (var idx in _playlist.ShuffleList)
             {
                 if (idx >= 0 && idx < _playlist.Items.Count)
                     PlaylistItems.Add(_playlist.Items[idx]);
@@ -321,7 +322,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     public int GetTargetingIndex()
     {
         if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating && _setting.displayShuffledList)
-            return HyPlayList.ShufflingIndex;
+            return _playlist.ShufflingIndex;
         return _playlist.NowPlayingIndex;
     }
 

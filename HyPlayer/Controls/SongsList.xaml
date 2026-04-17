@@ -154,7 +154,7 @@
                         Click="FlyoutItemComments_Click"
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="评论"
-                        Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
+                        Visibility="{x:Bind local:XamlHelpers.Setting.notClearMode, Mode=OneWay}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon Glyph="&#xE8F2;" />
                         </MenuFlyoutItem.Icon>
@@ -173,7 +173,7 @@
                         Click="BtnMV_Click"
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="视频"
-                        Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
+                        Visibility="{x:Bind local:XamlHelpers.Setting.notClearMode, Mode=OneWay}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon Glyph="&#xE173;" />
                         </MenuFlyoutItem.Icon>
@@ -223,13 +223,13 @@
                                 Grid.ColumnSpan="4"
                                 Height="64"
                                 Margin="2,0,2,0"
-                                x:Load="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                                x:Load="{x:Bind local:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}"
                                 x:Phase="4"
                                 CornerRadius="12"
                                 IsCacheEnabled="False"
                                 Opacity="1"
                                 Stretch="Fill"
-                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}">
+                                Visibility="{x:Bind local:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}">
                                 <frieren:ImageEx.Source>
                                     <BitmapImage UriSource="{x:Bind Cover}" />
                                 </frieren:ImageEx.Source>
@@ -238,11 +238,11 @@
                                 x:Name="RectangleImageAcrylic"
                                 Grid.ColumnSpan="4"
                                 Margin="1,0,1,0"
-                                x:Load="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                                x:Load="{x:Bind local:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}"
                                 Fill="{ThemeResource SystemControlBaseLowAcrylicElementBrush}"
                                 RadiusX="10"
                                 RadiusY="10"
-                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+                                Visibility="{x:Bind local:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}" />
 
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <frieren:ImageEx

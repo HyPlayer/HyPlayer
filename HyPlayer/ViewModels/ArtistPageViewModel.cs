@@ -2,9 +2,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Classes;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -15,6 +17,20 @@ namespace HyPlayer.ViewModels
 {
     public partial class ArtistPageViewModel : ObservableRecipient
     {
+        private readonly NeteaseCloudMusicApiHandler _api;
+        private readonly Setting _setting;
+        private readonly INotificationService _notification;
+
+        public ArtistPageViewModel(
+            NeteaseCloudMusicApiHandler api,
+            Setting setting,
+            INotificationService notification)
+        {
+            _api = api;
+            _setting = setting;
+            _notification = notification;
+        }
+
         public ObservableCollection<NCSong> AllSongs { get; set; } = [];
         public ObservableCollection<NCSong> HotSongs { get; set; } = [];
         public ObservableCollection<SimpleListItem> Albums { get; set; } = [];
@@ -35,21 +51,21 @@ namespace HyPlayer.ViewModels
         {
             if (artistId is null)
             {
-                Common.AddToTeachingTipLists("艺人ID为空", "请检查传入的参数是否正确");
+                _notification.ShowMessage("艺人ID为空", "请检查传入的参数是否正确");
                 return;
             }
             var res = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
             {
-                var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistDetailApi,
+                var resp = await _api.RequestAsync(NeteaseApis.ArtistDetailApi,
                     new ArtistDetailRequest() { ArtistId = artistId });
                 if (resp.IsError && resp.Error?.ErrorCode.ToString() == "404")
                 {
-                    Common.AddToTeachingTipLists("艺人不存在", null);
+                    _notification.ShowMessage("艺人不存在", null);
                     return null;
                 }
                 if (resp.IsError)
                 {
-                    Common.AddToTeachingTipLists("获取艺人信息失败", resp.Error?.Message);
+                    _notification.ShowMessage("获取艺人信息失败", resp.Error?.Message);
                     return null;
                 }
 
@@ -64,7 +80,7 @@ namespace HyPlayer.ViewModels
             Artist = res?.Artist.MapToNcArtist();
             if (res?.Artist?.PicUrl?.StartsWith("http") is true)
             {
-                if (Common.Setting.noImage)
+                if (_setting.noImage)
                 {
                     Image = null;
                 }
@@ -82,11 +98,11 @@ namespace HyPlayer.ViewModels
             HotSongs.Clear();
             var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, Artist.Id, async () =>
             {
-                var j1res = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistTopSongApi,
+                var j1res = await _api.RequestAsync(NeteaseApis.ArtistTopSongApi,
                     new ArtistTopSongRequest() { ArtistId = Artist.Id });
                 if (j1res.IsError)
                 {
-                    Common.AddToTeachingTipLists("获取歌手热门歌曲失败", j1res.Error?.Message);
+                    _notification.ShowMessage("获取歌手热门歌曲失败", j1res.Error?.Message);
                     return null;
                 }
 
@@ -95,11 +111,11 @@ namespace HyPlayer.ViewModels
             var idx = 0;
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongDetail, Artist.Id, async () =>
             {
-                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
+                var json = await _api.RequestAsync(NeteaseApis.SongDetailApi,
                     new SongDetailRequest() { IdList = j1?.Select(t => t.Id).ToList() });
                 if (json.IsError)
                 {
-                    Common.AddToTeachingTipLists("获取歌手歌曲信息失败", json.Error.Message);
+                    _notification.ShowMessage("获取歌手歌曲信息失败", json.Error.Message);
                     return null;
                 }
 
@@ -123,11 +139,11 @@ namespace HyPlayer.ViewModels
             var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial, Artist.Id + "_" + CurrentPage,
                     async () =>
                     {
-                        var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistSongsApi,
+                        var resp = await _api.RequestAsync(NeteaseApis.ArtistSongsApi,
                             new ArtistSongsRequest() { ArtistId = Artist.Id, Limit = 50, Offset = CurrentPage * 50 });
                         if (resp.IsError)
                         {
-                            Common.AddToTeachingTipLists("获取歌手歌曲失败", resp.Error?.Message);
+                            _notification.ShowMessage("获取歌手歌曲失败", resp.Error?.Message);
                             return null;
                         }
 
@@ -151,11 +167,11 @@ namespace HyPlayer.ViewModels
                 var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList, Artist.Id + "_" + CurrentPage,
                     async () =>
                     {
-                        var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistAlbumsApi,
+                        var resp = await _api.RequestAsync(NeteaseApis.ArtistAlbumsApi,
                             new ArtistAlbumsRequest() { ArtistId = Artist.Id, Limit = 50, Start = CurrentPage * 50 });
                         if (resp.IsError)
                         {
-                            Common.AddToTeachingTipLists("获取歌手专辑失败", resp.Error?.Message);
+                            _notification.ShowMessage("获取歌手专辑失败", resp.Error?.Message);
                             return null;
                         }
 
@@ -184,7 +200,7 @@ namespace HyPlayer.ViewModels
             }
             catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
         [RelayCommand]

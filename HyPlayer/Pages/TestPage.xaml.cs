@@ -1,5 +1,4 @@
-﻿using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
+using HyPlayer.Classes;
 using HyPlayer.NeteaseApi;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
@@ -27,6 +26,11 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class TestPage : Page
 {
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+
     public static readonly DependencyProperty ResourceIdProperty =
         DependencyProperty.Register(nameof(ResourceId), typeof(string), typeof(TestPage), new PropertyMetadata(""));
 
@@ -64,7 +68,7 @@ public sealed partial class TestPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        TbAdditionalApiParameters.Text = JsonSerializer.Serialize(Common.Setting.ApiAdditionalParameters, Common.DefaultOptions);
+        TbAdditionalApiParameters.Text = JsonSerializer.Serialize(_setting.ApiAdditionalParameters, JsonDefaults.Options);
     }
 
     public string ResourceId
@@ -75,7 +79,7 @@ public sealed partial class TestPage : Page
 
     private void TestTeachingTip_OnClick(object sender, RoutedEventArgs e)
     {
-        Common.AddToTeachingTipLists("TestTeachingTip", _teachingTipIndex++.ToString());
+        _notification.ShowMessage("TestTeachingTip", _teachingTipIndex++.ToString());
     }
 
     private async void TestGCLeak_Click(object sender, RoutedEventArgs e)
@@ -97,7 +101,7 @@ public sealed partial class TestPage : Page
             await Task.Delay(5000);
         }
         MainStackPanel.Children.Remove(leakCheckFrame);
-        Common.AddToTeachingTipLists("正在生成报告", "等待 GC 处理中");
+        _notification.ShowMessage("正在生成报告", "等待 GC 处理中");
         GC.Collect();
         await Task.Delay(5000);
         GC.Collect();
@@ -125,7 +129,7 @@ public sealed partial class TestPage : Page
 
     private void NavigateResourceId(object sender, RoutedEventArgs e)
     {
-        _ = Common.NavigatePageResource(ResourceId);
+        _ = Ioc.Default.GetRequiredService<INavigationService>().NavigateToResourceAsync(ResourceId);
     }
 
     private async void PlayResourceId(object sender, RoutedEventArgs e)
@@ -143,12 +147,12 @@ public sealed partial class TestPage : Page
         {
             CurrentSong = _state.NowPlayingItem,
             CurrentPlaySource = _playlist.PlaySourceId,
-            CurrentUser = Common.LoginedUser,
+            CurrentUser = _auth.CurrentUser,
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
-            IsInBackground = Common.IsInBackground,
-            IsLowCache = Common.Setting.forceMemoryGarbage,
-            ErrorMessageList = [.. Common.ErrorMessageList.TakeLast(15)]
-        }, Common.DefaultOptions);
+            IsInBackground = Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground,
+            IsLowCache = _setting.forceMemoryGarbage,
+            ErrorMessageList = [.. Ioc.Default.GetRequiredService<IUIStateService>().ErrorMessageList.TakeLast(15)]
+        }, JsonDefaults.Options);
         var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("dump-" +
             DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid() + ".txt");
         await FileIO.WriteTextAsync(file, info);
@@ -157,7 +161,7 @@ public sealed partial class TestPage : Page
 
     private void DisablePopUpButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.DisablePopUp = true;
+        _setting.DisablePopUp = true;
     }
 
     private void ForceGC_Click(object sender, RoutedEventArgs e)
@@ -169,13 +173,14 @@ public sealed partial class TestPage : Page
     {
         try
         {
-            var result = JsonSerializer.Deserialize<AdditionalParameters>(TbAdditionalApiParameters.Text, Common.DefaultOptions);
+            var result = JsonSerializer.Deserialize<AdditionalParameters>(TbAdditionalApiParameters.Text, JsonDefaults.Options);
             if (result != null)
             {
-                Common.Setting.ApiAdditionalParameters = result;
-                Common.NeteaseAPI!.Option.AdditionalParameters = result;
-                HyPlayList.LoginDoneCall();
-                Common.AddToTeachingTipLists("成功设置API附加参数", "请重启应用以使更改生效");
+                _setting.ApiAdditionalParameters = result;
+                _api.Option.AdditionalParameters = result;
+                var authService = Ioc.Default.GetRequiredService<IAuthService>();
+                authService.NotifyLoginCompleted();
+                _notification.ShowMessage("成功设置API附加参数", "请重启应用以使更改生效");
             }
             else
             {

@@ -29,12 +29,14 @@ public sealed class LyricService : ILyricService
     private readonly NeteaseCloudMusicApiHandler _api;
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
+    private readonly HttpClient _httpClient;
 
-    public LyricService(NeteaseCloudMusicApiHandler api, PlaybackStateService state, Setting setting)
+    public LyricService(NeteaseCloudMusicApiHandler api, PlaybackStateService state, Setting setting, HttpClient httpClient)
     {
         _api = api;
         _state = state;
         _setting = setting;
+        _httpClient = httpClient;
     }
 
     /// <inheritdoc />
@@ -288,7 +290,7 @@ public sealed class LyricService : ILyricService
         {
             if (!_setting.enableAmllTtmlDb || item.ItemType != HyPlayItemType.Netease) return;
 
-            var ttml = await Common.HttpClient!.GetStringAsync(
+            var ttml = await _httpClient.GetStringAsync(
                 _setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", item.Id), ct);
 
             var ttmlConverter = new AppleSyllableConverter();

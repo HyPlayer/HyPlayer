@@ -1,9 +1,9 @@
 ﻿#region
 
 using ALRC.Abstraction;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Classes.LyricParser.Abstraction;
-using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.Models;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
@@ -40,14 +40,14 @@ public class NCSong
     public int DisplayOrder => Order + 1;
 
     public Uri Cover =>
-        Common.Setting.noImage
+        Ioc.Default.GetRequiredService<Setting>().noImage
             ? null
             : new Uri((Album.Cover ??
                        "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") +
                       "?param=" +
                       StaticSource.PICSIZE_SINGLENCSONG_COVER);
     public string CoverString =>
-        Common.Setting.noImage
+        Ioc.Default.GetRequiredService<Setting>().noImage
             ? null
             : new Uri((Album.Cover ??
                        "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") +

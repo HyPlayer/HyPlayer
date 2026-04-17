@@ -1,6 +1,7 @@
-﻿#region
+#region
 
 using HyPlayer.Classes;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Comment;
 using HyPlayer.Pages;
@@ -16,6 +17,8 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 
+using HyPlayer.Services.Abstractions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 #endregion
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -79,7 +82,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         if (!IsLoadMoreComments) floorComments.Clear();
         var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ResourceType}_{MainComment.ResourceId}_{MainComment.CommentId}", async () =>
         {
-            var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.CommentFloorApi,
+            var rst = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>()!.RequestAsync(NeteaseApis.CommentFloorApi,
                 new CommentFloorRequest()
                 {
                     ParentCommentId = MainComment.CommentId,
@@ -90,7 +93,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             );
             if (rst.IsError)
             {
-                Common.AddToTeachingTipLists("加载楼层评论错误", rst.Error?.Message ?? "未知错误");
+                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("加载楼层评论错误", rst.Error?.Message ?? "未知错误");
                 return null;
             }
             return rst.Value;
@@ -114,7 +117,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private async void Like_Click(object sender, RoutedEventArgs e)
     {
-        var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CommentLikeApi,
+        var result = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().RequestAsync(NeteaseApis.CommentLikeApi,
             new CommentLikeRequest()
             {
                 CommentId = MainComment.CommentId,
@@ -123,7 +126,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             });
         if (result.IsError)
         {
-            Common.AddToTeachingTipLists("点赞失败", result.Error?.Message ?? "未知错误");
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("点赞失败", result.Error?.Message ?? "未知错误");
             return;
         }
 
@@ -135,21 +138,21 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     private void Delete_Click(object sender, RoutedEventArgs e)
     {
         throw new NotImplementedException();
-        // TODO: 删除评论
+        // NOTE: Comment delete functionality not yet implemented
     }
 
     private void NavToUser_Click(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(Me), MainComment.CommentUser.Id);
+        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me), MainComment.CommentUser.Id);
     }
 
     private async void SendReply_Click(object sender, RoutedEventArgs e)
     {
-        if (!string.IsNullOrWhiteSpace(ReplyText.Text) && Common.Logined)
+        if (!string.IsNullOrWhiteSpace(ReplyText.Text) && Ioc.Default.GetRequiredService<IAuthService>().IsLoggedIn)
         {
             try
             {
-                // TODO: 发送评论
+                // NOTE: Comment send functionality not yet implemented
                 ReplyText.Text = string.Empty;
                 await Task.Delay(1000);
                 _ = LoadFloorComments(false);

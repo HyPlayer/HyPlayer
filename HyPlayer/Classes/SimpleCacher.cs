@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -15,13 +16,13 @@ public static class SimpleCacher
 
     public static async Task InitializeAsync()
     {
-        cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(Common.Setting!.cacheDir);
+        cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(Ioc.Default.GetRequiredService<Setting>()!.cacheDir);
         // cacheFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("cache", CreationCollisionOption.OpenIfExists);
     }
 
     public static async Task<T?> GetOrCreateCacheAsync<T>(CacheType cacheType, string id, Func<Task<T?>> creator, TimeSpan? expiration = null, bool forceRefresh = false, bool forceUseCache = false, CancellationToken cancellationToken = default) where T : class
     {
-        if (!Common.Setting!.enableApiCache)
+        if (!Ioc.Default.GetRequiredService<Setting>()!.enableApiCache)
         {
             return await creator();
         }
@@ -56,7 +57,7 @@ public static class SimpleCacher
                 }
                 try
                 {
-                    var rst = JsonSerializer.Deserialize<T>(content, Common.DefaultOptions);
+                    var rst = JsonSerializer.Deserialize<T>(content, new JsonSerializerOptions(JsonSerializerDefaults.Web));
                     return rst;
                 }
                 catch
@@ -92,7 +93,7 @@ public static class SimpleCacher
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var json = JsonSerializer.Serialize(data, Common.DefaultOptions);
+            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions(JsonSerializerDefaults.Web));
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             await FileIO.WriteTextAsync(file, json);
         }

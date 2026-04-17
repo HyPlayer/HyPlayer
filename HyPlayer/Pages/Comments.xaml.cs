@@ -1,9 +1,12 @@
-﻿#region
+#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Comment;
 using HyPlayer.NeteaseApi.Models;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading;
@@ -27,6 +30,9 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class Comments : Page
 {
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+
 #nullable enable
     private ScrollViewer? MainScroll, HotCommentsScroll;
 #nullable restore
@@ -107,7 +113,7 @@ public sealed partial class Comments : Page
             {
             }
         }
-        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource?.Dispose();
     }
 
 
@@ -122,7 +128,7 @@ public sealed partial class Comments : Page
         if (IsShiftingPage) return;
         _cancellationToken.ThrowIfCancellationRequested();
         var isHotCommentsPage = HotCommentsContainer.Visibility == Visibility.Visible;
-        var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CommentsApi, new CommentsRequest
+        var result = await _api.RequestAsync(NeteaseApis.CommentsApi, new CommentsRequest
         {
             ResourceType = resourcetype,
             ResourceId = resourceid,
@@ -139,7 +145,7 @@ public sealed partial class Comments : Page
 
         if (result.IsError)
         {
-            Common.AddToTeachingTipLists("加载评论时出错", result.Error.Message);
+            _notification.ShowMessage("加载评论时出错", result.Error.Message);
             return;
         }
 
@@ -189,10 +195,10 @@ public sealed partial class Comments : Page
 
     private void SendComment_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: 评论功能风控
-        Common.AddToTeachingTipLists("评论功能暂时关闭", "由于网易云音乐风控策略，评论功能暂时关闭");
+        // NOTE: Comment risk control not yet implemented
+        _notification.ShowMessage("评论功能暂时关闭", "由于网易云音乐风控策略，评论功能暂时关闭");
         /*
-        if (!string.IsNullOrWhiteSpace(CommentEdit.Text) && Common.Logined)
+        if (!string.IsNullOrWhiteSpace(CommentEdit.Text) && Ioc.Default.GetRequiredService<IAuthService>().IsLoggedIn)
         {
             try
             {
@@ -216,20 +222,20 @@ public sealed partial class Comments : Page
                 CommentEdit.Text = string.Empty;
                 await Task.Delay(1000);
                 _commentLoaderTask = LoadComments(3);
-                Common.AddToTeachingTipLists("评论成功");
-                Common.RollTeachingTip();
+                _notification.ShowMessage("评论成功");
+                Ioc.Default.GetRequiredService<IUIStateService>().RollTeachingTip();
             }
             catch (Exception ex)
             {
-                Common.AddToTeachingTipLists("出现问题，评论失败", ex.Message);
-                Common.RollTeachingTip();
+                _notification.ShowMessage("出现问题，评论失败", ex.Message);
+                Ioc.Default.GetRequiredService<IUIStateService>().RollTeachingTip();
             }
         }
 
         else if (string.IsNullOrWhiteSpace(CommentEdit.Text))
         {
-            Common.AddToTeachingTipLists("评论不能为空");
-            Common.RollTeachingTip();
+            _notification.ShowMessage("评论不能为空");
+            Ioc.Default.GetRequiredService<IUIStateService>().RollTeachingTip();
         }
         else
         {
@@ -265,7 +271,7 @@ public sealed partial class Comments : Page
     (source) =>
 
     {
-        _ = Common.Invoke(
+        _ = _notification.InvokeOnUIThread(
         () =>
         {
             point = transform.TransformPoint(new Point(0, 25));//要超过判定区域，还要预留一点
@@ -297,7 +303,7 @@ public sealed partial class Comments : Page
         (source) =>
 
         {
-            _ = Common.Invoke(
+            _ = _notification.InvokeOnUIThread(
             () =>
             {
                 if ((sender?.As<ScrollViewer>()).VerticalOffset < 15)
@@ -324,7 +330,7 @@ public sealed partial class Comments : Page
     (source) =>
 
         {
-            _ = Common.Invoke(
+            _ = _notification.InvokeOnUIThread(
             () =>
            {
                HotCommentsScroll = HotComments.CommentPresentScrollViewer;
@@ -361,7 +367,7 @@ public sealed partial class Comments : Page
             (source) =>
 
             {
-                _ = Common.Invoke(
+                _ = _notification.InvokeOnUIThread(
                 () =>
                 {
                     MainScroll = NormalComments.CommentPresentScrollViewer;
