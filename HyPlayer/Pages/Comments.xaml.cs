@@ -1,13 +1,10 @@
-﻿#region
+#region
 
+using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Comment;
-using HyPlayer.NeteaseApi.Models;
+using HyPlayer.ViewModels;
 using System;
-using System.Collections.ObjectModel;
-using System.Threading;
-using System.Threading.Tasks;
 using Windows.System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -18,7 +15,7 @@ using Point = Windows.Foundation.Point;
 
 #endregion
 
-// https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
+// https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了"空白页"项模板
 
 namespace HyPlayer.Pages;
 
@@ -30,226 +27,66 @@ public sealed partial class Comments : Page
 #nullable enable
     private ScrollViewer? MainScroll, HotCommentsScroll;
 #nullable restore
-    private string cursor;
-    private int page = 1;
-    private string resourceid;
-    private NeteaseResourceType resourcetype;
-    private int sortType = 1;
     private bool IsShiftingPage = false;
-    private ObservableCollection<Comment> hotComments = new ObservableCollection<Comment>();
-    private ObservableCollection<Comment> normalComments = new ObservableCollection<Comment>();
-    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-    private CancellationToken _cancellationToken;
-    private Task _commentLoaderTask;
-    private Task _hotCommentLoaderTask;
 
     public Comments()
     {
         InitializeComponent();
-        _cancellationToken = _cancellationTokenSource.Token;
+        DataContext = Ioc.Default.GetRequiredService<CommentsViewModel>();
     }
+
+    private CommentsViewModel ViewModel => (CommentsViewModel)DataContext;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         if (e.Parameter is string resstr)
         {
-            resourceid = resstr.Substring(2);
-            switch (resstr.Substring(0, 2))
-            {
-                case "sg":
-                    resourcetype = NeteaseResourceType.Song;
-                    break;
-                case "mv":
-                    resourcetype = NeteaseResourceType.MV;
-                    break;
-                case "fm":
-                    resourcetype = NeteaseResourceType.RadioProgram;
-                    break;
-                case "mb":
-                    resourcetype = NeteaseResourceType.MLog;
-                    break;
-                case "al":
-                    resourcetype = NeteaseResourceType.Album;
-                    break;
-                case "pl":
-                    resourcetype = NeteaseResourceType.Playlist;
-                    break;
-            }
+            ViewModel.Initialize(resstr);
         }
-
-        LoadHotComments();
-        _commentLoaderTask = LoadComments(sortType);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        if (_commentLoaderTask != null && !_commentLoaderTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _commentLoaderTask;
-            }
-            catch
-            {
-            }
-        }
-        if (_hotCommentLoaderTask != null && !_hotCommentLoaderTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _hotCommentLoaderTask;
-            }
-            catch
-            {
-            }
-        }
-        _cancellationTokenSource.Dispose();
+        await ViewModel.CleanupAsync();
     }
-
-
-    private void LoadHotComments()
-    {
-        _hotCommentLoaderTask = LoadComments(2);
-    }
-
-    private async Task LoadComments(int type)
-    {
-        if (string.IsNullOrEmpty(resourceid)) return;
-        if (IsShiftingPage) return;
-        _cancellationToken.ThrowIfCancellationRequested();
-        var isHotCommentsPage = HotCommentsContainer.Visibility == Visibility.Visible;
-        var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CommentsApi, new CommentsRequest
-        {
-            ResourceType = resourcetype,
-            ResourceId = resourceid,
-            CommentSortType = type switch
-            {
-                2 => CommentSortType.Hot,
-                3 => CommentSortType.Time,
-                _ => CommentSortType.Recommend
-            },
-            PageSize = 20,
-            PageNo = page,
-            Cursor = page != 1 && type == 3 ? cursor : null
-        }, _cancellationToken);
-
-        if (result.IsError)
-        {
-            Common.AddToTeachingTipLists("加载评论时出错", result.Error.Message);
-            return;
-        }
-
-        if (type == 2 && isHotCommentsPage)
-            hotComments.Clear();
-        else normalComments.Clear();
-
-        foreach (var comment in result.Value?.Data?.Comments ?? [])
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            var cmt = comment.MapToComment();
-            cmt.ResourceType = resourcetype;
-            cmt.ResourceId = resourceid;
-            if (type == 2 && isHotCommentsPage)
-                hotComments.Add(cmt);
-            else normalComments.Add(cmt);
-        }
-
-        if (type == 3)
-            cursor = result.Value?.Data?.Cursor;
-
-        if (result.Value?.Data?.HasMore == true)
-            NextPage.IsEnabled = true;
-        else
-            NextPage.IsEnabled = false;
-
-        if (page > 1)
-            PrevPage.IsEnabled = true;
-        else
-            PrevPage.IsEnabled = false;
-    }
-
 
     private void NextPage_Click(object sender, RoutedEventArgs e)
     {
-        page++;
-        _commentLoaderTask = LoadComments(sortType);
-        ScrollTop();
+        if (DataContext is CommentsViewModel viewModel)
+        {
+            viewModel.NextPage();
+            ScrollTop();
+        }
     }
 
     private void PrevPage_Click(object sender, RoutedEventArgs e)
     {
-        page--;
-        _commentLoaderTask = LoadComments(sortType);
-        ScrollTop();
+        if (DataContext is CommentsViewModel viewModel)
+        {
+            viewModel.PrevPage();
+            ScrollTop();
+        }
     }
 
     private void SendComment_Click(object sender, RoutedEventArgs e)
     {
         // TODO: 评论功能风控
         Common.AddToTeachingTipLists("评论功能暂时关闭", "由于网易云音乐风控策略，评论功能暂时关闭");
-        /*
-        if (!string.IsNullOrWhiteSpace(CommentEdit.Text) && Common.Logined)
-        {
-            try
-            {
-                var result = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Comment,
-                    new Dictionary<string, object>
-                    {
-                        {
-                            "Id", resourceid
-                        },
-                        {
-                            "type", resourcetype
-                        },
-                        {
-                            "t", "1"
-                        },
-                        {
-                            "Content", CommentEdit.Text
-                        }
-                    });
-
-                CommentEdit.Text = string.Empty;
-                await Task.Delay(1000);
-                _commentLoaderTask = LoadComments(3);
-                Common.AddToTeachingTipLists("评论成功");
-                Common.RollTeachingTip();
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists("出现问题，评论失败", ex.Message);
-                Common.RollTeachingTip();
-            }
-        }
-
-        else if (string.IsNullOrWhiteSpace(CommentEdit.Text))
-        {
-            Common.AddToTeachingTipLists("评论不能为空");
-            Common.RollTeachingTip();
-        }
-        else
-        {
-            var dlg = new MessageDialog("请先登录");
-            await dlg.ShowAsync();
-        }
-        */
     }
 
     private void ComboBoxSortType_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        sortType = ComboBoxSortType.SelectedIndex + 1;
-        _commentLoaderTask = LoadComments(sortType);
+        if (DataContext is CommentsViewModel viewModel)
+            viewModel.ChangeSort(ComboBoxSortType.SelectedIndex);
     }
 
     private void SkipPage_Click(object sender, RoutedEventArgs e)
     {
-        if (int.TryParse(PageSelect.Text, out page))
+        if (int.TryParse(PageSelect.Text, out int pageNumber) && DataContext is CommentsViewModel viewModel)
         {
-            _commentLoaderTask = LoadComments(sortType);
+            viewModel.SkipPage(pageNumber);
             ScrollTop();
         }
     }
@@ -310,9 +147,9 @@ public sealed partial class Comments : Page
 
     private void PageSelect_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        if (int.TryParse(PageSelect.Text, out page))
+        if (int.TryParse(PageSelect.Text, out int pageNumber) && DataContext is CommentsViewModel viewModel)
         {
-            _commentLoaderTask = LoadComments(sortType);
+            viewModel.SkipPage(pageNumber);
             ScrollTop();
         }
     }

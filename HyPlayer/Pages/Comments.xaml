@@ -51,7 +51,7 @@
             <hycontrols:CommentsList
                 x:Name="HotComments"
                 Margin="0,40,0,190"
-                Comments="{x:Bind hotComments}"
+                Comments="{x:Bind ViewModel.HotComments}"
                 Loaded="HotComments_Loaded">
                 <hycontrols:CommentsList.RenderTransform>
                     <TranslateTransform x:Name="HotCommentsAnimateTranslateTransform" />
@@ -86,7 +86,7 @@
             <hycontrols:CommentsList
                 x:Name="NormalComments"
                 Margin="0,40,0,190"
-                Comments="{x:Bind normalComments}">
+                Comments="{x:Bind ViewModel.NormalComments}">
                 <hycontrols:CommentsList.RenderTransform>
                     <TranslateTransform x:Name="MainCommentsAnimateTranslateTransform" />
                 </hycontrols:CommentsList.RenderTransform>
@@ -107,7 +107,7 @@
                         x:Name="PrevPage"
                         Click="PrevPage_Click"
                         Content="上一页"
-                        IsEnabled="False" />
+                        IsEnabled="{x:Bind ViewModel.PrevPageEnabled, Mode=OneWay}" />
                     <AutoSuggestBox
                         x:Name="PageSelect"
                         Width="110"
@@ -118,7 +118,7 @@
                         x:Name="NextPage"
                         Click="NextPage_Click"
                         Content="下一页"
-                        IsEnabled="False" />
+                        IsEnabled="{x:Bind ViewModel.NextPageEnabled, Mode=OneWay}" />
                 </StackPanel>
             </StackPanel>
         </Grid>
