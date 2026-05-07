@@ -17,6 +17,7 @@ using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
@@ -183,7 +184,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             if (_items.Count == 0)
                 return;
 
-            if (stopPlayback)
+            if (stopPlayback && _player.GlobalPlaybackStatus == PlaybackStatus.Playing)
                 _player.PauseAll();
 
             _items.Clear();
@@ -225,7 +226,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             item = _items[_nowPlayingIndex];
         }
 
-        await _control.LoadAndPlayAsync(item);
+        await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
     /// <inheritdoc />
@@ -248,7 +249,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             item = _items[_nowPlayingIndex];
         }
 
-        await _control.LoadAndPlayAsync(item);
+        await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
     /// <inheritdoc />
@@ -271,7 +272,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             SyncIndex();
         }
 
-        await _control.LoadAndPlayAsync(item);
+        await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
     // ────────────── 曲目结束处理 ──────────────
@@ -674,8 +675,8 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         Duration = _state.Duration,
         CurrentItem = NowPlayingItem,
         RequestNextItemAsync = RequestNextItemAsync,
-        LoadMediaSourceAsync = (item, primary, autoPlay) =>
-            _control.LoadAndPlayAsync(item, primary, autoPlay),
+        LoadMediaSourceAsync = (item, primary, autoPlay, removeCurrentSongs) =>
+            _control.LoadAndPlayAsync(item, primary, autoPlay, removeCurrentSongs: removeCurrentSongs),
         Player = _player
     };
 

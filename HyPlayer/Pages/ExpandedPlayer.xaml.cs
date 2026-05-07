@@ -207,7 +207,7 @@ public sealed partial class ExpandedPlayer : Page
         }
         if (_player.PrimaryAudioInputNode.Position.TotalMilliseconds < view.Context.CurrentLyricTime)
         {
-            view.Context.CurrentLyricTime = (long)(_player?.PrimaryAudioInputNode.Position.TotalMilliseconds ?? 0);
+            view.Context.CurrentLyricTime = (long)(_player?.PrimaryAudioInputNode?.Position.TotalMilliseconds ?? 0);
             _lyricBox.ReflowTime(0);
         }
         else

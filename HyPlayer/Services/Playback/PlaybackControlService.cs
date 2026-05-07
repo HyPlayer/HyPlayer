@@ -163,7 +163,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     }
 
     /// <inheritdoc />
-    public async Task LoadAndPlayAsync(HyPlayItem item, bool setAsPrimary = true, bool autoPlay = true)
+    public async Task LoadAndPlayAsync(HyPlayItem item, bool setAsPrimary = true, bool autoPlay = true, bool removeCurrentSongs = true)
     {
         // 取消上一次加载
         _mediaSourceCts?.Cancel();
@@ -177,7 +177,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             if (mediaSource is null) return;
 
             ct.ThrowIfCancellationRequested();
-
+            if (removeCurrentSongs)
+                _player.RemoveAllPlaybackSource();
             item.PlayItem ??= new PlayItem();
             mediaSource.CustomProperties["nowPlayingItem"] = item;
 

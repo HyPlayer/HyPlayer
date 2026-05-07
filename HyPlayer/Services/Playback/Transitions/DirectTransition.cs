@@ -31,7 +31,7 @@ public sealed class DirectTransition : ITrackTransition
         var nextItem = await ctx.RequestNextItemAsync(true).ConfigureAwait(false);
         if (nextItem is not null)
         {
-            await ctx.LoadMediaSourceAsync(nextItem, true, true).ConfigureAwait(false);
+            await ctx.LoadMediaSourceAsync(nextItem, true, true, true).ConfigureAwait(false);
         }
     }
 

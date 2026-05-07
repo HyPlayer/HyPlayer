@@ -38,7 +38,8 @@ public interface IPlaybackControlService
     /// <param name="item">要播放的曲目</param>
     /// <param name="setAsPrimary">是否设为主播放源</param>
     /// <param name="autoPlay">是否自动开始播放</param>
-    Task LoadAndPlayAsync(HyPlayItem item, bool setAsPrimary = true, bool autoPlay = true);
+    /// <param name="removeCurrentSongs">是否移除当前播放的所有曲目</param>
+    Task LoadAndPlayAsync(HyPlayItem item, bool setAsPrimary = true, bool autoPlay = true, bool removeCurrentSongs = true);
 
     /// <summary>
     /// 初始化播放器（AudioGraph 等底层资源）

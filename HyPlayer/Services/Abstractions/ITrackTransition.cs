@@ -23,7 +23,7 @@ public class TrackTransitionContext
     public required Func<bool, Task<HyPlayItem?>> RequestNextItemAsync { get; init; }
 
     /// <summary>请求加载指定曲目的媒体源</summary>
-    public required Func<HyPlayItem, bool, bool, Task> LoadMediaSourceAsync { get; init; }
+    public required Func<HyPlayItem, bool, bool, bool, Task> LoadMediaSourceAsync { get; init; }
 
     /// <summary>底层播放器</summary>
     public required IPlayer Player { get; init; }

@@ -129,7 +129,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
 
                 playUrl = songResult.SongUrls[0].Url;
                 size = songResult.SongUrls[0].Size;
-
+                item.Size = size;
                 if (_setting.UseHttpWhenGettingSongs && (playUrl?.Contains("https://") ?? false))
                 {
                     playUrl = playUrl.Replace("https://", "http://");
@@ -196,13 +196,16 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
         var destinationFolder = await StorageFolder.GetFolderFromPathAsync(_setting.cacheDir);
         var fileName = string.Format(CacheFileNameFormat, item.Id, "cache");
         var destinationFile = await destinationFolder.CreateFileAsync(
-            fileName, CreationCollisionOption.OpenIfExists);
+            fileName, CreationCollisionOption.ReplaceExisting);
 
         var operation = _downloader.CreateDownload(new Uri(playUrl), destinationFile);
         operation.IsRandomAccessRequired = headerIsValid;
         _downloadOperations[item.Id] = operation;
 
-        _ = operation.StartAsync().AsTask(ct);
+        _ = operation.StartAsync().AsTask(ct).ContinueWith((operation) =>
+        {
+            _downloadOperations.TryRemove(item.Id, out _);
+        });
 
         return headerIsValid
             ? MediaSource.CreateFromDownloadOperation(operation)

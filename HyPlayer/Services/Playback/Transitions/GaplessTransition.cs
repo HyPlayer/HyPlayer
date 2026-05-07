@@ -63,7 +63,7 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
             var nextItem = await ctx.RequestNextItemAsync(true).ConfigureAwait(false);
             if (nextItem is not null)
             {
-                await ctx.LoadMediaSourceAsync(nextItem, true, true).ConfigureAwait(false);
+                await ctx.LoadMediaSourceAsync(nextItem, true, true, true).ConfigureAwait(false);
             }
         }
     }
@@ -128,7 +128,7 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
             _nextItem = nextItem;
 
             // 加载但不自动播放
-            await ctx.LoadMediaSourceAsync(nextItem, false, false).ConfigureAwait(false);
+            await ctx.LoadMediaSourceAsync(nextItem, false, false, false).ConfigureAwait(false);
 
             if (nextItem.PlayItem?.AudioGraphPlaybackSource is AudioGraphPlaybackSource nextSource)
             {
