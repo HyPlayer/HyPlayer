@@ -244,6 +244,7 @@ public sealed partial class SongsList : UserControl
         {
             var targetPlayItem =
                 _playlist.Items.ToList().Find(t => t.Id == (SongContainer.SelectedItem as NCSong).SongId);
+            targetPlayItem.ProviderId = "nst";
             await _playlist.MoveToAsync(targetPlayItem);
         }
     }

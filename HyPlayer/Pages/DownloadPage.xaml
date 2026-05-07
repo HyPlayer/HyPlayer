@@ -21,12 +21,12 @@
             Spacing="15">
             <Button
                 x:Name="OpenDownloadFolder"
-                Click="OpenDownloadFolder_Click"
+                Command="{x:Bind ViewModel.OpenDownloadFolderCommand}"
                 Content="打开下载目标文件夹" />
-            <Button Click="PauseAllBtn_Click" Content="暂停全部" />
-            <Button Click="Resume_All" Content="继续全部" />
+            <Button Command="{x:Bind ViewModel.PauseAllCommand}" Content="暂停全部" />
+            <Button Command="{x:Bind ViewModel.ResumeAllCommand}" Content="继续全部" />
             <Button
-                Click="Button_CleanAll_Click"
+                Command="{x:Bind ViewModel.ResumeAllCommand}"
                 Content="删除全部"
                 Foreground="OrangeRed" />
 
@@ -37,7 +37,7 @@
                     <Setter Property="Background" Value="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}" />
                 </Style>
             </ListView.Resources>
-            <ListView.Footer>
+    <ListView.Footer>
                 <Grid Height="150" />
             </ListView.Footer>
             <ListView.ItemTemplate>
@@ -115,10 +115,12 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
                                 <Button
+                                    x:Name="PauseBtn"
                                     Grid.Column="0"
                                     Click="PauseBtn_Click"
                                     Content="{x:Bind HasPaused, Mode=OneWay, Converter={StaticResource PausedToStringConverter}}" />
                                 <Button
+                                    x:Name="RemoveBtn"
                                     Grid.Column="1"
                                     Click="RemoveBtn_Click"
                                     Content="删除"

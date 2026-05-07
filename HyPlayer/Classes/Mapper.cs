@@ -110,6 +110,7 @@ public static class Mapper
             TranslatedName = song.Translations is not null ? string.Join(",", song.Translations) : null,
             IsAvailable = song.Privilege?.St is 0,
             Type = HyPlayItemType.Netease,
+            
         };
     }
     public static NCSong MapNcSong(this ArtistSongDto song)

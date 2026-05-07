@@ -141,6 +141,7 @@ public sealed partial class App : Application
         serviceCollection.AddTransient<AlbumPageViewModel>();
         serviceCollection.AddTransient<PlayBarViewModel>();
         serviceCollection.AddTransient<CommentsViewModel>();
+        serviceCollection.AddTransient<DownloadViewModel>();
     }
     private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
     {

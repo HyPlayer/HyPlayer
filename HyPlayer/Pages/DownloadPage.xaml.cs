@@ -1,6 +1,8 @@
 ﻿#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.HyPlayControl;
+using HyPlayer.ViewModels;
 using System;
 using System.Linq;
 using Windows.System;
@@ -19,19 +21,12 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class DownloadPage : Page
 {
+    private DownloadViewModel ViewModel => (DownloadViewModel)DataContext;
+
     public DownloadPage()
     {
         InitializeComponent();
-    }
-
-    private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
-    {
-        await Launcher.LaunchFolderPathAsync(Common.Setting.downloadDir);
-    }
-
-    private void Button_CleanAll_Click(object sender, RoutedEventArgs e)
-    {
-        DownloadManager.DownloadLists.Clear();
+        DataContext = Ioc.Default.GetRequiredService<DownloadViewModel>();
     }
 
     private void PauseBtn_Click(object sender, RoutedEventArgs e)
@@ -57,36 +52,5 @@ public sealed partial class DownloadPage : Page
     {
         if ((sender?.As<Button>())?.DataContext is not DownloadObject downloadObject) return;
         downloadObject.Remove();
-    }
-
-    private void PauseAllBtn_Click(object sender, RoutedEventArgs e)
-    {
-        foreach (var downloadObject in DownloadManager.DownloadLists.Where(t =>
-                     t.Status is DownloadObject.DownloadStatus.Downloading or DownloadObject.DownloadStatus.Queueing))
-        {
-            downloadObject.Pause();
-        }
-    }
-
-    private void Resume_All(object sender, RoutedEventArgs e)
-    {
-        foreach (var downloadObject in DownloadManager.DownloadLists.Where(t =>
-                     t.Status != DownloadObject.DownloadStatus.Downloading))
-        {
-            if (downloadObject.Status == DownloadObject.DownloadStatus.Paused)
-            {
-                downloadObject.Message = "排队中";
-                downloadObject.HasPaused = false;
-            }
-
-            if (downloadObject.Status == DownloadObject.DownloadStatus.Error)
-            {
-                downloadObject.Message = "排队中";
-                downloadObject.Progress = 0;
-                downloadObject.HasPaused = false;
-                downloadObject.HasError = false;
-            }
-            downloadObject.Status = DownloadObject.DownloadStatus.Queueing;
-        }
     }
 }

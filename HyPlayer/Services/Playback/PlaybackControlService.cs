@@ -172,6 +172,7 @@ public sealed class PlaybackControlService : IPlaybackControlService, IDisposabl
 
         try
         {
+            item.ProviderId = "nst";
             var mediaSource = await _mediaSourceService.CreateMediaSourceAsync(item, ct);
             if (mediaSource is null) return;
 
