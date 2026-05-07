@@ -12,7 +12,7 @@ namespace HyPlayer.Classes.Settings
     /// <summary>
     /// Settings related to audio playback, caching, and audio device configuration.
     /// </summary>
-    public class PlaybackSettings : SettingsBase
+    public partial class PlaybackSettings : SettingsBase
     {
         /// <summary>
         /// Playback volume (0-100).

@@ -4,7 +4,7 @@ using Windows.UI.Xaml.Data;
 
 namespace HyPlayer.Classes
 {
-    public class EmptyStringToVisibilityConverter : IValueConverter
+    public partial class EmptyStringToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

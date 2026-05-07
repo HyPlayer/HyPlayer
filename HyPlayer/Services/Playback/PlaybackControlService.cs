@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.Services.Abstractions;
@@ -23,7 +24,7 @@ namespace HyPlayer.Services.Playback;
 /// </list>
 /// </para>
 /// </summary>
-public sealed class PlaybackControlService : IPlaybackControlService, IDisposable
+public sealed partial class PlaybackControlService : IPlaybackControlService, IDisposable
 {
     private readonly IPlayer _player;
     private readonly IMediaSourceService _mediaSourceService;
@@ -255,6 +256,7 @@ public sealed class PlaybackControlService : IPlaybackControlService, IDisposabl
             && obj is HyPlayItem item)
         {
             _state.NowPlayingItem = item;
+            Ioc.Default.GetRequiredService<IPlaybackNotificationService>().OnTrackChangedAsync(item);
         }
     }
 

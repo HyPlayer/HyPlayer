@@ -90,7 +90,7 @@ public static class UpdateManager
         }
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
-            JsonSerializer.Deserialize<GitHubReleaseResponse>(resp, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            JsonSerializer.Deserialize<GitHubReleaseResponse>(resp, JsonDefaults.Options);
         var version = Version.TryParse(versionResp?.Tag, out var versionResult);
         return new RemoteVersionResult
         {
@@ -118,7 +118,7 @@ public static class UpdateManager
         }
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
-            JsonSerializer.Deserialize<LatestApplicationUpdate>(resp, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            JsonSerializer.Deserialize<LatestApplicationUpdate>(resp, JsonDefaults.Options);
         return new RemoteVersionResult
         {
             UpdateSource = source,

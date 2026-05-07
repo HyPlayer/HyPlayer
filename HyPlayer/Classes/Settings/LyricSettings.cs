@@ -9,7 +9,7 @@ namespace HyPlayer.Classes.Settings
     /// <summary>
     /// Settings related to lyric display, rendering, and behavior.
     /// </summary>
-    public class LyricSettings : SettingsBase
+    public partial class LyricSettings : SettingsBase
     {
         /// <summary>
         /// Romaji source for lyric transliteration.

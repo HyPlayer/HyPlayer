@@ -27,7 +27,7 @@ namespace HyPlayer.Services.Playback;
 /// 播放列表服务 — 编排播放策略 (<see cref="IPlayStrategy"/>) 与过渡策略 (<see cref="ITrackTransition"/>)，
 /// 管理播放列表内容和播放顺序。
 /// </summary>
-public sealed class PlaylistService : IPlaylistService, IDisposable
+public sealed partial class PlaylistService : IPlaylistService, IDisposable
 {
     private readonly Dictionary<string, IPlayStrategy> _strategies;
     private readonly Dictionary<string, ITrackTransition> _transitions;

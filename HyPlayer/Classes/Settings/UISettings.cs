@@ -10,7 +10,7 @@ namespace HyPlayer.Classes.Settings
     /// <summary>
     /// Settings related to UI appearance, themes, animations, and visual effects.
     /// </summary>
-    public class UISettings : SettingsBase
+    public partial class UISettings : SettingsBase
     {
         /// <summary>
         /// Theme request (Auto, Light, Dark).

@@ -7,7 +7,7 @@ using WinRT;
 using CommunityToolkit.Mvvm.DependencyInjection;
 namespace HyPlayer.Classes
 {
-    public class BooleanToWindowBrushesConverter : IValueConverter
+    public partial class BooleanToWindowBrushesConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

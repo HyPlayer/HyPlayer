@@ -9,7 +9,7 @@ namespace HyPlayer.Classes.Settings
     /// <summary>
     /// Settings related to API configuration, proxy, and network options.
     /// </summary>
-    public class ApiSettings : SettingsBase
+    public partial class ApiSettings : SettingsBase
     {
         /// <summary>
         /// Whether proxy is enabled.

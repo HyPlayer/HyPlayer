@@ -15,7 +15,7 @@ namespace HyPlayer.Services.Playback.Transitions;
 /// 同时对当前曲目执行淡出、对下一曲目执行淡入，实现平滑过渡。
 /// </para>
 /// </summary>
-public sealed class CrossFadeTransition : ITrackTransition, IDisposable
+public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
 {
     private readonly Setting _setting;
 

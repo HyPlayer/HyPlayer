@@ -14,7 +14,7 @@ namespace HyPlayer.Services.Playback.Transitions;
 /// 不执行任何音量渐变。此为预留实现，供后续完善。
 /// </para>
 /// </summary>
-public sealed class GaplessTransition : ITrackTransition, IDisposable
+public sealed partial class GaplessTransition : ITrackTransition, IDisposable
 {
     private readonly SemaphoreSlim _loaderSemaphore = new(1, 1);
 

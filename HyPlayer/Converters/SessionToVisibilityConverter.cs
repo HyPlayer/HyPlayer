@@ -5,7 +5,7 @@ using Windows.UI.Xaml.Data;
 
 namespace HyPlayer.Classes
 {
-    public class SessionToVisibilityConverter : IValueConverter
+    public partial class SessionToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

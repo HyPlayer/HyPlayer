@@ -4,7 +4,7 @@ using Windows.UI.Xaml.Data;
 
 namespace HyPlayer.Classes
 {
-    public class PlayBarMarginConverter : IValueConverter
+    public partial class PlayBarMarginConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

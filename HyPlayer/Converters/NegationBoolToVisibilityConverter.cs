@@ -4,7 +4,7 @@ using Windows.UI.Xaml.Data;
 
 namespace HyPlayer.Classes
 {
-    public class NegationBoolToVisibilityConverter : BoolToObjectConverter
+    public partial class NegationBoolToVisibilityConverter : BoolToObjectConverter
     {
         public NegationBoolToVisibilityConverter()
         {

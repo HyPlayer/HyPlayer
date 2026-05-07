@@ -10,7 +10,7 @@ using HyPlayer.Services.Abstractions;
 using CommunityToolkit.Mvvm.DependencyInjection;
 namespace HyPlayer.Classes
 {
-    public class PageToNavigationViewIndicatorConverter : IValueConverter
+    public partial class PageToNavigationViewIndicatorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

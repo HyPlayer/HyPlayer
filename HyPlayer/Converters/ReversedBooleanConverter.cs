@@ -3,7 +3,7 @@ using Windows.UI.Xaml.Data;
 
 namespace HyPlayer.Classes
 {
-    public class ReversedBooleanConverter : IValueConverter
+    public partial class ReversedBooleanConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

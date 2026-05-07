@@ -4,7 +4,7 @@ using Windows.UI.Xaml.Data;
 
 namespace HyPlayer.Classes
 {
-    public class TransparentColorConverter : IValueConverter
+    public partial class TransparentColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

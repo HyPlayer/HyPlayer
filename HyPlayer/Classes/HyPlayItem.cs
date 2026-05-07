@@ -1,4 +1,5 @@
-﻿using HyPlayer.UWP.Chopin.Abstractions.Models;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace HyPlayer.Classes
         public AudioGraphPlaybackSource AudioGraphPlaybackSource { get; set; }
         public InMemoryRandomAccessStream NcmPlayableStream { get; set; }
         public string NcmPlayableStreamMIMEType { get; set; } = string.Empty;
-        
+
         public PlayItem()
         {
 
@@ -53,6 +54,13 @@ namespace HyPlayer.Classes
             GC.SuppressFinalize(this);
         }
     }
+    public enum HyPlayItemType
+    {
+        Local,
+        LocalProgressive,
+        Netease,
+        Radio
+    }
     public class HyPlayItem : IEquatable<HyPlayItem>
     {
         public PlayItem PlayItem { get; set; }
@@ -85,7 +93,24 @@ namespace HyPlayer.Classes
         ///   <item><c>nst</c> — 网易云纯流式播放（不缓存）</item>
         /// </list>
         /// </summary>
-        public string ProviderId { get; set; }
+        public string ProviderId
+        {
+            get {
+                switch (ItemType)
+                {
+                    case HyPlayItemType.Local:
+                        return "lcl";
+                    case HyPlayItemType.LocalProgressive:
+                        return "lcl";
+                    case HyPlayItemType.Netease:
+                    case HyPlayItemType.Radio:
+                        if (LocalStorageFile != null) return "ncm";
+                        return Ioc.Default.GetRequiredService<Setting>().enableCache ? "nca" : "nst";
+                    default:
+                        throw new NotImplementedException($"未知的媒体源类型：{ItemType}");
+                }
+            }
+        }
 
         public double? Volume { get; set; }
 
@@ -124,11 +149,5 @@ namespace HyPlayer.Classes
             return Id.GetHashCode();
         }
     }
-    public enum HyPlayItemType
-    {
-        Local,
-        LocalProgressive,
-        Netease,
-        Radio
-    }
 }
+    

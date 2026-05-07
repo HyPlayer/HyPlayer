@@ -57,7 +57,7 @@ public static class SimpleCacher
                 }
                 try
                 {
-                    var rst = JsonSerializer.Deserialize<T>(content, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                    var rst = JsonSerializer.Deserialize<T>(content, JsonDefaults.Options);
                     return rst;
                 }
                 catch
@@ -93,7 +93,7 @@ public static class SimpleCacher
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            var json = JsonSerializer.Serialize(data, JsonDefaults.Options);
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             await FileIO.WriteTextAsync(file, json);
         }

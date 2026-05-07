@@ -153,7 +153,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
         {
             ct.ThrowIfCancellationRequested();
             var cacheFolder = await StorageFolder.GetFolderFromPathAsync(_setting.cacheDir);
-            var fileName = string.Format(CacheFileNameFormat, item.Id, item.SubExt);
+            var fileName = string.Format(CacheFileNameFormat, item.Id, "cache");
             var cacheFile = await cacheFolder.GetFileAsync(fileName);
 
             var properties = await cacheFile.GetBasicPropertiesAsync();
@@ -194,7 +194,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
         var headerIsValid = modified is not null;
 
         var destinationFolder = await StorageFolder.GetFolderFromPathAsync(_setting.cacheDir);
-        var fileName = string.Format(CacheFileNameFormat, item.Id, item.SubExt);
+        var fileName = string.Format(CacheFileNameFormat, item.Id, "cache");
         var destinationFile = await destinationFolder.CreateFileAsync(
             fileName, CreationCollisionOption.OpenIfExists);
 

@@ -7,7 +7,7 @@ namespace HyPlayer.Classes.Settings
     /// <summary>
     /// Settings related to Last.FM integration.
     /// </summary>
-    public class LastFMSettings : SettingsBase
+    public partial class LastFMSettings : SettingsBase
     {
         /// <summary>
         /// Last.FM session data.

@@ -4,7 +4,7 @@ using Windows.UI.Xaml.Data;
 
 namespace HyPlayer.Classes
 {
-    public class ThumbConverter : DependencyObject, IValueConverter
+    public partial class ThumbConverter : DependencyObject, IValueConverter
     {
         public static readonly DependencyProperty SecondValueProperty =
             DependencyProperty.Register("SecondValue", typeof(double), typeof(ThumbConverter),

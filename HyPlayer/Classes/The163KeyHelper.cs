@@ -68,7 +68,7 @@ internal static class The163KeyHelper
             {
                 byt163Key = cryptoTransform.TransformFinalBlock(byt163Key, 0, byt163Key.Length);
             }
-            var key = JsonSerializer.Deserialize<The163KeyClass>(Encoding.UTF8.GetString(byt163Key).Substring(6), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            var key = JsonSerializer.Deserialize<The163KeyClass>(Encoding.UTF8.GetString(byt163Key).Substring(6), JsonDefaults.Options);
             trackId = (ulong)key.musicId;
         }
         catch
@@ -117,7 +117,7 @@ internal static class The163KeyHelper
             }
 
             KeyStruct = JsonSerializer.Deserialize<The163KeyClass>(Encoding.UTF8.GetString(byt163Key)
-                .Substring(6), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                .Substring(6), JsonDefaults.Options);
         }
         catch
         {
@@ -131,7 +131,7 @@ internal static class The163KeyHelper
     {
         try
         {
-            var enc = "music:" + JsonSerializer.Serialize(key, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            var enc = "music:" + JsonSerializer.Serialize(key, JsonDefaults.Options);
             var toEncryptArray = Encoding.UTF8.GetBytes(enc);
             byte[] resultArray;
             using (var cryptoTransform = _aes.CreateEncryptor())
