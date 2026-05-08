@@ -1,7 +1,11 @@
-﻿#region
+#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
+using HyPlayer.NeteaseApi;
+using HyPlayer.Services.Abstractions;
 using Kawazu;
+using LiteFM;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.UI.Xaml.Media;
 using System;
@@ -40,6 +44,11 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class Settings : Page
 {
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+
     private bool isbyprogram;
     private int _elapse = 10;
 
@@ -62,20 +71,20 @@ public sealed partial class Settings : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
 
-        RomajiStatus.Header = (Common.KawazuConv == null ? "请下载Kawazu资源文件" : "可以转换");
-        ButtonDownloadRomaji.Visibility = Common.KawazuConv == null ? Visibility.Visible : Visibility.Collapsed;
-        if (Common.Setting.audioRate.EndsWith('0') || Common.Setting.downloadAudioRate.EndsWith('0'))
+        RomajiStatus.Header = (Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv == null ? "请下载Kawazu资源文件" : "可以转换");
+        ButtonDownloadRomaji.Visibility = Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv == null ? Visibility.Visible : Visibility.Collapsed;
+        if (_setting.audioRate.EndsWith('0') || _setting.downloadAudioRate.EndsWith('0'))
         {
-            Common.Setting.audioRate = "exhigh";
-            Common.Setting.downloadAudioRate = "hires";
+            _setting.audioRate = "exhigh";
+            _setting.downloadAudioRate = "hires";
         }
         else
         {
             ComboBoxSongBr.SelectedIndex = ComboBoxSongBr.Items.IndexOf(ComboBoxSongBr.Items.First(t =>
-                t?.As<ComboBoxItem>().Tag.ToString() == Common.Setting.audioRate));
+                t?.As<ComboBoxItem>().Tag.ToString() == _setting.audioRate));
             ComboBoxSongDownloadBr.SelectedIndex = ComboBoxSongDownloadBr.Items.IndexOf(
                 ComboBoxSongDownloadBr.Items.First(t =>
-                    t?.As<ComboBoxItem>().Tag.ToString() == Common.Setting.downloadAudioRate));
+                    t?.As<ComboBoxItem>().Tag.ToString() == _setting.downloadAudioRate));
         }
 
         TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
@@ -184,7 +193,7 @@ public sealed partial class Settings : Page
             archive.ExtractToDirectory(path);
             _ = obj.ResultFile.DeleteAsync();
 
-            Common.KawazuConv = new KawazuConverter(path);
+            Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv = new KawazuConverter(path);
         }
         catch (Exception e)
         {
@@ -193,8 +202,8 @@ public sealed partial class Settings : Page
         finally
         {
             RomajiStatus.Header =
-                (Common.KawazuConv == null ? "请重新下载资源文件" : "可以转换");
-            ButtonDownloadRomaji.Visibility = Common.KawazuConv != null ? Visibility.Visible : Visibility.Collapsed;
+                (Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv == null ? "请重新下载资源文件" : "可以转换");
+            ButtonDownloadRomaji.Visibility = Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv != null ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
@@ -209,7 +218,7 @@ public sealed partial class Settings : Page
     {
         ApplicationData.Current.LocalSettings.Values["xRealIp"] =
             TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
-        Common.NeteaseAPI?.Option.XRealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
+        _api?.Option.XRealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
     }
 
     private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)
@@ -223,7 +232,7 @@ public sealed partial class Settings : Page
         if (folder != null)
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("downloadFolder", folder);
-            Common.Setting.downloadDir = folder.Path;
+            _setting.downloadDir = folder.Path;
         }
     }
 
@@ -238,21 +247,21 @@ public sealed partial class Settings : Page
         if (folder != null)
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("searchingFolder", folder);
-            Common.Setting.searchingDir = folder.Path;
+            _setting.searchingDir = folder.Path;
         }
     }
 
 
     private void UIElement_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
     {
-        if (_elapse-- <= 0) Common.NavigatePage(typeof(TestPage));
+        if (_elapse-- <= 0) _navigation.Navigate(typeof(TestPage));
     }
 
 
     private void ControlSoundChecked(object sender, RoutedEventArgs e)
     {
         if (isbyprogram) return;
-        Common.Setting.uiSound = true;
+        _setting.uiSound = true;
         ElementSoundPlayer.State = ElementSoundPlayerState.On;
         ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.On;
     }
@@ -260,7 +269,7 @@ public sealed partial class Settings : Page
     private void ControlSoundUnChecked(object sender, RoutedEventArgs e)
     {
         if (isbyprogram) return;
-        Common.Setting.uiSound = false;
+        _setting.uiSound = false;
         ElementSoundPlayer.State = ElementSoundPlayerState.Off;
         ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
     }
@@ -283,7 +292,7 @@ public sealed partial class Settings : Page
     {
         if (isbyprogram) return;
         var size = (int)SliderAlbumShadowDepth.Value;
-        Common.Setting.expandedCoverShadowDepth = Math.Max(0, size);
+        _setting.expandedCoverShadowDepth = Math.Max(0, size);
     }
 
 
@@ -298,7 +307,7 @@ public sealed partial class Settings : Page
         if (folder != null)
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("cacheFolder", folder);
-            Common.Setting.cacheDir = folder.Path;
+            _setting.cacheDir = folder.Path;
         }
     }
     private void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -319,7 +328,7 @@ public sealed partial class Settings : Page
 
     private void BtnXboxReserve_Click(object sender, RoutedEventArgs e)
     {
-        Common.CollectGarbage();
+        _navigation.CollectGarbage();
     }
 
     private async void HotLyricOnStartUp_Checked(object sender, RoutedEventArgs e)
@@ -345,7 +354,7 @@ public sealed partial class Settings : Page
                     return;
                 }
 
-                Common.Setting.hotlyricOnStartup = false;
+                _setting.hotlyricOnStartup = false;
             }
             else
             {
@@ -367,12 +376,12 @@ public sealed partial class Settings : Page
             new Point(point.X + BtnChangeAudioRenderDevice.ActualWidth,
                 point.Y + BtnChangeAudioRenderDevice.ActualHeight));
         var device = await devicePicker.PickSingleDeviceAsync(rect);
-        if (device != null) Common.Setting.AudioRenderDevice = device.Id;
+        if (device != null) _setting.AudioRenderDevice = device.Id;
     }
 
     private void BtnChangeToDefaultAudioRenderDevice_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.AudioRenderDevice = "";
+        _setting.AudioRenderDevice = "";
     }
 
     private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
@@ -384,14 +393,14 @@ public sealed partial class Settings : Page
     {
         if (isbyprogram) return;
         var selectedItem = sender?.As<ComboBox>().SelectedItem?.As<ComboBoxItem>();
-        Common.Setting.audioRate = selectedItem.Tag.ToString();
+        _setting.audioRate = selectedItem.Tag.ToString();
     }
 
     private void ComboBoxSongDownloadBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (isbyprogram) return;
         var selectedItem = sender?.As<ComboBox>().SelectedItem?.As<ComboBoxItem>();
-        Common.Setting.downloadAudioRate = selectedItem.Tag.ToString();
+        _setting.downloadAudioRate = selectedItem.Tag.ToString();
     }
 
     private void CheckCanaryChannelButton_Click(object sender, RoutedEventArgs e)
@@ -408,32 +417,32 @@ public sealed partial class Settings : Page
 
     private void ResetPureLyricIdleColor(object sender, RoutedEventArgs e)
     {
-        Common.Setting.pureLyricIdleColor = null;
+        _setting.pureLyricIdleColor = null;
     }
 
     private void ConfirmPureLyricIdleColor(object sender, RoutedEventArgs e)
     {
-        Common.Setting.pureLyricIdleColor = PureLyricIdle.SelectedColor;
+        _setting.pureLyricIdleColor = PureLyricIdle.SelectedColor;
     }
 
     private void ResetPureLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        Common.Setting.pureLyricFocusingColor = null;
+        _setting.pureLyricFocusingColor = null;
     }
 
     private void ConfirmPureLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        Common.Setting.pureLyricFocusingColor = PureLyricFocusing.SelectedColor;
+        _setting.pureLyricFocusingColor = PureLyricFocusing.SelectedColor;
     }
 
     private void ResetKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        Common.Setting.karaokLyricFocusingColor = null;
+        _setting.karaokLyricFocusingColor = null;
     }
 
     private void ConfirmKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        Common.Setting.karaokLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
+        _setting.karaokLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
     }
 
     private void ApplyNewAcrylic()
@@ -466,18 +475,18 @@ public sealed partial class Settings : Page
 
     private void DisplayMaintain_OnChecked(object sender, RoutedEventArgs e)
     {
-        Common.DisplayRequest.RequestActive();
+        Ioc.Default.GetRequiredService<IUIStateService>().DisplayRequest.RequestActive();
     }
 
     private void DisplayMaintain_OnUnchecked(object sender, RoutedEventArgs e)
     {
-        Common.DisplayRequest.RequestRelease();
+        Ioc.Default.GetRequiredService<IUIStateService>().DisplayRequest.RequestRelease();
     }
 
     private async void BtnClearCache_Click(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ClearAllCacheAsync();
-        var folder = await StorageFolder.GetFolderFromPathAsync(Common.Setting!.cacheDir);
+        var folder = await StorageFolder.GetFolderFromPathAsync(_setting!.cacheDir);
         var files = await folder.GetFilesAsync();
         foreach (var file in files)
         {
@@ -490,11 +499,11 @@ public sealed partial class Settings : Page
 
     private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.LastFMSession = null;
+        _setting.LastFMSession = null;
     }
 
     private void LoginLastFMAccount_Click(object sender, RoutedEventArgs e)
     {
-        _ = Launcher.LaunchUriAsync(new Uri($"https://www.last.fm/api/auth?api_key={Common.LastFMClient.Options.ApiKey}&cb=hyplayer://link.last.fm"));
+        _ = Launcher.LaunchUriAsync(new Uri($"https://www.last.fm/api/auth?api_key={Ioc.Default.GetRequiredService<LastFMClient>().Options.ApiKey}&cb=hyplayer://link.last.fm"));
     }
 }

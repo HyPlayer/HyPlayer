@@ -3,6 +3,7 @@ name: Actions Build
 on:
   push:
     branches: [ "develop" ]
+  workflow_dispatch:
 
 jobs:
   to_gitee:

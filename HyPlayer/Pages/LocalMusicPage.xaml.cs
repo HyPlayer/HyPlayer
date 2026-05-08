@@ -1,7 +1,8 @@
 ﻿#region
 
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
+using HyPlayer.Services.Abstractions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -28,6 +29,8 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 {
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
     private readonly ObservableCollection<HyPlayItem> localHyItems = new();
     private string _notificationText;
@@ -80,9 +83,10 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private void Playall_Click(object sender, RoutedEventArgs e)
     {
-        HyPlayList.RemoveAllSong();
-        HyPlayList.List.AddRange(localHyItems);
-        HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _playlist.Clear();
+        _playlist.AppendItems(localHyItems);
+        _ = _playlist.MoveToAsync(localHyItems.FirstOrDefault());
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -95,8 +99,8 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
         NotificationText = "正在扫描...";
         localHyItems.Clear();
-        var folder = !string.IsNullOrEmpty(Common.Setting.searchingDir)
-            ? await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir)
+        var folder = !string.IsNullOrEmpty(_setting.searchingDir)
+            ? await StorageFolder.GetFolderFromPathAsync(_setting.searchingDir)
             : KnownFolders.MusicLibrary;
         // Use Query to boost? maybe?
         FileLoadingIndicateRing.Visibility = Visibility.Visible;
@@ -105,14 +109,14 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         queryOptions.FolderDepth = FolderDepth.Deep;
         var files = await folder.CreateFileQueryWithOptions(queryOptions).GetFilesAsync();
 
-        if (!Common.Setting.localProgressiveLoad)
+        if (!_setting.localProgressiveLoad)
         {
             foreach (var storageFile in files)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    var item = await HyPlayList.LoadStorageFile(storageFile);
+                    var item = await Ioc.Default.GetRequiredService<IPlaylistService>().LoadStorageFileAsync(storageFile);
                     localHyItems.Add(item);
                 }
                 catch
@@ -170,9 +174,10 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
-        HyPlayList.RemoveAllSong();
-        HyPlayList.List.AddRange(localHyItems);
-        HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedItem as HyPlayItem);
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _playlist.Clear();
+        _playlist.AppendItems(localHyItems);
+        _ = _playlist.MoveToAsync(ListBoxLocalMusicContainer.SelectedItem as HyPlayItem);
     }
 
     private async void UploadCloud_Click(object sender, RoutedEventArgs e)
@@ -183,7 +188,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private void Add_Local(object sender, RoutedEventArgs e)
     {
-        _ = HyPlayList.PickLocalFile();
+        _ = Ioc.Default.GetRequiredService<IPlaylistService>().PickLocalFileAsync();
     }
 
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)

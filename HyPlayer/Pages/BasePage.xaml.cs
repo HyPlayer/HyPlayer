@@ -1,15 +1,22 @@
-﻿#region
+#region
 
 using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Login;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.NeteaseApi.ApiContracts.Utils;
+using HyPlayer.NeteaseApi;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
+using HyPlayer.UWP.Chopin;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.UI.Xaml.Controls;
 using QRCoder;
 using System;
@@ -47,26 +54,46 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class BasePage : Page
 {
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+
     private string nowqrkey;
+    private readonly IPlaybackControlService _playback;
+    private readonly PlaybackStateService _state;
+    private readonly AudioGraphPlayer _player;
 
     public BasePage()
     {
+        _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+        _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
         InitializeComponent();
-        Common.PageBase = this;
-        Common.GlobalTip = TheTeachingTip;
+        Ioc.Default.GetRequiredService<IUIStateService>().PageBase = this;
+        Ioc.Default.GetRequiredService<IUIStateService>().GlobalTip = TheTeachingTip;
 
-        if (!HyPlayList.Player.PlayerCreated)
+        if (!_player.PlayerCreated)
         {
-            HyPlayList.InitializeHyPlaylist();
+            _ = _playback.InitializeAsync();
         }
-        HyPlayList.OnPlayItemChange += OnChangePlayItem;
-        HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
+        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((BasePage)r).OnChangePlayItem(m.Item));
+        WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (r, m) => ((BasePage)r).HyPlayList_OnSongCoverChanged(m.Item));
 
         ApplicationView.TerminateAppOnFinalViewClose = false;
-        Common.BaseFrame = BaseFrame;
-        BaseFrame.IsNavigationStackEnabled = !Common.Setting.forceMemoryGarbage;
+        Ioc.Default.GetRequiredService<INavigationService>().RootFrame = BaseFrame;
+        BaseFrame.IsNavigationStackEnabled = !_setting.forceMemoryGarbage;
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        WeakReferenceMessenger.Default.UnregisterAll(this);
+        Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+        Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
     }
 
     private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem)
@@ -78,37 +105,37 @@ public sealed partial class BasePage : Page
     private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
     {
         if (args.CurrentPoint.Properties.IsXButton1Pressed)
-            if (Common.IsExpanded)
-                Common.BarPlayBar.CollapseExpandedPlayer();
+            if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
+                (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).CollapseExpandedPlayer();
             else
-                Common.NavigateBack();
+                _navigation.NavigateBack();
     }
 
     private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
     {
         if (args.VirtualKey == VirtualKey.GamepadB)
         {
-            if (Common.IsExpanded)
-                Common.BarPlayBar.CollapseExpandedPlayer();
+            if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
+                (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).CollapseExpandedPlayer();
             else
-                Common.NavigateBack();
+                _navigation.NavigateBack();
             args.Handled = true;
         }
 
         if (args.VirtualKey == VirtualKey.GamepadY)
-            if (HyPlayList.IsPlaying)
-                HyPlayList.Player.PauseAll();
-            else if (!HyPlayList.IsPlaying) HyPlayList.Player.PlayAll();
+            if (_playback.IsPlaying)
+                _player.PauseAll();
+            else if (!_playback.IsPlaying) _player.PlayAll();
 
         if (args.VirtualKey == VirtualKey.Escape)
-            if (Common.IsExpanded)
-                Common.BarPlayBar.CollapseExpandedPlayer();
+            if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
+                (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).CollapseExpandedPlayer();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (!Common.Setting.DisablePopUp)
+        if (!_setting.DisablePopUp)
         {
             var dialog = new ContentDialog
             {
@@ -137,7 +164,7 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            if (Setting.LoadCookies() || Common.NeteaseAPI?.Option.AdditionalParameters.Cookies.Count is > 0)
+            if (Setting.LoadCookies() || _api?.Option.AdditionalParameters.Cookies.Count is > 0)
             {
                 try
                 {
@@ -150,7 +177,7 @@ public sealed partial class BasePage : Page
             }
             else
             {
-                Common.NavigatePage(typeof(Welcome));
+                _navigation.Navigate(typeof(Welcome));
             }
         }
         catch
@@ -186,7 +213,7 @@ public sealed partial class BasePage : Page
             if (isPhone)
             {
 
-                var response = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginCellphoneApi,
+                var response = await _api.RequestAsync(NeteaseApis.LoginCellphoneApi,
                     new LoginCellphoneRequest() { Cellphone = account, CountryCode = string.IsNullOrEmpty(contryCode) ? null : contryCode, Password = TextBoxPassword.Password });
                 if (response.IsError)
                 {
@@ -205,7 +232,7 @@ public sealed partial class BasePage : Page
             }
             else
             {
-                var response = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginEmailApi,
+                var response = await _api.RequestAsync(NeteaseApis.LoginEmailApi,
                     new LoginEmailRequest() { Email = account, Password = TextBoxPassword.Password });
                 if (response.IsError)
                 {
@@ -235,7 +262,7 @@ public sealed partial class BasePage : Page
     private void ButtonCloseLoginForm_Click(object sender, ContentDialogButtonClickEventArgs args)
     {
         DialogLogin.Hide();
-        Common.NavigateBack();
+        _navigation.NavigateBack();
     }
 
     public async Task<bool> LoginDone()
@@ -243,10 +270,10 @@ public sealed partial class BasePage : Page
         LoginStatusResponse LoginStatus;
         var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userStatus", async () =>
         {
-            var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LoginStatusApi);
+            var result = await _api.RequestAsync(NeteaseApis.LoginStatusApi);
             if (result.IsError)
             {
-                Common.AddToTeachingTipLists("登录失败", result.Error?.Message);
+                _notification.ShowMessage("登录失败", result.Error?.Message);
                 return null;
             }
             return result.Value;
@@ -263,9 +290,9 @@ public sealed partial class BasePage : Page
         //存储Cookie
         Setting.SaveCookies();
         if (LoginStatus.Profile != null)
-            Common.LoginedUser = LoginStatus.Profile.MapToNcUser();
+            _auth.CurrentUser = LoginStatus.Profile.MapToNcUser();
         else
-            Common.LoginedUser = new NCUser
+            _auth.CurrentUser = new NCUser
             {
                 Avatar = "ms-appx:///Assets/icon.png",
                 Id = LoginStatus.Account.Id,
@@ -273,16 +300,16 @@ public sealed partial class BasePage : Page
                 Signature = "此账号未进行手机号验证, 请使用网易云音乐客户端登录后再继续操作"
             };
 
-        Common.Logined = true;
-        NavItemLogin.Content = Common.LoginedUser.Name;
+        _auth.IsLoggedIn = true;
+        NavItemLogin.Content = _auth.CurrentUser.Name;
         NavItemLogin.Icon = new BitmapIcon
         {
-            UriSource = new Uri(Common.LoginedUser.Avatar + "?param=" +
+            UriSource = new Uri(_auth.CurrentUser.Avatar + "?param=" +
                                                     StaticSource.PICSIZE_NAVITEM_USERAVATAR),
             ShowAsMonochrome = false
         };
         InfoBarLoginHint.Severity = InfoBarSeverity.Success;
-        InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.Name;
+        InfoBarLoginHint.Message = "欢迎 " + _auth.CurrentUser.Name;
         DialogLogin.Hide();
         //加载我喜欢的歌
         _ = LoadMyLikelist();
@@ -291,11 +318,12 @@ public sealed partial class BasePage : Page
         // 执行签到操作
         // DoDailySign();
 
-        HyPlayList.LoginDoneCall();
+        var authService = Ioc.Default.GetRequiredService<IAuthService>();
+        authService.NotifyLoginCompleted();
         App.InitializeJumpList().SafeFireAndForget();
-        if (Common.Setting.noImage)
+        if (_setting.noImage)
         {
-            Common.NavigatePage(typeof(Welcome));
+            _navigation.Navigate(typeof(Welcome));
         }
         else
         {
@@ -307,19 +335,24 @@ public sealed partial class BasePage : Page
 
     private static async Task LoadMyLikelist()
     {
+        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        var auth = Ioc.Default.GetRequiredService<IAuthService>();
+        var notification = Ioc.Default.GetRequiredService<INotificationService>();
         var ids = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
         {
-            var js = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = Common.LoginedUser!.Id });
+            var js = await api.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = auth.CurrentUser!.Id });
             if (js.IsError)
             {
-                Common.AddToTeachingTipLists("获取喜欢列表失败", js.Error?.Message);
+                notification.ShowMessage("获取喜欢列表失败", js.Error?.Message);
                 return null;
             }
 
             return js.Value;
         });
 
-        Common.LikedSongs = ids?.TrackIds?.ToList() ?? [];
+        var likedSongs = ids?.TrackIds?.ToList() ?? [];
+        auth.LikedSongs.Clear();
+        auth.LikedSongs.AddRange(likedSongs);
     }
 
     public async Task LoadSongList()
@@ -328,11 +361,11 @@ public sealed partial class BasePage : Page
         var nowitem = NavItemsMyList;
         var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "mySongList", async () =>
         {
-            var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserPlaylistApi,
-                new UserPlaylistRequest() { Uid = Common.LoginedUser!.Id });
+            var json = await _api.RequestAsync(NeteaseApis.UserPlaylistApi,
+                new UserPlaylistRequest() { Uid = _auth.CurrentUser!.Id });
             if (json.IsError)
             {
-                Common.AddToTeachingTipLists("获取歌单失败", json.Error?.Message);
+                _notification.ShowMessage("获取歌单失败", json.Error?.Message);
                 return null;
             }
 
@@ -345,7 +378,7 @@ public sealed partial class BasePage : Page
         NavItemsAddPlaylist.Visibility = Visibility.Visible;
         NavItemsMyList.Visibility = Visibility.Visible;
         NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
-        Common.MySongLists.Clear();
+        _auth.MySongLists.Clear();
         var isliked = false;
         foreach (var jToken in jv?.Playlists ?? [])
             if (jToken.Subscribed)
@@ -363,7 +396,7 @@ public sealed partial class BasePage : Page
             }
             else
             {
-                Common.MySongLists.Add(jToken.MapToNCPlayList());
+                _auth.MySongLists.Add(jToken.MapToNCPlayList());
                 if (!isliked)
                 {
                     isliked = true;
@@ -390,23 +423,23 @@ public sealed partial class BasePage : Page
     private async void NavMain_OnSelectionChanged(NavigationView sender,
                                                   NavigationViewSelectionChangedEventArgs args)
     {
-        if (Common.NavigatingBack) return;
+        if (Ioc.Default.GetRequiredService<INavigationService>().NavigatingBack) return;
         var nowitem = sender.SelectedItem?.As<NavigationViewItem>();
-        if (Common.NavigationHistory.Count > 1)
+        if (Ioc.Default.GetRequiredService<INavigationService>().NavigationHistory.Count > 1)
             NavMain.IsBackEnabled = true;
         if (nowitem.Tag is null) return;
 
-        if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
+        if (nowitem.Tag.ToString() == "PageMe" && !_auth.IsLoggedIn)
         {
-            Common.NeteaseAPI?.Option.Cookies.Clear();//清一遍Cookie防止出错
+            _api?.Option.Cookies.Clear();//清一遍Cookie防止出错
             await DialogPreLoginHint.ShowAsync();
             return;
         }
 
-        if (nowitem.Tag.ToString() == "MusicCloud") Common.NavigatePage(typeof(MusicCloudPage));
+        if (nowitem.Tag.ToString() == "MusicCloud") _navigation.Navigate(typeof(MusicCloudPage));
 
         if (nowitem.Tag.ToString() == "DailyRcmd")
-            Common.NavigatePage(typeof(SongListDetail), new NCPlayList
+            _navigation.Navigate(typeof(SongListDetail), new NCPlayList
             {
                 Cover = "ms-appx:/Assets/icon.png",
                 Creator = new NCUser
@@ -424,35 +457,35 @@ public sealed partial class BasePage : Page
 
         if (nowitem.Tag.ToString() == "SonglistMyLike")
         {
-            Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].PlaylistId);
+            _navigation.Navigate(typeof(SongListDetail), _auth.MySongLists[0].PlaylistId);
             return;
         }
 
         if (nowitem.Tag.ToString().StartsWith("Playlist"))
-            Common.NavigatePage(typeof(SongListDetail), nowitem.Tag.ToString()[8..]);
+            _navigation.Navigate(typeof(SongListDetail), nowitem.Tag.ToString()[8..]);
 
         switch (nowitem.Tag.ToString())
         {
             case "PageMe":
-                Common.NavigatePage(typeof(Me), null);
+                _navigation.Navigate(typeof(Me), null);
                 break;
             case "PageSearch":
-                Common.NavigatePage(typeof(Search), null);
+                _navigation.Navigate(typeof(Search), null);
                 break;
             case "PageHome":
-                Common.NavigatePage(typeof(HomePage), null);
+                _navigation.Navigate(typeof(HomePage), null);
                 break;
             case "PageSettings":
-                Common.NavigatePage(typeof(Settings), null);
+                _navigation.Navigate(typeof(Settings), null);
                 break;
             case "PageLocal":
-                Common.NavigatePage(typeof(LocalMusicPage), null);
+                _navigation.Navigate(typeof(LocalMusicPage), null);
                 break;
             case "PageHistory":
-                Common.NavigatePage(typeof(History), null);
+                _navigation.Navigate(typeof(History), null);
                 break;
             case "PageFavorite":
-                Common.NavigatePage(typeof(PageFavorite), null);
+                _navigation.Navigate(typeof(PageFavorite), null);
                 break;
         }
     }
@@ -505,24 +538,24 @@ public sealed partial class BasePage : Page
         try
         {
             // 保持与原逻辑一致：不显式声明 Key 的泛型类型，避免在 UI 层引入额外类型依赖
-            var key = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginQrCodeUnikeyApi, new LoginQrCodeUnikeyRequest());
+            var key = await _api.RequestAsync(NeteaseApis.LoginQrCodeUnikeyApi, new LoginQrCodeUnikeyRequest());
             if (key.IsError)
             {
-                Common.AddToTeachingTipLists("获取UniKey失败", key.Error.Message);
+                _notification.ShowMessage("获取UniKey失败", key.Error.Message);
                 return;
             }
             await ReFreshQr(key.Value.Unikey);
             nowqrkey = key.Value.Unikey;
-            while (!Common.Logined && nowqrkey == key.Value.Unikey)
+            while (!_auth.IsLoggedIn && nowqrkey == key.Value.Unikey)
             {
-                var res = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginQrCodeCheckApi,
+                var res = await _api.RequestAsync(NeteaseApis.LoginQrCodeCheckApi,
                                                            new LoginQrCodeCheckRequest() { Unikey = key.Value.Unikey });
                 if (res.Value.Code == 800)
                 {
-                    key = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginQrCodeUnikeyApi, new LoginQrCodeUnikeyRequest());
+                    key = await _api.RequestAsync(NeteaseApis.LoginQrCodeUnikeyApi, new LoginQrCodeUnikeyRequest());
                     if (key.IsError)
                     {
-                        Common.AddToTeachingTipLists("获取UniKey失败", key.Error.Message);
+                        _notification.ShowMessage("获取UniKey失败", key.Error.Message);
                         return;
                     }
                     await ReFreshQr(key.Value.Unikey);
@@ -564,7 +597,7 @@ public sealed partial class BasePage : Page
         }
         catch (Exception e)
         {
-            Common.AddToTeachingTipLists("加载二维码时发生错误", e.Message);
+            _notification.ShowMessage("加载二维码时发生错误", e.Message);
         }
     }
 
@@ -607,7 +640,7 @@ public sealed partial class BasePage : Page
 
     private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        Common.NavigatePage(typeof(Search), sender.Text);
+        _navigation.Navigate(typeof(Search), sender.Text);
     }
 
     private void SearchAutoSuggestBox_OnSuggestionChosen(AutoSuggestBox sender,
@@ -621,20 +654,20 @@ public sealed partial class BasePage : Page
         /*
         try
         {
-            var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistPrivacyApi,
+            var result = await _api.RequestAsync(NeteaseApis.PlaylistPrivacyApi,
                                              new PlaylistPrivacyRequest() { Id = nowplid });
             if (result.IsError)
             {
-                Common.AddToTeachingTipLists("公开歌单失败", result.Error.Message);
+                _notification.ShowMessage("公开歌单失败", result.Error.Message);
                 return;
             }
 
-            Common.AddToTeachingTipLists("成功公开歌单");
+            _notification.ShowMessage("成功公开歌单");
             _ = LoadSongList();
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("公开歌单失败", ex.Message);
+            _notification.ShowMessage("公开歌单失败", ex.Message);
         }
         */
     }
@@ -644,19 +677,19 @@ public sealed partial class BasePage : Page
         /*
         try
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistDeleteApi,
+            var json = await _api.RequestAsync(NeteaseApis.PlaylistDeleteApi,
                                              new PlaylistDeleteRequest() { Id = nowplid });
             if (json.IsError)
             {
-                Common.AddToTeachingTipLists("删除失败", json.Error.Message);
+                _notification.ShowMessage("删除失败", json.Error.Message);
                 return;
             }
-            Common.AddToTeachingTipLists("成功删除");
+            _notification.ShowMessage("成功删除");
             _ = LoadSongList();
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("删除失败", ex.Message);
+            _notification.ShowMessage("删除失败", ex.Message);
         }
          */
     }
@@ -664,7 +697,7 @@ public sealed partial class BasePage : Page
 
     private void TheTeachingTip_OnCloseButtonClick(TeachingTip sender, object args)
     {
-        Common.TeachingTipList.Clear();
+        Ioc.Default.GetRequiredService<IUIStateService>().TeachingTipList.Clear();
     }
 
 
@@ -682,11 +715,11 @@ public sealed partial class BasePage : Page
             return;
         }
 
-        var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SearchSuggestionApi,
+        var json = await _api.RequestAsync(NeteaseApis.SearchSuggestionApi,
                                                     new SearchSuggestionRequest() { Keyword = sender.Text });
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("获取推荐词失败", json.Error.Message);
+            _notification.ShowMessage("获取推荐词失败", json.Error.Message);
             return;
         }
         sender.ItemsSource = json.Value.Result.AllMatch?.Select(t => t.Keyword).ToList();
@@ -694,7 +727,7 @@ public sealed partial class BasePage : Page
 
     private void OnChangePlayItem(HyPlayItem item)
     {
-        _ = Common.Invoke(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             if (item?.PlayItem != null)
             {
@@ -706,15 +739,15 @@ public sealed partial class BasePage : Page
 
     public async Task RefreshNavItemCover(HyPlayItem playItem)
     {
-        if (HyPlayList.CoverStream == null) return;
-        _ = Common.Invoke(async () =>
+        if (_state.CoverStream == null) return;
+        _ = _notification.InvokeOnUIThread(async () =>
         {
-            if (NavItemBlank.Opacity != 0 && !Common.IsExpanded && !Common.Setting.noImage)
+            if (NavItemBlank.Opacity != 0 && !Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded && !_setting.noImage)
             {
                 try
                 {
-                    if (playItem != HyPlayList.NowPlayingItem) return;
-                    using var stream = HyPlayList.CoverStream.CloneStream();
+                    if (playItem != _state.NowPlayingItem) return;
+                    using var stream = _state.CoverStream.CloneStream();
                     await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
@@ -726,16 +759,16 @@ public sealed partial class BasePage : Page
 
     public async Task RefreshNavItemCover(double collapseTime, HyPlayItem playItem)
     {
-        _ = Common.Invoke(async () =>
+        _ = _notification.InvokeOnUIThread(async () =>
         {
             var time = TimeSpan.FromSeconds(collapseTime + 0.25);
             await Task.Delay(time);
-            if (NavItemBlank.Opacity != 0 && !Common.IsExpanded && !Common.Setting.noImage)
+            if (NavItemBlank.Opacity != 0 && !Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded && !_setting.noImage)
             {
                 try
                 {
-                    if (playItem != HyPlayList.NowPlayingItem || HyPlayList.CoverStream == null) return;
-                    using var stream = HyPlayList.CoverStream.CloneStream();
+                    if (playItem != _state.NowPlayingItem || _state.CoverStream == null) return;
+                    using var stream = _state.CoverStream.CloneStream();
                     await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
@@ -748,7 +781,7 @@ public sealed partial class BasePage : Page
     private async void BaseFrame_Navigated(object sender, NavigationEventArgs e)
     {
         await Task.Delay(1000);
-        _ = Common.Invoke(() =>
+        _ = _notification.InvokeOnUIThread(() =>
             {
                 try
                 {
@@ -767,7 +800,7 @@ public sealed partial class BasePage : Page
     private void BtnApiAddParamClick(object sender, RoutedEventArgs e)
     {
         _ = Launcher.LaunchUriAsync(new Uri("https://github.com/HyPlayer/HyPlayer/wiki/%E5%85%B3%E4%BA%8E-%60ApiAdditionalParameter%60"));
-        Common.NavigatePage(typeof(TestPage));
+        _navigation.Navigate(typeof(TestPage));
     }
 
     private void ButtonPreLoginPrimary_Click(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -784,7 +817,7 @@ public sealed partial class BasePage : Page
             var deviceId = deviceInfo.Id;
             var androidId = deviceId.ToString("N")[..16];
             var imei = deviceId.ToString("N")[16..];
-            var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LoginAnnounceDeviceApi, new LoginAnnounceDeviceRequest
+            var rst = await _api.RequestAsync(NeteaseApis.LoginAnnounceDeviceApi, new LoginAnnounceDeviceRequest
             {
                 Imei = imei,
                 AndroidId = androidId,
@@ -793,15 +826,15 @@ public sealed partial class BasePage : Page
             });
             if (rst.IsError)
             {
-                Common.AddToTeachingTipLists("设备ID注册失败, 请尝试其他方案", "获取失败: " + rst.Error.Message);
+                _notification.ShowMessage("设备ID注册失败, 请尝试其他方案", "获取失败: " + rst.Error.Message);
                 return;
             }
-            Common.AddToTeachingTipLists("设备ID注册成功", "临时用户 ID: " + rst.Value.Data?.Id);
+            _notification.ShowMessage("设备ID注册成功", "临时用户 ID: " + rst.Value.Data?.Id);
             ButtonPreLoginPrimary_Click(null, null);
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("设备ID注册失败, 请尝试其他方案", "错误: " + ex.Message);
+            _notification.ShowMessage("设备ID注册失败, 请尝试其他方案", "错误: " + ex.Message);
             return;
         }
     }
@@ -809,7 +842,7 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            Common.NavigateBack();
+            _navigation.NavigateBack();
         }
         catch
         {

@@ -1,5 +1,6 @@
-﻿using CommunityToolkit.Mvvm.Input;
-using HyPlayer.HyPlayControl;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Input;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,7 +20,7 @@ namespace HyPlayer.Classes
         public string Title { get; set; }
 
         public Uri CoverUri =>
-            Common.Setting.noImage
+            Ioc.Default.GetRequiredService<Setting>().noImage
                 ? null
                 : new Uri((string.IsNullOrEmpty(CoverLink)
                               ? "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg"
@@ -32,11 +33,11 @@ namespace HyPlayer.Classes
         [RelayCommand]
         public async Task Play()
         {
-            HyPlayList.RemoveAllSong(true);
-            HyPlayList.PlaySourceId = ResourceId;
-            await HyPlayList.AppendNcSource(ResourceId);
-            HyPlayList.NowPlaying = -1;
-            HyPlayList.SongMoveNext();
+            var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+            _playlist.Clear();
+            _playlist.PlaySourceId = ResourceId;
+            await _playlist.AppendNcSourceAsync(ResourceId);
+            await _playlist.MoveNextAsync(true);
 
         }
     }

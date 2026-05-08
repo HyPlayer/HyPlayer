@@ -1,9 +1,15 @@
-﻿#region
+#region
 
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Cloud;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -25,6 +31,10 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class MusicCloudPage : Page
 {
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+
     private readonly ObservableCollection<NCSong> Items = new();
     private int page;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -42,7 +52,7 @@ public sealed partial class MusicCloudPage : Page
         _cancellationToken.ThrowIfCancellationRequested();
         var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userCloud_" + page, async () =>
         {
-            var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.CloudGetApi,
+            var json = await _api.RequestAsync(NeteaseApis.CloudGetApi,
                 new CloudGetRequest()
                 {
                     Limit = 749,
@@ -52,7 +62,7 @@ public sealed partial class MusicCloudPage : Page
             {
                 treashold = ++cooldownTime * 10;
                 page--;
-                Common.AddToTeachingTipLists("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+                _notification.ShowMessage("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
             }
 
             return json.Value;
@@ -83,6 +93,8 @@ public sealed partial class MusicCloudPage : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        WeakReferenceMessenger.Default.UnregisterAll(this);
+
         if (_loadResultTask != null && !_loadResultTask.IsCompleted)
         {
             try
@@ -96,15 +108,15 @@ public sealed partial class MusicCloudPage : Page
             }
         }
 
-        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource?.Dispose();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         _loadResultTask = LoadMusicCloudItem();
-        if (Common.Setting.greedlyLoadPlayContainerItems)
-            HyPlayList.OnTimerTicked += GreedlyLoad;
+        if (_setting.greedlyLoadPlayContainerItems)
+            WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((MusicCloudPage)r).GreedlyLoad());
     }
 
     int treashold = 3;
@@ -112,7 +124,7 @@ public sealed partial class MusicCloudPage : Page
 
     private void GreedlyLoad()
     {
-        _ = Common.Invoke(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             if (treashold > 10)
             {
@@ -127,7 +139,7 @@ public sealed partial class MusicCloudPage : Page
             }
             else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
-                HyPlayList.OnTimerTicked -= GreedlyLoad;
+                WeakReferenceMessenger.Default.Unregister<PositionTickMessage>(this);
                 OnLoadedAllSongs();
             }
         });
@@ -135,9 +147,10 @@ public sealed partial class MusicCloudPage : Page
 
     public void OnLoadedAllSongs()
     {
-        if (Common.Setting.AutoAddGreedilyLoadedSongsToPlayList && HyPlayList.PlaySourceId == "Content")
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        if (_setting.AutoAddGreedilyLoadedSongsToPlayList && _playlist.PlaySourceId == "Content")
         {
-            HyPlayList.AppendNcSongRange(SongContainer.Songs.ToList());
+            _playlist.AppendNcSongRange(SongContainer.Songs.ToList());
         }
     }
 
@@ -166,14 +179,14 @@ public sealed partial class MusicCloudPage : Page
         var files =
             await fop.PickMultipleFilesAsync();
         if (files == null) return;
-        Common.AddToTeachingTipLists("请稍等", "正在上传 " + files.Count + " 个音乐文件");
+        _notification.ShowMessage("请稍等", "正在上传 " + files.Count + " 个音乐文件");
         for (var i = 0; i < files.Count; i++)
         {
-            Common.AddToTeachingTipLists("正在上传共 " + files.Count + " 个音乐文件", "正在上传 第" + i + " 个音乐文件");
+            _notification.ShowMessage("正在上传共 " + files.Count + " 个音乐文件", "正在上传 第" + i + " 个音乐文件");
             await CloudUpload.UploadMusic(files[i]);
         }
 
-        Common.AddToTeachingTipLists("上传完成", "请重新加载云盘页面");
+        _notification.ShowMessage("上传完成", "请重新加载云盘页面");
     }
     private async void BtnRefresh_OnClick(object sender, RoutedEventArgs e)
     {

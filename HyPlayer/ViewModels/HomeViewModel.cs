@@ -1,20 +1,23 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 namespace HyPlayer.ViewModels
 {
     public partial class HomeViewModel : ObservableRecipient
     {
 #nullable enable
         private NeteaseCloudMusicApiHandler _neteaseApi;
+        private readonly IPlaylistService _playlist;
+        private readonly INavigationService _navigation;
 
         [ObservableProperty]
         public partial List<NCPlayList> RecommendedPlaylist { get; set; }
@@ -25,9 +28,11 @@ namespace HyPlayer.ViewModels
         [ObservableProperty]
         public partial List<NCPlayList> OfficialPlaylists { get; set; }
 #nullable restore
-        public HomeViewModel(NeteaseCloudMusicApiHandler neteaseApi)
+        public HomeViewModel(NeteaseCloudMusicApiHandler neteaseApi, IPlaylistService playlist, INavigationService navigation)
         {
             _neteaseApi = neteaseApi;
+            _playlist = playlist;
+            _navigation = navigation;
         }
 
         public async Task GetDataAsync()
@@ -40,7 +45,7 @@ namespace HyPlayer.ViewModels
             ToplistPlaylist = topListResult.IsSuccess ? topListResult.Value.List.Select(t => t.MapToNCPlayList()).ToList() : throw topListResult.Error;
             OfficialPlaylists = categoryListResult.IsSuccess ? categoryListResult.Value.Playlists.Select(t => t.MapToNCPlayList()).ToList() : throw categoryListResult.Error;
             // 登录内容
-            if (Common.Logined)
+            if (Ioc.Default.GetRequiredService<IAuthService>().IsLoggedIn)
             {
                 RecommendedPlaylist = rcmdListResult.IsSuccess ? rcmdListResult.Value.Recommends.Select(t => t.MapToNCPlayList()).ToList() : throw rcmdListResult.Error;
                 RecommendedSongs = rcmdSongsResult.IsSuccess ? rcmdSongsResult.Value.Data.DailySongs.Select(t => t.MapNcSong()).ToList() : throw rcmdSongsResult.Error;
@@ -50,7 +55,7 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void OnLikedClicked()
         {
-            Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].PlaylistId);
+            _navigation.Navigate(typeof(SongListDetail), Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].PlaylistId);
         }
 
         [RelayCommand]
@@ -66,12 +71,13 @@ namespace HyPlayer.ViewModels
         }
 
         [RelayCommand]
-        private void OnPlayAllRecommendedSongsClicked()
+        private async Task OnPlayAllRecommendedSongsClickedAsync()
         {
-            HyPlayList.RemoveAllSong();
-            HyPlayList.AppendNcSongs(RecommendedSongs);
-            HyPlayList.NowPlaying = -1;
-            HyPlayList.SongMoveNext();
+            _playlist.Clear();
+            var items = RecommendedSongs.Select(s => _playlist.NCSongToPlayItem(s));
+            _playlist.AppendItems(items);
+            _playlist.NotifyAppendDone();
+            await _playlist.MoveNextAsync(userInitiated: true);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.Extensions.JsonSerializer;
+using HyPlayer;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using static HyPlayer.Classes.UpdateManager;
@@ -10,6 +11,7 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(The163KeyClass))]
     [JsonSerializable(typeof(AdditionalParameters))]
     [JsonSerializable(typeof(List<string>))]
+    [JsonSerializable(typeof(CurPlayingListHistoryState))]
     [JsonSerializable(typeof(HyLyricInfo))]
     [JsonSerializable(typeof(HyALRCLyricInfo))]
     [JsonSerializable(typeof(LatestApplicationUpdate))]

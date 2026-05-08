@@ -94,7 +94,7 @@
                         Click="FlyoutItemComments_Click"
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="评论"
-                        Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
+                        Visibility="{x:Bind local:XamlHelpers.Setting.notClearMode, Mode=OneWay}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
                         </MenuFlyoutItem.Icon>
@@ -113,7 +113,7 @@
                         Click="BtnMV_Click"
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="视频"
-                        Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
+                        Visibility="{x:Bind local:XamlHelpers.Setting.notClearMode, Mode=OneWay}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE173;" />
                         </MenuFlyoutItem.Icon>

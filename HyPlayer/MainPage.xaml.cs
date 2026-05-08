@@ -1,8 +1,11 @@
-﻿#region
+#region
 
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
+using HyPlayer.Controls;
+using HyPlayer.NeteaseApi;
 using HyPlayer.Pages;
+using HyPlayer.Services.Playback;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Graphics.Canvas.Effects;
 using System;
 using System.Numerics;
@@ -18,6 +21,8 @@ using Windows.UI.Xaml.Navigation;
 using WinRT;
 using ColorStop = (float offset, Windows.UI.Color color);
 
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback.Messages;
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -32,16 +37,18 @@ public sealed partial class MainPage : Page
 {
     bool IsPlaybarOnShow = true;
     public bool IsExpandedPlayerInitialized = false;
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     public MainPage()
     {
-        Common.PageMain = this;
-        if (Common.NeteaseAPI != null)
+        Ioc.Default.GetRequiredService<IUIStateService>().PageMain = this;
+        var _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        if (_api != null)
         {
-            Common.NeteaseAPI.Option.XRealIP = Setting.GetSettings<string>("xRealIp", null);
-            Common.NeteaseAPI.Option.DegradeHttp = Setting.GetSettings("UseHttp", false);
+            _api.Option.XRealIP = Setting.GetSettings<string>("xRealIp", null);
+            _api.Option.DegradeHttp = Setting.GetSettings("UseHttp", false);
         }
-        StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024" : "640y640";
-        if (Common.Setting.uiSound)
+        StaticSource.PICSIZE_AUDIO_PLAYER_COVER = _setting.highQualityCoverInSMTC ? "1024y1024" : "640y640";
+        if (_setting.uiSound)
         {
             ElementSoundPlayer.State = ElementSoundPlayerState.Off;
             ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
@@ -52,20 +59,25 @@ public sealed partial class MainPage : Page
         UIElement PlayBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
         ActualThemeChanged += MainPage_ActualThemeChanged;
-        Common.BrushManagement.IsBright = ActualTheme == ElementTheme.Light;
-        Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
-        if (Common.Setting.displayMaintain)
+        Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IsBright = ActualTheme == ElementTheme.Light;
+        if (_setting.displayMaintain)
         {
             // displayRequest
-            Common.DisplayRequest.RequestActive();
+            Ioc.Default.GetRequiredService<IUIStateService>().DisplayRequest.RequestActive();
         }
     }
 
     private void MainPage_ActualThemeChanged(FrameworkElement sender, object args)
     {
-        Common.Setting.OnPropertyChanged("acrylicBackgroundStatus");
-        Common.Setting.OnPropertyChanged("playbarBackgroundAcrylic");
-        if (!Common.IsExpanded) Common.BrushManagement.IsBright = ActualTheme == ElementTheme.Light;
+        _setting.OnPropertyChanged("acrylicBackgroundStatus");
+        _setting.OnPropertyChanged("playbarBackgroundAcrylic");
+        if (!Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded) Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IsBright = ActualTheme == ElementTheme.Light;
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        ActualThemeChanged -= MainPage_ActualThemeChanged;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -78,23 +90,23 @@ public sealed partial class MainPage : Page
         switch (e.Parameter)
         {
             case "search":
-                Common.NavigatePage(typeof(Search));
+                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Search));
                 break;
             case "account":
-                Common.NavigatePage(typeof(Me));
+                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me));
                 break;
             case "likedsongs":
-                Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].PlaylistId);
+                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(SongListDetail), Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].PlaylistId);
                 break;
             case "local":
-                Common.NavigatePage(typeof(LocalMusicPage));
+                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(LocalMusicPage));
                 break;
         }
     }
-    private void OnPlaybarVisibilityChanged(bool isActivated)
+    internal void OnPlaybarVisibilityChanged(bool isActivated)
     {
-        if (!Common.Setting.AutoHidePlaybar) return;
-        _ = Common.Invoke(() =>
+        if (!_setting.AutoHidePlaybar) return;
+        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
         {
             if (isActivated)
             {
@@ -109,11 +121,11 @@ public sealed partial class MainPage : Page
 
     private void ShowBar()
     {
-        Common.PageBase.NavItemBlank.IsEnabled = false;
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank.IsEnabled = false;
         if (!IsPlaybarOnShow)
         {
             PointerInAni.Begin();
-            Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingItem);
+            (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).RefreshPlayBarCover(Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
             var BlankAni = new DoubleAnimation
             {
                 To = 0,
@@ -121,7 +133,7 @@ public sealed partial class MainPage : Page
                 EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
             };
             var storyboard = new Storyboard();
-            Storyboard.SetTarget(BlankAni, Common.PageBase.NavItemBlank);
+            Storyboard.SetTarget(BlankAni, (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank);
             Storyboard.SetTargetProperty(BlankAni, "Opacity");
             storyboard.Children.Add(BlankAni);
             storyboard.Begin();
@@ -164,7 +176,7 @@ public sealed partial class MainPage : Page
         PointerOutAni.Children.Add(PlayBarTransAni);
         PointerOutAni.Children.Add(PlayBarBlurTransAni);
         PointerOutAni.Begin();
-        Common.PageBase.NavItemBlank.IsEnabled = true;
+        (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank.IsEnabled = true;
         var BlankAni = new DoubleAnimation
         {
             BeginTime = TimeSpan.FromSeconds(time),
@@ -173,11 +185,11 @@ public sealed partial class MainPage : Page
             EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
         };
         var storyboard = new Storyboard();
-        Storyboard.SetTarget(BlankAni, Common.PageBase.NavItemBlank);
+        Storyboard.SetTarget(BlankAni, (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank);
         Storyboard.SetTargetProperty(BlankAni, "Opacity");
         storyboard.Children.Add(BlankAni);
         storyboard.Begin();
-        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingItem);
+        await (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).RefreshNavItemCover(3, Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
 
     }
 
@@ -342,11 +354,12 @@ public sealed partial class MainPage : Page
     private void Page_PointerMoved(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
         if (e.IsGenerated) return;
-        Common.PlaybarSecondCounter = 0;
-        if (!Common.PlaybarIsVisible)
+        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+        uiState.PlaybarSecondCounter = 0;
+        if (!uiState.PlaybarIsVisible)
         {
-            Common.OnPlaybarVisibilityChanged?.Invoke(true);
-            Common.PlaybarIsVisible = true;
+            uiState.InvokePlaybarVisibilityChanged(true);
+            uiState.PlaybarIsVisible = true;
         }
     }
 }

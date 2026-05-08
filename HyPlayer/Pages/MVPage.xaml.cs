@@ -1,9 +1,11 @@
 ﻿#region
 
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Video;
+using HyPlayer.Services.Abstractions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -24,6 +26,9 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class MVPage : Page
 {
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+
     private readonly List<NCMlog> sources = new();
     private string MVId;
     private string mvquality = "1080";
@@ -58,7 +63,7 @@ public sealed partial class MVPage : Page
 
     private void LoadThings()
     {
-        HyPlayList.Player.PauseAll();
+        Ioc.Default.GetRequiredService<IPlaybackControlService>().Pause();
         _videoLoaderTask = LoadVideo();
         _videoInfoLoaderTask = LoadVideoInfo();
         LoadComment();
@@ -67,7 +72,7 @@ public sealed partial class MVPage : Page
     private async Task LoadRelateive()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogRcmdFeedListApi,
+        var json = await _api.RequestAsync(NeteaseApis.MlogRcmdFeedListApi,
                 new MlogRcmdFeedListRequest()
                 {
                     Id = MVId,
@@ -76,7 +81,7 @@ public sealed partial class MVPage : Page
                 });
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("加载相关视频时出错", json.Error.Message);
+            _notification.ShowMessage("加载相关视频时出错", json.Error.Message);
             return;
         }
 
@@ -137,7 +142,7 @@ public sealed partial class MVPage : Page
         }
 
         MediaPlayerElement.Source = null;
-        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource?.Dispose();
     }
 
     private async Task LoadVideo()
@@ -149,7 +154,7 @@ public sealed partial class MVPage : Page
         string url;
         if (Regex.IsMatch(MVId, "^[0-9]*$"))
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.VideoUrlApi,
+            var json = await _api.RequestAsync(NeteaseApis.VideoUrlApi,
                 new VideoUrlRequest()
                 {
                     Id = MVId,
@@ -157,7 +162,7 @@ public sealed partial class MVPage : Page
                 }, _cancellationToken);
             if (json.IsError)
             {
-                Common.AddToTeachingTipLists("加载视频时出错", json.Error.Message);
+                _notification.ShowMessage("加载视频时出错", json.Error.Message);
                 return;
             }
 
@@ -165,7 +170,7 @@ public sealed partial class MVPage : Page
         }
         else
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogUrlApi,
+            var json = await _api.RequestAsync(NeteaseApis.MlogUrlApi,
                 new MlogUrlRequest()
                 {
                     Id = MVId,
@@ -173,7 +178,7 @@ public sealed partial class MVPage : Page
                 }, _cancellationToken);
             if (json.IsError)
             {
-                Common.AddToTeachingTipLists("加载视频时出错", json.Error.Message);
+                _notification.ShowMessage("加载视频时出错", json.Error.Message);
                 return;
             }
 
@@ -191,14 +196,14 @@ public sealed partial class MVPage : Page
         _cancellationToken.ThrowIfCancellationRequested();
         if (MvIdRegex().IsMatch(MVId))
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.VideoDetailApi,
+            var json = await _api.RequestAsync(NeteaseApis.VideoDetailApi,
                    new VideoDetailRequest()
                    {
                        Id = MVId
                    }, _cancellationToken);
             if (json.IsError)
             {
-                Common.AddToTeachingTipLists("加载视频信息时出错", json.Error.Message);
+                _notification.ShowMessage("加载视频信息时出错", json.Error.Message);
                 return;
             }
 
@@ -216,14 +221,14 @@ public sealed partial class MVPage : Page
         }
         else
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.MlogDetailApi,
+            var json = await _api.RequestAsync(NeteaseApis.MlogDetailApi,
                     new MlogDetailRequest()
                     {
                         MlogId = MVId
                     }, _cancellationToken);
             if (json.IsError)
             {
-                Common.AddToTeachingTipLists("加载视频信息时出错", json.Error.Message);
+                _notification.ShowMessage("加载视频信息时出错", json.Error.Message);
                 return;
             }
 

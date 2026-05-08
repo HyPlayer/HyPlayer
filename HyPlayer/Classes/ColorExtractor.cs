@@ -1,4 +1,5 @@
-﻿using Impressionist.Abstractions;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using Impressionist.Abstractions;
 using Impressionist.Implementations;
 using System;
 using System.Threading.Tasks;
@@ -16,13 +17,15 @@ namespace HyPlayer.Classes
             var colors = await ImageDecoder.GetPixelColor(decoder);
             ThemeColorResult color;
 
-            if (Common.Setting.ColorGeneratorType is 0)
+            var _setting = Ioc.Default.GetRequiredService<Setting>();
+
+            if (_setting.ColorGeneratorType is 0)
             {
-                color = await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, Common.Setting.ImpressionistIgnoreWhite, Common.Setting.ImpressionistLABSpace);
+                color = await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, _setting.ImpressionistIgnoreWhite, _setting.ImpressionistLABSpace);
             }
             else
             {
-                color = await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, Common.Setting.ImpressionistIgnoreWhite);
+                color = await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, _setting.ImpressionistIgnoreWhite);
             }
             return Color.FromArgb(255, (byte)color.Color.X, (byte)color.Color.Y, (byte)color.Color.Z);
         }

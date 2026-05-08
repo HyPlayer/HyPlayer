@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 using WinRT;
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 namespace HyPlayer.Classes
 {
     public partial class BrushManagement : INotifyPropertyChanged
@@ -21,9 +22,9 @@ namespace HyPlayer.Classes
         {
             get
             {
-                if (Common.Setting.karaokLyricFocusingColor is not null)
+                if (Ioc.Default.GetRequiredService<Setting>().karaokLyricFocusingColor is not null)
                 {
-                    return (Windows.UI.Color)Common.Setting.karaokLyricFocusingColor;
+                    return (Windows.UI.Color)Ioc.Default.GetRequiredService<Setting>().karaokLyricFocusingColor;
                 }
                 return karaokAccentBrush != null
                 ? (Windows.UI.Color)karaokAccentBrush
@@ -58,9 +59,9 @@ namespace HyPlayer.Classes
             get
 
             {
-                if (Common.Setting.pureLyricFocusingColor is not null)
+                if (Ioc.Default.GetRequiredService<Setting>().pureLyricFocusingColor is not null)
                 {
-                    return new SolidColorBrush(Common.Setting.pureLyricFocusingColor.Value);
+                    return new SolidColorBrush(Ioc.Default.GetRequiredService<Setting>().pureLyricFocusingColor.Value);
                 }
 
                 return (accentBrush ?? Application.Current.Resources["SystemControlPageTextBaseHighBrush"]?.As<SolidColorBrush>());
@@ -75,9 +76,9 @@ namespace HyPlayer.Classes
         {
             get
             {
-                if (Common.Setting.pureLyricIdleColor is not null)
+                if (Ioc.Default.GetRequiredService<Setting>().pureLyricIdleColor is not null)
                 {
-                    return new SolidColorBrush(Common.Setting.pureLyricIdleColor.Value);
+                    return new SolidColorBrush(Ioc.Default.GetRequiredService<Setting>().pureLyricIdleColor.Value);
                 }
 
                 return (idleBrush ?? Application.Current.Resources["TextFillColorTertiaryBrush"]?.As<SolidColorBrush>());

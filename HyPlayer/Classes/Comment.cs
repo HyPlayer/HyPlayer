@@ -1,8 +1,10 @@
-﻿using HyPlayer.NeteaseApi.Models;
+using HyPlayer.NeteaseApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
+using HyPlayer.Services.Abstractions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 namespace HyPlayer.Classes
 {
     public class Comment
@@ -18,6 +20,6 @@ namespace HyPlayer.Classes
         public NeteaseResourceType ResourceType { get; set; }
         public DateTime SendTime { get; set; }
         public NCUser CommentUser { get; set; }
-        public bool IsByMyself => CommentUser.Id == Common.LoginedUser?.Id;
+        public bool IsByMyself => CommentUser.Id == Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.Id;
     }
 }

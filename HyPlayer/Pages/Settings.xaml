@@ -1,4 +1,4 @@
-﻿<Page
+<Page
     x:Class="HyPlayer.Pages.Settings"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -78,7 +78,7 @@
                                         <ComboBox
                                             x:Name="RomajiSource"
                                             HorizontalAlignment="Right"
-                                            SelectedIndex="{x:Bind hyplayer:Common.Setting.LyricRomajiSource, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                            SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.LyricRomajiSource, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="不转换" />
                                             <ComboBoxItem Content="自动选择" />
                                             <ComboBoxItem Content="网易云音乐" />
@@ -116,7 +116,7 @@
                                             Minimum="0"
                                             SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.lyricSize, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="0为自动" Header="翻译大小">
                                         <controls:NumberBox
@@ -126,7 +126,7 @@
                                             Minimum="0"
                                             SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.translationSize, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.translationSize, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="0为自动" Header="罗马字大小">
                                         <controls:NumberBox
@@ -137,7 +137,7 @@
                                             Minimum="0"
                                             SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.romajiSize, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
                                 </controls3:SettingsExpander.Items>
@@ -146,7 +146,7 @@
                             <!--<CheckBox
                                 x:Name="CheckBoxLyricShadow"
                                 Content="开启歌词阴影"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.lyricDropshadow, Mode=TwoWay}" />-->
+                                IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.lyricDropshadow, Mode=TwoWay}" />-->
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
@@ -166,22 +166,22 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.karaokLyric, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.karaokLyric, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="使用 AMLL TTML Database">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.enableAmllTtmlDb, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.enableAmllTtmlDb, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard
                                         Description=" [NCM_ID] 为网易云音乐 ID 占位符"
                                         Header="AMLL TTML 镜像地址"
-                                        Visibility="{x:Bind hyplayer:Common.Setting.enableAmllTtmlDb, Mode=OneWay}">
-                                        <TextBox HorizontalAlignment="Left" Text="{x:Bind hyplayer:Common.Setting.amllTtmlMirrorUrl, Mode=OneWay}" />
+                                        Visibility="{x:Bind hyplayer:XamlHelpers.Setting.enableAmllTtmlDb, Mode=OneWay}">
+                                        <TextBox HorizontalAlignment="Left" Text="{x:Bind hyplayer:XamlHelpers.Setting.amllTtmlMirrorUrl, Mode=OneWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="歌词主色调">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.lyricColor, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="自动" />
                                             <ComboBoxItem Content="白色" />
                                             <ComboBoxItem Content="黑色" />
@@ -206,7 +206,7 @@
                                             <controls3:ColorPickerButton
                                                 x:Name="PureLyricIdle"
                                                 Grid.Column="0"
-                                                SelectedColor="{x:Bind hyplayer:Common.Setting.pureLyricIdleColor, Mode=OneWay, Converter={StaticResource NullableColorToColorConverter}}">
+                                                SelectedColor="{x:Bind hyplayer:XamlHelpers.Setting.pureLyricIdleColor, Mode=OneWay, Converter={StaticResource NullableColorToColorConverter}}">
                                                 <controls3:ColorPickerButton.ColorPickerStyle>
                                                     <Style TargetType="controls:ColorPicker">
                                                         <Setter Property="ColorSpectrumShape" Value="Box" />
@@ -230,7 +230,7 @@
                                             <controls3:ColorPickerButton
                                                 x:Name="PureLyricFocusing"
                                                 Grid.Column="0"
-                                                SelectedColor="{x:Bind hyplayer:Common.Setting.pureLyricFocusingColor, Mode=OneWay, Converter={StaticResource NullableColorToColorConverter}}">
+                                                SelectedColor="{x:Bind hyplayer:XamlHelpers.Setting.pureLyricFocusingColor, Mode=OneWay, Converter={StaticResource NullableColorToColorConverter}}">
                                                 <controls3:ColorPickerButton.ColorPickerStyle>
                                                     <Style TargetType="controls:ColorPicker">
                                                         <Setter Property="ColorSpectrumShape" Value="Box" />
@@ -254,7 +254,7 @@
                                             <controls3:ColorPickerButton
                                                 x:Name="KaraokLyricFocusing"
                                                 Grid.Column="0"
-                                                SelectedColor="{x:Bind hyplayer:Common.Setting.karaokLyricFocusingColor, Mode=OneWay, Converter={StaticResource NullableColorToColorConverter}}">
+                                                SelectedColor="{x:Bind hyplayer:XamlHelpers.Setting.karaokLyricFocusingColor, Mode=OneWay, Converter={StaticResource NullableColorToColorConverter}}">
                                                 <controls3:ColorPickerButton.ColorPickerStyle>
                                                     <Style TargetType="controls:ColorPicker">
                                                         <Setter Property="ColorSpectrumShape" Value="Box" />
@@ -272,7 +272,7 @@
                                         <ComboBox
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                            SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.lyricAlignment, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="左对齐" />
                                             <ComboBoxItem Content="居中" />
                                             <ComboBoxItem Content="右对齐" />
@@ -284,7 +284,7 @@
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             DisplayMemberPath="Name"
-                                            SelectedValue="{x:Bind hyplayer:Common.Setting.lyricFontFamily, Mode=TwoWay}"
+                                            SelectedValue="{x:Bind hyplayer:XamlHelpers.Setting.lyricFontFamily, Mode=TwoWay}"
                                             SelectedValuePath="Value" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="单位 %" Header="歌词距离顶部百分比">
@@ -296,7 +296,7 @@
                                             Minimum="0"
                                             SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.lyricPaddingTopRatio, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.lyricPaddingTopRatio, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="单位 %" Header="歌词宽度占容器百分比">
                                         <controls:NumberBox
@@ -307,18 +307,18 @@
                                             Minimum="0"
                                             SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.lyricRenderWidthRatio, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderWidthRatio, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard
                                         Description="单位 %"
                                         Header="歌词渐隐程度"
-                                        Visibility="{x:Bind hyplayer:Common.Setting.lyricRenderFade}">
+                                        Visibility="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderFade}">
                                         <Slider
                                             MinWidth="200"
                                             HorizontalAlignment="Right"
                                             Maximum="99"
                                             Minimum="0"
-                                            Value="{x:Bind hyplayer:Common.Setting.lyricFadingRatio, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.lyricFadingRatio, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
                                     <controls3:SettingsCard Header="歌词行间距">
@@ -328,7 +328,7 @@
                                             LargeChange="5"
                                             SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.lyricLineSpacing, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.lyricLineSpacing, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="歌词帧率">
                                         <controls:NumberBox
@@ -337,32 +337,32 @@
                                             LargeChange="5"
                                             SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.LyricRendererFPS, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.LyricRendererFPS, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="开启时启动热词">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.hotlyricOnStartup, Mode=TwoWay}"
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.hotlyricOnStartup, Mode=TwoWay}"
                                             Toggled="HotLyricOnStartUp_Checked" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="显示作词作曲信息">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.showComposerInLyric, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.showComposerInLyric, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="自动合并歌词">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.MigrateLyrics, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.MigrateLyrics, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="将会优化歌词时间轴效果, 可能会改变原本时间轴" Header="优化歌词时间轴">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.OptimizeLyric, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.OptimizeLyric, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -384,47 +384,47 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderFocusHighlighting, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderFocusHighlighting, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="音译扫词">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderTransliterationScanning, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderTransliterationScanning, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="非逐字行扫词">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderSimpleLineScanning, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderSimpleLineScanning, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="将会把每一行歌词预渲染, 将会造成大量内存占用" Header="预渲染合成">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricCacheRenderTarget, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricCacheRenderTarget, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="焦点歌词整体放大">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderScaleWhenFocusing, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderScaleWhenFocusing, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="模糊非聚焦行">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderBlur, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderBlur, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="非聚焦行逐渐渐隐">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderFade, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderFade, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
                                     <controls3:SettingsCard Description="不同函数有不同的效果" Header="行滚动函数">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.LineRollingCalculator, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.LineRollingCalculator, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="弹簧函数" />
                                             <ComboBoxItem Content="三角函数" />
                                             <ComboBoxItem Content="Lyricify 函数" />
@@ -511,20 +511,20 @@
                                             x:Name="FadePause"
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.CrossFade, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="交叉淡化渐入渐出时间 单位: s" Visibility="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="交叉淡化渐入渐出时间 单位: s" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.CrossFade, Mode=OneWay}">
                                         <Slider
                                             x:Name="CrossFadeTime"
                                             Width="256"
                                             HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=OneWay}"
+                                            IsEnabled="{x:Bind hyplayer:XamlHelpers.Setting.CrossFade, Mode=OneWay}"
                                             Maximum="10"
                                             Minimum="3"
                                             StepFrequency="1"
                                             TickFrequency="1"
                                             ToolTipService.ToolTip="{x:Bind CrossFadeTime.Value, Mode=OneWay}"
-                                            Value="{x:Bind hyplayer:Common.Setting.CrossFadeTime, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.CrossFadeTime, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -545,14 +545,14 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.shuffleNoRepeating, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="显示随机列表">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.displayShuffledList, Mode=TwoWay}"
-                                            Visibility="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=OneWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.displayShuffledList, Mode=TwoWay}"
+                                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.shuffleNoRepeating, Mode=OneWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -590,7 +590,7 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.EnableAudioGain, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.EnableAudioGain, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -610,13 +610,13 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.jumpVipSongPlaying, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.jumpVipSongPlaying, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="下载时跳过">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.jumpVipSongDownloading, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.jumpVipSongDownloading, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -635,13 +635,13 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.UpdateLastFMNowPlaying, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.UpdateLastFMNowPlaying, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="上传播放记录至Last.FM">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.LastFMScrobble, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.LastFMScrobble, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard>
                                         <Grid>
@@ -649,25 +649,25 @@
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
-                                            <Grid Grid.Row="0" Visibility="{x:Bind hyplayer:Common.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityConverter}}">
+                                            <Grid Grid.Row="0" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityConverter}}">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Grid.Column="0" Text="已登录账号：" />
-                                                <TextBlock Grid.Column="1" Text="{x:Bind hyplayer:Common.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToStringConverter}}" />
+                                                <TextBlock Grid.Column="1" Text="{x:Bind hyplayer:XamlHelpers.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToStringConverter}}" />
                                             </Grid>
                                             <Grid Grid.Row="1">
                                                 <Button
                                                     x:Name="LogoffLastFMAccount"
                                                     Click="LogoffLastFMAccount_Click"
                                                     Content="登出LastFM账号"
-                                                    Visibility="{x:Bind hyplayer:Common.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityConverter}}" />
+                                                    Visibility="{x:Bind hyplayer:XamlHelpers.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityConverter}}" />
                                                 <Button
                                                     x:Name="LoginLastFMAccount"
                                                     Click="LoginLastFMAccount_Click"
                                                     Content="登录LastFM账号"
-                                                    Visibility="{x:Bind hyplayer:Common.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityReverseConverter}}" />
+                                                    Visibility="{x:Bind hyplayer:XamlHelpers.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityReverseConverter}}" />
                                             </Grid>
                                         </Grid>
                                     </controls3:SettingsCard>
@@ -697,7 +697,7 @@
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
                                     <controls3:SettingsCard Header="主题色">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.themeRequest, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="跟随系统" />
                                             <ComboBoxItem Content="亮色" />
                                             <ComboBoxItem Content="暗色" />
@@ -707,25 +707,25 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.playButtonAccentColor, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playButtonAccentColor, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="播放栏按钮透明">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.playbarButtonsTransparent, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playbarButtonsTransparent, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="开启标题栏沉浸">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.EnableTitleBarImmerse, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.EnableTitleBarImmerse, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="播放条背景防糊优化">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.playbarBackgroundElay, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playbarBackgroundElay, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -743,7 +743,7 @@
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
                                     <controls3:SettingsCard Header="背景显示设置">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.expandedPlayerBackgroundType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.expandedPlayerBackgroundType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="专辑封面模糊" />
                                             <ComboBoxItem Content="跟随唱片主色调" />
                                             <ComboBoxItem Content="桌面亚克力 (不推荐)" />
@@ -752,7 +752,7 @@
                                         </ComboBox>
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="背景取色设置">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.ColorGeneratorType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.ColorGeneratorType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="KMeans" />
                                             <ComboBoxItem Content="OctTree" />
                                             <ComboBoxItem Content="Auto" />
@@ -762,26 +762,26 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.ImpressionistLABSpace, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.ImpressionistLABSpace, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="Impressionist (背景取色) 忽略白色">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.ImpressionistIgnoreWhite, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.ImpressionistIgnoreWhite, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="关闭则随机颜色进行初始化，仅在KMeans模式下生效" Header="Impressionist (背景取色) 使用KMeans++算法初始化颜色">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.ImpressionistUseKMeansPP, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.ImpressionistUseKMeansPP, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="歌词页面渲染帧率">
                                         <controls:NumberBox
                                             Width="64"
                                             HorizontalAlignment="Right"
                                             Minimum="24"
-                                            Value="{x:Bind hyplayer:Common.Setting.IsolationFPS, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.IsolationFPS, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="仅在背景设置为Isolation时生效" Header="Isolation渲染倍率">
                                         <controls:NumberBox
@@ -789,19 +789,19 @@
                                             HorizontalAlignment="Right"
                                             Maximum="1.5"
                                             Minimum="0.1"
-                                            Value="{x:Bind hyplayer:Common.Setting.IsolationScale, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.IsolationScale, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="停用歌词界面帧率限制">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.IsolationFullThrottle, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.IsolationFullThrottle, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="仅在背景设置为Isolation时生效" Header="启用Isolation光带">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.IsolationLightWave, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.IsolationLightWave, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="0 为无边框" Header="唱片边框厚度">
                                         <Slider
@@ -811,7 +811,7 @@
                                             Maximum="280"
                                             Minimum="0"
                                             ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.albumBorderLength, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="0为无阴影" Header="歌词页面封面阴影强度">
                                         <Slider
@@ -822,37 +822,37 @@
                                             Minimum="0"
                                             ToolTipService.ToolTip="{x:Bind SliderAlbumShadowDepth.Value}"
                                             ValueChanged="NBShadowDepth_OnValueChanged"
-                                            Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Mode=OneWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.expandedCoverShadowDepth, Mode=OneWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="圆形唱片">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.albumRound, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.albumRound, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="唱片旋转">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.albumRotate, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.albumRotate, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="动效适配 BPM">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.animationAdaptBPM, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.animationAdaptBPM, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="轻柔动效" Visibility="{x:Bind hyplayer:Common.Setting.animationAdaptBPM, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="轻柔动效" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.animationAdaptBPM, Mode=OneWay}">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.gentleBPMAnimation, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.gentleBPMAnimation, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="启用频谱图">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.EnableFFT, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.EnableFFT, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -874,45 +874,45 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="自定义Acrylic(需重启)" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="自定义Acrylic(需重启)" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=OneWay}">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Top"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.CustomAcrylic, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
-                                    <controls3:SettingsCard Header="TintOpacity值" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
+                                    <controls3:SettingsCard Header="TintOpacity值" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
                                         <Slider
                                             x:Name="TintOpacitySlider"
                                             Width="256"
                                             HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=OneWay}"
+                                            IsEnabled="{x:Bind hyplayer:XamlHelpers.Setting.CustomAcrylic, Mode=OneWay}"
                                             Maximum="1"
                                             Minimum="0"
                                             StepFrequency="0.01"
                                             ToolTipService.ToolTip="{x:Bind TintOpacitySlider.Value}"
                                             ValueChanged="TintOpacity_ValueChanged"
-                                            Value="{x:Bind hyplayer:Common.Setting.CustomTintOpacity, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.CustomTintOpacity, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
-                                    <controls3:SettingsCard Header="TintOpacityLuminosity值" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
+                                    <controls3:SettingsCard Header="TintOpacityLuminosity值" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
                                         <Slider
                                             x:Name="TintOpacityLuminositySlider"
                                             Width="256"
                                             HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=OneWay}"
+                                            IsEnabled="{x:Bind hyplayer:XamlHelpers.Setting.CustomAcrylic, Mode=OneWay}"
                                             Maximum="1"
                                             Minimum="0"
                                             StepFrequency="0.01"
                                             ToolTipService.ToolTip="{x:Bind TintOpacityLuminositySlider.Value}"
                                             ValueChanged="TintOpacityLuminosity_ValueChanged"
-                                            Value="{x:Bind hyplayer:Common.Setting.CustomTintLuminosityOpacity, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.CustomTintLuminosityOpacity, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
-                                    <controls3:SettingsCard Header="预览Acrylic" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
+                                    <controls3:SettingsCard Header="预览Acrylic" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
                                         <Rectangle
                                             x:Name="PreviewAcrylic"
                                             Grid.Column="1"
@@ -927,34 +927,34 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.noImage, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.noImage, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="PlayBar 脱离窗口边缘">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.playBarMargin, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playBarMargin, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="歌词界面专辑封面不裁剪为正方形">
                                         <ToggleSwitch
                                             Grid.Row="2"
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.expandedPlayerFullCover, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.expandedPlayerFullCover, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="显示发现及评论入口">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.notClearMode, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="自动隐藏PlayBar">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.AutoHidePlaybar, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.AutoHidePlaybar, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="自动隐藏PlayBar时间" Visibility="{x:Bind hyplayer:Common.Setting.AutoHidePlaybar, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="自动隐藏PlayBar时间" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.AutoHidePlaybar, Mode=OneWay}">
                                         <Slider
                                             x:Name="AutoHidePlayBarTime"
                                             Width="256"
@@ -962,7 +962,7 @@
                                             Maximum="10"
                                             Minimum="1"
                                             ToolTipService.ToolTip="{x:Bind AutoHidePlayBarTime.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.AutoHidePlaybarTime, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.AutoHidePlaybarTime, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -985,52 +985,52 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.expandedUseAcrylic, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.expandedUseAcrylic, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="否则为窗口亚克力" Header="播放条使用封面模糊背景">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.playbarBackgroundAcrylic, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playbarBackgroundAcrylic, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="展开/收缩「歌词页面」动画">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.expandAnimation, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.expandAnimation, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="播放条背景呼吸动画">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.playbarBackgroundBreath, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playbarBackgroundBreath, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="与阴影冲突" Header="歌词页面专辑封面呼吸动画">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.expandAlbumBreath, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.expandAlbumBreath, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="表头启用封面主题色">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="歌单列表项背景模糊">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="启用触摸手势控制 (歌词页面-专辑封面)">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.enableTouchGestureAction, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.enableTouchGestureAction, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="触摸手势模式">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.gestureMode, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.gestureMode, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="基本手势" />
                                             <ComboBoxItem Content="平移" />
                                             <ComboBoxItem Content="搓碟" />
@@ -1073,7 +1073,7 @@
                                                 x:Name="TextBoxDownloadDir"
                                                 Width="256"
                                                 IsReadOnly="True"
-                                                Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=OneWay}" />
+                                                Text="{x:Bind hyplayer:XamlHelpers.Setting.downloadDir, Mode=OneWay}" />
                                             <Button
                                                 x:Name="ButtonDownloadSelect"
                                                 Click="ButtonDownloadSelect_OnClick"
@@ -1089,7 +1089,7 @@
                                                 x:Name="TextBoxSearchingDir"
                                                 Width="256"
                                                 IsReadOnly="True"
-                                                Text="{x:Bind hyplayer:Common.Setting.searchingDir, Mode=OneWay}" />
+                                                Text="{x:Bind hyplayer:XamlHelpers.Setting.searchingDir, Mode=OneWay}" />
                                             <Button
                                                 x:Name="ButtonSearchingSelect"
                                                 Click="ButtonSearchingSelect_OnClick"
@@ -1104,7 +1104,7 @@
                                             <TextBox
                                                 x:Name="TextBoxCacheDir"
                                                 Width="256"
-                                                Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=OneWay}" />
+                                                Text="{x:Bind hyplayer:XamlHelpers.Setting.cacheDir, Mode=OneWay}" />
                                             <Button
                                                 x:Name="ButtonCacheSelect"
                                                 Click="ButtonCacheSelect_OnClick"
@@ -1139,7 +1139,7 @@
                                             HorizontalAlignment="Right"
                                             Orientation="Horizontal"
                                             Spacing="8">
-                                            <TextBox Width="256" Text="{x:Bind hyplayer:Common.Setting.downloadFileName, Mode=TwoWay}" />
+                                            <TextBox Width="256" Text="{x:Bind hyplayer:XamlHelpers.Setting.downloadFileName, Mode=TwoWay}" />
                                             <Button>
                                                 <Button.Flyout>
                                                     <Flyout>
@@ -1167,7 +1167,7 @@
                                         </StackPanel>
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="下载重名解决方法">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.downloadNameOccupySolution, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.downloadNameOccupySolution, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="跳过" />
                                             <ComboBoxItem Content="覆盖" />
                                             <ComboBoxItem Content="追加 ID" />
@@ -1193,25 +1193,25 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.downloadLyric, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.downloadLyric, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="下载翻译">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.downloadTranslation, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.downloadTranslation, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="写音乐信息">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.writedownloadFileInfo, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.writedownloadFileInfo, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="写网易云音乐信息">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.write163Info, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.write163Info, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="最大同时下载任务数">
                                         <controls:NumberBox
@@ -1221,7 +1221,7 @@
                                             Maximum="100"
                                             Minimum="1"
                                             SmallChange="1"
-                                            Value="{x:Bind hyplayer:Common.Setting.maxDownloadCount, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.maxDownloadCount, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -1296,7 +1296,7 @@
                                 <CheckBox
                                     x:Name="ProxyState"
                                     Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.EnableProxy, Mode=TwoWay}" />
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.EnableProxy, Mode=TwoWay}" />
                             </controls3:SettingsCard>
 
 
@@ -1310,58 +1310,58 @@
                                 <CheckBox
                                     x:Name="UseHttpCheckBox"
                                     Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.UseHttp, Mode=TwoWay}" />
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.UseHttp, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="获取歌曲时降级HTTPS为HTTP">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.UseHttpWhenGettingSongs, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.UseHttpWhenGettingSongs, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="自动加载更多内容, 3 秒一次请求, 可能会导致风控" Header="使用贪婪加载">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.greedlyLoadPlayContainerItems, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.greedlyLoadPlayContainerItems, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="贪婪加载完成时自动将加载到的歌曲添加到播放列表">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.AutoAddGreedilyLoadedSongsToPlayList, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.AutoAddGreedilyLoadedSongsToPlayList, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="在播放时才获取播放链接">
                                 <CheckBox
                                     x:Name="LazySongUrlGetCheck"
                                     Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.songUrlLazyGet, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="不要开启!" Header="Xbox上隐藏指针">
                                 <CheckBox
                                     x:Name="XboxPointerSet"
                                     Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.xboxHidePointer, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="开启后可能会频繁出现页面重载现象" Header="频繁内存回收">
                                 <CheckBox
                                     x:Name="ForceMemoryCollect"
                                     Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.forceMemoryGarbage, Mode=TwoWay}" />
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.forceMemoryGarbage, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="开启高级音乐历史存储 (超过 100 首)">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="将会在第二次请求时加速请求, 离线时从本地缓存获取" Header="开启请求数据缓存">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.enableApiCache, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.enableApiCache, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="开启播放音频缓存">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.enableCache, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="本地文件扫描渐进式加载 (Progressive Loading)">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.localProgressiveLoad, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.localProgressiveLoad, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="本地文件使用 TagLib 读取封面">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.useTaglibPicture, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.useTaglibPicture, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="私人 FM 时使用 私人 DJ">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.useAiDj, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.useAiDj, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="保持屏幕常亮">
                                 <CheckBox
                                     Margin="0,0,-100,0"
                                     Checked="DisplayMaintain_OnChecked"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.displayMaintain, Mode=TwoWay}"
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.displayMaintain, Mode=TwoWay}"
                                     Unchecked="DisplayMaintain_OnUnchecked" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="开启 UI 音效">
@@ -1369,50 +1369,50 @@
                                     x:Name="ControlSoundCheck"
                                     Margin="0,0,-100,0"
                                     Checked="ControlSoundChecked"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.uiSound, Mode=TwoWay}"
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.uiSound, Mode=TwoWay}"
                                     Unchecked="ControlSoundUnChecked" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="可能会提高内存占用" Header="启用安全本地文件访问">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.safeFileAccess, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="尝试绕过 CheckToken 接口 (可能被检测)">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.EnableCheckTokenApi, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.EnableCheckTokenApi, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="输出高清图片到SMTC">
                                 <CheckBox
                                     x:Name="HighQualityCoverInSMTC"
                                     Margin="0,0,-100,0"
                                     Content=""
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="启用磁贴">
                                 <CheckBox
                                     x:Name="DisableTile"
                                     Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.enableTile, Mode=TwoWay}" />
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.enableTile, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="部分系统下可能导致磁贴不显示" Header="启用磁贴背景">
                                 <CheckBox
                                     x:Name="TileBackgroundAvailability"
                                     Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.tileBackgroundAvailability, Mode=TwoWay}" />
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.tileBackgroundAvailability, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="Windows 10需打开此项才会显示磁贴" Header="磁贴背景缓存至本地">
                                 <CheckBox
                                     x:Name="SaveTileBackgroundToLocalFolder"
                                     Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.saveTileBackgroundToLocalFolder, Mode=TwoWay}" />
+                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.saveTileBackgroundToLocalFolder, Mode=TwoWay}" />
                             </controls3:SettingsCard>
 
                             <controls3:SettingsCard Description="对于部分歌曲的歌词更新率更高, 需重启 HyPlayer" Header="使用高精度歌词计时器">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.highPreciseLyricTimer, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.highPreciseLyricTimer, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像或在首页关闭&#13;开发者不受理受此功能影响的问题" Header="启用旧版主题（需重启应用）">
 
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="歌词控件Debug模式">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.LyricRendererDebugMode, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.LyricRendererDebugMode, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Click="ClearTileCache_Click" IsClickEnabled="True">
                                 <controls3:SettingsCard.Header>
@@ -1665,10 +1665,10 @@
                                                 <ComboBox
                                                     x:Name="UpdateSource"
                                                     HorizontalAlignment="Left"
-                                                    SelectedIndex="{x:Bind hyplayer:Common.Setting.UpdateSource, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                                    SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.UpdateSource, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                                     <ComboBoxItem Content="Microsoft Store" />
                                                     <ComboBoxItem Content="Release" />
-                                                    <ComboBoxItem Content="Canary" IsEnabled="{x:Bind hyplayer:Common.Setting.canaryChannelAvailability, Mode=OneWay}" />
+                                                    <ComboBoxItem Content="Canary" IsEnabled="{x:Bind hyplayer:XamlHelpers.Setting.canaryChannelAvailability, Mode=OneWay}" />
                                                     <ComboBoxItem Content="GitHub" />
                                                     <ComboBoxItem Content="Countinous Integration" />
                                                 </ComboBox>

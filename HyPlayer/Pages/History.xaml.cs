@@ -1,9 +1,12 @@
 ﻿#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.NeteaseApi.Bases;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading;
@@ -23,6 +26,10 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class History : Page
 {
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+
     private readonly ObservableCollection<NCSong> Songs = new();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -61,7 +68,7 @@ public sealed partial class History : Page
             {
             }
         }
-        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource?.Dispose();
     }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
@@ -96,11 +103,11 @@ public sealed partial class History : Page
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var ret3 = await Common.NeteaseAPI.RequestAsync<UserRecordAllResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
-                new UserRecordRequest() { UserId = Common.LoginedUser.Id, RecordType = UserRecordType.All });
+            var ret3 = await _api.RequestAsync<UserRecordAllResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
+                new UserRecordRequest() { UserId = _auth.CurrentUser.Id, RecordType = UserRecordType.All });
             if (ret3.IsError)
             {
-                Common.AddToTeachingTipLists("获取播放记录失败", ret3.Error.Message);
+                _notification.ShowMessage("获取播放记录失败", ret3.Error.Message);
                 return;
             }
             var weekData = ret3.Value?.AllData;
@@ -114,7 +121,7 @@ public sealed partial class History : Page
         }
         catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
         {
-            Common.AddToTeachingTipLists("获取播放记录失败", ex.Message);
+            _notification.ShowMessage("获取播放记录失败", ex.Message);
         }
     }
 
@@ -124,11 +131,11 @@ public sealed partial class History : Page
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var ret2 = await Common.NeteaseAPI!.RequestAsync<UserRecordWeekResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
-                new UserRecordRequest() { UserId = Common.LoginedUser.Id, RecordType = UserRecordType.WeekData }, _cancellationToken);
+            var ret2 = await _api.RequestAsync<UserRecordWeekResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
+                new UserRecordRequest() { UserId = _auth.CurrentUser.Id, RecordType = UserRecordType.WeekData }, _cancellationToken);
             if (ret2.IsError)
             {
-                Common.AddToTeachingTipLists("获取播放记录失败", ret2.Error.Message);
+                _notification.ShowMessage("获取播放记录失败", ret2.Error.Message);
                 return;
             }
             var weekData = ret2.Value?.WeekData;
@@ -142,7 +149,7 @@ public sealed partial class History : Page
         }
         catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
         {
-            Common.AddToTeachingTipLists("获取播放记录失败", ex.Message);
+            _notification.ShowMessage("获取播放记录失败", ex.Message);
         }
     }
 }

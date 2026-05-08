@@ -1,10 +1,20 @@
-﻿#region
+#region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
+using HyPlayer.Controls;
 using HyPlayer.NeteaseApi;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.MediaProviders;
+using HyPlayer.Services.Playback.Messages;
+using HyPlayer.Services.Playback.Strategies;
+using HyPlayer.Services.Playback.Transitions;
+using HyPlayer.UWP.Chopin;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using HyPlayer.ViewModels;
 using Kawazu;
@@ -46,8 +56,9 @@ public sealed partial class App : Application
     {
         InitializeComponent();
         InitializeServices();
-        Common.InitializeCommon();
-        if (Common.Setting.xboxHidePointer)
+        InitializeCommonServices();
+        HistoryManagement.InitializeHistoryTrack();
+        if (Ioc.Default.GetRequiredService<Setting>().xboxHidePointer)
         {
             RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
             FocusVisualKind = FocusVisualKind.Reveal;
@@ -58,8 +69,8 @@ public sealed partial class App : Application
         UnhandledException += App_UnhandledException;
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
-        if (Common.Setting.themeRequest != ThemeRequest.Auto)
-            RequestedTheme = Common.Setting.themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
+        if (Ioc.Default.GetRequiredService<Setting>().themeRequest != ThemeRequest.Auto)
+            RequestedTheme = Ioc.Default.GetRequiredService<Setting>().themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
         _ = InitializeThings();
     }
 
@@ -71,13 +82,29 @@ public sealed partial class App : Application
         Ioc.Default.ConfigureServices(provider);
     }
 
+    private static readonly object _messagingAnchor = new();
+
+    private static void InitializeCommonServices()
+    {
+        var setting = Ioc.Default.GetRequiredService<Setting>();
+        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        api.Option.AdditionalParameters = setting.ApiAdditionalParameters;
+        api.Option.FakeCheckToken = setting.EnableCheckTokenApi;
+        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+        WeakReferenceMessenger.Default.Register<PositionTickMessage>(_messagingAnchor, (_, _) =>
+        {
+            uiState.RollTeachingTip();
+            uiState.ChangePlaybarVisibility();
+        });
+    }
+
     private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
     {
-        if (!Common.Setting.forceMemoryGarbage) return;
+        if (!Ioc.Default.GetRequiredService<Setting>().forceMemoryGarbage) return;
         // Xbox 求你行行好,别杀我~ QAQ
-        if (!Common.IsInBackground) return;
+        if (!Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground) return;
         // 内存占用达到某个值
-        Common.CollectGarbage();
+        Ioc.Default.GetRequiredService<INavigationService>().CollectGarbage();
         GC.Collect();
     }
 
@@ -92,6 +119,52 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = LastFMConstants.APIKEY, ApiSecret = LastFMConstants.SECRET }, client));
         serviceCollection.AddSingleton(setting);
         serviceCollection.AddSingleton<AudioGraphPlayer>();
+        serviceCollection.AddSingleton<IPlayer>(sp => sp.GetRequiredService<AudioGraphPlayer>());
+
+        // ── 播放核心：状态中心 ──
+        serviceCollection.AddSingleton<PlaybackStateService>();
+
+        // ── 播放核心：媒体源 Provider 链（注册顺序 = 优先级）──
+        serviceCollection.AddSingleton<IMediaSourceProvider, NcmFileProvider>();           // ncm — NCM 加密文件
+        serviceCollection.AddSingleton<IMediaSourceProvider, NeteaseLocalFileProvider>();   // nlo — 网易云已下载到本地
+        serviceCollection.AddSingleton<IMediaSourceProvider, LocalFileProvider>();          // lcl — 普通本地文件
+        serviceCollection.AddSingleton<IMediaSourceProvider, CachedNeteaseProvider>();      // nca — 网易云在线 + 缓存
+        serviceCollection.AddSingleton<IMediaSourceProvider, NeteaseStreamingProvider>();   // nst — 网易云纯流式
+        serviceCollection.AddSingleton<IMediaSourceService, MediaSourceService>();
+
+        // ── 播放核心：播放策略 ──
+        serviceCollection.AddSingleton<IPlayStrategy, SequentialStrategy>();       // seq — 列表循环
+        serviceCollection.AddSingleton<IPlayStrategy, SingleRepeatStrategy>();     // sgl — 单曲循环
+        serviceCollection.AddSingleton<IPlayStrategy, ShuffleStrategy>();          // shf — 随机播放
+        serviceCollection.AddSingleton<IPlayStrategy, ShuffleNoRepeatStrategy>();  // shn — 随机不重复
+        serviceCollection.AddSingleton<IPlayStrategy, PersonalFmStrategy>();       // pfm — 私人 FM
+        serviceCollection.AddSingleton<IPlayStrategy, ListenTogetherStrategy>();   // ltg — 一起听
+
+        // ── 播放核心：曲目过渡策略 ──
+        serviceCollection.AddSingleton<ITrackTransition, DirectTransition>();      // dir — 直接切歌
+        serviceCollection.AddSingleton<ITrackTransition, CrossFadeTransition>();   // xfd — 交叉淡入淡出
+        serviceCollection.AddSingleton<ITrackTransition, GaplessTransition>();     // gap — 无缝衔接
+
+        // ── 播放核心：服务 ──
+        serviceCollection.AddSingleton<IPlaybackControlService, PlaybackControlService>();
+        serviceCollection.AddSingleton<IPlaylistService, PlaylistService>();
+        serviceCollection.AddSingleton<ILyricService, LyricService>();
+        serviceCollection.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
+
+        // ── 应用核心：认证 / 导航 / 通知 / UI 状态 ──
+        serviceCollection.AddSingleton<IAuthService, AuthService>();
+        serviceCollection.AddSingleton<INavigationService, NavigationService>();
+        serviceCollection.AddSingleton<INotificationService, NotificationService>();
+        serviceCollection.AddSingleton<NotificationDispatcher>();
+        serviceCollection.AddSingleton<IUIStateService, UIStateService>();
+        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>, MainPagePlaybarVisibilityChangedHandler>();
+        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>, CompactPlayerPlaybarVisibilityChangedHandler>();
+        serviceCollection.AddSingleton<ExpandedPlayerUiNotificationHandler>();
+        serviceCollection.AddSingleton<INotificationHandler<EnterForegroundFromBackgroundNotification>>(sp => sp.GetRequiredService<ExpandedPlayerUiNotificationHandler>());
+        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>>(sp => sp.GetRequiredService<ExpandedPlayerUiNotificationHandler>());
+        serviceCollection.AddSingleton<INotificationHandler<EnterForegroundFromBackgroundNotification>, PlayBarEnterForegroundHandler>();
+
+        // ── ViewModels ──
         serviceCollection.AddTransient<HomeViewModel>();
         serviceCollection.AddTransient<MeViewModel>();
         serviceCollection.AddTransient<ExpandedPlayerViewModel>();
@@ -99,14 +172,15 @@ public sealed partial class App : Application
         serviceCollection.AddTransient<SongListViewModel>();
         serviceCollection.AddTransient<FavoriteViewModel>();
         serviceCollection.AddTransient<AlbumPageViewModel>();
+        serviceCollection.AddTransient<PlayBarViewModel>();
     }
     private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
     {
-        if (!Common.Setting.forceMemoryGarbage) return;
-        if (Common.IsInBackground)
+        if (!Ioc.Default.GetRequiredService<Setting>().forceMemoryGarbage) return;
+        if (Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground)
         {
             // 内存占用达到某个值
-            Common.CollectGarbage();
+            Ioc.Default.GetRequiredService<INavigationService>().CollectGarbage();
             GC.Collect();
         }
     }
@@ -117,36 +191,37 @@ public sealed partial class App : Application
         {
             await SimpleCacher.InitializeAsync();
             var sf = await ApplicationData.Current.LocalCacheFolder.TryGetItemAsync("Romaji");
-            if (sf != null) Common.KawazuConv = new KawazuConverter(sf.Path);
+            if (sf != null) Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv = new KawazuConverter(sf.Path);
         }
         catch
         {
             // ignored
         }
 
-        if (Common.IsExpanded)
-            _ = Common.Invoke(() => { Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer)); });
+        if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
+            _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => { (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Navigate(typeof(ExpandedPlayer)); });
     }
 
     private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
     {
-        if (Common.IsInBackground)
+        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+        if (uiState.IsInBackground)
         {
-            Common.IsInBackground = false;
-            Common.OnEnterForegroundFromBackground?.Invoke();
+            uiState.IsInBackground = false;
+            uiState.InvokeEnterForeground();
         }
 
-        Common.IsInBackground = false;
+        uiState.IsInBackground = false;
 
-        if (!Common.Setting.forceMemoryGarbage) return;
-        Common.NavigateBack();
+        if (!Ioc.Default.GetRequiredService<Setting>().forceMemoryGarbage) return;
+        Ioc.Default.GetRequiredService<INavigationService>().NavigateBack();
 
         //ClearExtendedExecution(executionSession);
     }
 
     private void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
     {
-        Common.IsInBackground = true;
+        Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground = true;
     }
 
     protected override void OnActivated(IActivatedEventArgs args)
@@ -182,11 +257,11 @@ public sealed partial class App : Application
                 }
                 else
                 {
-                    Common.XboxGameBarWidget = new XboxGameBarWidget(
+                    Ioc.Default.GetRequiredService<IUIStateService>().XboxGameBarWidget = new XboxGameBarWidget(
                         widgetArgs,
                         Window.Current.CoreWindow,
                         widgetFrame);
-                    widgetFrame.Navigate(typeof(WidgetPage), Common.XboxGameBarWidget);
+                    widgetFrame.Navigate(typeof(WidgetPage), (Ioc.Default.GetRequiredService<IUIStateService>().XboxGameBarWidget as XboxGameBarWidget));
 
                 }
                 OnLaunchedOrActivatedAsync(args);
@@ -210,12 +285,12 @@ public sealed partial class App : Application
 
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
-            if (Common.IsExpanded) return;
-            var animation = Common.Setting.expandAnimation;
-            Common.Setting.expandAnimation = false;
-            Common.BarPlayBar.ShowExpandedPlayer();
-            var a = Common.Setting.expandAnimation;
-            Common.Setting.expandAnimation = animation;
+            if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded) return;
+            var animation = Ioc.Default.GetRequiredService<Setting>().expandAnimation;
+            Ioc.Default.GetRequiredService<Setting>().expandAnimation = false;
+            (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).ShowExpandedPlayer();
+            var a = Ioc.Default.GetRequiredService<Setting>().expandAnimation;
+            Ioc.Default.GetRequiredService<Setting>().expandAnimation = animation;
         }
         if (args.Kind == ActivationKind.Protocol)
         {
@@ -227,7 +302,7 @@ public sealed partial class App : Application
 
     private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        Common.ErrorMessageList.Add(e.Exception.ToString());
+        Ioc.Default.GetRequiredService<IUIStateService>().ErrorMessageList.Add(e.Exception.ToString());
         e.Handled = true;
     }
 
@@ -238,7 +313,7 @@ public sealed partial class App : Application
 
         var item1 = JumpListItem.CreateWithArguments("search", "搜索");
         item1.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistSearch.png");
-        if (Common.Logined)
+        if (Ioc.Default.GetRequiredService<IAuthService>().IsLoggedIn)
         {
             var item2 = JumpListItem.CreateWithArguments("account", "账户");
             item2.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistAccount.png");
@@ -294,15 +369,18 @@ public sealed partial class App : Application
         // 本地播放
         else if (args is FileActivatedEventArgs)
         {
-            HyPlayList.PlaySourceId = "local";
-            Common.IsExpanded = true;
+            var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+            _playlist.PlaySourceId = "local";
+            Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded = true;
             ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
 
             NavigateToRootPage();
             Window.Current.Activate();
-            if (!HyPlayList.Player.PlayerCreated)
+            var _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+            var _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+            if (!_player.PlayerCreated)
             {
-                HyPlayList.InitializeHyPlaylist();
+                _ = _control.InitializeAsync();
             }
             foreach (var storageItem in (args?.As<FileActivatedEventArgs>()).Files)
             {
@@ -321,11 +399,14 @@ public sealed partial class App : Application
                             file);
                 }
 
-                await HyPlayList.AppendStorageFile(file);
+                var item = await _playlist.LoadStorageFileAsync(file);
+                _playlist.AppendItem(item);
             }
 
-            HyPlayList.PlaySourceId = "local";
-            HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
+            _playlist.PlaySourceId = "local";
+            _playlist.NotifyAppendDone();
+            if (_playlist.Items.Count > 0)
+                await _playlist.MoveToAsync(_playlist.Items[0]);
         }
 
 
@@ -356,10 +437,16 @@ public sealed partial class App : Application
     private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
-        await HistoryManagement.SetcurPlayingListHistory([.. HyPlayList.List
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        var neteaseItems = _playlist.Items
             .Where(t => t.ItemType == HyPlayItemType.Netease)
-            .Select(t => t.Id)]);
-        Common.XboxGameBarWidget?.Close();
+            .ToList();
+        var currentItem = _playlist.NowPlayingItem;
+        var currentIndex = currentItem?.ItemType == HyPlayItemType.Netease
+            ? neteaseItems.IndexOf(currentItem)
+            : -1;
+        await HistoryManagement.SetcurPlayingListHistory([.. neteaseItems.Select(t => t.Id)], currentIndex);
+        (Ioc.Default.GetRequiredService<IUIStateService>().XboxGameBarWidget as XboxGameBarWidget)?.Close();
         deferral.Complete();
     }
 }

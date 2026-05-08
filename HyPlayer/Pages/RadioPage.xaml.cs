@@ -1,9 +1,15 @@
-﻿#region
+#region
 
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -21,6 +27,11 @@ namespace HyPlayer.Pages;
 
 public sealed partial class RadioPage : Page
 {
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+
     private bool asc;
     private int i;
     private int page;
@@ -40,6 +51,7 @@ public sealed partial class RadioPage : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        WeakReferenceMessenger.Default.UnregisterAll(this);
 
         if (_programLoaderTask != null && !_programLoaderTask.IsCompleted)
         {
@@ -54,7 +66,7 @@ public sealed partial class RadioPage : Page
             }
         }
 
-        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource?.Dispose();
     }
 
     private async Task LoadProgram()
@@ -63,7 +75,7 @@ public sealed partial class RadioPage : Page
         var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.Id + "_" + page + asc,
                 async () =>
                 {
-                    var rest = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
+                    var rest = await _api.RequestAsync(NeteaseApis.DjChannelProgramsApi,
                         new DjChannelProgramsRequest()
                         {
                             RadioId = Radio.Id,
@@ -75,12 +87,12 @@ public sealed partial class RadioPage : Page
                     {
                         treashold = ++cooldownTime * 10;
                         page--;
-                        Common.AddToTeachingTipLists("贪婪加载冷却", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+                        _notification.ShowMessage("贪婪加载冷却", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
                         return null;
                     }
                     else if (rest.IsError)
                     {
-                        Common.AddToTeachingTipLists("加载电台节目错误", rest.Error?.Message ?? "未知错误");
+                        _notification.ShowMessage("加载电台节目错误", rest.Error?.Message ?? "未知错误");
                         return null;
                     }
 
@@ -106,11 +118,11 @@ public sealed partial class RadioPage : Page
         {
             var json1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioInfo, rid, async () =>
             {
-                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelDetailApi,
+                var json = await _api.RequestAsync(NeteaseApis.DjChannelDetailApi,
                     new DjChannelDetailRequest() { Id = rid }, _cancellationToken);
                 if (json.IsError)
                 {
-                    Common.AddToTeachingTipLists("获取电台信息失败", json.Error?.Message ?? "未知错误");
+                    _notification.ShowMessage("获取电台信息失败", json.Error?.Message ?? "未知错误");
                     return null;
                 }
 
@@ -125,7 +137,7 @@ public sealed partial class RadioPage : Page
         TextBoxRadioName.Text = Radio.Name;
         TextBoxDJ.Content = Radio.DJ.Name;
         TextBlockDesc.Text = Radio.Description;
-        if (Common.Setting.noImage)
+        if (_setting.noImage)
         {
             ImageRect.ImageSource = null;
         }
@@ -139,8 +151,8 @@ public sealed partial class RadioPage : Page
         Songs.Clear();
         SongContainer.ListSource = "rd" + Radio.Id;
         _programLoaderTask = LoadProgram();
-        if (Common.Setting.greedlyLoadPlayContainerItems)
-            HyPlayList.OnTimerTicked += GreedlyLoad;
+        if (_setting.greedlyLoadPlayContainerItems)
+            WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((RadioPage)r).GreedlyLoad());
     }
 
     int treashold = 3;
@@ -148,7 +160,7 @@ public sealed partial class RadioPage : Page
 
     private void GreedlyLoad()
     {
-        _ = Common.Invoke(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             if (treashold > 10)
             {
@@ -163,7 +175,7 @@ public sealed partial class RadioPage : Page
             }
             else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
-                HyPlayList.OnTimerTicked -= GreedlyLoad;
+                WeakReferenceMessenger.Default.Unregister<PositionTickMessage>(this);
             }
         });
     }
@@ -176,14 +188,15 @@ public sealed partial class RadioPage : Page
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.AppendNcSource("rd" + Radio.Id);
-        if (asc) HyPlayList.List.Reverse();
-        HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        await _playlist.AppendNcSourceAsync("rd" + Radio.Id);
+        if (asc) _playlist.ReverseList();
+        await _playlist.MoveToAsync(_playlist.Items.FirstOrDefault());
     }
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        Common.NavigatePage(typeof(Me), Radio.DJ.Id);
+        _navigation.Navigate(typeof(Me), Radio.DJ.Id);
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)
@@ -197,7 +210,8 @@ public sealed partial class RadioPage : Page
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.AppendRadioList(Radio.Id, asc);
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        await _playlist.AppendRadioListAsync(Radio.Id, asc);
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
@@ -210,7 +224,7 @@ public sealed partial class RadioPage : Page
             var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.Id + "_" + page + asc,
                         async () =>
                         {
-                            var rest = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
+                            var rest = await _api.RequestAsync(NeteaseApis.DjChannelProgramsApi,
                                 new DjChannelProgramsRequest()
                                 {
                                     RadioId = Radio.Id,
@@ -220,7 +234,7 @@ public sealed partial class RadioPage : Page
                                 }, _cancellationToken);
                             if (rest.IsError)
                             {
-                                Common.AddToTeachingTipLists("加载电台节目错误", rest.Error?.Message ?? "未知错误");
+                                _notification.ShowMessage("加载电台节目错误", rest.Error?.Message ?? "未知错误");
                                 return null;
                             }
 

@@ -10,6 +10,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces
         Task InitializePlayer(IAudioSettings settings);
         Task ConnectPlaybackSourceAsync(IPlaybackSource playbackSource, PlaybackOptions options);
         void DisconnectPlaybackSource(IPlaybackSource playbackSource);
+        void RemoveAllPlaybackSource();
         void PlayAll();
         void PauseAll();
         void SeekPlaybackSource(TimeSpan target, IPlaybackSource playbackSource);
@@ -22,5 +23,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces
         Task ChangePlayerServiceImplementation(IAudioSettings settings);
         ISMTCManager SMTCManager { get; set; }
         int ConnectedPlaybackSourceCount { get; }
+        PlaybackStatus GlobalPlaybackStatus { get; }
+        IPlaybackSource PrimaryPlaybackSource { get; }
     }
 }

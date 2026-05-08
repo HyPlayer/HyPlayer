@@ -4,9 +4,9 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
+using HyPlayer.Services.Abstractions;
 using HyPlayer.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -30,6 +30,8 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class AlbumPage : Page
 {
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+
     private AlbumPageViewModel ViewModel;
     public AlbumPage()
     {
@@ -58,6 +60,6 @@ public sealed partial class AlbumPage : Page
         if (ViewModel.Artists.Count > 1)
             await new ArtistSelectDialog(ViewModel.Artists).ShowAsync();
         else
-            Common.NavigatePage(typeof(ArtistPage), ViewModel.Artists[0].Id);
+            _navigation.Navigate(typeof(ArtistPage), ViewModel.Artists[0].Id);
     }
 }

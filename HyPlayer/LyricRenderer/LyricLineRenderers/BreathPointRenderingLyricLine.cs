@@ -16,7 +16,7 @@ public class BreathPointRenderingLyricLine : RenderingLyricLine
 
     public override void GoToReactionState(ReactionState state, RenderContext context)
     {
-        // TODO
+    
     }
 
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)

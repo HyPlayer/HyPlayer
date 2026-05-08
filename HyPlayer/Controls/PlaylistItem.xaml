@@ -17,7 +17,7 @@
         PointerCaptureLost="UIElement_OnPointerCaptureLost"
         PointerEntered="UIElement_OnPointerEntered"
         PointerExited="UIElement_OnPointerExited"
-        RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}">
+        RightTapped="{x:Bind hyplayer:XamlHelpers.UIElement_RightTapped}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition />

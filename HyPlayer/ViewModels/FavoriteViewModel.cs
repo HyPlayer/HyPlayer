@@ -2,9 +2,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Classes;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
+using HyPlayer.Services.Abstractions;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,6 +16,17 @@ namespace HyPlayer.ViewModels
 {
     public partial class FavoriteViewModel : ObservableRecipient
     {
+        private readonly NeteaseCloudMusicApiHandler _api;
+        private readonly INotificationService _notification;
+
+        public FavoriteViewModel(
+            NeteaseCloudMusicApiHandler api,
+            INotificationService notification)
+        {
+            _api = api;
+            _notification = notification;
+        }
+
         public ObservableCollection<SimpleListItem> Content { get; set; } = new();
         [ObservableProperty]
         public partial int CurrentPage { get; set; }
@@ -42,10 +55,10 @@ namespace HyPlayer.ViewModels
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"djchannel_subscribed_{CurrentPage}",
                     async () =>
                     {
-                        var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.DjChannelSubscribedApi);
+                        var json = await _api.RequestAsync(NeteaseApis.DjChannelSubscribedApi);
                         if (json.IsError)
                         {
-                            Common.AddToTeachingTipLists("加载订阅播客列表错误", json.Error.Message);
+                            _notification.ShowMessage("加载订阅播客列表错误", json.Error.Message);
                             return null;
                         }
 
@@ -77,7 +90,7 @@ namespace HyPlayer.ViewModels
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"artist_sublist_{CurrentPage}",
                     async () =>
                     {
-                        var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ArtistSublistApi,
+                        var json = await _api.RequestAsync(NeteaseApis.ArtistSublistApi,
                             new ArtistSublistRequest()
                             {
                                 Limit = 25,
@@ -85,7 +98,7 @@ namespace HyPlayer.ViewModels
                             });
                         if (json.IsError)
                         {
-                            Common.AddToTeachingTipLists("加载关注歌手列表错误", json.Error.Message);
+                            _notification.ShowMessage("加载关注歌手列表错误", json.Error.Message);
                             return null;
                         }
 
@@ -114,7 +127,7 @@ namespace HyPlayer.ViewModels
             var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"album_sublist_{CurrentPage}",
                     async () =>
                     {
-                        var jv = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumSublistApi,
+                        var jv = await _api!.RequestAsync(NeteaseApis.AlbumSublistApi,
                             new AlbumSublistRequest()
                             {
                                 Limit = 25,
@@ -122,7 +135,7 @@ namespace HyPlayer.ViewModels
                             });
                         if (jv.IsError)
                         {
-                            Common.AddToTeachingTipLists("加载收藏专辑列表错误", jv.Error?.Message);
+                            _notification.ShowMessage("加载收藏专辑列表错误", jv.Error?.Message);
                             return null;
                         }
 

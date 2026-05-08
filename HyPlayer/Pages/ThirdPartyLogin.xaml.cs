@@ -1,6 +1,8 @@
-﻿#region
+#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
+using HyPlayer.NeteaseApi;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Web.WebView2.Core;
 using System;
@@ -8,6 +10,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
+using HyPlayer.Services.Abstractions;
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -19,6 +22,8 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class ThirdPartyLogin : Page
 {
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+
     private string LoginType = "5";
 
     public bool Navigated;
@@ -73,11 +78,11 @@ public sealed partial class ThirdPartyLogin : Page
             var cookies = await sender.CoreWebView2.CookieManager.GetCookiesAsync("https://music.163.com");
             foreach (var cookie in cookies)
             {
-                Common.NeteaseAPI!.Option.Cookies.Add(cookie.Name, cookie.Value);
+                _api.Option.Cookies.Add(cookie.Name, cookie.Value);
             }
 
             await SimpleCacher.ClearCacheAsync(CacheType.Login);
-            await Common.PageBase!.LoginDone();
+            await (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage)!.LoginDone();
         }
     }
 }

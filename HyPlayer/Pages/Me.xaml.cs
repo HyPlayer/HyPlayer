@@ -1,8 +1,10 @@
-﻿#region
+#region
 
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
+using HyPlayer.NeteaseApi;
+using HyPlayer.Services.Abstractions;
 using HyPlayer.ViewModels;
 using Windows.Storage;
 using Windows.UI.Xaml;
@@ -21,6 +23,11 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class Me : Page
 {
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+
     public Me()
     {
         InitializeComponent();
@@ -37,7 +44,7 @@ public sealed partial class Me : Page
         }
         else
         {
-            ViewModel.InitializeUserInfo(Common.LoginedUser.Id).SafeFireAndForget();
+            ViewModel.InitializeUserInfo(_auth.CurrentUser.Id).SafeFireAndForget();
         }
     }
 
@@ -45,15 +52,15 @@ public sealed partial class Me : Page
     {
         try
         {
-            Common.Logined = false;
-            Common.LoginedUser = new NCUser();
+            _auth.IsLoggedIn = false;
+            _auth.CurrentUser = new NCUser();
             if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("Cookies", out var container))
             {
                 container.Values.Clear();
             }
-            Common.NeteaseAPI.Option.Cookies.Clear();
+            _api.Option.Cookies.Clear();
             Setting.SaveCookies();
-            Common.PageMain.MainFrame.Navigate(typeof(BasePage));
+            (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).MainFrame.Navigate(typeof(BasePage));
             SimpleCacher.ClearCacheAsync(CacheType.Login).SafeFireAndForget();
             App.InitializeJumpList().SafeFireAndForget();
         }
@@ -64,14 +71,14 @@ public sealed partial class Me : Page
 
     private void RectangleImage_OnRightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        Common.Setting.IsOldThemeEnabled = false;
-        Common.AddToTeachingTipLists("已重置, 请重启");
+        _setting.IsOldThemeEnabled = false;
+        _notification.ShowMessage("已重置, 请重启");
     }
 
     private void SonglistItem_Tapped(object sender, TappedRoutedEventArgs e)
     {
         var target = (sender as FrameworkElement).Tag as string;
         if (string.IsNullOrEmpty(target)) return;
-        _ = Common.NavigatePageResource(target);
+        _ = Ioc.Default.GetRequiredService<INavigationService>().NavigateToResourceAsync(target);
     }
 }

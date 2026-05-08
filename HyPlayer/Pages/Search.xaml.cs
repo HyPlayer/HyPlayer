@@ -1,10 +1,13 @@
 ﻿#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.Bases;
 using HyPlayer.NeteaseApi.Models;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -27,6 +30,9 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class Search : Page
 {
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+
     public static readonly DependencyProperty HasNextPageProperty = DependencyProperty.Register(
         "HasNextPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
 
@@ -86,7 +92,7 @@ public sealed partial class Search : Page
             }
         }
 
-        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource?.Dispose();
     }
 
     private async Task LoadResult()
@@ -140,13 +146,13 @@ public sealed partial class Search : Page
         catch (Exception ex)
         {
             if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
     private async Task LoadSongResult()
     {
-        var json = await Common.NeteaseAPI.RequestAsync
+        var json = await _api.RequestAsync
         <SearchSongResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
             new SearchRequest()
@@ -159,7 +165,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("搜索歌曲时出错", json.Error.Message);
+            _notification.ShowMessage("搜索歌曲时出错", json.Error.Message);
             return;
         }
 
@@ -197,7 +203,7 @@ public sealed partial class Search : Page
 
     private async Task LoadAlbumResult()
     {
-        var json = await Common.NeteaseAPI.RequestAsync
+        var json = await _api.RequestAsync
         <SearchAlbumResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
             new SearchRequest()
@@ -210,7 +216,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("搜索专辑时出错", json.Error.Message);
+            _notification.ShowMessage("搜索专辑时出错", json.Error.Message);
             return;
         }
 
@@ -249,7 +255,7 @@ public sealed partial class Search : Page
 
     private async Task LoadArtistResult()
     {
-        var json = await Common.NeteaseAPI.RequestAsync
+        var json = await _api.RequestAsync
         <SearchArtistResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
             new SearchRequest()
@@ -262,7 +268,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("搜索歌手时出错", json.Error.Message);
+            _notification.ShowMessage("搜索歌手时出错", json.Error.Message);
             return;
         }
 
@@ -301,7 +307,7 @@ public sealed partial class Search : Page
 
     private async Task LoadPlaylistResult()
     {
-        var json = await Common.NeteaseAPI.RequestAsync
+        var json = await _api.RequestAsync
         <SearchPlaylistResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
             new SearchRequest()
@@ -314,7 +320,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("搜索歌单时出错", json.Error.Message);
+            _notification.ShowMessage("搜索歌单时出错", json.Error.Message);
             return;
         }
 
@@ -353,7 +359,7 @@ public sealed partial class Search : Page
 
     private async Task LoadUserResult()
     {
-        var json = await Common.NeteaseAPI.RequestAsync
+        var json = await _api.RequestAsync
         <SearchUserResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
             new SearchRequest()
@@ -366,7 +372,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("搜索用户时出错", json.Error.Message);
+            _notification.ShowMessage("搜索用户时出错", json.Error.Message);
             return;
         }
 
@@ -403,7 +409,7 @@ public sealed partial class Search : Page
 
     private async Task LoadRadioResult()
     {
-        var json = await Common.NeteaseAPI.RequestAsync
+        var json = await _api.RequestAsync
         <SearchRadioResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
             new SearchRequest()
@@ -416,7 +422,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("搜索电台时出错", json.Error.Message);
+            _notification.ShowMessage("搜索电台时出错", json.Error.Message);
             return;
         }
 
@@ -457,7 +463,7 @@ public sealed partial class Search : Page
 
     private async Task LoadMVResult()
     {
-        var json = await Common.NeteaseAPI.RequestAsync
+        var json = await _api.RequestAsync
         <SearchMVResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
             new SearchRequest()
@@ -470,7 +476,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("搜索 MV 时出错", json.Error.Message);
+            _notification.ShowMessage("搜索 MV 时出错", json.Error.Message);
             return;
         }
 
@@ -506,7 +512,7 @@ public sealed partial class Search : Page
 
     private async Task LoadMlogResult()
     {
-        var json = await Common.NeteaseAPI.RequestAsync
+        var json = await _api.RequestAsync
         <SearchVideoResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
             new SearchRequest()
@@ -519,7 +525,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("搜索 Mlog 时出错", json.Error.Message);
+            _notification.ShowMessage("搜索 Mlog 时出错", json.Error.Message);
             return;
         }
 
@@ -557,7 +563,7 @@ public sealed partial class Search : Page
     private async Task LoadLyricResult()
     {
         var i = 0;
-        var json = await Common.NeteaseAPI.RequestAsync
+        var json = await _api.RequestAsync
         <SearchLyricResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
             new SearchRequest()
@@ -569,7 +575,7 @@ public sealed partial class Search : Page
             }, _cancellationToken);
         if (json.IsError)
         {
-            Common.AddToTeachingTipLists("搜索歌词时出错", json.Error.Message);
+            _notification.ShowMessage("搜索歌词时出错", json.Error.Message);
             return;
         }
 
@@ -655,7 +661,7 @@ public sealed partial class Search : Page
 
         try
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SearchSuggestionApi,
+            var json = await _api.RequestAsync(NeteaseApis.SearchSuggestionApi,
                 new SearchSuggestionRequest()
                 {
                     Keyword = sender.Text
@@ -663,7 +669,7 @@ public sealed partial class Search : Page
 
             if (json.IsError)
             {
-                Common.AddToTeachingTipLists("搜索建议时出错", json.Error.Message);
+                _notification.ShowMessage("搜索建议时出错", json.Error.Message);
                 return;
             }
 
@@ -671,7 +677,7 @@ public sealed partial class Search : Page
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 

@@ -1,4 +1,6 @@
-﻿using Microsoft.UI.Xaml.Controls;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Classes;
+using Microsoft.UI.Xaml.Controls;
 using Windows.UI.Xaml;
 
 namespace HyPlayer.Resources
@@ -8,7 +10,7 @@ namespace HyPlayer.Resources
         public Theme()
         {
             this.InitializeComponent();
-            if (Common.Setting.IsOldThemeEnabled)
+            if (Ioc.Default.GetRequiredService<Setting>().IsOldThemeEnabled)
             {
                 MergedDictionaries.Add(new XamlControlsResources { ControlsResourcesVersion = ControlsResourcesVersion.Version1 });
             }

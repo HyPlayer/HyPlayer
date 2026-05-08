@@ -1,10 +1,12 @@
-﻿#region
+#region
 
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -19,6 +21,9 @@ namespace HyPlayer.Controls;
 public sealed partial class PlaylistItem : UserControl
 {
     private readonly NCPlayList playList;
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
 
     public PlaylistItem(NCPlayList playList)
     {
@@ -28,7 +33,7 @@ public sealed partial class PlaylistItem : UserControl
 
     private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(SongListDetail), playList);
+        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(SongListDetail), playList);
     }
 
     private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -48,54 +53,54 @@ public sealed partial class PlaylistItem : UserControl
 
     private async void PlayAllBtn_Click(object sender, RoutedEventArgs e)
     {
+        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         //播放全部歌曲
-        HyPlayList.RemoveAllSong();
-        await HyPlayList.AppendPlayList(playList.PlaylistId);
-        HyPlayList.PlaySourceId = $"pl{playList.PlaylistId}";
-        HyPlayList.NowPlaying = -1;
-        HyPlayList.SongMoveNext();
+        _playlist.Clear();
+        await _playlist.AppendPlayListAsync(playList.PlaylistId);
+        _playlist.PlaySourceId = $"pl{playList.PlaylistId}";
+        await _playlist.MoveNextAsync(true);
     }
 
     private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
     {
-        var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistPrivacyApi,
+        var result = await _api.RequestAsync(NeteaseApis.PlaylistPrivacyApi,
             new PlaylistPrivacyRequest()
             {
                 Id = playList.PlaylistId
             });
         if (result.IsError)
         {
-            Common.AddToTeachingTipLists("公开歌单失败", result.Error?.Message ?? "未知错误");
+            _notification.ShowMessage("公开歌单失败", result.Error?.Message ?? "未知错误");
         }
         else
         {
-            Common.AddToTeachingTipLists("成功公开歌单");
-            _ = Common.PageBase?.LoadSongList();
+            _notification.ShowMessage("成功公开歌单");
+            _ = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage)?.LoadSongList();
         }
     }
 
     private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
     {
-        var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistDeleteApi,
+        var result = await _api.RequestAsync(NeteaseApis.PlaylistDeleteApi,
             new PlaylistDeleteRequest()
             {
                 Id = playList.PlaylistId
             });
         if (result.IsError)
         {
-            Common.AddToTeachingTipLists("删除歌单失败", result.Error?.Message ?? "未知错误");
+            _notification.ShowMessage("删除歌单失败", result.Error?.Message ?? "未知错误");
         }
         else
         {
-            Common.AddToTeachingTipLists("成功删除");
-            _ = Common.PageBase?.LoadSongList();
-            Common.NavigateRefresh();
+            _notification.ShowMessage("成功删除");
+            _ = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage)?.LoadSongList();
+            Ioc.Default.GetRequiredService<INavigationService>().NavigateRefresh();
         }
     }
 
     private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        if (Common.Setting.noImage) ImageContainer.Source = null;
+        if (_setting.noImage) ImageContainer.Source = null;
         else
         {
             if (playList.Cover is not null)

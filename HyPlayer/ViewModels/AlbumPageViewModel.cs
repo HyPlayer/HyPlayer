@@ -3,9 +3,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
 using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +22,26 @@ namespace HyPlayer.ViewModels
 {
     public partial class AlbumPageViewModel :ObservableRecipient
     {
+        private readonly IPlaylistService _playlist;
+        private readonly NeteaseCloudMusicApiHandler _api;
+        private readonly Setting _setting;
+        private readonly INotificationService _notification;
+        private readonly INavigationService _navigation;
+
+        public AlbumPageViewModel(
+            IPlaylistService playlist,
+            NeteaseCloudMusicApiHandler api,
+            Setting setting,
+            INotificationService notification,
+            INavigationService navigation)
+        {
+            _playlist = playlist;
+            _api = api;
+            _setting = setting;
+            _notification = notification;
+            _navigation = navigation;
+        }
+
         [ObservableProperty]
         public partial NCAlbum Album { get; set; }
         [ObservableProperty]
@@ -42,11 +64,11 @@ namespace HyPlayer.ViewModels
         {
             var js = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumDynamic, albumId, async () =>
             {
-                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumDetailDynamicApi,
+                var json = await _api.RequestAsync(NeteaseApis.AlbumDetailDynamicApi,
                     new AlbumDetailDynamicRequest() { Id = albumId });
                 if (json.IsError)
                 {
-                    Common.AddToTeachingTipLists("获取专辑动态失败", json.Error?.Message);
+                    _notification.ShowMessage("获取专辑动态失败", json.Error?.Message);
                     return null;
                 }
 
@@ -61,11 +83,11 @@ namespace HyPlayer.ViewModels
             {
                 var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, albumId, async () =>
                 {
-                    var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumApi,
+                    var json = await _api.RequestAsync(NeteaseApis.AlbumApi,
                         new AlbumRequest() { Id = albumId });
                     if (json.IsError)
                     {
-                        Common.AddToTeachingTipLists("获取专辑信息失败", json.Error?.Message);
+                        _notification.ShowMessage("获取专辑信息失败", json.Error?.Message);
                         return null;
                     }
 
@@ -77,7 +99,7 @@ namespace HyPlayer.ViewModels
                 }
 
                 Album = rst.Album.MapToNcAlbum();
-                if (!Common.Setting.noImage) SourceImage = new BitmapImage(new Uri(Album.Cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
+                if (!_setting.noImage) SourceImage = new BitmapImage(new Uri(Album.Cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
                 else SourceImage = new BitmapImage(new Uri("/Assets/icon.png"));
 
                 var artists = rst.Album.Artists?.Select(t => t.MapToNcArtist()).ToList();
@@ -118,7 +140,7 @@ namespace HyPlayer.ViewModels
             }
             catch (Exception ex)
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
         [RelayCommand]
@@ -126,14 +148,14 @@ namespace HyPlayer.ViewModels
         {
             try
             {
-                HyPlayList.RemoveAllSong();
-                await HyPlayList.AppendNcSource("al" + Album.Id);
-                HyPlayList.PlaySourceId = "al" + Album.Id;
-                HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
+                _playlist.Clear();
+                await _playlist.AppendNcSourceAsync("al" + Album.Id);
+                _playlist.PlaySourceId = "al" + Album.Id;
+                await _playlist.MoveToAsync(_playlist.Items.FirstOrDefault());
             }
             catch (Exception ex)
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -149,13 +171,13 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void NavigateComment()
         {
-            Common.NavigatePage(typeof(Comments), "al" + Album.Id);
+            _navigation.Navigate(typeof(Comments), "al" + Album.Id);
         }
 
         [RelayCommand]
         private void Subscribe()
         {
-            _ = Common.NeteaseAPI?.RequestAsync(NeteaseApis.AlbumSubscribeApi,
+            _ = _api.RequestAsync(NeteaseApis.AlbumSubscribeApi,
                 new AlbumSubscribeRequest() { Id = Album.Id, IsSubscribe = !Subscribed });
             Subscribed = !Subscribed;
         }
@@ -163,7 +185,7 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void AddAllToPlaylist()
         {
-            HyPlayList.AppendNcSource("al" + Album.Id).SafeFireAndForget();
+            _playlist.AppendNcSourceAsync("al" + Album.Id).SafeFireAndForget();
         }
     }
 }

@@ -4,6 +4,7 @@ using HyPlayer.Classes;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.User;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -21,10 +22,12 @@ namespace HyPlayer.ViewModels
 
         private NeteaseCloudMusicApiHandler _neteaseApi;
         private Setting _settings;
-        public MeViewModel(NeteaseCloudMusicApiHandler api, Setting settings)
+        private readonly INotificationService _notification;
+        public MeViewModel(NeteaseCloudMusicApiHandler api, Setting settings, INotificationService notification)
         {
             _neteaseApi = api;
             _settings = settings;
+            _notification = notification;
         }
         public async Task InitializeUserInfo(string uid)
         {
@@ -37,7 +40,7 @@ namespace HyPlayer.ViewModels
                     });
                 if (json.IsError)
                 {
-                    Common.AddToTeachingTipLists("用户信息获取失败", json.Error?.Message);
+                    _notification.ShowMessage("用户信息获取失败", json.Error?.Message);
                     return null;
                 }
 
@@ -61,7 +64,7 @@ namespace HyPlayer.ViewModels
                         });
                     if (json.IsError)
                     {
-                        Common.AddToTeachingTipLists("用户歌单获取失败", json.Error?.Message);
+                        _notification.ShowMessage("用户歌单获取失败", json.Error?.Message);
                         return null;
                     }
 
@@ -112,7 +115,7 @@ namespace HyPlayer.ViewModels
             }
             catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
     }
