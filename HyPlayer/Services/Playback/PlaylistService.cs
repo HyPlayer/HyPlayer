@@ -78,7 +78,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
 
         _activeStrategy = _strategies.GetValueOrDefault("seq")
                           ?? _strategies.Values.First();
-        _activeTransition = _transitions.GetValueOrDefault("dir")
+        var transitionId = _setting.CrossFade ? "xfd" : "dir";
+        _activeTransition = _transitions.GetValueOrDefault(transitionId)
+                            ?? _transitions.GetValueOrDefault("dir")
                             ?? _transitions.Values.First();
 
         _state.ActiveStrategyId = _activeStrategy.Id;

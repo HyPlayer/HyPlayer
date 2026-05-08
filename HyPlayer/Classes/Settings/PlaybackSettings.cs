@@ -55,6 +55,7 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values["CrossFade"] = value;
+                Ioc.Default.GetService<IPlaylistService>()?.SetTransition(value ? "xfd" : "dir");
                 OnPropertyChanged();
             }
         }
