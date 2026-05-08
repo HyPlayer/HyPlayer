@@ -30,6 +30,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private readonly IMediaSourceService _mediaSourceService;
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
+    private readonly ILyricService _lyricService;
 
     private readonly SemaphoreSlim _seekerLock = new(1, 1);
     private CancellationTokenSource? _mediaSourceCts;
@@ -47,12 +48,14 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         IPlayer player,
         IMediaSourceService mediaSourceService,
         PlaybackStateService state,
-        Setting setting)
+        Setting setting,
+        ILyricService lyricService)
     {
         _player = player ?? throw new ArgumentNullException(nameof(player));
         _mediaSourceService = mediaSourceService ?? throw new ArgumentNullException(nameof(mediaSourceService));
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _setting = setting ?? throw new ArgumentNullException(nameof(setting));
+        _lyricService = lyricService ?? throw new ArgumentNullException(nameof(lyricService));
     }
 
     #region IPlaybackControlService
@@ -199,6 +202,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             _state.IsPlaying = autoPlay;
 
             WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item));
+            _ = _lyricService.LoadLyricsAsync(item, ct);
         }
         catch (OperationCanceledException)
         {

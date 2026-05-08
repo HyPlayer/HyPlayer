@@ -38,7 +38,7 @@ namespace HyPlayer
 
         public static void AddNCSongHistory(string songid)
         {
-            var list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings.Values["songHistory"].ToString(), JsonDefaults.Options);
+            var list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings.Values["songHistory"]?.ToString() ?? "[]", JsonDefaults.Options);
 
             list.Remove(songid);
             list.Insert(0, songid);
