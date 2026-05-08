@@ -22,6 +22,7 @@ using WinRT;
 using ColorStop = (float offset, Windows.UI.Color color);
 
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback.Messages;
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -59,7 +60,6 @@ public sealed partial class MainPage : Page
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
         ActualThemeChanged += MainPage_ActualThemeChanged;
         Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IsBright = ActualTheme == ElementTheme.Light;
-        Ioc.Default.GetRequiredService<IUIStateService>().OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         if (_setting.displayMaintain)
         {
             // displayRequest
@@ -78,7 +78,6 @@ public sealed partial class MainPage : Page
     {
         base.OnNavigatedFrom(e);
         ActualThemeChanged -= MainPage_ActualThemeChanged;
-        Ioc.Default.GetRequiredService<IUIStateService>().OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -104,7 +103,7 @@ public sealed partial class MainPage : Page
                 break;
         }
     }
-    private void OnPlaybarVisibilityChanged(bool isActivated)
+    internal void OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (!_setting.AutoHidePlaybar) return;
         _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>

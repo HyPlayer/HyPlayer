@@ -8,7 +8,6 @@ using HyPlayer.Services.Playback.Messages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -22,21 +21,22 @@ public partial class PlayBarViewModel : ObservableRecipient
     private readonly PlaybackStateService _state;
     private readonly ILyricService _lyricService;
     private readonly Setting _setting;
+    private readonly INotificationService _notification;
 
     public PlayBarViewModel(
         IPlaylistService playlist,
         IPlaybackControlService control,
         PlaybackStateService state,
         ILyricService lyricService,
-        Setting setting)
+        Setting setting,
+        INotificationService notification)
     {
         _playlist = playlist;
         _control = control;
         _state = state;
         _lyricService = lyricService;
         _setting = setting;
-
-        _state.PropertyChanged += State_PropertyChanged;
+        _notification = notification;
 
         // Initialize from current state
         NowPlayingItem = _state.NowPlayingItem;
@@ -111,6 +111,17 @@ public partial class PlayBarViewModel : ObservableRecipient
     /// Pass-through to PlaybackStateService.CoverStream for UI cover loading.
     /// </summary>
     public Windows.Storage.Streams.InMemoryRandomAccessStream? CoverStream => _state.CoverStream;
+
+    public string SongName => NowPlayingItem?.Name ?? string.Empty;
+    public string ArtistName => NowPlayingItem?.ArtistString ?? string.Empty;
+    public string AlbumName => NowPlayingItem?.AlbumString ?? string.Empty;
+    public string QualityTagText => string.IsNullOrEmpty(QualityTag) ? NowPlayingItem?.QualityTag ?? "无歌曲" : QualityTag;
+    public string TotalTimeText => FormatTime(Duration != TimeSpan.Zero ? Duration : TimeSpan.FromMilliseconds(NowPlayingItem?.LengthInMilliseconds ?? 0));
+    public string NowTimeText => FormatTime(Position);
+    public double ProgressMilliseconds => Position.TotalMilliseconds;
+    public double DurationMilliseconds => Duration != TimeSpan.Zero ? Duration.TotalMilliseconds : NowPlayingItem?.LengthInMilliseconds ?? 0;
+    public string PlayStateGlyph => IsPlaying ? "\uF8AE" : "\uF5B0";
+    public bool CanShareCurrentSong => NowPlayingItem is { ItemType: not HyPlayItemType.Local and not HyPlayItemType.LocalProgressive };
 
     // ── Relay Commands ──
 
@@ -202,38 +213,73 @@ public partial class PlayBarViewModel : ObservableRecipient
         messenger.Register<TrackChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            vm.NowPlayingItem = m.Item;
+            _ = vm._notification.InvokeOnUIThread(() =>
+            {
+                vm.NowPlayingItem = m.Item;
+                vm.Duration = TimeSpan.FromMilliseconds(m.Item?.LengthInMilliseconds ?? 0);
+                vm.QualityTag = vm._state.QualityTag;
+                vm.IsInFm = vm._state.IsInFm;
+                vm.ActiveStrategyId = vm._state.ActiveStrategyId;
+                vm.OnPropertyChanged(nameof(NowPlayType));
+            });
         });
 
         messenger.Register<PlaybackStateChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            vm.IsPlaying = m.IsPlaying;
+            _ = vm._notification.InvokeOnUIThread(() => vm.IsPlaying = m.IsPlaying);
         });
 
         messenger.Register<PlaylistChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            vm.RefreshPlaylistItems(m.IsShuffleTrigger);
+            _ = vm._notification.InvokeOnUIThread(() =>
+            {
+                vm.RefreshPlaylistItems(m.IsShuffleTrigger);
+                vm.ActiveStrategyId = vm._state.ActiveStrategyId;
+                vm.OnPropertyChanged(nameof(NowPlayType));
+            });
         });
 
-        messenger.Register<CoverChangedMessage>(this, (r, _) =>
+        messenger.Register<CoverChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            vm.OnPropertyChanged(nameof(NowPlayingItem));
+            _ = vm._notification.InvokeOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
         });
 
         messenger.Register<PositionTickMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            vm.Position = m.Position;
+            _ = vm._notification.InvokeOnUIThread(() =>
+            {
+                vm.Position = m.Position;
+                vm.Duration = vm._state.Duration;
+            });
+        });
+
+        messenger.Register<QualityTagChangedMessage>(this, (r, m) =>
+        {
+            var vm = (PlayBarViewModel)r;
+            _ = vm._notification.InvokeOnUIThread(() => vm.QualityTag = m.Tag);
+        });
+
+        messenger.Register<LyricIndexChangedMessage>(this, (r, m) =>
+        {
+            var vm = (PlayBarViewModel)r;
+            _ = vm._notification.InvokeOnUIThread(() => vm.LyricIndex = m.Index);
+        });
+
+        messenger.Register<LyricLoadedMessage>(this, (r, m) =>
+        {
+            var vm = (PlayBarViewModel)r;
+            _ = vm._notification.InvokeOnUIThread(() => vm.LyricInfo = m.Info);
         });
 
         messenger.Register<SongLikeStatusChangedMessage>(this, (r, m) =>
         {
             // UI layer handles visual update; ViewModel just notifies
             var vm = (PlayBarViewModel)r;
-            vm.OnPropertyChanged(nameof(NowPlayingItem));
+            _ = vm._notification.InvokeOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
         });
 
         messenger.Register<LoginCompletedMessage>(this, (r, _) =>
@@ -242,44 +288,37 @@ public partial class PlayBarViewModel : ObservableRecipient
         });
     }
 
-    // ── State forwarding ──
-
-    private void State_PropertyChanged(object sender, PropertyChangedEventArgs e)
+    partial void OnNowPlayingItemChanged(HyPlayItem? value) => NotifyPlayBarProperties();
+    partial void OnIsPlayingChanged(bool value) => OnPropertyChanged(nameof(PlayStateGlyph));
+    partial void OnPositionChanged(TimeSpan value)
     {
-        switch (e.PropertyName)
-        {
-            case nameof(PlaybackStateService.NowPlayingItem):
-                NowPlayingItem = _state.NowPlayingItem;
-                break;
-            case nameof(PlaybackStateService.IsPlaying):
-                IsPlaying = _state.IsPlaying;
-                break;
-            case nameof(PlaybackStateService.Position):
-                Position = _state.Position;
-                break;
-            case nameof(PlaybackStateService.Duration):
-                Duration = _state.Duration;
-                break;
-            case nameof(PlaybackStateService.Volume):
-                Volume = _state.Volume;
-                break;
-            case nameof(PlaybackStateService.ActiveStrategyId):
-                ActiveStrategyId = _state.ActiveStrategyId;
-                OnPropertyChanged(nameof(NowPlayType));
-                break;
-            case nameof(PlaybackStateService.LyricIndex):
-                LyricIndex = _state.LyricIndex;
-                break;
-            case nameof(PlaybackStateService.LyricInfo):
-                LyricInfo = _state.LyricInfo;
-                break;
-            case nameof(PlaybackStateService.IsInFm):
-                IsInFm = _state.IsInFm;
-                break;
-            case nameof(PlaybackStateService.QualityTag):
-                QualityTag = _state.QualityTag;
-                break;
-        }
+        OnPropertyChanged(nameof(NowTimeText));
+        OnPropertyChanged(nameof(ProgressMilliseconds));
+    }
+    partial void OnDurationChanged(TimeSpan value)
+    {
+        OnPropertyChanged(nameof(TotalTimeText));
+        OnPropertyChanged(nameof(DurationMilliseconds));
+    }
+    partial void OnQualityTagChanged(string value) => OnPropertyChanged(nameof(QualityTagText));
+
+    private void NotifyPlayBarProperties()
+    {
+        OnPropertyChanged(nameof(SongName));
+        OnPropertyChanged(nameof(ArtistName));
+        OnPropertyChanged(nameof(AlbumName));
+        OnPropertyChanged(nameof(QualityTagText));
+        OnPropertyChanged(nameof(TotalTimeText));
+        OnPropertyChanged(nameof(DurationMilliseconds));
+        OnPropertyChanged(nameof(CanShareCurrentSong));
+    }
+
+    private static string FormatTime(TimeSpan time)
+    {
+        if (time < TimeSpan.Zero) time = TimeSpan.Zero;
+        if (time.Hours == 0)
+            return time.Minutes < 10 ? time.ToString(@"m\:ss") : time.ToString(@"mm\:ss");
+        return time.ToString(@"hh\:mm\:ss");
     }
 
     // ── Helpers ──
@@ -324,6 +363,21 @@ public partial class PlayBarViewModel : ObservableRecipient
         if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating && _setting.displayShuffledList)
             return _playlist.ShufflingIndex;
         return _playlist.NowPlayingIndex;
+    }
+
+    public void SyncFromState()
+    {
+        NowPlayingItem = _state.NowPlayingItem;
+        IsPlaying = _state.IsPlaying;
+        Position = _state.Position;
+        Duration = _state.Duration;
+        Volume = _state.Volume;
+        ActiveStrategyId = _state.ActiveStrategyId;
+        LyricIndex = _state.LyricIndex;
+        LyricInfo = _state.LyricInfo;
+        IsInFm = _state.IsInFm;
+        QualityTag = _state.QualityTag;
+        OnPropertyChanged(nameof(NowPlayType));
     }
 
     /// <summary>

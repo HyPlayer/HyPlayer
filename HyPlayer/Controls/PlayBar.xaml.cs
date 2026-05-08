@@ -82,10 +82,6 @@ DoubleAnimation verticalAnimation;
     {
         _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
         {
-            PlayStateIcon.Glyph =
-                        _player.GlobalPlaybackStatus == PlaybackStatus.Playing
-                            ? "\uF8AE"
-                            : "\uF5B0";
             if (status == PlaybackStatus.Playing)
             {
                 if (_setting.playbarBackgroundBreath)
@@ -115,25 +111,7 @@ DoubleAnimation verticalAnimation;
             {
                 if (ViewModel.NowPlayingItem?.PlayItem == null) return;
                 var _lyricIsOnShowTimespan = ts;
-                if (!_isSliding)
-                {
-                    SliderProgress.Value = _player.PrimaryAudioInputNode?.Position.TotalMilliseconds ?? 0;
-                }
-
-                if ((_player.PrimaryAudioInputNode?.Position.Hours ?? 0) == 0)
-                {
-                    if ((_player.PrimaryAudioInputNode?.Position.Minutes ?? 0) < 10)
-                        TextBlockNowTime.Text =
-                            _player.PrimaryAudioInputNode?.Position.ToString(@"m\:ss") ?? string.Empty;
-                    else
-                        TextBlockNowTime.Text =
-                            _player.PrimaryAudioInputNode?.Position.ToString(@"mm\:ss") ?? string.Empty;
-                }
-                else
-                {
-                    TextBlockNowTime.Text =
-                        _player.PrimaryAudioInputNode?.Position.ToString(@"hh\:mm\:ss") ?? string.Empty;
-                }
+                // Text/progress values are provided by PlayBarViewModel x:Bind.
             }
             catch
             {
@@ -159,10 +137,6 @@ DoubleAnimation verticalAnimation;
 
         _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
         {
-            PlayStateIcon.Glyph =
-            _player.GlobalPlaybackStatus == PlaybackStatus.Playing
-                ? "\uF8AE"
-                : "\uF5B0";
             if (Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm)
             {
                 IconPrevious.Glyph = "\uE7E8";
@@ -196,34 +170,9 @@ DoubleAnimation verticalAnimation;
             // 恢复播放音量
             if (ViewModel.NowPlayingItem == null)
             {
-                TbSingerName.Content = null;
-                TbSongName.Text = null;
-                TbAlbumName.Content = null;
                 ApplicationView.GetForCurrentView().Title = "";
-                TbSongTag.Text = "无歌曲";
                 return;
             }
-
-            var totalTime = TimeSpan.FromMilliseconds(ViewModel.NowPlayingItem.LengthInMilliseconds);
-            if (totalTime.Hours == 0)
-            {
-                if (totalTime.Minutes < 10)
-                    TextBlockTotalTime.Text = totalTime.ToString(@"m\:ss");
-                else
-                    TextBlockTotalTime.Text = totalTime.ToString(@"mm\:ss");
-            }
-            else
-            {
-                TextBlockTotalTime.Text = totalTime.ToString(@"hh\:mm\:ss");
-            }
-
-
-            TbSingerName.Content = ViewModel.NowPlayingItem.ArtistString;
-            TbSongName.Text = ViewModel.NowPlayingItem.Name;
-            TbAlbumName.Content = ViewModel.NowPlayingItem.AlbumString;
-            TbSongTag.Text = ViewModel.NowPlayingItem.QualityTag ?? "";
-            Btn_Share.IsEnabled =
-                mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive;
 
             if (ViewModel.NowPlayingItem?.PlayItem == null) return;
 
@@ -234,11 +183,7 @@ DoubleAnimation verticalAnimation;
             }
 
             SliderProgress.Minimum = 0;
-            SliderProgress.Maximum = ViewModel.NowPlayingItem.LengthInMilliseconds;
-            SliderProgress.Value = _player.PrimaryAudioInputNode?.Position.TotalMilliseconds ?? 0;
-
-            TextBlockNowTime.Text =
-                _player.PrimaryAudioInputNode?.Position.ToString(@"m\:ss") ?? "0:00";
+            // Maximum/value/current time are provided by PlayBarViewModel x:Bind.
 
             // 新版随机播放算法
             realSelectSong = false;
@@ -485,6 +430,7 @@ DoubleAnimation verticalAnimation;
                 });
             PersonalFM.LoadNextFMStatic();
         }
+        ViewModel.SyncFromState();
     }
 
     private void BtnLike_OnClick(object sender, RoutedEventArgs e)
@@ -678,7 +624,7 @@ DoubleAnimation verticalAnimation;
         ButtonPlayList_OnClick(sender, e);
     }
 
-    private void OnEnteringForeground()
+    internal void OnEnteringForeground()
     {
         LoadPlayingFile(ViewModel.NowPlayingItem);
         RefreshPlayBarCover(ViewModel.NowPlayingItem);
@@ -708,7 +654,6 @@ DoubleAnimation verticalAnimation;
         // Position updates now use Messenger too
         messenger.Register<PositionTickMessage>(this, (_, m) => OnPlayPositionChange(m.Position));
 
-        Ioc.Default.GetRequiredService<IUIStateService>().OnEnterForegroundFromBackground += OnEnteringForeground;
         if (_setting.playbarButtonsTransparent)
         {
             BtnPlayRollType.Background = new SolidColorBrush(Colors.Transparent);
@@ -897,7 +842,6 @@ DoubleAnimation verticalAnimation;
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        Ioc.Default.GetRequiredService<IUIStateService>().OnEnterForegroundFromBackground -= OnEnteringForeground;
         _player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
     }
 }

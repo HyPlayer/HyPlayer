@@ -1,5 +1,6 @@
 using System;
 using HyPlayer.Classes;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HyPlayer.Services.Playback.Messages;
 
@@ -67,3 +68,28 @@ public record PlaybackStateChangedMessage(bool IsPlaying);
 /// 播放位置更新（高频，由播放器定时器触发）
 /// </summary>
 public record PositionTickMessage(TimeSpan Position);
+
+public interface INotificationHandler<in TNotification>
+{
+    void Handle(TNotification notification);
+}
+
+public sealed class NotificationDispatcher
+{
+    private readonly IServiceProvider _serviceProvider;
+
+    public NotificationDispatcher(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    public void Publish<TNotification>(TNotification notification)
+    {
+        foreach (var handler in _serviceProvider.GetServices<INotificationHandler<TNotification>>())
+            handler.Handle(notification);
+    }
+}
+
+public record EnterForegroundFromBackgroundNotification;
+
+public record PlaybarVisibilityChangedNotification(bool IsActivated);

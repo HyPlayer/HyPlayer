@@ -142,8 +142,6 @@ public sealed partial class ExpandedPlayer : Page
         WeakReferenceMessenger.Default.Register<SeekRequestedMessage>(this, (r, m) => ((ExpandedPlayer)r).HyPlayList_OnManualSeek(m.Position));
         WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((ExpandedPlayer)r).HyPlayList_OnTimerTicked());
         Window.Current.SizeChanged += Current_SizeChanged;
-        Ioc.Default.GetRequiredService<IUIStateService>().OnEnterForegroundFromBackground += OnEnteringForeground;
-        Ioc.Default.GetRequiredService<IUIStateService>().OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         _lyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         _lyricBox.OnBeforeRender += _lyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked += _lyricBoxOnOnRequestSeek;
@@ -577,7 +575,7 @@ public sealed partial class ExpandedPlayer : Page
         return alrc;
     }
 
-    public void OnEnteringForeground()
+    internal void OnEnteringForeground()
     {
         OnSongChange(_state.NowPlayingItem);
         RefreshAlbumCover(_state.NowPlayingItem);
@@ -1403,7 +1401,7 @@ public sealed partial class ExpandedPlayer : Page
         _stopwatch.Stop();
     }
 
-    private void OnPlaybarVisibilityChanged(bool isActivated)
+    internal void OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (!_settings.AutoHidePlaybar) return;
         if (isActivated)
@@ -1547,8 +1545,6 @@ public sealed partial class ExpandedPlayer : Page
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        Ioc.Default.GetRequiredService<IUIStateService>().OnEnterForegroundFromBackground -= OnEnteringForeground;
-        Ioc.Default.GetRequiredService<IUIStateService>().OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
         Window.Current?.SizeChanged -= Current_SizeChanged;
         if (_settings.albumRotate)
             RotateAnimationSet.Stop();

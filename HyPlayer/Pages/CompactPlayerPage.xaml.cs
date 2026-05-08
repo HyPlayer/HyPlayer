@@ -81,7 +81,7 @@ public sealed partial class CompactPlayerPage : Page
         //LeaveAnimation.Completed += LeaveAnimation_Completed;
         WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (r, m) => HyPlayList_OnSongCoverChanged(m.Item));
         WeakReferenceMessenger.Default.Register<SongLikeStatusChangedMessage>(this, (r, m) => HyPlayList_OnSongLikeStatusChange(m.IsLiked));
-        Ioc.Default.GetRequiredService<IUIStateService>().OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
+        Ioc.Default.GetRequiredService<IUIStateService>().PageCompactPlayer = this;
         Unloaded += CompactPlayerPage_Unloaded;
         //CompactPlayerAni.Begin();
     }
@@ -89,7 +89,7 @@ public sealed partial class CompactPlayerPage : Page
     private void CompactPlayerPage_Unloaded(object sender, RoutedEventArgs e)
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        Ioc.Default.GetRequiredService<IUIStateService>().OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
+        Ioc.Default.GetRequiredService<IUIStateService>().PageCompactPlayer = null;
         _player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
     }
 
@@ -139,7 +139,7 @@ public sealed partial class CompactPlayerPage : Page
         ChangeLyric();
     }
     */
-    private void OnPlaybarVisibilityChanged(bool isActivated)
+    internal void OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (isActivated)
         {

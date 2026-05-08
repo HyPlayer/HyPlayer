@@ -227,8 +227,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             item = _items[_nowPlayingIndex];
         }
 
-        _ = _notification.InvokeOnUIThread(() =>
-            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item)));
+        SendTrackChanged(item);
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
@@ -253,8 +252,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             item = _items[_nowPlayingIndex];
         }
 
-        _ = _notification.InvokeOnUIThread(() =>
-            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item)));
+        SendTrackChanged(item);
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
@@ -279,8 +277,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             SyncIndex();
         }
 
-        _ = _notification.InvokeOnUIThread(() =>
-            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item)));
+        SendTrackChanged(item);
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
@@ -713,16 +710,21 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         if (nextIndex is null)
             return Task.FromResult<HyPlayItem?>(null);
 
+        HyPlayItem item;
         lock (_lock)
         {
+            item = _items[nextIndex.Value];
             if (advance)
             {
                 _nowPlayingIndex = nextIndex.Value;
                 SyncIndex();
             }
-
-            return Task.FromResult<HyPlayItem?>(_items[nextIndex.Value]);
         }
+
+        if (advance)
+            SendTrackChanged(item);
+
+        return Task.FromResult<HyPlayItem?>(item);
     }
 
     /// <summary>
@@ -730,6 +732,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// </summary>
     private Task CommitItemAsync(HyPlayItem item)
     {
+        var changed = false;
         lock (_lock)
         {
             var index = _items.IndexOf(item);
@@ -737,8 +740,12 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             {
                 _nowPlayingIndex = index;
                 SyncIndex();
+                changed = true;
             }
         }
+
+        if (changed)
+            SendTrackChanged(item);
 
         return Task.CompletedTask;
     }
@@ -755,9 +762,19 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <summary>
     /// 发送播放列表变更消息
     /// </summary>
-    private static void SendPlaylistChanged(bool isShuffleTrigger = false)
+    private void SendPlaylistChanged(bool isShuffleTrigger = false)
     {
-        WeakReferenceMessenger.Default.Send(new PlaylistChangedMessage(isShuffleTrigger));
+        _ = _notification.InvokeOnUIThread(() =>
+            WeakReferenceMessenger.Default.Send(new PlaylistChangedMessage(isShuffleTrigger)));
+    }
+
+    /// <summary>
+    /// 发送当前曲目变更消息。
+    /// </summary>
+    private void SendTrackChanged(HyPlayItem item)
+    {
+        _ = _notification.InvokeOnUIThread(() =>
+            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item)));
     }
 
     // ────────────── Shuffle / 本地文件 / 通知 ──────────────
@@ -966,7 +983,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public void NotifyPlayItemChanged(HyPlayItem item)
     {
-        WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item));
+        SendTrackChanged(item);
     }
 
     /// <summary>

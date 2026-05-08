@@ -154,7 +154,14 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<IAuthService, AuthService>();
         serviceCollection.AddSingleton<INavigationService, NavigationService>();
         serviceCollection.AddSingleton<INotificationService, NotificationService>();
+        serviceCollection.AddSingleton<NotificationDispatcher>();
         serviceCollection.AddSingleton<IUIStateService, UIStateService>();
+        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>, MainPagePlaybarVisibilityChangedHandler>();
+        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>, CompactPlayerPlaybarVisibilityChangedHandler>();
+        serviceCollection.AddSingleton<ExpandedPlayerUiNotificationHandler>();
+        serviceCollection.AddSingleton<INotificationHandler<EnterForegroundFromBackgroundNotification>>(sp => sp.GetRequiredService<ExpandedPlayerUiNotificationHandler>());
+        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>>(sp => sp.GetRequiredService<ExpandedPlayerUiNotificationHandler>());
+        serviceCollection.AddSingleton<INotificationHandler<EnterForegroundFromBackgroundNotification>, PlayBarEnterForegroundHandler>();
 
         // ── ViewModels ──
         serviceCollection.AddTransient<HomeViewModel>();

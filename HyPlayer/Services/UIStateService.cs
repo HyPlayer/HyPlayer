@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback.Messages;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.Core;
@@ -23,6 +24,7 @@ public class UIStateService : IUIStateService
     private int _teachingTipSecondCounter = 3;
 
     public object? PageExpandedPlayer { get; set; }
+    public object? PageCompactPlayer { get; set; }
     public object? PageMain { get; set; }
     public object? BarPlayBar { get; set; }
     public object? PageBase { get; set; }
@@ -52,11 +54,10 @@ public class UIStateService : IUIStateService
     public ObservableCollection<string> Logs { get; } = [];
     public Queue<KeyValuePair<string, string?>> TeachingTipList { get; } = new();
 
-    public event Action? OnEnterForegroundFromBackground;
-    public event Action<bool>? OnPlaybarVisibilityChanged;
+    private NotificationDispatcher Dispatcher => Ioc.Default.GetRequiredService<NotificationDispatcher>();
 
-    public void InvokeEnterForeground() => OnEnterForegroundFromBackground?.Invoke();
-    public void InvokePlaybarVisibilityChanged(bool isActivated) => OnPlaybarVisibilityChanged?.Invoke(isActivated);
+    public void InvokeEnterForeground() => Dispatcher.Publish(new EnterForegroundFromBackgroundNotification());
+    public void InvokePlaybarVisibilityChanged(bool isActivated) => Dispatcher.Publish(new PlaybarVisibilityChangedNotification(isActivated));
 
     public void RollTeachingTip(bool passiveRoll = true)
     {
@@ -97,7 +98,7 @@ public class UIStateService : IUIStateService
         {
             if (PlaybarIsVisible)
             {
-                OnPlaybarVisibilityChanged?.Invoke(false);
+                InvokePlaybarVisibilityChanged(false);
                 PlaybarIsVisible = false;
             }
         }

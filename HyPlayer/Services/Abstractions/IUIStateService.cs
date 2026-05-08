@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using HyPlayer.Classes;
@@ -16,6 +15,7 @@ public interface IUIStateService
 {
     // UI page references (set during page initialization)
     object? PageExpandedPlayer { get; set; }
+    object? PageCompactPlayer { get; set; }
     object? PageMain { get; set; }
     object? BarPlayBar { get; set; }
     object? PageBase { get; set; }
@@ -36,10 +36,6 @@ public interface IUIStateService
     List<string> ErrorMessageList { get; }
     ObservableCollection<string> Logs { get; }
     Queue<KeyValuePair<string, string?>> TeachingTipList { get; }
-
-    // Events
-    event Action? OnEnterForegroundFromBackground;
-    event Action<bool>? OnPlaybarVisibilityChanged;
 
     // Methods
     void ChangePlaybarVisibility();

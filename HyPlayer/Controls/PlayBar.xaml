@@ -710,6 +710,7 @@
                         BorderBrush="Transparent"
                         Click="Btn_Share_OnClick"
                         CornerRadius="20"
+                        IsEnabled="{x:Bind ViewModel.CanShareCurrentSong, Mode=OneWay}"
                         ToolTipService.ToolTip="分享"
                         Visibility="{x:Bind Btn_Share.IsEnabled, Mode=OneWay}">
                         <FontIcon Foreground="{x:Bind hy:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}" Glyph="&#xE72D;" />
@@ -791,6 +792,7 @@
                             FontSize="22"
                             FontWeight="Bold"
                             IsTextSelectionEnabled="True"
+                            Text="{x:Bind ViewModel.SongName, Mode=OneWay}"
                             TextTrimming="CharacterEllipsis"
                             ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}">
                             <TextBlock.ContextFlyout>
@@ -814,6 +816,7 @@
                             Padding="0"
                             VerticalAlignment="Top"
                             Click="TbSingerName_OnTapped"
+                            Content="{x:Bind ViewModel.ArtistName, Mode=OneWay}"
                             FontSize="12"
                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             Style="{StaticResource TextBlockButtonStyle}">
@@ -836,6 +839,7 @@
                             Padding="0"
                             VerticalAlignment="Top"
                             Click="TbAlbumName_OnTapped"
+                            Content="{x:Bind ViewModel.AlbumName, Mode=OneWay}"
                             FontSize="12"
                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             Style="{StaticResource TextBlockButtonStyle}">
@@ -868,7 +872,7 @@
                                 FontSize="11"
                                 FontWeight="Bold"
                                 Foreground="Red"
-                                Text="无歌曲" />
+                                Text="{x:Bind ViewModel.QualityTagText, Mode=OneWay}" />
                         </Grid>
                     </Grid>
 
@@ -952,7 +956,7 @@
                             x:Name="PlayStateIcon"
                             FontSize="24"
                             Foreground="{x:Bind hy:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
-                            Glyph="&#xF5B0;" />
+                            Glyph="{x:Bind ViewModel.PlayStateGlyph, Mode=OneWay}" />
                         <!--  EDB4  -->
                     </Button>
                     <Button
@@ -1011,7 +1015,8 @@
                         Margin="0,7,4,0"
                         controls:DockPanel.Dock="Left"
                         FontSize="16"
-                        Foreground="{x:Bind hy:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}" />
+                        Foreground="{x:Bind hy:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
+                        Text="{x:Bind ViewModel.NowTimeText, Mode=OneWay}" />
                     <Border Grid.Column="1">
                         <Slider
                             x:Name="SliderProgress"
@@ -1021,7 +1026,9 @@
                             ManipulationMode="TranslateX"
                             ManipulationStarted="SliderProgress_ManipulationStarted"
                             ManipulationStarting="SliderProgress_OnManipulationStarting"
-                            RequestedTheme="{x:Bind hy:XamlHelpers.BrushManagement.AccentTheme, Mode=OneWay}">
+                            Maximum="{x:Bind ViewModel.DurationMilliseconds, Mode=OneWay}"
+                            RequestedTheme="{x:Bind hy:XamlHelpers.BrushManagement.AccentTheme, Mode=OneWay}"
+                            Value="{x:Bind ViewModel.ProgressMilliseconds, Mode=OneWay}">
 
                             <Slider.ThumbToolTipValueConverter>
                                 <classes:ThumbConverter SecondValue="{Binding SecondValue}" />
@@ -1035,7 +1042,8 @@
                         Margin="4,7,0,0"
                         controls:DockPanel.Dock="Right"
                         FontSize="16"
-                        Foreground="{x:Bind hy:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}" />
+                        Foreground="{x:Bind hy:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
+                        Text="{x:Bind ViewModel.TotalTimeText, Mode=OneWay}" />
 
                 </Grid>
             </Grid>
