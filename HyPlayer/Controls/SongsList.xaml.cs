@@ -423,50 +423,59 @@ public sealed partial class SongsList : UserControl
         }
 
         IsAddingSongToPlaylist = true;
-        if (ListSource != null && ListSource != "Content" && Songs.Count == VisibleSongs.Count)
+        try
         {
-            if (_playlist.PlaySourceId != ListSource.Substring(2) ||
-                _playlist.Items.Count != VisibleSongs.Count(t => t.IsAvailable))
+            if (ListSource != null && ListSource != "Content" && Songs.Count == VisibleSongs.Count)
             {
-                // Change Music Source
-                _playlist.Clear(!shiftSong);
-                await _playlist.AppendNcSourceAsync(ListSource);
+                if (_playlist.PlaySourceId != ListSource ||
+                    _playlist.Items.Count != VisibleSongs.Count(t => t.IsAvailable))
+                {
+                    // Change Music Source
+                    _playlist.Clear(!shiftSong);
+                    await _playlist.AppendNcSourceAsync(ListSource);
+                }
+            }
+            /*else if (ListSource == null)
+            {
+                var ncsong = VisibleSongs[SongContainer.SelectedIndex];
+                _playlist.AppendNcSong(ncsong);
+                _playlist.NotifyAppendDone();
+                var target = _playlist.Items.ToList().Find(t => t.Id == ncsong.SongId);
+                if (target != null) await _playlist.MoveToAsync(target);
+            }*/
+            else
+            {
+                _playlist.AppendNcSongs(VisibleSongs, clearFirst: !shiftSong, currentSongId: ncSong.SongId);
+            }
+
+            if (ListSource == "Content")
+            {
+                _playlist.PlaySourceId = "Content";
+            }
+
+            if (ListSource?[..2] == "pl" ||
+                ListSource?[..2] == "al")
+                _playlist.PlaySourceId = ListSource;
+
+            if (!shiftSong)
+            {
+                await _playlist.MoveToAsync(_playlist.Items.ToList().Find(t => t?.Id == ncSong.SongId));
+            }
+            else
+            {
+                _notification.ShowMessage("无感歌单切换", "成功无感切换到歌单 " + ListSource);
+                var targetIndex = _playlist.Items.ToList().FindIndex(song => song.Id == ncSong.SongId);
+                if (targetIndex != -1)
+                {
+                    _playlist.RestoreNowPlayingIndex(targetIndex);
+                    _playlist.NotifyAppendDone();
+                }
             }
         }
-        /*else if (ListSource == null)
+        finally
         {
-            var ncsong = VisibleSongs[SongContainer.SelectedIndex];
-            _playlist.AppendNcSong(ncsong);
-            _playlist.NotifyAppendDone();
-            var target = _playlist.Items.ToList().Find(t => t.Id == ncsong.SongId);
-            if (target != null) await _playlist.MoveToAsync(target);
-        }*/
-        else
-        {
-            _playlist.AppendNcSongs(VisibleSongs, clearFirst: !shiftSong, currentSongId: ncSong.SongId);
+            IsAddingSongToPlaylist = false;
         }
-
-        if (ListSource == "Content")
-        {
-            _playlist.PlaySourceId = "Content";
-        }
-
-        if (ListSource?.Substring(0, 2) == "pl" ||
-            ListSource?.Substring(0, 2) == "al")
-            _playlist.PlaySourceId = ListSource;
-
-        if (!shiftSong)
-        {
-            await _playlist.MoveToAsync(_playlist.Items.ToList().Find(t => t?.Id == ncSong.SongId));
-        }
-        else
-        {
-            _notification.ShowMessage("无感歌单切换", "成功无感切换到歌单 " + ListSource);
-            var targetItem = _playlist.Items.ToList().Find(song => song.Id == ncSong.SongId);
-            if (targetItem != null) await _playlist.MoveToAsync(targetItem);
-        }
-
-        IsAddingSongToPlaylist = false;
     }
 
     private void FilterBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
