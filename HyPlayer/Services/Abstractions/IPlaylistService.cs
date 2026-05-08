@@ -130,6 +130,9 @@ public interface IPlaylistService
     /// <summary>生成随机播放列表</summary>
     Task CreateShufflePlayLists(string currentSongId = "-1");
 
+    /// <summary>恢复当前播放索引而不触发播放</summary>
+    void RestoreNowPlayingIndex(int index);
+
     /// <summary>反转播放列表</summary>
     void ReverseList();
 

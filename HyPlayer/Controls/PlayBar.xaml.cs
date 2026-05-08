@@ -193,6 +193,9 @@ DoubleAnimation verticalAnimation;
             else
                 ListBoxPlayList.SelectedIndex = ViewModel.NowPlayingIndex;
 
+            if (ListBoxPlayList.SelectedIndex >= 0 && ListBoxPlayList.SelectedIndex < PlayItems.Count)
+                ListBoxPlayList.ScrollIntoView(PlayItems[ListBoxPlayList.SelectedIndex]);
+
             realSelectSong = true;
 
         });
@@ -234,12 +237,21 @@ DoubleAnimation verticalAnimation;
         if (targetingIndex == -1 || targetingIndex >= PlayItems.Count) return;
         realSelectSong = false;
         ListBoxPlayList.SelectedIndex = targetingIndex;
+        ListBoxPlayList.ScrollIntoView(PlayItems[targetingIndex]);
         realSelectSong = true;
     }
 
-    private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
+    private async void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
         if (!_player.PlayerCreated || ViewModel.NowPlayingItem == null) return;
+
+        if (_player.PrimaryPlaybackSource == null)
+        {
+            await Ioc.Default.GetRequiredService<IPlaybackControlService>()
+                .LoadAndPlayAsync(ViewModel.NowPlayingItem, setAsPrimary: true, autoPlay: true, removeCurrentSongs: true);
+            return;
+        }
+
         ViewModel.TogglePlayPauseCommand.Execute(null);
     }
 
@@ -748,18 +760,31 @@ DoubleAnimation verticalAnimation;
         if (ViewModel.PlaySourceId == "local") return;
         try
         {
-            var list = await HistoryManagement.GetcurPlayingListHistory();
-            if (list.Count > 0)
+            var state = await HistoryManagement.GetCurPlayingListHistoryStateAsync();
+            if (state.Songs.Count > 0)
             {
-                var success = int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"]?.ToString(),
-                    out var result);
-                if (success)
+                var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+                _playlist.AppendNcSongs(state.Songs);
+                var restoreIndex = state.CurrentIndex;
+                if (restoreIndex < 0 || restoreIndex >= _playlist.Items.Count)
+                    restoreIndex = _playlist.Items.Count > 0 ? 0 : -1;
+
+                if (restoreIndex >= 0)
                 {
-                    var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-                    _playlist.AppendNcSongs(list);
-                    var nowItem = _playlist.Items.Count > result && result >= 0 ? _playlist.Items[result] : null;
-                    if (nowItem != null)
-                        _playlist.NotifyPlayItemChanged(nowItem);
+                    var nowItem = _playlist.Items[restoreIndex];
+                    await Ioc.Default.GetRequiredService<IPlaybackControlService>()
+                        .LoadAndPlayAsync(nowItem, setAsPrimary: true, autoPlay: false, removeCurrentSongs: true);
+                    _playlist.RestoreNowPlayingIndex(restoreIndex);
+                    _playlist.NotifyPlayItemChanged(nowItem);
+                    _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+                    {
+                        var targetingIndex = ViewModel.GetTargetingIndex();
+                        if (targetingIndex >= 0 && targetingIndex < PlayItems.Count)
+                        {
+                            ListBoxPlayList.SelectedIndex = targetingIndex;
+                            ListBoxPlayList.ScrollIntoView(PlayItems[targetingIndex]);
+                        }
+                    });
                 }
             }
         }

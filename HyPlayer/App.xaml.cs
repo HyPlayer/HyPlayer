@@ -57,6 +57,7 @@ public sealed partial class App : Application
         InitializeComponent();
         InitializeServices();
         InitializeCommonServices();
+        HistoryManagement.InitializeHistoryTrack();
         if (Ioc.Default.GetRequiredService<Setting>().xboxHidePointer)
         {
             RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
@@ -437,9 +438,14 @@ public sealed partial class App : Application
     {
         var deferral = e.SuspendingOperation.GetDeferral();
         var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        await HistoryManagement.SetcurPlayingListHistory([.. _playlist.Items
+        var neteaseItems = _playlist.Items
             .Where(t => t.ItemType == HyPlayItemType.Netease)
-            .Select(t => t.Id)]);
+            .ToList();
+        var currentItem = _playlist.NowPlayingItem;
+        var currentIndex = currentItem?.ItemType == HyPlayItemType.Netease
+            ? neteaseItems.IndexOf(currentItem)
+            : -1;
+        await HistoryManagement.SetcurPlayingListHistory([.. neteaseItems.Select(t => t.Id)], currentIndex);
         (Ioc.Default.GetRequiredService<IUIStateService>().XboxGameBarWidget as XboxGameBarWidget)?.Close();
         deferral.Complete();
     }

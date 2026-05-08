@@ -757,6 +757,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     {
         _state.NowPlayingIndex = _nowPlayingIndex;
         _state.NowPlayingItem = NowPlayingItem;
+        ShufflingIndex = ShuffleList.IndexOf(_nowPlayingIndex);
     }
 
     /// <summary>
@@ -966,6 +967,19 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
 
         SendPlaylistChanged(true);
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public void RestoreNowPlayingIndex(int index)
+    {
+        lock (_lock)
+        {
+            if (index < 0 || index >= _items.Count)
+                return;
+
+            _nowPlayingIndex = index;
+            SyncIndex();
+        }
     }
 
     /// <inheritdoc />
