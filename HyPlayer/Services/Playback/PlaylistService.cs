@@ -46,6 +46,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     private ITrackTransition _activeTransition;
     private int _nowPlayingIndex = -1;
     private CancellationTokenSource? _trackEndCts;
+    private readonly SemaphoreSlim _trackEndLock = new(1, 1);
 
     /// <summary>
     /// 初始化 <see cref="PlaylistService"/>。
@@ -280,40 +281,53 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public async Task OnTrackEndedAsync()
     {
+        if (!await _trackEndLock.WaitAsync(0)) return;
+
         _trackEndCts?.Cancel();
         _trackEndCts?.Dispose();
         _trackEndCts = new CancellationTokenSource();
         var ct = _trackEndCts.Token;
 
-        var action = _activeStrategy.OnTrackEnded(BuildStrategyContext());
-
-        switch (action)
+        try
         {
-            case PlayStrategyAction.MoveNext:
-                await _activeTransition.OnTrackEndedAsync(BuildTransitionContext());
-                break;
+            var action = _activeStrategy.OnTrackEnded(BuildStrategyContext());
 
-            case PlayStrategyAction.Replay:
-                await _control.SeekAsync(TimeSpan.Zero);
-                break;
-
-            case PlayStrategyAction.LoadMore:
-                if (_activeStrategy is IAsyncPlayStrategy asyncStrategy)
-                {
-                    var moreItems = await asyncStrategy.LoadMoreAsync(
-                        BuildStrategyContext(), ct);
-                    lock (_lock)
-                    {
-                        _items.AddRange(moreItems);
-                    }
-                    NotifyAppendDone();
+            switch (action)
+            {
+                case PlayStrategyAction.MoveNext:
                     await _activeTransition.OnTrackEndedAsync(BuildTransitionContext());
-                }
-                break;
+                    break;
 
-            case PlayStrategyAction.Stop:
-                // 服务器驱动模式，不做任何操作
-                break;
+                case PlayStrategyAction.Replay:
+                    await _control.SeekAsync(TimeSpan.Zero);
+                    break;
+
+                case PlayStrategyAction.LoadMore:
+                    if (_activeStrategy is IAsyncPlayStrategy asyncStrategy)
+                    {
+                        var moreItems = await asyncStrategy.LoadMoreAsync(
+                            BuildStrategyContext(), ct);
+                        lock (_lock)
+                        {
+                            _items.AddRange(moreItems);
+                        }
+                        NotifyAppendDone();
+                        await _activeTransition.OnTrackEndedAsync(BuildTransitionContext());
+                    }
+                    break;
+
+                case PlayStrategyAction.Stop:
+                    // 服务器驱动模式，不做任何操作
+                    break;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 新的播放结束处理已接管。
+        }
+        finally
+        {
+            _trackEndLock.Release();
         }
     }
 
@@ -675,6 +689,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         Duration = _state.Duration,
         CurrentItem = NowPlayingItem,
         RequestNextItemAsync = RequestNextItemAsync,
+        CommitItemAsync = CommitItemAsync,
         LoadMediaSourceAsync = (item, primary, autoPlay, removeCurrentSongs) =>
             _control.LoadAndPlayAsync(item, primary, autoPlay, removeCurrentSongs: removeCurrentSongs),
         Player = _player
@@ -699,6 +714,24 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
 
             return Task.FromResult<HyPlayItem?>(_items[nextIndex.Value]);
         }
+    }
+
+    /// <summary>
+    /// 供过渡策略回调：将预加载曲目提交为当前播放曲目。
+    /// </summary>
+    private Task CommitItemAsync(HyPlayItem item)
+    {
+        lock (_lock)
+        {
+            var index = _items.IndexOf(item);
+            if (index >= 0)
+            {
+                _nowPlayingIndex = index;
+                SyncIndex();
+            }
+        }
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -935,5 +968,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         _trackEndCts?.Cancel();
         _trackEndCts?.Dispose();
         _trackEndCts = null;
+        _trackEndLock.Dispose();
     }
 }

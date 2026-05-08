@@ -52,17 +52,21 @@ public sealed class LyricService : ILyricService
     public async Task LoadLyricsAsync(HyPlayItem item, CancellationToken ct = default)
     {
         // 1. 尝试从缓存获取
-        var cached = await SimpleCacher.GetOrCreateCacheAsync(
-            CacheType.HyLyricInfo, item.Id,
-            () => Task.FromResult<HyLyricInfo>(null),
-            cancellationToken: ct);
-
-        if (cached is not null)
+        var canUseHyLyricInfoCache = item.ItemType == HyPlayItemType.Netease && !string.IsNullOrWhiteSpace(item.Id);
+        if (canUseHyLyricInfoCache)
         {
-            _state.LyricInfo = cached;
-            _state.LyricIndex = 0;
-            WeakReferenceMessenger.Default.Send(new LyricLoadedMessage(cached));
-            return;
+            var cached = await SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.HyLyricInfo, item.Id,
+                () => Task.FromResult<HyLyricInfo>(null),
+                cancellationToken: ct);
+
+            if (cached is not null && HasDisplayableLyrics(cached, item))
+            {
+                _state.LyricInfo = cached;
+                _state.LyricIndex = 0;
+                WeakReferenceMessenger.Default.Send(new LyricLoadedMessage(cached));
+                return;
+            }
         }
 
         // 2. 根据类型加载原始歌词
@@ -124,7 +128,7 @@ public sealed class LyricService : ILyricService
         WeakReferenceMessenger.Default.Send(new LyricLoadedMessage(lyricInfo));
 
         // 5. 写入缓存
-        if (item.ItemType == HyPlayItemType.Netease)
+        if (canUseHyLyricInfoCache && HasCacheableLyrics(lyricInfo, item))
         {
             _ = SimpleCacher.GetOrCreateCacheAsync(
                 CacheType.HyLyricInfo, item.Id,
@@ -189,7 +193,7 @@ public sealed class LyricService : ILyricService
     {
         try
         {
-            if (item.ItemType != HyPlayItemType.Netease || item.PlayItem == null)
+            if (item.ItemType != HyPlayItemType.Netease || item.PlayItem == null || string.IsNullOrWhiteSpace(item.Id))
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
 
             var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(
@@ -208,7 +212,9 @@ public sealed class LyricService : ILyricService
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
 
             static string CleanLrc(string text) =>
-                string.Join('\n', text.Split("\n").Where(t => !t.StartsWith('{')).ToArray());
+                string.IsNullOrEmpty(text)
+                    ? string.Empty
+                    : string.Join('\n', text.Split("\n").Where(t => !t.StartsWith('{')).ToArray());
 
             PureLyricInfo res;
 
@@ -288,7 +294,7 @@ public sealed class LyricService : ILyricService
     {
         try
         {
-            if (!_setting.enableAmllTtmlDb || item.ItemType != HyPlayItemType.Netease) return;
+            if (!_setting.enableAmllTtmlDb || item.ItemType != HyPlayItemType.Netease || string.IsNullOrWhiteSpace(item.Id)) return;
 
             var ttml = await _httpClient.GetStringAsync(
                 _setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", item.Id), ct);
@@ -333,17 +339,32 @@ public sealed class LyricService : ILyricService
 
             WeakReferenceMessenger.Default.Send(new LyricLoadedMessage(lyricInfo));
 
-            _ = SimpleCacher.GetOrCreateCacheAsync(
-                CacheType.HyLyricInfo, item.Id,
-                () => Task.FromResult(lyricInfo),
-                forceRefresh: true,
-                cancellationToken: ct);
+            if (HasCacheableLyrics(lyricInfo, item))
+            {
+                _ = SimpleCacher.GetOrCreateCacheAsync(
+                    CacheType.HyLyricInfo, item.Id,
+                    () => Task.FromResult(lyricInfo),
+                    forceRefresh: true,
+                    cancellationToken: ct);
+            }
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Lyric error: {ex.Message}");
         }
+    }
+
+    private static bool HasDisplayableLyrics(HyLyricInfo lyricInfo, HyPlayItem item)
+    {
+        return lyricInfo.Lyrics.Any(t =>
+            !string.IsNullOrWhiteSpace(t.LyricLine.CurrentLyric) &&
+            !string.Equals(t.LyricLine.CurrentLyric, item.ArtistString, StringComparison.Ordinal));
+    }
+
+    private static bool HasCacheableLyrics(HyLyricInfo lyricInfo, HyPlayItem item)
+    {
+        return HasDisplayableLyrics(lyricInfo, item);
     }
 
     #endregion

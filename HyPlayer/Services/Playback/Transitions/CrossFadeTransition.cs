@@ -31,6 +31,9 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
     /// <summary>是否已预加载下一首</summary>
     private volatile bool _preloaded;
 
+    /// <summary>是否正在预加载下一首</summary>
+    private volatile bool _preloading;
+
     /// <summary>是否正在执行淡入淡出</summary>
     private volatile bool _processing;
 
@@ -173,10 +176,11 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
     /// </summary>
     private async Task TryPreloadAsync(TrackTransitionContext ctx)
     {
-        if (_preloaded || _processing || !_setting.CrossFade) return;
+        if (_preloaded || _preloading || _processing || !_setting.CrossFade) return;
 
         try
         {
+            _preloading = true;
             await _loaderSemaphore.WaitAsync().ConfigureAwait(false);
             if (_preloaded || _processing) return;
 
@@ -197,7 +201,7 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
             }
 
             // 请求下一首
-            var nextItem = await ctx.RequestNextItemAsync(true).ConfigureAwait(false);
+            var nextItem = await ctx.RequestNextItemAsync(false).ConfigureAwait(false);
             if (nextItem is null)
             {
                 _preloaded = false;
@@ -226,6 +230,7 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
         }
         finally
         {
+            _preloading = false;
             _loaderSemaphore.Release();
         }
     }
@@ -254,6 +259,11 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
             if (multiplier >= 1.0)
             {
                 // 淡入完成
+                if (_nextItem is not null)
+                {
+                    _ = ctx.CommitItemAsync(_nextItem);
+                }
+
                 _processing = false;
                 _preloaded = false;
                 _nextPlaybackSource = null;
@@ -293,6 +303,7 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
     {
         _processing = false;
         _preloaded = false;
+        _preloading = false;
         _currentPlaybackSource = null;
         _nextPlaybackSource = null;
         _nextItem = null;

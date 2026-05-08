@@ -22,6 +22,9 @@ public class TrackTransitionContext
     /// <summary>请求获取下一首曲目（由 PlaylistService 提供的回调）</summary>
     public required Func<bool, Task<HyPlayItem?>> RequestNextItemAsync { get; init; }
 
+    /// <summary>提交预加载曲目为当前曲目（由 PlaylistService 提供的回调）</summary>
+    public required Func<HyPlayItem, Task> CommitItemAsync { get; init; }
+
     /// <summary>请求加载指定曲目的媒体源</summary>
     public required Func<HyPlayItem, bool, bool, bool, Task> LoadMediaSourceAsync { get; init; }
 

@@ -21,6 +21,7 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
     private AudioGraphPlaybackSource? _nextPlaybackSource;
     private HyPlayItem? _nextItem;
     private volatile bool _preloaded;
+    private volatile bool _preloading;
     private bool _disposed;
 
     /// <inheritdoc />
@@ -44,6 +45,11 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
         if (_preloaded && _nextPlaybackSource is not null)
         {
             // 已预加载 — 直接播放下一首
+            if (_nextItem is not null)
+            {
+                await ctx.CommitItemAsync(_nextItem).ConfigureAwait(false);
+            }
+
             ctx.Player.PlayPlaybackSource(_nextPlaybackSource);
 
             // 断开旧源
@@ -102,10 +108,11 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
     /// </summary>
     private async Task TryPreloadAsync(TrackTransitionContext ctx)
     {
-        if (_preloaded) return;
+        if (_preloaded || _preloading) return;
 
         try
         {
+            _preloading = true;
             await _loaderSemaphore.WaitAsync().ConfigureAwait(false);
             if (_preloaded) return;
 
@@ -118,7 +125,7 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
 
             _preloaded = true;
 
-            var nextItem = await ctx.RequestNextItemAsync(true).ConfigureAwait(false);
+            var nextItem = await ctx.RequestNextItemAsync(false).ConfigureAwait(false);
             if (nextItem is null)
             {
                 _preloaded = false;
@@ -142,6 +149,7 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
         }
         finally
         {
+            _preloading = false;
             _loaderSemaphore.Release();
         }
     }
@@ -152,6 +160,7 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
     private void ResetInternal()
     {
         _preloaded = false;
+        _preloading = false;
         _nextPlaybackSource = null;
         _nextItem = null;
     }

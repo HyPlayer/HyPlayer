@@ -2,6 +2,8 @@ using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -18,12 +20,14 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
     private readonly HttpClient _http;
+    private readonly IPlayer _player;
 
-    public PlaybackNotificationService(PlaybackStateService state, Setting setting, HttpClient http)
+    public PlaybackNotificationService(PlaybackStateService state, Setting setting, HttpClient http, IPlayer player)
     {
         _state = state;
         _setting = setting;
         _http = http;
+        _player = player;
     }
 
     /// <inheritdoc />
@@ -31,10 +35,13 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     {
         if (item == null) return;
 
+        UpdateSmtcDisplayInfo(item);
+
         // 1. 刷新封面
         if (!_setting.noImage)
         {
             await RefreshCoverAsync(item);
+            UpdateSmtcThumbnail();
             WeakReferenceMessenger.Default.Send(new CoverChangedMessage(item));
         }
 
@@ -96,5 +103,26 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     {
         if (item == null) return;
         await LastFMManager.Scrobble(item);
+    }
+
+    private void UpdateSmtcDisplayInfo(HyPlayItem item)
+    {
+        if (_player is AudioGraphPlayer { SMTCManager: not null } graphPlayer)
+        {
+            graphPlayer.SMTCManager.UpdateDisplayInfo(
+                item.Name,
+                item.ArtistString,
+                item.AlbumString);
+        }
+    }
+
+    private void UpdateSmtcThumbnail()
+    {
+        if (_state.CoverStreamReference is null) return;
+
+        if (_player is AudioGraphPlayer { SMTCManager: not null } graphPlayer)
+        {
+            graphPlayer.SMTCManager.UpdateThumbnail(_state.CoverStreamReference);
+        }
     }
 }

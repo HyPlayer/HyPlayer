@@ -31,9 +31,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
     private readonly ILyricService _lyricService;
+    private readonly INotificationService _notification;
+    private IPlaylistService? _playlistService;
 
     private readonly SemaphoreSlim _seekerLock = new(1, 1);
     private CancellationTokenSource? _mediaSourceCts;
+    private CancellationTokenSource? _lyricCts;
     private bool _disposed;
     private bool _initialized;
 
@@ -49,13 +52,15 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         IMediaSourceService mediaSourceService,
         PlaybackStateService state,
         Setting setting,
-        ILyricService lyricService)
+        ILyricService lyricService,
+        INotificationService notification)
     {
         _player = player ?? throw new ArgumentNullException(nameof(player));
         _mediaSourceService = mediaSourceService ?? throw new ArgumentNullException(nameof(mediaSourceService));
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _setting = setting ?? throw new ArgumentNullException(nameof(setting));
         _lyricService = lyricService ?? throw new ArgumentNullException(nameof(lyricService));
+        _notification = notification ?? throw new ArgumentNullException(nameof(notification));
     }
 
     #region IPlaybackControlService
@@ -105,6 +110,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             smtc.IsNextEnabled = true;
             smtc.IsPreviousEnabled = true;
             smtc.IsEnabled = true;
+            smtc.DisplayUpdater.Type = Windows.Media.MediaPlaybackType.Music;
             smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Closed;
             graphPlayer.SMTCManager = new HyPlayer.UWP.Chopin.SMTCManager(smtc);
 
@@ -198,11 +204,21 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
             await _player.ConnectPlaybackSourceAsync(playbackSource, options);
 
-            _state.NowPlayingItem = item;
-            _state.IsPlaying = autoPlay;
+            if (setAsPrimary)
+            {
+                _ = _notification.InvokeOnUIThread(() =>
+                {
+                    _state.NowPlayingItem = item;
+                    _state.Duration = TimeSpan.FromMilliseconds(item.LengthInMilliseconds);
+                    _state.IsPlaying = autoPlay;
+                    WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item));
+                });
 
-            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item));
-            _ = _lyricService.LoadLyricsAsync(item, ct);
+                _lyricCts?.Cancel();
+                _lyricCts?.Dispose();
+                _lyricCts = new CancellationTokenSource();
+                _ = LoadLyricsSafeAsync(item, _lyricCts.Token);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -228,6 +244,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private void OnPositionChanged(TimeSpan position)
     {
         _state.Position = position;
+        _lyricService.Tick(position);
+        (_playlistService ??= Ioc.Default.GetRequiredService<IPlaylistService>()).OnPositionTick(position, _state.Duration);
         WeakReferenceMessenger.Default.Send(new PositionTickMessage(position));
     }
 
@@ -237,8 +255,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private void OnGlobalPlaybackStatusChanged(PlaybackStatus status)
     {
         var playing = status == PlaybackStatus.Playing;
-        _state.IsPlaying = playing;
-        WeakReferenceMessenger.Default.Send(new PlaybackStateChangedMessage(playing));
+        _ = _notification.InvokeOnUIThread(() =>
+        {
+            _state.IsPlaying = playing;
+            WeakReferenceMessenger.Default.Send(new PlaybackStateChangedMessage(playing));
+        });
     }
 
     /// <summary>
@@ -248,7 +269,13 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     {
         var agSource = source as AudioGraphPlaybackSource;
         var item = agSource?.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
+        if (item is null) return;
+
         WeakReferenceMessenger.Default.Send(new TrackEndedMessage(item!));
+        if (!_state.IsInFm)
+        {
+            _ = HandleTrackEndedSafeAsync();
+        }
     }
 
     /// <summary>
@@ -260,8 +287,36 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             && agSource.PlaybackSource?.CustomProperties.TryGetValue("nowPlayingItem", out var obj) == true
             && obj is HyPlayItem item)
         {
-            _state.NowPlayingItem = item;
-            Ioc.Default.GetRequiredService<IPlaybackNotificationService>().OnTrackChangedAsync(item);
+            _ = Ioc.Default.GetRequiredService<IPlaybackNotificationService>().OnTrackChangedAsync(item);
+        }
+    }
+
+    private async Task LoadLyricsSafeAsync(HyPlayItem item, CancellationToken ct)
+    {
+        try
+        {
+            await _lyricService.LoadLyricsAsync(item, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Load lyrics failed: {ex.Message}");
+        }
+    }
+
+    private async Task HandleTrackEndedSafeAsync()
+    {
+        try
+        {
+            if (_state.NowPlayingItem is not null)
+            {
+                await Ioc.Default.GetRequiredService<IPlaybackNotificationService>().ScrobbleAsync(_state.NowPlayingItem);
+            }
+
+            await (_playlistService ??= Ioc.Default.GetRequiredService<IPlaylistService>()).OnTrackEndedAsync();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Track end handling failed: {ex.Message}");
         }
     }
 
@@ -287,6 +342,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
         _mediaSourceCts?.Cancel();
         _mediaSourceCts?.Dispose();
+        _lyricCts?.Cancel();
+        _lyricCts?.Dispose();
         _seekerLock.Dispose();
     }
 
