@@ -218,6 +218,13 @@ DoubleAnimation verticalAnimation;
             }
 
 
+            TbSingerName.Content = ViewModel.NowPlayingItem.ArtistString;
+            TbSongName.Text = ViewModel.NowPlayingItem.Name;
+            TbAlbumName.Content = ViewModel.NowPlayingItem.AlbumString;
+            TbSongTag.Text = ViewModel.NowPlayingItem.QualityTag ?? "";
+            Btn_Share.IsEnabled =
+                mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive;
+
             if (ViewModel.NowPlayingItem?.PlayItem == null) return;
 
             if (_isSliding)
@@ -233,10 +240,6 @@ DoubleAnimation verticalAnimation;
             TextBlockNowTime.Text =
                 _player.PrimaryAudioInputNode?.Position.ToString(@"m\:ss") ?? "0:00";
 
-            TbSingerName.Content = ViewModel.NowPlayingItem.ArtistString;
-            TbSongName.Text = ViewModel.NowPlayingItem.Name;
-            TbAlbumName.Content = ViewModel.NowPlayingItem.AlbumString;
-
             // 新版随机播放算法
             realSelectSong = false;
             if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating &&
@@ -247,9 +250,6 @@ DoubleAnimation verticalAnimation;
 
             realSelectSong = true;
 
-            TbSongTag.Text = ViewModel.NowPlayingItem.QualityTag ?? "";
-            Btn_Share.IsEnabled =
-                mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive;
         });
         var isLiked = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs.Contains(mpi.Id);
         if (mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive)

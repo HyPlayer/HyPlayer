@@ -227,6 +227,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             item = _items[_nowPlayingIndex];
         }
 
+        _ = _notification.InvokeOnUIThread(() =>
+            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item)));
+
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
@@ -250,6 +253,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             item = _items[_nowPlayingIndex];
         }
 
+        _ = _notification.InvokeOnUIThread(() =>
+            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item)));
+
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
@@ -272,6 +278,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             _nowPlayingIndex = index;
             SyncIndex();
         }
+
+        _ = _notification.InvokeOnUIThread(() =>
+            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item)));
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }

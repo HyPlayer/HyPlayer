@@ -182,12 +182,13 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
         try
         {
+            if (removeCurrentSongs)
+                _player.RemoveAllPlaybackSource();
+
             var mediaSource = await _mediaSourceService.CreateMediaSourceAsync(item, ct);
             if (mediaSource is null) return;
 
             ct.ThrowIfCancellationRequested();
-            if (removeCurrentSongs)
-                _player.RemoveAllPlaybackSource();
             item.PlayItem ??= new PlayItem();
             mediaSource.CustomProperties["nowPlayingItem"] = item;
 
@@ -211,7 +212,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
                     _state.NowPlayingItem = item;
                     _state.Duration = TimeSpan.FromMilliseconds(item.LengthInMilliseconds);
                     _state.IsPlaying = autoPlay;
-                    WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item));
                 });
 
                 _lyricCts?.Cancel();
