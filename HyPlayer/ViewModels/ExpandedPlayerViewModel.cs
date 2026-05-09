@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.ViewModels
@@ -106,10 +108,10 @@ namespace HyPlayer.ViewModels
         private void TogglePlayPause() => _control.TogglePlayPause();
 
         [RelayCommand]
-        private async void MoveNext() => await _playlist.MoveNextAsync(userInitiated: true);
+        private async Task MoveNext() => await _playlist.MoveNextAsync(userInitiated: true);
 
         [RelayCommand]
-        private async void MovePrevious() => await _playlist.MovePreviousAsync();
+        private async Task MovePrevious() => await _playlist.MovePreviousAsync();
 
         [RelayCommand]
         private void ChangePlayMode()
@@ -126,7 +128,7 @@ namespace HyPlayer.ViewModels
         }
 
         [RelayCommand]
-        private async void Seek(TimeSpan position) => await _control.SeekAsync(position);
+        private async Task Seek(TimeSpan position) => await _control.SeekAsync(position);
 
         [RelayCommand]
         private void LikeSong()
@@ -139,7 +141,8 @@ namespace HyPlayer.ViewModels
         private void TogglePlaylist() => IsPlaylistVisible = !IsPlaylistVisible;
 
         // ── Messenger registrations ───────────────────────────────
-
+        [RequiresUnreferencedCode("This method requires the generated CommunityToolkit.Mvvm.Messaging.__Internals.__IMessengerExtensions type not to be removed to use the fast path. If this type is removed by the linker, or if the target recipient was created dynamically and was missed by the source generator, a slower fallback path using a compiled LINQ expression will be used. This will have more overhead in the first invocation of this method for any given recipient type. Alternatively, OnActivated() can be manually overwritten, and registration can be done individually for each required message for this recipient.")]
+        [RequiresDynamicCode("This method requires the generated CommunityToolkit.Mvvm.Messaging.__Internals.__IMessengerExtensions type not to be removed to use the fast path. If that is present, the method is AOT safe, as the only methods being invoked to register the messages will be the ones produced by the source generator. If it isn't, this method will need to dynamically create the generic methods to register messages, which might not be available at runtime. Alternatively, OnActivated() can be manually overwritten, and registration can be done individually for each required message for this recipient.")]
         protected override void OnActivated()
         {
             // Low-frequency events via messenger

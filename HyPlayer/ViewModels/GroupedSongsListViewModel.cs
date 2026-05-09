@@ -1,0 +1,150 @@
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace HyPlayer.ViewModels;
+
+public partial class GroupedSongsListViewModel(
+    IPlaylistService playlist,
+    PlaybackStateService state,
+    INotificationService notification,
+    INavigationService navigation)
+{
+    public HyPlayItem NowPlayingItem => state.NowPlayingItem;
+
+    public async Task PlayNowAsync(IReadOnlyList<NCSong> selectedSongs, NCSong selectedSong)
+    {
+        if (selectedSongs.Count == 0) return;
+        if (!selectedSong.IsAvailable)
+        {
+            notification.ShowMessage("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用");
+            return;
+        }
+
+        foreach (var ncsong in selectedSongs)
+        {
+            playlist.AppendNcSong(ncsong);
+        }
+
+        var targetPlayItem = playlist.Items.ToList().Find(t => t.Id == selectedSong.SongId);
+        if (targetPlayItem != null)
+            await playlist.MoveToAsync(targetPlayItem);
+    }
+
+    public void AddToNext(IReadOnlyList<NCSong> selectedSongs, NCSong selectedSong)
+    {
+        if (selectedSongs.Count == 0) return;
+        if (!selectedSong.IsAvailable)
+        {
+            notification.ShowMessage("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用");
+            return;
+        }
+
+        var playItems = playlist.AppendNcSongRange([.. selectedSongs], playlist.NowPlayingIndex + 1);
+        if (state.ActiveStrategyId is "shf" or "shn")
+        {
+            List<int> playItemIndexes = [];
+            foreach (var item in playItems)
+            {
+                var index = playlist.Items.ToList().IndexOf(item);
+                playItemIndexes.Add(index);
+            }
+
+            for (int i = 0; i < playItemIndexes.Count; i++)
+            {
+                var item = playItemIndexes[i];
+                var currentIndex = playlist.ShuffleList.IndexOf(playlist.NowPlayingIndex);
+                var nextIndex = currentIndex + i + 1;
+                if (nextIndex >= playlist.ShuffleList.Count) break;
+                var targetIndex = playlist.ShuffleList.IndexOf(item);
+                var targetItem = playlist.ShuffleList[nextIndex];
+                playlist.ShuffleList[targetIndex] = targetItem;
+                playlist.ShuffleList[nextIndex] = item;
+            }
+        }
+
+        var unAvailableSongNames = selectedSongs.Where(t => !t.IsAvailable).Select(t => t.SongName).ToArray();
+        if (unAvailableSongNames.Length > 0)
+        {
+            notification.ShowMessage("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
+        }
+    }
+
+    public async Task OpenSingerAsync(NCSong selectedSong)
+    {
+        if (selectedSong.Artist == null || selectedSong.Artist.Count == 0) return;
+
+        if (selectedSong.Artist[0].Type == HyPlayItemType.Radio)
+        {
+            navigation.Navigate(typeof(Me), selectedSong.Artist[0].Id ?? "");
+        }
+        else
+        {
+            if (selectedSong is { Artist.Count: > 1 })
+                await new ArtistSelectDialog(selectedSong.Artist).ShowAsync();
+            else
+                navigation.Navigate(typeof(ArtistPage), selectedSong.Artist[0].Id ?? "");
+        }
+    }
+
+    public void OpenAlbum(NCSong selectedSong)
+    {
+        navigation.Navigate(typeof(AlbumPage), selectedSong.Album.Id ?? "");
+    }
+
+    public void OpenComments(NCSong selectedSong)
+    {
+        navigation.Navigate(typeof(Comments), "sg" + selectedSong.SongId);
+    }
+
+    public void DownloadSongs(IEnumerable<NCSong> selectedSongs)
+    {
+        foreach (var ncsong in selectedSongs)
+        {
+            DownloadManager.AddDownload(ncsong);
+        }
+    }
+
+    public void OpenMv(NCSong selectedSong)
+    {
+        navigation.Navigate(typeof(MVPage), selectedSong);
+    }
+
+    public async Task CollectAsync(NCSong selectedSong)
+    {
+        await new SongListSelect(selectedSong.SongId).ShowAsync();
+    }
+
+    public async Task PlayClickedSongAsync(NCSong clickedSong, string listSource, IReadOnlyList<NCSong> visibleSongs)
+    {
+        if (string.IsNullOrEmpty(listSource)) return;
+
+        bool shiftSong = clickedSong.SongId == state.NowPlayingItem?.Id;
+
+        if (!clickedSong.IsAvailable)
+        {
+            notification.ShowMessage("歌曲不可用", $"歌曲 {clickedSong.SongName} 当前不可用");
+            return;
+        }
+
+        if (playlist.PlaySourceId != listSource || visibleSongs.Count(t => t.IsAvailable) != playlist.Items.Count)
+        {
+            playlist.Clear(!shiftSong);
+            await playlist.AppendNcSourceAsync(listSource);
+        }
+
+        if (listSource.StartsWith("pl") || listSource.StartsWith("al"))
+            playlist.PlaySourceId = listSource;
+
+        var targetItem = playlist.Items.ToList().Find(song => song?.Id == clickedSong.SongId);
+        if (targetItem != null)
+            await playlist.MoveToAsync(targetItem);
+    }
+}

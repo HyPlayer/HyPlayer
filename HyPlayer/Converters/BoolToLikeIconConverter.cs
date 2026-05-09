@@ -3,7 +3,7 @@ using Windows.UI.Xaml.Data;
 
 namespace HyPlayer.Classes
 {
-    public class BoolToLikeIconConverter : IValueConverter
+    public partial class BoolToLikeIconConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

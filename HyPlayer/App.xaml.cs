@@ -174,6 +174,7 @@ public sealed partial class App : Application
         serviceCollection.AddTransient<FavoriteViewModel>();
         serviceCollection.AddTransient<AlbumPageViewModel>();
         serviceCollection.AddTransient<PlayBarViewModel>();
+        serviceCollection.AddTransient<GroupedSongsListViewModel>();
     }
     private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
     {

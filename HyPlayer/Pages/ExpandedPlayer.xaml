@@ -14,8 +14,8 @@
     xmlns:win2d="using:Microsoft.Graphics.Canvas.UI.Xaml"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Loaded="Page_Loaded"
-    Unloaded="Page_Unloaded"
-    NavigationCacheMode="Disabled">
+    NavigationCacheMode="Disabled"
+    Unloaded="Page_Unloaded">
     <Page.Resources>
         <!--  ReSharper disable once Xaml.RedundantResource  -->
 
@@ -219,7 +219,6 @@
                     <Border x:Name="ShadowTarget" Grid.Row="1" />
                     <frieren:ImageEx
                         x:Name="ImageAlbum"
-                        Source="{x:Bind ViewModel.Cover, Mode=OneWay}"
                         Grid.Row="1"
                         MaxWidth="600"
                         MaxHeight="600"
@@ -238,6 +237,7 @@
                         ManipulationMode="Rotate,TranslateX,TranslateY"
                         PlaceholderStretch="Uniform"
                         RightTapped="{x:Bind hyplayer:XamlHelpers.UIElement_RightTapped}"
+                        Source="{x:Bind ViewModel.Cover, Mode=OneWay}"
                         Stretch="Uniform">
                         <ani:Explicit.Animations>
                             <ani:AnimationSet x:Name="RotateAnimationSet">
@@ -293,13 +293,13 @@
                             <StackPanel x:Name="SongInfoContainer" Spacing="12">
                                 <TextBlock
                                     x:Name="TextBlockSongTitle"
-                                    Text="{x:Bind ViewModel.SongName, Mode=OneWay}"
                                     HorizontalAlignment="Center"
                                     FontSize="46"
                                     FontWeight="Bold"
                                     Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
                                     HorizontalTextAlignment="Center"
                                     IsTextSelectionEnabled="True"
+                                    Text="{x:Bind ViewModel.SongName, Mode=OneWay}"
                                     TextWrapping="Wrap" />
 
 
@@ -317,7 +317,7 @@
                                         Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
                                         Style="{StaticResource TextBlockButtonStyle}">
                                         <controls1:AutoScrollView IsPlaying="True">
-                                            <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist, Mode=OneWay}"/>
+                                            <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist, Mode=OneWay}" />
                                         </controls1:AutoScrollView>
                                     </HyperlinkButton>
                                     <HyperlinkButton
@@ -327,7 +327,7 @@
                                         Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
                                         Style="{StaticResource TextBlockButtonStyle}">
                                         <controls1:AutoScrollView IsPlaying="True">
-                                            <TextBlock x:Name="AlbumTextBlock" Text="{x:Bind ViewModel.Album, Mode=OneWay}"/>
+                                            <TextBlock x:Name="AlbumTextBlock" Text="{x:Bind ViewModel.Album, Mode=OneWay}" />
                                         </controls1:AutoScrollView>
 
                                     </HyperlinkButton>
@@ -339,20 +339,13 @@
                     </StackPanel>
                 </Grid>
             </ScrollViewer>
-            <Grid
-                x:Name="RightPanel"
-                Grid.Column="1"
-                HorizontalAlignment="Left">
-                <Grid.RowDefinitions>
-                    <RowDefinition x:Name="DefaultRow" Height="25*" />
-                    <RowDefinition x:Name="ImmersiveRow" Height="1*" />
-                </Grid.RowDefinitions>
-            </Grid>
+            <Grid x:Name="RightPanel" Grid.Column="1" />
             <Button
                 x:Name="MoreBtn"
                 Grid.Row="1"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
+                Canvas.ZIndex="2"
                 Width="40"
                 Height="40"
                 Margin="0,0,30,50"

@@ -329,8 +329,6 @@ public sealed partial class ExpandedPlayer : Page
                 UIAugmentationSys.Visibility = Visibility.Visible;
                 UIAugmentationSys.SetValue(Grid.ColumnProperty, 0);
                 UIAugmentationSys.SetValue(Grid.ColumnSpanProperty, 1);
-                RightPanel.SetValue(Grid.ColumnProperty, 1);
-                RightPanel.SetValue(Grid.ColumnSpanProperty, 1);
                 break;
             case ExpandedWindowMode.CoverOnly:
                 BtnToggleAlbum.IsChecked = true;
@@ -347,8 +345,6 @@ public sealed partial class ExpandedPlayer : Page
                 BtnToggleLyric.IsChecked = true;
                 RightPanel.Visibility = Visibility.Visible;
                 UIAugmentationSys.Visibility = Visibility.Collapsed;
-                RightPanel.SetValue(Grid.ColumnProperty, 0);
-                RightPanel.SetValue(Grid.ColumnSpanProperty, 2);
                 break;
         }
 
@@ -1480,6 +1476,7 @@ public sealed partial class ExpandedPlayer : Page
         {
             DrawAudioFFTGraph(sender, session);
         }
+        if(_windowMode == ExpandedWindowMode.CoverOnly) return;
         using var lyricCommand = new CanvasCommandList(session);
         using var lyricSession = lyricCommand.CreateDrawingSession();
         _lyricBox.Draw(lyricSession, args.Timing);
