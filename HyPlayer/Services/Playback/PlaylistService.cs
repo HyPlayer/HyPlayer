@@ -32,7 +32,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     private readonly IBackgroundTaskRunner _taskRunner;
 
     private readonly List<HyPlayItem> _items = new();
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     private IPlayStrategy _activeStrategy;
     private ITrackTransition _activeTransition;
@@ -308,6 +308,13 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             switch (action)
             {
                 case PlayStrategyAction.MoveNext:
+                    if (ShouldReplaySingleItem())
+                    {
+                        await _control.SeekAsync(TimeSpan.Zero);
+                        _control.Play();
+                        break;
+                    }
+
                     await _activeTransition.OnTrackEndedAsync(BuildTransitionContext());
                     break;
 
@@ -596,6 +603,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         HyPlayItem item;
         lock (_lock)
         {
+            if (!advance && nextIndex.Value == _nowPlayingIndex)
+                return Task.FromResult<HyPlayItem?>(null);
+
             item = _items[nextIndex.Value];
             if (advance)
             {
@@ -608,6 +618,14 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             SendTrackChanged(item);
 
         return Task.FromResult<HyPlayItem?>(item);
+    }
+
+    private bool ShouldReplaySingleItem()
+    {
+        lock (_lock)
+        {
+            return _items.Count == 1 && _nowPlayingIndex == 0;
+        }
     }
 
     /// <summary>

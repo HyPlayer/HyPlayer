@@ -17,6 +17,7 @@ public sealed class BackgroundTaskRunner : IBackgroundTaskRunner
 
     public void Forget(IAsyncAction action, string operationName)
     {
+        if (action == null) return;
         Forget(action.AsTask(), operationName);
     }
 

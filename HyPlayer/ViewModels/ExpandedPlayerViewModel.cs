@@ -8,10 +8,7 @@ using HyPlayer.Classes;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.ViewModels

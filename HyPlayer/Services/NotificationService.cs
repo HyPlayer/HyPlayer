@@ -23,7 +23,7 @@ public class NotificationService : INotificationService
     public void ShowMessage(string title, string? message = null)
     {
         _uiState.TeachingTipList.Enqueue(new KeyValuePair<string, string?>(title, message));
-        InvokeOnUIThread(() =>
+        _ = InvokeOnUIThread(() =>
         {
             var tip = _uiState.GlobalTip as Microsoft.UI.Xaml.Controls.TeachingTip;
             if (tip != null && !tip.IsOpen)

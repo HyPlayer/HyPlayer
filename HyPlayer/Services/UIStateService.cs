@@ -77,14 +77,14 @@ public class UIStateService : IUIStateService
         _teachingTipSecondCounter = 3;
         if (TeachingTipList.Count == 0)
         {
-            InvokeOnUIThread(() =>
+            _ = InvokeOnUIThread(() =>
             {
                 if (GlobalTip is TeachingTip tip) tip.IsOpen = false;
             });
             return;
         }
 
-        InvokeOnUIThread(() =>
+        _ = InvokeOnUIThread(() =>
         {
             if (TeachingTipList.Count == 0) return;
             var (title, subtitle) = TeachingTipList.Dequeue();
