@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -106,10 +107,10 @@ namespace HyPlayer.ViewModels
         private void TogglePlayPause() => _control.TogglePlayPause();
 
         [RelayCommand]
-        private async void MoveNext() => await _playlist.MoveNextAsync(userInitiated: true);
+        private async Task MoveNextAsync() => await _playlist.MoveNextAsync(userInitiated: true);
 
         [RelayCommand]
-        private async void MovePrevious() => await _playlist.MovePreviousAsync();
+        private async Task MovePreviousAsync() => await _playlist.MovePreviousAsync();
 
         [RelayCommand]
         private void ChangePlayMode()
@@ -126,7 +127,7 @@ namespace HyPlayer.ViewModels
         }
 
         [RelayCommand]
-        private async void Seek(TimeSpan position) => await _control.SeekAsync(position);
+        private async Task SeekAsync(TimeSpan position) => await _control.SeekAsync(position);
 
         [RelayCommand]
         private void LikeSong()

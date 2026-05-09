@@ -1,19 +1,9 @@
-using System;
-using Windows.UI.Xaml.Data;
-
 namespace HyPlayer.Classes
 {
-    public partial class BoolToLikeStringConverter : IValueConverter
+    public partial class BoolToLikeStringConverter : BoolToLikeConverterBase
     {
-        public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            if (value is true) return "已收藏";
-            else return "收藏";
-        }
+        protected override string TrueValue => "已收藏";
 
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
+        protected override string FalseValue => "收藏";
     }
 }

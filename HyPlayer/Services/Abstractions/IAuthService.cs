@@ -33,4 +33,7 @@ public interface IAuthService
 
     /// <summary>红心/取消红心当前播放歌曲</summary>
     void LikeSong();
+
+    /// <summary>红心/取消红心当前播放歌曲</summary>
+    Task LikeSongAsync();
 }

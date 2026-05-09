@@ -31,6 +31,7 @@ public sealed partial class GroupedSongsList : UserControl
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
 
     public static readonly DependencyProperty GroupedSongsProperty = DependencyProperty.Register(
         "GroupedSongs", typeof(CollectionViewSource), typeof(GroupedSongsList),
@@ -191,27 +192,27 @@ public sealed partial class GroupedSongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if ((SongContainer.SelectedItem as NCSong)?.Artist[0].Type == HyPlayItemType.Radio)
         {
-            Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me), (SongContainer.SelectedItem as NCSong)?.Artist[0].Id ?? "");
+            _navigation.Navigate(typeof(Me), (SongContainer.SelectedItem as NCSong)?.Artist[0].Id ?? "");
         }
         else
         {
             if (SongContainer.SelectedItem is NCSong { Artist.Count: > 1 })
                 await new ArtistSelectDialog((SongContainer.SelectedItem as NCSong)?.Artist).ShowAsync();
             else
-                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(ArtistPage), (SongContainer.SelectedItem as NCSong)?.Artist[0].Id ?? "");
+                _navigation.Navigate(typeof(ArtistPage), (SongContainer.SelectedItem as NCSong)?.Artist[0].Id ?? "");
         }
     }
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong)?.Album.Id ?? "");
+        _navigation.Navigate(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong)?.Album.Id ?? "");
     }
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong)?.SongId);
+        _navigation.Navigate(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong)?.SongId);
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
@@ -225,7 +226,7 @@ public sealed partial class GroupedSongsList : UserControl
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(MVPage), SongContainer.SelectedItem as NCSong ?? new NCSong());
+        _navigation.Navigate(typeof(MVPage), SongContainer.SelectedItem as NCSong ?? new NCSong());
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)

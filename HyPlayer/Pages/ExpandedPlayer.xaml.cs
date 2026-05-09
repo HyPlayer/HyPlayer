@@ -75,6 +75,8 @@ public sealed partial class ExpandedPlayer : Page
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
 
     // Services accessed via ViewModel; shortcuts for code-behind convenience
     private IPlaylistService _playlist => ViewModel.Playlist;
@@ -131,7 +133,7 @@ public sealed partial class ExpandedPlayer : Page
         InitializeComponent();
         ViewModel = Ioc.Default.GetRequiredService<ExpandedPlayerViewModel>();
         DataContext = ViewModel;
-        Ioc.Default.GetRequiredService<IUIStateService>().PageExpandedPlayer = this;
+        _uiState.PageExpandedPlayer = this;
         WeakReferenceMessenger.Default.Register<PlaybackStateChangedMessage>(this, (r, m) =>
         {
             if (m.IsPlaying) ((ExpandedPlayer)r).HyPlayList_OnPlay(); else ((ExpandedPlayer)r).HyPlayList_OnPause();
@@ -181,17 +183,17 @@ public sealed partial class ExpandedPlayer : Page
             if (action.StartsWith("hyplayer://"))
             {
                 var ResourceId = action[11..];
-                _ = _navigation.NavigateToResourceAsync(ResourceId);
-                (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar)!.CollapseExpandedPlayer();
+                _taskRunner.Forget(_navigation.NavigateToResourceAsync(ResourceId), "navigate from lyric action");
+                (_uiState.BarPlayBar as PlayBar)!.CollapseExpandedPlayer();
             }
             else
             {
-                _ = Windows.System.Launcher.LaunchUriAsync(new Uri(action));
+                _taskRunner.Forget(Windows.System.Launcher.LaunchUriAsync(new Uri(action)).AsTask(), "launch lyric action uri");
             }
         }
         else
         {
-            _ = _control.SeekAsync(TimeSpan.FromMilliseconds(line.StartTime));
+            _taskRunner.Forget(_control.SeekAsync(TimeSpan.FromMilliseconds(line.StartTime)), "seek from lyric click");
         }
     }
 
@@ -269,11 +271,11 @@ public sealed partial class ExpandedPlayer : Page
 
     private void HyPlayList_OnTimerTicked()
     {
-        if (Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground) return;
+        if (_uiState.IsInBackground) return;
         if (_needRedesign > 0)
         {
             _needRedesign--;
-            _ = _notification.InvokeOnUIThread(Redesign);
+            RunOnUIThread(Redesign);
         }
     }
 
@@ -426,6 +428,11 @@ public sealed partial class ExpandedPlayer : Page
         BgRotate.CenterY = LuminousBackgroundContainer.ActualHeight / 2;
     }
 
+    private void RunOnUIThread(Action action)
+    {
+        _taskRunner.Forget(_notification.InvokeOnUIThread(action), "ExpandedPlayer UI update");
+    }
+
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
@@ -434,7 +441,7 @@ public sealed partial class ExpandedPlayer : Page
             await ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
         if (ApplicationView.GetForCurrentView().IsFullScreenMode)
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
-        Ioc.Default.GetRequiredService<IUIStateService>().PageExpandedPlayer = null;
+        _uiState.PageExpandedPlayer = null;
     }
 
     private readonly Storyboard luminousColorsRotateStoryBoard = new();
@@ -443,8 +450,8 @@ public sealed partial class ExpandedPlayer : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground = false;
-        Ioc.Default.GetRequiredService<IUIStateService>().PageExpandedPlayer = this;
+        _uiState.IsInBackground = false;
+        _uiState.PageExpandedPlayer = this;
         if (e.Parameter is null || (bool)e.Parameter)
             Window.Current.SetTitleBar(AppTitleBar);
 

@@ -21,13 +21,20 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     private readonly Setting _setting;
     private readonly HttpClient _http;
     private readonly IPlayer _player;
+    private readonly IBackgroundTaskRunner _taskRunner;
 
-    public PlaybackNotificationService(PlaybackStateService state, Setting setting, HttpClient http, IPlayer player)
+    public PlaybackNotificationService(
+        PlaybackStateService state,
+        Setting setting,
+        HttpClient http,
+        IPlayer player,
+        IBackgroundTaskRunner taskRunner)
     {
         _state = state;
         _setting = setting;
         _http = http;
         _player = player;
+        _taskRunner = taskRunner;
     }
 
     /// <inheritdoc />
@@ -48,7 +55,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         // 2. Last.FM now-playing
         if (_setting.UpdateLastFMNowPlaying)
         {
-            _ = LastFMManager.UpdateNowPlaying(item);
+            _taskRunner.Forget(LastFMManager.UpdateNowPlaying(item), "update Last.FM now playing");
         }
     }
 

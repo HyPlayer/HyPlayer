@@ -30,6 +30,8 @@ namespace HyPlayer.Pages;
 public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
     private readonly ObservableCollection<HyPlayItem> localHyItems = new();
@@ -81,12 +83,13 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         DownloadPageFrame.Navigate(typeof(DownloadPage));
     }
 
-    private void Playall_Click(object sender, RoutedEventArgs e)
+    private async void Playall_Click(object sender, RoutedEventArgs e)
     {
-        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         _playlist.Clear();
         _playlist.AppendItems(localHyItems);
-        _ = _playlist.MoveToAsync(localHyItems.FirstOrDefault());
+        var firstItem = localHyItems.FirstOrDefault();
+        if (firstItem is not null)
+            await _playlist.MoveToAsync(firstItem);
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -116,7 +119,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                 _cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    var item = await Ioc.Default.GetRequiredService<IPlaylistService>().LoadStorageFileAsync(storageFile);
+                    var item = await _playlist.LoadStorageFileAsync(storageFile);
                     localHyItems.Add(item);
                 }
                 catch
@@ -171,13 +174,13 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     }
 
 
-    private void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
-        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         _playlist.Clear();
         _playlist.AppendItems(localHyItems);
-        _ = _playlist.MoveToAsync(ListBoxLocalMusicContainer.SelectedItem as HyPlayItem);
+        if (ListBoxLocalMusicContainer.SelectedItem is HyPlayItem selectedItem)
+            await _playlist.MoveToAsync(selectedItem);
     }
 
     private async void UploadCloud_Click(object sender, RoutedEventArgs e)
@@ -188,7 +191,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private void Add_Local(object sender, RoutedEventArgs e)
     {
-        _ = Ioc.Default.GetRequiredService<IPlaylistService>().PickLocalFileAsync();
+        _taskRunner.Forget(_playlist.PickLocalFileAsync, "pick local music from local music page");
     }
 
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)

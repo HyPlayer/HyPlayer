@@ -11,7 +11,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
-using CommunityToolkit.Mvvm.DependencyInjection;
 namespace HyPlayer.ViewModels;
 
 public partial class PlayBarViewModel : ObservableRecipient
@@ -22,6 +21,8 @@ public partial class PlayBarViewModel : ObservableRecipient
     private readonly ILyricService _lyricService;
     private readonly Setting _setting;
     private readonly INotificationService _notification;
+    private readonly IBackgroundTaskRunner _taskRunner;
+    private readonly IAuthService _authService;
 
     public PlayBarViewModel(
         IPlaylistService playlist,
@@ -29,7 +30,9 @@ public partial class PlayBarViewModel : ObservableRecipient
         PlaybackStateService state,
         ILyricService lyricService,
         Setting setting,
-        INotificationService notification)
+        INotificationService notification,
+        IBackgroundTaskRunner taskRunner,
+        IAuthService authService)
     {
         _playlist = playlist;
         _control = control;
@@ -37,6 +40,8 @@ public partial class PlayBarViewModel : ObservableRecipient
         _lyricService = lyricService;
         _setting = setting;
         _notification = notification;
+        _taskRunner = taskRunner;
+        _authService = authService;
 
         // Initialize from current state
         NowPlayingItem = _state.NowPlayingItem;
@@ -140,7 +145,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     [RelayCommand]
     private async Task MovePreviousAsync()
     {
-        if (Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm)
+        if (_state.IsInFm)
             PersonalFM.ExitFm();
         else
             await _playlist.MovePreviousAsync();
@@ -149,7 +154,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     [RelayCommand]
     private void ChangePlayMode()
     {
-        if (Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm) return;
+        if (_state.IsInFm) return;
 
         var nextStrategy = ActiveStrategyId switch
         {
@@ -172,8 +177,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     [RelayCommand]
     private void LikeSong()
     {
-        var authService = CommunityToolkit.Mvvm.DependencyInjection.Ioc.Default.GetRequiredService<IAuthService>();
-        authService.LikeSong();
+        _authService.LikeSong();
     }
 
     [RelayCommand]
@@ -213,7 +217,7 @@ public partial class PlayBarViewModel : ObservableRecipient
         messenger.Register<TrackChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() =>
+            vm.RunOnUIThread(() =>
             {
                 vm.NowPlayingItem = m.Item;
                 vm.Duration = TimeSpan.FromMilliseconds(m.Item?.LengthInMilliseconds ?? 0);
@@ -227,13 +231,13 @@ public partial class PlayBarViewModel : ObservableRecipient
         messenger.Register<PlaybackStateChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.IsPlaying = m.IsPlaying);
+            vm.RunOnUIThread(() => vm.IsPlaying = m.IsPlaying);
         });
 
         messenger.Register<PlaylistChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() =>
+            vm.RunOnUIThread(() =>
             {
                 vm.RefreshPlaylistItems(m.IsShuffleTrigger);
                 vm.ActiveStrategyId = vm._state.ActiveStrategyId;
@@ -244,13 +248,13 @@ public partial class PlayBarViewModel : ObservableRecipient
         messenger.Register<CoverChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
+            vm.RunOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
         });
 
         messenger.Register<PositionTickMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() =>
+            vm.RunOnUIThread(() =>
             {
                 vm.Position = m.Position;
                 vm.Duration = vm._state.Duration;
@@ -260,26 +264,26 @@ public partial class PlayBarViewModel : ObservableRecipient
         messenger.Register<QualityTagChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.QualityTag = m.Tag);
+            vm.RunOnUIThread(() => vm.QualityTag = m.Tag);
         });
 
         messenger.Register<LyricIndexChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.LyricIndex = m.Index);
+            vm.RunOnUIThread(() => vm.LyricIndex = m.Index);
         });
 
         messenger.Register<LyricLoadedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.LyricInfo = m.Info);
+            vm.RunOnUIThread(() => vm.LyricInfo = m.Info);
         });
 
         messenger.Register<SongLikeStatusChangedMessage>(this, (r, m) =>
         {
             // UI layer handles visual update; ViewModel just notifies
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
+            vm.RunOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
         });
 
         messenger.Register<LoginCompletedMessage>(this, (r, _) =>
@@ -313,6 +317,11 @@ public partial class PlayBarViewModel : ObservableRecipient
         OnPropertyChanged(nameof(CanShareCurrentSong));
     }
 
+    private void RunOnUIThread(Action action)
+    {
+        _taskRunner.Forget(_notification.InvokeOnUIThread(action), $"{nameof(PlayBarViewModel)} UI update");
+    }
+
     private static string FormatTime(TimeSpan time)
     {
         if (time < TimeSpan.Zero) time = TimeSpan.Zero;
@@ -329,18 +338,19 @@ public partial class PlayBarViewModel : ObservableRecipient
     public void RefreshPlaylistItems(bool isShuffleTrigger = false)
     {
         PlaylistItems.Clear();
+        var snapshot = _playlist.Items;
 
         if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating && _setting.displayShuffledList)
         {
             foreach (var idx in _playlist.ShuffleList)
             {
-                if (idx >= 0 && idx < _playlist.Items.Count)
-                    PlaylistItems.Add(_playlist.Items[idx]);
+                if (idx >= 0 && idx < snapshot.Count)
+                    PlaylistItems.Add(snapshot[idx]);
             }
         }
         else
         {
-            foreach (var item in _playlist.Items)
+            foreach (var item in snapshot)
                 PlaylistItems.Add(item);
         }
     }

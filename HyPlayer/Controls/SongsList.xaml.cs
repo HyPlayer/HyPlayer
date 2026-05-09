@@ -40,6 +40,8 @@ public sealed partial class SongsList : UserControl
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
     public static readonly DependencyProperty MultiSelectProperty =
         DependencyProperty.Register("MultiSelect", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
@@ -190,7 +192,7 @@ public sealed partial class SongsList : UserControl
     {
         if (playitem?.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive || playitem?.PlayItem == null)
         {
-            _ = _notification.InvokeOnUIThread(() =>
+            RunOnUIThread(() =>
             {
                 if (MultiSelect) return;
                 //IsManualSelect = false;
@@ -202,7 +204,7 @@ public sealed partial class SongsList : UserControl
 
         var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == playitem.Id);
         if (idx == -1) return;
-        _ = _notification.InvokeOnUIThread(() =>
+        RunOnUIThread(() =>
         {
             //IsManualSelect = false;
             SongContainer.SelectedIndex = idx;
@@ -298,14 +300,14 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if ((SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Type == HyPlayItemType.Radio)
         {
-            Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me), (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Id);
+            _navigation.Navigate(typeof(Me), (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Id);
         }
         else
         {
             if ((SongContainer.SelectedItem as NCSong).Artist.Count > 1)
                 await new ArtistSelectDialog((SongContainer.SelectedItem as NCSong).Artist).ShowAsync();
             else
-                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(ArtistPage),
+                _navigation.Navigate(typeof(ArtistPage),
                     (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Id);
         }
     }
@@ -319,14 +321,14 @@ public sealed partial class SongsList : UserControl
         }
         else
         {
-            Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong).Album);
+            _navigation.Navigate(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong).Album);
         }
     }
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong).SongId);
+        _navigation.Navigate(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong).SongId);
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
@@ -338,7 +340,7 @@ public sealed partial class SongsList : UserControl
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(MVPage), (SongContainer.SelectedItem as NCSong));
+        _navigation.Navigate(typeof(MVPage), (SongContainer.SelectedItem as NCSong));
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
@@ -502,10 +504,15 @@ public sealed partial class SongsList : UserControl
                 break;
             case "Comments":
                 var page = (SongListDetail)((Grid)Parent).Parent;
-                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Comments), "pl" + page.ViewModel.PlayList.PlaylistId);
+                _navigation.Navigate(typeof(Comments), "pl" + page.ViewModel.PlayList.PlaylistId);
                 break;
             default:
                 break;
         }
+    }
+
+    private void RunOnUIThread(Action action)
+    {
+        _taskRunner.Forget(_notification.InvokeOnUIThread(action), "SongsList UI update");
     }
 }
