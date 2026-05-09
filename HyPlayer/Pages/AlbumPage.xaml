@@ -15,7 +15,8 @@
             x:Name="SongContainer"
             Grid.Row="1"
             Margin="20,30,0,0"
-            GroupedSongs="{x:Bind ViewModel.AlbumSongsViewSource, Mode=OneWay}">
+            GroupedSongs="{x:Bind ViewModel.AlbumSongsViewSource, Mode=OneWay}"
+            ListSource="{x:Bind ViewModel.SourceId, Mode=OneWay}">
             <controls1:GroupedSongsList.ListHeader>
                 <controls:DockPanel
                     x:Name="GridPersonalInformation"
@@ -96,7 +97,7 @@
                             HorizontalAlignment="Left"
                             FontSize="14"
                             MaxLines="7"
-                            Text="专辑简介"
+                            Text="{x:Bind ViewModel.Description, Mode=OneWay}"
                             TextWrapping="WrapWholeWords" />
                     </StackPanel>
                 </controls:DockPanel>
