@@ -33,7 +33,7 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
     /// </summary>
     public void OnPositionTick(TrackTransitionContext ctx)
     {
-        _ = TryPreloadAsync(ctx);
+        ctx.TaskRunner.Forget(TryPreloadAsync(ctx), "gapless preload next track");
     }
 
     /// <summary>

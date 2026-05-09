@@ -24,6 +24,9 @@ public sealed partial class PlaylistItem : UserControl
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
 
     public PlaylistItem(NCPlayList playList)
     {
@@ -33,7 +36,7 @@ public sealed partial class PlaylistItem : UserControl
 
     private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(SongListDetail), playList);
+        _navigation.Navigate(typeof(SongListDetail), playList);
     }
 
     private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -53,7 +56,6 @@ public sealed partial class PlaylistItem : UserControl
 
     private async void PlayAllBtn_Click(object sender, RoutedEventArgs e)
     {
-        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         //播放全部歌曲
         _playlist.Clear();
         await _playlist.AppendPlayListAsync(playList.PlaylistId);
@@ -75,7 +77,7 @@ public sealed partial class PlaylistItem : UserControl
         else
         {
             _notification.ShowMessage("成功公开歌单");
-            _ = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage)?.LoadSongList();
+            _ = (_uiState.PageBase as BasePage)?.LoadSongList();
         }
     }
 
@@ -93,8 +95,8 @@ public sealed partial class PlaylistItem : UserControl
         else
         {
             _notification.ShowMessage("成功删除");
-            _ = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage)?.LoadSongList();
-            Ioc.Default.GetRequiredService<INavigationService>().NavigateRefresh();
+            _ = (_uiState.PageBase as BasePage)?.LoadSongList();
+            _navigation.NavigateRefresh();
         }
     }
 

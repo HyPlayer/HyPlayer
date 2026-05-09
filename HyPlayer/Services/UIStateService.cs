@@ -1,14 +1,12 @@
 #nullable enable
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using HyPlayer.Classes;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Timers;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
@@ -22,8 +20,17 @@ namespace HyPlayer.Services;
 /// </summary>
 public class UIStateService : IUIStateService
 {
+    private readonly Setting _setting;
+    private readonly NotificationDispatcher _dispatcher;
+
     private bool _isExpanded;
     private int _teachingTipSecondCounter = 3;
+
+    public UIStateService(Setting setting, NotificationDispatcher dispatcher)
+    {
+        _setting = setting;
+        _dispatcher = dispatcher;
+    }
 
     public object? PageExpandedPlayer { get; set; }
     public object? PageCompactPlayer { get; set; }
@@ -40,7 +47,7 @@ public class UIStateService : IUIStateService
         set
         {
             _isExpanded = value;
-            Ioc.Default.GetRequiredService<Setting>().OnPropertyChanged("playbarBackgroundAcrylic");
+            _setting.OnPropertyChanged("playbarBackgroundAcrylic");
         }
     }
 
@@ -61,10 +68,8 @@ public class UIStateService : IUIStateService
         Enabled = true,
     };
 
-    private NotificationDispatcher Dispatcher => Ioc.Default.GetRequiredService<NotificationDispatcher>();
-
-    public void InvokeEnterForeground() => Dispatcher.Publish(new EnterForegroundFromBackgroundNotification());
-    public void InvokePlaybarVisibilityChanged(bool isActivated) => Dispatcher.Publish(new PlaybarVisibilityChangedNotification(isActivated));
+    public void InvokeEnterForeground() => _dispatcher.Publish(new EnterForegroundFromBackgroundNotification());
+    public void InvokePlaybarVisibilityChanged(bool isActivated) => _dispatcher.Publish(new PlaybarVisibilityChangedNotification(isActivated));
 
     public void RollTeachingTip(bool passiveRoll = true)
     {
@@ -100,8 +105,7 @@ public class UIStateService : IUIStateService
 
     public void ChangePlaybarVisibility()
     {
-        var setting = Ioc.Default.GetRequiredService<Setting>();
-        if (++PlaybarSecondCounter >= setting.AutoHidePlaybarTime)
+        if (++PlaybarSecondCounter >= _setting.AutoHidePlaybarTime)
         {
             if (PlaybarIsVisible)
             {

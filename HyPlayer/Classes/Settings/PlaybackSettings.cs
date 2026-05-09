@@ -267,5 +267,10 @@ namespace HyPlayer.Classes.Settings
                 if (_playlist.ActiveStrategyId is "shf" or "shn" && value) _playlist.CreateShufflePlayLists();
             }
         }
+
+        // TODO(settings-applier): PlaybackSettings still applies several playback side effects directly
+        // (CrossFade, EnableAudioGain, ABRepeatStatus, AudioRenderDevice, EnableFFT, shuffleNoRepeating).
+        // Keep the current behavior for compatibility; migrate these setters behind a dedicated
+        // PlaybackSettingsApplier in a separate high-risk pass so import/reset settings can be made side-effect safe.
     }
 }

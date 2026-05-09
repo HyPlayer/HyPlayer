@@ -32,6 +32,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
     private readonly Setting _setting;
     private readonly HttpClient _httpClient;
     private readonly NeteaseCloudMusicApiHandler _neteaseApi;
+    private readonly IBackgroundTaskRunner _taskRunner;
     private readonly BackgroundDownloader _downloader = new();
 
     /// <summary>
@@ -48,11 +49,16 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
     /// <param name="setting">应用设置，用于获取缓存目录和音质配置</param>
     /// <param name="httpClient">HTTP 客户端，用于预检请求</param>
     /// <param name="neteaseApi">网易云 API 处理器，用于获取播放链接</param>
-    public CachedNeteaseProvider(Setting setting, HttpClient httpClient, NeteaseCloudMusicApiHandler neteaseApi)
+    public CachedNeteaseProvider(
+        Setting setting,
+        HttpClient httpClient,
+        NeteaseCloudMusicApiHandler neteaseApi,
+        IBackgroundTaskRunner taskRunner)
     {
         _setting = setting;
         _httpClient = httpClient;
         _neteaseApi = neteaseApi;
+        _taskRunner = taskRunner;
     }
 
     /// <inheritdoc />
@@ -202,10 +208,17 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
         operation.IsRandomAccessRequired = headerIsValid;
         _downloadOperations[item.Id] = operation;
 
-        _ = operation.StartAsync().AsTask(ct).ContinueWith((operation) =>
+        _taskRunner.Forget(async () =>
         {
-            _downloadOperations.TryRemove(item.Id, out _);
-        });
+            try
+            {
+                await operation.StartAsync().AsTask(ct);
+            }
+            finally
+            {
+                _downloadOperations.TryRemove(item.Id, out _);
+            }
+        }, "download and cache NetEase media");
 
         return headerIsValid
             ? MediaSource.CreateFromDownloadOperation(operation)

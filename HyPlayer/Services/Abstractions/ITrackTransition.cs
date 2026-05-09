@@ -30,6 +30,9 @@ public class TrackTransitionContext
 
     /// <summary>底层播放器</summary>
     public required IPlayer Player { get; init; }
+
+    /// <summary>后台任务 runner，用于观察预加载等 fire-and-forget 任务。</summary>
+    public required IBackgroundTaskRunner TaskRunner { get; init; }
 }
 
 /// <summary>

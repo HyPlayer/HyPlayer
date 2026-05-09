@@ -76,7 +76,7 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
         if (!_setting.CrossFade) return;
 
         // 尝试预加载
-        _ = TryPreloadAsync(ctx);
+        ctx.TaskRunner.Forget(TryPreloadAsync(ctx), "cross-fade preload next track");
 
         if (!_preloaded) return;
 
@@ -98,7 +98,7 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
             {
                 _committedPlaybackSource = _nextPlaybackSource;
                 _committedItem = _nextItem;
-                _ = ctx.CommitItemAsync(_nextItem);
+                ctx.TaskRunner.Forget(ctx.CommitItemAsync(_nextItem), "commit cross-fade preloaded item");
                 _committedNext = true;
             }
         }

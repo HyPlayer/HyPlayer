@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Services.Abstractions;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
@@ -13,24 +12,29 @@ namespace HyPlayer.Services;
 /// </summary>
 public class NotificationService : INotificationService
 {
+    private readonly IUIStateService _uiState;
+
+    public NotificationService(IUIStateService uiState)
+    {
+        _uiState = uiState;
+    }
+
     /// <inheritdoc />
     public void ShowMessage(string title, string? message = null)
     {
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-        uiState.TeachingTipList.Enqueue(new KeyValuePair<string, string?>(title, message));
+        _uiState.TeachingTipList.Enqueue(new KeyValuePair<string, string?>(title, message));
         InvokeOnUIThread(() =>
         {
-            var tip = uiState.GlobalTip as Microsoft.UI.Xaml.Controls.TeachingTip;
+            var tip = _uiState.GlobalTip as Microsoft.UI.Xaml.Controls.TeachingTip;
             if (tip != null && !tip.IsOpen)
-                uiState.RollTeachingTip(false);
+                _uiState.RollTeachingTip(false);
         });
     }
 
     /// <inheritdoc />
     public IAsyncAction? InvokeOnUIThread(Action action)
     {
-        var uiState = Ioc.Default.GetService<IUIStateService>();
-        if (uiState != null && uiState.IsInBackground) return null;
+        if (_uiState.IsInBackground) return null;
         try
         {
             if (CoreApplication.Views.Count > 0)

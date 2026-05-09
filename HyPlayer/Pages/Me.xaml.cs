@@ -27,6 +27,8 @@ public sealed partial class Me : Page
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
     public Me()
     {
@@ -79,6 +81,6 @@ public sealed partial class Me : Page
     {
         var target = (sender as FrameworkElement).Tag as string;
         if (string.IsNullOrEmpty(target)) return;
-        _ = Ioc.Default.GetRequiredService<INavigationService>().NavigateToResourceAsync(target);
+        _taskRunner.Forget(_navigation.NavigateToResourceAsync(target), "navigate to user songlist resource");
     }
 }

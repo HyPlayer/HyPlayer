@@ -5,17 +5,23 @@ using Windows.UI.Xaml.Data;
 
 namespace HyPlayer.Classes
 {
-    public partial class SessionToVisibilityConverter : IValueConverter
+    public abstract class SessionToVisibilityConverterBase : IValueConverter
     {
+        protected virtual bool Negate => false;
+
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if ((value is LastFMSession session) && session.HasLogined) return Visibility.Visible;
-            else return Visibility.Collapsed;
+            var hasLogined = (value is LastFMSession session) && session.HasLogined;
+            return hasLogined ^ Negate ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
             throw new NotImplementedException();
         }
+    }
+
+    public partial class SessionToVisibilityConverter : SessionToVisibilityConverterBase
+    {
     }
 }

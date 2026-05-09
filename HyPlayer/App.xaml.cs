@@ -30,7 +30,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Storage;
-using Windows.Storage.AccessCache;
 using Windows.System;
 using Windows.UI.StartScreen;
 using Windows.UI.Xaml;
@@ -71,7 +70,7 @@ public sealed partial class App : Application
         LeavingBackground += App_LeavingBackground;
         if (Ioc.Default.GetRequiredService<Setting>().themeRequest != ThemeRequest.Auto)
             RequestedTheme = Ioc.Default.GetRequiredService<Setting>().themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
-        _ = InitializeThings();
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(InitializeThings, "initialize app cache and converters");
     }
 
     private static void InitializeServices()
@@ -147,6 +146,9 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<ITrackTransition, GaplessTransition>();     // gap — 无缝衔接
 
         // ── 播放核心：服务 ──
+        serviceCollection.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
+        serviceCollection.AddSingleton<ILocalFileImportService, LocalFileImportService>();
+        serviceCollection.AddSingleton<INeteaseQueueSourceService, NeteaseQueueSourceService>();
         serviceCollection.AddSingleton<IPlaybackControlService, PlaybackControlService>();
         serviceCollection.AddSingleton<IPlaylistService, PlaylistService>();
         serviceCollection.AddSingleton<ILyricService, LyricService>();
@@ -201,7 +203,12 @@ public sealed partial class App : Application
         }
 
         if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
-            _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => { (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Navigate(typeof(ExpandedPlayer)); });
+            Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(
+                Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+                {
+                    (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
+                }),
+                "navigate expanded player during app initialization");
     }
 
     private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
@@ -298,7 +305,9 @@ public sealed partial class App : Application
         {
             var launchUri = (args?.As<IProtocolActivatedEventArgs>())?.Uri;
             if (launchUri?.Host == "link.last.fm")
-                _ = LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
+                Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(
+                    LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty)),
+                    "complete Last.FM browser login");
         }
     }
 
@@ -340,7 +349,7 @@ public sealed partial class App : Application
 
     private async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
     {
-        _ = InitializeJumpList();
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(InitializeJumpList, "initialize jump list");
 
         base.OnActivated(args);
 
@@ -372,6 +381,7 @@ public sealed partial class App : Application
         else if (args is FileActivatedEventArgs)
         {
             var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+            var _localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
             _playlist.PlaySourceId = "local";
             Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded = true;
             ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
@@ -382,25 +392,12 @@ public sealed partial class App : Application
             var _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
             if (!_player.PlayerCreated)
             {
-                _ = _control.InitializeAsync();
+                Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(_control.InitializeAsync(), "initialize player for file activation");
             }
             foreach (var storageItem in (args?.As<FileActivatedEventArgs>()).Files)
             {
                 var file = (StorageFile)storageItem;
-                var folder = await file.GetParentAsync();
-                if (folder != null)
-                {
-                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
-                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
-                            folder);
-                }
-                else
-                {
-                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
-                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
-                            file);
-                }
-
+                await _localFileImport.RegisterFutureAccessAsync(file);
                 var item = await _playlist.LoadStorageFileAsync(file);
                 _playlist.AppendItem(item);
             }
