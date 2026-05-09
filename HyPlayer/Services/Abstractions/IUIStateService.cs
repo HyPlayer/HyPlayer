@@ -6,6 +6,7 @@ using Kawazu;
 using Windows.System.Display;
 
 using HyPlayer.Services.Abstractions;
+using System.Timers;
 namespace HyPlayer.Services.Abstractions;
 
 /// <summary>
@@ -36,6 +37,7 @@ public interface IUIStateService
     List<string> ErrorMessageList { get; }
     ObservableCollection<string> Logs { get; }
     Queue<KeyValuePair<string, string?>> TeachingTipList { get; }
+    Timer GlobalSecondTimer { get; }
 
     // Methods
     void ChangePlaybarVisibility();

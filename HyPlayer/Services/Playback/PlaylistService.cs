@@ -193,7 +193,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 return;
 
             if (stopPlayback && _player.GlobalPlaybackStatus == PlaybackStatus.Playing)
-                _player.PauseAll();
+                _control.Pause();   
 
             _items.Clear();
             _nowPlayingIndex = -1;

@@ -10,6 +10,7 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.ListenTogether;
 using HyPlayer.NeteaseApi.ApiContracts.ListenTogether.Dual;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Messages;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
 
@@ -23,7 +24,7 @@ namespace HyPlayer.Classes;
 /// </para>
 /// </summary>
 internal sealed class ListenTogetherManager :
-    IRecipient<PositionTickMessage>,
+    IRecipient<GlobalSecondTimerMessage>,
     IRecipient<TrackChangedMessage>,
     IRecipient<PlaybackStateChangedMessage>,
     IRecipient<SeekRequestedMessage>,
@@ -153,7 +154,7 @@ internal sealed class ListenTogetherManager :
     //  Messenger handlers
     // ---------------------------------------------------------------
 
-    void IRecipient<PositionTickMessage>.Receive(PositionTickMessage message)
+    void IRecipient<GlobalSecondTimerMessage>.Receive(GlobalSecondTimerMessage message)
     {
         HeartbeatTick();
     }
@@ -382,7 +383,7 @@ internal sealed class ListenTogetherManager :
     private void RegisterMessages()
     {
         var messenger = WeakReferenceMessenger.Default;
-        messenger.Register<PositionTickMessage>(this);
+        messenger.Register<GlobalSecondTimerMessage>(this);
         messenger.Register<TrackChangedMessage>(this);
         messenger.Register<PlaybackStateChangedMessage>(this);
         messenger.Register<SeekRequestedMessage>(this);

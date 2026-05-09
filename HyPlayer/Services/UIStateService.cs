@@ -7,6 +7,7 @@ using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
+using System.Timers;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.System.Display;
@@ -61,6 +62,11 @@ public class UIStateService : IUIStateService
     public List<string> ErrorMessageList { get; } = [];
     public ObservableCollection<string> Logs { get; } = [];
     public Queue<KeyValuePair<string, string?>> TeachingTipList { get; } = new();
+    public Timer GlobalSecondTimer { get; } = new(1000)
+    {
+        AutoReset = true,
+        Enabled = true,
+    };
 
     public void InvokeEnterForeground() => _dispatcher.Publish(new EnterForegroundFromBackgroundNotification());
     public void InvokePlaybarVisibilityChanged(bool isActivated) => _dispatcher.Publish(new PlaybarVisibilityChangedNotification(isActivated));
