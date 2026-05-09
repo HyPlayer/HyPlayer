@@ -1,6 +1,6 @@
 #region
 
-#nullable enable
+#nullable enable annotations
 using ALRC.Abstraction;
 using ALRC.Converters;
 using ALRC.Converters.Enhancers;
@@ -56,6 +56,7 @@ using Windows.UI.Xaml.Navigation;
 using Buffer = Windows.Storage.Streams.Buffer;
 using HyALRCLyricInfo = HyPlayer.Classes.HyALRCLyricInfo;
 using LrcConverter = HyPlayer.Classes.LrcConverter;
+using HyPlayer.Services.Messages;
 
 #endregion
 
@@ -140,7 +141,7 @@ public sealed partial class ExpandedPlayer : Page
         WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (r, m) => ((ExpandedPlayer)r).RefreshAlbumCover(m.Item));
         WeakReferenceMessenger.Default.Register<LyricLoadedMessage>(this, (r, _) => ((ExpandedPlayer)r).HyPlayList_OnLyricLoaded());
         WeakReferenceMessenger.Default.Register<SeekRequestedMessage>(this, (r, m) => ((ExpandedPlayer)r).HyPlayList_OnManualSeek(m.Position));
-        WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((ExpandedPlayer)r).HyPlayList_OnTimerTicked());
+        WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(this, (r, _) => ((ExpandedPlayer)r).HyPlayList_OnTimerTicked());
         Window.Current.SizeChanged += Current_SizeChanged;
         _lyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         _lyricBox.OnBeforeRender += _lyricBox_OnBeforeRender;

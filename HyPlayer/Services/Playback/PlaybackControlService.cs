@@ -128,6 +128,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     public void Play()
     {
         _player.PlayAll();
+        if(_player.PrimaryPlaybackSource.PlaybackStatus is not PlaybackStatus.Playing)
+        {
+            _player.PlayPlaybackSource(_player.PrimaryPlaybackSource);
+        }
         _state.IsPlaying = true;
     }
 

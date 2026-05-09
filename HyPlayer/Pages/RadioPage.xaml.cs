@@ -20,6 +20,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Services.Messages;
 
 #endregion
 
@@ -152,7 +153,7 @@ public sealed partial class RadioPage : Page
         SongContainer.ListSource = "rd" + Radio.Id;
         _programLoaderTask = LoadProgram();
         if (_setting.greedlyLoadPlayContainerItems)
-            WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((RadioPage)r).GreedlyLoad());
+            WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(this, (r, _) => ((RadioPage)r).GreedlyLoad());
     }
 
     int treashold = 3;
@@ -175,7 +176,7 @@ public sealed partial class RadioPage : Page
             }
             else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
-                WeakReferenceMessenger.Default.Unregister<PositionTickMessage>(this);
+                WeakReferenceMessenger.Default.Unregister<GlobalSecondTimerMessage>(this);
             }
         });
     }

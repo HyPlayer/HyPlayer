@@ -19,6 +19,7 @@ using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Services.Messages;
 
 #endregion
 
@@ -116,7 +117,7 @@ public sealed partial class MusicCloudPage : Page
         base.OnNavigatedTo(e);
         _loadResultTask = LoadMusicCloudItem();
         if (_setting.greedlyLoadPlayContainerItems)
-            WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((MusicCloudPage)r).GreedlyLoad());
+            WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(this, (r, _) => ((MusicCloudPage)r).GreedlyLoad());
     }
 
     int treashold = 3;
@@ -139,7 +140,7 @@ public sealed partial class MusicCloudPage : Page
             }
             else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
-                WeakReferenceMessenger.Default.Unregister<PositionTickMessage>(this);
+                WeakReferenceMessenger.Default.Unregister<GlobalSecondTimerMessage>(this);
                 OnLoadedAllSongs();
             }
         });

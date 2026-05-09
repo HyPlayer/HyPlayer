@@ -1,13 +1,15 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Timers;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.System.Display;
@@ -53,6 +55,11 @@ public class UIStateService : IUIStateService
     public List<string> ErrorMessageList { get; } = [];
     public ObservableCollection<string> Logs { get; } = [];
     public Queue<KeyValuePair<string, string?>> TeachingTipList { get; } = new();
+    public Timer GlobalSecondTimer { get; } = new(1000)
+    {
+        AutoReset = true,
+        Enabled = true,
+    };
 
     private NotificationDispatcher Dispatcher => Ioc.Default.GetRequiredService<NotificationDispatcher>();
 

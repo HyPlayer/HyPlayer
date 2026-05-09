@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Windows.UI;
 
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Services.Messages;
 namespace HyPlayer.ViewModels
 {
     public partial class SongListViewModel : ObservableRecipient
@@ -134,8 +135,8 @@ namespace HyPlayer.ViewModels
                 await LoadDailyRcmdItems();
             }
             if (_setting.greedlyLoadPlayContainerItems)
-                // Use WeakReferenceMessenger for timer-tick driven greedy loading
-                WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, _) => ((SongListViewModel)r).GreedlyLoad());
+                // Use WeakReferenceMessenger for second-timer driven greedy loading
+                WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(this, (r, _) => ((SongListViewModel)r).GreedlyLoad());
             IsLoading = false;
         }
 
@@ -270,7 +271,7 @@ namespace HyPlayer.ViewModels
             else if (HasMore == false)
             {
                 // Unregister greedy-load tick handler
-                WeakReferenceMessenger.Default.Unregister<PositionTickMessage>(this);
+                WeakReferenceMessenger.Default.Unregister<GlobalSecondTimerMessage>(this);
             }
         }
         [RelayCommand]

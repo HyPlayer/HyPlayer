@@ -6,8 +6,9 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.NeteaseApi;
 using HyPlayer.Pages;
-using HyPlayer.Services.Abstractions;
 using HyPlayer.Services;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Messages;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.MediaProviders;
 using HyPlayer.Services.Playback.Messages;
@@ -36,7 +37,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using WinRT;
-using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 #endregion
 
 namespace HyPlayer;
@@ -91,7 +91,8 @@ public sealed partial class App : Application
         api.Option.AdditionalParameters = setting.ApiAdditionalParameters;
         api.Option.FakeCheckToken = setting.EnableCheckTokenApi;
         var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-        WeakReferenceMessenger.Default.Register<PositionTickMessage>(_messagingAnchor, (_, _) =>
+        uiState.GlobalSecondTimer.Elapsed += (_, _) => WeakReferenceMessenger.Default.Send(new GlobalSecondTimerMessage());
+        WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(_messagingAnchor, (_, _) =>
         {
             uiState.RollTeachingTip();
             uiState.ChangePlaybarVisibility();
