@@ -535,7 +535,7 @@ DoubleAnimation verticalAnimation;
         dataTransferManager.DataRequested += (manager, args) =>
         {
             var dataPackage = new DataPackage();
-            dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?Id=" +
+            dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" +
                                            ViewModel.NowPlayingItem.Id));
             dataPackage.Properties.Title = ViewModel.NowPlayingItem.Name;
             dataPackage.Properties.Description =
