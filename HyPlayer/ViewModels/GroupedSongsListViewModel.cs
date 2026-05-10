@@ -48,7 +48,7 @@ public partial class GroupedSongsListViewModel(
         }
 
         var playItems = playlist.AppendNcSongRange([.. selectedSongs], playlist.NowPlayingIndex + 1);
-        if (state.ActiveStrategyId is "shf" or "shn")
+        if (state.ActiveStrategyId == "shn")
         {
             List<int> playItemIndexes = [];
             foreach (var item in playItems)

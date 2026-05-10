@@ -126,7 +126,6 @@ public sealed partial class App : Application
 
         // ── 播放核心：媒体源 Provider 链（注册顺序 = 优先级）──
         serviceCollection.AddSingleton<IMediaSourceProvider, NcmFileProvider>();           // ncm — NCM 加密文件
-        serviceCollection.AddSingleton<IMediaSourceProvider, NeteaseLocalFileProvider>();   // nlo — 网易云已下载到本地
         serviceCollection.AddSingleton<IMediaSourceProvider, LocalFileProvider>();          // lcl — 普通本地文件
         serviceCollection.AddSingleton<IMediaSourceProvider, CachedNeteaseProvider>();      // nca — 网易云在线 + 缓存
         serviceCollection.AddSingleton<IMediaSourceProvider, NeteaseStreamingProvider>();   // nst — 网易云纯流式
@@ -135,7 +134,6 @@ public sealed partial class App : Application
         // ── 播放核心：播放策略 ──
         serviceCollection.AddSingleton<IPlayStrategy, SequentialStrategy>();       // seq — 列表循环
         serviceCollection.AddSingleton<IPlayStrategy, SingleRepeatStrategy>();     // sgl — 单曲循环
-        serviceCollection.AddSingleton<IPlayStrategy, ShuffleStrategy>();          // shf — 随机播放
         serviceCollection.AddSingleton<IPlayStrategy, ShuffleNoRepeatStrategy>();  // shn — 随机不重复
         serviceCollection.AddSingleton<IPlayStrategy, PersonalFmStrategy>();       // pfm — 私人 FM
         serviceCollection.AddSingleton<IPlayStrategy, ListenTogetherStrategy>();   // ltg — 一起听

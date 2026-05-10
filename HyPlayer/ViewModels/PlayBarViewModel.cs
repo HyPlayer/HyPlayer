@@ -98,16 +98,6 @@ public partial class PlayBarViewModel : ObservableRecipient
     /// </summary>
     public ObservableCollection<HyPlayItem> PlaylistItems { get; } = [];
 
-    /// <summary>
-    /// Current play mode derived from ActiveStrategyId.
-    /// </summary>
-    public PlayMode NowPlayType => ActiveStrategyId switch
-    {
-        "sgl" => PlayMode.SinglePlay,
-        "shf" or "shn" => PlayMode.Shuffled,
-        _ => PlayMode.DefaultRoll
-    };
-
     // ── Playlist service pass-through ──
 
     public IReadOnlyList<HyPlayItem> Items => _playlist.Items;
@@ -161,13 +151,12 @@ public partial class PlayBarViewModel : ObservableRecipient
         var nextStrategy = ActiveStrategyId switch
         {
             "seq" => "shn",
-            "shn" or "shf" => "sgl",
+            "shn" => "sgl",
             "sgl" => "seq",
             _ => "seq"
         };
         _playlist.SetStrategy(nextStrategy);
         ActiveStrategyId = nextStrategy;
-        OnPropertyChanged(nameof(NowPlayType));
     }
 
     [RelayCommand]
@@ -227,7 +216,6 @@ public partial class PlayBarViewModel : ObservableRecipient
                 vm.QualityTag = vm._state.QualityTag;
                 vm.IsInFm = vm._state.IsInFm;
                 vm.ActiveStrategyId = vm._state.ActiveStrategyId;
-                vm.OnPropertyChanged(nameof(NowPlayType));
             });
         });
 
@@ -244,7 +232,6 @@ public partial class PlayBarViewModel : ObservableRecipient
             {
                 vm.RefreshPlaylistItems(m.IsShuffleTrigger);
                 vm.ActiveStrategyId = vm._state.ActiveStrategyId;
-                vm.OnPropertyChanged(nameof(NowPlayType));
             });
         });
 
@@ -307,6 +294,7 @@ public partial class PlayBarViewModel : ObservableRecipient
         OnPropertyChanged(nameof(TotalTimeText));
         OnPropertyChanged(nameof(DurationMilliseconds));
     }
+    partial void OnActiveStrategyIdChanged(string value) => RefreshPlaylistItems();
     partial void OnQualityTagChanged(string value) => OnPropertyChanged(nameof(QualityTagText));
 
     private void NotifyPlayBarProperties()
@@ -343,7 +331,7 @@ public partial class PlayBarViewModel : ObservableRecipient
         PlaylistItems.Clear();
         var snapshot = _playlist.Items;
 
-        if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating && _setting.displayShuffledList)
+        if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
         {
             foreach (var idx in _playlist.ShuffleList)
             {
@@ -363,7 +351,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     /// </summary>
     public string GetPlaylistTitle()
     {
-        if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating && _setting.displayShuffledList)
+        if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
             return $"随机播放列表 (共{PlaylistItems.Count}首)";
         return $"播放列表 (共{PlaylistItems.Count}首)";
     }
@@ -373,7 +361,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     /// </summary>
     public int GetTargetingIndex()
     {
-        if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating && _setting.displayShuffledList)
+        if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
             return _playlist.ShufflingIndex;
         return _playlist.NowPlayingIndex;
     }
@@ -390,14 +378,13 @@ public partial class PlayBarViewModel : ObservableRecipient
         LyricInfo = _state.LyricInfo;
         IsInFm = _state.IsInFm;
         QualityTag = _state.QualityTag;
-        OnPropertyChanged(nameof(NowPlayType));
     }
 
     /// <summary>
     /// Notifies that playlist append is done (triggers PlaylistChanged message).
     /// </summary>
-    public void NotifyAppendDone(bool isShuffleTrigger = false)
+    public void NotifyAppendDone()
     {
-        _playlist.NotifyAppendDone(isShuffleTrigger);
+        _playlist.NotifyAppendDone();
     }
 }

@@ -88,7 +88,6 @@ namespace HyPlayer.Classes
         /// <list type="bullet">
         ///   <item><c>lcl</c> — 普通本地音频文件</item>
         ///   <item><c>ncm</c> — NCM 加密文件（解密后播放）</item>
-        ///   <item><c>nlo</c> — 网易云歌曲已下载到本地（非 NCM 格式）</item>
         ///   <item><c>nca</c> — 网易云在线播放 + 缓存策略（边下边播）</item>
         ///   <item><c>nst</c> — 网易云纯流式播放（不缓存）</item>
         /// </list>

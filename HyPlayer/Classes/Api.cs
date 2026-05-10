@@ -7,8 +7,8 @@ using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using System;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -43,14 +43,15 @@ internal class Api
         var _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         _playlist.Clear();
         var songList = Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].PlaylistId;
-        var randomSong = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs[new Random().Next(0, Ioc.Default.GetRequiredService<IAuthService>().LikedSongs.Count - 1)];
+        var likedSongs = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs;
+        var randomSong = likedSongs[RandomNumberGenerator.GetInt32(likedSongs.Count)];
         var jsoon = await _api.RequestAsync(NeteaseApis.PlaymodeIntelligenceListApi,
             new PlaymodeIntelligenceListRequest
             {
                 PlaylistId = songList,
                 SongId = randomSong,
                 StartMusicId = _state.NowPlayingItem?.Id ?? randomSong,
-                Count = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs.Count
+                Count = likedSongs.Count
             }, cancellationToken);
 
         if (jsoon.IsError)

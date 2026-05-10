@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,14 @@ public class PlayStrategyContext
 
     /// <summary>当前播放曲目</summary>
     public HyPlayItem? CurrentItem { get; init; }
+    /// <summary>当前播放列表</summary>
+    public IReadOnlyList<int>? ShuffledItems { get; init; }
+
+    /// <summary>随机播放索引</summary>
+    public int? ShuffledIndex { get; init; }
+
+    /// <summary>更新随机算法</summary>
+    public Action? UpdateShuffleActions { get; init; }
 }
 
 /// <summary>

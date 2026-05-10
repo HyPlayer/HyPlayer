@@ -83,7 +83,7 @@ public interface IPlaylistService
     /// <summary>
     /// 通知列表追加完成（触发 PlaylistChanged 消息）
     /// </summary>
-    void NotifyAppendDone(bool isShuffleTrigger = false);
+    void NotifyAppendDone();
 
     // ────────────── NCSong 相关 ──────────────
 
@@ -128,7 +128,7 @@ public interface IPlaylistService
     Task<HyPlayItem> LoadStorageFileAsync(StorageFile file, bool nocheck163 = false);
 
     /// <summary>生成随机播放列表</summary>
-    Task CreateShufflePlayLists(string currentSongId = "-1");
+    void CreateShufflePlayLists();
 
     /// <summary>恢复当前播放索引而不触发播放</summary>
     void RestoreNowPlayingIndex(int index);

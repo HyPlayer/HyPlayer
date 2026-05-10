@@ -541,18 +541,11 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="使用不重复随机">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.shuffleNoRepeating, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="显示随机列表">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.displayShuffledList, Mode=TwoWay}"
-                                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.shuffleNoRepeating, Mode=OneWay}" />
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.displayShuffledList, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>

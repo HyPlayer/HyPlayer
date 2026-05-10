@@ -281,6 +281,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     /// </summary>
     private void OnTrackReachesEnd(IPlaybackSource source)
     {
+        if (!ReferenceEquals(source, _player.PrimaryPlaybackSource)) return;
+
         var agSource = source as AudioGraphPlaybackSource;
         var item = agSource?.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
         if (item is null) return;

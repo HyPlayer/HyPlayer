@@ -265,7 +265,7 @@ public sealed partial class SongsList : UserControl
 
         var playItems = _playlist.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(),
             _playlist.NowPlayingIndex + 1);
-        if (_state.ActiveStrategyId is "shf" or "shn")
+        if (_state.ActiveStrategyId == "shn")
         {
             List<int> playItemIndexes = [];
             foreach (var item in playItems)

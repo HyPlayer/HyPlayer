@@ -65,13 +65,11 @@ public sealed partial class PlayBar
 
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding = false;
-    public PlayMode NowPlayType => ViewModel.NowPlayType;
     private TimeSpan StartingTimeSpan = TimeSpan.Zero;
     public ObservableCollection<HyPlayItem> PlayItems => ViewModel.PlaylistItems;
 #nullable enable
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
 #nullable restore
-    private bool realSelectSong;
 
     /*
 private Storyboard TbSongNameScrollStoryBoard;
@@ -145,35 +143,7 @@ DoubleAnimation verticalAnimation;
 
         RunOnUIThread(() =>
         {
-            if (_state.IsInFm)
-            {
-                IconPrevious.Glyph = "\uE7E8";
-                IconPlayType.Glyph = "\uE107";
-                FlyoutPlayRollType.Text = "我不喜欢";
-            }
-            else
-            {
-                IconPrevious.Glyph = "\uF8AC";
-                var nowPlayType = ViewModel.NowPlayType;
-                switch (nowPlayType)
-                {
-                    case PlayMode.Shuffled:
-                        //随机
-                        IconPlayType.Glyph = "\uE14B";
-                        FlyoutPlayRollType.Text = "随机播放";
-                        break;
-                    case PlayMode.SinglePlay:
-                        //单曲
-                        IconPlayType.Glyph = "\uE1CC";
-                        FlyoutPlayRollType.Text = "单曲循环";
-                        break;
-                    case PlayMode.DefaultRoll:
-                        //顺序
-                        IconPlayType.Glyph = "\uE169";
-                        FlyoutPlayRollType.Text = "顺序播放";
-                        break;
-                }
-            }
+            RefreshPlayModeDisplay();
 
             // 恢复播放音量
             if (ViewModel.NowPlayingItem == null)
@@ -192,19 +162,6 @@ DoubleAnimation verticalAnimation;
 
             SliderProgress.Minimum = 0;
             // Maximum/value/current time are provided by PlayBarViewModel x:Bind.
-
-            // 新版随机播放算法
-            realSelectSong = false;
-            if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating &&
-                _setting.displayShuffledList)
-                ListBoxPlayList.SelectedIndex = ViewModel.GetTargetingIndex();
-            else
-                ListBoxPlayList.SelectedIndex = ViewModel.NowPlayingIndex;
-
-            if (ListBoxPlayList.SelectedIndex >= 0 && ListBoxPlayList.SelectedIndex < PlayItems.Count)
-                ListBoxPlayList.ScrollIntoView(PlayItems[ListBoxPlayList.SelectedIndex]);
-
-            realSelectSong = true;
 
         });
         var isLiked = _auth.LikedSongs.Contains(mpi.Id);
@@ -236,6 +193,34 @@ DoubleAnimation verticalAnimation;
         */
     }
 
+    private void RefreshPlayModeDisplay()
+    {
+        if (_state.IsInFm)
+        {
+            IconPrevious.Glyph = "\uE7E8";
+            IconPlayType.Glyph = "\uE107";
+            FlyoutPlayRollType.Text = "我不喜欢";
+            return;
+        }
+
+        IconPrevious.Glyph = "\uF8AC";
+        switch (ViewModel.ActiveStrategyId)
+        {
+            case "shn":
+                IconPlayType.Glyph = "\uE14B";
+                FlyoutPlayRollType.Text = "随机播放";
+                break;
+            case "sgl":
+                IconPlayType.Glyph = "\uE1CC";
+                FlyoutPlayRollType.Text = "单曲循环";
+                break;
+            default:
+                IconPlayType.Glyph = "\uE169";
+                FlyoutPlayRollType.Text = "顺序播放";
+                break;
+        }
+    }
+
     public void RefreshSongList(bool isShuffle = false)
     {
         ViewModel.RefreshPlaylistItems(isShuffle);
@@ -243,10 +228,7 @@ DoubleAnimation verticalAnimation;
 
         var targetingIndex = ViewModel.GetTargetingIndex();
         if (targetingIndex == -1 || targetingIndex >= PlayItems.Count) return;
-        realSelectSong = false;
-        ListBoxPlayList.SelectedIndex = targetingIndex;
         ListBoxPlayList.ScrollIntoView(PlayItems[targetingIndex]);
-        realSelectSong = true;
     }
 
     private async void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
@@ -288,15 +270,9 @@ DoubleAnimation verticalAnimation;
 
     private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ListBoxPlayList.SelectedItem != null && ListBoxPlayList.SelectedItem != ViewModel.NowPlayingItem &&
-            realSelectSong)
+        if (ListBoxPlayList.SelectedItem != null && ListBoxPlayList.SelectedItem != ViewModel.NowPlayingItem)
         {
             ViewModel.MoveToItemCommand.Execute(ListBoxPlayList.SelectedItem as HyPlayItem);
-            if (ViewModel.NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating &&
-                _setting.displayShuffledList)
-            {
-                _playlist.ShufflingIndex = ListBoxPlayList.SelectedIndex;
-            }
         }
     }
 
@@ -420,23 +396,8 @@ DoubleAnimation verticalAnimation;
         {
             ViewModel.ChangePlayModeCommand.Execute(null);
             // Update UI icons based on new play mode
-            switch (ViewModel.NowPlayType)
-            {
-                case PlayMode.Shuffled:
-                    IconPlayType.Glyph = "\uE14B";
-                    FlyoutPlayRollType.Text = "随机播放";
-                    RefreshSongList();
-                    break;
-                case PlayMode.SinglePlay:
-                    IconPlayType.Glyph = "\uE1CC";
-                    FlyoutPlayRollType.Text = "单曲循环";
-                    break;
-                case PlayMode.DefaultRoll:
-                    IconPlayType.Glyph = "\uE169";
-                    FlyoutPlayRollType.Text = "顺序播放";
-                    RefreshSongList();
-                    break;
-            }
+            RefreshPlayModeDisplay();
+            RefreshSongList();
         }
         else
         {
@@ -609,13 +570,7 @@ DoubleAnimation verticalAnimation;
     {
         if (ViewModel.NowPlayingIndex >= 0 && ViewModel.NowPlayingIndex < PlayItems.Count)
         {
-            var nowPlayType = ViewModel.NowPlayType;
-            if (nowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating &&
-                _setting.displayShuffledList)
-                // 新的随机算法
-                ListBoxPlayList.ScrollIntoView(PlayItems[ViewModel.GetTargetingIndex()]);
-            else
-                ListBoxPlayList.ScrollIntoView(PlayItems[ViewModel.NowPlayingIndex]);
+            ListBoxPlayList.ScrollIntoView(PlayItems[ViewModel.GetTargetingIndex()]);
         }
     }
 
@@ -652,6 +607,8 @@ DoubleAnimation verticalAnimation;
         PlayBarBackgroundFadeIn.Begin();
         ViewModel.SetVolumeCommand.Execute((double)_setting.Volume);
         SliderAudioRate.Value = (double)_setting.Volume;
+        ViewModel.SyncFromState();
+        RefreshPlayModeDisplay();
 
         // --- Messenger-based event subscriptions ---
         var messenger = WeakReferenceMessenger.Default;
@@ -689,8 +646,6 @@ DoubleAnimation verticalAnimation;
 
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
-        realSelectSong = false;
-        realSelectSong = true;
         _uiState.Logs.Add("Now PlaySource is " + ViewModel.PlaySourceId);
 
         if (_uiState.IsExpanded)
@@ -783,11 +738,11 @@ DoubleAnimation verticalAnimation;
                         var targetingIndex = ViewModel.GetTargetingIndex();
                         if (targetingIndex >= 0 && targetingIndex < PlayItems.Count)
                         {
-                            ListBoxPlayList.SelectedIndex = targetingIndex;
                             ListBoxPlayList.ScrollIntoView(PlayItems[targetingIndex]);
                         }
-                    });
-                }
+        });
+    }
+
             }
         }
         catch

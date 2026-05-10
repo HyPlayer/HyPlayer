@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
@@ -72,7 +73,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         _neteaseQueueSource = neteaseQueueSource;
         _taskRunner = taskRunner;
 
-        _activeStrategy = _strategies.GetValueOrDefault("seq")
+        var strategyId = _setting.ActiveStrategyId;
+        _activeStrategy = _strategies.GetValueOrDefault(strategyId)
+                          ?? _strategies.GetValueOrDefault("seq")
                           ?? _strategies.Values.First();
         var transitionId = _setting.CrossFade ? "xfd" : "dir";
         _activeTransition = _transitions.GetValueOrDefault(transitionId)
@@ -80,6 +83,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                             ?? _transitions.Values.First();
 
         _state.ActiveStrategyId = _activeStrategy.Id;
+        _setting.ActiveStrategyId = _activeStrategy.Id;
         _state.ActiveTransitionId = _activeTransition.Id;
     }
 
@@ -180,7 +184,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 SyncIndex();
             }
 
-            SendPlaylistChanged();
+            NotifyAppendDone();
         }
     }
 
@@ -200,15 +204,18 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             SyncIndex();
             _state.NowPlayingItem = null;
 
-            SendPlaylistChanged();
+            NotifyAppendDone();
         }
     }
 
     /// <inheritdoc />
-    public void NotifyAppendDone(bool isShuffleTrigger = false)
+    public void NotifyAppendDone()
     {
         _activeStrategy.OnPlaylistChanged(BuildStrategyContext());
-        SendPlaylistChanged(isShuffleTrigger);
+        if (ActiveStrategyId == "shn")
+            CreateShufflePlayLists();
+        else
+            SendPlaylistChanged();
     }
 
     // ────────────── 导航 ──────────────
@@ -354,7 +361,16 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public void OnPositionTick(TimeSpan position, TimeSpan duration)
     {
-        _activeTransition.OnPositionTick(BuildTransitionContext());
+        if (!ShouldRunTransitionOnPositionTick())
+            return;
+
+        _activeTransition.OnPositionTick(BuildTransitionContext(position, duration));
+    }
+
+    private bool ShouldRunTransitionOnPositionTick()
+    {
+        var action = _activeStrategy.OnTrackEnded(BuildStrategyContext());
+        return action is PlayStrategyAction.MoveNext or PlayStrategyAction.LoadMore;
     }
 
     // ────────────── 策略切换 ──────────────
@@ -367,7 +383,13 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
 
         _activeStrategy = strategy;
         _state.ActiveStrategyId = strategyId;
+        _setting.ActiveStrategyId = strategyId;
         _activeStrategy.OnPlaylistChanged(BuildStrategyContext());
+
+        if (strategyId == "shn")
+            CreateShufflePlayLists();
+        else
+            SendPlaylistChanged();
     }
 
     /// <inheritdoc />
@@ -570,7 +592,10 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             {
                 Items = _items.ToArray(),
                 CurrentIndex = _nowPlayingIndex,
-                CurrentItem = NowPlayingItem
+                CurrentItem = NowPlayingItem,
+                UpdateShuffleActions = CreateShufflePlayLists,
+                ShuffledIndex = ActiveStrategyId == "shn" ? ShufflingIndex : null,
+                ShuffledItems = ActiveStrategyId == "shn" ? ShuffleList : null
             };
         }
     }
@@ -578,10 +603,12 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <summary>
     /// 构建过渡策略上下文，将回调绑定到本服务
     /// </summary>
-    private TrackTransitionContext BuildTransitionContext() => new()
+    private TrackTransitionContext BuildTransitionContext() => BuildTransitionContext(_state.Position, _state.Duration);
+
+    private TrackTransitionContext BuildTransitionContext(TimeSpan position, TimeSpan duration) => new()
     {
-        Position = _state.Position,
-        Duration = _state.Duration,
+        Position = position,
+        Duration = duration,
         CurrentItem = NowPlayingItem,
         RequestNextItemAsync = RequestNextItemAsync,
         CommitItemAsync = CommitItemAsync,
@@ -714,16 +741,15 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
-    public Task CreateShufflePlayLists(string currentSongId = "-1")
+    public void CreateShufflePlayLists()
     {
         ShuffleList.Clear();
-        ShufflingIndex = 0;
+        var currentSongId = NowPlayingItem?.Id ?? "-1";
         lock (_lock)
         {
             if (_items.Count != 0)
             {
                 HashSet<int> shuffledNumbers = [];
-                bool hasSpecifiedCorrectCurrentSong = false;
                 if (currentSongId != "-1")
                 {
                     int playItemIndex = _items.FindIndex(s => s.ToNCSong().SongId == currentSongId);
@@ -731,26 +757,19 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                     {
                         shuffledNumbers.Add(playItemIndex);
                         ShuffleList.Add(playItemIndex);
-                        hasSpecifiedCorrectCurrentSong = true;
                     }
                 }
 
                 while (shuffledNumbers.Count < _items.Count)
                 {
-                    var buffer = Guid.NewGuid().ToByteArray();
-                    var seed = BitConverter.ToInt32(buffer, 0);
-                    var random = new Random(seed);
-                    var indexShuffled = random.Next(_items.Count);
+                    var indexShuffled = RandomNumberGenerator.GetInt32(_items.Count);
                     if (shuffledNumbers.Add(indexShuffled))
                         ShuffleList.Add(indexShuffled);
                 }
-
-                ShufflingIndex = hasSpecifiedCorrectCurrentSong ? 0 : ShuffleList.IndexOf(_nowPlayingIndex);
             }
         }
 
         SendPlaylistChanged(true);
-        return Task.CompletedTask;
     }
 
     /// <inheritdoc />

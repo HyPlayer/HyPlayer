@@ -66,7 +66,7 @@ namespace HyPlayer
         public string cacheDir { get => Playback.cacheDir; set => Playback.cacheDir = value; }
         public string AudioRenderDevice { get => Playback.AudioRenderDevice; set => Playback.AudioRenderDevice = value; }
         public bool EnableFFT { get => Playback.EnableFFT; set => Playback.EnableFFT = value; }
-        public bool shuffleNoRepeating { get => Playback.shuffleNoRepeating; set => Playback.shuffleNoRepeating = value; }
+        public string ActiveStrategyId { get => Playback.ActiveStrategyId; set => Playback.ActiveStrategyId = value; }
 
         // --- UISettings delegates ---
 
@@ -285,16 +285,6 @@ namespace HyPlayer
         {
             get => GetSettings(nameof(maxDownloadCount), 1);
             set => ApplicationData.Current.LocalSettings.Values[nameof(maxDownloadCount)] = value;
-        }
-
-        public PlayMode songRollType
-        {
-            get => GetSettings(nameof(songRollType), PlayMode.DefaultRoll);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(songRollType)] = (int)value;
-                OnPropertyChanged();
-            }
         }
 
         public bool safeFileAccess

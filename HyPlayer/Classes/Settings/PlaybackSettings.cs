@@ -254,22 +254,20 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Whether shuffle mode avoids repeating tracks.
+        /// Current playback strategy identifier (seq/sgl/shn/pfm/ltg).
         /// </summary>
-        public bool shuffleNoRepeating
+        public string ActiveStrategyId
         {
-            get => GetSettings(nameof(shuffleNoRepeating), true);
+            get => GetSettings(nameof(ActiveStrategyId), "seq");
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(shuffleNoRepeating)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(ActiveStrategyId)] = value;
                 OnPropertyChanged();
-                var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-                if (_playlist.ActiveStrategyId is "shf" or "shn" && value) _playlist.CreateShufflePlayLists();
             }
         }
 
         // TODO(settings-applier): PlaybackSettings still applies several playback side effects directly
-        // (CrossFade, EnableAudioGain, ABRepeatStatus, AudioRenderDevice, EnableFFT, shuffleNoRepeating).
+        // (CrossFade, EnableAudioGain, ABRepeatStatus, AudioRenderDevice, EnableFFT).
         // Keep the current behavior for compatibility; migrate these setters behind a dedicated
         // PlaybackSettingsApplier in a separate high-risk pass so import/reset settings can be made side-effect safe.
     }
