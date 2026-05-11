@@ -119,6 +119,29 @@ namespace HyPlayer.Classes
         }
         public string AlbumString => Album.Name ?? "未知专辑";
 
+        public string GetQualityTagText(string fallbackLevel = null)
+        {
+            if (!string.IsNullOrWhiteSpace(QualityTag)) return QualityTag;
+            if(IsLocalFile) return "本地歌曲";
+            return FormatAudioLevel(fallbackLevel);
+        }
+
+        public static string FormatAudioLevel(string level)
+        {
+            return level switch
+            {
+                "standard" => "标准",
+                "higher" => "较高",
+                "exhigh" => "极高",
+                "lossless" => "无损",
+                "hires" => "Hi-Res",
+                "jyeffect" => "高清环绕声",
+                "sky" => "沉浸环绕声",
+                "jymaster" => "超清母带",
+                _ => string.Empty
+            };
+        }
+
         public bool Equals(HyPlayItem other)
         {
             return other.Id == Id;

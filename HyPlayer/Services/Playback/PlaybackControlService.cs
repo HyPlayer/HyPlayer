@@ -226,6 +226,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
                     _state.NowPlayingItem = item;
                     _state.Duration = TimeSpan.FromMilliseconds(item.LengthInMilliseconds);
                     _state.IsPlaying = autoPlay;
+                    _state.QualityTag = item.GetQualityTagText(_setting.audioRate);
+                    WeakReferenceMessenger.Default.Send(new QualityTagChangedMessage(_state.QualityTag));
                 }), "update playback state after load");
 
                 _lyricCts?.Cancel();

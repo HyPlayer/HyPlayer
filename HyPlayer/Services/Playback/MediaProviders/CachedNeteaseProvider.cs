@@ -133,13 +133,19 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
                     return (null, 0);
                 }
 
-                playUrl = songResult.SongUrls[0].Url;
-                size = songResult.SongUrls[0].Size;
+                var songUrl = songResult.SongUrls[0];
+                playUrl = songUrl.Url;
+                size = songUrl.Size;
                 item.Size = size;
+                item.Bitrate = Convert.ToInt32(songUrl.BitRate);
+                item.SubExt = songUrl.Type?.ToLowerInvariant() ?? string.Empty;
+                item.QualityTag = item.GetQualityTagText(_setting.audioRate);
                 if (_setting.UseHttpWhenGettingSongs && (playUrl?.Contains("https://") ?? false))
                 {
                     playUrl = playUrl.Replace("https://", "http://");
                 }
+
+                if (playUrl != null) item.Url = playUrl;
             }
             else
             {
@@ -159,7 +165,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
         {
             ct.ThrowIfCancellationRequested();
             var cacheFolder = await StorageFolder.GetFolderFromPathAsync(_setting.cacheDir);
-            var fileName = string.Format(CacheFileNameFormat, item.Id, "cache");
+            var fileName = string.Format(CacheFileNameFormat, item.Id, item.SubExt);
             var cacheFile = await cacheFolder.GetFileAsync(fileName);
 
             var properties = await cacheFile.GetBasicPropertiesAsync();
@@ -200,7 +206,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
         var headerIsValid = modified is not null;
 
         var destinationFolder = await StorageFolder.GetFolderFromPathAsync(_setting.cacheDir);
-        var fileName = string.Format(CacheFileNameFormat, item.Id, "cache");
+        var fileName = string.Format(CacheFileNameFormat, item.Id, item.SubExt);
         var destinationFile = await destinationFolder.CreateFileAsync(
             fileName, CreationCollisionOption.ReplaceExisting);
 

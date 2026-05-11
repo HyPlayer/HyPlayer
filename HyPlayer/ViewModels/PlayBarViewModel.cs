@@ -112,7 +112,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     public string SongName => NowPlayingItem?.Name ?? string.Empty;
     public string ArtistName => NowPlayingItem?.ArtistString ?? string.Empty;
     public string AlbumName => NowPlayingItem?.AlbumString ?? string.Empty;
-    public string QualityTagText => string.IsNullOrEmpty(QualityTag) ? NowPlayingItem?.QualityTag ?? "无歌曲" : QualityTag;
+    public string QualityTagText => NowPlayingItem?.GetQualityTagText(_setting.audioRate) ?? "无歌曲";
     public string TotalTimeText => FormatTime(Duration != TimeSpan.Zero ? Duration : TimeSpan.FromMilliseconds(NowPlayingItem?.LengthInMilliseconds ?? 0));
     public string NowTimeText => FormatTime(Position);
     public double ProgressMilliseconds => Position.TotalMilliseconds;
