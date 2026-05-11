@@ -71,7 +71,7 @@ public sealed partial class CompactPlayerPage : Page
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
 
-    private readonly SolidColorBrush TransparentBrush = new SolidColorBrush(Colors.Transparent);
+    private readonly SolidColorBrush TransparentBrush = new(Colors.Transparent);
     public bool _lyricIsKaraokeLyric;
     public SongLyric Lrc;
 

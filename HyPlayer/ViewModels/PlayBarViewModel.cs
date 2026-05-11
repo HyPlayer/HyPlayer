@@ -230,7 +230,7 @@ public partial class PlayBarViewModel : ObservableRecipient
             var vm = (PlayBarViewModel)r;
             vm.RunOnUIThread(() =>
             {
-                vm.RefreshPlaylistItems(m.IsShuffleTrigger);
+                vm.RefreshPlaylistItems();
                 vm.ActiveStrategyId = vm._state.ActiveStrategyId;
             });
         });
@@ -326,7 +326,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     /// <summary>
     /// Refreshes the PlaylistItems collection from the playlist service.
     /// </summary>
-    public void RefreshPlaylistItems(bool isShuffleTrigger = false)
+    public void RefreshPlaylistItems()
     {
         PlaylistItems.Clear();
         var snapshot = _playlist.Items;

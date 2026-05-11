@@ -42,7 +42,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(audioRate)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -56,7 +55,6 @@ namespace HyPlayer.Classes.Settings
             {
                 ApplicationData.Current.LocalSettings.Values["CrossFade"] = value;
                 Ioc.Default.GetService<IPlaylistService>()?.SetTransition(value ? "xfd" : "dir");
-                OnPropertyChanged();
             }
         }
 
@@ -81,7 +79,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableAudioGain)] = value;
-                OnPropertyChanged();
                 var player = Ioc.Default.GetService<AudioGraphPlayer>();
                 var _state = Ioc.Default.GetService<PlaybackStateService>();
                 if (player?.PrimaryPlaybackSource != null)
@@ -116,7 +113,6 @@ namespace HyPlayer.Classes.Settings
                 {
                     WeakReferenceMessenger.Default.Unregister<PositionTickMessage>(this);
                 }
-                OnPropertyChanged();
             }
         }
 
@@ -131,7 +127,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 _abStartPoint = value;
-                OnPropertyChanged(nameof(ABStartPointFriendlyValue));
             }
         }
 
@@ -164,7 +159,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 _abEndPoint = value;
-                OnPropertyChanged(nameof(ABEndPointFriendlyValue));
             }
         }
 
@@ -197,7 +191,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(enableCache)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -220,7 +213,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(cacheDir)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -234,7 +226,6 @@ namespace HyPlayer.Classes.Settings
             {
                 ApplicationData.Current.LocalSettings.Values["AudioRenderDeviceID"] = value;
                 _ = Ioc.Default.GetRequiredService<IPlaybackControlService>().InitializeAsync();
-                OnPropertyChanged();
             }
         }
 
@@ -248,8 +239,7 @@ namespace HyPlayer.Classes.Settings
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableFFT)] = value;
                 var player = Ioc.Default.GetService<AudioGraphPlayer>();
-                if (player != null) player.EnableFFTProcessing = value;
-                OnPropertyChanged();
+                player?.EnableFFTProcessing = value;
             }
         }
 
@@ -262,7 +252,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(ActiveStrategyId)] = value;
-                OnPropertyChanged();
             }
         }
 

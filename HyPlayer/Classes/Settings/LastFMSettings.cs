@@ -25,7 +25,6 @@ namespace HyPlayer.Classes.Settings
                 {
                     ApplicationData.Current.LocalSettings.Values[nameof(LastFMSession)] = JsonSerializer.Serialize(value, JsonDefaults.Options);
                 }
-                OnPropertyChanged();
             }
         }
 
@@ -62,7 +61,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(useAiDj)] = value;
-                OnPropertyChanged();
             }
         }
     }

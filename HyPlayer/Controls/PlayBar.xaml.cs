@@ -221,9 +221,9 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    public void RefreshSongList(bool isShuffle = false)
+    public void RefreshSongList()
     {
-        ViewModel.RefreshPlaylistItems(isShuffle);
+        ViewModel.RefreshPlaylistItems();
         PlayListTitle.Text = ViewModel.GetPlaylistTitle();
 
         var targetingIndex = ViewModel.GetTargetingIndex();
@@ -614,10 +614,8 @@ DoubleAnimation verticalAnimation;
         messenger.Register<TrackChangedMessage>(this, (_, m) => LoadPlayingFile(m.Item));
         messenger.Register<PlaylistChangedMessage>(this, (_, m) =>
         {
-            if (!m.IsShuffleTrigger && ViewModel.Items.Count == 0)
+            if (ViewModel.Items.Count == 0)
                 HyPlayListOnOnSongRemoveAll();
-            else
-                RefreshSongList(m.IsShuffleTrigger);
         });
         messenger.Register<SongLikeStatusChangedMessage>(this, (_, m) => HyPlayList_OnSongLikeStatusChange(m.IsLiked));
         messenger.Register<CoverChangedMessage>(this, (_, m) => RefreshPlayBarCover(m.Item));

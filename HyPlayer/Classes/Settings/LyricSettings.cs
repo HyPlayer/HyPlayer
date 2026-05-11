@@ -20,7 +20,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(LyricRomajiSource)] = (int)value;
-                OnPropertyChanged();
             }
         }
 
@@ -42,7 +41,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(karaokLyric)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -55,7 +53,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(showComposerInLyric)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -68,7 +65,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(downloadLyric)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -81,7 +77,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(downloadTranslation)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -94,7 +89,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(MigrateLyrics)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -107,7 +101,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(OptimizeLyric)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -129,7 +122,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricCacheRenderTarget)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -142,7 +134,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricScaleSize)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -167,7 +158,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricLineSpacing)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -180,7 +170,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(translationSize)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -193,7 +182,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(romajiSize)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -206,7 +194,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricPaddingTopRatio)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -219,7 +206,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricFadingRatio)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -232,7 +218,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(hotlyricOnStartup)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -245,7 +230,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(enableAmllTtmlDb)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -258,7 +242,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(amllTtmlMirrorUrl)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -271,7 +254,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderFocusHighlighting)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -284,7 +266,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderWidthRatio)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -297,7 +278,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderTransliterationScanning)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -310,7 +290,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderSimpleLineScanning)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -323,7 +302,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderScaleWhenFocusing)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -336,7 +314,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderBlur)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -349,7 +326,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderFade)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -362,7 +338,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(LineRollingCalculator)] = (int)value;
-                OnPropertyChanged();
             }
         }
 
@@ -375,7 +350,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererDebugMode)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -388,7 +362,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererFPS)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -409,7 +382,6 @@ namespace HyPlayer.Classes.Settings
                     ApplicationData.Current.LocalSettings.Values[nameof(pureLyricIdleColor)] = new[]
                         { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
                 else ApplicationData.Current.LocalSettings.Values[nameof(pureLyricIdleColor)] = null;
-                OnPropertyChanged();
             }
         }
 
@@ -429,7 +401,6 @@ namespace HyPlayer.Classes.Settings
                     ApplicationData.Current.LocalSettings.Values[nameof(pureLyricFocusingColor)] = new[]
                         { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
                 else ApplicationData.Current.LocalSettings.Values[nameof(pureLyricFocusingColor)] = null;
-                OnPropertyChanged();
             }
         }
 
@@ -449,7 +420,6 @@ namespace HyPlayer.Classes.Settings
                     ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricFocusingColor)] = new[]
                         { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
                 else ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricFocusingColor)] = null;
-                OnPropertyChanged();
             }
         }
 #nullable restore
@@ -463,7 +433,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(IsolationFullThrottle)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -476,7 +445,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(IsolationFPS)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -489,7 +457,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(IsolationScale)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -502,7 +469,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(IsolationLightWave)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -515,7 +481,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(ImpressionistLABSpace)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -528,7 +493,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(ImpressionistIgnoreWhite)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -541,7 +505,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(ImpressionistUseKMeansPP)] = value;
-                OnPropertyChanged();
             }
         }
     }

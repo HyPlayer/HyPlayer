@@ -143,7 +143,7 @@ public sealed partial class ExpandedPlayer : Page
         WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((ExpandedPlayer)r).OnSongChange(m.Item));
         WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (r, m) => ((ExpandedPlayer)r).RefreshAlbumCover(m.Item));
         WeakReferenceMessenger.Default.Register<LyricLoadedMessage>(this, (r, _) => ((ExpandedPlayer)r).HyPlayList_OnLyricLoaded());
-        WeakReferenceMessenger.Default.Register<SeekRequestedMessage>(this, (r, m) => ((ExpandedPlayer)r).HyPlayList_OnManualSeek(m.Position));
+        WeakReferenceMessenger.Default.Register<SeekRequestedMessage>(this, (r, m) => ((ExpandedPlayer)r).HyPlayList_OnManualSeek());
         WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(this, (r, _) => ((ExpandedPlayer)r).HyPlayList_OnTimerTicked());
         Window.Current.SizeChanged += Current_SizeChanged;
         _lyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
@@ -171,7 +171,7 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.Context.LineSpacing = _settings.lyricLineSpacing;
     }
 
-    private void HyPlayList_OnManualSeek(TimeSpan position)
+    private void HyPlayList_OnManualSeek()
     {
         _positionChangedBySeeking = true;
     }
