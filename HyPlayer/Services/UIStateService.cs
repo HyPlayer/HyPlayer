@@ -71,6 +71,17 @@ public class UIStateService : IUIStateService
     public void InvokeEnterForeground() => _dispatcher.Publish(new EnterForegroundFromBackgroundNotification());
     public void InvokePlaybarVisibilityChanged(bool isActivated) => _dispatcher.Publish(new PlaybarVisibilityChangedNotification(isActivated));
 
+    public void ClearReferences(object owner)
+    {
+        if (ReferenceEquals(PageExpandedPlayer, owner)) PageExpandedPlayer = null;
+        if (ReferenceEquals(PageCompactPlayer, owner)) PageCompactPlayer = null;
+        if (ReferenceEquals(PageMain, owner)) PageMain = null;
+        if (ReferenceEquals(BarPlayBar, owner)) BarPlayBar = null;
+        if (ReferenceEquals(PageBase, owner)) PageBase = null;
+        if (ReferenceEquals(GlobalTip, owner)) GlobalTip = null;
+        if (ReferenceEquals(XboxGameBarWidget, owner)) XboxGameBarWidget = null;
+    }
+
     public void RollTeachingTip(bool passiveRoll = true)
     {
         if (passiveRoll && _teachingTipSecondCounter-- > 0) return;

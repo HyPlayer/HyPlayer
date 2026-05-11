@@ -94,6 +94,9 @@ public sealed partial class BasePage : Page
         WeakReferenceMessenger.Default.UnregisterAll(this);
         Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
+        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+        uiState.ClearReferences(this);
+        uiState.ClearReferences(TheTeachingTip);
     }
 
     private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem)

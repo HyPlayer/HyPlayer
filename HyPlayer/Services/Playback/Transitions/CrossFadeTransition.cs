@@ -360,8 +360,10 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
         _fadeStartTicks = 0;
     }
 
-    private static void CleanupPlaybackSourceItem(AudioGraphPlaybackSource playbackSource)
+    private static void CleanupPlaybackSourceItem(AudioGraphPlaybackSource? playbackSource)
     {
+        if (playbackSource is null) return;
+
         HyPlayItem? item = null;
         if (playbackSource.PlaybackSource?.CustomProperties.TryGetValue("nowPlayingItem", out var obj) == true)
             item = obj as HyPlayItem;
@@ -388,6 +390,9 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
     /// </summary>
     private void ResetInternal()
     {
+        if (!_committedNext)
+            CleanupPlaybackSourceItem(_nextPlaybackSource);
+
         _processing = false;
         _preloaded = false;
         _preloading = false;

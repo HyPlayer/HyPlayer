@@ -118,6 +118,7 @@ public sealed partial class ExpandedPlayer : Page
     private Color? _karaokAccentColorCache;
     private SolidColorBrush? _pureAccentBrushCache;
     private const float LyricBoxRightPadding = 32;
+    private bool _isCleanedUp;
 
     public double LyricShowSize { get; set; }
     public double LyricWidth { get; set; }
@@ -441,7 +442,7 @@ public sealed partial class ExpandedPlayer : Page
             await ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
         if (ApplicationView.GetForCurrentView().IsFullScreenMode)
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
-        _uiState.PageExpandedPlayer = null;
+        CleanupPageReferences();
     }
 
     private readonly Storyboard luminousColorsRotateStoryBoard = new();
@@ -1571,8 +1572,19 @@ public sealed partial class ExpandedPlayer : Page
 
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
+        CleanupPageReferences();
+    }
+
+    private void CleanupPageReferences()
+    {
+        if (_isCleanedUp) return;
+        _isCleanedUp = true;
+
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        Window.Current?.SizeChanged -= Current_SizeChanged;
+        Window.Current.SizeChanged -= Current_SizeChanged;
+        _lyricBox.OnBeforeRender -= _lyricBox_OnBeforeRender;
+        _lyricBox.OnLyricLineClicked -= _lyricBoxOnOnRequestSeek;
+        _uiState.ClearReferences(this);
         if (_settings.albumRotate)
             RotateAnimationSet.Stop();
         if (_settings.expandAlbumBreath)

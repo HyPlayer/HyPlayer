@@ -41,6 +41,8 @@ public sealed partial class WidgetPage : Page
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
     private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
+    private bool _eventsRegistered;
+    private bool _windowClosedRegistered;
 
 
     public WidgetPage()
@@ -49,6 +51,7 @@ public sealed partial class WidgetPage : Page
         _settings = new GameBarSettings(Dispatcher);
         Instance = this;
         Window.Current.Closed += WidgetPage_Closed;
+        _windowClosedRegistered = true;
     }
 
     private void WidgetPage_Closed(object sender, CoreWindowEventArgs e)
@@ -82,6 +85,12 @@ public sealed partial class WidgetPage : Page
 
     public void Initialize()
     {
+        if (_eventsRegistered)
+        {
+            LoadLyrics();
+            return;
+        }
+
         _hotkeyWatcher = XboxGameBarHotkeyWatcher.CreateWatcher(_widget, (List<VirtualKey>)[VirtualKey.Control, VirtualKey.LeftMenu, VirtualKey.A]);//全局热键
         _hotkeyWatcher.Start();
         InitializeLyricView();
@@ -97,6 +106,7 @@ public sealed partial class WidgetPage : Page
             if (m.IsPlaying) HyPlayList_OnPlay(); else HyPlayList_OnPause();
         });
         WeakReferenceMessenger.Default.Register<LyricLoadedMessage>(this, (r, m) => OnPlaylistLyricLoaded());
+        _eventsRegistered = true;
         TipContent.Visibility = Visibility.Collapsed;
         LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
         PlayStateIcon.Glyph =
@@ -137,16 +147,32 @@ public sealed partial class WidgetPage : Page
     }
     private void UnregisterEvents()
     {
-        _hotkeyWatcher.Stop();
-        _widget.CloseRequested -= Widget_CloseRequested;
-        _widget.SettingsClicked -= OnSettingsChecked;
-        _widget.WindowBoundsChanged -= OnResized;
-        _widget.RequestedThemeChanged -= RequestedThemeChanged;
-        _hotkeyWatcher.HotkeySetStateChanged -= OnHotkeySetStateChanged;
-        WeakReferenceMessenger.Default.UnregisterAll(this);
-        Ioc.Default.GetRequiredService<IUIStateService>().XboxGameBarWidget = null;
-        Window.Current.Closed -= WidgetPage_Closed;
-        Instance = null;
+        if (_eventsRegistered)
+        {
+            _hotkeyWatcher?.Stop();
+            if (_widget is not null)
+            {
+                _widget.CloseRequested -= Widget_CloseRequested;
+                _widget.SettingsClicked -= OnSettingsChecked;
+                _widget.WindowBoundsChanged -= OnResized;
+                _widget.RequestedThemeChanged -= RequestedThemeChanged;
+            }
+            if (_hotkeyWatcher is not null)
+                _hotkeyWatcher.HotkeySetStateChanged -= OnHotkeySetStateChanged;
+            WeakReferenceMessenger.Default.UnregisterAll(this);
+            _eventsRegistered = false;
+        }
+
+        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+        if (_widget is not null)
+            uiState.ClearReferences(_widget);
+        if (_windowClosedRegistered)
+        {
+            Window.Current.Closed -= WidgetPage_Closed;
+            _windowClosedRegistered = false;
+        }
+        if (ReferenceEquals(Instance, this))
+            Instance = null;
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
         {
             LyricView.RemoveFromVisualTree();

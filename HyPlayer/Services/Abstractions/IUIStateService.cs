@@ -44,4 +44,5 @@ public interface IUIStateService
     void RollTeachingTip(bool passiveRoll = true);
     void InvokeEnterForeground();
     void InvokePlaybarVisibilityChanged(bool isActivated);
+    void ClearReferences(object owner);
 }

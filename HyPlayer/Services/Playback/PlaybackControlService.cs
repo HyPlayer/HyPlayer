@@ -197,12 +197,20 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         try
         {
             if (removeCurrentSongs)
+            {
+                var oldItem = _state.NowPlayingItem;
                 _player.RemoveAllPlaybackSource();
+                oldItem?.PlayItem?.Dispose();
+                if (oldItem is not null)
+                    oldItem.PlayItem = null;
+            }
 
             var mediaSource = await _mediaSourceService.CreateMediaSourceAsync(item, ct);
             if (mediaSource is null) return;
 
             ct.ThrowIfCancellationRequested();
+            item.PlayItem?.Dispose();
+            item.PlayItem = null;
             item.PlayItem ??= new PlayItem();
             mediaSource.CustomProperties["nowPlayingItem"] = item;
 

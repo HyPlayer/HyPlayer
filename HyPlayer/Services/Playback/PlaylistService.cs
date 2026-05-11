@@ -148,7 +148,10 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         lock (_lock)
         {
             if (clearFirst)
+            {
+                DisposePlayItems(_items);
                 _items.Clear();
+            }
 
             _items.AddRange(items);
         }
@@ -168,6 +171,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 return;
             }
 
+            DisposePlayItem(_items[index]);
             _items.RemoveAt(index);
 
             // 调整当前播放索引
@@ -199,6 +203,8 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             if (stopPlayback && _player.GlobalPlaybackStatus == PlaybackStatus.Playing)
                 _control.Pause();   
 
+            _player.RemoveAllPlaybackSource();
+            DisposePlayItems(_items);
             _items.Clear();
             _nowPlayingIndex = -1;
             SyncIndex();
@@ -459,7 +465,11 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         {
             if (clearFirst)
             {
-                lock (_lock) { _items.Clear(); }
+                lock (_lock)
+                {
+                    DisposePlayItems(_items);
+                    _items.Clear();
+                }
             }
 
             foreach (var ncSong in ncSongs)
@@ -708,6 +718,19 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             "publish track changed");
     }
 
+    private static void DisposePlayItems(IEnumerable<HyPlayItem> items)
+    {
+        foreach (var item in items)
+            DisposePlayItem(item);
+    }
+
+    private static void DisposePlayItem(HyPlayItem? item)
+    {
+        item?.PlayItem?.Dispose();
+        if (item is not null)
+            item.PlayItem = null;
+    }
+
     // ────────────── Shuffle / 本地文件 / 通知 ──────────────
 
     /// <inheritdoc />
@@ -811,6 +834,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         _trackEndCts?.Cancel();
         _trackEndCts?.Dispose();
         _trackEndCts = null;
+        DisposePlayItems(_items);
+        _items.Clear();
+        _state.NowPlayingItem = null;
         _trackEndLock.Dispose();
     }
 }

@@ -120,7 +120,6 @@ public class NavigationService : INavigationService
 
         Navigate(typeof(BlankPage));
         RootFrame.Content = null;
-        _uiState.PageExpandedPlayer = null;
         var pageMain = _uiState.PageMain as MainPage;
         pageMain?.ExpandedPlayer.Navigate(typeof(BlankPage));
         _taskRunner.Forget(ImageCache.Instance.ClearAsync(), "clear image cache while collecting garbage");

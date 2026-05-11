@@ -159,6 +159,10 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
     /// </summary>
     private void ResetInternal()
     {
+        _nextItem?.PlayItem?.Dispose();
+        if (_nextItem is not null)
+            _nextItem.PlayItem = null;
+
         _preloaded = false;
         _preloading = false;
         _nextPlaybackSource = null;

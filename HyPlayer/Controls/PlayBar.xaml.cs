@@ -359,7 +359,6 @@ DoubleAnimation verticalAnimation;
         ButtonCollapse.Visibility = Visibility.Collapsed;
         (_uiState.PageMain as MainPage).GridPlayBarMarginBlur.Visibility = Visibility.Visible;
         (_uiState.PageBase as BasePage).AppTitleBar.ReleasePointerCaptures();
-        _uiState.PageExpandedPlayer = null;
         (_uiState.PageMain as MainPage).ExpandedPlayer.Navigate(typeof(BlankPage));
         (_uiState.PageMain as MainPage).GridPlayBar.BorderThickness = new Thickness(1);
         (_uiState.PageMain as MainPage).MainFrame.Visibility = Visibility.Visible;
@@ -824,6 +823,7 @@ DoubleAnimation verticalAnimation;
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
         _player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
+        _uiState.ClearReferences(this);
     }
 
     private void RunOnUIThread(Action action)
