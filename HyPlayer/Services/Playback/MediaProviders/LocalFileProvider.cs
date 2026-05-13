@@ -1,9 +1,15 @@
 #nullable enable
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Services.Abstractions;
 using System;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.Services.Abstractions;
+using System.Xml.Linq;
+using TagLib.Ape;
+using TagLib.Matroska;
 using Windows.Media.Core;
 using Windows.Storage;
 
@@ -35,7 +41,29 @@ public sealed class LocalFileProvider : IMediaSourceProvider
 
         if (file == null)
             return null;
+        using var abstraction = new UwpStorageFileAbstraction(file);
+        using var tagFile = TagLibHelper.Create(abstraction, file.FileType);
+        if(item.ItemType == HyPlayItemType.LocalProgressive)
+        {
+            var songPerformersList = tagFile.Tag.Performers
+                .Select(t => new NCArtist { Name = t, Type = HyPlayItemType.Local }).ToList();
+            if (songPerformersList.Count == 0)
+                songPerformersList.Add(new NCArtist { Name = "未知歌手", Type = HyPlayItemType.Local });
 
+            item.IsLocalFile = true;
+            item.LocalFileTag = tagFile.Tag;
+            item.Bitrate = tagFile.Properties.AudioBitrate;
+            item.Name = tagFile.Tag.Title;
+            item.Artist = songPerformersList;
+            item.Album = new NCAlbum { Name = tagFile.Tag.Album };
+            item.TrackId = (int)tagFile.Tag.Track;
+            item.CDName = "01";
+            item.Size = 0;
+            item.LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds;
+            item.ItemType = HyPlayItemType.Local;
+        }
+        item.PlayItem ??= new PlayItem();
+        item.PlayItem.CoverBuffer = tagFile.Tag.Pictures[0]?.Data?.Data?.AsBuffer();
         return MediaSource.CreateFromStorageFile(file);
     }
 }

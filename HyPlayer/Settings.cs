@@ -120,7 +120,6 @@ namespace HyPlayer
         public bool canaryChannelAvailability { get => UI.canaryChannelAvailability; set { UI.canaryChannelAvailability = value; OnPropertyChanged(); } }
         public bool localProgressiveLoad { get => UI.localProgressiveLoad; set { UI.localProgressiveLoad = value; OnPropertyChanged(); } }
         public bool highQualityCoverInSMTC { get => UI.highQualityCoverInSMTC; set { UI.highQualityCoverInSMTC = value; OnPropertyChanged(); } }
-        public bool useTaglibPicture { get => UI.useTaglibPicture; set { UI.useTaglibPicture = value; OnPropertyChanged(); } }
         public UpdateSource UpdateSource { get => UI.UpdateSource; set { UI.UpdateSource = value; OnPropertyChanged(); } }
 
         // --- ApiSettings delegates ---
@@ -291,16 +290,6 @@ namespace HyPlayer
             }
         }
 
-        public bool safeFileAccess
-        {
-            get => GetSettings(nameof(safeFileAccess), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = value;
-                OnPropertyChanged();
-            }
-        }
-
         public List<string> scanLocalFolder
         {
             get
@@ -310,7 +299,7 @@ namespace HyPlayer
             }
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = string.Join("\r\n", value);
+                ApplicationData.Current.LocalSettings.Values[nameof(scanLocalFolder)] = string.Join("\r\n", value);
                 OnPropertyChanged();
             }
         }

@@ -1344,9 +1344,6 @@
                             <controls3:SettingsCard Header="本地文件扫描渐进式加载 (Progressive Loading)">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.localProgressiveLoad, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="本地文件使用 TagLib 读取封面">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.useTaglibPicture, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
                             <controls3:SettingsCard Header="私人 FM 时使用 私人 DJ">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.useAiDj, Mode=TwoWay}" />
                             </controls3:SettingsCard>
@@ -1364,9 +1361,6 @@
                                     Checked="ControlSoundChecked"
                                     IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.uiSound, Mode=TwoWay}"
                                     Unchecked="ControlSoundUnChecked" />
-                            </controls3:SettingsCard>
-                            <controls3:SettingsCard Description="可能会提高内存占用" Header="启用安全本地文件访问">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.safeFileAccess, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="尝试绕过 CheckToken 接口 (可能被检测)">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.EnableCheckTokenApi, Mode=TwoWay}" />

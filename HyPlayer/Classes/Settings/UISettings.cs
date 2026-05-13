@@ -603,18 +603,6 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Whether to use taglib for picture extraction.
-        /// </summary>
-        public bool useTaglibPicture
-        {
-            get => GetSettings(nameof(useTaglibPicture), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(useTaglibPicture)] = value;
-            }
-        }
-
-        /// <summary>
         /// Update source channel.
         /// </summary>
         public UpdateSource UpdateSource

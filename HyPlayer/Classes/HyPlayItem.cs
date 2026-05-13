@@ -19,6 +19,7 @@ namespace HyPlayer.Classes
         public AudioGraphPlaybackSource AudioGraphPlaybackSource { get; set; }
         public InMemoryRandomAccessStream NcmPlayableStream { get; set; }
         public string NcmPlayableStreamMIMEType { get; set; } = string.Empty;
+        public IBuffer? CoverBuffer { get; set; }
 
         public PlayItem()
         {
@@ -144,7 +145,9 @@ namespace HyPlayer.Classes
 
         public bool Equals(HyPlayItem other)
         {
-            return other.Id == Id;
+            if (ItemType == HyPlayItemType.Local || ItemType == HyPlayItemType.LocalProgressive)
+                return other.LocalStorageFile == LocalStorageFile || Url == other.Url;
+            return Id == other.Id;
         }
 
         public NCSong ToNCSong()

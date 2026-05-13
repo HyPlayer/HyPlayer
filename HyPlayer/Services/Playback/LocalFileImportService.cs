@@ -108,7 +108,7 @@ public sealed class LocalFileImportService : ILocalFileImportService
                 LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds,
                 ItemType = HyPlayItemType.Local
             };
-            if (sf.Provider.Id == "network" || _setting.safeFileAccess)
+            if (sf.Provider.Id == "network")
                 hyPlayItem.LocalStorageFile = sf;
             return hyPlayItem;
         }
