@@ -52,142 +52,141 @@ namespace HyPlayer
 
         // --- PlaybackSettings delegates ---
 
-        public int Volume { get => Playback.Volume; set => Playback.Volume = value; }
-        public string audioRate { get => Playback.audioRate; set => Playback.audioRate = value; }
-        public bool CrossFade { get => Playback.CrossFade; set => Playback.CrossFade = value; }
-        public double CrossFadeTime { get => Playback.CrossFadeTime; set => Playback.CrossFadeTime = value; }
-        public bool EnableAudioGain { get => Playback.EnableAudioGain; set => Playback.EnableAudioGain = value; }
-        public bool ABRepeatStatus { get => Playback.ABRepeatStatus; set => Playback.ABRepeatStatus = value; }
-        public TimeSpan ABStartPoint { get => Playback.ABStartPoint; set => Playback.ABStartPoint = value; }
+        public int Volume { get => Playback.Volume; set { Playback.Volume = value; OnPropertyChanged(); } }
+        public string audioRate { get => Playback.audioRate; set { Playback.audioRate = value; OnPropertyChanged(); } }
+        public bool CrossFade { get => Playback.CrossFade; set { Playback.CrossFade = value; OnPropertyChanged(); } }
+        public double CrossFadeTime { get => Playback.CrossFadeTime; set { Playback.CrossFadeTime = value; OnPropertyChanged(); } }
+        public bool EnableAudioGain { get => Playback.EnableAudioGain; set { Playback.EnableAudioGain = value; OnPropertyChanged(); } }
+        public bool ABRepeatStatus { get => Playback.ABRepeatStatus; set { Playback.ABRepeatStatus = value; OnPropertyChanged(); } }
+        public TimeSpan ABStartPoint { get => Playback.ABStartPoint; set { Playback.ABStartPoint = value; OnPropertyChanged(); } }
         public string ABStartPointFriendlyValue => Playback.ABStartPointFriendlyValue;
-        public TimeSpan ABEndPoint { get => Playback.ABEndPoint; set => Playback.ABEndPoint = value; }
+        public TimeSpan ABEndPoint { get => Playback.ABEndPoint; set { Playback.ABEndPoint = value; OnPropertyChanged(); } }
         public string ABEndPointFriendlyValue => Playback.ABEndPointFriendlyValue;
-        public bool enableCache { get => Playback.enableCache; set => Playback.enableCache = value; }
-        public string cacheDir { get => Playback.cacheDir; set => Playback.cacheDir = value; }
-        public string AudioRenderDevice { get => Playback.AudioRenderDevice; set => Playback.AudioRenderDevice = value; }
-        public bool EnableFFT { get => Playback.EnableFFT; set => Playback.EnableFFT = value; }
-        public bool shuffleNoRepeating { get => Playback.shuffleNoRepeating; set => Playback.shuffleNoRepeating = value; }
+        public bool enableCache { get => Playback.enableCache; set { Playback.enableCache = value; OnPropertyChanged(); } }
+        public string cacheDir { get => Playback.cacheDir; set { Playback.cacheDir = value; OnPropertyChanged(); } }
+        public string AudioRenderDevice { get => Playback.AudioRenderDevice; set { Playback.AudioRenderDevice = value; OnPropertyChanged(); } }
+        public bool EnableFFT { get => Playback.EnableFFT; set { Playback.EnableFFT = value; OnPropertyChanged(); } }
+        public string ActiveStrategyId { get => Playback.ActiveStrategyId; set { Playback.ActiveStrategyId = value; OnPropertyChanged(); } }
 
         // --- UISettings delegates ---
 
-        public ThemeRequest themeRequest { get => UI.themeRequest; set => UI.themeRequest = value; }
-        public bool expandAnimation { get => UI.expandAnimation; set => UI.expandAnimation = value; }
-        public bool forceMemoryGarbage { get => UI.forceMemoryGarbage; set => UI.forceMemoryGarbage = value; }
-        public bool noImage { get => UI.noImage; set => UI.noImage = value; }
-        public LyricAlignment lyricAlignment { get => UI.lyricAlignment; set => UI.lyricAlignment = value; }
-        public int lyricSize { get => UI.lyricSize; set => UI.lyricSize = value; }
-        public LyricColor lyricColor { get => UI.lyricColor; set => UI.lyricColor = value; }
-        public ColorGeneratorType ColorGeneratorType { get => UI.ColorGeneratorType; set => UI.ColorGeneratorType = value; }
-        public bool IsOldThemeEnabled { get => UI.IsOldThemeEnabled; set => UI.IsOldThemeEnabled = value; }
-        public BackgroundType expandedPlayerBackgroundType { get => UI.expandedPlayerBackgroundType; set => UI.expandedPlayerBackgroundType = value; }
-        public bool CustomAcrylic { get => UI.CustomAcrylic; set => UI.CustomAcrylic = value; }
-        public double CustomTintOpacity { get => UI.CustomTintOpacity; set => UI.CustomTintOpacity = value; }
-        public double CustomTintLuminosityOpacity { get => UI.CustomTintLuminosityOpacity; set => UI.CustomTintLuminosityOpacity = value; }
-        public bool acrylicBackgroundStatus { get => UI.acrylicBackgroundStatus; set => UI.acrylicBackgroundStatus = value; }
+        public ThemeRequest themeRequest { get => UI.themeRequest; set { UI.themeRequest = value; OnPropertyChanged(); } }
+        public bool expandAnimation { get => UI.expandAnimation; set { UI.expandAnimation = value; OnPropertyChanged(); } }
+        public bool forceMemoryGarbage { get => UI.forceMemoryGarbage; set { UI.forceMemoryGarbage = value; OnPropertyChanged(); } }
+        public bool noImage { get => UI.noImage; set { UI.noImage = value; OnPropertyChanged(); } }
+        public LyricAlignment lyricAlignment { get => UI.lyricAlignment; set { UI.lyricAlignment = value; OnPropertyChanged(); } }
+        public int lyricSize { get => UI.lyricSize; set { UI.lyricSize = value; OnPropertyChanged(); } }
+        public LyricColor lyricColor { get => UI.lyricColor; set { UI.lyricColor = value; OnPropertyChanged(); } }
+        public ColorGeneratorType ColorGeneratorType { get => UI.ColorGeneratorType; set { UI.ColorGeneratorType = value; OnPropertyChanged(); } }
+        public bool IsOldThemeEnabled { get => UI.IsOldThemeEnabled; set { UI.IsOldThemeEnabled = value; OnPropertyChanged(); } }
+        public BackgroundType expandedPlayerBackgroundType { get => UI.expandedPlayerBackgroundType; set { UI.expandedPlayerBackgroundType = value; OnPropertyChanged(); } }
+        public bool CustomAcrylic { get => UI.CustomAcrylic; set { UI.CustomAcrylic = value; OnPropertyChanged(); } }
+        public double CustomTintOpacity { get => UI.CustomTintOpacity; set { UI.CustomTintOpacity = value; OnPropertyChanged(); } }
+        public double CustomTintLuminosityOpacity { get => UI.CustomTintLuminosityOpacity; set { UI.CustomTintLuminosityOpacity = value; OnPropertyChanged(); } }
+        public bool acrylicBackgroundStatus { get => UI.acrylicBackgroundStatus; set { UI.acrylicBackgroundStatus = value; OnPropertyChanged(); } }
         public static bool acrylicAvailabiliity => HyPlayerUISettings.acrylicAvailabiliity;
-        public bool albumRotate { get => UI.albumRotate; set => UI.albumRotate = value; }
-        public bool albumRound { get => UI.albumRound; set => UI.albumRound = value; }
-        public int albumBorderLength { get => UI.albumBorderLength; set => UI.albumBorderLength = value; }
-        public bool expandedUseAcrylic { get => UI.expandedUseAcrylic; set => UI.expandedUseAcrylic = value; }
-        public bool playbarBackgroundBreath { get => UI.playbarBackgroundBreath; set => UI.playbarBackgroundBreath = value; }
-        public bool playbarBackgroundAcrylic { get => UI.playbarBackgroundAcrylic; set => UI.playbarBackgroundAcrylic = value; }
-        public bool expandAlbumBreath { get => UI.expandAlbumBreath; set => UI.expandAlbumBreath = value; }
-        public bool listHeaderAcrylicBlur { get => UI.listHeaderAcrylicBlur; set => UI.listHeaderAcrylicBlur = value; }
-        public bool itemOfListBackgroundAcrylicBlur { get => UI.itemOfListBackgroundAcrylicBlur; set => UI.itemOfListBackgroundAcrylicBlur = value; }
-        public bool playbarButtonsTransparent { get => UI.playbarButtonsTransparent; set => UI.playbarButtonsTransparent = value; }
-        public bool playbarBackgroundElay { get => UI.playbarBackgroundElay; set => UI.playbarBackgroundElay = value; }
-        public bool playButtonAccentColor { get => UI.playButtonAccentColor; set => UI.playButtonAccentColor = value; }
-        public bool expandedPlayerFullCover { get => UI.expandedPlayerFullCover; set => UI.expandedPlayerFullCover = value; }
-        public int expandedCoverShadowDepth { get => UI.expandedCoverShadowDepth; set => UI.expandedCoverShadowDepth = value; }
-        public bool EnableTitleBarImmerse { get => UI.EnableTitleBarImmerse; set => UI.EnableTitleBarImmerse = value; }
-        public bool CompactPlayerPageBlurStatus { get => UI.CompactPlayerPageBlurStatus; set => UI.CompactPlayerPageBlurStatus = value; }
-        public bool notClearMode { get => UI.notClearMode; set => UI.notClearMode = value; }
-        public bool AutoHidePlaybar { get => UI.AutoHidePlaybar; set => UI.AutoHidePlaybar = value; }
-        public int AutoHidePlaybarTime { get => UI.AutoHidePlaybarTime; set => UI.AutoHidePlaybarTime = value; }
-        public bool playBarMargin { get => UI.playBarMargin; set => UI.playBarMargin = value; }
-        public bool uiSound { get => UI.uiSound; set => UI.uiSound = value; }
-        public bool displayShuffledList { get => UI.displayShuffledList; set => UI.displayShuffledList = value; }
-        public bool displayMaintain { get => UI.displayMaintain; set => UI.displayMaintain = value; }
-        public bool xboxHidePointer { get => UI.xboxHidePointer; set => UI.xboxHidePointer = value; }
-        public bool enableTouchGestureAction { get => UI.enableTouchGestureAction; set => UI.enableTouchGestureAction = value; }
-        public GestureMode gestureMode { get => UI.gestureMode; set => UI.gestureMode = value; }
-        public bool animationAdaptBPM { get => UI.animationAdaptBPM; set => UI.animationAdaptBPM = value; }
-        public bool gentleBPMAnimation { get => UI.gentleBPMAnimation; set => UI.gentleBPMAnimation = value; }
-        public bool DisablePopUp { get => UI.DisablePopUp; set => UI.DisablePopUp = value; }
-        public bool enableTile { get => UI.enableTile; set => UI.enableTile = value; }
-        public bool tileBackgroundAvailability { get => UI.tileBackgroundAvailability; set => UI.tileBackgroundAvailability = value; }
-        public bool saveTileBackgroundToLocalFolder { get => UI.saveTileBackgroundToLocalFolder; set => UI.saveTileBackgroundToLocalFolder = value; }
-        public bool canaryChannelAvailability { get => UI.canaryChannelAvailability; set => UI.canaryChannelAvailability = value; }
-        public bool localProgressiveLoad { get => UI.localProgressiveLoad; set => UI.localProgressiveLoad = value; }
-        public bool highQualityCoverInSMTC { get => UI.highQualityCoverInSMTC; set => UI.highQualityCoverInSMTC = value; }
-        public bool useTaglibPicture { get => UI.useTaglibPicture; set => UI.useTaglibPicture = value; }
-        public UpdateSource UpdateSource { get => UI.UpdateSource; set => UI.UpdateSource = value; }
+        public bool albumRotate { get => UI.albumRotate; set { UI.albumRotate = value; OnPropertyChanged(); } }
+        public bool albumRound { get => UI.albumRound; set { UI.albumRound = value; OnPropertyChanged(); } }
+        public int albumBorderLength { get => UI.albumBorderLength; set { UI.albumBorderLength = value; OnPropertyChanged(); } }
+        public bool expandedUseAcrylic { get => UI.expandedUseAcrylic; set { UI.expandedUseAcrylic = value; OnPropertyChanged(); } }
+        public bool playbarBackgroundBreath { get => UI.playbarBackgroundBreath; set { UI.playbarBackgroundBreath = value; OnPropertyChanged(); } }
+        public bool playbarBackgroundAcrylic { get => UI.playbarBackgroundAcrylic; set { UI.playbarBackgroundAcrylic = value; OnPropertyChanged(); } }
+        public bool expandAlbumBreath { get => UI.expandAlbumBreath; set { UI.expandAlbumBreath = value; OnPropertyChanged(); } }
+        public bool listHeaderAcrylicBlur { get => UI.listHeaderAcrylicBlur; set { UI.listHeaderAcrylicBlur = value; OnPropertyChanged(); } }
+        public bool itemOfListBackgroundAcrylicBlur { get => UI.itemOfListBackgroundAcrylicBlur; set { UI.itemOfListBackgroundAcrylicBlur = value; OnPropertyChanged(); } }
+        public bool playbarButtonsTransparent { get => UI.playbarButtonsTransparent; set { UI.playbarButtonsTransparent = value; OnPropertyChanged(); } }
+        public bool playbarBackgroundElay { get => UI.playbarBackgroundElay; set { UI.playbarBackgroundElay = value; OnPropertyChanged(); } }
+        public bool playButtonAccentColor { get => UI.playButtonAccentColor; set { UI.playButtonAccentColor = value; OnPropertyChanged(); } }
+        public bool expandedPlayerFullCover { get => UI.expandedPlayerFullCover; set { UI.expandedPlayerFullCover = value; OnPropertyChanged(); } }
+        public int expandedCoverShadowDepth { get => UI.expandedCoverShadowDepth; set { UI.expandedCoverShadowDepth = value; OnPropertyChanged(); } }
+        public bool EnableTitleBarImmerse { get => UI.EnableTitleBarImmerse; set { UI.EnableTitleBarImmerse = value; OnPropertyChanged(); } }
+        public bool CompactPlayerPageBlurStatus { get => UI.CompactPlayerPageBlurStatus; set { UI.CompactPlayerPageBlurStatus = value; OnPropertyChanged(); } }
+        public bool notClearMode { get => UI.notClearMode; set { UI.notClearMode = value; OnPropertyChanged(); } }
+        public bool AutoHidePlaybar { get => UI.AutoHidePlaybar; set { UI.AutoHidePlaybar = value; OnPropertyChanged(); } }
+        public int AutoHidePlaybarTime { get => UI.AutoHidePlaybarTime; set { UI.AutoHidePlaybarTime = value; OnPropertyChanged(); } }
+        public bool playBarMargin { get => UI.playBarMargin; set { UI.playBarMargin = value; OnPropertyChanged(); } }
+        public bool uiSound { get => UI.uiSound; set { UI.uiSound = value; OnPropertyChanged(); } }
+        public bool displayShuffledList { get => UI.displayShuffledList; set { UI.displayShuffledList = value; OnPropertyChanged(); } }
+        public bool displayMaintain { get => UI.displayMaintain; set { UI.displayMaintain = value; OnPropertyChanged(); } }
+        public bool xboxHidePointer { get => UI.xboxHidePointer; set { UI.xboxHidePointer = value; OnPropertyChanged(); } }
+        public bool enableTouchGestureAction { get => UI.enableTouchGestureAction; set { UI.enableTouchGestureAction = value; OnPropertyChanged(); } }
+        public GestureMode gestureMode { get => UI.gestureMode; set { UI.gestureMode = value; OnPropertyChanged(); } }
+        public bool animationAdaptBPM { get => UI.animationAdaptBPM; set { UI.animationAdaptBPM = value; OnPropertyChanged(); } }
+        public bool gentleBPMAnimation { get => UI.gentleBPMAnimation; set { UI.gentleBPMAnimation = value; OnPropertyChanged(); } }
+        public bool DisablePopUp { get => UI.DisablePopUp; set { UI.DisablePopUp = value; OnPropertyChanged(); } }
+        public bool enableTile { get => UI.enableTile; set { UI.enableTile = value; OnPropertyChanged(); } }
+        public bool tileBackgroundAvailability { get => UI.tileBackgroundAvailability; set { UI.tileBackgroundAvailability = value; OnPropertyChanged(); } }
+        public bool saveTileBackgroundToLocalFolder { get => UI.saveTileBackgroundToLocalFolder; set { UI.saveTileBackgroundToLocalFolder = value; OnPropertyChanged(); } }
+        public bool canaryChannelAvailability { get => UI.canaryChannelAvailability; set { UI.canaryChannelAvailability = value; OnPropertyChanged(); } }
+        public bool localProgressiveLoad { get => UI.localProgressiveLoad; set { UI.localProgressiveLoad = value; OnPropertyChanged(); } }
+        public bool highQualityCoverInSMTC { get => UI.highQualityCoverInSMTC; set { UI.highQualityCoverInSMTC = value; OnPropertyChanged(); } }
+        public UpdateSource UpdateSource { get => UI.UpdateSource; set { UI.UpdateSource = value; OnPropertyChanged(); } }
 
         // --- ApiSettings delegates ---
 
-        public bool EnableProxy { get => Api.EnableProxy; set => Api.EnableProxy = value; }
-        public AdditionalParameters ApiAdditionalParameters { get => Api.ApiAdditionalParameters; set => Api.ApiAdditionalParameters = value; }
-        public bool UseHttp { get => Api.UseHttp; set => Api.UseHttp = value; }
-        public bool UseHttpWhenGettingSongs { get => Api.UseHttpWhenGettingSongs; set => Api.UseHttpWhenGettingSongs = value; }
-        public bool EnableCheckTokenApi { get => Api.EnableCheckTokenApi; set => Api.EnableCheckTokenApi = value; }
-        public bool enableApiCache { get => Api.enableApiCache; set => Api.enableApiCache = value; }
-        public bool songUrlLazyGet { get => Api.songUrlLazyGet; set => Api.songUrlLazyGet = value; }
-        public bool greedlyLoadPlayContainerItems { get => Api.greedlyLoadPlayContainerItems; set => Api.greedlyLoadPlayContainerItems = value; }
-        public bool AutoAddGreedilyLoadedSongsToPlayList { get => Api.AutoAddGreedilyLoadedSongsToPlayList; set => Api.AutoAddGreedilyLoadedSongsToPlayList = value; }
-        public bool jumpVipSongPlaying { get => Api.jumpVipSongPlaying; set => Api.jumpVipSongPlaying = value; }
-        public bool jumpVipSongDownloading { get => Api.jumpVipSongDownloading; set => Api.jumpVipSongDownloading = value; }
+        public bool EnableProxy { get => Api.EnableProxy; set { Api.EnableProxy = value; OnPropertyChanged(); } }
+        public AdditionalParameters ApiAdditionalParameters { get => Api.ApiAdditionalParameters; set { Api.ApiAdditionalParameters = value; OnPropertyChanged(); } }
+        public bool UseHttp { get => Api.UseHttp; set { Api.UseHttp = value; OnPropertyChanged(); } }
+        public bool UseHttpWhenGettingSongs { get => Api.UseHttpWhenGettingSongs; set { Api.UseHttpWhenGettingSongs = value; OnPropertyChanged(); } }
+        public bool EnableCheckTokenApi { get => Api.EnableCheckTokenApi; set { Api.EnableCheckTokenApi = value; OnPropertyChanged(); } }
+        public bool enableApiCache { get => Api.enableApiCache; set { Api.enableApiCache = value; OnPropertyChanged(); } }
+        public bool songUrlLazyGet { get => Api.songUrlLazyGet; set { Api.songUrlLazyGet = value; OnPropertyChanged(); } }
+        public bool greedlyLoadPlayContainerItems { get => Api.greedlyLoadPlayContainerItems; set { Api.greedlyLoadPlayContainerItems = value; OnPropertyChanged(); } }
+        public bool AutoAddGreedilyLoadedSongsToPlayList { get => Api.AutoAddGreedilyLoadedSongsToPlayList; set { Api.AutoAddGreedilyLoadedSongsToPlayList = value; OnPropertyChanged(); } }
+        public bool jumpVipSongPlaying { get => Api.jumpVipSongPlaying; set { Api.jumpVipSongPlaying = value; OnPropertyChanged(); } }
+        public bool jumpVipSongDownloading { get => Api.jumpVipSongDownloading; set { Api.jumpVipSongDownloading = value; OnPropertyChanged(); } }
 
         // --- LyricSettings delegates ---
 
-        public RomajiSource LyricRomajiSource { get => Lyric.LyricRomajiSource; set => Lyric.LyricRomajiSource = value; }
-        public bool highPreciseLyricTimer { get => Lyric.highPreciseLyricTimer; set => Lyric.highPreciseLyricTimer = value; }
-        public bool karaokLyric { get => Lyric.karaokLyric; set => Lyric.karaokLyric = value; }
-        public bool showComposerInLyric { get => Lyric.showComposerInLyric; set => Lyric.showComposerInLyric = value; }
-        public bool downloadLyric { get => Lyric.downloadLyric; set => Lyric.downloadLyric = value; }
-        public bool downloadTranslation { get => Lyric.downloadTranslation; set => Lyric.downloadTranslation = value; }
-        public bool MigrateLyrics { get => Lyric.MigrateLyrics; set => Lyric.MigrateLyrics = value; }
-        public bool OptimizeLyric { get => Lyric.OptimizeLyric; set => Lyric.OptimizeLyric = value; }
-        public bool lyricDropshadow { get => Lyric.lyricDropshadow; set => Lyric.lyricDropshadow = value; }
-        public bool lyricCacheRenderTarget { get => Lyric.lyricCacheRenderTarget; set => Lyric.lyricCacheRenderTarget = value; }
-        public int lyricScaleSize { get => Lyric.lyricScaleSize; set => Lyric.lyricScaleSize = value; }
-        public string lyricFontFamily { get => Lyric.lyricFontFamily; set => Lyric.lyricFontFamily = value; }
-        public int lyricLineSpacing { get => Lyric.lyricLineSpacing; set => Lyric.lyricLineSpacing = value; }
-        public int translationSize { get => Lyric.translationSize; set => Lyric.translationSize = value; }
-        public int romajiSize { get => Lyric.romajiSize; set => Lyric.romajiSize = value; }
-        public int lyricPaddingTopRatio { get => Lyric.lyricPaddingTopRatio; set => Lyric.lyricPaddingTopRatio = value; }
-        public int lyricFadingRatio { get => Lyric.lyricFadingRatio; set => Lyric.lyricFadingRatio = value; }
-        public bool hotlyricOnStartup { get => Lyric.hotlyricOnStartup; set => Lyric.hotlyricOnStartup = value; }
-        public bool enableAmllTtmlDb { get => Lyric.enableAmllTtmlDb; set => Lyric.enableAmllTtmlDb = value; }
-        public string amllTtmlMirrorUrl { get => Lyric.amllTtmlMirrorUrl; set => Lyric.amllTtmlMirrorUrl = value; }
-        public bool lyricRenderFocusHighlighting { get => Lyric.lyricRenderFocusHighlighting; set => Lyric.lyricRenderFocusHighlighting = value; }
-        public int lyricRenderWidthRatio { get => Lyric.lyricRenderWidthRatio; set => Lyric.lyricRenderWidthRatio = value; }
-        public bool lyricRenderTransliterationScanning { get => Lyric.lyricRenderTransliterationScanning; set => Lyric.lyricRenderTransliterationScanning = value; }
-        public bool lyricRenderSimpleLineScanning { get => Lyric.lyricRenderSimpleLineScanning; set => Lyric.lyricRenderSimpleLineScanning = value; }
-        public bool lyricRenderScaleWhenFocusing { get => Lyric.lyricRenderScaleWhenFocusing; set => Lyric.lyricRenderScaleWhenFocusing = value; }
-        public bool lyricRenderBlur { get => Lyric.lyricRenderBlur; set => Lyric.lyricRenderBlur = value; }
-        public bool lyricRenderFade { get => Lyric.lyricRenderFade; set => Lyric.lyricRenderFade = value; }
-        public RollingCalculator LineRollingCalculator { get => Lyric.LineRollingCalculator; set => Lyric.LineRollingCalculator = value; }
-        public bool LyricRendererDebugMode { get => Lyric.LyricRendererDebugMode; set => Lyric.LyricRendererDebugMode = value; }
-        public int LyricRendererFPS { get => Lyric.LyricRendererFPS; set => Lyric.LyricRendererFPS = value; }
+        public RomajiSource LyricRomajiSource { get => Lyric.LyricRomajiSource; set { Lyric.LyricRomajiSource = value; OnPropertyChanged(); } }
+        public bool highPreciseLyricTimer { get => Lyric.highPreciseLyricTimer; set { Lyric.highPreciseLyricTimer = value; OnPropertyChanged(); } }
+        public bool karaokLyric { get => Lyric.karaokLyric; set { Lyric.karaokLyric = value; OnPropertyChanged(); } }
+        public bool showComposerInLyric { get => Lyric.showComposerInLyric; set { Lyric.showComposerInLyric = value; OnPropertyChanged(); } }
+        public bool downloadLyric { get => Lyric.downloadLyric; set { Lyric.downloadLyric = value; OnPropertyChanged(); } }
+        public bool downloadTranslation { get => Lyric.downloadTranslation; set { Lyric.downloadTranslation = value; OnPropertyChanged(); } }
+        public bool MigrateLyrics { get => Lyric.MigrateLyrics; set { Lyric.MigrateLyrics = value; OnPropertyChanged(); } }
+        public bool OptimizeLyric { get => Lyric.OptimizeLyric; set { Lyric.OptimizeLyric = value; OnPropertyChanged(); } }
+        public bool lyricDropshadow { get => Lyric.lyricDropshadow; set { Lyric.lyricDropshadow = value; OnPropertyChanged(); } }
+        public bool lyricCacheRenderTarget { get => Lyric.lyricCacheRenderTarget; set { Lyric.lyricCacheRenderTarget = value; OnPropertyChanged(); } }
+        public int lyricScaleSize { get => Lyric.lyricScaleSize; set { Lyric.lyricScaleSize = value; OnPropertyChanged(); } }
+        public string lyricFontFamily { get => Lyric.lyricFontFamily; set { Lyric.lyricFontFamily = value; OnPropertyChanged(); } }
+        public int lyricLineSpacing { get => Lyric.lyricLineSpacing; set { Lyric.lyricLineSpacing = value; OnPropertyChanged(); } }
+        public int translationSize { get => Lyric.translationSize; set { Lyric.translationSize = value; OnPropertyChanged(); } }
+        public int romajiSize { get => Lyric.romajiSize; set { Lyric.romajiSize = value; OnPropertyChanged(); } }
+        public int lyricPaddingTopRatio { get => Lyric.lyricPaddingTopRatio; set { Lyric.lyricPaddingTopRatio = value; OnPropertyChanged(); } }
+        public int lyricFadingRatio { get => Lyric.lyricFadingRatio; set { Lyric.lyricFadingRatio = value; OnPropertyChanged(); } }
+        public bool hotlyricOnStartup { get => Lyric.hotlyricOnStartup; set { Lyric.hotlyricOnStartup = value; OnPropertyChanged(); } }
+        public bool enableAmllTtmlDb { get => Lyric.enableAmllTtmlDb; set { Lyric.enableAmllTtmlDb = value; OnPropertyChanged(); } }
+        public string amllTtmlMirrorUrl { get => Lyric.amllTtmlMirrorUrl; set { Lyric.amllTtmlMirrorUrl = value; OnPropertyChanged(); } }
+        public bool lyricRenderFocusHighlighting { get => Lyric.lyricRenderFocusHighlighting; set { Lyric.lyricRenderFocusHighlighting = value; OnPropertyChanged(); } }
+        public int lyricRenderWidthRatio { get => Lyric.lyricRenderWidthRatio; set { Lyric.lyricRenderWidthRatio = value; OnPropertyChanged(); } }
+        public bool lyricRenderTransliterationScanning { get => Lyric.lyricRenderTransliterationScanning; set { Lyric.lyricRenderTransliterationScanning = value; OnPropertyChanged(); } }
+        public bool lyricRenderSimpleLineScanning { get => Lyric.lyricRenderSimpleLineScanning; set { Lyric.lyricRenderSimpleLineScanning = value; OnPropertyChanged(); } }
+        public bool lyricRenderScaleWhenFocusing { get => Lyric.lyricRenderScaleWhenFocusing; set { Lyric.lyricRenderScaleWhenFocusing = value; OnPropertyChanged(); } }
+        public bool lyricRenderBlur { get => Lyric.lyricRenderBlur; set { Lyric.lyricRenderBlur = value; OnPropertyChanged(); } }
+        public bool lyricRenderFade { get => Lyric.lyricRenderFade; set { Lyric.lyricRenderFade = value; OnPropertyChanged(); } }
+        public RollingCalculator LineRollingCalculator { get => Lyric.LineRollingCalculator; set { Lyric.LineRollingCalculator = value; OnPropertyChanged(); } }
+        public bool LyricRendererDebugMode { get => Lyric.LyricRendererDebugMode; set { Lyric.LyricRendererDebugMode = value; OnPropertyChanged(); } }
+        public int LyricRendererFPS { get => Lyric.LyricRendererFPS; set { Lyric.LyricRendererFPS = value; OnPropertyChanged(); } }
 #nullable enable
-        public Color? pureLyricIdleColor { get => Lyric.pureLyricIdleColor; set => Lyric.pureLyricIdleColor = value; }
-        public Color? pureLyricFocusingColor { get => Lyric.pureLyricFocusingColor; set => Lyric.pureLyricFocusingColor = value; }
-        public Color? karaokLyricFocusingColor { get => Lyric.karaokLyricFocusingColor; set => Lyric.karaokLyricFocusingColor = value; }
+        public Color? pureLyricIdleColor { get => Lyric.pureLyricIdleColor; set { Lyric.pureLyricIdleColor = value; OnPropertyChanged(); } }
+        public Color? pureLyricFocusingColor { get => Lyric.pureLyricFocusingColor; set { Lyric.pureLyricFocusingColor = value; OnPropertyChanged(); } }
+        public Color? karaokLyricFocusingColor { get => Lyric.karaokLyricFocusingColor; set { Lyric.karaokLyricFocusingColor = value; OnPropertyChanged(); } }
 #nullable restore
-        public bool IsolationFullThrottle { get => Lyric.IsolationFullThrottle; set => Lyric.IsolationFullThrottle = value; }
-        public double IsolationFPS { get => Lyric.IsolationFPS; set => Lyric.IsolationFPS = value; }
-        public float IsolationScale { get => Lyric.IsolationScale; set => Lyric.IsolationScale = value; }
-        public bool IsolationLightWave { get => Lyric.IsolationLightWave; set => Lyric.IsolationLightWave = value; }
-        public bool ImpressionistLABSpace { get => Lyric.ImpressionistLABSpace; set => Lyric.ImpressionistLABSpace = value; }
-        public bool ImpressionistIgnoreWhite { get => Lyric.ImpressionistIgnoreWhite; set => Lyric.ImpressionistIgnoreWhite = value; }
-        public bool ImpressionistUseKMeansPP { get => Lyric.ImpressionistUseKMeansPP; set => Lyric.ImpressionistUseKMeansPP = value; }
+        public bool IsolationFullThrottle { get => Lyric.IsolationFullThrottle; set { Lyric.IsolationFullThrottle = value; OnPropertyChanged(); } }
+        public double IsolationFPS { get => Lyric.IsolationFPS; set { Lyric.IsolationFPS = value; OnPropertyChanged(); } }
+        public float IsolationScale { get => Lyric.IsolationScale; set { Lyric.IsolationScale = value; OnPropertyChanged(); } }
+        public bool IsolationLightWave { get => Lyric.IsolationLightWave; set { Lyric.IsolationLightWave = value; OnPropertyChanged(); } }
+        public bool ImpressionistLABSpace { get => Lyric.ImpressionistLABSpace; set { Lyric.ImpressionistLABSpace = value; OnPropertyChanged(); } }
+        public bool ImpressionistIgnoreWhite { get => Lyric.ImpressionistIgnoreWhite; set { Lyric.ImpressionistIgnoreWhite = value; OnPropertyChanged(); } }
+        public bool ImpressionistUseKMeansPP { get => Lyric.ImpressionistUseKMeansPP; set { Lyric.ImpressionistUseKMeansPP = value; OnPropertyChanged(); } }
 
         // --- LastFMSettings delegates ---
 
-        public LastFMSession LastFMSession { get => LastFM.LastFMSession; set => LastFM.LastFMSession = value; }
-        public bool UpdateLastFMNowPlaying { get => LastFM.UpdateLastFMNowPlaying; set => LastFM.UpdateLastFMNowPlaying = value; }
-        public bool LastFMScrobble { get => LastFM.LastFMScrobble; set => LastFM.LastFMScrobble = value; }
-        public bool useAiDj { get => LastFM.useAiDj; set => LastFM.useAiDj = value; }
+        public LastFMSession LastFMSession { get => LastFM.LastFMSession; set { LastFM.LastFMSession = value; OnPropertyChanged(); } }
+        public bool UpdateLastFMNowPlaying { get => LastFM.UpdateLastFMNowPlaying; set { LastFM.UpdateLastFMNowPlaying = value; OnPropertyChanged(); } }
+        public bool LastFMScrobble { get => LastFM.LastFMScrobble; set { LastFM.LastFMScrobble = value; OnPropertyChanged(); } }
+        public bool useAiDj { get => LastFM.useAiDj; set { LastFM.useAiDj = value; OnPropertyChanged(); } }
 
         // ===================================================================
         // Properties that remain directly on Setting (not grouped)
@@ -216,7 +215,7 @@ namespace HyPlayer
         public OccupySolution downloadNameOccupySolution
         {
             get => GetSettings(nameof(downloadNameOccupySolution), OccupySolution.Skip);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(downloadNameOccupySolution)] = (int)value;
+            set { ApplicationData.Current.LocalSettings.Values[nameof(downloadNameOccupySolution)] = (int)value; OnPropertyChanged(); }
         }
 
         public string downloadDir
@@ -284,23 +283,11 @@ namespace HyPlayer
         public int maxDownloadCount
         {
             get => GetSettings(nameof(maxDownloadCount), 1);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(maxDownloadCount)] = value;
-        }
-
-        public PlayMode songRollType
-        {
-            get => GetSettings(nameof(songRollType), PlayMode.DefaultRoll);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(songRollType)] = (int)value;
+                ApplicationData.Current.LocalSettings.Values[nameof(maxDownloadCount)] = value;
                 OnPropertyChanged();
             }
-        }
-
-        public bool safeFileAccess
-        {
-            get => GetSettings(nameof(safeFileAccess), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = value;
         }
 
         public List<string> scanLocalFolder
@@ -310,7 +297,11 @@ namespace HyPlayer
                 var folders = GetSettings(nameof(scanLocalFolder), KnownFolders.MusicLibrary.Path);
                 return [.. folders.Split("\r\n")];
             }
-            set => ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = string.Join("\r\n", value);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(scanLocalFolder)] = string.Join("\r\n", value);
+                OnPropertyChanged();
+            }
         }
 
         public bool advancedMusicHistoryStorage

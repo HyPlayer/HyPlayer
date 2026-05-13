@@ -76,7 +76,7 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
         if (!_setting.CrossFade) return;
 
         // 尝试预加载
-        _ = TryPreloadAsync(ctx);
+        ctx.TaskRunner.Forget(TryPreloadAsync(ctx), "cross-fade preload next track");
 
         if (!_preloaded) return;
 
@@ -98,7 +98,7 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
             {
                 _committedPlaybackSource = _nextPlaybackSource;
                 _committedItem = _nextItem;
-                _ = ctx.CommitItemAsync(_nextItem);
+                ctx.TaskRunner.Forget(ctx.CommitItemAsync(_nextItem), "commit cross-fade preloaded item");
                 _committedNext = true;
             }
         }
@@ -131,23 +131,20 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
     /// </summary>
     public async Task OnTrackEndedAsync(TrackTransitionContext ctx)
     {
-        if (_currentPlaybackSource is not null)
+        var nextPlaybackSource = _nextPlaybackSource ?? _committedPlaybackSource;
+        var nextItem = _nextItem ?? _committedItem;
+
+        if (_currentPlaybackSource is not null && nextPlaybackSource is not null && nextItem is not null)
         {
-            var nextPlaybackSource = _nextPlaybackSource ?? _committedPlaybackSource;
-            var nextItem = _nextItem ?? _committedItem;
+            var targetVolume = _setting.EnableAudioGain ? _nextInitialVolume : 1.0;
+            ctx.Player.PlayPlaybackSource(nextPlaybackSource);
+            ctx.Player.SetPlaybackSourceOutputVolume(targetVolume, nextPlaybackSource);
+            SetPrimaryPlaybackSourceIfSupported(ctx.Player, nextPlaybackSource);
 
-            if (nextPlaybackSource is not null)
+            if (!_committedNext)
             {
-                var targetVolume = _setting.EnableAudioGain ? _nextInitialVolume : 1.0;
-                ctx.Player.PlayPlaybackSource(nextPlaybackSource);
-                ctx.Player.SetPlaybackSourceOutputVolume(targetVolume, nextPlaybackSource);
-                SetPrimaryPlaybackSourceIfSupported(ctx.Player, nextPlaybackSource);
-
-                if (!_committedNext && nextItem is not null)
-                {
-                    await ctx.CommitItemAsync(nextItem).ConfigureAwait(false);
-                    _committedNext = true;
-                }
+                await ctx.CommitItemAsync(nextItem).ConfigureAwait(false);
+                _committedNext = true;
             }
 
             // 已经在淡入淡出中或已完成预加载 — 断开旧源
@@ -156,14 +153,16 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
 
             _currentPlaybackSource = null;
         }
-        else if (_nextPlaybackSource is null)
+        else
         {
             // 未预加载 — 回退到直接切歌
-            var nextItem = await ctx.RequestNextItemAsync(true).ConfigureAwait(false);
-            if (nextItem is not null)
+            ResetInternal();
+            var fallbackItem = await ctx.RequestNextItemAsync(true).ConfigureAwait(false);
+            if (fallbackItem is not null)
             {
-                await ctx.LoadMediaSourceAsync(nextItem, true, true, true).ConfigureAwait(false);
+                await ctx.LoadMediaSourceAsync(fallbackItem, true, true, true).ConfigureAwait(false);
             }
+            return;
         }
 
         // 清理淡入淡出状态
@@ -361,8 +360,10 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
         _fadeStartTicks = 0;
     }
 
-    private static void CleanupPlaybackSourceItem(AudioGraphPlaybackSource playbackSource)
+    private static void CleanupPlaybackSourceItem(AudioGraphPlaybackSource? playbackSource)
     {
+        if (playbackSource is null) return;
+
         HyPlayItem? item = null;
         if (playbackSource.PlaybackSource?.CustomProperties.TryGetValue("nowPlayingItem", out var obj) == true)
             item = obj as HyPlayItem;
@@ -389,6 +390,9 @@ public sealed partial class CrossFadeTransition : ITrackTransition, IDisposable
     /// </summary>
     private void ResetInternal()
     {
+        if (!_committedNext)
+            CleanupPlaybackSourceItem(_nextPlaybackSource);
+
         _processing = false;
         _preloaded = false;
         _preloading = false;

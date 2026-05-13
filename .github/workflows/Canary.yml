@@ -57,7 +57,7 @@ jobs:
               echo "Currently Building Version Is"
               echo $VERSION
               $MANIFEST.Package.Identity.Name = "48848aaaaaaccd.HyPlayer"
-              $MANIFEST.Package.Identity.Publisher = "CN=Test certificate for 'HyPlayer [OSS]'"
+              $MANIFEST.Package.Identity.Publisher = "CN=SignPath Foundation, O=SignPath Foundation, L=Lewes, S=Delaware, C=US"
               $MANIFEST.Package.Applications.Application.VisualElements.DisplayName = "HyPlayer"
               Set-Content -Path HyPlayer.Package\Package.appxmanifest -Value $MANIFEST.OuterXml
     - name: Set BuildInfo Version
@@ -133,7 +133,7 @@ jobs:
         api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
         organization-id: 'cded843b-8dbb-4711-b75a-4265b8e55a12'
         project-slug: 'HyPlayer'
-        signing-policy-slug: 'test'
+        signing-policy-slug: 'release'
         github-artifact-id: '${{ steps.upload-unsigned-artifact.outputs.artifact-id }}'
         wait-for-completion: true
         output-artifact-directory: 'OutputArtifacts'  

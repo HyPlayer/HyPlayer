@@ -27,19 +27,22 @@ namespace HyPlayer.ViewModels
         private readonly Setting _setting;
         private readonly INotificationService _notification;
         private readonly INavigationService _navigation;
+        private readonly IBackgroundTaskRunner _taskRunner;
 
         public AlbumPageViewModel(
             IPlaylistService playlist,
             NeteaseCloudMusicApiHandler api,
             Setting setting,
             INotificationService notification,
-            INavigationService navigation)
+            INavigationService navigation,
+            IBackgroundTaskRunner taskRunner)
         {
             _playlist = playlist;
             _api = api;
             _setting = setting;
             _notification = notification;
             _navigation = navigation;
+            _taskRunner = taskRunner;
         }
 
         [ObservableProperty]
@@ -177,8 +180,9 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void Subscribe()
         {
-            _ = _api.RequestAsync(NeteaseApis.AlbumSubscribeApi,
-                new AlbumSubscribeRequest() { Id = Album.Id, IsSubscribe = !Subscribed });
+            _taskRunner.Forget(_api.RequestAsync(NeteaseApis.AlbumSubscribeApi,
+                new AlbumSubscribeRequest() { Id = Album.Id, IsSubscribe = !Subscribed }),
+                "toggle album subscription");
             Subscribed = !Subscribed;
         }
 

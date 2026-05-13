@@ -406,7 +406,7 @@ internal sealed class ListenTogetherManager :
         return strategyId switch
         {
             "sgl" => ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportPlayMode.SingleLoop,
-            "shf" or "shn" => ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportPlayMode.Random,
+            "shn" => ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportPlayMode.Random,
             _ => ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportPlayMode.OrderLoop
         };
     }

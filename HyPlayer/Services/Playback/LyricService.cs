@@ -30,13 +30,20 @@ public sealed class LyricService : ILyricService
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
     private readonly HttpClient _httpClient;
+    private readonly IBackgroundTaskRunner _taskRunner;
 
-    public LyricService(NeteaseCloudMusicApiHandler api, PlaybackStateService state, Setting setting, HttpClient httpClient)
+    public LyricService(
+        NeteaseCloudMusicApiHandler api,
+        PlaybackStateService state,
+        Setting setting,
+        HttpClient httpClient,
+        IBackgroundTaskRunner taskRunner)
     {
         _api = api;
         _state = state;
         _setting = setting;
         _httpClient = httpClient;
+        _taskRunner = taskRunner;
     }
 
     /// <inheritdoc />
@@ -130,10 +137,11 @@ public sealed class LyricService : ILyricService
         // 5. 写入缓存
         if (canUseHyLyricInfoCache && HasCacheableLyrics(lyricInfo, item))
         {
-            _ = SimpleCacher.GetOrCreateCacheAsync(
+            _taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
                 CacheType.HyLyricInfo, item.Id,
                 () => Task.FromResult(lyricInfo),
-                cancellationToken: ct);
+                cancellationToken: ct),
+                "cache lyric info");
         }
 
         // 6. 尝试加载 AMLL TTML 歌词（覆盖）
@@ -296,13 +304,14 @@ public sealed class LyricService : ILyricService
         {
             if (!_setting.enableAmllTtmlDb || item.ItemType != HyPlayItemType.Netease || string.IsNullOrWhiteSpace(item.Id)) return;
 
-            var ttml = await _httpClient.GetStringAsync(
-                _setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", item.Id), ct);
-
+            using var message = new HttpRequestMessage(HttpMethod.Get, _setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", item.Id));
+            message.Headers.Add("User-Agent", "HyPlayer LyricsClient");
+            using var ttml = await _httpClient.SendAsync(message, ct);
+            var ttmlContent = await ttml.Content.ReadAsStringAsync(ct);
             var ttmlConverter = new AppleSyllableConverter();
             var lrcConverter = new LrcConverter();
             var lrcTranslationConverter = new LrcTranslationEnhancer();
-            var alrc = ttmlConverter.Convert(ttml);
+            var alrc = ttmlConverter.Convert(ttmlContent);
             var lrc = lrcConverter.ConvertBack(alrc);
             var trLrc = lrcTranslationConverter.Extract(alrc);
 
@@ -341,17 +350,17 @@ public sealed class LyricService : ILyricService
 
             if (HasCacheableLyrics(lyricInfo, item))
             {
-                _ = SimpleCacher.GetOrCreateCacheAsync(
+                _taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
                     CacheType.HyLyricInfo, item.Id,
                     () => Task.FromResult(lyricInfo),
                     forceRefresh: true,
-                    cancellationToken: ct);
+                    cancellationToken: ct),
+                    "refresh AMLL lyric cache");
             }
         }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception ex)
+        catch
         {
-            System.Diagnostics.Debug.WriteLine($"Lyric error: {ex.Message}");
+
         }
     }
 

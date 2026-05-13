@@ -63,12 +63,6 @@
         OctTree = 1,
         Auto = 2
     }
-    public enum PlayMode : int
-    {
-        DefaultRoll = 0,
-        SinglePlay = 1,
-        Shuffled = 2
-    }
     public enum ThemeRequest : int
     {
         Auto = 0,

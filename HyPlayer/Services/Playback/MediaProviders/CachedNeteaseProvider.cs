@@ -32,6 +32,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
     private readonly Setting _setting;
     private readonly HttpClient _httpClient;
     private readonly NeteaseCloudMusicApiHandler _neteaseApi;
+    private readonly IBackgroundTaskRunner _taskRunner;
     private readonly BackgroundDownloader _downloader = new();
 
     /// <summary>
@@ -48,11 +49,16 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
     /// <param name="setting">应用设置，用于获取缓存目录和音质配置</param>
     /// <param name="httpClient">HTTP 客户端，用于预检请求</param>
     /// <param name="neteaseApi">网易云 API 处理器，用于获取播放链接</param>
-    public CachedNeteaseProvider(Setting setting, HttpClient httpClient, NeteaseCloudMusicApiHandler neteaseApi)
+    public CachedNeteaseProvider(
+        Setting setting,
+        HttpClient httpClient,
+        NeteaseCloudMusicApiHandler neteaseApi,
+        IBackgroundTaskRunner taskRunner)
     {
         _setting = setting;
         _httpClient = httpClient;
         _neteaseApi = neteaseApi;
+        _taskRunner = taskRunner;
     }
 
     /// <inheritdoc />
@@ -127,13 +133,19 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
                     return (null, 0);
                 }
 
-                playUrl = songResult.SongUrls[0].Url;
-                size = songResult.SongUrls[0].Size;
+                var songUrl = songResult.SongUrls[0];
+                playUrl = songUrl.Url;
+                size = songUrl.Size;
                 item.Size = size;
+                item.Bitrate = Convert.ToInt32(songUrl.BitRate);
+                item.SubExt = songUrl.Type?.ToLowerInvariant() ?? string.Empty;
+                item.QualityTag = item.GetQualityTagText(_setting.audioRate);
                 if (_setting.UseHttpWhenGettingSongs && (playUrl?.Contains("https://") ?? false))
                 {
                     playUrl = playUrl.Replace("https://", "http://");
                 }
+
+                if (playUrl != null) item.Url = playUrl;
             }
             else
             {
@@ -153,7 +165,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
         {
             ct.ThrowIfCancellationRequested();
             var cacheFolder = await StorageFolder.GetFolderFromPathAsync(_setting.cacheDir);
-            var fileName = string.Format(CacheFileNameFormat, item.Id, "cache");
+            var fileName = string.Format(CacheFileNameFormat, item.Id, item.SubExt);
             var cacheFile = await cacheFolder.GetFileAsync(fileName);
 
             var properties = await cacheFile.GetBasicPropertiesAsync();
@@ -194,7 +206,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
         var headerIsValid = modified is not null;
 
         var destinationFolder = await StorageFolder.GetFolderFromPathAsync(_setting.cacheDir);
-        var fileName = string.Format(CacheFileNameFormat, item.Id, "cache");
+        var fileName = string.Format(CacheFileNameFormat, item.Id, item.SubExt);
         var destinationFile = await destinationFolder.CreateFileAsync(
             fileName, CreationCollisionOption.ReplaceExisting);
 
@@ -202,10 +214,17 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
         operation.IsRandomAccessRequired = headerIsValid;
         _downloadOperations[item.Id] = operation;
 
-        _ = operation.StartAsync().AsTask(ct).ContinueWith((operation) =>
+        _taskRunner.Forget(async () =>
         {
-            _downloadOperations.TryRemove(item.Id, out _);
-        });
+            try
+            {
+                await operation.StartAsync().AsTask(ct);
+            }
+            finally
+            {
+                _downloadOperations.TryRemove(item.Id, out _);
+            }
+        }, "download and cache NetEase media");
 
         return headerIsValid
             ? MediaSource.CreateFromDownloadOperation(operation)

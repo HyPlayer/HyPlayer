@@ -1,11 +1,13 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Messages;
 using Microsoft.Toolkit.Uwp.Helpers;
 using System;
 using System.Collections.Generic;
@@ -17,7 +19,6 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Timers;
 using TagLib;
 using Windows.Graphics.Imaging;
 using Windows.Networking.BackgroundTransfer;
@@ -465,7 +466,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
 
 internal static class DownloadManager
 {
-    private static readonly Timer _timer = new(1000);
+    private static readonly object _timerRecipient = new();
     private static bool Timered;
     public static ObservableCollection<DownloadObject> DownloadLists = [];
     public static BackgroundDownloader Downloader = new();
@@ -482,8 +483,7 @@ internal static class DownloadManager
     {
         if (!Timered)
         {
-            _timer.Elapsed += Timer_Elapsed;
-            _timer.Start();
+            WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(_timerRecipient, (_, _) => Timer_Elapsed());
             Timered = true;
         }
     }
@@ -492,10 +492,12 @@ internal static class DownloadManager
     {
         if (Timered)
         {
-            _timer.Stop();
-            _timer.Elapsed -= Timer_Elapsed;
+            WeakReferenceMessenger.Default.Unregister<GlobalSecondTimerMessage>(_timerRecipient);
             Timered = false;
         }
+        WritingTasks.RemoveAll(t => t.IsCompleted);
+        if (DownloadLists.Count == 0)
+            AlbumPicturesCache.Clear();
     }
 
     public static void AddDownload(NCSong song)
@@ -506,9 +508,13 @@ internal static class DownloadManager
         DownloadLists.Add(new DownloadObject(song));
     }
 
-    private static void Timer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+    private static void Timer_Elapsed()
     {
-        if (DownloadLists.Count == 0) return;
+        if (DownloadLists.Count == 0)
+        {
+            StopTimer();
+            return;
+        }
         var maxDownloadCount = Ioc.Default.GetRequiredService<Setting>().maxDownloadCount;
         for (var i = 0; i < DownloadLists.Count; i++)
         {
@@ -523,7 +529,12 @@ internal static class DownloadManager
                     return;
                 case DownloadObject.DownloadStatus.Finished:
                     var i1 = i;
-                    _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => { DownloadLists.RemoveAt(i1); });
+                    _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+                    {
+                        DownloadLists.RemoveAt(i1);
+                        if (DownloadLists.Count == 0)
+                            StopTimer();
+                    });
                     break;
                 case DownloadObject.DownloadStatus.Paused:
                 case DownloadObject.DownloadStatus.Error:

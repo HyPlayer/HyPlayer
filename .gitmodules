@@ -1,10 +1,6 @@
 [submodule "Kawazu"]
 	path = Kawazu
 	url = https://github.com/HyPlayer/Kawazu.git
-[submodule "LyricParser"]
-	path = LyricParser
-	url = https://github.com/HyPlayer/LyricParser
-	branch = UWP
 [submodule "Impressionist"]
 	path = Impressionist
 	url = https://github.com/Storyteller-Studios/Impressionist

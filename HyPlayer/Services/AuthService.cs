@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.Services.Abstractions;
@@ -15,6 +15,21 @@ namespace HyPlayer.Services;
 /// </summary>
 public class AuthService : IAuthService
 {
+    private readonly PlaybackStateService _state;
+    private readonly INotificationService _notification;
+    private readonly IBackgroundTaskRunner _taskRunner;
+    private readonly SemaphoreSlim _likeSongGate = new(1, 1);
+
+    public AuthService(
+        PlaybackStateService state,
+        INotificationService notification,
+        IBackgroundTaskRunner taskRunner)
+    {
+        _state = state;
+        _notification = notification;
+        _taskRunner = taskRunner;
+    }
+
     /// <inheritdoc />
     public bool IsLoggedIn { get; set; }
 
@@ -50,10 +65,28 @@ public class AuthService : IAuthService
     }
 
     /// <inheritdoc />
-    public async void LikeSong()
+    public void LikeSong()
     {
-        var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-        var item = state.NowPlayingItem;
+        _taskRunner.Forget(LikeSongAsync, "toggle current song like status");
+    }
+
+    /// <inheritdoc />
+    public async Task LikeSongAsync()
+    {
+        await _likeSongGate.WaitAsync();
+        try
+        {
+            await LikeSongCoreAsync();
+        }
+        finally
+        {
+            _likeSongGate.Release();
+        }
+    }
+
+    private async Task LikeSongCoreAsync()
+    {
+        var item = _state.NowPlayingItem;
         if (item == null) return;
         var isLiked = LikedSongs.Contains(item.Id);
         try
@@ -73,8 +106,7 @@ public class AuthService : IAuthService
                         else throw new Exception("红心操作失败");
                         break;
                     case HyPlayItemType.Radio:
-                        var notification = Ioc.Default.GetRequiredService<INotificationService>();
-                        notification.ShowMessage("暂不支持红心电台歌曲", "将在后续版本中支持");
+                        _notification.ShowMessage("暂不支持红心电台歌曲", "将在后续版本中支持");
                         WeakReferenceMessenger.Default.Send(new SongLikeStatusChangedMessage(!isLiked));
                         break;
                 }
@@ -82,8 +114,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            var notification = Ioc.Default.GetRequiredService<INotificationService>();
-            notification.ShowMessage("红心操作失败", ex.Message);
+            _notification.ShowMessage("红心操作失败", ex.Message);
         }
     }
 }

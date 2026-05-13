@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Classes;
 using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Toolkit.Uwp.UI;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
@@ -16,6 +17,23 @@ namespace HyPlayer.Services;
 /// </summary>
 public class NavigationService : INavigationService
 {
+    private readonly IBackgroundTaskRunner _taskRunner;
+    private readonly Setting _setting;
+    private readonly IUIStateService _uiState;
+    private readonly IServiceProvider _serviceProvider;
+
+    public NavigationService(
+        IBackgroundTaskRunner taskRunner,
+        Setting setting,
+        IUIStateService uiState,
+        IServiceProvider serviceProvider)
+    {
+        _taskRunner = taskRunner;
+        _setting = setting;
+        _uiState = uiState;
+        _serviceProvider = serviceProvider;
+    }
+
     /// <inheritdoc />
     public Frame? RootFrame { get; set; }
 
@@ -28,11 +46,9 @@ public class NavigationService : INavigationService
     /// <inheritdoc />
     public void Navigate(Type pageType, object? parameter = null)
     {
-        var setting = Ioc.Default.GetRequiredService<Setting>();
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-        if (setting.forceMemoryGarbage)
+        if (_setting.forceMemoryGarbage)
         {
-            var pageBase = uiState.PageBase as BasePage;
+            var pageBase = _uiState.PageBase as BasePage;
             if (NavigationHistory.Count >= 1 && pageBase?.NavMain.SelectedItem == NavigationHistory.Peek().Item)
                 pageBase.NavMain.SelectedItem = pageBase.NavItemBlank;
             NavigationHistory.Push(new NavigationHistoryItem
@@ -55,8 +71,7 @@ public class NavigationService : INavigationService
     /// <inheritdoc />
     public void NavigateBack()
     {
-        var setting = Ioc.Default.GetRequiredService<Setting>();
-        if (setting.forceMemoryGarbage)
+        if (_setting.forceMemoryGarbage)
         {
             if (NavigationHistory.Count > 1)
                 NavigationHistory.Pop();
@@ -89,6 +104,9 @@ public class NavigationService : INavigationService
     /// <inheritdoc />
     public void NavigateRefresh()
     {
+        if (NavigationHistory.Count == 0)
+            return;
+
         var peek = NavigationHistory.Peek();
         RootFrame?.Navigate(peek.PageType, peek.Paratmers);
         GC.Collect();
@@ -97,15 +115,16 @@ public class NavigationService : INavigationService
     /// <inheritdoc />
     public void CollectGarbage()
     {
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+        if (RootFrame is null)
+            return;
+
         Navigate(typeof(BlankPage));
-        RootFrame!.Content = null;
-        uiState.PageExpandedPlayer = null;
-        var pageMain = uiState.PageMain as MainPage;
+        RootFrame.Content = null;
+        var pageMain = _uiState.PageMain as MainPage;
         pageMain?.ExpandedPlayer.Navigate(typeof(BlankPage));
-        _ = ImageCache.Instance.ClearAsync();
-        uiState.KawazuConv?.Dispose();
-        uiState.KawazuConv = null;
+        _taskRunner.Forget(ImageCache.Instance.ClearAsync(), "clear image cache while collecting garbage");
+        _uiState.KawazuConv?.Dispose();
+        _uiState.KawazuConv = null;
     }
 
     /// <inheritdoc />
@@ -129,9 +148,11 @@ public class NavigationService : INavigationService
                 Navigate(typeof(Me), resourceId[2..]);
                 break;
             case "ns":
-                var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+                var playlist = _serviceProvider.GetRequiredService<IPlaylistService>();
                 await playlist.AppendNcSourceAsync(resourceId);
-                playlist.MoveToAsync(playlist.Items.FirstOrDefault(t => "ns" + t.Id == resourceId));
+                var item = playlist.Items.FirstOrDefault(t => "ns" + t.Id == resourceId);
+                if (item is not null)
+                    await playlist.MoveToAsync(item);
                 break;
             case "ml":
                 Navigate(typeof(MVPage), resourceId[2..]);

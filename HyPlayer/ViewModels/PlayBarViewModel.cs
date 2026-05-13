@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using CommunityToolkit.Mvvm.DependencyInjection;
+using System.Diagnostics.CodeAnalysis;
 namespace HyPlayer.ViewModels;
 
 public partial class PlayBarViewModel : ObservableRecipient
@@ -22,6 +23,8 @@ public partial class PlayBarViewModel : ObservableRecipient
     private readonly ILyricService _lyricService;
     private readonly Setting _setting;
     private readonly INotificationService _notification;
+    private readonly IBackgroundTaskRunner _taskRunner;
+    private readonly IAuthService _authService;
 
     public PlayBarViewModel(
         IPlaylistService playlist,
@@ -29,7 +32,9 @@ public partial class PlayBarViewModel : ObservableRecipient
         PlaybackStateService state,
         ILyricService lyricService,
         Setting setting,
-        INotificationService notification)
+        INotificationService notification,
+        IBackgroundTaskRunner taskRunner,
+        IAuthService authService)
     {
         _playlist = playlist;
         _control = control;
@@ -37,6 +42,8 @@ public partial class PlayBarViewModel : ObservableRecipient
         _lyricService = lyricService;
         _setting = setting;
         _notification = notification;
+        _taskRunner = taskRunner;
+        _authService = authService;
 
         // Initialize from current state
         NowPlayingItem = _state.NowPlayingItem;
@@ -91,16 +98,6 @@ public partial class PlayBarViewModel : ObservableRecipient
     /// </summary>
     public ObservableCollection<HyPlayItem> PlaylistItems { get; } = [];
 
-    /// <summary>
-    /// Current play mode derived from ActiveStrategyId.
-    /// </summary>
-    public PlayMode NowPlayType => ActiveStrategyId switch
-    {
-        "sgl" => PlayMode.SinglePlay,
-        "shf" or "shn" => PlayMode.Shuffled,
-        _ => PlayMode.DefaultRoll
-    };
-
     // ── Playlist service pass-through ──
 
     public IReadOnlyList<HyPlayItem> Items => _playlist.Items;
@@ -115,7 +112,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     public string SongName => NowPlayingItem?.Name ?? string.Empty;
     public string ArtistName => NowPlayingItem?.ArtistString ?? string.Empty;
     public string AlbumName => NowPlayingItem?.AlbumString ?? string.Empty;
-    public string QualityTagText => string.IsNullOrEmpty(QualityTag) ? NowPlayingItem?.QualityTag ?? "无歌曲" : QualityTag;
+    public string QualityTagText => NowPlayingItem?.GetQualityTagText(_setting.audioRate) ?? "无歌曲";
     public string TotalTimeText => FormatTime(Duration != TimeSpan.Zero ? Duration : TimeSpan.FromMilliseconds(NowPlayingItem?.LengthInMilliseconds ?? 0));
     public string NowTimeText => FormatTime(Position);
     public double ProgressMilliseconds => Position.TotalMilliseconds;
@@ -140,7 +137,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     [RelayCommand]
     private async Task MovePreviousAsync()
     {
-        if (Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm)
+        if (_state.IsInFm)
             PersonalFM.ExitFm();
         else
             await _playlist.MovePreviousAsync();
@@ -149,18 +146,17 @@ public partial class PlayBarViewModel : ObservableRecipient
     [RelayCommand]
     private void ChangePlayMode()
     {
-        if (Ioc.Default.GetRequiredService<PlaybackStateService>().IsInFm) return;
+        if (_state.IsInFm) return;
 
         var nextStrategy = ActiveStrategyId switch
         {
             "seq" => "shn",
-            "shn" or "shf" => "sgl",
+            "shn" => "sgl",
             "sgl" => "seq",
             _ => "seq"
         };
         _playlist.SetStrategy(nextStrategy);
         ActiveStrategyId = nextStrategy;
-        OnPropertyChanged(nameof(NowPlayType));
     }
 
     [RelayCommand]
@@ -172,8 +168,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     [RelayCommand]
     private void LikeSong()
     {
-        var authService = CommunityToolkit.Mvvm.DependencyInjection.Ioc.Default.GetRequiredService<IAuthService>();
-        authService.LikeSong();
+        _authService.LikeSong();
     }
 
     [RelayCommand]
@@ -205,7 +200,8 @@ public partial class PlayBarViewModel : ObservableRecipient
     }
 
     // ── Messenger Registrations ──
-
+    [RequiresUnreferencedCode("This method requires the generated CommunityToolkit.Mvvm.Messaging.__Internals.__IMessengerExtensions type not to be removed to use the fast path. If this type is removed by the linker, or if the target recipient was created dynamically and was missed by the source generator, a slower fallback path using a compiled LINQ expression will be used. This will have more overhead in the first invocation of this method for any given recipient type. Alternatively, OnActivated() can be manually overwritten, and registration can be done individually for each required message for this recipient.")]
+    [RequiresDynamicCode("This method requires the generated CommunityToolkit.Mvvm.Messaging.__Internals.__IMessengerExtensions type not to be removed to use the fast path. If that is present, the method is AOT safe, as the only methods being invoked to register the messages will be the ones produced by the source generator. If it isn't, this method will need to dynamically create the generic methods to register messages, which might not be available at runtime. Alternatively, OnActivated() can be manually overwritten, and registration can be done individually for each required message for this recipient.")]
     protected override void OnActivated()
     {
         var messenger = Messenger;
@@ -213,44 +209,42 @@ public partial class PlayBarViewModel : ObservableRecipient
         messenger.Register<TrackChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() =>
+            vm.RunOnUIThread(() =>
             {
                 vm.NowPlayingItem = m.Item;
                 vm.Duration = TimeSpan.FromMilliseconds(m.Item?.LengthInMilliseconds ?? 0);
                 vm.QualityTag = vm._state.QualityTag;
                 vm.IsInFm = vm._state.IsInFm;
                 vm.ActiveStrategyId = vm._state.ActiveStrategyId;
-                vm.OnPropertyChanged(nameof(NowPlayType));
             });
         });
 
         messenger.Register<PlaybackStateChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.IsPlaying = m.IsPlaying);
+            vm.RunOnUIThread(() => vm.IsPlaying = m.IsPlaying);
         });
 
         messenger.Register<PlaylistChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() =>
+            vm.RunOnUIThread(() =>
             {
-                vm.RefreshPlaylistItems(m.IsShuffleTrigger);
+                vm.RefreshPlaylistItems();
                 vm.ActiveStrategyId = vm._state.ActiveStrategyId;
-                vm.OnPropertyChanged(nameof(NowPlayType));
             });
         });
 
         messenger.Register<CoverChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
+            vm.RunOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
         });
 
         messenger.Register<PositionTickMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() =>
+            vm.RunOnUIThread(() =>
             {
                 vm.Position = m.Position;
                 vm.Duration = vm._state.Duration;
@@ -260,26 +254,26 @@ public partial class PlayBarViewModel : ObservableRecipient
         messenger.Register<QualityTagChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.QualityTag = m.Tag);
+            vm.RunOnUIThread(() => vm.QualityTag = m.Tag);
         });
 
         messenger.Register<LyricIndexChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.LyricIndex = m.Index);
+            vm.RunOnUIThread(() => vm.LyricIndex = m.Index);
         });
 
         messenger.Register<LyricLoadedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.LyricInfo = m.Info);
+            vm.RunOnUIThread(() => vm.LyricInfo = m.Info);
         });
 
         messenger.Register<SongLikeStatusChangedMessage>(this, (r, m) =>
         {
             // UI layer handles visual update; ViewModel just notifies
             var vm = (PlayBarViewModel)r;
-            _ = vm._notification.InvokeOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
+            vm.RunOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
         });
 
         messenger.Register<LoginCompletedMessage>(this, (r, _) =>
@@ -300,6 +294,7 @@ public partial class PlayBarViewModel : ObservableRecipient
         OnPropertyChanged(nameof(TotalTimeText));
         OnPropertyChanged(nameof(DurationMilliseconds));
     }
+    partial void OnActiveStrategyIdChanged(string value) => RefreshPlaylistItems();
     partial void OnQualityTagChanged(string value) => OnPropertyChanged(nameof(QualityTagText));
 
     private void NotifyPlayBarProperties()
@@ -311,6 +306,11 @@ public partial class PlayBarViewModel : ObservableRecipient
         OnPropertyChanged(nameof(TotalTimeText));
         OnPropertyChanged(nameof(DurationMilliseconds));
         OnPropertyChanged(nameof(CanShareCurrentSong));
+    }
+
+    private void RunOnUIThread(Action action)
+    {
+        _taskRunner.Forget(_notification.InvokeOnUIThread(action), $"{nameof(PlayBarViewModel)} UI update");
     }
 
     private static string FormatTime(TimeSpan time)
@@ -326,21 +326,22 @@ public partial class PlayBarViewModel : ObservableRecipient
     /// <summary>
     /// Refreshes the PlaylistItems collection from the playlist service.
     /// </summary>
-    public void RefreshPlaylistItems(bool isShuffleTrigger = false)
+    public void RefreshPlaylistItems()
     {
         PlaylistItems.Clear();
+        var snapshot = _playlist.Items;
 
-        if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating && _setting.displayShuffledList)
+        if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
         {
             foreach (var idx in _playlist.ShuffleList)
             {
-                if (idx >= 0 && idx < _playlist.Items.Count)
-                    PlaylistItems.Add(_playlist.Items[idx]);
+                if (idx >= 0 && idx < snapshot.Count)
+                    PlaylistItems.Add(snapshot[idx]);
             }
         }
         else
         {
-            foreach (var item in _playlist.Items)
+            foreach (var item in snapshot)
                 PlaylistItems.Add(item);
         }
     }
@@ -350,7 +351,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     /// </summary>
     public string GetPlaylistTitle()
     {
-        if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating && _setting.displayShuffledList)
+        if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
             return $"随机播放列表 (共{PlaylistItems.Count}首)";
         return $"播放列表 (共{PlaylistItems.Count}首)";
     }
@@ -360,7 +361,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     /// </summary>
     public int GetTargetingIndex()
     {
-        if (NowPlayType == PlayMode.Shuffled && _setting.shuffleNoRepeating && _setting.displayShuffledList)
+        if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
             return _playlist.ShufflingIndex;
         return _playlist.NowPlayingIndex;
     }
@@ -377,14 +378,13 @@ public partial class PlayBarViewModel : ObservableRecipient
         LyricInfo = _state.LyricInfo;
         IsInFm = _state.IsInFm;
         QualityTag = _state.QualityTag;
-        OnPropertyChanged(nameof(NowPlayType));
     }
 
     /// <summary>
     /// Notifies that playlist append is done (triggers PlaylistChanged message).
     /// </summary>
-    public void NotifyAppendDone(bool isShuffleTrigger = false)
+    public void NotifyAppendDone()
     {
-        _playlist.NotifyAppendDone(isShuffleTrigger);
+        _playlist.NotifyAppendDone();
     }
 }

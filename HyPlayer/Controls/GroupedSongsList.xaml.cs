@@ -4,14 +4,11 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
-using System;
+using HyPlayer.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -28,9 +25,8 @@ namespace HyPlayer.Controls;
 
 public sealed partial class GroupedSongsList : UserControl
 {
-    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-    private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    public GroupedSongsListViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<GroupedSongsListViewModel>();
 
     public static readonly DependencyProperty GroupedSongsProperty = DependencyProperty.Register(
         "GroupedSongs", typeof(CollectionViewSource), typeof(GroupedSongsList),
@@ -74,7 +70,7 @@ public sealed partial class GroupedSongsList : UserControl
         {
             SetValue(GroupedSongsProperty, value);
             SongContainer.SelectedIndex = -1;
-            HyPlayListOnOnPlayItemChange(_state.NowPlayingItem);
+            HyPlayListOnOnPlayItemChange(ViewModel.NowPlayingItem);
         }
     }
 
@@ -132,111 +128,56 @@ public sealed partial class GroupedSongsList : UserControl
 
     private async void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
-        {
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
-            return;
-        }
-        foreach (NCSong ncsong in SongContainer.SelectedItems.Cast<NCSong>())
-        {
-            _playlist.AppendNcSong(ncsong);
-        }
-
-        if (SongContainer.SelectedItem != null)
-        {
-            var targetPlayItem = _playlist.Items.ToList().Find(t => t.Id == (SongContainer.SelectedItem as NCSong).SongId);
-            await _playlist.MoveToAsync(targetPlayItem);
-        }
+        if (TryGetSelectedSong(out var selectedSong))
+            await ViewModel.PlayNowAsync(GetSelectedSongs(), selectedSong);
     }
 
     private void FlyoutItemAddToPlayList_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
-        {
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
-            return;
-        }
-        var playItems = _playlist.AppendNcSongRange([.. SongContainer.SelectedItems.Cast<NCSong>()], _playlist.NowPlayingIndex + 1);
-        if (_state.ActiveStrategyId is "shf" or "shn")
-        {
-            List<int> playItemIndexes = [];
-            foreach (var item in playItems)
-            {
-                var index = _playlist.Items.ToList().IndexOf(item);
-                playItemIndexes.Add(index);
-            }
-            for (int i = 0; i < playItemIndexes.Count; i++)
-            {
-                var item = playItemIndexes[i];
-                var currentIndex = _playlist.ShuffleList.IndexOf(_playlist.NowPlayingIndex);
-                if (currentIndex + playItemIndexes.Count >= _playlist.ShuffleList.Count) break; // 如果调不了顺序（歌单剩余空位不足）就算了
-                var nextIndex = currentIndex + i + 1;
-                var targetIndex = _playlist.ShuffleList.IndexOf(item);
-                var t = _playlist.ShuffleList[nextIndex];
-                _playlist.ShuffleList[targetIndex] = t;
-                _playlist.ShuffleList[nextIndex] = item;
-            }
-        }
-        if (SongContainer.SelectedItems.Cast<NCSong>().Any(t => !t.IsAvailable))
-        {
-            var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Select(t => t.SongName).ToArray();
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
-        }
+        if (TryGetSelectedSong(out var selectedSong))
+            ViewModel.AddToNext(GetSelectedSongs(), selectedSong);
     }
 
     private async void FlyoutItemSinger_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        if ((SongContainer.SelectedItem as NCSong)?.Artist[0].Type == HyPlayItemType.Radio)
-        {
-            Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me), (SongContainer.SelectedItem as NCSong)?.Artist[0].Id ?? "");
-        }
-        else
-        {
-            if (SongContainer.SelectedItem is NCSong { Artist.Count: > 1 })
-                await new ArtistSelectDialog((SongContainer.SelectedItem as NCSong)?.Artist).ShowAsync();
-            else
-                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(ArtistPage), (SongContainer.SelectedItem as NCSong)?.Artist[0].Id ?? "");
-        }
+        if (TryGetSelectedSong(out var selectedSong))
+            await ViewModel.OpenSingerAsync(selectedSong);
     }
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong)?.Album.Id ?? "");
+        if (TryGetSelectedSong(out var selectedSong))
+            ViewModel.OpenAlbum(selectedSong);
     }
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong)?.SongId);
+        if (TryGetSelectedSong(out var selectedSong))
+            ViewModel.OpenComments(selectedSong);
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
     {
-        foreach (NCSong ncsong in SongContainer.SelectedItems.Cast<NCSong>())
-        {
-            DownloadManager.AddDownload(ncsong);
-        }
+        ViewModel.DownloadSongs(GetSelectedSongs());
     }
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(MVPage), SongContainer.SelectedItem as NCSong ?? new NCSong());
+        if (TryGetSelectedSong(out var selectedSong))
+            ViewModel.OpenMv(selectedSong);
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        await new SongListSelect((SongContainer.SelectedItem as NCSong)?.SongId).ShowAsync();
+        if (TryGetSelectedSong(out var selectedSong))
+            await ViewModel.CollectAsync(selectedSong);
     }
 
     private void Grid_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
         var element = sender?.As<Grid>();
+        if (element == null) return;
+
         if (SongContainer.SelectionMode == ListViewSelectionMode.Single)
         {
             SongContainer.SelectedItem = element.DataContext;
@@ -249,31 +190,25 @@ public sealed partial class GroupedSongsList : UserControl
 
     private async void SongContainer_OnItemClick(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem == null) return;
+        if (e.ClickedItem is not NCSong clickedSong) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        bool shiftSong = ((e.ClickedItem as NCSong).SongId == _state.NowPlayingItem?.Id);
+        await ViewModel.PlayClickedSongAsync(clickedSong, ListSource, SongContainer.Items.Cast<NCSong>().ToList());
+    }
 
-        if (!(e.ClickedItem as NCSong).IsAvailable)
+    private IReadOnlyList<NCSong> GetSelectedSongs()
+    {
+        return [.. SongContainer.SelectedItems.Cast<NCSong>()];
+    }
+
+    private bool TryGetSelectedSong(out NCSong selectedSong)
+    {
+        if (SongContainer.SelectedItem is NCSong song)
         {
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {(e.ClickedItem as NCSong).SongName} 当前不可用");
-            return;
-        }
-        if (_playlist.PlaySourceId != ListSource || SongContainer.Items.Cast<NCSong>().Where(t => t.IsAvailable).Count() != _playlist.Items.Count)
-        {
-            // Change Music Source
-            _playlist.Clear(!shiftSong);
-            await _playlist.AppendNcSourceAsync(ListSource);
+            selectedSong = song;
+            return true;
         }
 
-        if (ListSource[..2] == "pl" ||
-            ListSource[..2] == "al")
-            _playlist.PlaySourceId = ListSource;
-        if (!shiftSong)
-            await _playlist.MoveToAsync(_playlist.Items.ToList().Find(t => t?.Id == (e.ClickedItem as NCSong).SongId));
-        else
-        {
-            var targetItem = _playlist.Items.ToList().Find(song => song.Id == ((e.ClickedItem as NCSong).SongId));
-            if (targetItem != null) await _playlist.MoveToAsync(targetItem);
-        }
+        selectedSong = new NCSong();
+        return false;
     }
 }

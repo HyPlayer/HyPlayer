@@ -1,26 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Album;
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
-using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Windows.Storage;
-using Windows.Storage.AccessCache;
-using Windows.Storage.Pickers;
 
 namespace HyPlayer.Services.Playback;
 
@@ -35,12 +26,14 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     private readonly PlaybackStateService _state;
     private readonly IPlaybackControlService _control;
     private readonly IPlayer _player;
-    private readonly NeteaseCloudMusicApiHandler _api;
     private readonly INotificationService _notification;
     private readonly Setting _setting;
+    private readonly ILocalFileImportService _localFileImport;
+    private readonly INeteaseQueueSourceService _neteaseQueueSource;
+    private readonly IBackgroundTaskRunner _taskRunner;
 
     private readonly List<HyPlayItem> _items = new();
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     private IPlayStrategy _activeStrategy;
     private ITrackTransition _activeTransition;
@@ -63,20 +56,26 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         PlaybackStateService state,
         IPlaybackControlService control,
         IPlayer player,
-        NeteaseCloudMusicApiHandler api,
         INotificationService notification,
-        Setting setting)
+        Setting setting,
+        ILocalFileImportService localFileImport,
+        INeteaseQueueSourceService neteaseQueueSource,
+        IBackgroundTaskRunner taskRunner)
     {
         _strategies = strategies.ToDictionary(s => s.Id, StringComparer.Ordinal);
         _transitions = transitions.ToDictionary(t => t.Id, StringComparer.Ordinal);
         _state = state;
         _control = control;
         _player = player;
-        _api = api;
         _notification = notification;
         _setting = setting;
+        _localFileImport = localFileImport;
+        _neteaseQueueSource = neteaseQueueSource;
+        _taskRunner = taskRunner;
 
-        _activeStrategy = _strategies.GetValueOrDefault("seq")
+        var strategyId = _setting.ActiveStrategyId;
+        _activeStrategy = _strategies.GetValueOrDefault(strategyId)
+                          ?? _strategies.GetValueOrDefault("seq")
                           ?? _strategies.Values.First();
         var transitionId = _setting.CrossFade ? "xfd" : "dir";
         _activeTransition = _transitions.GetValueOrDefault(transitionId)
@@ -84,11 +83,21 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                             ?? _transitions.Values.First();
 
         _state.ActiveStrategyId = _activeStrategy.Id;
+        _setting.ActiveStrategyId = _activeStrategy.Id;
         _state.ActiveTransitionId = _activeTransition.Id;
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<HyPlayItem> Items => _items.AsReadOnly();
+    public IReadOnlyList<HyPlayItem> Items
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _items.ToArray();
+            }
+        }
+    }
 
     /// <inheritdoc />
     public int NowPlayingIndex => _nowPlayingIndex;
@@ -139,7 +148,10 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         lock (_lock)
         {
             if (clearFirst)
+            {
+                DisposePlayItems(_items);
                 _items.Clear();
+            }
 
             _items.AddRange(items);
         }
@@ -159,6 +171,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 return;
             }
 
+            DisposePlayItem(_items[index]);
             _items.RemoveAt(index);
 
             // 调整当前播放索引
@@ -175,7 +188,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 SyncIndex();
             }
 
-            SendPlaylistChanged();
+            NotifyAppendDone();
         }
     }
 
@@ -190,20 +203,25 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             if (stopPlayback && _player.GlobalPlaybackStatus == PlaybackStatus.Playing)
                 _control.Pause();   
 
+            _player.RemoveAllPlaybackSource();
+            DisposePlayItems(_items);
             _items.Clear();
             _nowPlayingIndex = -1;
             SyncIndex();
             _state.NowPlayingItem = null;
 
-            SendPlaylistChanged();
+            NotifyAppendDone();
         }
     }
 
     /// <inheritdoc />
-    public void NotifyAppendDone(bool isShuffleTrigger = false)
+    public void NotifyAppendDone()
     {
         _activeStrategy.OnPlaylistChanged(BuildStrategyContext());
-        SendPlaylistChanged(isShuffleTrigger);
+        if (ActiveStrategyId == "shn")
+            CreateShufflePlayLists();
+        else
+            SendPlaylistChanged();
     }
 
     // ────────────── 导航 ──────────────
@@ -303,6 +321,13 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             switch (action)
             {
                 case PlayStrategyAction.MoveNext:
+                    if (ShouldReplaySingleItem())
+                    {
+                        await _control.SeekAsync(TimeSpan.Zero);
+                        _control.Play();
+                        break;
+                    }
+
                     await _activeTransition.OnTrackEndedAsync(BuildTransitionContext());
                     break;
 
@@ -342,7 +367,16 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public void OnPositionTick(TimeSpan position, TimeSpan duration)
     {
-        _activeTransition.OnPositionTick(BuildTransitionContext());
+        if (!ShouldRunTransitionOnPositionTick())
+            return;
+
+        _activeTransition.OnPositionTick(BuildTransitionContext(position, duration));
+    }
+
+    private bool ShouldRunTransitionOnPositionTick()
+    {
+        var action = _activeStrategy.OnTrackEnded(BuildStrategyContext());
+        return action is PlayStrategyAction.MoveNext or PlayStrategyAction.LoadMore;
     }
 
     // ────────────── 策略切换 ──────────────
@@ -355,7 +389,13 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
 
         _activeStrategy = strategy;
         _state.ActiveStrategyId = strategyId;
+        _setting.ActiveStrategyId = strategyId;
         _activeStrategy.OnPlaylistChanged(BuildStrategyContext());
+
+        if (strategyId == "shn")
+            CreateShufflePlayLists();
+        else
+            SendPlaylistChanged();
     }
 
     /// <inheritdoc />
@@ -425,7 +465,11 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         {
             if (clearFirst)
             {
-                lock (_lock) { _items.Clear(); }
+                lock (_lock)
+                {
+                    DisposePlayItems(_items);
+                    _items.Clear();
+                }
             }
 
             foreach (var ncSong in ncSongs)
@@ -466,208 +510,83 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public async Task<bool> AppendNcSourceAsync(string sourceId)
     {
-        try
-        {
-            var prefix = sourceId[..2];
-            switch (prefix)
-            {
-                case "pl":
-                    await AppendPlayListAsync(sourceId[2..]);
-                    return true;
-                case "ns":
-                    var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongDetail,
-                        string.Concat("ncm", sourceId.AsSpan(2, sourceId.Length - 2)),
-                        async () =>
-                        {
-                            var result = await _api.RequestAsync(NeteaseApis.SongDetailApi,
-                                new SongDetailRequest { Id = sourceId[2..] });
-                            if (result.IsError)
-                            {
-                                _notification.ShowMessage("获取歌曲信息失败", result.Error?.Message);
-                                return null;
-                            }
-
-                            if (result.Value?.Songs is not { Length: > 0 })
-                            {
-                                _notification.ShowMessage("获取歌曲信息失败", "歌曲信息为空");
-                                return null;
-                            }
-
-                            return result.Value.Songs[0];
-                        });
-                    if (rst is not null)
-                        AppendNcSong(rst.MapToNcSong());
-                    return true;
-                case "al":
-                    await AppendAlbumAsync(sourceId[2..]);
-                    return true;
-                case "sh":
-                case "sa":
-                    await AppendSingerHotAsync(sourceId[2..]);
-                    return true;
-                case "rd":
-                    await AppendRadioListAsync(sourceId[2..]);
-                    return true;
-                default:
-                    return false;
-            }
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            return false;
-        }
+        var result = await _neteaseQueueSource.LoadSourceAsync(sourceId);
+        AppendNcSongBatches(result);
+        return result.Success;
     }
 
     /// <inheritdoc />
     public async Task<bool> AppendPlayListAsync(string playlistId)
     {
-        try
-        {
-            var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracks, playlistId, async () =>
-            {
-                var detailResponse = await _api.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
-                    new PlaylistTracksGetRequest { Id = playlistId });
-                if (detailResponse.IsError)
-                {
-                    _notification.ShowMessage("获取歌单失败", detailResponse.Error.Message);
-                    return null;
-                }
-
-                return detailResponse.Value;
-            }, cancellationToken: CancellationToken.None);
-
-            var nowIndex = 0;
-            var trackIds = resp?.Playlist?.TrackIds.Select(t => t.Id).ToList() ?? [];
-            while (nowIndex * 500 < trackIds.Count)
-            {
-                var nowIds = trackIds.GetRange(nowIndex * 500,
-                    Math.Min(500, trackIds.Count - nowIndex * 500));
-                var songDetailResp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracksDetail,
-                    playlistId + "_" + nowIndex, async () =>
-                    {
-                        var songResponse = await _api.RequestAsync(NeteaseApis.SongDetailApi,
-                            new SongDetailRequest { IdList = nowIds });
-                        if (songResponse.IsError)
-                            _notification.ShowMessage("获取歌曲失败", songResponse.Error?.Message);
-                        return songResponse.Value;
-                    }, cancellationToken: CancellationToken.None);
-
-                var songs = songDetailResp.Songs;
-                nowIndex++;
-                var result = songs.Select(t => t.MapToNcSong()).ToList();
-                AppendNcSongs(result, false);
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("AppendPlayList时发生错误", ex.Message);
-        }
-
-        return false;
+        var result = await _neteaseQueueSource.LoadPlaylistAsync(playlistId);
+        AppendNcSongBatches(result);
+        return result.Success;
     }
 
     /// <inheritdoc />
     public async Task<bool> AppendRadioListAsync(string radioId, bool asc = false)
     {
-        try
-        {
-            bool? hasMore = true;
-            var page = 0;
-            while (hasMore is true)
-            {
-                var json = await _api.RequestAsync(NeteaseApis.DjChannelProgramsApi,
-                    new DjChannelProgramsRequest
-                    {
-                        RadioId = radioId,
-                        Offset = page * 100,
-                        Limit = 100,
-                        Asc = asc
-                    });
-                if (json.IsError)
-                {
-                    _notification.ShowMessage("获取电台节目失败", json.Error.Message);
-                    return false;
-                }
-
-                hasMore = json.Value is { Data.More: true };
-                if (json.Value?.Data?.Programs is { Length: > 0 })
-                    AppendNcSongs(
-                        [.. json.Value.Data.Programs.Select(t => (NCSong)t.MapToNCFmItem())],
-                        false);
-
-                page++;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("AppendRadioList时发生错误", ex.Message);
-        }
-
-        return false;
+        var result = await _neteaseQueueSource.LoadRadioListAsync(radioId, asc);
+        AppendNcSongBatches(result);
+        return result.Success;
     }
 
     private async Task<bool> AppendSingerHotAsync(string id)
     {
-        try
-        {
-            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, id, async () =>
-            {
-                var j1 = await _api.RequestAsync(NeteaseApis.ArtistTopSongApi,
-                    new ArtistTopSongRequest { ArtistId = id });
-                if (j1.IsError)
-                {
-                    _notification.ShowMessage("获取歌手热门歌曲失败", j1.Error?.Message);
-                    return null;
-                }
-
-                return j1.Value?.Songs;
-            }, cancellationToken: CancellationToken.None);
-
-            AppendNcSongs([.. rst.Select(t => t.MapNcSong())], false);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("AppendNCSource时发生错误", ex.Message);
-        }
-
-        return false;
+        var result = await _neteaseQueueSource.LoadSingerHotAsync(id);
+        AppendNcSongBatches(result);
+        return result.Success;
     }
 
     private async Task<bool> AppendAlbumAsync(string albumId)
     {
+        var result = await _neteaseQueueSource.LoadAlbumAsync(albumId);
+        AppendNcSongBatches(result);
+        return result.Success;
+    }
+
+    private void AppendNcSongBatches(NeteaseQueueSourceLoadResult result)
+    {
+        if (!result.Success)
+            return;
+
         try
         {
-            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, albumId, async () =>
+            var hasChanges = false;
+            lock (_lock)
             {
-                var json = await _api.RequestAsync(NeteaseApis.AlbumApi,
-                    new AlbumRequest { Id = albumId });
-                if (json.IsError)
+                foreach (var batch in result.Batches)
                 {
-                    _notification.ShowMessage("获取专辑信息失败", json.Error?.Message);
-                    return null;
+                    if (batch is not { Count: > 0 })
+                        continue;
+
+                    foreach (var ncSong in batch)
+                    {
+                        if (result.Batches.Count == 1 && batch.Count == 1)
+                        {
+                            var singleItem = NCSongToPlayItem(ncSong);
+                            if (_items.Contains(singleItem))
+                                continue;
+
+                            _items.Add(singleItem);
+                        }
+                        else
+                        {
+                            _items.Add(NCSongToPlayItem(ncSong));
+                        }
+
+                        hasChanges = true;
+                    }
                 }
+            }
 
-                return json.Value;
-            }, cancellationToken: CancellationToken.None);
-
-            if (rst is null)
-                return false;
-
-            AppendNcSongs(rst.Songs?.Select(t => t.MapToNcSong()).ToList(), false);
-            return true;
+            if (hasChanges)
+                NotifyAppendDone();
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("AppendAlbum时发生错误", ex.Message);
+            _notification.ShowMessage("AppendNCSong时发生错误", ex.Message);
         }
-
-        return false;
     }
 
     // ────────────── 内部辅助 ──────────────
@@ -681,9 +600,12 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         {
             return new PlayStrategyContext
             {
-                Items = _items.AsReadOnly(),
+                Items = _items.ToArray(),
                 CurrentIndex = _nowPlayingIndex,
-                CurrentItem = NowPlayingItem
+                CurrentItem = NowPlayingItem,
+                UpdateShuffleActions = CreateShufflePlayLists,
+                ShuffledIndex = ActiveStrategyId == "shn" ? ShufflingIndex : null,
+                ShuffledItems = ActiveStrategyId == "shn" ? ShuffleList : null
             };
         }
     }
@@ -691,16 +613,19 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <summary>
     /// 构建过渡策略上下文，将回调绑定到本服务
     /// </summary>
-    private TrackTransitionContext BuildTransitionContext() => new()
+    private TrackTransitionContext BuildTransitionContext() => BuildTransitionContext(_state.Position, _state.Duration);
+
+    private TrackTransitionContext BuildTransitionContext(TimeSpan position, TimeSpan duration) => new()
     {
-        Position = _state.Position,
-        Duration = _state.Duration,
+        Position = position,
+        Duration = duration,
         CurrentItem = NowPlayingItem,
         RequestNextItemAsync = RequestNextItemAsync,
         CommitItemAsync = CommitItemAsync,
         LoadMediaSourceAsync = (item, primary, autoPlay, removeCurrentSongs) =>
             _control.LoadAndPlayAsync(item, primary, autoPlay, removeCurrentSongs: removeCurrentSongs),
-        Player = _player
+        Player = _player,
+        TaskRunner = _taskRunner
     };
 
     /// <summary>
@@ -715,6 +640,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         HyPlayItem item;
         lock (_lock)
         {
+            if (!advance && nextIndex.Value == _nowPlayingIndex)
+                return Task.FromResult<HyPlayItem?>(null);
+
             item = _items[nextIndex.Value];
             if (advance)
             {
@@ -727,6 +655,14 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             SendTrackChanged(item);
 
         return Task.FromResult<HyPlayItem?>(item);
+    }
+
+    private bool ShouldReplaySingleItem()
+    {
+        lock (_lock)
+        {
+            return _items.Count == 1 && _nowPlayingIndex == 0;
+        }
     }
 
     /// <summary>
@@ -767,8 +703,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// </summary>
     private void SendPlaylistChanged(bool isShuffleTrigger = false)
     {
-        _ = _notification.InvokeOnUIThread(() =>
-            WeakReferenceMessenger.Default.Send(new PlaylistChangedMessage(isShuffleTrigger)));
+        _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
+            WeakReferenceMessenger.Default.Send(new PlaylistChangedMessage(isShuffleTrigger))),
+            "publish playlist changed");
     }
 
     /// <summary>
@@ -776,8 +713,22 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// </summary>
     private void SendTrackChanged(HyPlayItem item)
     {
-        _ = _notification.InvokeOnUIThread(() =>
-            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item)));
+        _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
+            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item))),
+            "publish track changed");
+    }
+
+    private static void DisposePlayItems(IEnumerable<HyPlayItem> items)
+    {
+        foreach (var item in items)
+            DisposePlayItem(item);
+    }
+
+    private static void DisposePlayItem(HyPlayItem? item)
+    {
+        item?.PlayItem?.Dispose();
+        if (item is not null)
+            item.PlayItem = null;
     }
 
     // ────────────── Shuffle / 本地文件 / 通知 ──────────────
@@ -794,77 +745,10 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public async Task PickLocalFileAsync()
     {
-        var fop = new FileOpenPicker();
-        fop.FileTypeFilter.Add(".flac");
-        fop.FileTypeFilter.Add(".mp3");
-        fop.FileTypeFilter.Add(".ncm");
-        fop.FileTypeFilter.Add(".ape");
-        fop.FileTypeFilter.Add(".m4a");
-        fop.FileTypeFilter.Add(".wav");
+        var items = await _localFileImport.PickLocalFilesAsync();
+        if (items.Count == 0) return;
 
-        var files = await fop.PickMultipleFilesAsync();
-        if (files == null || files.Count == 0) return;
-
-        foreach (var file in files)
-        {
-            try
-            {
-                var folder = await file.GetParentAsync();
-                if (folder != null)
-                {
-                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
-                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(), folder);
-                }
-                else
-                {
-                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
-                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(), file);
-                }
-
-                if (Path.GetExtension(file.Path) == ".ncm")
-                {
-                    using var stream = await file.OpenStreamForReadAsync();
-                    if (NCMFile.IsCorrectNCMFile(stream))
-                    {
-                        var info = NCMFile.GetNCMMusicInfo(stream);
-                        var hyitem = new HyPlayItem
-                        {
-                            ItemType = HyPlayItemType.Netease,
-                            Album = new NCAlbum
-                            {
-                                Name = info.album,
-                                Id = info.albumId.ToString(),
-                                Cover = info.albumPic
-                            },
-                            LocalStorageFile = file,
-                            Url = file.Path,
-                            SubExt = info.format,
-                            Bitrate = info.bitrate,
-                            IsLocalFile = true,
-                            LengthInMilliseconds = info.duration,
-                            Id = info.musicId.ToString(),
-                            TrackId = -1,
-                            CDName = "01",
-                            Artist = null,
-                            Name = info.musicName,
-                            InfoTag = file.Provider.DisplayName + " NCM"
-                        };
-                        hyitem.Artist = [.. info.artist.Select(t => new NCArtist
-                        { Name = t[0].ToString(), Id = t[1].ToString() })];
-                        lock (_lock) { _items.Add(hyitem); }
-                    }
-                }
-                else
-                {
-                    var item = await LoadStorageFileAsync(file);
-                    lock (_lock) { _items.Add(item); }
-                }
-            }
-            catch (Exception ex)
-            {
-                _notification.ShowMessage($"加载文件 {file.Name} 失败", ex.Message);
-            }
-        }
+        lock (_lock) { _items.AddRange(items); }
 
         NotifyAppendDone();
         HyPlayItem? lastItem;
@@ -876,72 +760,19 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public async Task<HyPlayItem> LoadStorageFileAsync(StorageFile sf, bool nocheck163 = false)
     {
-        using var abstraction = new UwpStorageFileAbstraction(sf);
-        using var tagFile = TagLibHelper.Create(abstraction, sf.FileType);
-        if (nocheck163 || !The163KeyHelper.TryGetMusicInfo(tagFile.Tag, out var mi))
-        {
-            var songPerformersList = tagFile.Tag.Performers
-                .Select(t => new NCArtist { Name = t, Type = HyPlayItemType.Local }).ToList();
-            if (songPerformersList.Count == 0)
-                songPerformersList.Add(new NCArtist { Name = "未知歌手", Type = HyPlayItemType.Local });
-
-            var hyPlayItem = new HyPlayItem
-            {
-                IsLocalFile = true,
-                LocalFileTag = tagFile.Tag,
-                Bitrate = tagFile.Properties.AudioBitrate,
-                InfoTag = sf.Provider.DisplayName,
-                Id = null,
-                Name = tagFile.Tag.Title,
-                Artist = songPerformersList,
-                Album = new NCAlbum { Name = tagFile.Tag.Album },
-                TrackId = (int)tagFile.Tag.Track,
-                CDName = "01",
-                Url = sf.Path,
-                SubExt = sf.FileType,
-                Size = 0,
-                LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds,
-                ItemType = HyPlayItemType.Local
-            };
-            if (sf.Provider.Id == "network" || _setting.safeFileAccess)
-                hyPlayItem.LocalStorageFile = sf;
-            return hyPlayItem;
-        }
-
-        if (string.IsNullOrEmpty(mi.musicName))
-            return await LoadStorageFileAsync(sf, true);
-
-        return new HyPlayItem
-        {
-            ItemType = HyPlayItemType.Local,
-            Album = new NCAlbum { Name = mi.album, Id = mi.albumId.ToString(), Cover = mi.albumPic },
-            Url = sf.Path,
-            SubExt = sf.FileType,
-            LocalFileTag = tagFile.Tag,
-            Bitrate = mi.bitrate,
-            IsLocalFile = true,
-            LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds,
-            Id = mi.musicId.ToString(),
-            Artist = [.. mi.artist.Select(t => new NCArtist { Name = t[0].ToString(), Id = t[1].ToString() })],
-            Name = mi.musicName,
-            LocalStorageFile = sf,
-            TrackId = (int)tagFile.Tag.Track,
-            CDName = "01",
-            InfoTag = sf.Provider.DisplayName
-        };
+        return await _localFileImport.LoadStorageFileAsync(sf, nocheck163);
     }
 
     /// <inheritdoc />
-    public Task CreateShufflePlayLists(string currentSongId = "-1")
+    public void CreateShufflePlayLists()
     {
         ShuffleList.Clear();
-        ShufflingIndex = 0;
+        var currentSongId = NowPlayingItem?.Id ?? "-1";
         lock (_lock)
         {
             if (_items.Count != 0)
             {
                 HashSet<int> shuffledNumbers = [];
-                bool hasSpecifiedCorrectCurrentSong = false;
                 if (currentSongId != "-1")
                 {
                     int playItemIndex = _items.FindIndex(s => s.ToNCSong().SongId == currentSongId);
@@ -949,26 +780,19 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                     {
                         shuffledNumbers.Add(playItemIndex);
                         ShuffleList.Add(playItemIndex);
-                        hasSpecifiedCorrectCurrentSong = true;
                     }
                 }
 
                 while (shuffledNumbers.Count < _items.Count)
                 {
-                    var buffer = Guid.NewGuid().ToByteArray();
-                    var seed = BitConverter.ToInt32(buffer, 0);
-                    var random = new Random(seed);
-                    var indexShuffled = random.Next(_items.Count);
+                    var indexShuffled = RandomNumberGenerator.GetInt32(_items.Count);
                     if (shuffledNumbers.Add(indexShuffled))
                         ShuffleList.Add(indexShuffled);
                 }
-
-                ShufflingIndex = hasSpecifiedCorrectCurrentSong ? 0 : ShuffleList.IndexOf(_nowPlayingIndex);
             }
         }
 
         SendPlaylistChanged(true);
-        return Task.CompletedTask;
     }
 
     /// <inheritdoc />
@@ -1010,6 +834,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         _trackEndCts?.Cancel();
         _trackEndCts?.Dispose();
         _trackEndCts = null;
+        DisposePlayItems(_items);
+        _items.Clear();
+        _state.NowPlayingItem = null;
         _trackEndLock.Dispose();
     }
 }

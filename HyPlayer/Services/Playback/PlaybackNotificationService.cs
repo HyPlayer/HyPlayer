@@ -21,13 +21,20 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     private readonly Setting _setting;
     private readonly HttpClient _http;
     private readonly IPlayer _player;
+    private readonly IBackgroundTaskRunner _taskRunner;
 
-    public PlaybackNotificationService(PlaybackStateService state, Setting setting, HttpClient http, IPlayer player)
+    public PlaybackNotificationService(
+        PlaybackStateService state,
+        Setting setting,
+        HttpClient http,
+        IPlayer player,
+        IBackgroundTaskRunner taskRunner)
     {
         _state = state;
         _setting = setting;
         _http = http;
         _player = player;
+        _taskRunner = taskRunner;
     }
 
     /// <inheritdoc />
@@ -48,7 +55,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         // 2. Last.FM now-playing
         if (_setting.UpdateLastFMNowPlaying)
         {
-            _ = LastFMManager.UpdateNowPlaying(item);
+            _taskRunner.Forget(LastFMManager.UpdateNowPlaying(item), "update Last.FM now playing");
         }
     }
 
@@ -57,22 +64,23 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     {
         try
         {
+            IBuffer buffer;
             if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
             {
-                // 本地文件封面由旧逻辑处理（需要 StorageFile 访问），
-                // 新服务仅处理网络曲目封面下载。
-                return;
+                buffer = item.PlayItem.CoverBuffer;
             }
+            else
+            {
+                var coverUrl = item.Album?.Cover;
+                if (string.IsNullOrEmpty(coverUrl)) return;
 
-            var coverUrl = item.Album?.Cover;
-            if (string.IsNullOrEmpty(coverUrl)) return;
+                var url = coverUrl + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
+                using var response = await _http.GetAsync(new Uri(url));
+                if (!response.IsSuccessStatusCode) return;
 
-            var url = coverUrl + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
-            using var response = await _http.GetAsync(new Uri(url));
-            if (!response.IsSuccessStatusCode) return;
-
-            var bytes = await response.Content.ReadAsByteArrayAsync();
-            var buffer = bytes.AsBuffer();
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                buffer = bytes.AsBuffer();
+            }
 
             // 替换封面流
             var newStream = new InMemoryRandomAccessStream();

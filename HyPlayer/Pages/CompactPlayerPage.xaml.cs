@@ -9,6 +9,7 @@ using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.WindowManagement;
@@ -66,8 +67,11 @@ public sealed partial class CompactPlayerPage : Page
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
     private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
 
-    private readonly SolidColorBrush TransparentBrush = new SolidColorBrush(Colors.Transparent);
+    private readonly SolidColorBrush TransparentBrush = new(Colors.Transparent);
     public bool _lyricIsKaraokeLyric;
     public SongLyric Lrc;
 
@@ -81,7 +85,7 @@ public sealed partial class CompactPlayerPage : Page
         //LeaveAnimation.Completed += LeaveAnimation_Completed;
         WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (r, m) => HyPlayList_OnSongCoverChanged(m.Item));
         WeakReferenceMessenger.Default.Register<SongLikeStatusChangedMessage>(this, (r, m) => HyPlayList_OnSongLikeStatusChange(m.IsLiked));
-        Ioc.Default.GetRequiredService<IUIStateService>().PageCompactPlayer = this;
+        _uiState.PageCompactPlayer = this;
         Unloaded += CompactPlayerPage_Unloaded;
         //CompactPlayerAni.Begin();
     }
@@ -89,13 +93,13 @@ public sealed partial class CompactPlayerPage : Page
     private void CompactPlayerPage_Unloaded(object sender, RoutedEventArgs e)
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        Ioc.Default.GetRequiredService<IUIStateService>().PageCompactPlayer = null;
+        _uiState.ClearReferences(this);
         _player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
     }
 
     private void Player_OnGlobalPlaybackStatusChanged(PlaybackStatus status)
     {
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        RunOnUIThread(() =>
         {
             PlayStateIcon.Glyph =
                 _player.GlobalPlaybackStatus == PlaybackStatus.Playing
@@ -107,7 +111,7 @@ public sealed partial class CompactPlayerPage : Page
     private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem)
     {
         if (_state.CoverStream == null) return;
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(async () =>
+        _taskRunner.Forget(_notification.InvokeOnUIThread(async () =>
         {
             if (!_setting.noImage)
             {
@@ -122,12 +126,12 @@ public sealed partial class CompactPlayerPage : Page
 
                 }
             }
-        });
+        }), "refresh compact player cover");
     }
 
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        RunOnUIThread(() =>
         {
             NowProgress = position.TotalMilliseconds;
         });
@@ -159,7 +163,7 @@ public sealed partial class CompactPlayerPage : Page
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
     {
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        RunOnUIThread(() =>
         {
             IconLiked.Foreground = isLiked
                 ? new SolidColorBrush(Colors.Red)
@@ -229,7 +233,7 @@ public sealed partial class CompactPlayerPage : Page
             LyricControl.QuickRenderMode = false;
             if (kara.Duration.TotalSeconds > 1)
             {
-                _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => { ChangeLyric(); });
+                RunOnUIThread(() => { ChangeLyric(); });
                 return;
             }
         }
@@ -238,7 +242,7 @@ public sealed partial class CompactPlayerPage : Page
             if (lrcLine.StartTime.TotalSeconds - _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].LyricLine.StartTime.TotalSeconds > 1)
             {
                 LyricControl.QuickRenderMode = false;
-                _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => { ChangeLyric(); });
+                RunOnUIThread(() => { ChangeLyric(); });
                 return;
             }
             else
@@ -253,7 +257,7 @@ public sealed partial class CompactPlayerPage : Page
     private void ChangeLyric()
     {
 
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        RunOnUIThread(() =>
         {
             LyricText = _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].LyricLine.CurrentLyric;
             LyricControl.Lyric = _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex];
@@ -263,15 +267,18 @@ public sealed partial class CompactPlayerPage : Page
 
     private void OnChangePlayItem(HyPlayItem item)
     {
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        RunOnUIThread(() =>
         {
             NowPlayingName = item?.Name;
             NowPlayingArtists = item?.ArtistString;
         });
-        if (item.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+        if (item is null)
+            return;
+
+        if (item.ItemType is not (HyPlayItemType.Local or HyPlayItemType.LocalProgressive))
         {
             var isLiked = _auth.LikedSongs.Contains(_state.NowPlayingItem?.Id);
-            _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+            RunOnUIThread(() =>
             {
                 IconLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
@@ -323,8 +330,14 @@ public sealed partial class CompactPlayerPage : Page
 
     private void ExitButton_Click(object sender, RoutedEventArgs e)
     {
-        _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
+        _taskRunner.Forget(ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default).AsTask(),
+            "exit compact overlay mode");
         //(Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Navigate(typeof(ExpandedPlayer), false);
+    }
+
+    private void RunOnUIThread(Action action)
+    {
+        _taskRunner.Forget(_notification.InvokeOnUIThread(action), "CompactPlayerPage UI update");
     }
 
     private void Grid_PointerEntered(object sender, PointerRoutedEventArgs e)

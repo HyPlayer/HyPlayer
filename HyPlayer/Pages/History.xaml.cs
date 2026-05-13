@@ -99,50 +99,41 @@ public sealed partial class History : Page
 
     private async Task LoadRankAll()
     {
-        Songs.Clear();
-        _cancellationToken.ThrowIfCancellationRequested();
-        try
+        await LoadRank(async cancellationToken =>
         {
-            var ret3 = await _api.RequestAsync<UserRecordAllResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
-                new UserRecordRequest() { UserId = _auth.CurrentUser.Id, RecordType = UserRecordType.All });
-            if (ret3.IsError)
-            {
-                _notification.ShowMessage("获取播放记录失败", ret3.Error.Message);
-                return;
-            }
-            var weekData = ret3.Value?.AllData;
-            for (var i = 0; i < weekData.Length; i++)
-            {
-                _cancellationToken.ThrowIfCancellationRequested();
-                var song = weekData[i].Song.MapNcSong();
-                song.Order = i;
-                Songs.Add(song);
-            }
-        }
-        catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
-        {
-            _notification.ShowMessage("获取播放记录失败", ex.Message);
-        }
+            var response = await _api.RequestAsync<UserRecordAllResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
+                new UserRecordRequest() { UserId = _auth.CurrentUser.Id, RecordType = UserRecordType.All }, cancellationToken);
+            return (response.IsError, response.Error?.Message, response.Value?.AllData);
+        }, record => record.Song.MapNcSong());
     }
 
     private async Task LoadRankWeek()
+    {
+        await LoadRank(async cancellationToken =>
+        {
+            var response = await _api.RequestAsync<UserRecordWeekResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
+                new UserRecordRequest() { UserId = _auth.CurrentUser.Id, RecordType = UserRecordType.WeekData }, cancellationToken);
+            return (response.IsError, response.Error?.Message, response.Value?.WeekData);
+        }, record => record.Song.MapNcSong());
+    }
+
+    private async Task LoadRank<TRecord>(Func<CancellationToken, Task<(bool IsError, string ErrorMessage, TRecord[] Records)>> requestRank, Func<TRecord, NCSong> mapSong)
     {
         Songs.Clear();
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var ret2 = await _api.RequestAsync<UserRecordWeekResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
-                new UserRecordRequest() { UserId = _auth.CurrentUser.Id, RecordType = UserRecordType.WeekData }, _cancellationToken);
-            if (ret2.IsError)
+            var result = await requestRank(_cancellationToken);
+            if (result.IsError)
             {
-                _notification.ShowMessage("获取播放记录失败", ret2.Error.Message);
+                _notification.ShowMessage("获取播放记录失败", result.ErrorMessage);
                 return;
             }
-            var weekData = ret2.Value?.WeekData;
-            for (var i = 0; i < weekData.Length; i++)
+            var rankData = result.Records ?? [];
+            for (var i = 0; i < rankData.Length; i++)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
-                var song = weekData[i].Song.MapNcSong();
+                var song = mapSong(rankData[i]);
                 song.Order = i;
                 Songs.Add(song);
             }

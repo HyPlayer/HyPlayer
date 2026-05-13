@@ -54,6 +54,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             set
             {
                 var source = value as AudioGraphPlaybackSource;
+                if (ReferenceEquals(source, _primaryPlaybackSource)) return;
                 _primaryPlaybackSource = source;
                 OnPrimaryPlaybackSourceChanged?.Invoke(source);
             }

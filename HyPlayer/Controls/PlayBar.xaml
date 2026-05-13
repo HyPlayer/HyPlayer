@@ -15,6 +15,7 @@
     Background="{x:Bind hy:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource BooleanToBarPlayBarBrushesConverter}}"
     CornerRadius="20"
     Loaded="UserControl_Loaded"
+    Unloaded="UserControl_Unloaded"
     mc:Ignorable="d">
     <UserControl.Resources>
 
@@ -1140,6 +1141,7 @@
                                     Height="500"
                                     ItemContainerStyle="{ThemeResource ListViewItemStyle}"
                                     ItemsSource="{x:Bind PlayItems, Mode=OneWay}"
+                                    SelectedItem="{x:Bind ViewModel.NowPlayingItem, Mode=OneWay}"
                                     SelectionChanged="ListBoxPlayList_OnSelectionChanged"
                                     SelectionMode="Single">
                                     <ListView.ItemTemplate>

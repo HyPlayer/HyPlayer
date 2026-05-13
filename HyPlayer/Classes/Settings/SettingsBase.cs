@@ -8,24 +8,8 @@ namespace HyPlayer.Classes.Settings
     /// <summary>
     /// Base class for sub-settings groups providing shared storage and notification infrastructure.
     /// </summary>
-    public abstract class SettingsBase : INotifyPropertyChanged
+    public abstract class SettingsBase
     {
-#nullable enable
-        public event PropertyChangedEventHandler? PropertyChanged;
-#nullable restore
-
-        public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            try
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }
-            catch
-            {
-                // ignore
-            }
-        }
-
         public static T GetSettings<T>(string propertyName, T defaultValue)
         {
             try

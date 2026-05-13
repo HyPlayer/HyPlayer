@@ -58,10 +58,9 @@ public sealed class NcmFileProvider : IMediaSourceProvider
             var targetStream = songDataStream.AsStream();
             encStream.CopyTo(targetStream);
 
-            var playItem = new PlayItem();
-            item.PlayItem = playItem;
-            playItem.NcmPlayableStream = songDataStream;
-            playItem.NcmPlayableStreamMIMEType = MIMEHelper.GetNCMFileMimeType(info.format);
+            item.PlayItem ??= new PlayItem();
+            item.PlayItem.NcmPlayableStream = songDataStream;
+            item.PlayItem.NcmPlayableStreamMIMEType = MIMEHelper.GetNCMFileMimeType(info.format);
         });
 
         if (item.PlayItem?.NcmPlayableStream == null)

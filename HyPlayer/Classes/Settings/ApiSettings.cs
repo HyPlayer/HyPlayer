@@ -20,7 +20,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableProxy)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -42,7 +41,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(UseHttp)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -55,7 +53,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(UseHttpWhenGettingSongs)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -69,7 +66,6 @@ namespace HyPlayer.Classes.Settings
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableCheckTokenApi)] = value;
                 Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>()?.Option.FakeCheckToken = value;
-                OnPropertyChanged();
             }
         }
 
@@ -82,7 +78,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(enableApiCache)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -95,7 +90,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(songUrlLazyGet)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -108,7 +102,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(greedlyLoadPlayContainerItems)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -121,7 +114,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(AutoAddGreedilyLoadedSongsToPlayList)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -134,7 +126,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(jumpVipSongPlaying)] = value;
-                OnPropertyChanged();
             }
         }
 
@@ -147,7 +138,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(jumpVipSongDownloading)] = value;
-                OnPropertyChanged();
             }
         }
     }
