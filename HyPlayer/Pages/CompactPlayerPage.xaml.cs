@@ -93,7 +93,7 @@ public sealed partial class CompactPlayerPage : Page
     private void CompactPlayerPage_Unloaded(object sender, RoutedEventArgs e)
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        _uiState.PageCompactPlayer = null;
+        _uiState.ClearReferences(this);
         _player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
     }
 

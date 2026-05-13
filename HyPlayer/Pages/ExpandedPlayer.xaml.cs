@@ -136,7 +136,6 @@ public sealed partial class ExpandedPlayer : Page
         InitializeComponent();
         ViewModel = Ioc.Default.GetRequiredService<ExpandedPlayerViewModel>();
         DataContext = ViewModel;
-        _uiState.PageExpandedPlayer = this;
         WeakReferenceMessenger.Default.Register<PlaybackStateChangedMessage>(this, (r, m) =>
         {
             if (m.IsPlaying) ((ExpandedPlayer)r).HyPlayList_OnPlay(); else ((ExpandedPlayer)r).HyPlayList_OnPause();
@@ -1555,6 +1554,11 @@ public sealed partial class ExpandedPlayer : Page
         if (_settings.expandAlbumBreath)
         {
             ImageAlbumAni?.Stop();
+        }
+        if (expandedPlayerWindow is not null)
+        {
+            expandedPlayerWindow.Closed -= ExpandedPlayerClosed;
+            expandedPlayerWindow = null;
         }
     }
 }
