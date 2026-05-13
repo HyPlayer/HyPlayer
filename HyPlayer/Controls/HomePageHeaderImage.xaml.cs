@@ -90,9 +90,11 @@ namespace HyPlayer.Controls
             _imageGridEffectBrush?.Dispose();
             _imageGridSurfaceBrush?.Dispose();
             _imageGridVisualSurface?.Dispose();
+            _imageGridBottomGradientBrush?.Dispose();
             _imageGridSizeAnimation?.Dispose();
             _bottomGradientStartPointAnimation?.Dispose();
             _bottomGradientStartPointAnimation = null;
+            _imageGridBottomGradientBrush = null;
         }
         private void OnLoading(FrameworkElement sender, object args)
         {

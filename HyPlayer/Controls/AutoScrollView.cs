@@ -50,6 +50,7 @@ public partial class AutoScrollView : RedirectVisualView
         MeasureChildInBoundingBox = IsPlaying;
 
         this.Loaded += AutoScrollView_Loaded;
+        this.Unloaded += OnUnloaded;
     }
 
     private Compositor compositor;
@@ -249,5 +250,29 @@ public partial class AutoScrollView : RedirectVisualView
         }
     }
 
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        Loaded -= AutoScrollView_Loaded;
+        Unloaded -= OnUnloaded;
+
+        RootVisual.StopAnimation("Offset.X");
+        visual1.StopAnimation("Offset");
+        visual1.StopAnimation("Size");
+        visual2.StopAnimation("Offset");
+        visual2.StopAnimation("Size");
+
+        RootVisual.Children.Remove(visual2);
+        RootVisual.Children.Remove(visual1);
+
+        visual2.Dispose();
+        visual1.Dispose();
+
+        offsetBind1.Dispose();
+        offsetBind2.Dispose();
+        sizeBind.Dispose();
+        animation.Dispose();
+        linearEasingFunc.Dispose();
+        propSet.Dispose();
+    }
 }
 
