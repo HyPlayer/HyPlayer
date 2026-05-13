@@ -1,10 +1,10 @@
-name: Release Build
+name: Actions Signed Build
 
 on:
-  - workflow_dispatch
+  workflow_dispatch:
 
-jobs:       
-  build:
+jobs:        
+  ci_build:
     strategy:
       matrix:
         configuration: [Release]
@@ -52,10 +52,12 @@ jobs:
       shell: pwsh
       run: |
               $MANIFEST = [xml](Get-Content HyPlayer.Package\Package.appxmanifest)
-              $VERSION = $MANIFEST.Package.Identity.Version
-              "VERSION=$VERSION" >> $env:GITHUB_ENV
+              $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
+              $VERSION = $MAINVERSION + "${{github.run_number}}"
+              Write-Host("##vso[task.setvariable variable=VERSION]$VERSION")
               echo "Currently Building Version Is"
               echo $VERSION
+              $MANIFEST.Package.Identity.Version = $VERSION
               $MANIFEST.Package.Identity.Name = "48848aaaaaaccd.HyPlayer"
               $MANIFEST.Package.Identity.Publisher = "CN=SignPath Foundation, O=SignPath Foundation, L=Lewes, S=Delaware, C=US"
               $MANIFEST.Package.Applications.Application.VisualElements.DisplayName = "HyPlayer"
@@ -101,7 +103,7 @@ jobs:
               }
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Create the app package
-      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:Platform=$env:Platform /p:RuntimeIdentifier=win-x64 /p:AppxPackageSigningEnabled=false
+      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}" /p:Platform=$env:Platform /p:RuntimeIdentifier=win-x64
       if: ${{matrix.platform == 'x64'}}
       env:
         Appx_Bundle: Never
@@ -110,7 +112,7 @@ jobs:
         Platform: ${{ matrix.platform }}
         
     - name: Create the app package
-      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:Platform=$env:Platform /p:RuntimeIdentifier=win-arm64 /p:AppxPackageSigningEnabled=false
+      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile="HyPlayer_TemporaryKey.pfx" /p:PackageCertificatePassword="${{ secrets.PFX_KEY }}" /p:Platform=$env:Platform /p:RuntimeIdentifier=win-arm64
       if: ${{matrix.platform == 'arm64'}}
       env:
         Appx_Bundle: Never
@@ -136,85 +138,17 @@ jobs:
         signing-policy-slug: 'release'
         github-artifact-id: '${{ steps.upload-unsigned-artifact.outputs.artifact-id }}'
         wait-for-completion: true
-        output-artifact-directory: 'OutputArtifacts'  
-
+        output-artifact-directory: 'OutputArtifacts'
+             
     - name: Upload build artifacts 
       uses: ncipollo/release-action@v1
       with:
         artifacts: 'OutputArtifacts\**\HyPlayer.Package_*.msix'
         allowUpdates: true
         artifactErrorsFailBuild: true
-        name: "HyPlayer Release Build ${{ env.VERSION }}"
+        body: '> 这是 GitHub Actions 的自动编译, 并经过SignPath提供的证书进行签名。 内容可能不稳定,如非特别需要,请使用加入内测使用Canary 版本. 使用此版本出现的问题概不负责'
+        name: "HyPlayer GitHub Actions Signed Build"
+        prerelease: true
         replacesArtifacts: true
-        draft: true
-        bodyFile: CHANGELOG_RELEASE.md
-        tag: "${{ env.VERSION }}"
+        tag: "actions-build-signed"
         
-    - name: Upload to Server - x64
-      shell: pwsh
-      if: ${{matrix.platform == 'x64'}}
-      run: |
-          $BUNDLEPATH = (Get-ChildItem -Path "OutputArtifacts" -Include *.msix -Recurse) | Foreach-Object {$_.FullName}
-          $timestamp = [DateTimeOffset]::Now.ToUnixTimeSeconds()
-          $version="${{ env.VERSION }}"
-          $key = [System.Text.Encoding]::UTF8.GetBytes("${{ secrets.FILEHOST_KEY }}")
-          $random = "$timestamp-$(Get-Random)"
-          $nonce = [BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($random))).Replace("-","").ToLower()
-          $fileHash = (Get-FileHash -Path "$BUNDLEPATH" -Algorithm SHA256).Hash.ToLower()
-          $signature = "PUT`n/api/v1/programs/HyPlayer/$version/windows/amd64`n$timestamp`n$nonce`n$fileHash"
-          $data = [System.Text.Encoding]::UTF8.GetBytes("$signature")
-          $hmac = New-Object System.Security.Cryptography.HMACSHA256 -Property @{Key=$key}
-          $hmacString = [System.BitConverter]::ToString($hmac.ComputeHash($data)).Replace("-","").ToLower()
-          $headers = @{
-            "Authorization" = "HMAC $hmacString"
-            "Content-Type" = "application/octet-stream"
-            "X-Nonce" = "$nonce"
-            "X-Timestamp" = "$timestamp"
-            "X-Extension" = ".msix"
-          }
-          $result = Invoke-WebRequest -Uri "http://${{ secrets.FILEHOST_ADDR }}/api/v1/programs/HyPlayer/$version/windows/amd64" `
-              -Method PUT `
-              -Headers $headers `
-              -InFile $BUNDLEPATH
-          $changelog = Get-Content CHANGELOG_RELEASE.md -Raw -Encoding UTF8 | Out-String
-          Write-Host $changelog
-
-    - name: Upload to Server - arm64
-      shell: pwsh
-      if: ${{matrix.platform == 'arm64'}}
-      run: |
-          $BUNDLEPATH = (Get-ChildItem -Path "OutputArtifacts" -Include *.msix -Recurse) | Foreach-Object {$_.FullName}
-          $timestamp = [DateTimeOffset]::Now.ToUnixTimeSeconds()
-          $version="${{ env.VERSION }}"
-          $key = [System.Text.Encoding]::UTF8.GetBytes("${{ secrets.FILEHOST_KEY }}")
-          $random = "$timestamp-$(Get-Random)"
-          $nonce = [BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($random))).Replace("-","").ToLower()
-          $fileHash = (Get-FileHash -Path "$BUNDLEPATH" -Algorithm SHA256).Hash.ToLower()
-          $signature = "PUT`n/api/v1/programs/HyPlayer/$version/windows/arm64`n$timestamp`n$nonce`n$fileHash"
-          $data = [System.Text.Encoding]::UTF8.GetBytes("$signature")
-          $hmac = New-Object System.Security.Cryptography.HMACSHA256 -Property @{Key=$key}
-          $hmacString = [System.BitConverter]::ToString($hmac.ComputeHash($data)).Replace("-","").ToLower()
-          $headers = @{
-            "Authorization" = "HMAC $hmacString"
-            "Content-Type" = "application/octet-stream"
-            "X-Nonce" = "$nonce"
-            "X-Timestamp" = "$timestamp"
-            "X-Extension" = ".msix"
-          }
-          $result = Invoke-WebRequest -Uri "http://${{ secrets.FILEHOST_ADDR }}/api/v1/programs/HyPlayer/$version/windows/arm64" `
-              -Method PUT `
-              -Headers $headers `
-              -InFile $BUNDLEPATH
-          $changelog = Get-Content CHANGELOG_RELEASE.md -Raw -Encoding UTF8 | Out-String
-          Write-Host $changelog
-          $bodyObject = @{
-            channels = @(2,3)
-            version  = $VERSION
-            authKey  = "${{ secrets.SERVER_API_KEY }}"
-            date     = (Get-Date -Format o)
-            note     = $changelog
-            url      = "https://hyplayer.raspberrykan.dev"
-          }
-          $body = $bodyObject | ConvertTo-Json -Compress -EscapeHandling EscapeNonAscii
-          $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -ContentType 'application/json' -Body $body
-    

@@ -57,7 +57,7 @@ jobs:
               echo "Currently Building Version Is"
               echo $VERSION
               $MANIFEST.Package.Identity.Name = "48848aaaaaaccd.HyPlayer"
-              $MANIFEST.Package.Identity.Publisher = "CN=Test certificate for 'HyPlayer [OSS]'"
+              $MANIFEST.Package.Identity.Publisher = "CN=SignPath Foundation, O=SignPath Foundation, L=Lewes, S=Delaware, C=US"
               $MANIFEST.Package.Applications.Application.VisualElements.DisplayName = "HyPlayer"
               Set-Content -Path HyPlayer.Package\Package.appxmanifest -Value $MANIFEST.OuterXml
     - name: Set BuildInfo Version
