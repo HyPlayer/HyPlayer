@@ -136,6 +136,18 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 
 ## 感谢
 
+<table>
+  <tr>
+    <td>
+      <img alt="SignPath" src="https://signpath.org/assets/favicon-50x50.png" />
+    </td>
+    <td>
+    Free code signing on Windows provided by <a href="https://signpath.io">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a><br/>
+    由 <a href="https://signpath.io">SignPath.io</a> 提供 Windows 上的免费代码签名，由 <a href="https://signpath.org">SignPath Foundation</a> 提供证书
+    </td>
+  </tr>
+</table>
+
 <img src="https://www.jetbrains.com/shop/static/images/jetbrains-logo-inv.svg" height="100">
 
 感谢由 [Jetbrains](https://www.jetbrains.com) 提供的 [开源许可证书](https://www.jetbrains.com/community/opensource/) 
