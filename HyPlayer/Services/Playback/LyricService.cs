@@ -304,13 +304,14 @@ public sealed class LyricService : ILyricService
         {
             if (!_setting.enableAmllTtmlDb || item.ItemType != HyPlayItemType.Netease || string.IsNullOrWhiteSpace(item.Id)) return;
 
-            var ttml = await _httpClient.GetStringAsync(
-                _setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", item.Id), ct);
-
+            using var message = new HttpRequestMessage(HttpMethod.Get, _setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", item.Id));
+            message.Headers.Add("User-Agent", "HyPlayer LyricsClient");
+            using var ttml = await _httpClient.SendAsync(message, ct);
+            var ttmlContent = await ttml.Content.ReadAsStringAsync(ct);
             var ttmlConverter = new AppleSyllableConverter();
             var lrcConverter = new LrcConverter();
             var lrcTranslationConverter = new LrcTranslationEnhancer();
-            var alrc = ttmlConverter.Convert(ttml);
+            var alrc = ttmlConverter.Convert(ttmlContent);
             var lrc = lrcConverter.ConvertBack(alrc);
             var trLrc = lrcTranslationConverter.Extract(alrc);
 
@@ -357,10 +358,9 @@ public sealed class LyricService : ILyricService
                     "refresh AMLL lyric cache");
             }
         }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception ex)
+        catch
         {
-            System.Diagnostics.Debug.WriteLine($"Lyric error: {ex.Message}");
+
         }
     }
 

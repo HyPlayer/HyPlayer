@@ -236,11 +236,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
                     _state.QualityTag = item.GetQualityTagText(_setting.audioRate);
                     WeakReferenceMessenger.Default.Send(new QualityTagChangedMessage(_state.QualityTag));
                 }), "update playback state after load");
-
-                _lyricCts?.Cancel();
-                _lyricCts?.Dispose();
-                _lyricCts = new CancellationTokenSource();
-                _taskRunner.Forget(LoadLyricsSafeAsync(item, _lyricCts.Token), "load lyrics");
             }
         }
         catch (OperationCanceledException)
