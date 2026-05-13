@@ -307,12 +307,12 @@ public sealed partial class ExpandedPlayer : Page
                 : _settings.lyricSize;
 
             _lastWidth = _nowWidth;
-            _needRedesign += 2;
+            _needRedesign += 1;
         }
         else if (_lastHeight != _nowHeight)
         {
             _lastHeight = _nowHeight;
-            _needRedesign += 2;
+            _needRedesign += 1;
         }
     }
 
@@ -332,25 +332,25 @@ public sealed partial class ExpandedPlayer : Page
                 BtnToggleAlbum.IsChecked = true;
                 BtnToggleLyric.IsChecked = true;
                 RightPanel.Visibility = Visibility.Visible;
-                UIAugmentationSys.Visibility = Visibility.Visible;
-                UIAugmentationSys.SetValue(Grid.ColumnProperty, 0);
-                UIAugmentationSys.SetValue(Grid.ColumnSpanProperty, 1);
+                LeftPanel.Visibility = Visibility.Visible;
+                InfoPanelColumn.Width = new GridLength(1, GridUnitType.Star);
+                LyricPanelColumn.Width = new GridLength(1, GridUnitType.Star);
                 break;
             case ExpandedWindowMode.CoverOnly:
                 BtnToggleAlbum.IsChecked = true;
                 BtnToggleLyric.IsChecked = false;
-                UIAugmentationSys.Visibility = Visibility.Visible;
                 RightPanel.Visibility = Visibility.Collapsed;
-                UIAugmentationSys.SetValue(Grid.ColumnProperty, 0);
-                UIAugmentationSys.SetValue(Grid.ColumnSpanProperty, 2);
-                UIAugmentationSys.VerticalAlignment = VerticalAlignment.Stretch;
-                UIAugmentationSys.HorizontalAlignment = HorizontalAlignment.Stretch;
+                LeftPanel.Visibility = Visibility.Visible;
+                InfoPanelColumn.Width = new GridLength(1, GridUnitType.Star);
+                LyricPanelColumn.Width = new GridLength(0);
                 break;
             case ExpandedWindowMode.LyricOnly:
                 BtnToggleAlbum.IsChecked = false;
                 BtnToggleLyric.IsChecked = true;
+                LeftPanel.Visibility = Visibility.Collapsed;
                 RightPanel.Visibility = Visibility.Visible;
-                UIAugmentationSys.Visibility = Visibility.Collapsed;
+                InfoPanelColumn.Width =  new GridLength(0);
+                LyricPanelColumn.Width = new GridLength(1, GridUnitType.Star);
                 break;
         }
 
@@ -362,32 +362,8 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (_needRedesign > 5) _needRedesign = 5;
         // 这个函数里面放无法用XAML实现的页面布局方式
-
-
-        if (600 > Math.Min(LeftPanel.ActualHeight, MainGrid.ActualHeight))
-        {
-            SongInfo.Width = ImageAlbum.Width;
-        }
-        else
-        {
-            ImageAlbum.Width = double.NaN;
-            ImageAlbum.Height = double.NaN;
-            SongInfo.Width = double.NaN;
-        }
-
         BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
-
-        float sizey = 1;
-        float sizex = 1;
-        if (_windowMode != ExpandedWindowMode.LyricOnly)
-        {
-            if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight)
-                sizey = (float)(MainGrid.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight));
-
-            if (ImageAlbum.ActualOffset.X + ImageAlbum.ActualWidth > LeftPanel.ActualWidth)
-                sizex = (float)(LeftPanel.ActualWidth / (ImageAlbum.ActualOffset.X + ImageAlbum.ActualWidth));
-            UIAugmentationSys.ChangeView(0, 0, Math.Min(sizex, sizey));
-        }
+    
         if (Math.Abs(lastChangedLyricWidth - LyricWidth) > 0.001f && Math.Abs(_lyricRenderXOffset - RightPanel.ActualOffset.X) > 0.001f)
         {
             _lyricRenderXOffset = RightPanel.ActualOffset.X;

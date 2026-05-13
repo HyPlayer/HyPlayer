@@ -197,155 +197,140 @@
             Margin="0,0,0,80"
             Visibility="Visible">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
+                <ColumnDefinition x:Name="InfoPanelColumn" Width="*" />
+                <ColumnDefinition x:Name="LyricPanelColumn" Width="*" />
             </Grid.ColumnDefinitions>
-            <ScrollViewer
-                x:Name="UIAugmentationSys"
-                Canvas.ZIndex="1"
-                HorizontalScrollMode="Disabled"
-                VerticalScrollBarVisibility="Hidden"
-                VerticalScrollMode="Disabled">
-                <Grid
-                    x:Name="LeftPanel"
-                    MaxWidth="600"
-                    HorizontalAlignment="Stretch"
-                    Tapped="LeftPanel_Tapped">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="4*" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="11*" />
-                    </Grid.RowDefinitions>
-                    <Border x:Name="ShadowTarget" Grid.Row="1" />
-                    <frieren:ImageEx
-                        x:Name="ImageAlbum"
-                        Grid.Row="1"
-                        MaxWidth="600"
-                        MaxHeight="600"
-                        Margin="20"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        ui:Effects.Shadow="{StaticResource AlbumShadow}"
-                        ui:VisualExtensions.NormalizedCenterPoint="0.5"
-                        x:FieldModifier="public"
-                        BorderBrush="Black"
-                        BorderThickness="80"
-                        CornerRadius="16"
-                        IsCacheEnabled="False"
-                        ManipulationCompleted="ImageAlbum_OnManipulationCompleted"
-                        ManipulationDelta="ImageAlbum_OnManipulationDelta"
-                        ManipulationMode="Rotate,TranslateX,TranslateY"
-                        PlaceholderStretch="Uniform"
-                        RightTapped="{x:Bind hyplayer:XamlHelpers.UIElement_RightTapped}"
-                        Source="{x:Bind ViewModel.Cover, Mode=OneWay}"
-                        Stretch="Uniform">
-                        <ani:Explicit.Animations>
-                            <ani:AnimationSet x:Name="RotateAnimationSet">
-                                <ani:RotationInDegreesAnimation
-                                    x:Name="AlbumRotateAnimation"
-                                    EasingMode="EaseOut"
-                                    EasingType="Linear"
-                                    Repeat="Forever"
-                                    From="0"
-                                    To="360"
-                                    Duration="0:0:20" />
-                            </ani:AnimationSet>
-                        </ani:Explicit.Animations>
-                        <frieren:ImageEx.RenderTransform>
-                            <TransformGroup>
-                                <ScaleTransform x:Name="ImageScale" CenterX="300" CenterY="300" />
-                                <TranslateTransform x:Name="ImagePositionOffset" />
-                                <RotateTransform x:Name="ImageRotateTransform" CenterX="280" CenterY="280" />
-                            </TransformGroup>
-                        </frieren:ImageEx.RenderTransform>
-                        <frieren:ImageEx.ContextFlyout>
-                            <MenuFlyout>
-                                <MenuFlyoutItem
-                                    Click="SaveAlbumImage_Click"
-                                    Icon="Save"
-                                    Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Text="保存图片" />
-                                <MenuFlyoutItem
-                                    Click="CopySongName_Click"
-                                    Icon="Copy"
-                                    Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Text="复制歌名" />
-                            </MenuFlyout>
-                        </frieren:ImageEx.ContextFlyout>
-                    </frieren:ImageEx>
-                    <StackPanel
-                        x:Name="SongInfo"
-                        Grid.Row="2"
-                        MaxWidth="600"
-                        VerticalAlignment="Top"
-                        IsTapEnabled="True"
-                        Orientation="Vertical"
-                        Spacing="12">
-                        <Grid
-                            MaxWidth="600"
-                            Margin="20,0,20,20"
-                            CornerRadius="0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <StackPanel x:Name="SongInfoContainer" Spacing="12">
-                                <TextBlock
-                                    x:Name="TextBlockSongTitle"
-                                    HorizontalAlignment="Center"
-                                    FontSize="46"
-                                    FontWeight="Bold"
+            <Grid
+                x:Name="LeftPanel"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                Tapped="LeftPanel_Tapped">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="2*" />
+                    <RowDefinition Height="1*" />
+                </Grid.RowDefinitions>
+                <Border x:Name="ShadowTarget" Grid.Row="0" />
+                <frieren:ImageEx
+                    x:Name="ImageAlbum"
+                    Grid.Row="0"
+                    Margin="20"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    ui:Effects.Shadow="{StaticResource AlbumShadow}"
+                    ui:VisualExtensions.NormalizedCenterPoint="0.5"
+                    x:FieldModifier="public"
+                    BorderBrush="Black"
+                    BorderThickness="80"
+                    CornerRadius="16"
+                    IsCacheEnabled="False"
+                    ManipulationCompleted="ImageAlbum_OnManipulationCompleted"
+                    ManipulationDelta="ImageAlbum_OnManipulationDelta"
+                    ManipulationMode="Rotate,TranslateX,TranslateY"
+                    PlaceholderStretch="Uniform"
+                    RightTapped="{x:Bind hyplayer:XamlHelpers.UIElement_RightTapped}"
+                    Source="{x:Bind ViewModel.Cover, Mode=OneWay}"
+                    Stretch="Uniform">
+                    <ani:Explicit.Animations>
+                        <ani:AnimationSet x:Name="RotateAnimationSet">
+                            <ani:RotationInDegreesAnimation
+                                x:Name="AlbumRotateAnimation"
+                                EasingMode="EaseOut"
+                                EasingType="Linear"
+                                Repeat="Forever"
+                                From="0"
+                                To="360"
+                                Duration="0:0:20" />
+                        </ani:AnimationSet>
+                    </ani:Explicit.Animations>
+                    <frieren:ImageEx.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="ImageScale" CenterX="300" CenterY="300" />
+                            <TranslateTransform x:Name="ImagePositionOffset" />
+                            <RotateTransform x:Name="ImageRotateTransform" CenterX="280" CenterY="280" />
+                        </TransformGroup>
+                    </frieren:ImageEx.RenderTransform>
+                    <frieren:ImageEx.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem
+                                Click="SaveAlbumImage_Click"
+                                Icon="Save"
+                                Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                                Text="保存图片" />
+                            <MenuFlyoutItem
+                                Click="CopySongName_Click"
+                                Icon="Copy"
+                                Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                                Text="复制歌名" />
+                        </MenuFlyout>
+                    </frieren:ImageEx.ContextFlyout>
+                </frieren:ImageEx>
+                <StackPanel
+                    x:Name="SongInfo"
+                    Grid.Row="1"
+                    VerticalAlignment="Top"
+                    IsTapEnabled="True"
+                    Orientation="Vertical"
+                    Spacing="12">
+                    <Grid Margin="20,0,20,20" CornerRadius="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <StackPanel x:Name="SongInfoContainer" Spacing="12">
+                            <TextBlock
+                                x:Name="TextBlockSongTitle"
+                                HorizontalAlignment="Center"
+                                FontSize="46"
+                                FontWeight="Bold"
+                                Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
+                                HorizontalTextAlignment="Center"
+                                IsTextSelectionEnabled="True"
+                                Text="{x:Bind ViewModel.SongName, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+
+
+                            <controls1:AlignableWrapPanel
+                                HorizontalContentAlignment="Center"
+                                HorizontalSpacing="12"
+                                Orientation="Horizontal"
+                                StretchChild="None"
+                                VerticalSpacing="-6">
+
+                                <HyperlinkButton
+                                    Name="SingerHyperlinkBtn"
+                                    Click="TextBlockSinger_OnTapped"
+                                    FontSize="20"
                                     Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
-                                    HorizontalTextAlignment="Center"
-                                    IsTextSelectionEnabled="True"
-                                    Text="{x:Bind ViewModel.SongName, Mode=OneWay}"
-                                    TextWrapping="Wrap" />
+                                    Style="{StaticResource TextBlockButtonStyle}">
+                                    <controls1:AutoScrollView IsPlaying="True">
+                                        <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist, Mode=OneWay}" />
+                                    </controls1:AutoScrollView>
+                                </HyperlinkButton>
+                                <HyperlinkButton
+                                    Name="AlbumHyperlinkBtn"
+                                    Click="AlbumHyperlinkBtn_OnTapped"
+                                    FontSize="20"
+                                    Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
+                                    Style="{StaticResource TextBlockButtonStyle}">
+                                    <controls1:AutoScrollView IsPlaying="True">
+                                        <TextBlock x:Name="AlbumTextBlock" Text="{x:Bind ViewModel.Album, Mode=OneWay}" />
+                                    </controls1:AutoScrollView>
 
+                                </HyperlinkButton>
 
-                                <controls1:AlignableWrapPanel
-                                    HorizontalContentAlignment="Center"
-                                    HorizontalSpacing="12"
-                                    Orientation="Horizontal"
-                                    StretchChild="None"
-                                    VerticalSpacing="-6">
+                            </controls1:AlignableWrapPanel>
 
-                                    <HyperlinkButton
-                                        Name="SingerHyperlinkBtn"
-                                        Click="TextBlockSinger_OnTapped"
-                                        FontSize="20"
-                                        Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
-                                        Style="{StaticResource TextBlockButtonStyle}">
-                                        <controls1:AutoScrollView IsPlaying="True">
-                                            <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist, Mode=OneWay}" />
-                                        </controls1:AutoScrollView>
-                                    </HyperlinkButton>
-                                    <HyperlinkButton
-                                        Name="AlbumHyperlinkBtn"
-                                        Click="AlbumHyperlinkBtn_OnTapped"
-                                        FontSize="20"
-                                        Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
-                                        Style="{StaticResource TextBlockButtonStyle}">
-                                        <controls1:AutoScrollView IsPlaying="True">
-                                            <TextBlock x:Name="AlbumTextBlock" Text="{x:Bind ViewModel.Album, Mode=OneWay}" />
-                                        </controls1:AutoScrollView>
-
-                                    </HyperlinkButton>
-
-                                </controls1:AlignableWrapPanel>
-
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Grid>
-            </ScrollViewer>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Grid>
             <Grid x:Name="RightPanel" Grid.Column="1" />
             <Button
                 x:Name="MoreBtn"
                 Grid.Row="1"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
-                Canvas.ZIndex="2"
                 Width="40"
                 Height="40"
                 Margin="0,0,30,50"
@@ -355,6 +340,7 @@
                 x:FieldModifier="public"
                 Background="Transparent"
                 BorderThickness="0"
+                Canvas.ZIndex="2"
                 CornerRadius="30"
                 Style="{StaticResource ButtonRevealStyle}">
                 <Button.Flyout>
