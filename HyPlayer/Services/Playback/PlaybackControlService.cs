@@ -1,6 +1,4 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.Services.Abstractions;
@@ -8,6 +6,11 @@ using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.Media;
+using Windows.Media.Playback;
 
 namespace HyPlayer.Services.Playback;
 
@@ -37,6 +40,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private readonly IServiceProvider _serviceProvider;
     private bool _resolvingPlaylistService;
     private IPlaylistService? _playlistService;
+    private SystemMediaTransportControls? _smtc;
 
     private readonly SemaphoreSlim _seekerLock = new(1, 1);
     private CancellationTokenSource? _mediaSourceCts;
@@ -122,16 +126,46 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             smtc.IsEnabled = true;
             smtc.DisplayUpdater.Type = Windows.Media.MediaPlaybackType.Music;
             smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Closed;
-            graphPlayer.SMTCManager = new HyPlayer.UWP.Chopin.SMTCManager(smtc);
+            graphPlayer.SMTCManager = new UWP.Chopin.SMTCManager(smtc);
+            _smtc = smtc;
 
             // 订阅播放器事件
             graphPlayer.OnTrackReachesEnd += OnTrackReachesEnd;
             graphPlayer.OnGlobalPlaybackStatusChanged += OnGlobalPlaybackStatusChanged;
             graphPlayer.OnPositionChanged += OnPositionChanged;
             graphPlayer.OnPrimaryPlaybackSourceChanged += OnPrimaryPlaybackSourceChanged;
+            smtc.ButtonPressed += SMTC_ButtonPressed;
+            smtc.PlaybackPositionChangeRequested += SMTC_PlaybackPositionChangeRequested;
         }
 
         _state.Volume = _setting.Volume / 100d;
+    }
+
+    private void SMTC_PlaybackPositionChangeRequested(SystemMediaTransportControls sender, PlaybackPositionChangeRequestedEventArgs args)
+    {
+        SeekAsync(args.RequestedPlaybackPosition).SafeFireAndForget();
+    }
+
+    private void SMTC_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args)
+    {
+        switch (args.Button)
+        {
+            case SystemMediaTransportControlsButton.Play:
+                Play();
+                break;
+
+            case SystemMediaTransportControlsButton.Pause:
+                Pause();
+                break;
+
+            case SystemMediaTransportControlsButton.Next:
+                _playlistService.MoveNextAsync();
+                break;
+
+            case SystemMediaTransportControlsButton.Previous:
+                _playlistService.MovePreviousAsync();
+                break;
+        }
     }
 
     /// <inheritdoc />
@@ -392,7 +426,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             graphPlayer.OnPositionChanged -= OnPositionChanged;
             graphPlayer.OnPrimaryPlaybackSourceChanged -= OnPrimaryPlaybackSourceChanged;
         }
-
+        _smtc?.ButtonPressed -= SMTC_ButtonPressed;
+        _smtc?.PlaybackPositionChangeRequested -= SMTC_PlaybackPositionChangeRequested;
         _mediaSourceCts?.Cancel();
         _mediaSourceCts?.Dispose();
         _lyricCts?.Cancel();
