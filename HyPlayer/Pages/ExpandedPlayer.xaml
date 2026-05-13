@@ -137,7 +137,8 @@
             Grid.Row="0"
             Grid.RowSpan="3"
             Grid.Column="0"
-            Canvas.ZIndex="-1">
+            Canvas.ZIndex="-1"
+            SizeChanged="LuminousBackgroundContainer_SizeChanged">
             <Grid.RenderTransform>
                 <TransformGroup>
                     <RotateTransform x:Name="BgRotate" CenterX="{x:Bind BgScale.CenterX, Mode=OneWay}" CenterY="{x:Bind BgScale.CenterY, Mode=OneWay}" />
@@ -228,6 +229,7 @@
                     ManipulationMode="Rotate,TranslateX,TranslateY"
                     PlaceholderStretch="Uniform"
                     RightTapped="{x:Bind hyplayer:XamlHelpers.UIElement_RightTapped}"
+                    SizeChanged="ImageAlbum_SizeChanged"
                     Source="{x:Bind ViewModel.Cover, Mode=OneWay}"
                     Stretch="Uniform">
                     <ani:Explicit.Animations>
@@ -264,66 +266,60 @@
                         </MenuFlyout>
                     </frieren:ImageEx.ContextFlyout>
                 </frieren:ImageEx>
-                <StackPanel
-                    x:Name="SongInfo"
+                <Grid
                     Grid.Row="1"
-                    VerticalAlignment="Top"
-                    IsTapEnabled="True"
-                    Orientation="Vertical"
-                    Spacing="12">
-                    <Grid Margin="20,0,20,20" CornerRadius="0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <StackPanel x:Name="SongInfoContainer" Spacing="12">
-                            <TextBlock
-                                x:Name="TextBlockSongTitle"
-                                HorizontalAlignment="Center"
-                                FontSize="46"
-                                FontWeight="Bold"
-                                Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
-                                HorizontalTextAlignment="Center"
-                                IsTextSelectionEnabled="True"
-                                Text="{x:Bind ViewModel.SongName, Mode=OneWay}"
-                                TextWrapping="Wrap" />
+                    Margin="20,0,20,20"
+                    CornerRadius="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <controls1:AutoScrollView
+                        Grid.Row="0"
+                        HorizontalAlignment="Center"
+                        IsPlaying="True">
+                        <TextBlock
+                            x:Name="TextBlockSongTitle"
+                            FontSize="46"
+                            FontWeight="Bold"
+                            Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
+                            HorizontalTextAlignment="Center"
+                            IsTextSelectionEnabled="True"
+                            Text="{x:Bind ViewModel.SongName, Mode=OneWay}" />
+                    </controls1:AutoScrollView>
 
+                    <controls1:AlignableWrapPanel
+                        Grid.Row="1"
+                        HorizontalContentAlignment="Center"
+                        HorizontalSpacing="12"
+                        Orientation="Horizontal"
+                        StretchChild="None"
+                        VerticalSpacing="-6">
 
-                            <controls1:AlignableWrapPanel
-                                HorizontalContentAlignment="Center"
-                                HorizontalSpacing="12"
-                                Orientation="Horizontal"
-                                StretchChild="None"
-                                VerticalSpacing="-6">
+                        <HyperlinkButton
+                            Name="SingerHyperlinkBtn"
+                            Click="TextBlockSinger_OnTapped"
+                            FontSize="20"
+                            Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
+                            Style="{StaticResource TextBlockButtonStyle}">
+                            <controls1:AutoScrollView IsPlaying="True">
+                                <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist, Mode=OneWay}" />
+                            </controls1:AutoScrollView>
+                        </HyperlinkButton>
+                        <HyperlinkButton
+                            Name="AlbumHyperlinkBtn"
+                            Click="AlbumHyperlinkBtn_OnTapped"
+                            FontSize="20"
+                            Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
+                            Style="{StaticResource TextBlockButtonStyle}">
+                            <controls1:AutoScrollView IsPlaying="True">
+                                <TextBlock x:Name="AlbumTextBlock" Text="{x:Bind ViewModel.Album, Mode=OneWay}" />
+                            </controls1:AutoScrollView>
 
-                                <HyperlinkButton
-                                    Name="SingerHyperlinkBtn"
-                                    Click="TextBlockSinger_OnTapped"
-                                    FontSize="20"
-                                    Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
-                                    Style="{StaticResource TextBlockButtonStyle}">
-                                    <controls1:AutoScrollView IsPlaying="True">
-                                        <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist, Mode=OneWay}" />
-                                    </controls1:AutoScrollView>
-                                </HyperlinkButton>
-                                <HyperlinkButton
-                                    Name="AlbumHyperlinkBtn"
-                                    Click="AlbumHyperlinkBtn_OnTapped"
-                                    FontSize="20"
-                                    Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
-                                    Style="{StaticResource TextBlockButtonStyle}">
-                                    <controls1:AutoScrollView IsPlaying="True">
-                                        <TextBlock x:Name="AlbumTextBlock" Text="{x:Bind ViewModel.Album, Mode=OneWay}" />
-                                    </controls1:AutoScrollView>
+                        </HyperlinkButton>
 
-                                </HyperlinkButton>
-
-                            </controls1:AlignableWrapPanel>
-
-                        </StackPanel>
-                    </Grid>
-                </StackPanel>
+                    </controls1:AlignableWrapPanel>
+                </Grid>
             </Grid>
             <Grid x:Name="RightPanel" Grid.Column="1" />
             <Button

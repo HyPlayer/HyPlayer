@@ -94,7 +94,7 @@ public sealed partial class ExpandedPlayer : Page
     private int _lastWidth;
     public HyPlayItem? _lastSong;
     private bool _isManualChangeMode;
-    private int _needRedesign = 1;
+    private bool _needsRedesign = true;
     private int _nowHeight;
     private int _nowWidth;
     private bool _isProgramClick;
@@ -118,6 +118,7 @@ public sealed partial class ExpandedPlayer : Page
     private Color? _karaokAccentColorCache;
     private SolidColorBrush? _pureAccentBrushCache;
     private const float LyricBoxRightPadding = 32;
+    private const double ResponsiveBreakpointWidth = 800;
     private bool _isCleanedUp;
 
     public double LyricShowSize { get; set; }
@@ -227,11 +228,8 @@ public sealed partial class ExpandedPlayer : Page
     public void SingleViewModeToggle()
     {
         if (_windowMode == ExpandedWindowMode.Both) return;
-        else
-        {
-            _windowMode = _windowMode == ExpandedWindowMode.LyricOnly ? ExpandedWindowMode.CoverOnly : ExpandedWindowMode.LyricOnly;
-            Change_windowMode();
-        }
+        _windowMode = _windowMode == ExpandedWindowMode.LyricOnly ? ExpandedWindowMode.CoverOnly : ExpandedWindowMode.LyricOnly;
+        ChangeWindowMode();
     }
     private void HyPlayList_OnPlay()
     {
@@ -277,9 +275,9 @@ public sealed partial class ExpandedPlayer : Page
     private void HyPlayList_OnTimerTicked()
     {
         if (_uiState.IsInBackground) return;
-        if (_needRedesign > 0)
+        if (_needsRedesign)
         {
-            _needRedesign--;
+            _needsRedesign = false;
             RunOnUIThread(Redesign);
         }
     }
@@ -287,7 +285,7 @@ public sealed partial class ExpandedPlayer : Page
     private void HyPlayList_OnLyricLoaded()
     {
         LoadLyricsBox();
-        _needRedesign++;
+        _needsRedesign = true;
     }
 
     private void Current_SizeChanged(object? sender, WindowSizeChangedEventArgs? e)
@@ -296,35 +294,34 @@ public sealed partial class ExpandedPlayer : Page
         _nowHeight = e is null ? (int)Window.Current.Bounds.Height : (int)e.Size.Height;
         if (_lastWidth != _nowWidth)
         {
-            //这段不要放出去了
-            if (_windowMode == ExpandedWindowMode.Both)
-                LyricWidth = _nowWidth * 0.5;
-            else
-                LyricWidth = _nowWidth - 15;
-            LyricWidth = Math.Max(LyricWidth - LyricBoxRightPadding, 0);
+            LyricWidth = CalculateLyricWidth();
             LyricShowSize = _settings.lyricSize <= 0
                 ? Math.Max(_nowWidth / 40, 40)
                 : _settings.lyricSize;
 
             _lastWidth = _nowWidth;
-            _needRedesign += 1;
+            _needsRedesign = true;
         }
         else if (_lastHeight != _nowHeight)
         {
             _lastHeight = _nowHeight;
-            _needRedesign += 1;
+            _needsRedesign = true;
         }
     }
 
-    private void Change_windowMode()
+    private double CalculateLyricWidth()
+    {
+        var baseWidth = _windowMode == ExpandedWindowMode.Both
+            ? _nowWidth * 0.5
+            : _nowWidth - 30;
+        return Math.Max(baseWidth - LyricBoxRightPadding, 0);
+    }
+
+    private void ChangeWindowMode()
     {
         _isRealClick = false;
 
-        if (_windowMode == ExpandedWindowMode.Both)
-            LyricWidth = _nowWidth * 0.5;
-        else
-            LyricWidth = _nowWidth - 30;
-        LyricWidth = Math.Max(LyricWidth - LyricBoxRightPadding, 0);
+        LyricWidth = CalculateLyricWidth();
 
         switch (_windowMode)
         {
@@ -354,13 +351,12 @@ public sealed partial class ExpandedPlayer : Page
                 break;
         }
 
-        _needRedesign++;
+        _needsRedesign = true;
         _isRealClick = true;
     }
 
     private void Redesign()
     {
-        if (_needRedesign > 5) _needRedesign = 5;
         // 这个函数里面放无法用XAML实现的页面布局方式
         BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
     
@@ -375,34 +371,32 @@ public sealed partial class ExpandedPlayer : Page
             lastChangedLyricWidth = LyricWidth;
         }
 
-        //歌词宽度
-        if (_nowWidth <= 800)
+        // 响应式布局: 窗口宽度 <= ResponsiveBreakpointWidth 时仅显示封面, > ResponsiveBreakpointWidth 时恢复双栏
+        if (!_isManualChangeMode)
         {
-            if (!_isManualChangeMode && _windowMode == ExpandedWindowMode.Both)
+            if (_nowWidth <= ResponsiveBreakpointWidth && _windowMode == ExpandedWindowMode.Both)
             {
                 _windowMode = ExpandedWindowMode.CoverOnly;
-                Change_windowMode();
+                ChangeWindowMode();
             }
-        }
-        else if (_nowWidth > 800)
-        {
-            if (!_isManualChangeMode && _windowMode != ExpandedWindowMode.Both)
+            else if (_nowWidth > ResponsiveBreakpointWidth && _windowMode != ExpandedWindowMode.Both)
             {
                 _windowMode = ExpandedWindowMode.Both;
-                Change_windowMode();
+                ChangeWindowMode();
             }
         }
+    }
 
+    private void ImageAlbum_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        ImageRotateTransform.CenterX = e.NewSize.Width / 2;
+        ImageRotateTransform.CenterY = e.NewSize.Height / 2;
+    }
 
-
-        ImageRotateTransform.CenterX = ImageAlbum.ActualSize.X / 2;
-        ImageRotateTransform.CenterY = ImageAlbum.ActualSize.Y / 2;
-
-        BgScale.CenterY = LuminousBackgroundContainer.ActualHeight / 2;
-        BgScale.CenterX = LuminousBackgroundContainer.ActualWidth / 2;
-
-        BgRotate.CenterX = LuminousBackgroundContainer.ActualWidth / 2;
-        BgRotate.CenterY = LuminousBackgroundContainer.ActualHeight / 2;
+    private void LuminousBackgroundContainer_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        BgScale.CenterX = e.NewSize.Width / 2;
+        BgScale.CenterY = e.NewSize.Height / 2;
     }
 
     private void RunOnUIThread(Action action)
@@ -443,8 +437,8 @@ public sealed partial class ExpandedPlayer : Page
             ViewModel.SyncFromState();
             OnSongChange(_playlist.Items[_playlist.NowPlayingIndex]);
             RefreshAlbumCover(_state.NowPlayingItem);
-            Change_windowMode();
-            _needRedesign++;
+            ChangeWindowMode();
+            _needsRedesign = true;
         }
         catch
         {
@@ -604,7 +598,7 @@ public sealed partial class ExpandedPlayer : Page
                 }
             }
 
-            _needRedesign++;
+            _needsRedesign = true;
             NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
         });
     }
@@ -781,7 +775,7 @@ public sealed partial class ExpandedPlayer : Page
         else if (BtnToggleAlbum.IsChecked)
             _windowMode = ExpandedWindowMode.CoverOnly;
         else if (BtnToggleLyric.IsChecked) _windowMode = ExpandedWindowMode.LyricOnly;
-        Change_windowMode();
+        ChangeWindowMode();
     }
 
     private void BtnToggleFullScreen_Checked(object sender, RoutedEventArgs e)
@@ -790,12 +784,12 @@ public sealed partial class ExpandedPlayer : Page
         if (BtnToggleFullScreen.IsChecked)
         {
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
-            Change_windowMode();
+            ChangeWindowMode();
         }
         else if (ApplicationView.GetForCurrentView().IsFullScreenMode)
         {
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
-            Change_windowMode();
+            ChangeWindowMode();
         }
     }
 
@@ -888,7 +882,7 @@ public sealed partial class ExpandedPlayer : Page
             if (!_lyricBox.HasJumpedLyrics)
             {
                 _windowMode = ExpandedWindowMode.CoverOnly;
-                Change_windowMode();
+                ChangeWindowMode();
             }
         }
     }
@@ -1513,12 +1507,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void LeftPanel_Tapped(object sender, TappedRoutedEventArgs e)
     {
-        if (_windowMode == ExpandedWindowMode.Both) return;
-        else
-        {
-            _windowMode = _windowMode == ExpandedWindowMode.LyricOnly ? ExpandedWindowMode.CoverOnly : ExpandedWindowMode.LyricOnly;
-            Change_windowMode();
-        }
+        SingleViewModeToggle();
     }
 
     private void LyricView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
