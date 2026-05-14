@@ -444,29 +444,6 @@ public sealed partial class Settings : Page
         _setting.karaokLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
     }
 
-    private void ApplyNewAcrylic()
-    {
-        var Brush = new Microsoft.UI.Xaml.Media.AcrylicBrush()
-        {
-            BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
-            TintColor = (Windows.UI.Color)Application.Current.Resources["SystemRevealAltHighColor"],
-            TintOpacity = TintOpacitySlider.Value,
-            TintLuminosityOpacity = TintOpacityLuminositySlider.Value,
-            FallbackColor = (Windows.UI.Color)Application.Current.Resources["SystemRevealAltHighColor"],
-        };
-        PreviewAcrylic.Fill = Brush;
-    }
-
-    private void TintOpacity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        ApplyNewAcrylic();
-    }
-
-    private void TintOpacityLuminosity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        ApplyNewAcrylic();
-    }
-
     private async void AboutRomaji_Click(object sender, RoutedEventArgs e)
     {
         await AboutRomajiDialog.ShowAsync();

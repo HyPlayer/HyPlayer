@@ -12,9 +12,8 @@
     {
         CoverBlur = 0,
         CoverTheme = 1,
-        DesktopAcrylic = 2,
-        Animated = 3,
-        Isolation = 4
+        Animated = 2,
+        Isolation = 3
     }
     public enum ExpandedWindowMode : int
     {

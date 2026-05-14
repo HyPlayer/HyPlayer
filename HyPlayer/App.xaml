@@ -4,14 +4,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:classes="using:HyPlayer.Classes"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:theme="using:HyPlayer.Resources">
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <theme:Theme />
-
+                <muxc:XamlControlsResources />
                 <ResourceDictionary Source="/Resources/Acrylic.xaml" />
-                <ResourceDictionary Source="/Resources/Theme.xaml" />
                 <ResourceDictionary Source="/Resources/UnsupportedFontIcon.xaml" />
                 <ResourceDictionary Source="/Classes/ConvertersDictionary.xaml" />
                 <ResourceDictionary Source="/Resources/ListView.xaml" />
@@ -27,7 +25,10 @@
             <Color x:Key="SubtleFillColorTertiary">#0AFFFFFF</Color>
 
             <classes:NegationBoolToVisibilityConverter x:Key="NegationBoolToVisibilityConverter" />
-
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark" Source="/Resources/Dark.xaml" />
+                <ResourceDictionary x:Key="Light" Source="/Resources/Light.xaml" />
+            </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

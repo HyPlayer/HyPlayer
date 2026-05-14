@@ -353,18 +353,6 @@ namespace HyPlayer.Classes.Settings
             }
         }
 
-        /// <summary>
-        /// Lyric renderer FPS.
-        /// </summary>
-        public int LyricRendererFPS
-        {
-            get => GetSettings(nameof(LyricRendererFPS), 60);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererFPS)] = value;
-            }
-        }
-
 #nullable enable
         /// <summary>
         /// Pure lyric idle color override.

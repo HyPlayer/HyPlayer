@@ -36,30 +36,6 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="60" />
                         </Grid.ColumnDefinitions>
-                        <controls:ImageEx
-                            x:Name="RectangleImageBack"
-                            Grid.ColumnSpan="2"
-                            Height="85"
-                            Margin="0,-10,0,-10"
-                            x:Load="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}"
-                            x:Phase="4"
-                            CornerRadius="10"
-                            IsCacheEnabled="False"
-                            Stretch="UniformToFill"
-                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}">
-                            <controls:ImageEx.Source>
-                                <BitmapImage UriSource="{x:Bind CoverUri}" />
-                            </controls:ImageEx.Source>
-                        </controls:ImageEx>
-                        <Rectangle
-                            x:Name="RectangleImageAcrylic"
-                            Grid.ColumnSpan="2"
-                            Margin="0,-10,0,-10"
-                            x:Load="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}"
-                            Fill="{ThemeResource SystemControlAcrylicElementBrush}"
-                            RadiusX="10"
-                            RadiusY="10"
-                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}" />
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
                             <TextBlock
                                 x:Name="OrderId"

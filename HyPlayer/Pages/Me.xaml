@@ -32,27 +32,6 @@
                     <DataTemplate x:Key="ListItemTemplate" x:DataType="classes:SimpleListItem">
                         <ListViewItem CornerRadius="0" Style="{StaticResource ListViewItemStyle}">
                             <Grid Margin="0,5" HorizontalAlignment="Stretch">
-                                <frieren:ImageEx
-                                    x:Name="RectangleImageBack"
-                                    Height="82"
-                                    Margin="0"
-                                    x:Load="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}"
-                                    CornerRadius="12"
-                                    IsCacheEnabled="False"
-                                    Stretch="UniformToFill"
-                                    Visibility="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}">
-                                    <frieren:ImageEx.Source>
-                                        <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}" />
-                                    </frieren:ImageEx.Source>
-                                </frieren:ImageEx>
-                                <Rectangle
-                                    x:Name="RectangleImageAcrylic"
-                                    Margin="0,-1,0,-1"
-                                    x:Load="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}"
-                                    Fill="{ThemeResource SystemControlAcrylicElementBrush}"
-                                    RadiusX="10"
-                                    RadiusY="10"
-                                    Visibility="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur}" />
                                 <Grid
                                     Grid.Column="0"
                                     Background="Transparent"
@@ -164,7 +143,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0">
-                    <Grid x:Name="AcrylicGrid" Visibility="{x:Bind hyplayer:Setting.acrylicAvailabiliity}">
+                    <Grid x:Name="AcrylicGrid">
                         <Border
                             x:Name="RectangleImageBack"
                             x:Load="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur}"
@@ -183,19 +162,6 @@
                             Background="{ThemeResource MePageAcrylicBrush}"
                             Visibility="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur}" />
                     </Grid>
-
-                    <Border x:Name="RectangleImageFallback" Visibility="{x:Bind hyplayer:Setting.acrylicAvailabiliity, Converter={StaticResource BoolToVisibilityInverseConverter}}">
-                        <Border.Background>
-                            <ImageBrush Stretch="UniformToFill">
-                                <ImageBrush.ImageSource>
-                                    <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}" />
-                                </ImageBrush.ImageSource>
-                            </ImageBrush>
-                        </Border.Background>
-                    </Border>
-
-
-
 
                     <controls:DockPanel
                         x:Name="GridPersonalInformation"
@@ -251,14 +217,6 @@
                             </Button>
                         </StackPanel>
                     </controls:DockPanel>
-
-                    <ui:Effects.Shadow>
-                        <media:AttachedCardShadow
-                            CornerRadius="0"
-                            Opacity="{x:Bind Path=hyplayer:Setting.acrylicAvailabiliity, Converter={StaticResource BoolToOpacityConverter}}"
-                            Offset="0,1,0"
-                            Color="Black" />
-                    </ui:Effects.Shadow>
                 </Grid>
                 <Grid
                     x:Name="MainGrid"

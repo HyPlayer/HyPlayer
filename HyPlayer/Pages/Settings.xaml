@@ -330,15 +330,6 @@
                                             SpinButtonPlacementMode="Compact"
                                             Value="{x:Bind hyplayer:XamlHelpers.Setting.lyricLineSpacing, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="歌词帧率">
-                                        <controls:NumberBox
-                                            MinWidth="100"
-                                            HorizontalAlignment="Right"
-                                            LargeChange="5"
-                                            SmallChange="1"
-                                            SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.LyricRendererFPS, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="开启时启动热词">
                                         <ToggleSwitch
                                             MinWidth="10"
@@ -696,29 +687,11 @@
                                             <ComboBoxItem Content="暗色" />
                                         </ComboBox>
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="圆形播放按钮">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playButtonAccentColor, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="播放栏按钮透明">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playbarButtonsTransparent, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="开启标题栏沉浸">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.EnableTitleBarImmerse, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="播放条背景防糊优化">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playbarBackgroundElay, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -739,7 +712,6 @@
                                         <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.expandedPlayerBackgroundType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="专辑封面模糊" />
                                             <ComboBoxItem Content="跟随唱片主色调" />
-                                            <ComboBoxItem Content="桌面亚克力 (不推荐)" />
                                             <ComboBoxItem Content="流光溢彩" />
                                             <ComboBoxItem Content="流光溢彩 (Isolation)" />
                                         </ComboBox>
@@ -863,59 +835,6 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Description="关闭此选项则为 Mica" Header="使用亚克力窗口背景">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="自定义Acrylic(需重启)" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=OneWay}">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Top"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.CustomAcrylic, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-
-                                    <controls3:SettingsCard Header="TintOpacity值" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
-                                        <Slider
-                                            x:Name="TintOpacitySlider"
-                                            Width="256"
-                                            HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:XamlHelpers.Setting.CustomAcrylic, Mode=OneWay}"
-                                            Maximum="1"
-                                            Minimum="0"
-                                            StepFrequency="0.01"
-                                            ToolTipService.ToolTip="{x:Bind TintOpacitySlider.Value}"
-                                            ValueChanged="TintOpacity_ValueChanged"
-                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.CustomTintOpacity, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-
-                                    <controls3:SettingsCard Header="TintOpacityLuminosity值" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
-                                        <Slider
-                                            x:Name="TintOpacityLuminositySlider"
-                                            Width="256"
-                                            HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:XamlHelpers.Setting.CustomAcrylic, Mode=OneWay}"
-                                            Maximum="1"
-                                            Minimum="0"
-                                            StepFrequency="0.01"
-                                            ToolTipService.ToolTip="{x:Bind TintOpacityLuminositySlider.Value}"
-                                            ValueChanged="TintOpacityLuminosity_ValueChanged"
-                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.CustomTintLuminosityOpacity, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-
-                                    <controls3:SettingsCard Header="预览Acrylic" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
-                                        <Rectangle
-                                            x:Name="PreviewAcrylic"
-                                            Grid.Column="1"
-                                            Width="256"
-                                            Height="75"
-                                            VerticalAlignment="Stretch"
-                                            RadiusX="10"
-                                            RadiusY="10" />
-                                    </controls3:SettingsCard>
-
                                     <controls3:SettingsCard Description="需重启应用" Header="无图模式">
                                         <ToggleSwitch
                                             MinWidth="10"
@@ -980,23 +899,11 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.expandedUseAcrylic, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Description="否则为窗口亚克力" Header="播放条使用封面模糊背景">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playbarBackgroundAcrylic, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="展开/收缩「歌词页面」动画">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.expandAnimation, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="播放条背景呼吸动画">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.playbarBackgroundBreath, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="与阴影冲突" Header="歌词页面专辑封面呼吸动画">
                                         <ToggleSwitch
@@ -1009,12 +916,6 @@
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="歌单列表项背景模糊">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.itemOfListBackgroundAcrylicBlur, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="启用触摸手势控制 (歌词页面-专辑封面)">
                                         <ToggleSwitch

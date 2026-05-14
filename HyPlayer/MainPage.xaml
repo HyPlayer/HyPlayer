@@ -144,7 +144,7 @@
             Margin="{x:Bind hyplayer:XamlHelpers.Setting.playBarMargin, Mode=OneWay, Converter={StaticResource PlayBarMarginConverter}}"
             VerticalAlignment="Bottom"
             x:FieldModifier="public"
-            Background="{x:Bind hyplayer:XamlHelpers.Setting.playbarBackgroundAcrylic, Mode=OneWay, Converter={StaticResource BooleanToGridPlayBarBrushesConverter}}"
+            Background="{StaticResource SystemControlAcrylicElementMediumHighBrush}"
             BorderBrush="{ThemeResource CardBorderBrush}"
             BorderThickness="1"
             CornerRadius="{x:Bind hyplayer:XamlHelpers.Setting.playBarMargin, Mode=OneWay, Converter={StaticResource PlayBarCornerRadiusConverter}}"

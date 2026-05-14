@@ -13,9 +13,6 @@
     <classes:AlbumShadowConverter x:Key="ShadowConverter" />
     <classes:ReversedBooleanToVisibilityConverter x:Key="ReversedBooleanToVisibilityConverter" />
     <classes:EnumToIntConverter x:Key="EnumToIntConverter" />
-    <classes:BooleanToWindowBrushesConverter x:Key="BooleanToWindowBrushesConverter" />
-    <classes:BooleanToBarPlayBarBrushesConverter x:Key="BooleanToBarPlayBarBrushesConverter" />
-    <classes:BooleanToGridPlayBarBrushesConverter x:Key="BooleanToGridPlayBarBrushesConverter" />
     <classes:DateConverter x:Key="DateConverter" />
     <classes:NullableColorToColorConverter x:Key="NullableColorToColorConverter" />
     <classes:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />

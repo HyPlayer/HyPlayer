@@ -12,24 +12,11 @@
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     d:DesignHeight="102.667"
     d:DesignWidth="1289"
-    Background="{x:Bind hy:XamlHelpers.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource BooleanToBarPlayBarBrushesConverter}}"
     CornerRadius="20"
     Loaded="UserControl_Loaded"
     Unloaded="UserControl_Unloaded"
     mc:Ignorable="d">
     <UserControl.Resources>
-
-        <LinearGradientBrush x:Key="SolidPlayButtonColor" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop x:Name="PlayBtnGradient" Offset="0.2" Color="#fefefe" />
-            <GradientStop Offset="0.8" Color="#f1f1f1" />
-        </LinearGradientBrush>
-        <LinearGradientBrush x:Key="SolidPlayButtonIconColor" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop x:Name="PlayBtnIconGradient" Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
-            <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColorLight1}" />
-        </LinearGradientBrush>
-
-
-
         <Flyout x:Key="VolumeFlyout">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -55,55 +42,6 @@
             x:Name="IconTick"
             FontFamily="{StaticResource SymbolThemeFontFamily}"
             Glyph="&#xE008;" />
-        <Storyboard x:Name="PlayBarBackgroundFadeIn">
-            <FadeInThemeAnimation BeginTime="0:0:0.2" Storyboard.TargetName="PlayBarBackground" />
-            <FadeInThemeAnimation Storyboard.TargetName="PlayBarAcrylic" />
-        </Storyboard>
-        <Storyboard x:Name="PlayBarBackgroundFadeOut">
-            <FadeOutThemeAnimation Storyboard.TargetName="PlayBarBackground" Duration="0:0:0.2" />
-            <FadeOutThemeAnimation
-                BeginTime="0:0:0.15"
-                Storyboard.TargetName="PlayBarAcrylic"
-                Duration="0:0:0.2" />
-        </Storyboard>
-        <Storyboard x:Name="PlayBarBackgroundAni">
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="PlayBarBackground"
-                Storyboard.TargetProperty="Opacity"
-                From="1"
-                To="0.4"
-                Duration="0:0:4">
-                <DoubleAnimation.EasingFunction>
-                    <QuarticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="BackgroundAni"
-                Storyboard.TargetProperty="ScaleY"
-                From="1"
-                To="8"
-                Duration="0:0:3">
-                <DoubleAnimation.EasingFunction>
-                    <QuarticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="PlayBtnGradient"
-                Storyboard.TargetProperty="Offset"
-                From="0.2"
-                To="0.5"
-                Duration="0:0:4">
-                <DoubleAnimation.EasingFunction>
-                    <QuarticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
         <Storyboard x:Name="InitializedAni">
             <DoubleAnimation
                 Storyboard.TargetName="GridSongInfo"
@@ -607,25 +545,7 @@
             </Setter>
         </Style>
     </UserControl.Resources>
-    <Grid Background="Transparent" CornerRadius="4,4,0,0">
-        <frieren:ImageEx
-            x:Name="PlayBarBackground"
-            Grid.ColumnSpan="4"
-            VerticalAlignment="Top"
-            IsCacheEnabled="False"
-            Source="{x:Bind AlbumImage.Source, Mode=OneWay}"
-            Stretch="UniformToFill"
-            Visibility="{x:Bind hy:XamlHelpers.Setting.playbarBackgroundAcrylic, Mode=OneWay}">
-            <frieren:ImageEx.RenderTransform>
-                <ScaleTransform x:Name="BackgroundAni" CenterX="200" CenterY="55" />
-            </frieren:ImageEx.RenderTransform>
-        </frieren:ImageEx>
-        <Rectangle
-            x:Name="PlayBarAcrylic"
-            Grid.ColumnSpan="4"
-            Fill="{ThemeResource SystemControlAltMediumLowAcrylicElementMediumBrush}"
-            Opacity="1"
-            Visibility="{x:Bind hy:XamlHelpers.Setting.playbarBackgroundAcrylic, Mode=OneWay}" />
+    <Grid CornerRadius="4,4,0,0">
         <Grid x:Name="GridThis" Margin="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*" />
@@ -911,7 +831,7 @@
                         Height="38"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Background="#22ffffff"
+                        Background="Transparent"
                         BorderThickness="0"
                         Click="BtnPlayRollType_OnClick"
                         CornerRadius="30"
@@ -929,7 +849,7 @@
                         Height="40"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Background="#22ffffff"
+                        Background="Transparent"
                         BorderThickness="0"
                         Click="BtnPreviousSong_OnClick"
                         CornerRadius="30">
@@ -947,7 +867,7 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         AutomationProperties.AcceleratorKey="Space"
-                        Background="#22ffffff"
+                        Background="Transparent"
                         BorderThickness="0"
                         Click="BtnPlayStateChange_OnClick"
                         CornerRadius="30"
@@ -967,7 +887,7 @@
                         Height="40"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Background="#22ffffff"
+                        Background="Transparent"
                         BorderThickness="0"
                         Click="BtnNextSong_OnClick"
                         CornerRadius="30">
@@ -983,7 +903,7 @@
                         Height="40"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Background="#22ffffff"
+                        Background="Transparent"
                         BorderThickness="0"
                         Click="BtnLike_OnClick"
                         CornerRadius="30">

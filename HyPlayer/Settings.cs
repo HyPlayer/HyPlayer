@@ -80,23 +80,12 @@ namespace HyPlayer
         public ColorGeneratorType ColorGeneratorType { get => UI.ColorGeneratorType; set { UI.ColorGeneratorType = value; OnPropertyChanged(); } }
         public bool IsOldThemeEnabled { get => UI.IsOldThemeEnabled; set { UI.IsOldThemeEnabled = value; OnPropertyChanged(); } }
         public BackgroundType expandedPlayerBackgroundType { get => UI.expandedPlayerBackgroundType; set { UI.expandedPlayerBackgroundType = value; OnPropertyChanged(); } }
-        public bool CustomAcrylic { get => UI.CustomAcrylic; set { UI.CustomAcrylic = value; OnPropertyChanged(); } }
-        public double CustomTintOpacity { get => UI.CustomTintOpacity; set { UI.CustomTintOpacity = value; OnPropertyChanged(); } }
-        public double CustomTintLuminosityOpacity { get => UI.CustomTintLuminosityOpacity; set { UI.CustomTintLuminosityOpacity = value; OnPropertyChanged(); } }
-        public bool acrylicBackgroundStatus { get => UI.acrylicBackgroundStatus; set { UI.acrylicBackgroundStatus = value; OnPropertyChanged(); } }
-        public static bool acrylicAvailabiliity => HyPlayerUISettings.acrylicAvailabiliity;
         public bool albumRotate { get => UI.albumRotate; set { UI.albumRotate = value; OnPropertyChanged(); } }
         public bool albumRound { get => UI.albumRound; set { UI.albumRound = value; OnPropertyChanged(); } }
         public int albumBorderLength { get => UI.albumBorderLength; set { UI.albumBorderLength = value; OnPropertyChanged(); } }
         public bool expandedUseAcrylic { get => UI.expandedUseAcrylic; set { UI.expandedUseAcrylic = value; OnPropertyChanged(); } }
-        public bool playbarBackgroundBreath { get => UI.playbarBackgroundBreath; set { UI.playbarBackgroundBreath = value; OnPropertyChanged(); } }
-        public bool playbarBackgroundAcrylic { get => UI.playbarBackgroundAcrylic; set { UI.playbarBackgroundAcrylic = value; OnPropertyChanged(); } }
         public bool expandAlbumBreath { get => UI.expandAlbumBreath; set { UI.expandAlbumBreath = value; OnPropertyChanged(); } }
         public bool listHeaderAcrylicBlur { get => UI.listHeaderAcrylicBlur; set { UI.listHeaderAcrylicBlur = value; OnPropertyChanged(); } }
-        public bool itemOfListBackgroundAcrylicBlur { get => UI.itemOfListBackgroundAcrylicBlur; set { UI.itemOfListBackgroundAcrylicBlur = value; OnPropertyChanged(); } }
-        public bool playbarButtonsTransparent { get => UI.playbarButtonsTransparent; set { UI.playbarButtonsTransparent = value; OnPropertyChanged(); } }
-        public bool playbarBackgroundElay { get => UI.playbarBackgroundElay; set { UI.playbarBackgroundElay = value; OnPropertyChanged(); } }
-        public bool playButtonAccentColor { get => UI.playButtonAccentColor; set { UI.playButtonAccentColor = value; OnPropertyChanged(); } }
         public bool expandedPlayerFullCover { get => UI.expandedPlayerFullCover; set { UI.expandedPlayerFullCover = value; OnPropertyChanged(); } }
         public int expandedCoverShadowDepth { get => UI.expandedCoverShadowDepth; set { UI.expandedCoverShadowDepth = value; OnPropertyChanged(); } }
         public bool EnableTitleBarImmerse { get => UI.EnableTitleBarImmerse; set { UI.EnableTitleBarImmerse = value; OnPropertyChanged(); } }
@@ -166,7 +155,6 @@ namespace HyPlayer
         public bool lyricRenderFade { get => Lyric.lyricRenderFade; set { Lyric.lyricRenderFade = value; OnPropertyChanged(); } }
         public RollingCalculator LineRollingCalculator { get => Lyric.LineRollingCalculator; set { Lyric.LineRollingCalculator = value; OnPropertyChanged(); } }
         public bool LyricRendererDebugMode { get => Lyric.LyricRendererDebugMode; set { Lyric.LyricRendererDebugMode = value; OnPropertyChanged(); } }
-        public int LyricRendererFPS { get => Lyric.LyricRendererFPS; set { Lyric.LyricRendererFPS = value; OnPropertyChanged(); } }
 #nullable enable
         public Color? pureLyricIdleColor { get => Lyric.pureLyricIdleColor; set { Lyric.pureLyricIdleColor = value; OnPropertyChanged(); } }
         public Color? pureLyricFocusingColor { get => Lyric.pureLyricFocusingColor; set { Lyric.pureLyricFocusingColor = value; OnPropertyChanged(); } }

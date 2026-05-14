@@ -459,11 +459,6 @@ public sealed partial class ExpandedPlayer : Page
             luminousColorsRotateStoryBoard.Children.Add(luminousColorsRotateAnimation);
             luminousColorsRotateStoryBoard.Begin();
         }
-        if (_settings.expandedPlayerBackgroundType == BackgroundType.DesktopAcrylic)
-            PageContainer.Background =
-                (Brush)new BooleanToWindowBrushesConverter().Convert(
-                    _settings.acrylicBackgroundStatus, null, null,
-                    null);
         NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
         if (_settings.pureLyricFocusingColor is not null)
         {
@@ -897,10 +892,6 @@ public sealed partial class ExpandedPlayer : Page
             resultGenerated = true;
         }
         if (_state.NowPlayingItem == null) return false;
-        if (_settings.expandedPlayerBackgroundType == BackgroundType.DesktopAcrylic)
-        {
-            return ActualTheme == ElementTheme.Light;
-        }
         try
         {
             BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
@@ -1057,7 +1048,6 @@ public sealed partial class ExpandedPlayer : Page
             case BackgroundType.Animated:
                 BlackCover.Opacity = 1;
                 break;
-            case BackgroundType.DesktopAcrylic:
             case BackgroundType.Isolation:
                 BlackCover.Visibility = Visibility.Collapsed;
                 AcrylicCover.Visibility = Visibility.Collapsed;
@@ -1276,10 +1266,6 @@ public sealed partial class ExpandedPlayer : Page
                         }
                     }
 
-
-
-                    if (_settings.playbarBackgroundElay)
-                        (_uiState.BarPlayBar as PlayBar)!.SetPlayBarIdleBackground(brushManagement.IdleBrush);
                     //LoadLyricsBox();
                     RefreshUIColor();
                     if (_settings.expandedPlayerBackgroundType == BackgroundType.Animated)

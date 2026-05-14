@@ -30,6 +30,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -81,23 +82,6 @@ DoubleAnimation verticalAnimation;
     {
         _uiState.BarPlayBar = this;
         InitializeComponent();
-        _player.OnGlobalPlaybackStatusChanged += Player_OnGlobalPlaybackStatusChanged;
-    }
-
-    private void Player_OnGlobalPlaybackStatusChanged(PlaybackStatus status)
-    {
-        RunOnUIThread(() =>
-        {
-            if (status == PlaybackStatus.Playing)
-            {
-                if (_setting.playbarBackgroundBreath)
-                    PlayBarBackgroundAni.Begin();
-            }
-            else
-            {
-                PlayBarBackgroundAni.Stop();
-            }
-        });
     }
 
     private void HyPlayListOnOnSongRemoveAll()
@@ -281,7 +265,6 @@ DoubleAnimation verticalAnimation;
         if (!_player.PlayerCreated || ViewModel.NowPlayingItem?.PlayItem?.AudioGraphPlaybackSource == null) return;
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
-        PlayBarBackgroundFadeOut.Begin();
         //(Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).MainFrame.Visibility = Visibility.Collapsed;
         (_uiState.PageMain as MainPage).ExpandedPlayer.Visibility = Visibility.Visible;
         (_uiState.PageMain as MainPage).ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
@@ -289,6 +272,7 @@ DoubleAnimation verticalAnimation;
         (_uiState.PageMain as MainPage).GridPlayBar.BorderThickness = new Thickness(0);
         (_uiState.PageMain as MainPage).MainFrame.Visibility = Visibility.Collapsed;
         (_uiState.PageMain as MainPage).GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;
+        (_uiState.PageMain as MainPage).GridPlayBar.Background = null;
         if (_setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
             try
             {
@@ -328,7 +312,6 @@ DoubleAnimation verticalAnimation;
         (_uiState.PageExpandedPlayer as ExpandedPlayer).StartCollapseAnimation();
         GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
         GridSongInfo.Visibility = Visibility.Visible;
-        PlayBarBackgroundFadeIn.Begin();
         _uiState.BrushManagement.AccentBrush = null;
         if (_setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
         {
@@ -361,6 +344,7 @@ DoubleAnimation verticalAnimation;
         (_uiState.PageBase as BasePage).AppTitleBar.ReleasePointerCaptures();
         (_uiState.PageMain as MainPage).ExpandedPlayer.Navigate(typeof(BlankPage));
         (_uiState.PageMain as MainPage).GridPlayBar.BorderThickness = new Thickness(1);
+        (_uiState.PageMain as MainPage).GridPlayBar.Background = Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"].As<Brush>();
         (_uiState.PageMain as MainPage).MainFrame.Visibility = Visibility.Visible;
         (_uiState.PageMain as MainPage).ExpandedPlayer.Visibility = Visibility.Collapsed;
         var region = (_uiState.PageBase as BasePage).AppTitleBar.FindDescendant("PART_DragRegion")?.As<Grid>();
@@ -588,7 +572,6 @@ DoubleAnimation verticalAnimation;
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
         InitializedAni.Begin();
-        PlayBarBackgroundFadeIn.Begin();
         ViewModel.SetVolumeCommand.Execute((double)_setting.Volume);
         SliderAudioRate.Value = (double)_setting.Volume;
         ViewModel.SyncFromState();
@@ -609,56 +592,29 @@ DoubleAnimation verticalAnimation;
         // Position updates now use Messenger too
         messenger.Register<PositionTickMessage>(this, (_, m) => OnPlayPositionChange(m.Position));
 
-        if (_setting.playbarButtonsTransparent)
-        {
-            BtnPlayRollType.Background = new SolidColorBrush(Colors.Transparent);
-            BtnPreviousSong.Background = new SolidColorBrush(Colors.Transparent);
-            BtnPlayStateChange.Background = new SolidColorBrush(Colors.Transparent);
-            BtnNextSong.Background = new SolidColorBrush(Colors.Transparent);
-            BtnLike.Background = new SolidColorBrush(Colors.Transparent);
-        }
-
-        if (_setting.playButtonAccentColor)
-        {
-            BtnPlayStateChange.Background = Resources["SolidPlayButtonColor"]?.As<Brush>();
-            PlayStateIcon.Foreground = Resources["SolidPlayButtonIconColor"]?.As<Brush>();
-        }
-        else
-            PlayBarBackgroundAni.Children.RemoveAt(2);
-
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
         _uiState.Logs.Add("Now PlaySource is " + ViewModel.PlaySourceId);
 
         if (_uiState.IsExpanded)
             (_uiState.BarPlayBar as PlayBar).ShowExpandedPlayer();
-        if (!_setting.playbarBackgroundAcrylic)
-            if (_setting.hotlyricOnStartup)
-                try
-                {
-                    var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
-                    if (await Launcher.QueryUriSupportAsync(uri, LaunchQuerySupportType.Uri,
-                            "306200B4771A6.217957860C1A5_mb3g82vhcggpy") ==
-                        LaunchQuerySupportStatus.Available)
-                    {
-                        await Launcher.LaunchUriAsync(uri);
-                        Bindings.Update();
-                        return;
-                    }
-                }
-                catch
-                {
-                }
 
-        if (_setting.playbarBackgroundElay)
-        {
-            PointerEntered += (o, args) =>
+        if (_setting.hotlyricOnStartup)
+            try
             {
-                if (_uiState.IsExpanded && _setting.playbarBackgroundElay)
-                    GridThis.Background = BackgroundElayBrush;
-            };
-            PointerExited += (o, args) => { GridThis.Background = new SolidColorBrush(Colors.Transparent); };
-        }
+                var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
+                if (await Launcher.QueryUriSupportAsync(uri, LaunchQuerySupportType.Uri,
+                        "306200B4771A6.217957860C1A5_mb3g82vhcggpy") ==
+                    LaunchQuerySupportStatus.Available)
+                {
+                    await Launcher.LaunchUriAsync(uri);
+                    Bindings.Update();
+                    return;
+                }
+            }
+            catch
+            {
+            }
         ViewModel.DataTransferManager.DataRequested += DataTransferManager_DataRequested;
     }
 
@@ -818,7 +774,6 @@ DoubleAnimation verticalAnimation;
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        _player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
         ViewModel.DataTransferManager.DataRequested -= DataTransferManager_DataRequested;
         _uiState.ClearReferences(this);
     }

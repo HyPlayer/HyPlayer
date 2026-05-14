@@ -124,87 +124,6 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Whether custom acrylic is enabled.
-        /// </summary>
-        public bool CustomAcrylic
-        {
-            get => GetSettings(nameof(CustomAcrylic), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(CustomAcrylic)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Custom tint opacity for acrylic.
-        /// </summary>
-        public double CustomTintOpacity
-        {
-            get
-            {
-                try
-                {
-                    if (CustomAcrylic)
-                    {
-                        return GetSettings(nameof(CustomTintOpacity), 3d);
-                    }
-                    else
-                    {
-                        return 0d;
-                    }
-                }
-                catch
-                {
-                    return 3d;
-                }
-            }
-            set => ApplicationData.Current.LocalSettings.Values[nameof(CustomTintOpacity)] = value;
-        }
-
-        /// <summary>
-        /// Custom tint luminosity opacity for acrylic.
-        /// </summary>
-        public double CustomTintLuminosityOpacity
-        {
-            get
-            {
-                try
-                {
-                    if (CustomAcrylic)
-                    {
-                        return GetSettings(nameof(CustomTintLuminosityOpacity), 3d);
-                    }
-                    else
-                    {
-                        return 0d;
-                    }
-                }
-                catch
-                {
-                    return 3d;
-                }
-            }
-            set => ApplicationData.Current.LocalSettings.Values[nameof(CustomTintLuminosityOpacity)] = value;
-        }
-
-        /// <summary>
-        /// Whether acrylic background is enabled.
-        /// </summary>
-        public bool acrylicBackgroundStatus
-        {
-            get => GetSettings(nameof(acrylicBackgroundStatus), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(acrylicBackgroundStatus)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether acrylic effects are available on this system.
-        /// </summary>
-        public static bool acrylicAvailabiliity => new Windows.UI.ViewManagement.UISettings().AdvancedEffectsEnabled && Windows.UI.Composition.CompositionCapabilities.GetForCurrentView().AreEffectsFast();
-
-        /// <summary>
         /// Whether album cover rotates during playback.
         /// </summary>
         public bool albumRotate
@@ -249,27 +168,6 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Whether playbar background has breath animation.
-        /// </summary>
-        public bool playbarBackgroundBreath
-        {
-            get => GetSettings(nameof(playbarBackgroundBreath), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(playbarBackgroundBreath)] = value;
-        }
-
-        /// <summary>
-        /// Whether playbar background uses acrylic.
-        /// </summary>
-        public bool playbarBackgroundAcrylic
-        {
-            get => GetSettings(nameof(playbarBackgroundAcrylic), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(playbarBackgroundAcrylic)] = value;
-            }
-        }
-
-        /// <summary>
         /// Whether expanded album has breath animation.
         /// </summary>
         public bool expandAlbumBreath
@@ -285,51 +183,6 @@ namespace HyPlayer.Classes.Settings
         {
             get => GetSettings(nameof(listHeaderAcrylicBlur), true);
             set => ApplicationData.Current.LocalSettings.Values[nameof(listHeaderAcrylicBlur)] = value;
-        }
-
-        /// <summary>
-        /// Whether list item background uses acrylic blur.
-        /// </summary>
-        public bool itemOfListBackgroundAcrylicBlur
-        {
-            get => GetSettings(nameof(itemOfListBackgroundAcrylicBlur), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(itemOfListBackgroundAcrylicBlur)] = value;
-        }
-
-        /// <summary>
-        /// Whether playbar buttons are transparent.
-        /// </summary>
-        public bool playbarButtonsTransparent
-        {
-            get => GetSettings(nameof(playbarButtonsTransparent), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(playbarButtonsTransparent)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether playbar background has elay effect.
-        /// </summary>
-        public bool playbarBackgroundElay
-        {
-            get => GetSettings(nameof(playbarBackgroundElay), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(playbarBackgroundElay)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether play button uses accent color.
-        /// </summary>
-        public bool playButtonAccentColor
-        {
-            get => GetSettings(nameof(playButtonAccentColor), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(playButtonAccentColor)] = value;
-            }
         }
 
         /// <summary>
