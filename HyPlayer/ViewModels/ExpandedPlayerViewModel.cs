@@ -20,7 +20,7 @@ namespace HyPlayer.ViewModels
         private readonly IPlaybackControlService _control;
         private readonly PlaybackStateService _state;
         private readonly ILyricService _lyricService;
-        private readonly IPlaybackNotificationService _notification;
+        private readonly INotificationService _notification;
         private readonly Setting _settings;
 
         public ExpandedPlayerViewModel(
@@ -28,7 +28,7 @@ namespace HyPlayer.ViewModels
             IPlaybackControlService control,
             PlaybackStateService state,
             ILyricService lyricService,
-            IPlaybackNotificationService notification,
+            INotificationService notification,
             Setting settings)
         {
             _playlist = playlist;
@@ -148,12 +148,14 @@ namespace HyPlayer.ViewModels
             // Low-frequency events via messenger
             Messenger.Register<TrackChangedMessage>(this, (r, m) =>
             {
-                var vm = (ExpandedPlayerViewModel)r;
-                vm.NowPlayingItem = m.Item;
-                vm.SongName = m.Item?.Name;
-                vm.Album = m.Item?.AlbumString;
-                vm.Artist = m.Item?.ArtistString;
-                vm.Duration = TimeSpan.FromMilliseconds(m.Item?.LengthInMilliseconds ?? 0);
+                _ = _notification.InvokeOnUIThread(() => {
+                    var vm = (ExpandedPlayerViewModel)r;
+                    vm.NowPlayingItem = m.Item;
+                    vm.SongName = m.Item?.Name;
+                    vm.Album = m.Item?.AlbumString;
+                    vm.Artist = m.Item?.ArtistString;
+                    vm.Duration = TimeSpan.FromMilliseconds(m.Item?.LengthInMilliseconds ?? 0);
+                });
             });
 
             Messenger.Register<PlaybackStateChangedMessage>(this, (r, m) =>

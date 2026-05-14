@@ -329,12 +329,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             && agSource.PlaybackSource?.CustomProperties.TryGetValue("nowPlayingItem", out var obj) == true
             && obj is HyPlayItem item)
         {
-            _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
-            {
-                _state.NowPlayingItem = item;
-                _state.Duration = TimeSpan.FromMilliseconds(item.LengthInMilliseconds);
-            }), "update primary playback source state");
-
+            _state.Duration = agSource.PlaybackSource.Duration ?? TimeSpan.Zero;
             _lyricCts?.Cancel();
             _lyricCts?.Dispose();
             _lyricCts = new CancellationTokenSource();

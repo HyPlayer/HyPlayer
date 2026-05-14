@@ -20,11 +20,6 @@ public interface IPlaybackNotificationService
     Task RefreshCoverAsync(HyPlayItem item);
 
     /// <summary>
-    /// 更新 SMTC 播放位置
-    /// </summary>
-    void UpdateSmtcPosition(TimeSpan position, TimeSpan duration);
-
-    /// <summary>
     /// 曲目播放结束时 Scrobble
     /// </summary>
     Task ScrobbleAsync(HyPlayItem item);

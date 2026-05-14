@@ -41,8 +41,8 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     public async Task OnTrackChangedAsync(HyPlayItem item)
     {
         if (item == null) return;
-
         UpdateSmtcDisplayInfo(item);
+        
         WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item));
 
         // 1. 刷新封面
@@ -100,12 +100,6 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         }
     }
 
-    /// <inheritdoc />
-    public void UpdateSmtcPosition(TimeSpan position, TimeSpan duration)
-    {
-        _state.Position = position;
-        _state.Duration = duration;
-    }
 
     /// <inheritdoc />
     public async Task ScrobbleAsync(HyPlayItem item)
