@@ -762,10 +762,11 @@ public sealed partial class BasePage : Page
 
     private async void BaseFrame_Navigated(object sender, NavigationEventArgs e)
     {
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = _notification.InvokeOnUIThread(async () =>
             {
                 try
                 {
+                    await Task.Delay(500);
                     NavMain.SelectionChanged -= NavMain_OnSelectionChanged;
                     Bindings.Update();
                     NavMain.SelectionChanged += NavMain_OnSelectionChanged;
