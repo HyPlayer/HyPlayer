@@ -616,8 +616,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         CurrentItem = NowPlayingItem,
         RequestNextItemAsync = RequestNextItemAsync,
         CommitItemAsync = CommitItemAsync,
-        LoadMediaSourceAsync = (item, primary, autoPlay, removeCurrentSongs) =>
-            _control.LoadAndPlayAsync(item, primary, autoPlay, removeCurrentSongs: removeCurrentSongs),
+        LoadMediaSourceAsync = _control.LoadAndPlayAsync,
         Player = _player,
         TaskRunner = _taskRunner
     };

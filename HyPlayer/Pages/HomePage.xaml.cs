@@ -39,7 +39,7 @@ namespace HyPlayer.Pages
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            base.OnNavigatedFrom(e);
+            base.OnNavigatedTo(e);
 
             ViewModel.GetDataAsync().SafeFireAndForget();
         }

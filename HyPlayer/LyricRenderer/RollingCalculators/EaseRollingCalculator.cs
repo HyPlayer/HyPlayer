@@ -17,28 +17,17 @@ public abstract class EaseRollingCalculator : LineRollingCalculator
     {
         float progress = 1;
         var gap = currentLine.Id - context.CurrentLyricLineIndex;
-        if (true)
+        if (!(fromY < targetY) && gap >= 0)
         {
-            if (!(fromY < targetY) && gap >= 0)
-            {
-                var theoryTime = AnimationDuration * ((float)Math.Log10(Math.Max(gap, MaxEasingPercent)) + 1);
-                progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
-                progress = (float)EaseFunction.Ease(progress);
-                /*
-
-                var expo = (Math.Exp(springiness * progress) - 1.0) / (Math.Exp(springiness) - 1.0);
-                progress = expo * (Math.Sin((Math.PI * 2.0 * oscillations + Math.PI * 0.5) * progress));
-                progress = 1 - progress;*/
-            }
-            else
-            {
-                //progress = Math.Clamp(
-                //    (context.CurrentLyricTime - context.CurrentKeyframe) * 1.0f / AnimationDuration *
-                //    ((float)Math.Log10(-gap + 15) + 1), 0, 1);
-                var theoryTime = AnimationDuration * ((float)Math.Log10(Math.Max(gap, MaxEasingPercent)) + 1);
-                progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
-                progress = (float)EaseFunction.Ease(progress);
-            }
+            var theoryTime = AnimationDuration * ((float)Math.Log10(Math.Max(gap, MaxEasingPercent)) + 1);
+            progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
+            progress = (float)EaseFunction.Ease(progress);
+        }
+        else
+        {
+            var theoryTime = AnimationDuration * ((float)Math.Log10(Math.Max(gap, MaxEasingPercent)) + 1);
+            progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
+            progress = (float)EaseFunction.Ease(progress);
         }
         if (progress != 0)
         {
