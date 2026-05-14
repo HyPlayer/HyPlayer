@@ -494,21 +494,6 @@ DoubleAnimation verticalAnimation;
     {
         // NOTE: 分享电台节目功能尚未实现
         if (ViewModel.NowPlayingItem.ItemType != HyPlayItemType.Netease) return;
-        var dataTransferManager = DataTransferManager.GetForCurrentView();
-
-        dataTransferManager.DataRequested += (manager, args) =>
-        {
-            var dataPackage = new DataPackage();
-            dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?Id=" +
-                                           ViewModel.NowPlayingItem.Id));
-            dataPackage.Properties.Title = ViewModel.NowPlayingItem.Name;
-            dataPackage.Properties.Description =
-                "歌手: " + string.Join(';',
-                    ViewModel.NowPlayingItem.Artist
-                        .Select(t => t.Name));
-            var request = args.Request;
-            request.Data = dataPackage;
-        };
 
         //展示系统的共享ui
         DataTransferManager.ShowShareUI();
@@ -674,7 +659,21 @@ DoubleAnimation verticalAnimation;
             };
             PointerExited += (o, args) => { GridThis.Background = new SolidColorBrush(Colors.Transparent); };
         }
+        ViewModel.DataTransferManager.DataRequested += DataTransferManager_DataRequested;
+    }
 
+    private void DataTransferManager_DataRequested(DataTransferManager sender, DataRequestedEventArgs args)
+    {
+        var dataPackage = new DataPackage();
+        dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" +
+                                       ViewModel.NowPlayingItem.Id));
+        dataPackage.Properties.Title = ViewModel.NowPlayingItem.Name;
+        dataPackage.Properties.Description =
+            "歌手: " + string.Join(';',
+                ViewModel.NowPlayingItem.Artist
+                    .Select(t => t.Name));
+        var request = args.Request;
+        request.Data = dataPackage;
     }
 
     public async void RefreshPlayBarCover(HyPlayItem playItem)
@@ -821,6 +820,7 @@ DoubleAnimation verticalAnimation;
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
         _player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
+        ViewModel.DataTransferManager.DataRequested -= DataTransferManager_DataRequested;
         _uiState.ClearReferences(this);
     }
 

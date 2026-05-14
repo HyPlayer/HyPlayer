@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using System.Diagnostics.CodeAnalysis;
+using Windows.ApplicationModel.DataTransfer;
 namespace HyPlayer.ViewModels;
 
 public partial class PlayBarViewModel : ObservableRecipient
@@ -25,6 +26,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IAuthService _authService;
+    private readonly DataTransferManager _dataTransferManager;
 
     public PlayBarViewModel(
         IPlaylistService playlist,
@@ -44,7 +46,7 @@ public partial class PlayBarViewModel : ObservableRecipient
         _notification = notification;
         _taskRunner = taskRunner;
         _authService = authService;
-
+        _dataTransferManager = DataTransferManager.GetForCurrentView();
         // Initialize from current state
         NowPlayingItem = _state.NowPlayingItem;
         IsPlaying = _state.IsPlaying;
@@ -119,6 +121,7 @@ public partial class PlayBarViewModel : ObservableRecipient
     public double DurationMilliseconds => Duration != TimeSpan.Zero ? Duration.TotalMilliseconds : NowPlayingItem?.LengthInMilliseconds ?? 0;
     public string PlayStateGlyph => IsPlaying ? "\uF8AE" : "\uF5B0";
     public bool CanShareCurrentSong => NowPlayingItem is { ItemType: not HyPlayItemType.Local and not HyPlayItemType.LocalProgressive };
+    public DataTransferManager DataTransferManager => _dataTransferManager;
 
     // ── Relay Commands ──
 
