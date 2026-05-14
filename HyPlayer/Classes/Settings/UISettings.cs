@@ -591,18 +591,6 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Whether to use high quality cover in SMTC.
-        /// </summary>
-        public bool highQualityCoverInSMTC
-        {
-            get => GetSettings(nameof(highQualityCoverInSMTC), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(highQualityCoverInSMTC)] = value;
-            }
-        }
-
-        /// <summary>
         /// Update source channel.
         /// </summary>
         public UpdateSource UpdateSource

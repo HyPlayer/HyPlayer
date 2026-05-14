@@ -1365,13 +1365,6 @@
                             <controls3:SettingsCard Header="尝试绕过 CheckToken 接口 (可能被检测)">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.EnableCheckTokenApi, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="输出高清图片到SMTC">
-                                <CheckBox
-                                    x:Name="HighQualityCoverInSMTC"
-                                    Margin="0,0,-100,0"
-                                    Content=""
-                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
                             <controls3:SettingsCard Header="启用磁贴">
                                 <CheckBox
                                     x:Name="DisableTile"

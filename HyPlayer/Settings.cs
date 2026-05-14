@@ -119,7 +119,6 @@ namespace HyPlayer
         public bool saveTileBackgroundToLocalFolder { get => UI.saveTileBackgroundToLocalFolder; set { UI.saveTileBackgroundToLocalFolder = value; OnPropertyChanged(); } }
         public bool canaryChannelAvailability { get => UI.canaryChannelAvailability; set { UI.canaryChannelAvailability = value; OnPropertyChanged(); } }
         public bool localProgressiveLoad { get => UI.localProgressiveLoad; set { UI.localProgressiveLoad = value; OnPropertyChanged(); } }
-        public bool highQualityCoverInSMTC { get => UI.highQualityCoverInSMTC; set { UI.highQualityCoverInSMTC = value; OnPropertyChanged(); } }
         public UpdateSource UpdateSource { get => UI.UpdateSource; set { UI.UpdateSource = value; OnPropertyChanged(); } }
 
         // --- ApiSettings delegates ---

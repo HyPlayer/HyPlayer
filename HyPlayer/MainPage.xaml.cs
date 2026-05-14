@@ -48,7 +48,6 @@ public sealed partial class MainPage : Page
             _api.Option.XRealIP = Setting.GetSettings<string>("xRealIp", null);
             _api.Option.DegradeHttp = Setting.GetSettings("UseHttp", false);
         }
-        StaticSource.PICSIZE_AUDIO_PLAYER_COVER = _setting.highQualityCoverInSMTC ? "1024y1024" : "640y640";
         if (_setting.uiSound)
         {
             ElementSoundPlayer.State = ElementSoundPlayerState.Off;

@@ -2,8 +2,7 @@
 
 internal static class StaticSource
 {
-    public const string PICSIZE_AUDIO_PLAYER_COVER = "640x640";
-    public const string PICSIZE_IMMERSIVEMODE_COVER = "1024y1024";
+    public const string PICSIZE_AUDIO_PLAYER_COVER = "1024y1024";
     public const string PICSIZE_PLAYLIST_ITEM_COVER = "250y250";
     public const string PICSIZE_SIMPLE_LINER_LIST_ITEM = "250y250";
     public const string PICSIZE_SINGLENCSONG_COVER = "75y75";
