@@ -294,7 +294,10 @@
                                         Margin="0,0,15,0"
                                         FontSize="12"
                                         TextTrimming="CharacterEllipsis" />
-                                    <controls1:AutoScrollView Grid.Row="1" Margin="0,0,15,5">
+                                    <controls1:AutoScrollView
+                                        Grid.Row="1"
+                                        Margin="0,0,15,5"
+                                        IsPlaying="True">
                                         <TextBlock
                                             x:Name="NavItemSongName"
                                             FontSize="20"
