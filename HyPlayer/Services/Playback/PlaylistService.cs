@@ -247,8 +247,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             item = _items[_nowPlayingIndex];
         }
 
-        SendTrackChanged(item);
-
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
@@ -272,8 +270,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             item = _items[_nowPlayingIndex];
         }
 
-        SendTrackChanged(item);
-
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
@@ -296,8 +292,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             _nowPlayingIndex = index;
             SyncIndex();
         }
-
-        SendTrackChanged(item);
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
@@ -651,9 +645,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             }
         }
 
-        if (advance)
-            SendTrackChanged(item);
-
         return Task.FromResult<HyPlayItem?>(item);
     }
 
@@ -670,7 +661,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// </summary>
     private Task CommitItemAsync(HyPlayItem item)
     {
-        var changed = false;
         lock (_lock)
         {
             var index = _items.IndexOf(item);
@@ -678,12 +668,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             {
                 _nowPlayingIndex = index;
                 SyncIndex();
-                changed = true;
             }
         }
 
-        if (changed)
-            SendTrackChanged(item);
 
         return Task.CompletedTask;
     }
@@ -706,16 +693,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
             WeakReferenceMessenger.Default.Send(new PlaylistChangedMessage(isShuffleTrigger))),
             "publish playlist changed");
-    }
-
-    /// <summary>
-    /// 发送当前曲目变更消息。
-    /// </summary>
-    private void SendTrackChanged(HyPlayItem item)
-    {
-        _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
-            WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item))),
-            "publish track changed");
     }
 
     private static void DisposePlayItems(IEnumerable<HyPlayItem> items)
@@ -818,12 +795,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 _nowPlayingIndex = _items.Count - _nowPlayingIndex - 1;
             SyncIndex();
         }
-    }
-
-    /// <inheritdoc />
-    public void NotifyPlayItemChanged(HyPlayItem item)
-    {
-        SendTrackChanged(item);
     }
 
     /// <summary>

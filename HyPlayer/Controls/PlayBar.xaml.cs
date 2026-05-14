@@ -728,7 +728,6 @@ DoubleAnimation verticalAnimation;
                     var nowItem = _playlist.Items[restoreIndex];
                     await _control.LoadAndPlayAsync(nowItem, setAsPrimary: true, autoPlay: false, removeCurrentSongs: true);
                     _playlist.RestoreNowPlayingIndex(restoreIndex);
-                    _playlist.NotifyPlayItemChanged(nowItem);
                     RunOnUIThread(() =>
                     {
                         var targetingIndex = ViewModel.GetTargetingIndex();

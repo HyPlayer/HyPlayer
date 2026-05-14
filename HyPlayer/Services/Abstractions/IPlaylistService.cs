@@ -135,7 +135,4 @@ public interface IPlaylistService
 
     /// <summary>反转播放列表</summary>
     void ReverseList();
-
-    /// <summary>通知当前播放曲目变更（发送 TrackChangedMessage）</summary>
-    void NotifyPlayItemChanged(HyPlayItem item);
 }

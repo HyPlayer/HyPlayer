@@ -63,7 +63,7 @@ public sealed class LocalFileProvider : IMediaSourceProvider
             item.ItemType = HyPlayItemType.Local;
         }
         item.PlayItem ??= new PlayItem();
-        item.PlayItem.CoverBuffer = tagFile.Tag.Pictures[0]?.Data?.Data?.AsBuffer();
+        item.PlayItem.CoverBuffer = tagFile.Tag.Pictures.FirstOrDefault()?.Data?.Data?.AsBuffer();
         return MediaSource.CreateFromStorageFile(file);
     }
 }

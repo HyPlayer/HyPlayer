@@ -100,7 +100,7 @@ namespace HyPlayer.Classes
                 {
                     case HyPlayItemType.Local:
                     case HyPlayItemType.LocalProgressive:
-                        if(SubExt == "ncm") return "ncm";
+                        if(SubExt == ".ncm") return "ncm";
                         return "lcl";
                     case HyPlayItemType.Netease:
                     case HyPlayItemType.Radio:

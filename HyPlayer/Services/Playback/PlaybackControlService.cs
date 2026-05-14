@@ -259,18 +259,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             };
 
             await _player.ConnectPlaybackSourceAsync(playbackSource, options);
-
-            if (setAsPrimary)
-            {
-                _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
-                {
-                    _state.NowPlayingItem = item;
-                    _state.Duration = TimeSpan.FromMilliseconds(item.LengthInMilliseconds);
-                    _state.IsPlaying = autoPlay;
-                    _state.QualityTag = item.GetQualityTagText(_setting.audioRate);
-                    WeakReferenceMessenger.Default.Send(new QualityTagChangedMessage(_state.QualityTag));
-                }), "update playback state after load");
-            }
         }
         catch (OperationCanceledException)
         {

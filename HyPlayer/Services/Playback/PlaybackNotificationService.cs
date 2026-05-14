@@ -43,6 +43,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         if (item == null) return;
 
         UpdateSmtcDisplayInfo(item);
+        WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item));
 
         // 1. 刷新封面
         if (!_setting.noImage)
