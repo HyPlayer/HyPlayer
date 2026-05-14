@@ -264,39 +264,45 @@
                                 Fill="{ThemeResource SystemControlAcrylicElementBrush}"
                                 RadiusX="10"
                                 RadiusY="10" />
-                            <StackPanel Orientation="Horizontal">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
                                 <frieren:ImageEx
                                     x:Name="NavItemImage"
-                                    Width="85"
-                                    Height="85"
+                                    Grid.Column="0"
                                     Margin="10,10,0,10"
                                     CornerRadius="10"
                                     IsCacheEnabled="False"
-                                    Stretch="UniformToFill">
+                                    Stretch="Uniform">
                                     <frieren:ImageEx.Source>
                                         <BitmapImage x:Name="NavItemImageSource" />
                                     </frieren:ImageEx.Source>
                                 </frieren:ImageEx>
-                                <StackPanel
+                                <Grid
+                                    Grid.Column="1"
                                     Margin="10,0,0,10"
-                                    VerticalAlignment="Bottom"
-                                    Orientation="Vertical">
+                                    VerticalAlignment="Bottom">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="3*" />
+                                    </Grid.RowDefinitions>
                                     <TextBlock
                                         x:Name="NavItemArtist"
-                                        MaxWidth="180"
+                                        Grid.Row="0"
                                         Margin="0,0,15,0"
                                         FontSize="12"
                                         TextTrimming="CharacterEllipsis" />
-                                    <TextBlock
-                                        x:Name="NavItemSongName"
-                                        MaxWidth="180"
-                                        Margin="0,0,15,5"
-                                        FontSize="22"
-                                        FontWeight="Bold"
-                                        TextAlignment="Left"
-                                        TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
-                            </StackPanel>
+                                    <controls1:AutoScrollView Grid.Row="1" Margin="0,0,15,5">
+                                        <TextBlock
+                                            x:Name="NavItemSongName"
+                                            FontSize="20"
+                                            FontWeight="Bold"
+                                            TextAlignment="Left" />
+                                    </controls1:AutoScrollView>
+                                </Grid>
+                            </Grid>
                         </Grid>
                     </muxc:NavigationViewItem>
                 </muxc:NavigationView.FooterMenuItems>

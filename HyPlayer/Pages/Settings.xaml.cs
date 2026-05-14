@@ -181,9 +181,8 @@ public sealed partial class Settings : Page
             //下载完成
             //unzip
             RomajiStatus.Header = "正在解压,请稍等......";
-            await Task.Delay(1000);
             var path =
-                (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji",
+                (await ApplicationData.Current.LocalFolder.CreateFolderAsync("Romaji",
                     CreationCollisionOption.OpenIfExists)).Path;
             //Read the file stream
             var a = await obj.ResultFile.OpenStreamForReadAsync();

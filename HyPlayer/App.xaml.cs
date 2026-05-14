@@ -158,12 +158,8 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<INotificationService, NotificationService>();
         serviceCollection.AddSingleton<NotificationDispatcher>();
         serviceCollection.AddSingleton<IUIStateService, UIStateService>();
-        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>, MainPagePlaybarVisibilityChangedHandler>();
-        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>, CompactPlayerPlaybarVisibilityChangedHandler>();
-        serviceCollection.AddSingleton<ExpandedPlayerUiNotificationHandler>();
-        serviceCollection.AddSingleton<INotificationHandler<EnterForegroundFromBackgroundNotification>>(sp => sp.GetRequiredService<ExpandedPlayerUiNotificationHandler>());
-        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>>(sp => sp.GetRequiredService<ExpandedPlayerUiNotificationHandler>());
-        serviceCollection.AddSingleton<INotificationHandler<EnterForegroundFromBackgroundNotification>, PlayBarEnterForegroundHandler>();
+        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>, PlaybarVisibilityChangedHandler>();
+        serviceCollection.AddSingleton<INotificationHandler<EnterForegroundFromBackgroundNotification>, EnterForegroundHandler>();
 
         // ── ViewModels ──
         serviceCollection.AddTransient<HomeViewModel>();
@@ -192,7 +188,7 @@ public sealed partial class App : Application
         try
         {
             await SimpleCacher.InitializeAsync();
-            var sf = await ApplicationData.Current.LocalCacheFolder.TryGetItemAsync("Romaji");
+            var sf = await ApplicationData.Current.LocalFolder.TryGetItemAsync("Romaji");
             if (sf != null) Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv = new KawazuConverter(sf.Path);
         }
         catch

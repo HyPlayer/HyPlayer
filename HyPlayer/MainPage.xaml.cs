@@ -23,6 +23,7 @@ using ColorStop = (float offset, Windows.UI.Color color);
 
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
+using AsyncAwaitBestPractices;
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -114,7 +115,7 @@ public sealed partial class MainPage : Page
             }
             else
             {
-                _ = CollapseBar(3);
+               CollapseBar().SafeFireAndForget();
             }
         });
     }
@@ -141,26 +142,23 @@ public sealed partial class MainPage : Page
 
     }
 
-    private async Task CollapseBar(double time)
+    private async Task CollapseBar()
     {
         IsPlaybarOnShow = false;
         var PlayBarAni = new DoubleAnimation
         {
-            BeginTime = TimeSpan.FromSeconds(time),
             To = 0,
             EnableDependentAnimation = true,
             EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
         };
         var PlayBarTransAni = new DoubleAnimation
         {
-            BeginTime = TimeSpan.FromSeconds(time),
             To = 20,
             EnableDependentAnimation = true,
             EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
         };
         var PlayBarBlurTransAni = new DoubleAnimation
         {
-            BeginTime = TimeSpan.FromSeconds(time),
             To = 0,
             EnableDependentAnimation = true,
             EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
@@ -179,7 +177,6 @@ public sealed partial class MainPage : Page
         (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank.IsEnabled = true;
         var BlankAni = new DoubleAnimation
         {
-            BeginTime = TimeSpan.FromSeconds(time),
             To = 1,
             EnableDependentAnimation = true,
             EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
@@ -189,8 +186,7 @@ public sealed partial class MainPage : Page
         Storyboard.SetTargetProperty(BlankAni, "Opacity");
         storyboard.Children.Add(BlankAni);
         storyboard.Begin();
-        await (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).RefreshNavItemCover(3, Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
-
+        await (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).RefreshNavItemCover(Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
     }
 
     private static void SetPlayBarMarginBlurEffect(UIElement sender)

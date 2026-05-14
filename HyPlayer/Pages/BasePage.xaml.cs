@@ -732,7 +732,7 @@ public sealed partial class BasePage : Page
     {
         _ = _notification.InvokeOnUIThread(() =>
         {
-            if (item?.PlayItem != null)
+            if (item != null)
             {
                 NavItemSongName.Text = item.Name;
                 NavItemArtist.Text = item.ArtistString;
@@ -745,7 +745,7 @@ public sealed partial class BasePage : Page
         if (_state.CoverStream == null) return;
         _ = _notification.InvokeOnUIThread(async () =>
         {
-            if (NavItemBlank.Opacity != 0 && !Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded && !_setting.noImage)
+            if (!Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded && !_setting.noImage)
             {
                 try
                 {
@@ -760,30 +760,8 @@ public sealed partial class BasePage : Page
         });
     }
 
-    public async Task RefreshNavItemCover(double collapseTime, HyPlayItem playItem)
-    {
-        _ = _notification.InvokeOnUIThread(async () =>
-        {
-            var time = TimeSpan.FromSeconds(collapseTime + 0.25);
-            await Task.Delay(time);
-            if (NavItemBlank.Opacity != 0 && !Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded && !_setting.noImage)
-            {
-                try
-                {
-                    if (playItem != _state.NowPlayingItem || _state.CoverStream == null) return;
-                    using var stream = _state.CoverStream.CloneStream();
-                    await NavItemImageSource.SetSourceAsync(stream);
-                }
-                catch
-                {
-                }
-            }
-        });
-    }
-
     private async void BaseFrame_Navigated(object sender, NavigationEventArgs e)
     {
-        await Task.Delay(1000);
         _ = _notification.InvokeOnUIThread(() =>
             {
                 try

@@ -240,6 +240,8 @@ namespace HyPlayer.ViewModels
             foreach (var jToken in rst.Songs ?? [])
             {
                 var ncSong = jToken.MapToNcSong();
+                var isAvailable = rst.Privileges?.FirstOrDefault(p => p.Id == ncSong.SongId)?.St == 0;
+                ncSong.IsAvailable = isAvailable;
                 ncSong.Order = idx++;
                 Songs.Add(ncSong);
             }

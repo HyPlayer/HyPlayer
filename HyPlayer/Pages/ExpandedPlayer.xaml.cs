@@ -102,7 +102,7 @@ public sealed partial class ExpandedPlayer : Page
     private ExpandedWindowMode _windowMode;
     private AppWindow? expandedPlayerWindow;
     public Color? albumMainColor;
-    public Stopwatch _stopwatch = new();
+    public int _stopwatch = 3;
     private PixelShaderEffect? _shaderEffect;
     private float _randomValue = -1;
     private float _lyricRenderXOffset;
@@ -877,7 +877,7 @@ public sealed partial class ExpandedPlayer : Page
         if (_windowMode == ExpandedWindowMode.LyricOnly)
         {
             UISettings _uiSettings = new();
-            await Task.Delay((int)(_uiSettings.DoubleClickTime + 55));
+            await Task.Delay((int)(_uiSettings.DoubleClickTime));
             if (!_lyricBox.HasJumpedLyrics)
             {
                 _windowMode = ExpandedWindowMode.CoverOnly;
@@ -1327,12 +1327,7 @@ public sealed partial class ExpandedPlayer : Page
     }
     public Task Show()
     {
-        _stopwatch.Reset();
         MainGrid.Margin = new Thickness(0, 0, 0, 80);
-        //if (Common.IsInImmersiveMode)
-        //{
-        //    DefaultRow.Height = new GridLength(1.1, GridUnitType.Star);
-        //}
 
         var BtnAni = new DoubleAnimation
         {
@@ -1348,34 +1343,24 @@ public sealed partial class ExpandedPlayer : Page
         return Task.CompletedTask;
     }
 
-    public async Task Collapse()
+    public void Collapse()
     {
-        _stopwatch.Start();
-        await Task.Run(async () =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
-            while (_stopwatch.ElapsedMilliseconds < 3000)
-            {
-                await Task.Delay(10);
-            }
+            MainGrid.Margin = new Thickness(0);
 
-            _ = _notification.InvokeOnUIThread(() =>
+            var BtnAni = new DoubleAnimation
             {
-                MainGrid.Margin = new Thickness(0);
-
-                var BtnAni = new DoubleAnimation
-                {
-                    To = 0,
-                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                    EnableDependentAnimation = true
-                };
-                var storyboard = new Storyboard();
-                Storyboard.SetTarget(BtnAni, MoreBtn);
-                Storyboard.SetTargetProperty(BtnAni, "Opacity");
-                storyboard.Children.Add(BtnAni);
-                storyboard.Begin();
-            });
+                To = 0,
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                EnableDependentAnimation = true
+            };
+            var storyboard = new Storyboard();
+            Storyboard.SetTarget(BtnAni, MoreBtn);
+            Storyboard.SetTargetProperty(BtnAni, "Opacity");
+            storyboard.Children.Add(BtnAni);
+            storyboard.Begin();
         });
-        _stopwatch.Stop();
     }
 
     internal void OnPlaybarVisibilityChanged(bool isActivated)
@@ -1387,7 +1372,7 @@ public sealed partial class ExpandedPlayer : Page
         }
         else
         {
-            _ = Collapse();
+            Collapse();
         }
     }
     public static double Map(double value, double fromSource, double toSource, double fromTarget, double toTarget)
