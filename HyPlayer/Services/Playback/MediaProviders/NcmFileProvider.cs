@@ -50,17 +50,19 @@ public sealed class NcmFileProvider : IMediaSourceProvider
                 throw new InvalidOperationException("NCM 文件格式不正确");
             }
 
+            item.PlayItem ??= new PlayItem();
             var info = NCMFile.GetNCMMusicInfo(stream);
+            item.PlayItem.CoverBuffer = NCMFile.GetCoverByteArray(stream).AsBuffer();
             using var encStream = NCMFile.GetEncryptedStream(stream);
             encStream.Seek(0, SeekOrigin.Begin);
 
             var songDataStream = new InMemoryRandomAccessStream();
             var targetStream = songDataStream.AsStream();
             encStream.CopyTo(targetStream);
-
-            item.PlayItem ??= new PlayItem();
             item.PlayItem.NcmPlayableStream = songDataStream;
             item.PlayItem.NcmPlayableStreamMIMEType = MIMEHelper.GetNCMFileMimeType(info.format);
+
+
         });
 
         if (item.PlayItem?.NcmPlayableStream == null)
