@@ -61,18 +61,16 @@ public sealed partial class BasePage : Page
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
     private string nowqrkey;
-    private readonly IPlaybackControlService _playback;
-    private readonly PlaybackStateService _state;
-    private readonly AudioGraphPlayer _player;
+    private readonly IPlaybackControlService _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+    private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+    private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
 
     public BasePage()
     {
-        _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-        _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-        _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
         InitializeComponent();
-        Ioc.Default.GetRequiredService<IUIStateService>().PageBase = this;
-        Ioc.Default.GetRequiredService<IUIStateService>().GlobalTip = TheTeachingTip;
+        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+        uiState.PageBase = this;
+        uiState.GlobalTip = TheTeachingTip;
 
         if (!_player.PlayerCreated)
         {
@@ -108,9 +106,7 @@ public sealed partial class BasePage : Page
     private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
     {
         if (args.CurrentPoint.Properties.IsXButton1Pressed)
-            if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
-                (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).CollapseExpandedPlayer();
-            else
+            if (!CollapseExpandedPlayerIfNeeded())
                 _navigation.NavigateBack();
     }
 
@@ -118,9 +114,7 @@ public sealed partial class BasePage : Page
     {
         if (args.VirtualKey == VirtualKey.GamepadB)
         {
-            if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
-                (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).CollapseExpandedPlayer();
-            else
+            if (!CollapseExpandedPlayerIfNeeded())
                 _navigation.NavigateBack();
             args.Handled = true;
         }
@@ -131,8 +125,15 @@ public sealed partial class BasePage : Page
             else if (!_playback.IsPlaying) _player.PlayAll();
 
         if (args.VirtualKey == VirtualKey.Escape)
-            if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
-                (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).CollapseExpandedPlayer();
+            CollapseExpandedPlayerIfNeeded();
+    }
+
+    private bool CollapseExpandedPlayerIfNeeded()
+    {
+        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+        if (!uiState.IsExpanded) return false;
+        (uiState.BarPlayBar as PlayBar)?.CollapseExpandedPlayer();
+        return true;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

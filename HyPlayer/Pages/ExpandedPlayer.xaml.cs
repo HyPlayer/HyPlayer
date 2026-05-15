@@ -78,6 +78,7 @@ public sealed partial class ExpandedPlayer : Page
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+    private readonly HttpClient _httpClient = Ioc.Default.GetRequiredService<HttpClient>();
 
     // Services accessed via ViewModel; shortcuts for code-behind convenience
     private IPlaylistService _playlist => ViewModel.Playlist;
@@ -184,8 +185,8 @@ public sealed partial class ExpandedPlayer : Page
             var action = actionLyricLine.ActionUri;
             if (action.StartsWith("hyplayer://"))
             {
-                var ResourceId = action[11..];
-                _taskRunner.Forget(_navigation.NavigateToResourceAsync(ResourceId), "navigate from lyric action");
+                var resourceId = action[11..];
+                _taskRunner.Forget(_navigation.NavigateToResourceAsync(resourceId), "navigate from lyric action");
                 (_uiState.BarPlayBar as PlayBar)!.CollapseExpandedPlayer();
             }
             else
@@ -733,11 +734,11 @@ public sealed partial class ExpandedPlayer : Page
                 _state.NowPlayingItem.ItemType != HyPlayItemType.LocalProgressive)
             {
                 using var coverResult =
-                    await Ioc.Default.GetRequiredService<HttpClient>().GetAsync(new Uri(_state.NowPlayingItem.Album.Cover));
+                    await _httpClient.GetAsync(new Uri(_state.NowPlayingItem.Album.Cover));
                 if (coverResult.IsSuccessStatusCode)
                 {
-                    var Cover = (await coverResult.Content.ReadAsByteArrayAsync()).AsBuffer();
-                    await FileIO.WriteBufferAsync(file, Cover);
+                    var cover = (await coverResult.Content.ReadAsByteArrayAsync()).AsBuffer();
+                    await FileIO.WriteBufferAsync(file, cover);
                 }
                 else
                 {
@@ -1014,7 +1015,6 @@ public sealed partial class ExpandedPlayer : Page
             await expandedPlayerWindow.CloseAsync();
         }
 
-        //(Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
     }
 
     private void ExpandedPlayerClosed(AppWindow sender, AppWindowClosedEventArgs args)

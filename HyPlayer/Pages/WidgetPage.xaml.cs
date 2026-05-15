@@ -32,7 +32,7 @@ public sealed partial class WidgetPage : Page
 {
     private XboxGameBarWidget _widget;
     private XboxGameBarHotkeyWatcher _hotkeyWatcher;
-    private readonly GameBarSettings _settings;
+    private readonly GameBarSettings _gameBarSettings;
     private readonly LyricRenderView LyricBox = new();
 
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
@@ -49,7 +49,7 @@ public sealed partial class WidgetPage : Page
     public WidgetPage()
     {
         this.InitializeComponent();
-        _settings = new GameBarSettings(Dispatcher);
+        _gameBarSettings = new GameBarSettings(Dispatcher);
         Instance = this;
         Window.Current.Closed += WidgetPage_Closed;
         _windowClosedRegistered = true;
@@ -275,10 +275,10 @@ public sealed partial class WidgetPage : Page
         LyricBox.Context.Effects.FocusHighlighting = _setting.lyricRenderFocusHighlighting;
         LyricBox.Context.Effects.TransliterationScanning = _setting.lyricRenderTransliterationScanning;
         LyricBox.Context.Effects.SimpleLineScanning = _setting.lyricRenderSimpleLineScanning;
-        LyricBox.Context.PreferTypography.Font = _settings.LyricFontFamily;
-        LyricBox.Context.LineSpacing = _settings.LyricLineSpacing;
-        LyricBox.EnableTranslation = _settings.EnableTranslation;
-        LyricBox.EnableTransliteration = _settings.EnableTransliteration;
+        LyricBox.Context.PreferTypography.Font = _gameBarSettings.LyricFontFamily;
+        LyricBox.Context.LineSpacing = _gameBarSettings.LyricLineSpacing;
+        LyricBox.EnableTranslation = _gameBarSettings.EnableTranslation;
+        LyricBox.EnableTransliteration = _gameBarSettings.EnableTransliteration;
         LyricBox.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color, Colors.Black);
         UpdateLyricSize();
     }
@@ -311,14 +311,14 @@ public sealed partial class WidgetPage : Page
     private void UpdateLyricSize()
     {
         if (_state.NowPlayingItem == null) return;
-        var lyricSize = _settings.LyricSize <= 0
+        var lyricSize = _gameBarSettings.LyricSize <= 0
             ? Math.Max(_widget.WindowBounds.Width / 20, 40)
-            : _settings.LyricSize;
-        var translationSize = (_settings.TranslationSize > 0) ? _settings.TranslationSize : lyricSize / 1.8;
-        var romajiSize = (_settings.RomajiSize > 0) ? _settings.RomajiSize : lyricSize / 2;
+            : _gameBarSettings.LyricSize;
+        var translationSize = (_gameBarSettings.TranslationSize > 0) ? _gameBarSettings.TranslationSize : lyricSize / 1.8;
+        var romajiSize = (_gameBarSettings.RomajiSize > 0) ? _gameBarSettings.RomajiSize : lyricSize / 2;
 
         LyricBox.ChangeRenderFontSize((float)lyricSize, (float)translationSize, (float)romajiSize);
-        LyricBox.ChangeAlignment(_settings.LyricAlignment switch
+        LyricBox.ChangeAlignment(_gameBarSettings.LyricAlignment switch
         {
             1 => TextAlignment.Center,
             2 => TextAlignment.Right,

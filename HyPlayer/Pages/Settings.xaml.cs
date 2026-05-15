@@ -70,9 +70,9 @@ public sealed partial class Settings : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-
-        RomajiStatus.Header = (Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv == null ? "请下载Kawazu资源文件" : "可以转换");
-        ButtonDownloadRomaji.Visibility = Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv == null ? Visibility.Visible : Visibility.Collapsed;
+        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+        RomajiStatus.Header = (uiState.KawazuConv == null ? "请下载Kawazu资源文件" : "可以转换");
+        ButtonDownloadRomaji.Visibility = uiState.KawazuConv == null ? Visibility.Visible : Visibility.Collapsed;
         if (_setting.audioRate.EndsWith('0') || _setting.downloadAudioRate.EndsWith('0'))
         {
             _setting.audioRate = "exhigh";
@@ -200,9 +200,10 @@ public sealed partial class Settings : Page
         }
         finally
         {
+            var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
             RomajiStatus.Header =
-                (Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv == null ? "请重新下载资源文件" : "可以转换");
-            ButtonDownloadRomaji.Visibility = Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv != null ? Visibility.Visible : Visibility.Collapsed;
+                (uiState.KawazuConv == null ? "请重新下载资源文件" : "可以转换");
+            ButtonDownloadRomaji.Visibility = uiState.KawazuConv != null ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 

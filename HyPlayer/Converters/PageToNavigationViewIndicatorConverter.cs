@@ -14,61 +14,62 @@ namespace HyPlayer.Classes
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
+            var basePage = Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage;
             NavigationViewItem pageNavigationViewItem;
             if (value == null)
             {
-                return (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage)?.NavItemBlank;
+                return basePage?.NavItemBlank;
             }
             Type pageType = value.GetType();
             if (pageType == typeof(HomePage))
-                pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage)?.NavItemPageHome;
+                pageNavigationViewItem = basePage?.NavItemPageHome;
             else if (pageType == typeof(SongListDetail))
             {
                 var displayedList = (SongListDetail)value;
-                if (displayedList.ViewModel.PlayList == null) return (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage)?.NavItemBlank;
+                if (displayedList.ViewModel.PlayList == null) return basePage?.NavItemBlank;
                 if (displayedList.ViewModel.PlayList.Name == "每日歌曲推荐")
-                    pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemDailyRcmd;
+                    pageNavigationViewItem = basePage.NavItemDailyRcmd;
                 else if (displayedList.ViewModel.PlayList.PlaylistId == Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].PlaylistId)
-                    pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemsMyLovedPlaylist;
+                    pageNavigationViewItem = basePage.NavItemsMyLovedPlaylist;
                 else
                 {
-                    var item = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemsMyList.MenuItems.Where(t => (t?.As<NavigationViewItem>()?.Tag as string) == $"Playlist{displayedList.ViewModel.PlayList.PlaylistId}").FirstOrDefault()
-                        ?? (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemsLikeList.MenuItems.Where(t => (t?.As<NavigationViewItem>()?.Tag as string) == $"Playlist{displayedList.ViewModel.PlayList.PlaylistId}").FirstOrDefault();
+                    var item = basePage.NavItemsMyList.MenuItems.Where(t => (t?.As<NavigationViewItem>()?.Tag as string) == $"Playlist{displayedList.ViewModel.PlayList.PlaylistId}").FirstOrDefault()
+                        ?? basePage.NavItemsLikeList.MenuItems.Where(t => (t?.As<NavigationViewItem>()?.Tag as string) == $"Playlist{displayedList.ViewModel.PlayList.PlaylistId}").FirstOrDefault();
                     if (item != null)
                     {
                         pageNavigationViewItem = (NavigationViewItem)item;
                     }
                     else
                     {
-                        pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank;
+                        pageNavigationViewItem = basePage.NavItemBlank;
                     }
                 }
             }
             else if (pageType == typeof(LocalMusicPage))
             {
-                pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemPageLocal;
+                pageNavigationViewItem = basePage.NavItemPageLocal;
             }
             else if (pageType == typeof(History))
             {
-                pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).PageHistory;
+                pageNavigationViewItem = basePage.PageHistory;
             }
             else if (pageType == typeof(PageFavorite))
             {
-                pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemPageFavorite;
+                pageNavigationViewItem = basePage.NavItemPageFavorite;
             }
             else if (pageType == typeof(MusicCloudPage))
             {
-                pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemMusicCloud;
+                pageNavigationViewItem = basePage.NavItemMusicCloud;
             }
             else if (pageType == typeof(HyPlayer.Pages.Settings))
             {
-                pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemPageSettings;
+                pageNavigationViewItem = basePage.NavItemPageSettings;
             }
             else if (pageType == typeof(Me))
             {
-                pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemLogin;
+                pageNavigationViewItem = basePage.NavItemLogin;
             }
-            else pageNavigationViewItem = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank;
+            else pageNavigationViewItem = basePage.NavItemBlank;
             return pageNavigationViewItem;
         }
         public object ConvertBack(object value, Type targetType, object parameter, string language)

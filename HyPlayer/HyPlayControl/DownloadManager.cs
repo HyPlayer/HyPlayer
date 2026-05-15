@@ -30,10 +30,13 @@ using File = TagLib.File;
 
 namespace HyPlayer.HyPlayControl;
 
-internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChanged
+internal sealed partial class DownloadObject : INotifyPropertyChanged
 {
     public HyPlayItem PlayItem;
     private DownloadOperation _downloadOperation;
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly NCSong _song;
 
     private IStorageFile _resultFileBackingField;
     public IStorageFile ResultFile
@@ -59,7 +62,13 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
         set => SetField(ref _hadSize, value);
     }
 
-    public NCSong ncsong = song;
+    public NCSong ncsong;
+
+    public DownloadObject(NCSong song)
+    {
+        _song = song;
+        ncsong = song;
+    }
 
     public int Progress
     {
@@ -117,7 +126,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
         if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
             _downloadOperation?.Pause();
         Status = DownloadStatus.Paused;
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             Message = "暂停中";
             HasPaused = true;
@@ -129,7 +138,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
     {
         _downloadOperation?.Resume();
         Status = DownloadStatus.Downloading;
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             Message = "下载中";
             HasPaused = false;
@@ -141,7 +150,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
         if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
             _downloadOperation?.Pause();
         Status = DownloadStatus.Finished;
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             Message = "已移除";
             HasPaused = false;
@@ -152,26 +161,26 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
     {
         DownloadManager.WritingTasks.Add(Task.Run(async () =>
         {
-            if (Ioc.Default.GetRequiredService<Setting>().downloadLyric)
+            if (_setting.downloadLyric)
                 await DownloadLyric().ConfigureAwait(false);
-            if (Ioc.Default.GetRequiredService<Setting>().writedownloadFileInfo)
+            if (_setting.writedownloadFileInfo)
                 await WriteInfoToFile().ConfigureAwait(false);
             DownloadManager.WritingTasks.RemoveAll(t => t.IsCompleted);
             Status = DownloadStatus.Finished;
         }));
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => Message = "下载完成");
+        _ = _notification.InvokeOnUIThread(() => Message = "下载完成");
     }
 
     private Task WriteInfoToFile()
     {
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => Message = "正在写文件信息");
+        _ = _notification.InvokeOnUIThread(() => Message = "正在写文件信息");
         return Task.Run(async () =>
         {
             using var streamAbstraction = new UwpStorageFileAbstraction(ResultFile);
             using var file = TagLibHelper.Create(streamAbstraction, ResultFile.FileType);
             try
             {
-                if (Ioc.Default.GetRequiredService<Setting>().write163Info && PlayItem is not null)
+                if (_setting.write163Info && PlayItem is not null)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, PlayItem);
                 //写相关信息
                 file.Tag.Album = ncsong.Album.Name;
@@ -219,7 +228,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
             catch (Exception ex)
             {
                 Status = DownloadStatus.Error;
-                _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+                _ = _notification.InvokeOnUIThread(() =>
                 {
                     HasError = true;
                     HasPaused = true;
@@ -227,14 +236,14 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
                     Message = "写入音乐信息时出现错误" + ex.Message;
                 });
                 Ioc.Default.GetRequiredService<IUIStateService>().ErrorMessageList.Add("写入音乐信息时出现错误" + ex.Message);
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("写入信息错误: " + ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _notification.ShowMessage("写入信息错误: " + ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         });
     }
 
     private Task DownloadLyric()
     {
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => Message = "下载歌词中");
+        _ = _notification.InvokeOnUIThread(() => Message = "下载歌词中");
         //下载歌词
         return Task.Run(async () =>
         {
@@ -246,7 +255,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
                 if (data.Lyric == null) return;
                 if (data.Lyric.Lyric == "[99:00.00]纯音乐，请欣赏") return;
                 var lrc = Utils.ConvertPureLyric(data.Lyric.Lyric);
-                if (Ioc.Default.GetRequiredService<Setting>().downloadTranslation && data.TranslationLyric != null)
+                if (_setting.downloadTranslation && data.TranslationLyric != null)
                 {
                     Utils.ConvertTranslation(data.TranslationLyric.Lyric, lrc);
                 }
@@ -267,14 +276,14 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
             else
             {
                 Status = DownloadStatus.Error;
-                _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+                _ = _notification.InvokeOnUIThread(() =>
                 {
                     Message = "下载歌词错误: " + lyricResult.Error.Message;
                     HasError = true;
                     HasPaused = true;
                     Progress = 100;
                 });
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("下载歌词错误: " + lyricResult.Error.Message);
+                _notification.ShowMessage("下载歌词错误: " + lyricResult.Error.Message);
             }
         });
     }
@@ -298,7 +307,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
         if (obj.Progress.TotalBytesToReceive == 0) return;
         if (Status != DownloadStatus.Downloading) return;
 
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread((() =>
+        _ = _notification.InvokeOnUIThread((() =>
         {
             TotalSize = obj.Progress.TotalBytesToReceive;
             HadSize = obj.Progress.BytesReceived;
@@ -309,16 +318,16 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
         if (HadSize == TotalSize && Status == DownloadStatus.Finished) return;
     }
 
-    public static void DownloadStartToast(string SongName)
+    public void DownloadStartToast(string SongName)
     {
-        Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("下载开始", "歌曲" + SongName + "下载开始");
+        _notification.ShowMessage("下载开始", "歌曲" + SongName + "下载开始");
     }
 
     public async Task StartDownload()
     {
         if (_downloadOperation != null) { Resume(); return; }
         Status = DownloadStatus.Downloading;
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        _ = _notification.InvokeOnUIThread(() =>
         {
             HasError = false;
             HasPaused = false;
@@ -326,7 +335,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
         });
         try
         {
-            FileName = Ioc.Default.GetRequiredService<Setting>().downloadFileName
+            FileName = _setting.downloadFileName
                 .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.Name)).EscapeForPath())
                 .Replace("{$SONGNAME}", ncsong.SongName.EscapeForPath())
                 .Replace("{$ALBUM}", ncsong.Album.Name.EscapeForPath())
@@ -334,7 +343,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
                     (ncsong.GetType() == typeof(NCAlbumSong) ? ncsong.Order : ncsong.Order + 1).ToString().EscapeForPath())
                 .Replace("{$CDNAME}", ncsong.CDName?.EscapeForPath())
                 .Replace("{$SONGID}", ncsong.SongId?.EscapeForPath());
-            var folderName = Ioc.Default.GetRequiredService<Setting>().downloadDir;
+            var folderName = _setting.downloadDir;
             var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
             var ses = FileName.Replace('\\', '/').Split('/');
             for (var index = 0; index < ses.Length - 1; index++)
@@ -346,11 +355,11 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
 
             if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".mp3")) ||
                 await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".flac")))
-                switch (Ioc.Default.GetRequiredService<Setting>().downloadNameOccupySolution)
+                switch (_setting.downloadNameOccupySolution)
                 {
                     case OccupySolution.Skip:
                         Status = DownloadStatus.Paused;
-                        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => { Message = "歌曲已存在, 跳过"; });
+                        _ = _notification.InvokeOnUIThread(() => { Message = "歌曲已存在, 跳过"; });
                         return;
                     case OccupySolution.ReWrite:
                         await (await nowFolder.GetFileAsync(Path.GetFileName(FileName))).DeleteAsync();
@@ -371,19 +380,19 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
                         Wc_DownloadFileCompleted();
                         return;
                 }
-            _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+            _ = _notification.InvokeOnUIThread(() =>
             {
                 HasError = false;
                 HasPaused = false;
                 Message = "正在获取下载链接";
             });
-            var urlRequest = new SongUrlRequest() { Id = ncsong.SongId, Level = Ioc.Default.GetRequiredService<Setting>().downloadAudioRate };
+            var urlRequest = new SongUrlRequest() { Id = ncsong.SongId, Level = _setting.downloadAudioRate };
             var urlResult = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().RequestAsync(NeteaseApis.SongUrlApi, urlRequest);
 
             if (urlResult.IsError || urlResult.Value?.SongUrls?[0] is null)
             {
                 Status = DownloadStatus.Error;
-                _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+                _ = _notification.InvokeOnUIThread(() =>
                 {
                     Message = "获取下载链接错误";
                     HasError = true;
@@ -393,10 +402,10 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
                 return;
             }
 
-            if (urlResult.Value.SongUrls[0].FreeTrialInfo is not null && Ioc.Default.GetRequiredService<Setting>().jumpVipSongDownloading)
+            if (urlResult.Value.SongUrls[0].FreeTrialInfo is not null && _setting.jumpVipSongDownloading)
             {
                 Status = DownloadStatus.Paused;
-                _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+                _ = _notification.InvokeOnUIThread(() =>
                 {
                     HasPaused = true;
                     Progress = 100;
@@ -440,7 +449,7 @@ internal sealed partial class DownloadObject(NCSong song) : INotifyPropertyChang
         catch (Exception ex)
         {
             Status = DownloadStatus.Error;
-            _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() => { Message = "下载错误: " + ex.Message; });
+            _ = _notification.InvokeOnUIThread(() => { Message = "下载错误: " + ex.Message; });
             Ioc.Default.GetRequiredService<IUIStateService>().ErrorMessageList.Add("无法下载歌曲 " + ncsong.SongName + "\n已自动将其从下载列表中移除" + ex.Message);
         }
     }

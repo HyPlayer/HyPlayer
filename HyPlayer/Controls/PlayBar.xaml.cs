@@ -162,7 +162,6 @@ DoubleAnimation verticalAnimation;
                 FlyoutLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
-                //BtnFlyoutLike.IsChecked = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs.Contains(ViewModel.NowPlayingItem.Id);
             });
             HistoryManagement.AddNCSongHistory(mpi.Id);
         }
@@ -265,7 +264,6 @@ DoubleAnimation verticalAnimation;
         if (!_player.PlayerCreated || ViewModel.NowPlayingItem?.PlayItem?.AudioGraphPlaybackSource == null) return;
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
-        //(Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).MainFrame.Visibility = Visibility.Collapsed;
         (_uiState.PageMain as MainPage).ExpandedPlayer.Visibility = Visibility.Visible;
         (_uiState.PageMain as MainPage).ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
             new EntranceNavigationTransitionInfo());

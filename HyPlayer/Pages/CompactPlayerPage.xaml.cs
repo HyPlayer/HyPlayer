@@ -313,7 +313,6 @@ public sealed partial class CompactPlayerPage : Page
         OnChangePlayItem(_state.NowPlayingItem);
         HyPlayList_OnSongCoverChanged(_state.NowPlayingItem);
         PlayStateIcon.Glyph = _control.IsPlaying ? "\uEDB4" : "\uEDB5";
-        //(Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).Visibility = Visibility.Collapsed;
         (e.Parameter?.As<AppWindow>()).TitleBar.ExtendsContentIntoTitleBar = true;
         //Window.Current.SetTitleBar(MainGrid);
     }
@@ -332,7 +331,6 @@ public sealed partial class CompactPlayerPage : Page
     {
         _taskRunner.Forget(ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default).AsTask(),
             "exit compact overlay mode");
-        //(Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Navigate(typeof(ExpandedPlayer), false);
     }
 
     private void RunOnUIThread(Action action)
