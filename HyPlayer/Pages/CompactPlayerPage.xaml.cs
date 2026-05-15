@@ -83,8 +83,8 @@ public sealed partial class CompactPlayerPage : Page
         WeakReferenceMessenger.Default.Register<LyricIndexChangedMessage>(this, (r, m) => ((CompactPlayerPage)r).OnLyricChanged());
         _player.OnGlobalPlaybackStatusChanged += Player_OnGlobalPlaybackStatusChanged;
         //LeaveAnimation.Completed += LeaveAnimation_Completed;
-        WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (r, m) => HyPlayList_OnSongCoverChanged(m.Item));
-        WeakReferenceMessenger.Default.Register<SongLikeStatusChangedMessage>(this, (r, m) => HyPlayList_OnSongLikeStatusChange(m.IsLiked));
+        WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (_, m) => HyPlayList_OnSongCoverChanged(m.Item));
+        WeakReferenceMessenger.Default.Register<SongLikeStatusChangedMessage>(this, (_, m) => HyPlayList_OnSongLikeStatusChange(m.IsLiked));
         _uiState.PageCompactPlayer = this;
         Unloaded += CompactPlayerPage_Unloaded;
         //CompactPlayerAni.Begin();

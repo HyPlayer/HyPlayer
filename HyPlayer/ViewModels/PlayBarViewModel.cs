@@ -233,15 +233,9 @@ public partial class PlayBarViewModel : ObservableRecipient
             var vm = (PlayBarViewModel)r;
             vm.RunOnUIThread(() =>
             {
-                vm.RefreshPlaylistItems();
                 vm.ActiveStrategyId = vm._state.ActiveStrategyId;
+                vm.RefreshPlaylistItems();
             });
-        });
-
-        messenger.Register<CoverChangedMessage>(this, (r, m) =>
-        {
-            var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
         });
 
         messenger.Register<PositionTickMessage>(this, (r, m) =>
@@ -270,18 +264,6 @@ public partial class PlayBarViewModel : ObservableRecipient
         {
             var vm = (PlayBarViewModel)r;
             vm.RunOnUIThread(() => vm.LyricInfo = m.Info);
-        });
-
-        messenger.Register<SongLikeStatusChangedMessage>(this, (r, m) =>
-        {
-            // UI layer handles visual update; ViewModel just notifies
-            var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() => vm.OnPropertyChanged(nameof(NowPlayingItem)));
-        });
-
-        messenger.Register<LoginCompletedMessage>(this, (r, _) =>
-        {
-            // UI layer handles login-done logic
         });
     }
 
@@ -355,8 +337,8 @@ public partial class PlayBarViewModel : ObservableRecipient
     public string GetPlaylistTitle()
     {
         if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
-            return $"随机播放列表 (共{PlaylistItems.Count}首)";
-        return $"播放列表 (共{PlaylistItems.Count}首)";
+            return $"随机播放列表 (共{_playlist.Items.Count}首)";
+        return $"播放列表 (共{_playlist.Items.Count}首)";
     }
 
     /// <summary>

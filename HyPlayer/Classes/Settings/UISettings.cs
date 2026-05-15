@@ -362,5 +362,23 @@ namespace HyPlayer.Classes.Settings
                 ApplicationData.Current.LocalSettings.Values[nameof(UpdateSource)] = (int)value;
             }
         }
+
+        public bool EnableTile
+        {
+            get => GetSettings(nameof(EnableTile), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(EnableTile)] = value;
+            }
+        }
+
+        public bool EnableTileBackground
+        {
+            get => GetSettings(nameof(EnableTileBackground), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(EnableTileBackground)] = value;
+            }
+        }
     }
 }

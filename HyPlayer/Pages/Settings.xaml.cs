@@ -48,6 +48,7 @@ public sealed partial class Settings : Page
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
 
     private bool isbyprogram;
     private int _elapse = 10;
@@ -475,5 +476,10 @@ public sealed partial class Settings : Page
     private void LoginLastFMAccount_Click(object sender, RoutedEventArgs e)
     {
         _ = Launcher.LaunchUriAsync(new Uri($"https://www.last.fm/api/auth?api_key={Ioc.Default.GetRequiredService<LastFMClient>().Options.ApiKey}&cb=hyplayer://link.last.fm"));
+    }
+
+    private void BtnClearTileCache_Click(object sender, RoutedEventArgs e)
+    {
+        _tileService.ClearAllTiles();
     }
 }

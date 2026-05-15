@@ -101,6 +101,8 @@ namespace HyPlayer
          public bool canaryChannelAvailability { get => UI.canaryChannelAvailability; set { UI.canaryChannelAvailability = value; OnPropertyChanged(); } }
         public bool localProgressiveLoad { get => UI.localProgressiveLoad; set { UI.localProgressiveLoad = value; OnPropertyChanged(); } }
         public UpdateSource UpdateSource { get => UI.UpdateSource; set { UI.UpdateSource = value; OnPropertyChanged(); } }
+        public bool EnableTile { get=>UI.EnableTile; set { UI.EnableTile = value; OnPropertyChanged(); } }
+        public bool EnableTileBackground { get => UI.EnableTileBackground; set { UI.EnableTileBackground = value; OnPropertyChanged(); } }  
 
         // --- ApiSettings delegates ---
 

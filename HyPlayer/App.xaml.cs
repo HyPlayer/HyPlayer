@@ -134,6 +134,7 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<IPlaylistService, PlaylistService>();
         serviceCollection.AddSingleton<ILyricService, LyricService>();
         serviceCollection.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
+        serviceCollection.AddSingleton<ITileService, TileService>();
 
         // ── 应用核心：认证 / 导航 / 通知 / UI 状态 ──
         serviceCollection.AddSingleton<IAuthService, AuthService>();

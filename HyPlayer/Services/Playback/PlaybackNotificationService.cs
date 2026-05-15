@@ -22,19 +22,22 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     private readonly HttpClient _http;
     private readonly IPlayer _player;
     private readonly IBackgroundTaskRunner _taskRunner;
+    private readonly ITileService _tileService;
 
     public PlaybackNotificationService(
         PlaybackStateService state,
         Setting setting,
         HttpClient http,
         IPlayer player,
-        IBackgroundTaskRunner taskRunner)
+        IBackgroundTaskRunner taskRunner,
+        ITileService tileService)
     {
         _state = state;
         _setting = setting;
         _http = http;
         _player = player;
         _taskRunner = taskRunner;
+        _tileService = tileService;
     }
 
     /// <inheritdoc />
@@ -87,6 +90,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
             var newStream = new InMemoryRandomAccessStream();
             await newStream.WriteAsync(buffer);
             var newRef = RandomAccessStreamReference.CreateFromStream(newStream);
+            await _tileService.UpdateTile(item, newStream);
 
             // Atomic swap
             var oldStream = _state.CoverStream;

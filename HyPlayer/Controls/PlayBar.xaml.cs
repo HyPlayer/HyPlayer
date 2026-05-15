@@ -204,16 +204,6 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    public void RefreshSongList()
-    {
-        ViewModel.RefreshPlaylistItems();
-        PlayListTitle.Text = ViewModel.GetPlaylistTitle();
-
-        var targetingIndex = ViewModel.GetTargetingIndex();
-        if (targetingIndex == -1 || targetingIndex >= PlayItems.Count) return;
-        ListBoxPlayList.ScrollIntoView(PlayItems[targetingIndex]);
-    }
-
     private async void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
         if (!_player.PlayerCreated || ViewModel.NowPlayingItem == null) return;
@@ -362,7 +352,6 @@ DoubleAnimation verticalAnimation;
         {
             var item = btn.DataContext as HyPlayItem;
             ViewModel.RemoveItemCommand.Execute(item);
-            RefreshSongList();
         }
     }
 
@@ -373,7 +362,6 @@ DoubleAnimation verticalAnimation;
             ViewModel.ChangePlayModeCommand.Execute(null);
             // Update UI icons based on new play mode
             RefreshPlayModeDisplay();
-            RefreshSongList();
         }
         else
         {
@@ -575,6 +563,7 @@ DoubleAnimation verticalAnimation;
         {
             if (ViewModel.Items.Count == 0)
                 HyPlayListOnOnSongRemoveAll();
+            PlayListTitle.Text = ViewModel.GetPlaylistTitle();
         });
         messenger.Register<SongLikeStatusChangedMessage>(this, (_, m) => HyPlayList_OnSongLikeStatusChange(m.IsLiked));
         messenger.Register<CoverChangedMessage>(this, (_, m) => RefreshPlayBarCover(m.Item));

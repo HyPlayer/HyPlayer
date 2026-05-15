@@ -847,6 +847,25 @@
                                             ToolTipService.ToolTip="{x:Bind AutoHidePlayBarTime.Value}"
                                             Value="{x:Bind hyplayer:XamlHelpers.Setting.AutoHidePlaybarTime, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="启用磁贴">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.EnableTile, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="启用磁贴背景" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.EnableTile, Mode=OneWay}">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.EnableTileBackground, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="删除磁贴缓存">
+                                        <Button
+                                            x:Name="BtnClearTileCache"
+                                            HorizontalAlignment="Right"
+                                            Click="BtnClearTileCache_Click"
+                                            Content="清理" />
+                                    </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
 
@@ -971,12 +990,10 @@
                                         </StackPanel>
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="清理所有缓存">
-                                        <StackPanel
+                                        <Button
                                             HorizontalAlignment="Right"
-                                            Orientation="Horizontal"
-                                            Spacing="8">
-                                            <Button Click="BtnClearCache_Click" Content="清理" />
-                                        </StackPanel>
+                                            Click="BtnClearCache_Click"
+                                            Content="清理" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>

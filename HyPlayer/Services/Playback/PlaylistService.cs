@@ -178,14 +178,12 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             if (index < _nowPlayingIndex)
             {
                 _nowPlayingIndex--;
-                SyncIndex();
             }
             else if (index == _nowPlayingIndex)
             {
                 // 当前曲目被移除，索引不变但指向了新曲目
                 if (_nowPlayingIndex >= _items.Count)
                     _nowPlayingIndex = _items.Count - 1;
-                SyncIndex();
             }
 
             NotifyAppendDone();
@@ -207,7 +205,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             DisposePlayItems(_items);
             _items.Clear();
             _nowPlayingIndex = -1;
-            SyncIndex();
             _state.NowPlayingItem = null;
 
             NotifyAppendDone();
@@ -243,8 +240,8 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         lock (_lock)
         {
             _nowPlayingIndex = nextIndex.Value;
-            SyncIndex();
             item = _items[_nowPlayingIndex];
+            SyncIndex();
         }
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
@@ -266,8 +263,8 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         lock (_lock)
         {
             _nowPlayingIndex = prevIndex.Value;
-            SyncIndex();
             item = _items[_nowPlayingIndex];
+            SyncIndex();
         }
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
@@ -689,6 +686,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// </summary>
     private void SendPlaylistChanged(bool isShuffleTrigger = false)
     {
+        SyncIndex();
         _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
             WeakReferenceMessenger.Default.Send(new PlaylistChangedMessage(isShuffleTrigger))),
             "publish playlist changed");
