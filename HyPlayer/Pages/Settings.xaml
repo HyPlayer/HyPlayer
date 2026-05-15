@@ -670,7 +670,8 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 Description="需要重启 HyPlayer"
-                                Header="颜色设置">
+                                Header="颜色设置"
+                                IsExpanded="True">
                                 <controls3:SettingsExpander.HeaderIcon>
                                     <FontIcon Glyph="&#xE790;" />
                                 </controls3:SettingsExpander.HeaderIcon>
@@ -686,12 +687,6 @@
                                             <ComboBoxItem Content="亮色" />
                                             <ComboBoxItem Content="暗色" />
                                         </ComboBox>
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="开启标题栏沉浸">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.EnableTitleBarImmerse, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -722,24 +717,6 @@
                                             <ComboBoxItem Content="OctTree" />
                                             <ComboBoxItem Content="Auto" />
                                         </ComboBox>
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Description="关闭则为RGB空间，仅在KMeans模式下生效" Header="Impressionist (背景取色) 使用LAB空间">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.ImpressionistLABSpace, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="Impressionist (背景取色) 忽略白色">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.ImpressionistIgnoreWhite, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Description="关闭则随机颜色进行初始化，仅在KMeans模式下生效" Header="Impressionist (背景取色) 使用KMeans++算法初始化颜色">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.ImpressionistUseKMeansPP, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="歌词页面渲染帧率">
                                         <controls:NumberBox
@@ -910,12 +887,6 @@
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.expandAlbumBreath, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="表头启用封面主题色">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="启用触摸手势控制 (歌词页面-专辑封面)">
                                         <ToggleSwitch

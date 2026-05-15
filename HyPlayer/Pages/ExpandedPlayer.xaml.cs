@@ -899,8 +899,8 @@ public sealed partial class ExpandedPlayer : Page
             {
                 themeColor = _settings.ColorGeneratorType switch
                 {
-                    ColorGeneratorType.OctTree => await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, _settings.ImpressionistIgnoreWhite),
-                    _ => await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, _settings.ImpressionistIgnoreWhite, _settings.ImpressionistLABSpace),
+                    ColorGeneratorType.OctTree => await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, true),
+                    _ => await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, true, true),
                 };
                 albumMainColor = Color.FromArgb(255, (byte)themeColor.Color.X, (byte)themeColor.Color.Y, (byte)themeColor.Color.Z);
             }
@@ -911,19 +911,19 @@ public sealed partial class ExpandedPlayer : Page
                     ColorGeneratorType.KMeans => await PaletteGenerators.KMeansPaletteGenerator.CreatePalette(
                                                 colors,
                                                 _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                _settings.ImpressionistIgnoreWhite,
-                                                _settings.ImpressionistLABSpace,
-                                                _settings.ImpressionistUseKMeansPP),
+                                                true,
+                                                true,
+                                                true),
                     ColorGeneratorType.OctTree => palette = await PaletteGenerators.OctTreePaletteGenerator.CreatePalette(
                                                 colors,
                                                 _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                _settings.ImpressionistIgnoreWhite),
+                                                true),
                     _ => await AutoPaletteGenerator.CreatePalette(
                                                 colors,
                                                 _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                _settings.ImpressionistIgnoreWhite,
-                                                _settings.ImpressionistLABSpace,
-                                                _settings.ImpressionistUseKMeansPP),
+                                                true,
+                                                true,
+                                                true),
                 };
                 themeColor = palette.ThemeColor;
                 _albumColors = [.. palette.Palette.Select(quantizedColor => Color.FromArgb(255, (byte)quantizedColor.X, (byte)quantizedColor.Y, (byte)quantizedColor.Z))];

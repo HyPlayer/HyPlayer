@@ -450,41 +450,5 @@ namespace HyPlayer.Classes.Settings
                 ApplicationData.Current.LocalSettings.Values[nameof(IsolationLightWave)] = value;
             }
         }
-
-        /// <summary>
-        /// Whether Impressionist uses LAB color space.
-        /// </summary>
-        public bool ImpressionistLABSpace
-        {
-            get => GetSettings(nameof(ImpressionistLABSpace), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(ImpressionistLABSpace)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether Impressionist ignores white colors.
-        /// </summary>
-        public bool ImpressionistIgnoreWhite
-        {
-            get => GetSettings(nameof(ImpressionistIgnoreWhite), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(ImpressionistIgnoreWhite)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether Impressionist uses KMeans++ algorithm.
-        /// </summary>
-        public bool ImpressionistUseKMeansPP
-        {
-            get => GetSettings(nameof(ImpressionistUseKMeansPP), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(ImpressionistUseKMeansPP)] = value;
-            }
-        }
     }
 }

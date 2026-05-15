@@ -21,11 +21,11 @@ namespace HyPlayer.Classes
 
             if (_setting.ColorGeneratorType is 0)
             {
-                color = await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, _setting.ImpressionistIgnoreWhite, _setting.ImpressionistLABSpace);
+                color = await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, true, true);
             }
             else
             {
-                color = await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, _setting.ImpressionistIgnoreWhite);
+                color = await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, true);
             }
             return Color.FromArgb(255, (byte)color.Color.X, (byte)color.Color.Y, (byte)color.Color.Z);
         }

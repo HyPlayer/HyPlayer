@@ -83,10 +83,8 @@ namespace HyPlayer
         public int albumBorderLength { get => UI.albumBorderLength; set { UI.albumBorderLength = value; OnPropertyChanged(); } }
         public bool expandedUseAcrylic { get => UI.expandedUseAcrylic; set { UI.expandedUseAcrylic = value; OnPropertyChanged(); } }
         public bool expandAlbumBreath { get => UI.expandAlbumBreath; set { UI.expandAlbumBreath = value; OnPropertyChanged(); } }
-        public bool listHeaderAcrylicBlur { get => UI.listHeaderAcrylicBlur; set { UI.listHeaderAcrylicBlur = value; OnPropertyChanged(); } }
         public bool expandedPlayerFullCover { get => UI.expandedPlayerFullCover; set { UI.expandedPlayerFullCover = value; OnPropertyChanged(); } }
         public int expandedCoverShadowDepth { get => UI.expandedCoverShadowDepth; set { UI.expandedCoverShadowDepth = value; OnPropertyChanged(); } }
-        public bool EnableTitleBarImmerse { get => UI.EnableTitleBarImmerse; set { UI.EnableTitleBarImmerse = value; OnPropertyChanged(); } }
         public bool CompactPlayerPageBlurStatus { get => UI.CompactPlayerPageBlurStatus; set { UI.CompactPlayerPageBlurStatus = value; OnPropertyChanged(); } }
         public bool notClearMode { get => UI.notClearMode; set { UI.notClearMode = value; OnPropertyChanged(); } }
         public bool AutoHidePlaybar { get => UI.AutoHidePlaybar; set { UI.AutoHidePlaybar = value; OnPropertyChanged(); } }
@@ -156,10 +154,6 @@ namespace HyPlayer
         public double IsolationFPS { get => Lyric.IsolationFPS; set { Lyric.IsolationFPS = value; OnPropertyChanged(); } }
         public float IsolationScale { get => Lyric.IsolationScale; set { Lyric.IsolationScale = value; OnPropertyChanged(); } }
         public bool IsolationLightWave { get => Lyric.IsolationLightWave; set { Lyric.IsolationLightWave = value; OnPropertyChanged(); } }
-        public bool ImpressionistLABSpace { get => Lyric.ImpressionistLABSpace; set { Lyric.ImpressionistLABSpace = value; OnPropertyChanged(); } }
-        public bool ImpressionistIgnoreWhite { get => Lyric.ImpressionistIgnoreWhite; set { Lyric.ImpressionistIgnoreWhite = value; OnPropertyChanged(); } }
-        public bool ImpressionistUseKMeansPP { get => Lyric.ImpressionistUseKMeansPP; set { Lyric.ImpressionistUseKMeansPP = value; OnPropertyChanged(); } }
-
         // --- LastFMSettings delegates ---
 
         public LastFMSession LastFMSession { get => LastFM.LastFMSession; set { LastFM.LastFMSession = value; OnPropertyChanged(); } }

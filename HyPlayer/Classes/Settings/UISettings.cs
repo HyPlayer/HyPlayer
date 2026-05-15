@@ -156,15 +156,6 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Whether list header uses acrylic blur.
-        /// </summary>
-        public bool listHeaderAcrylicBlur
-        {
-            get => GetSettings(nameof(listHeaderAcrylicBlur), true);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(listHeaderAcrylicBlur)] = value;
-        }
-
-        /// <summary>
         /// Whether expanded player shows full cover.
         /// </summary>
         public bool expandedPlayerFullCover
@@ -185,18 +176,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(expandedCoverShadowDepth)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether title bar immerse mode is enabled.
-        /// </summary>
-        public bool EnableTitleBarImmerse
-        {
-            get => GetSettings("enableTitleBarImmerse", true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["enableTitleBarImmerse"] = value;
             }
         }
 

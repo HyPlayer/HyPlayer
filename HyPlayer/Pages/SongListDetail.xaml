@@ -60,9 +60,7 @@
                     <Border
                         x:Name="RectangleImageBack"
                         Grid.Column="0"
-                        Grid.ColumnSpan="2"
-                        x:Load="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur}"
-                        Visibility="{x:Bind hyplayer:XamlHelpers.Setting.listHeaderAcrylicBlur}">
+                        Grid.ColumnSpan="2">
                         <Border.Background>
                             <LinearGradientBrush Opacity="0.5" StartPoint="0,0" EndPoint="0,1">
                                 <GradientStop x:Name="AlbumColor" Offset="0" Color="{x:Bind ViewModel.AlbumColor, Mode=OneWay}" />
