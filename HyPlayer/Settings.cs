@@ -72,13 +72,11 @@ namespace HyPlayer
 
         public ThemeRequest themeRequest { get => UI.themeRequest; set { UI.themeRequest = value; OnPropertyChanged(); } }
         public bool expandAnimation { get => UI.expandAnimation; set { UI.expandAnimation = value; OnPropertyChanged(); } }
-        public bool forceMemoryGarbage { get => UI.forceMemoryGarbage; set { UI.forceMemoryGarbage = value; OnPropertyChanged(); } }
         public bool noImage { get => UI.noImage; set { UI.noImage = value; OnPropertyChanged(); } }
         public LyricAlignment lyricAlignment { get => UI.lyricAlignment; set { UI.lyricAlignment = value; OnPropertyChanged(); } }
         public int lyricSize { get => UI.lyricSize; set { UI.lyricSize = value; OnPropertyChanged(); } }
         public LyricColor lyricColor { get => UI.lyricColor; set { UI.lyricColor = value; OnPropertyChanged(); } }
         public ColorGeneratorType ColorGeneratorType { get => UI.ColorGeneratorType; set { UI.ColorGeneratorType = value; OnPropertyChanged(); } }
-        public bool IsOldThemeEnabled { get => UI.IsOldThemeEnabled; set { UI.IsOldThemeEnabled = value; OnPropertyChanged(); } }
         public BackgroundType expandedPlayerBackgroundType { get => UI.expandedPlayerBackgroundType; set { UI.expandedPlayerBackgroundType = value; OnPropertyChanged(); } }
         public bool albumRotate { get => UI.albumRotate; set { UI.albumRotate = value; OnPropertyChanged(); } }
         public bool albumRound { get => UI.albumRound; set { UI.albumRound = value; OnPropertyChanged(); } }
@@ -97,16 +95,12 @@ namespace HyPlayer
         public bool uiSound { get => UI.uiSound; set { UI.uiSound = value; OnPropertyChanged(); } }
         public bool displayShuffledList { get => UI.displayShuffledList; set { UI.displayShuffledList = value; OnPropertyChanged(); } }
         public bool displayMaintain { get => UI.displayMaintain; set { UI.displayMaintain = value; OnPropertyChanged(); } }
-        public bool xboxHidePointer { get => UI.xboxHidePointer; set { UI.xboxHidePointer = value; OnPropertyChanged(); } }
         public bool enableTouchGestureAction { get => UI.enableTouchGestureAction; set { UI.enableTouchGestureAction = value; OnPropertyChanged(); } }
         public GestureMode gestureMode { get => UI.gestureMode; set { UI.gestureMode = value; OnPropertyChanged(); } }
         public bool animationAdaptBPM { get => UI.animationAdaptBPM; set { UI.animationAdaptBPM = value; OnPropertyChanged(); } }
         public bool gentleBPMAnimation { get => UI.gentleBPMAnimation; set { UI.gentleBPMAnimation = value; OnPropertyChanged(); } }
         public bool DisablePopUp { get => UI.DisablePopUp; set { UI.DisablePopUp = value; OnPropertyChanged(); } }
-        public bool enableTile { get => UI.enableTile; set { UI.enableTile = value; OnPropertyChanged(); } }
-        public bool tileBackgroundAvailability { get => UI.tileBackgroundAvailability; set { UI.tileBackgroundAvailability = value; OnPropertyChanged(); } }
-        public bool saveTileBackgroundToLocalFolder { get => UI.saveTileBackgroundToLocalFolder; set { UI.saveTileBackgroundToLocalFolder = value; OnPropertyChanged(); } }
-        public bool canaryChannelAvailability { get => UI.canaryChannelAvailability; set { UI.canaryChannelAvailability = value; OnPropertyChanged(); } }
+         public bool canaryChannelAvailability { get => UI.canaryChannelAvailability; set { UI.canaryChannelAvailability = value; OnPropertyChanged(); } }
         public bool localProgressiveLoad { get => UI.localProgressiveLoad; set { UI.localProgressiveLoad = value; OnPropertyChanged(); } }
         public UpdateSource UpdateSource { get => UI.UpdateSource; set { UI.UpdateSource = value; OnPropertyChanged(); } }
 
@@ -115,7 +109,6 @@ namespace HyPlayer
         public bool EnableProxy { get => Api.EnableProxy; set { Api.EnableProxy = value; OnPropertyChanged(); } }
         public AdditionalParameters ApiAdditionalParameters { get => Api.ApiAdditionalParameters; set { Api.ApiAdditionalParameters = value; OnPropertyChanged(); } }
         public bool UseHttp { get => Api.UseHttp; set { Api.UseHttp = value; OnPropertyChanged(); } }
-        public bool UseHttpWhenGettingSongs { get => Api.UseHttpWhenGettingSongs; set { Api.UseHttpWhenGettingSongs = value; OnPropertyChanged(); } }
         public bool EnableCheckTokenApi { get => Api.EnableCheckTokenApi; set { Api.EnableCheckTokenApi = value; OnPropertyChanged(); } }
         public bool enableApiCache { get => Api.enableApiCache; set { Api.enableApiCache = value; OnPropertyChanged(); } }
         public bool songUrlLazyGet { get => Api.songUrlLazyGet; set { Api.songUrlLazyGet = value; OnPropertyChanged(); } }
@@ -127,7 +120,6 @@ namespace HyPlayer
         // --- LyricSettings delegates ---
 
         public RomajiSource LyricRomajiSource { get => Lyric.LyricRomajiSource; set { Lyric.LyricRomajiSource = value; OnPropertyChanged(); } }
-        public bool highPreciseLyricTimer { get => Lyric.highPreciseLyricTimer; set { Lyric.highPreciseLyricTimer = value; OnPropertyChanged(); } }
         public bool karaokLyric { get => Lyric.karaokLyric; set { Lyric.karaokLyric = value; OnPropertyChanged(); } }
         public bool showComposerInLyric { get => Lyric.showComposerInLyric; set { Lyric.showComposerInLyric = value; OnPropertyChanged(); } }
         public bool downloadLyric { get => Lyric.downloadLyric; set { Lyric.downloadLyric = value; OnPropertyChanged(); } }

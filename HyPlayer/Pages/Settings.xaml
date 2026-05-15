@@ -1206,9 +1206,6 @@
                                     Margin="0,0,-100,0"
                                     IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.UseHttp, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="获取歌曲时降级HTTPS为HTTP">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.UseHttpWhenGettingSongs, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
                             <controls3:SettingsCard Description="自动加载更多内容, 3 秒一次请求, 可能会导致风控" Header="使用贪婪加载">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.greedlyLoadPlayContainerItems, Mode=TwoWay}" />
                             </controls3:SettingsCard>
@@ -1220,18 +1217,6 @@
                                     x:Name="LazySongUrlGetCheck"
                                     Margin="0,0,-100,0"
                                     IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.songUrlLazyGet, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
-                            <controls3:SettingsCard Description="不要开启!" Header="Xbox上隐藏指针">
-                                <CheckBox
-                                    x:Name="XboxPointerSet"
-                                    Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.xboxHidePointer, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
-                            <controls3:SettingsCard Description="开启后可能会频繁出现页面重载现象" Header="频繁内存回收">
-                                <CheckBox
-                                    x:Name="ForceMemoryCollect"
-                                    Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.forceMemoryGarbage, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="开启高级音乐历史存储 (超过 100 首)">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
@@ -1266,39 +1251,8 @@
                             <controls3:SettingsCard Header="尝试绕过 CheckToken 接口 (可能被检测)">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.EnableCheckTokenApi, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="启用磁贴">
-                                <CheckBox
-                                    x:Name="DisableTile"
-                                    Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.enableTile, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
-                            <controls3:SettingsCard Description="部分系统下可能导致磁贴不显示" Header="启用磁贴背景">
-                                <CheckBox
-                                    x:Name="TileBackgroundAvailability"
-                                    Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.tileBackgroundAvailability, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
-                            <controls3:SettingsCard Description="Windows 10需打开此项才会显示磁贴" Header="磁贴背景缓存至本地">
-                                <CheckBox
-                                    x:Name="SaveTileBackgroundToLocalFolder"
-                                    Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.saveTileBackgroundToLocalFolder, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
-
-                            <controls3:SettingsCard Description="对于部分歌曲的歌词更新率更高, 需重启 HyPlayer" Header="使用高精度歌词计时器">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.highPreciseLyricTimer, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
-                            <controls3:SettingsCard Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像或在首页关闭&#13;开发者不受理受此功能影响的问题" Header="启用旧版主题（需重启应用）">
-
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
                             <controls3:SettingsCard Header="歌词控件Debug模式">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.LyricRendererDebugMode, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
-                            <controls3:SettingsCard Click="ClearTileCache_Click" IsClickEnabled="True">
-                                <controls3:SettingsCard.Header>
-                                    <TextBlock x:Name="ClearTileCache" Text="清除磁贴背景缓存" />
-                                </controls3:SettingsCard.Header>
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Click="RestartBtn_Click" IsClickEnabled="True">
                                 <controls3:SettingsCard.Header>

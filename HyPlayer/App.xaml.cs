@@ -57,14 +57,7 @@ public sealed partial class App : Application
         InitializeServices();
         InitializeCommonServices();
         HistoryManagement.InitializeHistoryTrack();
-        if (Ioc.Default.GetRequiredService<Setting>().xboxHidePointer)
-        {
-            RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
-            FocusVisualKind = FocusVisualKind.Reveal;
-        }
         Suspending += OnSuspending;
-        MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
-        MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
         UnhandledException += App_UnhandledException;
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
@@ -96,16 +89,6 @@ public sealed partial class App : Application
             uiState.RollTeachingTip();
             uiState.ChangePlaybarVisibility();
         });
-    }
-
-    private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
-    {
-        if (!Ioc.Default.GetRequiredService<Setting>().forceMemoryGarbage) return;
-        // Xbox 求你行行好,别杀我~ QAQ
-        if (!Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground) return;
-        // 内存占用达到某个值
-        Ioc.Default.GetRequiredService<INavigationService>().CollectGarbage();
-        GC.Collect();
     }
 
     private static void InitializeServices(ServiceCollection serviceCollection)
@@ -172,16 +155,6 @@ public sealed partial class App : Application
         serviceCollection.AddTransient<PlayBarViewModel>();
         serviceCollection.AddTransient<GroupedSongsListViewModel>();
     }
-    private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
-    {
-        if (!Ioc.Default.GetRequiredService<Setting>().forceMemoryGarbage) return;
-        if (Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground)
-        {
-            // 内存占用达到某个值
-            Ioc.Default.GetRequiredService<INavigationService>().CollectGarbage();
-            GC.Collect();
-        }
-    }
 
     private static async Task InitializeThings()
     {
@@ -213,13 +186,6 @@ public sealed partial class App : Application
             uiState.IsInBackground = false;
             uiState.InvokeEnterForeground();
         }
-
-        uiState.IsInBackground = false;
-
-        if (!Ioc.Default.GetRequiredService<Setting>().forceMemoryGarbage) return;
-        Ioc.Default.GetRequiredService<INavigationService>().NavigateBack();
-
-        //ClearExtendedExecution(executionSession);
     }
 
     private void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)

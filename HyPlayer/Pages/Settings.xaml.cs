@@ -408,13 +408,6 @@ public sealed partial class Settings : Page
         _ = UpdateManager.GetUserCanaryChannelAvailability(canaryEmail.Text);
     }
 
-    private async void ClearTileCache_Click(object sender, RoutedEventArgs e)
-    {
-        var storageFolder = await ApplicationData.Current.TemporaryFolder.TryGetItemAsync("LocalTileBackground");
-        if (storageFolder != null) await storageFolder.DeleteAsync();
-    }
-
-
     private void ResetPureLyricIdleColor(object sender, RoutedEventArgs e)
     {
         _setting.pureLyricIdleColor = null;

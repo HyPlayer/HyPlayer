@@ -31,8 +31,6 @@ public sealed partial class ArtistSelectDialog : ContentDialog
         Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].Id);
         if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
         {
-            if (Ioc.Default.GetRequiredService<Setting>().forceMemoryGarbage)
-                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(BlankPage));
             (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).CollapseExpandedPlayer();
         }
 

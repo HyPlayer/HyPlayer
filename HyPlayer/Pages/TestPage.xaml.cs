@@ -150,7 +150,6 @@ public sealed partial class TestPage : Page
             CurrentUser = _auth.CurrentUser,
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
             IsInBackground = Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground,
-            IsLowCache = _setting.forceMemoryGarbage,
             ErrorMessageList = [.. Ioc.Default.GetRequiredService<IUIStateService>().ErrorMessageList.TakeLast(15)]
         }, JsonDefaults.Options);
         var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("dump-" +

@@ -37,15 +37,6 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Whether to force memory garbage collection.
-        /// </summary>
-        public bool forceMemoryGarbage
-        {
-            get => GetSettings(nameof(forceMemoryGarbage), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(forceMemoryGarbage)] = value;
-        }
-
-        /// <summary>
         /// Whether to disable image loading.
         /// </summary>
         public bool noImage
@@ -96,18 +87,6 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(ColorGeneratorType)] = (int)value;
-            }
-        }
-
-        /// <summary>
-        /// Whether old theme is enabled.
-        /// </summary>
-        public bool IsOldThemeEnabled
-        {
-            get => GetSettings(nameof(IsOldThemeEnabled), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(IsOldThemeEnabled)] = value;
             }
         }
 
@@ -319,15 +298,6 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Whether to hide pointer on Xbox.
-        /// </summary>
-        public bool xboxHidePointer
-        {
-            get => GetSettings(nameof(xboxHidePointer), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(xboxHidePointer)] = value;
-        }
-
-        /// <summary>
         /// Whether touch gesture actions are enabled.
         /// </summary>
         public bool enableTouchGestureAction
@@ -376,47 +346,6 @@ namespace HyPlayer.Classes.Settings
         {
             get => GetSettings(nameof(DisablePopUp), false);
             set => ApplicationData.Current.LocalSettings.Values[nameof(DisablePopUp)] = value;
-        }
-
-        /// <summary>
-        /// Whether tile is enabled.
-        /// </summary>
-        public bool enableTile
-        {
-            get => GetSettings(nameof(enableTile), System.Environment.OSVersion.Version.Build < 22000);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(enableTile)] = value;
-                if (!value)
-                {
-                    tileBackgroundAvailability = false;
-                    saveTileBackgroundToLocalFolder = false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Whether tile background is available.
-        /// </summary>
-        public bool tileBackgroundAvailability
-        {
-            get => GetSettings(nameof(tileBackgroundAvailability), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(tileBackgroundAvailability)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether to save tile background to local folder.
-        /// </summary>
-        public bool saveTileBackgroundToLocalFolder
-        {
-            get => GetSettings(nameof(saveTileBackgroundToLocalFolder), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(saveTileBackgroundToLocalFolder)] = value;
-            }
         }
 
         /// <summary>

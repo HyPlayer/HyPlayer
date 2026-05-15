@@ -81,7 +81,6 @@ public sealed partial class BasePage : Page
 
         ApplicationView.TerminateAppOnFinalViewClose = false;
         Ioc.Default.GetRequiredService<INavigationService>().RootFrame = BaseFrame;
-        BaseFrame.IsNavigationStackEnabled = !_setting.forceMemoryGarbage;
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
     }

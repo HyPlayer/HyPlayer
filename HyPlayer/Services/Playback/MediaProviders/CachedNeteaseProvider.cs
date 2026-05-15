@@ -141,10 +141,6 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
                 item.SubExt = songUrl.Type?.ToLowerInvariant() ?? string.Empty;
                 item.QualityTag = item.GetQualityTagText(_setting.audioRate);
                 item.Volume = AudioUtils.DbToVolumePercent(songUrl.Gain ?? 0);
-                if (_setting.UseHttpWhenGettingSongs && (playUrl?.Contains("https://") ?? false))
-                {
-                    playUrl = playUrl.Replace("https://", "http://");
-                }
 
                 if (playUrl != null) item.Url = playUrl;
             }

@@ -285,9 +285,6 @@ DoubleAnimation verticalAnimation;
             {
                 //ignore
             }
-
-        if (_setting.forceMemoryGarbage)
-            _navigation.Navigate(typeof(BlankPage));
         _uiState.IsExpanded = true;
         GridSongInfo.Visibility = Visibility.Collapsed;
         GridSongAdvancedOperation.Visibility = Visibility.Visible;
@@ -334,8 +331,6 @@ DoubleAnimation verticalAnimation;
             }
         }
 
-        if (_setting.forceMemoryGarbage)
-            _navigation.NavigateBack();
         ButtonExpand.Visibility = Visibility.Visible;
         ButtonCollapse.Visibility = Visibility.Collapsed;
         (_uiState.PageMain as MainPage).GridPlayBarMarginBlur.Visibility = Visibility.Visible;
@@ -467,8 +462,6 @@ DoubleAnimation verticalAnimation;
             _navigation.Navigate(typeof(Comments), "sg" + ViewModel.NowPlayingItem.Id);
         else
             _navigation.Navigate(typeof(Comments), "fm" + ViewModel.NowPlayingItem.Album.Alias);
-        if (_setting.forceMemoryGarbage)
-            _navigation.Navigate(typeof(BlankPage));
         CollapseExpandedPlayer();
     }
 

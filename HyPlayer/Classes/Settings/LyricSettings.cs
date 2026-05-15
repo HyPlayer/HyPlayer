@@ -24,15 +24,6 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Whether high-precision lyric timer is enabled.
-        /// </summary>
-        public bool highPreciseLyricTimer
-        {
-            get => GetSettings(nameof(highPreciseLyricTimer), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(highPreciseLyricTimer)] = value;
-        }
-
-        /// <summary>
         /// Whether karaoke lyric mode is enabled.
         /// </summary>
         public bool karaokLyric

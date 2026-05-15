@@ -681,8 +681,6 @@ public sealed partial class ExpandedPlayer : Page
             if (_state.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
                 _navigation.Navigate(typeof(RadioPage), _state.NowPlayingItem.Album.Id);
 
-            if (_settings.forceMemoryGarbage)
-                _navigation.Navigate(typeof(BlankPage));
             (_uiState.BarPlayBar as PlayBar)!.CollapseExpandedPlayer();
         }
         catch
@@ -709,8 +707,6 @@ public sealed partial class ExpandedPlayer : Page
             if (_state.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
                 _navigation.Navigate(typeof(Me), _state.NowPlayingItem.Artist[0].Id);
 
-            if (_settings.forceMemoryGarbage)
-                _navigation.Navigate(typeof(BlankPage));
             (_uiState.BarPlayBar as PlayBar)!.CollapseExpandedPlayer();
         }
         catch

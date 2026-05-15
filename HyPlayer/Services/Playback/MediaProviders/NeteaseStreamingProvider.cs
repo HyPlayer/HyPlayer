@@ -109,11 +109,6 @@ public sealed class NeteaseStreamingProvider : IMediaSourceProvider
                 item.QualityTag = item.GetQualityTagText(_setting.audioRate);
                 item.Volume = AudioUtils.DbToVolumePercent(songUrl.Gain ?? 0);
 
-                if (_setting.UseHttpWhenGettingSongs && (playUrl?.Contains("https://") ?? false))
-                {
-                    playUrl = playUrl.Replace("https://", "http://");
-                }
-
                 if (playUrl != null) item.Url = playUrl;
             }
             else

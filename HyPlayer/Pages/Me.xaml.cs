@@ -71,12 +71,6 @@ public sealed partial class Me : Page
         }
     }
 
-    private void RectangleImage_OnRightTapped(object sender, RightTappedRoutedEventArgs e)
-    {
-        _setting.IsOldThemeEnabled = false;
-        _notification.ShowMessage("已重置, 请重启");
-    }
-
     private void SonglistItem_Tapped(object sender, TappedRoutedEventArgs e)
     {
         var target = (sender as FrameworkElement).Tag as string;

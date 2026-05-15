@@ -46,59 +46,15 @@ public class NavigationService : INavigationService
     /// <inheritdoc />
     public void Navigate(Type pageType, object? parameter = null)
     {
-        if (_setting.forceMemoryGarbage)
-        {
-            var pageBase = _uiState.PageBase as BasePage;
-            if (NavigationHistory.Count >= 1 && pageBase?.NavMain.SelectedItem == NavigationHistory.Peek().Item)
-                pageBase.NavMain.SelectedItem = pageBase.NavItemBlank;
-            NavigationHistory.Push(new NavigationHistoryItem
-            {
-                PageType = pageType,
-                Paratmers = parameter,
-                Item = pageBase?.NavMain.SelectedItem
-            });
-            RootFrame?.Navigate(pageType, parameter,
+        RootFrame?.Navigate(pageType, parameter,
                 new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromRight });
-            GC.Collect();
-        }
-        else
-        {
-            RootFrame?.Navigate(pageType, parameter,
-                new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromRight });
-        }
     }
 
     /// <inheritdoc />
     public void NavigateBack()
     {
-        if (_setting.forceMemoryGarbage)
-        {
-            if (NavigationHistory.Count > 1)
-                NavigationHistory.Pop();
-            try
-            {
-                var bak = NavigationHistory.Peek();
-                while (bak.PageType == typeof(BlankPage))
-                {
-                    NavigationHistory.Pop();
-                    bak = NavigationHistory.Peek();
-                }
-
-                RootFrame?.Navigate(bak.PageType, bak.Paratmers,
-                    new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromLeft });
-                NavigatingBack = true;
-                NavigatingBack = false;
-                GC.Collect();
-            }
-            catch
-            {
-            }
-        }
-        else
-        {
-            if (RootFrame != null && RootFrame.CanGoBack)
-                RootFrame?.GoBack();
-        }
+        if (RootFrame != null && RootFrame.CanGoBack)
+            RootFrame?.GoBack();
     }
 
     /// <inheritdoc />
