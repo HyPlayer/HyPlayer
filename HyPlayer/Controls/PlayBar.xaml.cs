@@ -119,9 +119,9 @@ DoubleAnimation verticalAnimation;
 
     public void LoadPlayingFile(HyPlayItem mpi)
     {
-        if (ViewModel.NowPlayingItem == null) return;
+        if (mpi == null) return;
         RunOnUIThread(() => ApplicationView.GetForCurrentView().Title =
-            $"{ViewModel.NowPlayingItem.Name} - {ViewModel.NowPlayingItem.ArtistString}");
+            $"{mpi.Name} - {mpi.ArtistString}");
 
         //SliderAudioRate.Value = ViewModel.Volume * 100;
 
