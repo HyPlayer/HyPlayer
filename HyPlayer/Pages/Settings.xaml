@@ -162,12 +162,6 @@
                                 </controls3:SettingsExpander.Transitions>
 
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="使用逐字歌词 (试验性功能)">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.karaokLyric, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="使用 AMLL TTML Database">
                                         <ToggleSwitch
                                             MinWidth="10"

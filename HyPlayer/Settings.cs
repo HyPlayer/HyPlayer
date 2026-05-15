@@ -118,7 +118,6 @@ namespace HyPlayer
         // --- LyricSettings delegates ---
 
         public RomajiSource LyricRomajiSource { get => Lyric.LyricRomajiSource; set { Lyric.LyricRomajiSource = value; OnPropertyChanged(); } }
-        public bool karaokLyric { get => Lyric.karaokLyric; set { Lyric.karaokLyric = value; OnPropertyChanged(); } }
         public bool showComposerInLyric { get => Lyric.showComposerInLyric; set { Lyric.showComposerInLyric = value; OnPropertyChanged(); } }
         public bool downloadLyric { get => Lyric.downloadLyric; set { Lyric.downloadLyric = value; OnPropertyChanged(); } }
         public bool downloadTranslation { get => Lyric.downloadTranslation; set { Lyric.downloadTranslation = value; OnPropertyChanged(); } }

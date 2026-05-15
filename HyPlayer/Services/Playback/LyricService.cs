@@ -87,7 +87,7 @@ public sealed class LyricService : ILyricService
         // 3. 转换歌词行
         var lyricInfo = new HyLyricInfo();
 
-        if (pureLyricInfo is KaraokLyricInfo && _setting.karaokLyric)
+        if (pureLyricInfo is KaraokLyricInfo)
         {
             lyricInfo.Lyrics = Utils.ConvertKaraok(pureLyricInfo);
         }

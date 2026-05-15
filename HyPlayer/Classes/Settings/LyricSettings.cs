@@ -24,18 +24,6 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Whether karaoke lyric mode is enabled.
-        /// </summary>
-        public bool karaokLyric
-        {
-            get => GetSettings(nameof(karaokLyric), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(karaokLyric)] = value;
-            }
-        }
-
-        /// <summary>
         /// Whether to show composer info in lyrics.
         /// </summary>
         public bool showComposerInLyric
