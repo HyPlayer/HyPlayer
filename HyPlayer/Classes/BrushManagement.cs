@@ -1,94 +1,96 @@
-using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 using WinRT;
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-namespace HyPlayer.Classes
+namespace HyPlayer.Classes;
+
+/// <summary>
+/// 歌词渲染画刷管理器，提供 Accent / Idle 等主题画刷与颜色。
+/// 继承 <see cref="ObservableObject"/> 以支持 XAML 绑定与属性变更通知。
+/// </summary>
+public class BrushManagement : ObservableObject
 {
-    public partial class BrushManagement : INotifyPropertyChanged
+    private readonly Setting _setting;
+    private SolidColorBrush? _accentBrush;
+    private SolidColorBrush? _idleBrush;
+    private Windows.UI.Color? _karaokAccentBrush;
+    private bool _isBright;
+
+    public BrushManagement(Setting setting)
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        _setting = setting;
+    }
+
+    /// <summary>
+    /// 是否为亮色主题。变更时会联动刷新 <see cref="AccentTheme"/>、<see cref="AccentBrush"/>、<see cref="IdleBrush"/>。
+    /// </summary>
+    public bool IsBright
+    {
+        get => _isBright;
+        set
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-        private Windows.UI.Color? karaokAccentBrush;
-        private SolidColorBrush accentBrush;
-        private SolidColorBrush idleBrush;
-        public Windows.UI.Color KaraokAccentBrush
-        {
-            get
+            if (SetProperty(ref _isBright, value))
             {
-                if (Ioc.Default.GetRequiredService<Setting>().karaokLyricFocusingColor is not null)
-                {
-                    return (Windows.UI.Color)Ioc.Default.GetRequiredService<Setting>().karaokLyricFocusingColor;
-                }
-                return karaokAccentBrush != null
-                ? (Windows.UI.Color)karaokAccentBrush
-                : (Application.Current.Resources["SystemControlPageTextBaseHighBrush"]?.As<SolidColorBrush>())!.Color;
-            }
-            set
-            {
-                karaokAccentBrush = value;
-                NotifyPropertyChanged();
+                OnPropertyChanged(nameof(AccentTheme));
+                OnPropertyChanged(nameof(AccentBrush));
+                OnPropertyChanged(nameof(IdleBrush));
             }
         }
+    }
 
-        public ElementTheme AccentTheme => IsBright ? ElementTheme.Light : ElementTheme.Dark;
+    /// <summary>
+    /// 基于 <see cref="IsBright"/> 计算的主题枚举，供 XAML 绑定使用。
+    /// </summary>
+    public ElementTheme AccentTheme => IsBright ? ElementTheme.Light : ElementTheme.Dark;
 
-        public bool IsBright
+    /// <summary>
+    /// 当前强调画刷（用户自定义或系统主题色）。
+    /// </summary>
+    public SolidColorBrush AccentBrush
+    {
+        get
         {
-            get => isBright;
-            set
-            {
-                isBright = value;
-                NotifyPropertyChanged();
-                NotifyPropertyChanged(nameof(AccentTheme));
-                NotifyPropertyChanged(nameof(AccentBrush));
-                NotifyPropertyChanged(nameof(IdleBrush));
-            }
+            if (_setting.pureLyricFocusingColor is { } customColor)
+                return new SolidColorBrush(customColor);
+
+            return _accentBrush
+                ?? Application.Current.Resources["SystemControlPageTextBaseHighBrush"]?.As<SolidColorBrush>()
+                ?? new SolidColorBrush(Windows.UI.Colors.White);
         }
+        set => SetProperty(ref _accentBrush, value);
+    }
 
-        private bool isBright;
-
-        public SolidColorBrush AccentBrush
+    /// <summary>
+    /// 当前默认/非激活画刷（用户自定义或系统主题色）。
+    /// </summary>
+    public SolidColorBrush IdleBrush
+    {
+        get
         {
-            get
+            if (_setting.pureLyricIdleColor is { } customColor)
+                return new SolidColorBrush(customColor);
 
-            {
-                if (Ioc.Default.GetRequiredService<Setting>().pureLyricFocusingColor is not null)
-                {
-                    return new SolidColorBrush(Ioc.Default.GetRequiredService<Setting>().pureLyricFocusingColor.Value);
-                }
-
-                return (accentBrush ?? Application.Current.Resources["SystemControlPageTextBaseHighBrush"]?.As<SolidColorBrush>());
-            }
-            set
-            {
-                accentBrush = value;
-                NotifyPropertyChanged();
-            }
+            return _idleBrush
+                ?? Application.Current.Resources["TextFillColorTertiaryBrush"]?.As<SolidColorBrush>()
+                ?? new SolidColorBrush(Windows.UI.Colors.Gray);
         }
-        public SolidColorBrush IdleBrush
+        set => SetProperty(ref _idleBrush, value);
+    }
+
+    /// <summary>
+    /// 卡拉OK歌词专用强调色（用户自定义或系统主题色）。
+    /// </summary>
+    public Windows.UI.Color KaraokAccentBrush
+    {
+        get
         {
-            get
-            {
-                if (Ioc.Default.GetRequiredService<Setting>().pureLyricIdleColor is not null)
-                {
-                    return new SolidColorBrush(Ioc.Default.GetRequiredService<Setting>().pureLyricIdleColor.Value);
-                }
+            if (_setting.karaokLyricFocusingColor is { } customColor)
+                return customColor;
 
-                return (idleBrush ?? Application.Current.Resources["TextFillColorTertiaryBrush"]?.As<SolidColorBrush>());
-            }
-            set
-            {
-                idleBrush = value;
-                NotifyPropertyChanged();
-            }
+            return _karaokAccentBrush
+                ?? (Application.Current.Resources["SystemControlPageTextBaseHighBrush"]?.As<SolidColorBrush>())!.Color;
         }
-
+        set => SetProperty(ref _karaokAccentBrush, value);
     }
 }

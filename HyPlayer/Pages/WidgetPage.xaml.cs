@@ -43,6 +43,7 @@ public sealed partial class WidgetPage : Page
     private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
     private bool _eventsRegistered;
     private bool _windowClosedRegistered;
+    private bool _positionChangedBySeeking;
 
 
     public WidgetPage()
@@ -103,9 +104,10 @@ public sealed partial class WidgetPage : Page
         WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, m) => HyPlayList_OnPlayPositionChange(m.Position));
         WeakReferenceMessenger.Default.Register<PlaybackStateChangedMessage>(this, (r, m) =>
         {
-            if (m.IsPlaying) HyPlayList_OnPlay(); else HyPlayList_OnPause();
+           HyPlayList_OnPlaybackStatusChanged();
         });
         WeakReferenceMessenger.Default.Register<LyricLoadedMessage>(this, (r, m) => OnPlaylistLyricLoaded());
+        WeakReferenceMessenger.Default.Register<SeekRequestedMessage>(this, (r, m) => HyPlayList_OnManualSeek());
         _eventsRegistered = true;
         TipContent.Visibility = Visibility.Collapsed;
         LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
@@ -116,19 +118,12 @@ public sealed partial class WidgetPage : Page
         LoadLyrics();
     }
 
-    private void HyPlayList_OnPlay()
+    private void HyPlayList_OnPlaybackStatusChanged()
     {
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
         {
             PlayStateIcon.Glyph = _player.GlobalPlaybackStatus == PlaybackStatus.Playing ? "\uF8AE" : "\uF5B0";
-        });
-    }
-
-    private void HyPlayList_OnPause()
-    {
-        _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-        {
-            PlayStateIcon.Glyph = _player.GlobalPlaybackStatus == PlaybackStatus.Playing ? "\uF8AE" : "\uF5B0";
+            LyricBox.Context.IsPlaying = _player.GlobalPlaybackStatus == PlaybackStatus.Playing;
         });
     }
 
@@ -173,10 +168,7 @@ public sealed partial class WidgetPage : Page
         }
         if (ReferenceEquals(Instance, this))
             Instance = null;
-        _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-        {
-            LyricView.RemoveFromVisualTree();
-        });
+        _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, LyricView.RemoveFromVisualTree);
     }
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
@@ -244,6 +236,11 @@ public sealed partial class WidgetPage : Page
         LoadLyrics();
     }
 
+    private void HyPlayList_OnManualSeek()
+    {
+        _positionChangedBySeeking = true;
+    }
+
     private void OnResized(XboxGameBarWidget sender, object args)
     {
         UpdateLyricSize();
@@ -265,6 +262,7 @@ public sealed partial class WidgetPage : Page
         LyricBox.Context.LyricPaddingTopRatio = _setting.lyricPaddingTopRatio / 100f;
         LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
         LyricBox.Context.Effects.Blur = _setting.lyricRenderBlur;
+        LyricBox.Context.Effects.CacheRenderTarget = _setting.lyricCacheRenderTarget;
         LyricBox.Context.LineRollingEaseCalculator = _setting.LineRollingCalculator switch
         {
             RollingCalculator.SinRollingCalculator => new SinRollingCalculator(),
@@ -298,6 +296,8 @@ public sealed partial class WidgetPage : Page
         {
             LyricBox.Context.CurrentLyricTime = (long)_player.PrimaryAudioInputNode.Position.TotalMilliseconds;
         }
+        LyricBox.Context.IsSeek = _positionChangedBySeeking;
+        _positionChangedBySeeking = false;
     }
 
     private void InitializeLyricView()
@@ -333,8 +333,14 @@ public sealed partial class WidgetPage : Page
 
     private void LoadLyrics()
     {
-        LyricBox.SetLyricLines(LrcConverter.Convert(ExpandedPlayer.ConvertToALRC(_lyricService.CurrentLyricInfo.Lyrics)));
+        var lyricInfo = _lyricService.CurrentLyricInfo;
+        var durationMs = _player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0;
+        LyricBox.SetLyricLines(LrcConverter.Convert(
+            ExpandedPlayer.ConvertToALRC(lyricInfo.Lyrics, durationMs),
+            lyricInfo.LyricMetadata,
+            lyricInfo.SongMetadata));
         LyricBox.ReflowTime(0);
+        LyricBox.Redesign((float)LyricView.ActualWidth, (float)LyricView.ActualHeight, LyricView.Dpi);
     }
 
     private SolidColorBrush GetAccentBrush()

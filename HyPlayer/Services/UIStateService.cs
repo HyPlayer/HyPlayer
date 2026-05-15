@@ -30,6 +30,7 @@ public class UIStateService : IUIStateService
     {
         _setting = setting;
         _dispatcher = dispatcher;
+        BrushManagement = new BrushManagement(_setting);
     }
 
     public object? PageExpandedPlayer { get; set; }
@@ -58,7 +59,7 @@ public class UIStateService : IUIStateService
     public int PlaybarSecondCounter { get; set; }
     public bool PlaybarIsVisible { get; set; } = true;
     public DisplayRequest DisplayRequest { get; } = new();
-    public BrushManagement BrushManagement { get; } = new();
+    public BrushManagement BrushManagement { get; }
     public List<string> ErrorMessageList { get; } = [];
     public ObservableCollection<string> Logs { get; } = [];
     public Queue<KeyValuePair<string, string?>> TeachingTipList { get; } = new();
