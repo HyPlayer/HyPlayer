@@ -1368,23 +1368,37 @@ public sealed partial class ExpandedPlayer : Page
     }
     private bool UseHSVBlending()
     {
-        var hueSum = 0d;
+        if (_albumColorVectors.Count == 0)
+            return false;
+
+        var x = 0d;
+        var y = 0d;
+        var weightSum = 0d;
+
         foreach (var colorVector in _albumColorVectors)
         {
-            hueSum += colorVector.RGBVectorToHSVColor().H;
+            var hsv = colorVector.RGBVectorToHSVColor();
+
+            var weight = hsv.S * hsv.V;
+
+            if (weight <= 0.05d)
+                continue;
+
+            var radians = hsv.H * Math.PI / 180d;
+
+            x += Math.Cos(radians) * weight;
+            y += Math.Sin(radians) * weight;
+            weightSum += weight;
         }
 
-        var avg = hueSum / _albumColorVectors.Count;
-        var sum = 0d;
-        foreach (var colorVector in _albumColorVectors)
-        {
-            var distance = colorVector.RGBVectorToHSVColor().H - avg;
-            sum += distance * distance;
-        }
+        if (weightSum <= 0d)
+            return false;
 
-        var variance = Math.Sqrt(sum / _albumColorVectors.Count);
-        return variance <= 90;
+        var hueConcentration = Math.Sqrt(x * x + y * y) / weightSum;
+
+        return hueConcentration >= 0.7d;
     }
+
     private void LuminousBackground_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
     {
         using var session = args.DrawingSession;
