@@ -638,9 +638,14 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         }
                         if (currentLineLength + length > requestedWidth)
                         {
-                            if (lastSpaceIndex != 0)
+                            if (lastSpaceIndex != 0){
                                 sb.Append('\n');
-                            sb.Append(span[(lastSpaceIndex + 1)..i]);
+                                sb.Append(span[(lastSpaceIndex + 1)..i]);
+                            }
+                            else
+                            {
+                                sb.Append(span[lastSpaceIndex..i]);
+                            }
                             currentLineLength = 0;
                             lastSpaceIndex = i;
                             i++;
