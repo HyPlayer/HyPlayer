@@ -485,7 +485,7 @@ public sealed partial class ExpandedPlayer : Page
             if (_lyricIsCleaning) return;
             if (_state.LyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
             {
-                _lyricBox.SetLyricLines(LrcConverter.Convert(ConvertToALRC(_state.LyricInfo.Lyrics, _player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0), _state.LyricInfo.LyricMetadata, _state.LyricInfo.SongMetadata));
+                _lyricBox.SetLyricLines(LrcConverter.Convert(Utils.ConvertToALRC(_state.LyricInfo.Lyrics, _player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0), _state.LyricInfo.LyricMetadata, _state.LyricInfo.SongMetadata));
             }
             else
             {
@@ -499,53 +499,10 @@ public sealed partial class ExpandedPlayer : Page
             });
             _lyricBox.ReflowTime(0);
             if (_state.NowPlayingItem == null) return;
-            _lyricBox.Redesign((float)LyricWidth, _nowHeight, LuminousBackground.Dpi);
             RefreshUIColor();
             Redesign();
             _lyricHasBeenLoaded = true;
         });
-    }
-
-    public static ALRCFile ConvertToALRC(List<SongLyric> lyric, double durationMs = 0)
-    {
-        var lines = new List<ALRCLine>();
-        var alrc = new ALRCFile
-        {
-            Schema = "https://github.com/kengwang/ALRC/blob/main/schemas/v1.json",
-            LyricInfo = null,
-            SongInfo = null,
-            Header = null,
-            Lines = lines
-        };
-        var lastLine = new ALRCLine();
-        foreach (var songLyric in lyric)
-        {
-            var line = new ALRCLine
-            {
-                Start = (long)songLyric.LyricLine.StartTime.TotalMilliseconds,
-                LineStyle = null,
-                RawText = songLyric.LyricLine.CurrentLyric,
-                Transliteration = songLyric.Romaji?.Trim(),
-                Translation = songLyric.Translation?.Trim()
-            };
-            lastLine.End = line.Start;
-            lastLine = line;
-            if (songLyric.LyricLine is KaraokeLyricsLine lrcLyricsLine)
-            {
-                line.Words = [.. lrcLyricsLine.WordInfos.Select(s => new ALRCWord
-                {
-                    Start = (long)s.StartTime.TotalMilliseconds,
-                    End = (long)(s.StartTime + s.Duration).TotalMilliseconds,
-                    Word = s.CurrentWords,
-                    Transliteration = string.IsNullOrWhiteSpace(s.Transliteration) ? null : s.Transliteration
-                })];
-            }
-            lines.Add(line);
-        }
-
-        if (lines.LastOrDefault() is { End: null or <= 0 } last) last.End = (long)durationMs;
-
-        return alrc;
     }
 
     internal void OnEnteringForeground()
@@ -583,8 +540,6 @@ public sealed partial class ExpandedPlayer : Page
                         _lyricList.Clear();
                         _lyricList.Add(SongLyric.LoadingLyric);
                     }
-
-                    _lyricBox.Redesign((float)LyricWidth, _nowHeight, LuminousBackground.Dpi);
                     _lyricIsCleaning = false;
                     if (_lyricHasBeenLoaded)
                     {

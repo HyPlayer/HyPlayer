@@ -55,6 +55,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
             UpdateSmtcThumbnail();
             WeakReferenceMessenger.Default.Send(new CoverChangedMessage(item));
         }
+        await _tileService.UpdateTile(item, _state.CoverStream);
 
         // 2. Last.FM now-playing
         if (_setting.UpdateLastFMNowPlaying)
@@ -90,7 +91,6 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
             var newStream = new InMemoryRandomAccessStream();
             await newStream.WriteAsync(buffer);
             var newRef = RandomAccessStreamReference.CreateFromStream(newStream);
-            await _tileService.UpdateTile(item, newStream);
 
             // Atomic swap
             var oldStream = _state.CoverStream;

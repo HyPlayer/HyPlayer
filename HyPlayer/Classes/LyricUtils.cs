@@ -1,14 +1,14 @@
+using ALRC.Abstraction;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.Classes.LyricParser.Abstraction;
 using HyPlayer.Classes.LyricParser.Implementation;
+using HyPlayer.Services.Abstractions;
 using Kawazu;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-using HyPlayer.Services.Abstractions;
-using CommunityToolkit.Mvvm.DependencyInjection;
 namespace HyPlayer.HyPlayControl;
 
 public static class Utils
@@ -222,5 +222,46 @@ public static class Utils
         }
 
         throw new ArgumentException("HyLyricInfo is not KaraokeLyricInfo");
+    }
+    public static ALRCFile ConvertToALRC(List<SongLyric> lyric, double durationMs = 0)
+    {
+        var lines = new List<ALRCLine>();
+        var alrc = new ALRCFile
+        {
+            Schema = "https://github.com/kengwang/ALRC/blob/main/schemas/v1.json",
+            LyricInfo = null,
+            SongInfo = null,
+            Header = null,
+            Lines = lines
+        };
+        var lastLine = new ALRCLine();
+        foreach (var songLyric in lyric)
+        {
+            var line = new ALRCLine
+            {
+                Start = (long)songLyric.LyricLine.StartTime.TotalMilliseconds,
+                LineStyle = null,
+                RawText = songLyric.LyricLine.CurrentLyric,
+                Transliteration = songLyric.Romaji?.Trim(),
+                Translation = songLyric.Translation?.Trim()
+            };
+            lastLine.End = line.Start;
+            lastLine = line;
+            if (songLyric.LyricLine is KaraokeLyricsLine lrcLyricsLine)
+            {
+                line.Words = [.. lrcLyricsLine.WordInfos.Select(s => new ALRCWord
+                {
+                    Start = (long)s.StartTime.TotalMilliseconds,
+                    End = (long)(s.StartTime + s.Duration).TotalMilliseconds,
+                    Word = s.CurrentWords,
+                    Transliteration = string.IsNullOrWhiteSpace(s.Transliteration) ? null : s.Transliteration
+                })];
+            }
+            lines.Add(line);
+        }
+
+        if (lines.LastOrDefault() is { End: null or <= 0 } last) last.End = (long)durationMs;
+
+        return alrc;
     }
 }

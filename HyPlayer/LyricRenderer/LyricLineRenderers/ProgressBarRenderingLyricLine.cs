@@ -92,7 +92,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
     public override void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
     {
-        _isFocusing = (context.CurrentLyricTime >= StartTime && context.CurrentLyricTime < EndTime);
+        _isFocusing = (context.CurrentKeyframe >= StartTime) && (context.CurrentKeyframe < EndTime);
         Hidden = false;
         if (HiddenOnBlur && !_isFocusing)
         {
