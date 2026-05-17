@@ -125,8 +125,21 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public bool IsInFm => _state.IsInFm;
 
+    private string _playSourceId = string.Empty;
+
     /// <inheritdoc />
-    public string PlaySourceId { get; set; } = string.Empty;
+    public string PlaySourceId
+    {
+        get => _playSourceId;
+        set
+        {
+            if (_playSourceId == value)
+                return;
+
+            ExitPersonalFmForSourceChange();
+            _playSourceId = value;
+        }
+    }
 
     // ────────────── 列表操作 ──────────────
 
@@ -145,6 +158,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public void AppendItems(IEnumerable<HyPlayItem> items, bool clearFirst = false)
     {
+        if (clearFirst)
+            ExitPersonalFmForSourceChange();
+
         lock (_lock)
         {
             if (clearFirst)
@@ -193,6 +209,8 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public void Clear(bool stopPlayback = true)
     {
+        ExitPersonalFmForSourceChange();
+
         lock (_lock)
         {
             if (_items.Count == 0)
@@ -233,6 +251,20 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             await _activeTransition.OnManualSkipAsync(BuildTransitionContext());
 
         var nextIndex = _activeStrategy.GetNext(BuildStrategyContext());
+        if (nextIndex is null && _activeStrategy is IAsyncPlayStrategy asyncStrategy)
+        {
+            var moreItems = (await asyncStrategy.LoadMoreAsync(BuildStrategyContext())).ToList();
+            if (moreItems.Count > 0)
+            {
+                lock (_lock)
+                {
+                    _items.AddRange(moreItems);
+                }
+                NotifyAppendDone();
+                nextIndex = _activeStrategy.GetNext(BuildStrategyContext());
+            }
+        }
+
         if (nextIndex is null)
             return;
 
@@ -291,6 +323,12 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         }
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
+    }
+
+    private void ExitPersonalFmForSourceChange()
+    {
+        if (_state.IsInFm)
+            PersonalFM.ExitFm(clearPlaylist: false);
     }
 
     // ────────────── 曲目结束处理 ──────────────
@@ -373,14 +411,15 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     // ────────────── 策略切换 ──────────────
 
     /// <inheritdoc />
-    public void SetStrategy(string strategyId)
+    public void SetStrategy(string strategyId, bool persist = true)
     {
         if (!_strategies.TryGetValue(strategyId, out var strategy))
             return;
 
         _activeStrategy = strategy;
         _state.ActiveStrategyId = strategyId;
-        _setting.ActiveStrategyId = strategyId;
+        if (persist)
+            _setting.ActiveStrategyId = strategyId;
         _activeStrategy.OnPlaylistChanged(BuildStrategyContext());
 
         if (strategyId == "shn")
@@ -456,6 +495,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         {
             if (clearFirst)
             {
+                ExitPersonalFmForSourceChange();
                 lock (_lock)
                 {
                     DisposePlayItems(_items);

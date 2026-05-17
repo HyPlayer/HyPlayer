@@ -4,6 +4,7 @@
 
 - This is a Windows-only UWP/MSIX app targeting `net10.0-windows10.0.26100.0`; use Windows + Visual Studio/MSBuild, not a generic cross-platform .NET workflow.
 - Clone/update with submodules. `HyPlayer.slnx` references `HyPlayer.Frieren`, `HyPlayer.NeteaseProvider`, `HyPlayer.UWP.Chopin`, `Impressionist`, `Kawazu`, and `Microsoft.Gaming.XboxGameBar.Projection`.
+- This repository is a multi-project solution. For build verification, build/restore `HyPlayer.slnx` or the MSIX package project directly; do not treat an individual project such as `HyPlayer\HyPlayer.csproj` as the final build target.
 - Do not run a bare `dotnet build` and trust the result: default `AnyCPU` can make `Microsoft.Gaming.XboxGameBar.Projection` look for `runtimes\win10-AnyCPU\native\Microsoft.Gaming.XboxGameBar.dll`. Always pass a real platform/RID.
 - CI restore shape for x64: `msbuild HyPlayer.slnx /t:Restore /p:Configuration=Release /p:RuntimeIdentifier=win-x64 /p:Platform=x64`.
 - CI package build shape for x64: `msbuild HyPlayer.Package\HyPlayer.Package.wapproj /p:Configuration=Release /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundle=Never /p:Platform=x64 /p:RuntimeIdentifier=win-x64 /p:AppxPackageSigningEnabled=false`.

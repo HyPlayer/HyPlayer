@@ -2,14 +2,10 @@
 
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
-using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 #endregion
@@ -20,208 +16,110 @@ namespace HyPlayer.Classes;
 /// 私人 FM 控制器。
 /// <para>
 /// 保留静态入口 <see cref="InitPersonalFM"/> / <see cref="ExitFm"/> 以兼容现有调用方，
-/// 内部通过 <see cref="Ioc.Default"/> 解析 DI 服务，不再直接引用 HyPlayList。
+/// 具体的 FM 内容加载与曲目转换由 <see cref="IAsyncPlayStrategy"/> 的 pfm 策略负责。
 /// </para>
 /// </summary>
-internal sealed class PersonalFM : IRecipient<TrackEndedMessage>
+internal sealed class PersonalFM
 {
     private static PersonalFM? _instance;
-    private static bool _isNew = true;
 
-    private readonly IPlaylistService _playlist;
-    private readonly PlaybackStateService _state;
+    private readonly IPlaylistService _playlistService;
+    private readonly PlaybackStateService _playbackState;
+    private readonly IAsyncPlayStrategy _personalFmStrategy;
+    private string _previousStrategyId = string.Empty;
+    private bool _isLoadingNextTrack;
 
     private PersonalFM()
     {
-        _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        _playlistService = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _playbackState = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        _personalFmStrategy = Ioc.Default.GetRequiredService<IEnumerable<IPlayStrategy>>()
+            .OfType<IAsyncPlayStrategy>()
+            .First(strategy => strategy.Id == "pfm");
     }
-
-    // ---------------------------------------------------------------
-    //  Static entry points (backward-compatible)
-    // ---------------------------------------------------------------
 
     public static void InitPersonalFM()
     {
-        // Tear down any previous instance first
-        CleanupInstance();
+        DisposeInstance();
 
         var fm = new PersonalFM();
         _instance = fm;
-
-        fm._playlist.SetStrategy("pfm");
-        fm._state.IsInFm = true;
-        fm._playlist.Clear();
-
-        // Subscribe to track-ended via messenger
-        WeakReferenceMessenger.Default.Register<TrackEndedMessage>(fm);
-
-        fm.LoadNextFM().SafeFireAndForget();
+        fm._previousStrategyId = fm._playbackState.ActiveStrategyId;
+        fm._playlistService.Clear();
+        fm._playlistService.SetStrategy("pfm", persist: false);
+        fm._playbackState.IsInFm = true;
+        fm.LoadNextTrackAsync().SafeFireAndForget();
     }
 
-    public static void ExitFm()
+    public static void ExitFm(bool clearPlaylist = true)
     {
-        CleanupInstance();
+        DisposeInstance(clearPlaylist);
     }
 
     /// <summary>
-    /// 静态入口：加载下一首 FM 歌曲（供旧代码调用）
+    /// 静态入口：切换到下一首 FM 歌曲（供旧代码调用）。
     /// </summary>
     public static void LoadNextFMStatic()
     {
-        _instance?.LoadNextFM().SafeFireAndForget();
+        _instance?.LoadNextTrackAsync().SafeFireAndForget();
     }
 
-    // ---------------------------------------------------------------
-    //  Messenger handler
-    // ---------------------------------------------------------------
-
-    void IRecipient<TrackEndedMessage>.Receive(TrackEndedMessage message)
+    private async Task LoadNextTrackAsync(bool userInitiated = false)
     {
-        if (_state.IsInFm)
-            LoadNextFM().SafeFireAndForget();
-    }
+        if (_isLoadingNextTrack)
+            return;
 
-    // ---------------------------------------------------------------
-    //  Core logic
-    // ---------------------------------------------------------------
-
-    public async Task LoadNextFM()
-    {
-        if (_playlist.NowPlayingIndex + 1 >= _playlist.Items.Count)
+        _isLoadingNextTrack = true;
+        try
         {
-            var finalIndex = Math.Max(_playlist.Items.Count - 1, 0);
-            if (!Ioc.Default.GetRequiredService<Setting>().useAiDj)
-            {
-                var result = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().RequestAsync(NeteaseApis.PersonalFmApi);
-                if (result.IsError || result.Value?.Items?.Length is not > 0)
-                {
-                    Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("加载私人 FM错误", result.Error?.Message ?? "未知错误");
-                    return;
-                }
+            if (_playlistService.NowPlayingIndex + 1 >= _playlistService.Items.Count)
+                await AppendMoreTracksAsync();
 
-                foreach (var personalFmDataItem in result.Value.Items)
-                {
-                    var hpi = NCSongToPlayItem(personalFmDataItem.MapToNcSong());
-                    _playlist.AppendItem(hpi);
-                }
-            }
-            else
-            {
-                // AIDJ
-                var result = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().RequestAsync(NeteaseApis.AiDjContentRcmdInfoApi,
-                    new AiDjContentRcmdInfoRequest
-                    {
-                        IsNewToAidj = _isNew
-                    });
-                _isNew = false;
-                if (result.IsError || result.Value?.Data?.AiDjResources?.Length is not > 0)
-                {
-                    Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("加载私人 FM错误", result.Error?.Message ?? "未知错误");
-                    return;
-                }
+            if (!IsActiveSession || _playlistService.Items.Count == 0)
+                return;
 
-                foreach (var aiDjContentRcmdInfoResource in result.Value.Data.AiDjResources)
-                {
-                    if (aiDjContentRcmdInfoResource is AiDjContentRcmdInfoResponse.AiDjContentRcmdInfoData.AiDjContentRcmdAudioResource audioValue)
-                    {
-                        foreach (var audioItem in audioValue.Value?.Audio ?? [])
-                        {
-                            var playItem = new HyPlayItem()
-                            {
-                                ItemType = HyPlayItemType.Netease,
-                                Album = new NCAlbum
-                                {
-                                    AlbumType = HyPlayItemType.Netease,
-                                    Alias = "私人 DJ",
-                                    Cover =
-                                            "https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg",
-                                    Description = "私人 DJ",
-                                    Id = "126368130",
-                                    Name = "私人 DJ 推荐语"
-                                },
-                                Artist =
-                                    [
-                                        new NCArtist()
-                                                {
-                                                    Alias = "私人 DJ",
-                                                    Avatar =
-                                                        "https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg",
-                                                    Id = "1",
-                                                    Name = "私人 DJ",
-                                                    TranslatedName = null,
-                                                    Type = HyPlayItemType.Netease
-                                                }
-                                    ],
-                                Bitrate = 0,
-                                CDName = null,
-                                Id = "-1",
-                                IsLocalFile = false,
-                                LengthInMilliseconds = audioItem.Duration,
-                                Name = "私人 DJ 推荐语",
-                                InfoTag = "私人 DJ",
-                                Url = audioItem.Url,
-                                Size = audioItem.Size ?? 0
-                            };
-                            _playlist.AppendItem(playItem);
-                        }
-                    }
-                    else if (aiDjContentRcmdInfoResource is AiDjContentRcmdInfoResponse.AiDjContentRcmdInfoData.AiDjContentRcmdAudioSong songValue)
-                    {
-                        var ncSong = songValue.Value?.SongName?.MapToNcSong();
-                        if (ncSong is not null)
-                        {
-                            var hpi = NCSongToPlayItem(ncSong);
-                            _playlist.AppendItem(hpi);
-                        }
-                    }
-                }
-            }
-
-            _playlist.NotifyAppendDone();
-            if (_playlist.Items.Count > finalIndex)
-            {
-                var item = _playlist.Items[finalIndex];
-                await _playlist.MoveToAsync(item);
-            }
+            await _playlistService.MoveNextAsync(userInitiated);
+            if (IsActiveSession)
+                _playbackState.IsInFm = true;
         }
-
-        _state.IsInFm = true;
-    }
-
-    // ---------------------------------------------------------------
-    //  Helpers
-    // ---------------------------------------------------------------
-
-    private static void CleanupInstance()
-    {
-        if (_instance is not null)
+        finally
         {
-            WeakReferenceMessenger.Default.Unregister<TrackEndedMessage>(_instance);
-            _instance._state.IsInFm = false;
-            _instance._playlist.Clear();
-            _instance = null;
+            _isLoadingNextTrack = false;
         }
     }
 
-    /// <summary>
-    /// Convert an <see cref="NCSong"/> to a <see cref="HyPlayItem"/>.
-    /// Pure data mapping — no side effects.
-    /// </summary>
-    private static HyPlayItem NCSongToPlayItem(NCSong ncSong)
+    private async Task AppendMoreTracksAsync()
     {
-        return new HyPlayItem
+        var moreItems = (await _personalFmStrategy.LoadMoreAsync(new PlayStrategyContext
         {
-            ItemType = ncSong.Type,
-            InfoTag = ncSong.Alias,
-            Album = ncSong.Album,
-            Artist = ncSong.Artist,
-            Id = ncSong.SongId,
-            Translation = ncSong.TranslatedName,
-            Name = ncSong.SongName,
-            TrackId = ncSong.TrackId,
-            CDName = ncSong.CDName,
-            LengthInMilliseconds = ncSong.LengthInMilliseconds
-        };
+            Items = _playlistService.Items.ToArray(),
+            CurrentIndex = _playlistService.NowPlayingIndex,
+            CurrentItem = _playlistService.NowPlayingIndex >= 0 && _playlistService.NowPlayingIndex < _playlistService.Items.Count
+                ? _playlistService.Items[_playlistService.NowPlayingIndex]
+                : null
+        })).ToList();
+
+        if (!IsActiveSession || moreItems.Count == 0)
+            return;
+
+        foreach (var item in moreItems)
+            _playlistService.AppendItem(item);
+
+        if (IsActiveSession)
+            _playlistService.NotifyAppendDone();
+    }
+
+    private bool IsActiveSession => ReferenceEquals(_instance, this) && _playbackState.IsInFm;
+
+    private static void DisposeInstance(bool clearPlaylist = true)
+    {
+        if (_instance is null)
+            return;
+
+        _instance._playbackState.IsInFm = false;
+        if (clearPlaylist)
+            _instance._playlistService.Clear();
+        _instance._playlistService.SetStrategy(_instance._previousStrategyId);
+        _instance = null;
     }
 }

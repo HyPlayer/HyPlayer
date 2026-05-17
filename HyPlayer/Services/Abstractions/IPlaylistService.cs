@@ -62,7 +62,8 @@ public interface IPlaylistService
     /// 切换播放策略
     /// </summary>
     /// <param name="strategyId">三字母策略 Id (seq/sgl/shf/shn/pfm/ltg)</param>
-    void SetStrategy(string strategyId);
+    /// <param name="persist">是否保存为普通播放模式偏好。</param>
+    void SetStrategy(string strategyId, bool persist = true);
 
     /// <summary>
     /// 切换过渡策略

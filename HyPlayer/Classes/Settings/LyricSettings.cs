@@ -117,18 +117,6 @@ namespace HyPlayer.Classes.Settings
         }
 
         /// <summary>
-        /// Lyric font family.
-        /// </summary>
-        public string lyricFontFamily
-        {
-            get => GetSettings(nameof(lyricFontFamily), "Microsoft YaHei UI");
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricFontFamily)] = value;
-            }
-        }
-
-        /// <summary>
         /// Lyric line spacing.
         /// </summary>
         public int lyricLineSpacing

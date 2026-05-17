@@ -128,7 +128,6 @@ namespace HyPlayer
         public bool lyricDropshadow { get => Lyric.lyricDropshadow; set { Lyric.lyricDropshadow = value; OnPropertyChanged(); } }
         public bool lyricCacheRenderTarget { get => Lyric.lyricCacheRenderTarget; set { Lyric.lyricCacheRenderTarget = value; OnPropertyChanged(); } }
         public int lyricScaleSize { get => Lyric.lyricScaleSize; set { Lyric.lyricScaleSize = value; OnPropertyChanged(); } }
-        public string lyricFontFamily { get => Lyric.lyricFontFamily; set { Lyric.lyricFontFamily = value; OnPropertyChanged(); } }
         public int lyricLineSpacing { get => Lyric.lyricLineSpacing; set { Lyric.lyricLineSpacing = value; OnPropertyChanged(); } }
         public int translationSize { get => Lyric.translationSize; set { Lyric.translationSize = value; OnPropertyChanged(); } }
         public int romajiSize { get => Lyric.romajiSize; set { Lyric.romajiSize = value; OnPropertyChanged(); } }
@@ -284,6 +283,17 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(advancedMusicHistoryStorage)] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string lyricFontFamily
+        {
+            get => GetSettings(nameof(lyricFontFamily), "Microsoft YaHei UI");
+            set
+            {
+                if (lyricFontFamily == value) return;
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricFontFamily)] = value;
                 OnPropertyChanged();
             }
         }

@@ -314,10 +314,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         if (item is null) return;
 
         WeakReferenceMessenger.Default.Send(new TrackEndedMessage(item!));
-        if (!_state.IsInFm)
+        if (_setting.LastFMScrobble)
         {
-            _taskRunner.Forget(HandleTrackEndedSafeAsync(), "handle track ended");
+            _taskRunner.Forget(LastFMManager.Scrobble(item), "update Last.FM now playing");
         }
+        _taskRunner.Forget(HandleTrackEndedSafeAsync(), "handle track ended");
     }
 
     /// <summary>
@@ -355,11 +356,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     {
         try
         {
-            if (_state.NowPlayingItem is not null)
-            {
-                await _playbackNotification.ScrobbleAsync(_state.NowPlayingItem);
-            }
-
             var playlistService = GetPlaylistService();
             if (playlistService is not null)
                 await playlistService.OnTrackEndedAsync();

@@ -139,7 +139,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider
                 item.Size = size;
                 item.Bitrate = Convert.ToInt32(songUrl.BitRate);
                 item.SubExt = songUrl.Type?.ToLowerInvariant() ?? string.Empty;
-                item.QualityTag = item.GetQualityTagText(_setting.audioRate);
+                item.QualityTag = item.GetQualityTagText(songUrl.Level ?? string.Empty);
                 item.Volume = AudioUtils.DbToVolumePercent(songUrl.Gain ?? 0);
 
                 if (playUrl != null) item.Url = playUrl;

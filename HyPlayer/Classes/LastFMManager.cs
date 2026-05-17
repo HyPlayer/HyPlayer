@@ -24,7 +24,7 @@ namespace HyPlayer.Classes
         }
         public static async Task UpdateNowPlaying(HyPlayItem item)
         {
-            if (!Ioc.Default.GetRequiredService<Setting>().LastFMSession.HasLogined || !Ioc.Default.GetRequiredService<Setting>().UpdateLastFMNowPlaying) return;
+            if (!Ioc.Default.GetRequiredService<Setting>().LastFMSession.HasLogined || !Ioc.Default.GetRequiredService<Setting>().UpdateLastFMNowPlaying || item.ItemType != HyPlayItemType.Netease) return;
             var request = new UpdateNowPlayingRequest()
             {
                 Album = item.AlbumString,
@@ -39,7 +39,7 @@ namespace HyPlayer.Classes
         }
         public static async Task Scrobble(HyPlayItem item)
         {
-            if (!Ioc.Default.GetRequiredService<Setting>().LastFMSession.HasLogined || !Ioc.Default.GetRequiredService<Setting>().LastFMScrobble) return;
+            if (!Ioc.Default.GetRequiredService<Setting>().LastFMSession.HasLogined || !Ioc.Default.GetRequiredService<Setting>().LastFMScrobble || item.ItemType != HyPlayItemType.Netease) return;
             var request = new ScrobbleRequest()
             {
                 Album = item.AlbumString,
