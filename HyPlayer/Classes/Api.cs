@@ -20,9 +20,9 @@ internal class Api
 {
     public static async Task<bool> LikeSong(string songid, bool like)
     {
-        var _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-        var _notification = Ioc.Default.GetRequiredService<INotificationService>();
-        var requestResult = await _api.RequestAsync(NeteaseApis.LikeApi,
+        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        var notification = Ioc.Default.GetRequiredService<INotificationService>();
+        var requestResult = await api.RequestAsync(NeteaseApis.LikeApi,
             new LikeRequest() { TrackId = songid, Like = like, UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser.Id });
         if (requestResult.IsSuccess)
         {
@@ -30,33 +30,33 @@ internal class Api
         }
         else
         {
-            _notification.ShowMessage(requestResult.Error.Message);
+            notification.ShowMessage(requestResult.Error.Message);
             return false;
         }
     }
 
     public static async Task EnterIntelligencePlay(CancellationToken cancellationToken = default)
     {
-        var _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-        var _notification = Ioc.Default.GetRequiredService<INotificationService>();
-        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        var _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-        _playlist.Clear();
+        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        var notification = Ioc.Default.GetRequiredService<INotificationService>();
+        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        playlist.Clear();
         var songList = Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].PlaylistId;
         var likedSongs = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs;
         var randomSong = likedSongs[RandomNumberGenerator.GetInt32(likedSongs.Count)];
-        var jsoon = await _api.RequestAsync(NeteaseApis.PlaymodeIntelligenceListApi,
+        var jsoon = await api.RequestAsync(NeteaseApis.PlaymodeIntelligenceListApi,
             new PlaymodeIntelligenceListRequest
             {
                 PlaylistId = songList,
                 SongId = randomSong,
-                StartMusicId = _state.NowPlayingItem?.Id ?? randomSong,
+                StartMusicId = state.NowPlayingItem?.Id ?? randomSong,
                 Count = likedSongs.Count
             }, cancellationToken);
 
         if (jsoon.IsError)
         {
-            _notification.ShowMessage("加载心动模式列表出错", jsoon.Error.Message);
+            notification.ShowMessage("加载心动模式列表出错", jsoon.Error.Message);
             return;
         }
 
@@ -64,11 +64,11 @@ internal class Api
         {
             if (item.SongInfo is null) continue;
             var ncSong = item.SongInfo.MapNcSong();
-            var playItem = _playlist.NCSongToPlayItem(ncSong);
+            var playItem = ncSong.ToHyPlayItem();
             playItem.InfoTag = item.Recommended ? "为你推荐" : "我的喜欢";
-            _playlist.AppendItem(playItem);
-            _playlist.NotifyAppendDone();
-            await _playlist.MoveToAsync(_playlist.Items.FirstOrDefault());
+            playlist.AppendItem(playItem);
+            playlist.NotifyAppendDone();
+            await playlist.MoveToAsync(playlist.Items.FirstOrDefault());
 
         }
     }

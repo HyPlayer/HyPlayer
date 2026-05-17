@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using HyPlayer.Classes.LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
@@ -22,9 +22,9 @@ public static class LyricRenderComposer
         CanvasDrawingSession drawingSession, SongLyric lyric,
         TimeSpan position, LyricRenderOption renderOption, Size drawingSize, bool quickRender = false)
     {
-        var _currentTimeInLine = TimeSpan.Zero;
+        var currentTimeInLine = TimeSpan.Zero;
         if (!quickRender)
-            _currentTimeInLine = position - lyric.LyricLine.StartTime;
+            currentTimeInLine = position - lyric.LyricLine.StartTime;
         using var textFormat = new CanvasTextFormat
         {
             FontSize = renderOption.FontSize,
@@ -74,7 +74,7 @@ public static class LyricRenderComposer
         if (!quickRender && lyric.LyricLine is KaraokeLyricsLine karaokeLyricsLine)
         {
             // 获取已高亮字符数
-            var currentWordInfo = GetCurrentWordInfo(_currentTimeInLine, karaokeLyricsLine);
+            var currentWordInfo = GetCurrentWordInfo(currentTimeInLine, karaokeLyricsLine);
             var currentWordIndex = karaokeLyricsLine.WordInfos.ToList().IndexOf(currentWordInfo);
             var letterPosition = GetLetterPosition(currentWordInfo, karaokeLyricsLine);
             var highlightedGeometry =
@@ -85,7 +85,7 @@ public static class LyricRenderComposer
             var shouldEase = (currentWordIndex == karaokeLyricsLine.WordInfos.Count - 1 ||
                               currentWordInfo.Duration.TotalSeconds > 1);
             var currentPercentage =
-                GetCurrentWordPercentage(startTime.TotalMilliseconds, _currentTimeInLine.TotalMilliseconds,
+                GetCurrentWordPercentage(startTime.TotalMilliseconds, currentTimeInLine.TotalMilliseconds,
                                          currentWordInfo.Duration.TotalMilliseconds, shouldEase, renderOption);
             var currentWordGeometry = CreateCurrentWordGeometry(currentPercentage, drawingSession,
                                                                 textLayout.GetCharacterRegions(
@@ -125,7 +125,7 @@ public static class LyricRenderComposer
                 if (shouldEase && false)
                 {
                     shadowPercentage =
-                           GetCurrentWordPercentage(startTime.TotalMilliseconds, _currentTimeInLine.TotalMilliseconds,
+                           GetCurrentWordPercentage(startTime.TotalMilliseconds, currentTimeInLine.TotalMilliseconds,
                                         currentWordInfo.Duration.TotalMilliseconds, false, renderOption);
                 }
                 var wordHighlightShadow = new ColorMatrixEffect

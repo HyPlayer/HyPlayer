@@ -90,7 +90,7 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
 
         return result.Value.Items
             .Select(item => item.MapToNcSong())
-            .Select(NcSongToHyPlayItem);
+            .Select(song => song.ToHyPlayItem());
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
                 case AiDjContentRcmdInfoResponse.AiDjContentRcmdInfoData.AiDjContentRcmdAudioSong songResource:
                     var ncSong = songResource.Value?.SongName?.MapToNcSong();
                     if (ncSong is not null)
-                        items.Add(NcSongToHyPlayItem(ncSong));
+                        items.Add(ncSong.ToHyPlayItem());
                     break;
             }
         }
@@ -159,23 +159,4 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
         return items;
     }
 
-    /// <summary>
-    /// 将 NCSong 转换为 HyPlayItem（与 IPlaylistService.NCSongToPlayItem 逻辑一致）
-    /// </summary>
-    private static HyPlayItem NcSongToHyPlayItem(NCSong ncSong)
-    {
-        return new HyPlayItem
-        {
-            ItemType = ncSong.Type,
-            InfoTag = ncSong.Alias,
-            Album = ncSong.Album,
-            Artist = ncSong.Artist,
-            Id = ncSong.SongId,
-            Translation = ncSong.TranslatedName,
-            Name = ncSong.SongName,
-            TrackId = ncSong.TrackId,
-            CDName = ncSong.CDName,
-            LengthInMilliseconds = ncSong.LengthInMilliseconds
-        };
-    }
 }

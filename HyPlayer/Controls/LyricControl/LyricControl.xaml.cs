@@ -1,4 +1,4 @@
-﻿using HyPlayer.Classes;
+using HyPlayer.Classes;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.UWP.Chopin;
@@ -29,9 +29,9 @@ namespace HyPlayer.Controls.LyricControl
         private void CanvasControl_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender,
                                         Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
         {
-            var _lyric = Ioc.Default.GetRequiredService<ILyricService>();
-            var _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
-            if (_lyric.CurrentLyricIndex < 0 || _lyric.CurrentLyricIndex >= _lyric.CurrentLyricInfo.Lyrics.Count || _player.PrimaryAudioInputNode == null)
+            var lyric = Ioc.Default.GetRequiredService<ILyricService>();
+            var player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+            if (lyric.CurrentLyricIndex < 0 || lyric.CurrentLyricIndex >= lyric.CurrentLyricInfo.Lyrics.Count || player.PrimaryAudioInputNode == null)
                 return;
             LyricRenderOption ??= new LyricRenderOption
             {
@@ -49,8 +49,8 @@ namespace HyPlayer.Controls.LyricControl
 
             };
             LyricRenderComposer.RenderOnDrawingSession(args.DrawingSession,
-                                                       _lyric.CurrentLyricInfo.Lyrics[_lyric.CurrentLyricIndex],
-                                                       _player.PrimaryAudioInputNode.Position, LyricRenderOption.GetValueOrDefault(),
+                                                       lyric.CurrentLyricInfo.Lyrics[lyric.CurrentLyricIndex],
+                                                       player.PrimaryAudioInputNode.Position, LyricRenderOption.GetValueOrDefault(),
                                                        sender.Size, QuickRenderMode);
         }
 

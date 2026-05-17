@@ -80,12 +80,12 @@ namespace HyPlayer.Classes.Settings
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableAudioGain)] = value;
                 var player = Ioc.Default.GetService<AudioGraphPlayer>();
-                var _state = Ioc.Default.GetService<PlaybackStateService>();
+                var state = Ioc.Default.GetService<PlaybackStateService>();
                 if (player?.PrimaryPlaybackSource != null)
                 {
                     if (value)
                     {
-                        player.SetPlaybackSourceOutputVolume(_state?.NowPlayingItem?.Volume ?? 1, player.PrimaryPlaybackSource);
+                        player.SetPlaybackSourceOutputVolume(state?.NowPlayingItem?.Volume ?? 1, player.PrimaryPlaybackSource);
                     }
                     else player.SetPlaybackSourceOutputVolume(1, player.PrimaryPlaybackSource);
                 }
@@ -105,8 +105,8 @@ namespace HyPlayer.Classes.Settings
                 {
                     WeakReferenceMessenger.Default.Register<PlaybackSettings, PositionTickMessage>(this, (_, m) =>
                     {
-                        var _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-                        _control.CheckABTimeRemaining(m.Position);
+                        var control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+                        control.CheckABTimeRemaining(m.Position);
                     });
                 }
                 else

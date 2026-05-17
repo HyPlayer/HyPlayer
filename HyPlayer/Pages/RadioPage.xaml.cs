@@ -189,10 +189,10 @@ public sealed partial class RadioPage : Page
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        await _playlist.AppendNcSourceAsync("rd" + Radio.Id);
-        if (asc) _playlist.ReverseList();
-        await _playlist.MoveToAsync(_playlist.Items.FirstOrDefault());
+        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        await playlist.AppendNcSourceAsync("rd" + Radio.Id);
+        if (asc) playlist.ReverseList();
+        await playlist.MoveToAsync(playlist.Items.FirstOrDefault());
     }
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
@@ -211,8 +211,8 @@ public sealed partial class RadioPage : Page
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        await _playlist.AppendRadioListAsync(Radio.Id, asc);
+        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        await playlist.AppendRadioListAsync(Radio.Id, asc);
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)

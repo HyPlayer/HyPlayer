@@ -42,11 +42,11 @@ public sealed partial class MainPage : Page
     public MainPage()
     {
         Ioc.Default.GetRequiredService<IUIStateService>().PageMain = this;
-        var _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-        if (_api != null)
+        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        if (api != null)
         {
-            _api.Option.XRealIP = Setting.GetSettings<string>("xRealIp", null);
-            _api.Option.DegradeHttp = Setting.GetSettings("UseHttp", false);
+            api.Option.XRealIP = Setting.GetSettings<string>("xRealIp", null);
+            api.Option.DegradeHttp = Setting.GetSettings("UseHttp", false);
         }
         if (_setting.uiSound)
         {

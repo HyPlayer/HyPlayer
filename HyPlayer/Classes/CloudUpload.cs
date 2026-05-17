@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.NeteaseApi;
@@ -32,10 +32,10 @@ internal class CloudUpload
 #nullable enable
     public static async Task UploadMusic(StorageFile file)
     {
-        var _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-        var _notification = Ioc.Default.GetRequiredService<INotificationService>();
-        var _httpClient = Ioc.Default.GetRequiredService<HttpClient>();
-        _notification.ShowMessage("上传本地音乐至音乐云盘中", "正在上传: " + file.DisplayName);
+        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        var notification = Ioc.Default.GetRequiredService<INotificationService>();
+        var httpClient = Ioc.Default.GetRequiredService<HttpClient>();
+        notification.ShowMessage("上传本地音乐至音乐云盘中", "正在上传: " + file.DisplayName);
         var musicprop = await file.Properties.GetMusicPropertiesAsync();
         //首先获取基本信息
         using var abstraction = new UwpStorageFileAbstraction(file);
@@ -65,7 +65,7 @@ internal class CloudUpload
         var sBuilder = new StringBuilder();
         foreach (var b in computedHash) sBuilder.Append(b.ToString("x2").ToLower());
         var md5 = sBuilder.ToString();
-        var checkResult = await _api.RequestAsync(NeteaseApis.CloudUploadCheckApi,
+        var checkResult = await api.RequestAsync(NeteaseApis.CloudUploadCheckApi,
             new CloudUploadCheckRequest()
             {
                 Ext = file.FileType,
@@ -74,7 +74,7 @@ internal class CloudUpload
             });
         if (checkResult.IsError)
         {
-            _notification.ShowMessage($"上传失败: {file.DisplayName}", checkResult.Error!.Message);
+            notification.ShowMessage($"上传失败: {file.DisplayName}", checkResult.Error!.Message);
             return;
         }
         var title = string.IsNullOrEmpty(name)
@@ -99,10 +99,10 @@ internal class CloudUpload
                 FileName = file.Name,
                 Md5 = md5
             };
-            var tokenRes = await _api.RequestAsync(NeteaseApis.CloudUploadTokenAllocApi, tokenRequest);
+            var tokenRes = await api.RequestAsync(NeteaseApis.CloudUploadTokenAllocApi, tokenRequest);
             if (tokenRes.IsError)
             {
-                _notification.ShowMessage($"上传失败: {file.DisplayName}", tokenRes.Error!.Message);
+                notification.ShowMessage($"上传失败: {file.DisplayName}", tokenRes.Error!.Message);
                 return;
             }
 
@@ -112,7 +112,7 @@ internal class CloudUpload
             {
                 Bucket = "jd-musicrep-privatecloud-audio-public"
             };
-            var loadBalancerRes = await _api.RequestAsync(NeteaseApis.NeteaseUploadLoadBalancerGetApi,
+            var loadBalancerRes = await api.RequestAsync(NeteaseApis.NeteaseUploadLoadBalancerGetApi,
                 loadBalancerReq);
             if (loadBalancerRes.IsSuccess)
             {
@@ -138,7 +138,7 @@ internal class CloudUpload
             foreach (var b in imgcomputedHash) imgsBuilder.Append(b.ToString("x2").ToLower());
             var imgmd5 = imgsBuilder.ToString();
 
-            var coverAllocRes = await _api.RequestAsync(NeteaseApis.CloudUploadCoverTokenAllocApi,
+            var coverAllocRes = await api.RequestAsync(NeteaseApis.CloudUploadCoverTokenAllocApi,
                 new CloudUploadCoverTokenAllocRequest
                 {
                     Ext = "png",
@@ -146,7 +146,7 @@ internal class CloudUpload
                 });
             if (coverAllocRes.IsError)
             {
-                _notification.ShowMessage($"上传失败(封面): {file.DisplayName}", coverAllocRes.Error!.Message);
+                notification.ShowMessage($"上传失败(封面): {file.DisplayName}", coverAllocRes.Error!.Message);
             }
             coverId = coverAllocRes.Value?.Result?.DocId!;
             var imglb = "http://45.127.129.8";
@@ -154,7 +154,7 @@ internal class CloudUpload
             {
                 Bucket = "yyimgs"
             };
-            var imgloadBalancerRes = await _api.RequestAsync(NeteaseApis.NeteaseUploadLoadBalancerGetApi,
+            var imgloadBalancerRes = await api.RequestAsync(NeteaseApis.NeteaseUploadLoadBalancerGetApi,
                 imgloadBalancerReq);
             if (imgloadBalancerRes.IsSuccess)
             {
@@ -168,24 +168,24 @@ internal class CloudUpload
 
 
 
-        var infoRes = await _api.RequestAsync(NeteaseApis.CloudUploadInfoApi, infoReq);
+        var infoRes = await api.RequestAsync(NeteaseApis.CloudUploadInfoApi, infoReq);
         if (infoRes.IsError)
         {
-            _notification.ShowMessage($"上传失败: {file.DisplayName}", infoRes.Error!.Message);
+            notification.ShowMessage($"上传失败: {file.DisplayName}", infoRes.Error!.Message);
             return;
         }
         var cloudPubReq = new CloudPubRequest()
         {
             SongId = infoRes.Value!.SongId!
         };
-        var cloudPubRes = await _api.RequestAsync(NeteaseApis.CloudPubApi, cloudPubReq);
+        var cloudPubRes = await api.RequestAsync(NeteaseApis.CloudPubApi, cloudPubReq);
         if (cloudPubRes.IsError)
         {
-            _notification.ShowMessage($"上传失败: {file.DisplayName}", cloudPubRes.Error!.Message);
+            notification.ShowMessage($"上传失败: {file.DisplayName}", cloudPubRes.Error!.Message);
         }
         else
         {
-            _notification.ShowMessage("上传本地音乐至音乐云盘成功", "成功上传: " + file.DisplayName);
+            notification.ShowMessage("上传本地音乐至音乐云盘成功", "成功上传: " + file.DisplayName);
         }
 
     }

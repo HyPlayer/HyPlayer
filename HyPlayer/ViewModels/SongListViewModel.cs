@@ -285,7 +285,7 @@ namespace HyPlayer.ViewModels
             }
             else
             {
-                var items = Songs.Select(s => _playlist.NCSongToPlayItem(s));
+                var items = Songs.Select(s => s.ToHyPlayItem());
                 _playlist.AppendItems(items);
                 _playlist.NotifyAppendDone();
             }
@@ -328,7 +328,7 @@ namespace HyPlayer.ViewModels
             else
             {
                 _playlist.Clear();
-                var items = Songs.Select(s => _playlist.NCSongToPlayItem(s));
+                var items = Songs.Select(s => s.ToHyPlayItem());
                 _playlist.AppendItems(items);
                 _playlist.PlaySourceId = $"{PlayList.PlaylistId}";
                 _playlist.NotifyAppendDone();

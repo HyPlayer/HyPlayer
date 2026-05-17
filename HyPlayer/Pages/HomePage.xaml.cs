@@ -47,12 +47,12 @@ namespace HyPlayer.Pages
         private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
             var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
-            var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+            var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
             //播放全部歌曲
-            _playlist.Clear();
-            await _playlist.AppendPlayListAsync(playList.PlaylistId);
-            _playlist.PlaySourceId = $"pl{playList.PlaylistId}";
-            await _playlist.MoveNextAsync(true);
+            playlist.Clear();
+            await playlist.AppendPlayListAsync(playList.PlaylistId);
+            playlist.PlaySourceId = $"pl{playList.PlaylistId}";
+            await playlist.MoveNextAsync(true);
         }
 
         private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)

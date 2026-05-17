@@ -134,19 +134,19 @@ public sealed partial class TestPage : Page
 
     private async void PlayResourceId(object sender, RoutedEventArgs e)
     {
-        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        _playlist.Clear();
-        await _playlist.AppendNcSourceAsync(ResourceId);
+        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        playlist.Clear();
+        await playlist.AppendNcSourceAsync(ResourceId);
     }
 
     private async void DumpDebugInfo_Click(object sender, RoutedEventArgs e)
     {
-        var _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         var info = JsonSerializer.Serialize(new DumpInfo
         {
-            CurrentSong = _state.NowPlayingItem,
-            CurrentPlaySource = _playlist.PlaySourceId,
+            CurrentSong = state.NowPlayingItem,
+            CurrentPlaySource = playlist.PlaySourceId,
             CurrentUser = _auth.CurrentUser,
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
             IsInBackground = Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground,

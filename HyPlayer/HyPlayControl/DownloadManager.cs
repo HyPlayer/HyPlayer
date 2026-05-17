@@ -415,25 +415,13 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
             }
 
             FileName += "." + urlResult.Value.SongUrls[0].Type?.ToLowerInvariant();
-            PlayItem = new HyPlayItem
-            {
-                Bitrate = Convert.ToInt32(urlResult.Value.SongUrls[0].BitRate),
-                QualityTag = "下载",
-                InfoTag = "下载",
-                Album = ncsong.Album,
-                Translation = ncsong.TranslatedName,
-                Artist = ncsong.Artist,
-                SubExt = urlResult.Value.SongUrls[0].Type.ToLowerInvariant(),
-                Id = ncsong.SongId,
-                Name = ncsong.SongName,
-                ItemType = HyPlayItemType.Netease,
-                TrackId = ncsong.TrackId,
-                CDName = ncsong.CDName,
-                Url = urlResult.Value.SongUrls[0].Url,
-                LengthInMilliseconds = ncsong.LengthInMilliseconds,
-                Size = urlResult.Value.SongUrls[0].Size,
-                //md5 = json["data"][0]["md5"].ToString()
-            };
+            PlayItem = ncsong.ToHyPlayItem();
+            PlayItem.Bitrate = Convert.ToInt32(urlResult.Value.SongUrls[0].BitRate);
+            PlayItem.QualityTag = "下载";
+            PlayItem.InfoTag = "下载";
+            PlayItem.SubExt = urlResult.Value.SongUrls[0].Type.ToLowerInvariant();
+            PlayItem.Url = urlResult.Value.SongUrls[0].Url;
+            PlayItem.Size = urlResult.Value.SongUrls[0].Size;
 
             _downloadOperation = DownloadManager.Downloader.CreateDownload(
                 new Uri(urlResult.Value.SongUrls[0].Url),

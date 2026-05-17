@@ -1,0 +1,122 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback.Messages;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
+using Windows.Storage;
+
+namespace HyPlayer.Services.Playback;
+
+public sealed partial class PlaylistService
+{
+    // ────────────── Shuffle / 本地文件 / 通知 ──────────────
+
+    /// <inheritdoc />
+    public List<int> ShuffleList { get; } = [];
+
+    /// <inheritdoc />
+    public int ShufflingIndex { get; set; } = -1;
+
+    /// <inheritdoc />
+    public StorageFile? NowPlayingStorageFile { get; private set; }
+
+    /// <inheritdoc />
+    public async Task PickLocalFileAsync()
+    {
+        var items = await _localFileImport.PickLocalFilesAsync();
+        if (items.Count == 0) return;
+
+        lock (_lock) { _items.AddRange(items); }
+
+        NotifyAppendDone();
+        HyPlayItem? lastItem;
+        lock (_lock) { lastItem = _items.LastOrDefault(); }
+        if (lastItem != null)
+            await MoveToAsync(lastItem);
+    }
+
+    /// <inheritdoc />
+    public async Task<HyPlayItem> LoadStorageFileAsync(StorageFile sf, bool nocheck163 = false)
+    {
+        return await _localFileImport.LoadStorageFileAsync(sf, nocheck163);
+    }
+
+    /// <inheritdoc />
+    public void CreateShufflePlayLists()
+    {
+        ShuffleList.Clear();
+        var currentSongId = NowPlayingItem?.Id ?? "-1";
+        lock (_lock)
+        {
+            if (_items.Count != 0)
+            {
+                HashSet<int> shuffledNumbers = [];
+                if (currentSongId != "-1")
+                {
+                    int playItemIndex = _items.FindIndex(s => s.ToNCSong().SongId == currentSongId);
+                    if (playItemIndex != -1)
+                    {
+                        shuffledNumbers.Add(playItemIndex);
+                        ShuffleList.Add(playItemIndex);
+                    }
+                }
+
+                while (shuffledNumbers.Count < _items.Count)
+                {
+                    var indexShuffled = RandomNumberGenerator.GetInt32(_items.Count);
+                    if (shuffledNumbers.Add(indexShuffled))
+                        ShuffleList.Add(indexShuffled);
+                }
+            }
+        }
+
+        SendPlaylistChanged(true);
+    }
+
+    /// <inheritdoc />
+    public void RestoreNowPlayingIndex(int index)
+    {
+        lock (_lock)
+        {
+            if (index < 0 || index >= _items.Count)
+                return;
+
+            _nowPlayingIndex = index;
+            SyncIndex();
+        }
+    }
+
+    /// <inheritdoc />
+    public void ReverseList()
+    {
+        lock (_lock)
+        {
+            _items.Reverse();
+            if (_nowPlayingIndex >= 0 && _nowPlayingIndex < _items.Count)
+                _nowPlayingIndex = _items.Count - _nowPlayingIndex - 1;
+            SyncIndex();
+        }
+    }
+
+    /// <summary>
+    /// Disposes the internal <see cref="CancellationTokenSource"/> used for track-end handling.
+    /// </summary>
+    public void Dispose()
+    {
+        _trackEndCts?.Cancel();
+        _trackEndCts?.Dispose();
+        _trackEndCts = null;
+        DisposePlayItems(_items);
+        _items.Clear();
+        _state.NowPlayingItem = null;
+        _trackEndLock.Dispose();
+    }
+}

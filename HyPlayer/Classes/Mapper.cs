@@ -1,4 +1,4 @@
-﻿using HyPlayer.NeteaseApi.ApiContracts.Artist;
+using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.Models.ResponseModels;
 using System.Collections.Generic;
@@ -8,6 +8,23 @@ namespace HyPlayer.Classes;
 
 public static class Mapper
 {
+    public static HyPlayItem ToHyPlayItem(this NCSong ncSong)
+    {
+        return new HyPlayItem
+        {
+            ItemType = ncSong.Type,
+            InfoTag = ncSong.Alias,
+            Album = ncSong.Album,
+            Artist = ncSong.Artist,
+            Id = ncSong.SongId,
+            Translation = ncSong.TranslatedName,
+            Name = ncSong.SongName,
+            TrackId = ncSong.TrackId,
+            CDName = ncSong.CDName,
+            LengthInMilliseconds = ncSong.LengthInMilliseconds
+        };
+    }
+
     public static NCSong MapToNcSong(this SongDto song)
     {
         return new NCSong

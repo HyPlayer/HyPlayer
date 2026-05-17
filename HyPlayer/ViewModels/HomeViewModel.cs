@@ -74,7 +74,7 @@ namespace HyPlayer.ViewModels
         private async Task OnPlayAllRecommendedSongsClickedAsync()
         {
             _playlist.Clear();
-            var items = RecommendedSongs.Select(s => _playlist.NCSongToPlayItem(s));
+            var items = RecommendedSongs.Select(s => s.ToHyPlayItem());
             _playlist.AppendItems(items);
             _playlist.NotifyAppendDone();
             await _playlist.MoveNextAsync(userInitiated: true);

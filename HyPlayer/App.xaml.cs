@@ -341,32 +341,32 @@ public sealed partial class App : Application
         // 本地播放
         else if (args is FileActivatedEventArgs)
         {
-            var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-            var _localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
-            _playlist.PlaySourceId = "local";
+            var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+            var localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
+            playlist.PlaySourceId = "local";
             Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded = true;
             ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
 
             NavigateToRootPage();
             Window.Current.Activate();
-            var _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-            var _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
-            if (!_player.PlayerCreated)
+            var control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+            var player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+            if (!player.PlayerCreated)
             {
-                Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(_control.InitializeAsync(), "initialize player for file activation");
+                Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(control.InitializeAsync(), "initialize player for file activation");
             }
             foreach (var storageItem in (args?.As<FileActivatedEventArgs>()).Files)
             {
                 var file = (StorageFile)storageItem;
-                await _localFileImport.RegisterFutureAccessAsync(file);
-                var item = await _playlist.LoadStorageFileAsync(file);
-                _playlist.AppendItem(item);
+                await localFileImport.RegisterFutureAccessAsync(file);
+                var item = await playlist.LoadStorageFileAsync(file);
+                playlist.AppendItem(item);
             }
 
-            _playlist.PlaySourceId = "local";
-            _playlist.NotifyAppendDone();
-            if (_playlist.Items.Count > 0)
-                await _playlist.MoveToAsync(_playlist.Items[0]);
+            playlist.PlaySourceId = "local";
+            playlist.NotifyAppendDone();
+            if (playlist.Items.Count > 0)
+                await playlist.MoveToAsync(playlist.Items[0]);
         }
 
 
@@ -397,11 +397,11 @@ public sealed partial class App : Application
     private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
-        var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        var neteaseItems = _playlist.Items
+        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        var neteaseItems = playlist.Items
             .Where(t => t.ItemType == HyPlayItemType.Netease)
             .ToList();
-        var currentItem = _playlist.NowPlayingItem;
+        var currentItem = playlist.NowPlayingItem;
         var currentIndex = currentItem?.ItemType == HyPlayItemType.Netease
             ? neteaseItems.IndexOf(currentItem)
             : -1;

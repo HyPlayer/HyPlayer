@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Services.Abstractions;
 using System;
@@ -33,11 +33,11 @@ namespace HyPlayer.Classes
         [RelayCommand]
         public async Task Play()
         {
-            var _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-            _playlist.Clear();
-            _playlist.PlaySourceId = ResourceId;
-            await _playlist.AppendNcSourceAsync(ResourceId);
-            await _playlist.MoveNextAsync(true);
+            var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+            playlist.Clear();
+            playlist.PlaySourceId = ResourceId;
+            await playlist.AppendNcSourceAsync(ResourceId);
+            await playlist.MoveNextAsync(true);
 
         }
     }
