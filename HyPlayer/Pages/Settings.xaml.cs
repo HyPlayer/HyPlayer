@@ -102,8 +102,6 @@ public sealed partial class Settings : Page
 #if DEBUG
         VersionCode.Text += " Debug";
 #endif
-        //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
-        BtnXboxReserve.Visibility = true ? Visibility.Visible : Visibility.Collapsed;
         FontBox.ItemsSource = GetAllFonts();
     }
 
@@ -325,11 +323,6 @@ public sealed partial class Settings : Page
     private async void RestartBtn_Click(object sender, RoutedEventArgs e)
     {
         await CoreApplication.RequestRestartAsync("ChangeThemeRestart");
-    }
-
-    private void BtnXboxReserve_Click(object sender, RoutedEventArgs e)
-    {
-        _navigation.CollectGarbage();
     }
 
     private async void HotLyricOnStartUp_Checked(object sender, RoutedEventArgs e)

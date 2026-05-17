@@ -430,9 +430,9 @@ DoubleAnimation verticalAnimation;
     private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
     {
         if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            _navigation.Navigate(typeof(Comments), "sg" + ViewModel.NowPlayingItem.Id);
+            _navigation.Navigate(typeof(Comments), CommentTarget.Song(ViewModel.NowPlayingItem.Id));
         else
-            _navigation.Navigate(typeof(Comments), "fm" + ViewModel.NowPlayingItem.Album.Alias);
+            _navigation.Navigate(typeof(Comments), CommentTarget.RadioProgram(ViewModel.NowPlayingItem.Album.Alias));
         CollapseExpandedPlayer();
     }
 

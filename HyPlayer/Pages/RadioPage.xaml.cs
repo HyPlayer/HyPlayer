@@ -32,6 +32,7 @@ public sealed partial class RadioPage : Page
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
 
     private bool asc;
     private int i;
@@ -150,7 +151,7 @@ public sealed partial class RadioPage : Page
         }
 
         Songs.Clear();
-        SongContainer.ListSource = "rd" + Radio.Id;
+        SongContainer.QueueScope = SongListQueueScope.Radio(Radio.Id);
         _programLoaderTask = LoadProgram();
         if (_setting.greedlyLoadPlayContainerItems)
             WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(this, (r, _) => ((RadioPage)r).GreedlyLoad());
@@ -190,7 +191,7 @@ public sealed partial class RadioPage : Page
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
         var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        await playlist.AppendNcSourceAsync("rd" + Radio.Id);
+        await _navigator.AppendAsync(new MusicResource.Radio(Radio.Id));
         if (asc) playlist.ReverseList();
         await playlist.MoveToAsync(playlist.Items.FirstOrDefault());
     }

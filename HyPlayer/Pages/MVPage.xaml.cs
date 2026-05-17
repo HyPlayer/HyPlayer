@@ -96,9 +96,9 @@ public sealed partial class MVPage : Page
     private void LoadComment()
     {
         if (Regex.IsMatch(MVId, "^[0-9]*$"))
-            CommentFrame.Navigate(typeof(Comments), "mv" + MVId);
+            CommentFrame.Navigate(typeof(Comments), CommentTarget.MV(MVId));
         else
-            CommentFrame.Navigate(typeof(Comments), "mb" + MVId);
+            CommentFrame.Navigate(typeof(Comments), CommentTarget.MLog(MVId));
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)

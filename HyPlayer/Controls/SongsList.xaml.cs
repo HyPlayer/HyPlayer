@@ -42,6 +42,7 @@ public sealed partial class SongsList : UserControl
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly ISongListQueueBuilder _songListQueueBuilder = Ioc.Default.GetRequiredService<ISongListQueueBuilder>();
 
     public static readonly DependencyProperty MultiSelectProperty =
         DependencyProperty.Register("MultiSelect", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
@@ -59,10 +60,10 @@ public sealed partial class SongsList : UserControl
         new PropertyMetadata(null)
     );
 
-    public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
-        "ListSource", typeof(string),
+    public static readonly DependencyProperty QueueScopeProperty = DependencyProperty.Register(
+        "QueueScope", typeof(SongListQueueScope),
         typeof(SongsList),
-        new PropertyMetadata(null)
+        new PropertyMetadata(SongListQueueScope.Visible)
     );
 
 
@@ -180,10 +181,10 @@ public sealed partial class SongsList : UserControl
         set => SetValue(CanViewCommentsProperty, value);
     }
 
-    public string ListSource
+    public SongListQueueScope QueueScope
     {
-        get => (string)GetValue(ListSourceProperty);
-        set => SetValue(ListSourceProperty, value);
+        get => (SongListQueueScope)GetValue(QueueScopeProperty);
+        set => SetValue(QueueScopeProperty, value);
     }
 
     public bool IsAddingSongToPlaylist = false;
@@ -328,7 +329,7 @@ public sealed partial class SongsList : UserControl
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
-        _navigation.Navigate(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong).SongId);
+        _navigation.Navigate(typeof(Comments), CommentTarget.Song((SongContainer.SelectedItem as NCSong).SongId));
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
@@ -355,12 +356,13 @@ public sealed partial class SongsList : UserControl
         var ids = SongContainer.SelectedItems.Cast<NCSong>().Select(t => t.SongId).ToList();
         if (!IsCloudStorageList)
         {
+            if (QueueScope is not { Kind: SongListQueueScopeKind.Playlist, Id: not null }) return;
             await _api.RequestAsync(NeteaseApis.PlaylistTracksEditApi,
             new PlaylistTracksEditRequest()
             {
                 IdList = ids,
                 IsAdd = false,
-                PlaylistId = ListSource.Substring(2)
+                PlaylistId = QueueScope.Id
             });
         }
         else
@@ -427,52 +429,7 @@ public sealed partial class SongsList : UserControl
         IsAddingSongToPlaylist = true;
         try
         {
-            if (ListSource != null && ListSource != "Content" && Songs.Count == VisibleSongs.Count)
-            {
-                if (_playlist.PlaySourceId != ListSource ||
-                    _playlist.Items.Count != VisibleSongs.Count(t => t.IsAvailable))
-                {
-                    // Change Music Source
-                    _playlist.Clear(!shiftSong);
-                    await _playlist.AppendNcSourceAsync(ListSource);
-                }
-            }
-            /*else if (ListSource == null)
-            {
-                var ncsong = VisibleSongs[SongContainer.SelectedIndex];
-                _playlist.AppendNcSong(ncsong);
-                _playlist.NotifyAppendDone();
-                var target = _playlist.Items.ToList().Find(t => t.Id == ncsong.SongId);
-                if (target != null) await _playlist.MoveToAsync(target);
-            }*/
-            else
-            {
-                _playlist.AppendNcSongs(VisibleSongs, clearFirst: !shiftSong, currentSongId: ncSong.SongId);
-            }
-
-            if (ListSource == "Content")
-            {
-                _playlist.PlaySourceId = "Content";
-            }
-
-            if (ListSource?[..2] == "pl" ||
-                ListSource?[..2] == "al")
-                _playlist.PlaySourceId = ListSource;
-
-            if (!shiftSong)
-            {
-                await _playlist.MoveToAsync(_playlist.Items.ToList().Find(t => t?.Id == ncSong.SongId));
-            }
-            else
-            {
-                _notification.ShowMessage("无感歌单切换", "成功无感切换到歌单 " + ListSource);
-                var targetIndex = _playlist.Items.ToList().FindIndex(song => song.Id == ncSong.SongId);
-                if (targetIndex != -1)
-                {
-                    _playlist.RestoreNowPlayingIndex(targetIndex);
-                    _playlist.NotifyAppendDone();
-                }
-            }
+            await _songListQueueBuilder.BuildAndPlayAsync(ncSong, GetEffectiveQueueScope(), VisibleSongs.ToList());
         }
         finally
         {
@@ -499,6 +456,16 @@ public sealed partial class SongsList : UserControl
             }
     }
 
+    private SongListQueueScope GetEffectiveQueueScope()
+    {
+        return IsShowingCompleteSource() ? QueueScope : SongListQueueScope.Visible;
+    }
+
+    private bool IsShowingCompleteSource()
+    {
+        return Songs != null && Songs.Count == VisibleSongs.Count;
+    }
+
     private void ToolbarNavigationView_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender,
         Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
     {
@@ -513,7 +480,7 @@ public sealed partial class SongsList : UserControl
                 break;
             case "Comments":
                 var page = (SongListDetail)((Grid)Parent).Parent;
-                _navigation.Navigate(typeof(Comments), "pl" + page.ViewModel.PlayList.PlaylistId);
+                _navigation.Navigate(typeof(Comments), CommentTarget.Playlist(page.ViewModel.PlayList.PlaylistId));
                 break;
             default:
                 break;

@@ -50,7 +50,7 @@ public partial class SimpleLinerList : UserControl
 
     private void ItemList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ItemList.SelectedIndex >= 0)
-            _ = Ioc.Default.GetRequiredService<INavigationService>().NavigateToResourceAsync(ListItems[ItemList.SelectedIndex].ResourceId);
+        if (ItemList.SelectedIndex >= 0 && ListItems[ItemList.SelectedIndex].Route is { } route)
+            _ = Ioc.Default.GetRequiredService<IAppNavigator>().NavigateAsync(route);
     }
 }

@@ -16,7 +16,6 @@
     <classes:DateConverter x:Key="DateConverter" />
     <classes:NullableColorToColorConverter x:Key="NullableColorToColorConverter" />
     <classes:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />
-    <classes:PageToNavigationViewIndicatorConverter x:Key="PageToNavigationViewIndicatorConverter" />
     <classes:ShaderConverter x:Key="ShaderConverter" />
     <classes:LuminousConverter x:Key="LuminousConverter" />
     <classes:SessionToStringConverter x:Key="SessionToStringConverter" />

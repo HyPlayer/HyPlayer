@@ -6,7 +6,9 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Messages;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -25,6 +27,7 @@ public sealed partial class PlaylistItem : UserControl
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
 
@@ -57,10 +60,7 @@ public sealed partial class PlaylistItem : UserControl
     private async void PlayAllBtn_Click(object sender, RoutedEventArgs e)
     {
         //播放全部歌曲
-        _playlist.Clear();
-        await _playlist.AppendPlayListAsync(playList.PlaylistId);
-        _playlist.PlaySourceId = $"pl{playList.PlaylistId}";
-        await _playlist.MoveNextAsync(true);
+        await _navigator.PlayAsync(new MusicResource.Playlist(playList.PlaylistId));
     }
 
     private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
@@ -77,7 +77,7 @@ public sealed partial class PlaylistItem : UserControl
         else
         {
             _notification.ShowMessage("成功公开歌单");
-            _ = (_uiState.PageBase as BasePage)?.LoadSongList();
+            WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
         }
     }
 
@@ -95,7 +95,7 @@ public sealed partial class PlaylistItem : UserControl
         else
         {
             _notification.ShowMessage("成功删除");
-            _ = (_uiState.PageBase as BasePage)?.LoadSongList();
+            WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
             _navigation.NavigateRefresh();
         }
     }

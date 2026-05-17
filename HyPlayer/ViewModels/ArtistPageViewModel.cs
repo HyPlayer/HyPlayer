@@ -189,7 +189,8 @@ namespace HyPlayer.ViewModels
                             ? string.Join(" / ", album.Alias)
                             : "",
                         LineThree = album.Paid ? "付费专辑" : "",
-                        ResourceId = "al" + album.Id,
+                        Route = new AppRoute.Album($"{album.Id}"),
+                        PlayResource = new MusicResource.Album($"{album.Id}"),
                         CoverLink = album.PictureUrl,
                         Order = CurrentPage * 50 + i++,
                         CanPlay = true

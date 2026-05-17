@@ -1,17 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Threading;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback.Messages;
-using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
-using Windows.Storage;
 
 namespace HyPlayer.Services.Playback;
 
@@ -98,40 +90,53 @@ public sealed partial class PlaylistService
     /// <inheritdoc />
     public async Task<bool> AppendNcSourceAsync(string sourceId)
     {
-        var result = await _neteaseQueueSource.LoadSourceAsync(sourceId);
+        if (sourceId.Length < 3)
+            return false;
+
+        var prefix = sourceId[..2];
+        var id = sourceId[2..];
+
+        if (!_providersByPrefix.TryGetValue(prefix, out var provider))
+            return false;
+
+        var result = await provider.LoadAsync(id);
         AppendNcSongBatches(result);
         return result.Success;
     }
 
     /// <inheritdoc />
-    public async Task<bool> AppendPlayListAsync(string playlistId)
+    public async Task<bool> AppendSourceByKindAsync(SongListQueueScopeKind kind, string id)
     {
-        var result = await _neteaseQueueSource.LoadPlaylistAsync(playlistId);
+        if (!_providersByKind.TryGetValue(kind, out var provider))
+            return false;
+
+        var result = await provider.LoadAsync(id);
         AppendNcSongBatches(result);
         return result.Success;
     }
+
+    /// <inheritdoc />
+    public Task<bool> AppendPlayListAsync(string playlistId)
+        => AppendSourceByKindAsync(SongListQueueScopeKind.Playlist, playlistId);
 
     /// <inheritdoc />
     public async Task<bool> AppendRadioListAsync(string radioId, bool asc = false)
     {
-        var result = await _neteaseQueueSource.LoadRadioListAsync(radioId, asc);
-        AppendNcSongBatches(result);
-        return result.Success;
+        if (_providersByKind.TryGetValue(SongListQueueScopeKind.Radio, out var provider)
+            && provider is QueueProviders.RadioQueueSourceProvider radioProvider)
+        {
+            var result = await radioProvider.LoadAsync(radioId, asc);
+            AppendNcSongBatches(result);
+            return result.Success;
+        }
+        return false;
     }
 
     private async Task<bool> AppendSingerHotAsync(string id)
-    {
-        var result = await _neteaseQueueSource.LoadSingerHotAsync(id);
-        AppendNcSongBatches(result);
-        return result.Success;
-    }
+        => await AppendSourceByKindAsync(SongListQueueScopeKind.Artist, id);
 
     private async Task<bool> AppendAlbumAsync(string albumId)
-    {
-        var result = await _neteaseQueueSource.LoadAlbumAsync(albumId);
-        AppendNcSongBatches(result);
-        return result.Success;
-    }
+        => await AppendSourceByKindAsync(SongListQueueScopeKind.Album, albumId);
 
     private void AppendNcSongBatches(NeteaseQueueSourceLoadResult result)
     {

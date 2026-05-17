@@ -35,7 +35,7 @@
                                 <Grid
                                     Grid.Column="0"
                                     Background="Transparent"
-                                    Tag="{x:Bind ResourceId}"
+                                    Tag="{x:Bind Route}"
                                     Tapped="SonglistItem_Tapped">
                                     <StackPanel Orientation="Horizontal">
                                         <frieren:ImageEx
@@ -111,7 +111,7 @@
                                     Command="{x:Bind PlayCommand}"
                                     CornerRadius="9"
                                     FocusVisualSecondaryBrush="AliceBlue"
-                                    Tag="{x:Bind ResourceId}"
+                                    Tag="{x:Bind Route}"
                                     ToolTipService.ToolTip="播放">
                                     <FontIcon
                                         Name="PlayStateIcon"

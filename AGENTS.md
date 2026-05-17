@@ -7,6 +7,7 @@
 - This repository is a multi-project solution. For build verification, build/restore `HyPlayer.slnx` or the MSIX package project directly; do not treat an individual project such as `HyPlayer\HyPlayer.csproj` as the final build target.
 - Do not run a bare `dotnet build` and trust the result: default `AnyCPU` can make `Microsoft.Gaming.XboxGameBar.Projection` look for `runtimes\win10-AnyCPU\native\Microsoft.Gaming.XboxGameBar.dll`. Always pass a real platform/RID.
 - CI restore shape for x64: `msbuild HyPlayer.slnx /t:Restore /p:Configuration=Release /p:RuntimeIdentifier=win-x64 /p:Platform=x64`.
+- Verified local whole-solution x64 build shape: `msbuild HyPlayer.slnx /p:Configuration=Release /p:RuntimeIdentifier=win-x64 /p:Platform=x64 /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false`. Use Visual Studio MSBuild (for example via `vswhere`) if `msbuild` is not on PATH.
 - CI package build shape for x64: `msbuild HyPlayer.Package\HyPlayer.Package.wapproj /p:Configuration=Release /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundle=Never /p:Platform=x64 /p:RuntimeIdentifier=win-x64 /p:AppxPackageSigningEnabled=false`.
 - For arm64, use the same commands with `/p:Platform=arm64 /p:RuntimeIdentifier=win-arm64`.
 - `nuget.config` clears inherited package sources; restore must use this repo config because CommunityToolkit Labs packages come from the Azure DevOps feed declared there.

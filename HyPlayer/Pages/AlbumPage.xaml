@@ -16,7 +16,7 @@
             Grid.Row="1"
             Margin="20,30,0,0"
             GroupedSongs="{x:Bind ViewModel.AlbumSongsViewSource, Mode=OneWay}"
-            ListSource="{x:Bind ViewModel.SourceId, Mode=OneWay}">
+            QueueScope="{x:Bind ViewModel.QueueScope, Mode=OneWay}">
             <controls1:GroupedSongsList.ListHeader>
                 <controls:DockPanel
                     x:Name="GridPersonalInformation"

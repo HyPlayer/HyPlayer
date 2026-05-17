@@ -76,6 +76,7 @@ public sealed partial class ExpandedPlayer : Page
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
     private readonly HttpClient _httpClient = Ioc.Default.GetRequiredService<HttpClient>();
@@ -185,8 +186,8 @@ public sealed partial class ExpandedPlayer : Page
             var action = actionLyricLine.ActionUri;
             if (action.StartsWith("hyplayer://"))
             {
-                var resourceId = action[11..];
-                _taskRunner.Forget(_navigation.NavigateToResourceAsync(resourceId), "navigate from lyric action");
+                if (AppRoute.TryParseExternalResource(action[11..], out var route))
+                    _taskRunner.Forget(_navigator.NavigateAsync(route), "navigate from lyric action");
                 (_uiState.BarPlayBar as PlayBar)!.CollapseExpandedPlayer();
             }
             else

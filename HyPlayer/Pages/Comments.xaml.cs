@@ -58,30 +58,15 @@ public sealed partial class Comments : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (e.Parameter is string resstr)
+        if (e.Parameter is CommentTarget target)
         {
-            resourceid = resstr.Substring(2);
-            switch (resstr.Substring(0, 2))
-            {
-                case "sg":
-                    resourcetype = NeteaseResourceType.Song;
-                    break;
-                case "mv":
-                    resourcetype = NeteaseResourceType.MV;
-                    break;
-                case "fm":
-                    resourcetype = NeteaseResourceType.RadioProgram;
-                    break;
-                case "mb":
-                    resourcetype = NeteaseResourceType.MLog;
-                    break;
-                case "al":
-                    resourcetype = NeteaseResourceType.Album;
-                    break;
-                case "pl":
-                    resourcetype = NeteaseResourceType.Playlist;
-                    break;
-            }
+            resourceid = target.ResourceId;
+            resourcetype = target.ResourceType;
+        }
+        else if (e.Parameter is string resstr && CommentTarget.TryParseExternalResource(resstr, out target))
+        {
+            resourceid = target.ResourceId;
+            resourcetype = target.ResourceType;
         }
 
         LoadHotComments();

@@ -186,7 +186,8 @@ public sealed partial class Search : Page
                     LineTwo = string.Join(" / ", songJs.Artists?.Select(t => t.Name) ?? []),
                     LineThree = songJs.Album?.Name,
                     LineOne = string.Join(" ", songJs.Translations ?? []) + " / " + string.Join("", songJs.Alias ?? []),
-                    ResourceId = "ns" + songJs.Id,
+                    Route = new AppRoute.Song($"{songJs.Id}"),
+                    PlayResource = new MusicResource.Song($"{songJs.Id}"),
                     CoverLink = songJs.Album?.PictureUrl,
                     Order = i++
                 });
@@ -236,7 +237,8 @@ public sealed partial class Search : Page
                     LineOne = string.Join(" / ", albumJs.Artists?.Select(t => t.Name) ?? []),
                     LineTwo = string.Join(" / ", albumJs.Alias ?? []),
                     LineThree = $"歌曲数:{albumJs.Size}",
-                    ResourceId = "al" + albumJs.Id,
+                    Route = new AppRoute.Album($"{albumJs.Id}"),
+                    PlayResource = new MusicResource.Album($"{albumJs.Id}"),
                     CoverLink = albumJs.PictureUrl,
                     Order = i++
                 });
@@ -287,7 +289,8 @@ public sealed partial class Search : Page
                 LineOne = singerjson.Translation,
                 LineTwo = string.Join("/", singerjson.Alias ?? []),
                 LineThree = $"专辑数 {singerjson.AlbumSize} | MV 数 {singerjson.MvSize}",
-                ResourceId = "ar" + singerjson.Id,
+                Route = new AppRoute.Artist($"{singerjson.Id}"),
+                PlayResource = new MusicResource.Artist($"{singerjson.Id}"),
                 CoverLink = singerjson.Img1v1Url,
                 Order = i++,
                 CanPlay = true
@@ -340,7 +343,8 @@ public sealed partial class Search : Page
                     LineOne = playlistJs.Creator?.Nickname,
                     LineTwo = playlistJs.Description,
                     LineThree = $"歌曲数:{playlistJs.TrackCount}",
-                    ResourceId = "pl" + playlistJs.Id,
+                    Route = new AppRoute.Playlist($"{playlistJs.Id}"),
+                    PlayResource = new MusicResource.Playlist($"{playlistJs.Id}"),
                     CoverLink = playlistJs.CoverUrl,
                     Order = i++
                 });
@@ -390,7 +394,7 @@ public sealed partial class Search : Page
                 {
                     Title = userJs.Nickname,
                     LineOne = userJs.Signature,
-                    ResourceId = "us" + userJs.UserId,
+                    Route = new AppRoute.Me($"{userJs.UserId}"),
                     CoverLink = userJs.AvatarUrl,
                     Order = i++
                 });
@@ -442,7 +446,8 @@ public sealed partial class Search : Page
                     LineOne = radioJs.DjData?.Nickname,
                     LineTwo = radioJs.Description,
                     LineThree = $"节目数:{radioJs.ProgramCount}",
-                    ResourceId = "rd" + radioJs.Id,
+                    Route = new AppRoute.Radio($"{radioJs.Id}"),
+                    PlayResource = new MusicResource.Radio($"{radioJs.Id}"),
                     CoverLink = radioJs.CoverUrl,
                     Order = i++
                 });
@@ -495,7 +500,7 @@ public sealed partial class Search : Page
                     LineOne = item.ArtistName,
                     LineTwo = item.Description,
                     LineThree = string.Join(" / ", item.TransNames),
-                    ResourceId = "ml" + item.Id,
+                    Route = new AppRoute.MV($"{item.Id}"),
                     CoverLink = item.Cover.ToString(),
                     Order = i++
                 });
@@ -545,7 +550,7 @@ public sealed partial class Search : Page
                     LineOne = string.Join(" / ", item.Artists?.Select(t => t.UserName) ?? []),
                     LineTwo = null,
                     LineThree = null,
-                    ResourceId = "ml" + item.Id,
+                    Route = new AppRoute.MV($"{item.Id}"),
                     CoverLink = item.CoverUrl,
                     Order = i++
                 });
@@ -595,7 +600,8 @@ public sealed partial class Search : Page
                     LineOne = string.Join(" / ", songJs.Artists?.Select(t => t.Name) ?? []),
                     LineTwo = songJs.Lyrics?.First(t => t.Contains("</b>")),
                     LineThree = string.Join("   ", songJs.Lyrics?.ToList() ?? []),
-                    ResourceId = "ns" + songJs.Id,
+                    Route = new AppRoute.Song($"{songJs.Id}"),
+                    PlayResource = new MusicResource.Song($"{songJs.Id}"),
                     CoverLink = songJs.Album?.PictureUrl,
                     Order = i++
                 });

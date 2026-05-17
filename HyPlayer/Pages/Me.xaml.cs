@@ -28,6 +28,7 @@ public sealed partial class Me : Page
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
     public Me()
@@ -73,8 +74,7 @@ public sealed partial class Me : Page
 
     private void SonglistItem_Tapped(object sender, TappedRoutedEventArgs e)
     {
-        var target = (sender as FrameworkElement).Tag as string;
-        if (string.IsNullOrEmpty(target)) return;
-        _taskRunner.Forget(_navigation.NavigateToResourceAsync(target), "navigate to user songlist resource");
+        if ((sender as FrameworkElement)?.Tag is not AppRoute target) return;
+        _taskRunner.Forget(_navigator.NavigateAsync(target), "navigate to user songlist route");
     }
 }

@@ -13,10 +13,12 @@ using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.NeteaseApi.ApiContracts.Utils;
 using HyPlayer.NeteaseApi;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Messages;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
+using HyPlayer.ViewModels;
 using Microsoft.UI.Xaml.Controls;
 using QRCoder;
 using System;
@@ -58,7 +60,12 @@ public sealed partial class BasePage : Page
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
+    private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+
+    /// <summary>导航侧边栏 ViewModel，供 XAML {x:Bind} 使用</summary>
+    public NavigationShellViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<NavigationShellViewModel>();
 
     private string nowqrkey;
     private readonly IPlaybackControlService _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
@@ -76,8 +83,6 @@ public sealed partial class BasePage : Page
         {
             _ = _playback.InitializeAsync();
         }
-        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((BasePage)r).OnChangePlayItem(m.Item));
-        WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (r, m) => ((BasePage)r).HyPlayList_OnSongCoverChanged(m.Item));
 
         ApplicationView.TerminateAppOnFinalViewClose = false;
         Ioc.Default.GetRequiredService<INavigationService>().RootFrame = BaseFrame;
@@ -94,11 +99,6 @@ public sealed partial class BasePage : Page
         var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
         uiState.ClearReferences(this);
         uiState.ClearReferences(TheTeachingTip);
-    }
-
-    private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem)
-    {
-        await RefreshNavItemCover(playItem);
     }
 
 
@@ -304,22 +304,14 @@ public sealed partial class BasePage : Page
             };
 
         _auth.IsLoggedIn = true;
-        NavItemLogin.Content = _auth.CurrentUser.Name;
-        NavItemLogin.Icon = new BitmapIcon
-        {
-            UriSource = new Uri(_auth.CurrentUser.Avatar + "?param=" +
-                                                    StaticSource.PICSIZE_NAVITEM_USERAVATAR),
-            ShowAsMonochrome = false
-        };
+        ViewModel.UpdateAfterLogin();
         InfoBarLoginHint.Severity = InfoBarSeverity.Success;
         InfoBarLoginHint.Message = "欢迎 " + _auth.CurrentUser.Name;
         DialogLogin.Hide();
         //加载我喜欢的歌
         _ = LoadMyLikelist();
-        _ = LoadSongList();
+        WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
 
-        // 执行签到操作
-        // DoDailySign();
 
         var authService = Ioc.Default.GetRequiredService<IAuthService>();
         authService.NotifyLoginCompleted();
@@ -330,7 +322,8 @@ public sealed partial class BasePage : Page
         }
         else
         {
-            NavMain.SelectedItem = NavItemLogin;
+            ViewModel.SelectedItem = ViewModel.FindNode(new AppRoute.Me());
+            await _navigator.NavigateAsync(new AppRoute.Me());
         }
 
         return true;
@@ -358,163 +351,55 @@ public sealed partial class BasePage : Page
         auth.LikedSongs.AddRange(likedSongs);
     }
 
-    public async Task LoadSongList()
-    {
-        //加载用户歌单
-        var nowitem = NavItemsMyList;
-        var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "mySongList", async () =>
-        {
-            var json = await _api.RequestAsync(NeteaseApis.UserPlaylistApi,
-                new UserPlaylistRequest() { Uid = _auth.CurrentUser!.Id });
-            if (json.IsError)
-            {
-                _notification.ShowMessage("获取歌单失败", json.Error?.Message);
-                return null;
-            }
-
-            return json.Value;
-        });
-
-        NavItemsLikeList.MenuItems.Clear();
-        NavItemsMyList.MenuItems.Clear();
-        NavItemsLikeList.Visibility = Visibility.Visible;
-        NavItemsAddPlaylist.Visibility = Visibility.Visible;
-        NavItemsMyList.Visibility = Visibility.Visible;
-        NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
-        _auth.MySongLists.Clear();
-        var isliked = false;
-        foreach (var jToken in jv?.Playlists ?? [])
-            if (jToken.Subscribed)
-            {
-                var item = new NavigationViewItem
-                {
-                    Content = jToken.Name,
-                    Tag = "Playlist" + jToken.Id,
-                    Icon = new FontIcon
-                    {
-                        Glyph = "\uE142"
-                    }
-                };
-                NavItemsLikeList.MenuItems.Add(item);
-            }
-            else
-            {
-                _auth.MySongLists.Add(jToken.MapToNCPlayList());
-                if (!isliked)
-                {
-                    isliked = true;
-                    continue;
-                }
-
-                var item = new NavigationViewItem
-                {
-                    Icon = new FontIcon
-                    {
-                        Glyph = jToken.Privacy == 0 ? "\uE142" : "\uE72E"
-                    },
-                    Content = jToken.Name,
-                    Tag = "Playlist" + jToken.Id,
-                };
-                if (jToken.Privacy == 0)
-                    item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 211, 39, 100));
-
-                NavItemsMyList.MenuItems.Add(item);
-            }
-
-    }
-
-    private async void NavMain_OnSelectionChanged(NavigationView sender,
+    private void NavMain_OnSelectionChanged(NavigationView sender,
                                                   NavigationViewSelectionChangedEventArgs args)
     {
-        if (Ioc.Default.GetRequiredService<INavigationService>().NavigatingBack) return;
-        var nowitem = sender.SelectedItem?.As<NavigationViewItem>();
-        if (Ioc.Default.GetRequiredService<INavigationService>().NavigationHistory.Count > 1)
+        if (_uiState.NavigatingBack) return;
+        if (_navigation.CanGoBack)
             NavMain.IsBackEnabled = true;
-        if (nowitem.Tag is null) return;
 
-        if (nowitem.Tag.ToString() == "PageMe" && !_auth.IsLoggedIn)
-        {
-            _api?.Option.Cookies.Clear();//清一遍Cookie防止出错
-            await DialogPreLoginHint.ShowAsync();
-            return;
-        }
-
-        if (nowitem.Tag.ToString() == "MusicCloud") _navigation.Navigate(typeof(MusicCloudPage));
-
-        if (nowitem.Tag.ToString() == "DailyRcmd")
-            _navigation.Navigate(typeof(SongListDetail), new NCPlayList
-            {
-                Cover = "ms-appx:/Assets/icon.png",
-                Creator = new NCUser
-                {
-                    Avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-                    Id = "1",
-                    Name = "网易云音乐",
-                    Signature = "网易云音乐官方账号 "
-                },
-                IsDailyRecommend = true,
-                HasSubscribed = false,
-                Name = "每日歌曲推荐",
-                Description = "根据你的口味生成，每天6:00更新"
-            });
-
-        if (nowitem.Tag.ToString() == "SonglistMyLike")
-        {
-            _navigation.Navigate(typeof(SongListDetail), _auth.MySongLists[0].PlaylistId);
-            return;
-        }
-
-        if (nowitem.Tag.ToString().StartsWith("Playlist"))
-            _navigation.Navigate(typeof(SongListDetail), nowitem.Tag.ToString()[8..]);
-
-        switch (nowitem.Tag.ToString())
-        {
-            case "PageMe":
-                _navigation.Navigate(typeof(Me), null);
-                break;
-            case "PageSearch":
-                _navigation.Navigate(typeof(Search), null);
-                break;
-            case "PageHome":
-                _navigation.Navigate(typeof(HomePage), null);
-                break;
-            case "PageSettings":
-                _navigation.Navigate(typeof(Settings), null);
-                break;
-            case "PageLocal":
-                _navigation.Navigate(typeof(LocalMusicPage), null);
-                break;
-            case "PageHistory":
-                _navigation.Navigate(typeof(History), null);
-                break;
-            case "PageFavorite":
-                _navigation.Navigate(typeof(PageFavorite), null);
-                break;
-        }
+        // 导航路由在 ItemInvoked 中处理；选中态由 ViewModel.SelectedItem 双向绑定管理
     }
 
-    // Invoked events of not-for-navigation items can be handled separately.
-    // Meanwhile we set "SelectsOnInvoked" property of these items "False" to avoid the navigation pane indicator being set to them.
-    private void NavMain_ItemInvoked(NavigationView sender,
+    private async void NavMain_ItemInvoked(NavigationView sender,
                                            NavigationViewItemInvokedEventArgs args)
     {
-        var invokedItemTag = (args.InvokedItemContainer?.As<NavigationViewItem>())?.Tag?.ToString();
-        if (invokedItemTag is null || invokedItemTag == string.Empty) return;
-        switch (invokedItemTag)
+        if (args.InvokedItemContainer?.Tag is not NavigationNode node) return;
+
+        try
         {
-            case "SonglistCreate":
+            // 登录门控
+            if (node.Route is AppRoute.Me && !_auth.IsLoggedIn)
+            {
+                ViewModel.SelectedItem = null;
+                _api?.Option.Cookies.Clear();
+                await DialogPreLoginHint.ShowAsync();
+                return;
+            }
+
+            if (node.Route is not null)
+            {
+                await _navigator.NavigateAsync(node.Route);
+            }
+            else if (node.Action is { } action)
+            {
+                switch (action)
                 {
-                    _ = new CreateSonglistDialog().ShowAsync();
-                    break;
+                    case AppNavigationAction.CreatePlaylist:
+                        _ = new CreateSonglistDialog().ShowAsync();
+                        break;
+                    case AppNavigationAction.PersonalFM:
+                        PersonalFM.InitPersonalFM();
+                        break;
+                    case AppNavigationAction.HeartBeat:
+                        Api.EnterIntelligencePlay().SafeFireAndForget();
+                        break;
                 }
-            case "PersonalFM":
-                {
-                    PersonalFM.InitPersonalFM();
-                    break;
-                }
-            case "HeartBeat":
-                Api.EnterIntelligencePlay().SafeFireAndForget();
-                break;
+            }
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("导航失败", ex.Message);
         }
     }
 
@@ -666,7 +551,7 @@ public sealed partial class BasePage : Page
             }
 
             _notification.ShowMessage("成功公开歌单");
-            _ = LoadSongList();
+            WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
         }
         catch (Exception ex)
         {
@@ -688,7 +573,7 @@ public sealed partial class BasePage : Page
                 return;
             }
             _notification.ShowMessage("成功删除");
-            _ = LoadSongList();
+            WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
         }
         catch (Exception ex)
         {
@@ -728,38 +613,6 @@ public sealed partial class BasePage : Page
         sender.ItemsSource = json.Value.Result.AllMatch?.Select(t => t.Keyword).ToList();
     }
 
-    private void OnChangePlayItem(HyPlayItem item)
-    {
-        _ = _notification.InvokeOnUIThread(() =>
-        {
-            if (item != null)
-            {
-                NavItemSongName.Text = item.Name;
-                NavItemArtist.Text = item.ArtistString;
-            }
-        });
-    }
-
-    public async Task RefreshNavItemCover(HyPlayItem playItem)
-    {
-        if (_state.CoverStream == null) return;
-        _ = _notification.InvokeOnUIThread(async () =>
-        {
-            if (!Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded && !_setting.noImage)
-            {
-                try
-                {
-                    if (playItem != _state.NowPlayingItem) return;
-                    using var stream = _state.CoverStream.CloneStream();
-                    await NavItemImageSource.SetSourceAsync(stream);
-                }
-                catch
-                {
-                }
-            }
-        });
-    }
-
     private async void BaseFrame_Navigated(object sender, NavigationEventArgs e)
     {
         _ = _notification.InvokeOnUIThread(async () =>
@@ -767,9 +620,10 @@ public sealed partial class BasePage : Page
                 try
                 {
                     await Task.Delay(500);
-                    NavMain.SelectionChanged -= NavMain_OnSelectionChanged;
-                    Bindings.Update();
-                    NavMain.SelectionChanged += NavMain_OnSelectionChanged;
+                    // 根据当前页面路由同步 NavigationView 选中态
+                    var route = _navigator.InferRoute(e.SourcePageType, e.Parameter);
+                    if (route is not null)
+                        ViewModel.SelectedItem = ViewModel.FindNode(route);
                 }
                 catch
                 {

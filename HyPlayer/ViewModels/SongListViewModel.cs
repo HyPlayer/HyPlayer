@@ -32,6 +32,7 @@ namespace HyPlayer.ViewModels
         private readonly Setting _setting;
         private readonly INotificationService _notification;
         private readonly INavigationService _navigation;
+        private readonly IAppNavigator _navigator;
         private readonly HttpClient _httpClient;
 
         public SongListViewModel(
@@ -40,6 +41,7 @@ namespace HyPlayer.ViewModels
             Setting setting,
             INotificationService notification,
             INavigationService navigation,
+            IAppNavigator navigator,
             HttpClient httpClient)
         {
             _playlist = playlist;
@@ -47,7 +49,9 @@ namespace HyPlayer.ViewModels
             _setting = setting;
             _notification = notification;
             _navigation = navigation;
+            _navigator = navigator;
             _httpClient = httpClient;
+            QueueScope = SongListQueueScope.Visible;
         }
 
         public ObservableCollection<NCSong> Songs { get; set; } = [];
@@ -67,15 +71,13 @@ namespace HyPlayer.ViewModels
         public partial string DescriptionBoxContent { get; set; }
 #nullable enable
         [ObservableProperty]
-        public partial string? ResourceId { get; set; }
-        [ObservableProperty]
         public partial string? UpdateTime { get; set; }
         [ObservableProperty]
         public partial Uri? CoverUri { get; set; }
         [ObservableProperty]
         public partial Color AlbumColor { get; set; }
         [ObservableProperty]
-        public partial string SourceId {  get; set; }
+        public partial SongListQueueScope QueueScope { get; set; }
 #nullable restore
 
         private List<string> _songListIds = [];
@@ -84,11 +86,11 @@ namespace HyPlayer.ViewModels
 
         public async Task LoadPageData(string PlaylistId, bool loadPlaylist = false)
         {
+            QueueScope = SongListQueueScope.Playlist(PlaylistId);
             if (loadPlaylist)
             {
                 var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistDetail, PlaylistId, async () =>
                 {
-                    SourceId = $"pl{PlaylistId}";
                     // 歌单详情
                     var json = await _api.RequestAsync(NeteaseApis.PlaylistDetailApi,
                         new PlaylistDetailRequest()
@@ -107,7 +109,6 @@ namespace HyPlayer.ViewModels
                 PlayList = rst?.Playlists?.FirstOrDefault().MapToNCPlayList();
             }
             DescriptionBoxContent = PlayList.Description;
-            ResourceId = "pl" + PlayList?.PlaylistId;
             if (_setting.noImage)
             {
                 CoverUri = null;
@@ -117,7 +118,7 @@ namespace HyPlayer.ViewModels
                 CoverUri = PlayList.IsDailyRecommend ? new Uri(PlayList.Cover) : new Uri(PlayList.Cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
             }
             LoadAlbumImage().SafeFireAndForget();
-            UpdateTime = $"{DateConverter.FriendFormat(PlayList.UpdateTime)}更新";
+            UpdateTime = PlayList.UpdateTime == DateTime.MinValue ? string.Empty : $"{DateConverter.FriendFormat(PlayList.UpdateTime)}更新";
             LoadSongListItem().SafeFireAndForget();
         }
 
@@ -142,7 +143,7 @@ namespace HyPlayer.ViewModels
 
         public async Task LoadDailyRcmdItems()
         {
-            ResourceId = "content";
+            QueueScope = SongListQueueScope.Content;
             var items = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "recommendSongs", async () =>
             {
                 // 每天推荐歌曲
@@ -293,7 +294,7 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void NavigateToComments()
         {
-            _navigation.Navigate(typeof(Comments), "pl" + PlayList.PlaylistId);
+            _navigation.Navigate(typeof(Comments), CommentTarget.Playlist(PlayList.PlaylistId));
         }
         [RelayCommand]
         private async Task ResetCacheAsync()
@@ -321,8 +322,7 @@ namespace HyPlayer.ViewModels
             if (!PlayList.IsDailyRecommend)
             {
                 _playlist.Clear();
-                await _playlist.AppendPlayListAsync(PlayList.PlaylistId);
-                _playlist.PlaySourceId = $"pl{PlayList.PlaylistId}";
+                await _navigator.AppendAsync(new MusicResource.Playlist(PlayList.PlaylistId));
                 await _playlist.MoveNextAsync(userInitiated: true);
             }
             else
@@ -330,7 +330,7 @@ namespace HyPlayer.ViewModels
                 _playlist.Clear();
                 var items = Songs.Select(s => s.ToHyPlayItem());
                 _playlist.AppendItems(items);
-                _playlist.PlaySourceId = $"{PlayList.PlaylistId}";
+                _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.PlaylistId));
                 _playlist.NotifyAppendDone();
                 await _playlist.MoveNextAsync(userInitiated: true);
             }

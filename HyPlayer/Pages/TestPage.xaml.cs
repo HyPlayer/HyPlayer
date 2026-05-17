@@ -129,14 +129,14 @@ public sealed partial class TestPage : Page
 
     private void NavigateResourceId(object sender, RoutedEventArgs e)
     {
-        _ = Ioc.Default.GetRequiredService<INavigationService>().NavigateToResourceAsync(ResourceId);
+        if (AppRoute.TryParseExternalResource(ResourceId, out var route))
+            _ = Ioc.Default.GetRequiredService<IAppNavigator>().NavigateAsync(route);
     }
 
     private async void PlayResourceId(object sender, RoutedEventArgs e)
     {
-        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        playlist.Clear();
-        await playlist.AppendNcSourceAsync(ResourceId);
+        if (MusicResource.TryParseExternalResource(ResourceId, out var resource))
+            await Ioc.Default.GetRequiredService<IAppNavigator>().PlayAsync(resource);
     }
 
     private async void DumpDebugInfo_Click(object sender, RoutedEventArgs e)

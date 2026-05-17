@@ -13,6 +13,7 @@ namespace HyPlayer.ViewModels;
 
 public partial class GroupedSongsListViewModel(
     IPlaylistService playlist,
+    ISongListQueueBuilder queueBuilder,
     PlaybackStateService state,
     INotificationService notification,
     INavigationService navigation)
@@ -101,7 +102,7 @@ public partial class GroupedSongsListViewModel(
 
     public void OpenComments(NCSong selectedSong)
     {
-        navigation.Navigate(typeof(Comments), "sg" + selectedSong.SongId);
+        navigation.Navigate(typeof(Comments), CommentTarget.Song(selectedSong.SongId));
     }
 
     public void DownloadSongs(IEnumerable<NCSong> selectedSongs)
@@ -122,29 +123,9 @@ public partial class GroupedSongsListViewModel(
         await new SongListSelect(selectedSong.SongId).ShowAsync();
     }
 
-    public async Task PlayClickedSongAsync(NCSong clickedSong, string listSource, IReadOnlyList<NCSong> visibleSongs)
+    internal async Task PlayClickedSongAsync(NCSong clickedSong, SongListQueueScope scope, IReadOnlyList<NCSong> visibleSongs)
     {
-        if (string.IsNullOrEmpty(listSource)) return;
-
-        bool shiftSong = clickedSong.SongId == state.NowPlayingItem?.Id;
-
-        if (!clickedSong.IsAvailable)
-        {
-            notification.ShowMessage("歌曲不可用", $"歌曲 {clickedSong.SongName} 当前不可用");
-            return;
-        }
-
-        if (playlist.PlaySourceId != listSource || visibleSongs.Count(t => t.IsAvailable) != playlist.Items.Count)
-        {
-            playlist.Clear(!shiftSong);
-            await playlist.AppendNcSourceAsync(listSource);
-        }
-
-        if (listSource.StartsWith("pl") || listSource.StartsWith("al"))
-            playlist.PlaySourceId = listSource;
-
-        var targetItem = playlist.Items.ToList().Find(song => song?.Id == clickedSong.SongId);
-        if (targetItem != null)
-            await playlist.MoveToAsync(targetItem);
+        await queueBuilder.BuildAndPlayAsync(clickedSong, scope, visibleSongs);
     }
+
 }

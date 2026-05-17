@@ -1,11 +1,13 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Messages;
 using System;
 using Windows.UI.Xaml.Controls;
 #endregion
@@ -40,7 +42,7 @@ public sealed partial class CreateSonglistDialog : ContentDialog
         }
 
         Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建成功");
-        _ = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).LoadSongList();
+        WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
         Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.XRealIP = realIpBackup;// Restore user setting
     }
 

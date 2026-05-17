@@ -1,26 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using HyPlayer.Classes;
 
 namespace HyPlayer.Services.Abstractions;
 
 /// <summary>
-/// Loads NetEase queue sources and maps them to NCSong batches.
+/// 队列源加载结果 — 包含 NCSong 批次列表。
+/// 由 <see cref="IQueueSourceProvider"/> 产生，由 <see cref="IPlaylistService"/> 消费。
 /// </summary>
-public interface INeteaseQueueSourceService
-{
-    Task<NeteaseQueueSourceLoadResult> LoadSourceAsync(string sourceId);
-
-    Task<NeteaseQueueSourceLoadResult> LoadPlaylistAsync(string playlistId);
-
-    Task<NeteaseQueueSourceLoadResult> LoadRadioListAsync(string radioId, bool asc = false);
-
-    Task<NeteaseQueueSourceLoadResult> LoadSingerHotAsync(string id);
-
-    Task<NeteaseQueueSourceLoadResult> LoadAlbumAsync(string albumId);
-}
-
 public sealed class NeteaseQueueSourceLoadResult
 {
     public bool Success { get; init; }

@@ -13,6 +13,7 @@ using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.MediaProviders;
 using HyPlayer.Services.Playback.Messages;
 using HyPlayer.Services.Playback.Strategies;
+using HyPlayer.Services.Playback.QueueProviders;
 using HyPlayer.Services.Playback.Transitions;
 using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
@@ -126,12 +127,19 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<ITrackTransition, CrossFadeTransition>();   // xfd — 交叉淡入淡出
         serviceCollection.AddSingleton<ITrackTransition, GaplessTransition>();     // gap — 无缝衔接
 
+        // ── 播放核心：队列源 Provider ──
+        serviceCollection.AddSingleton<IQueueSourceProvider, PlaylistQueueSourceProvider>();
+        serviceCollection.AddSingleton<IQueueSourceProvider, AlbumQueueSourceProvider>();
+        serviceCollection.AddSingleton<IQueueSourceProvider, RadioQueueSourceProvider>();
+        serviceCollection.AddSingleton<IQueueSourceProvider, SingerHotQueueSourceProvider>();
+        serviceCollection.AddSingleton<IQueueSourceProvider, SingleSongQueueSourceProvider>();
+
         // ── 播放核心：服务 ──
         serviceCollection.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
         serviceCollection.AddSingleton<ILocalFileImportService, LocalFileImportService>();
-        serviceCollection.AddSingleton<INeteaseQueueSourceService, NeteaseQueueSourceService>();
         serviceCollection.AddSingleton<IPlaybackControlService, PlaybackControlService>();
         serviceCollection.AddSingleton<IPlaylistService, PlaylistService>();
+        serviceCollection.AddSingleton<ISongListQueueBuilder, SongListQueueBuilder>();
         serviceCollection.AddSingleton<ILyricService, LyricService>();
         serviceCollection.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
         serviceCollection.AddSingleton<ITileService, TileService>();
@@ -139,6 +147,8 @@ public sealed partial class App : Application
         // ── 应用核心：认证 / 导航 / 通知 / UI 状态 ──
         serviceCollection.AddSingleton<IAuthService, AuthService>();
         serviceCollection.AddSingleton<INavigationService, NavigationService>();
+        serviceCollection.AddSingleton<IAppNavigator, AppNavigator>();
+        serviceCollection.AddSingleton<NavigationShellViewModel>();
         serviceCollection.AddSingleton<INotificationService, NotificationService>();
         serviceCollection.AddSingleton<NotificationDispatcher>();
         serviceCollection.AddSingleton<IUIStateService, UIStateService>();

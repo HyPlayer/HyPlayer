@@ -1,10 +1,12 @@
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Messages;
 using HyPlayer.ViewModels;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -47,12 +49,9 @@ namespace HyPlayer.Pages
         private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
             var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
-            var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
             //播放全部歌曲
-            playlist.Clear();
-            await playlist.AppendPlayListAsync(playList.PlaylistId);
-            playlist.PlaySourceId = $"pl{playList.PlaylistId}";
-            await playlist.MoveNextAsync(true);
+            await Ioc.Default.GetRequiredService<IAppNavigator>()
+                .PlayAsync(new MusicResource.Playlist(playList.PlaylistId));
         }
 
         private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
@@ -70,7 +69,7 @@ namespace HyPlayer.Pages
             else
             {
                 _notification.ShowMessage("成功公开歌单");
-                _ = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage)?.LoadSongList();
+                WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
             }
         }
 
@@ -89,7 +88,7 @@ namespace HyPlayer.Pages
             else
             {
                 _notification.ShowMessage("成功删除");
-                _ = (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage)?.LoadSongList();
+                WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
                 _navigation.NavigateRefresh();
             }
         }

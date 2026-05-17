@@ -77,7 +77,8 @@ namespace HyPlayer.ViewModels
                     LineThree =
                         $"{DateConverter.FriendFormat(DateConverter.GetDateTimeFromTimeStamp(pljs.LastProgramCreateTime))}前 | 最后一个节目: " +
                         pljs.LastVoiceName,
-                    ResourceId = "rd" + pljs.Id,
+                    Route = new AppRoute.Radio($"{pljs.Id}"),
+                    PlayResource = new MusicResource.Radio($"{pljs.Id}"),
                     CoverLink = pljs.CoverUrl,
                     Order = _currentIndex++,
                     CanPlay = true
@@ -114,7 +115,8 @@ namespace HyPlayer.ViewModels
                     LineOne = singerjson.Translation,
                     LineTwo = string.Join("/", singerjson.Alias ?? []),
                     LineThree = $"专辑数 {singerjson.AlbumSize} | MV 数 {singerjson.MvSize}",
-                    ResourceId = "ar" + singerjson.Id,
+                    Route = new AppRoute.Artist($"{singerjson.Id}"),
+                    PlayResource = new MusicResource.Artist($"{singerjson.Id}"),
                     CoverLink = singerjson.Img1v1Url,
                     Order = _currentIndex++,
                     CanPlay = true
@@ -151,7 +153,8 @@ namespace HyPlayer.ViewModels
                     LineOne = string.Join(" / ", albumjson.Artists?.Select(t => t.Name) ?? []),
                     LineTwo = string.Join(" / ", albumjson.Alias ?? []),
                     LineThree = $"歌曲数:{albumjson.Size}",
-                    ResourceId = "al" + albumjson.Id,
+                    Route = new AppRoute.Album($"{albumjson.Id}"),
+                    PlayResource = new MusicResource.Album($"{albumjson.Id}"),
                     CoverLink = albumjson.PictureUrl,
                     Order = _currentIndex++,
                     CanPlay = true

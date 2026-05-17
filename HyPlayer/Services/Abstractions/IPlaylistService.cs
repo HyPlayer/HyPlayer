@@ -105,6 +105,11 @@ public interface IPlaylistService
     /// </summary>
     Task<bool> AppendNcSourceAsync(string sourceId);
 
+    /// <summary>
+    /// 根据来源 Kind + Id 直接追加歌曲（替代 string-based 路由）
+    /// </summary>
+    Task<bool> AppendSourceByKindAsync(SongListQueueScopeKind kind, string id);
+
     /// <summary>追加歌单</summary>
     Task<bool> AppendPlayListAsync(string playlistId);
 

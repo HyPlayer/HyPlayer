@@ -121,27 +121,14 @@ public sealed partial class MainPage : Page
 
     private void ShowBar()
     {
-        (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank.IsEnabled = false;
         if (!IsPlaybarOnShow)
         {
             PointerInAni.Begin();
             (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).RefreshPlayBarCover(Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
-            var BlankAni = new DoubleAnimation
-            {
-                To = 0,
-                EnableDependentAnimation = true,
-                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            };
-            var storyboard = new Storyboard();
-            Storyboard.SetTarget(BlankAni, (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank);
-            Storyboard.SetTargetProperty(BlankAni, "Opacity");
-            storyboard.Children.Add(BlankAni);
-            storyboard.Begin();
         }
-
     }
 
-    private async Task CollapseBar()
+    private Task CollapseBar()
     {
         IsPlaybarOnShow = false;
         var PlayBarAni = new DoubleAnimation
@@ -173,19 +160,7 @@ public sealed partial class MainPage : Page
         PointerOutAni.Children.Add(PlayBarTransAni);
         PointerOutAni.Children.Add(PlayBarBlurTransAni);
         PointerOutAni.Begin();
-        (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank.IsEnabled = true;
-        var BlankAni = new DoubleAnimation
-        {
-            To = 1,
-            EnableDependentAnimation = true,
-            EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
-        };
-        var storyboard = new Storyboard();
-        Storyboard.SetTarget(BlankAni, (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).NavItemBlank);
-        Storyboard.SetTargetProperty(BlankAni, "Opacity");
-        storyboard.Children.Add(BlankAni);
-        storyboard.Begin();
-        await (Ioc.Default.GetRequiredService<IUIStateService>().PageBase as BasePage).RefreshNavItemCover(Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
+        return Task.CompletedTask;
     }
 
     private static void SetPlayBarMarginBlurEffect(UIElement sender)

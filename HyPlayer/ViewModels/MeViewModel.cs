@@ -87,7 +87,8 @@ namespace HyPlayer.ViewModels
                                 LineThree = $"播放量: {playList.PlayCount} | 歌曲数: {playList.TrackCount}",
                                 LineTwo = playList.Description,
                                 Order = subListIdx++,
-                                ResourceId = "pl" + playList.PlaylistId,
+                                Route = new AppRoute.Playlist($"{playList.PlaylistId}"),
+                                PlayResource = new MusicResource.Playlist($"{playList.PlaylistId}"),
                                 Title = playList.Name,
                                 CanPlay = true
                             }
@@ -103,7 +104,8 @@ namespace HyPlayer.ViewModels
                                 LineThree = $"播放量: {playList.PlayCount} | 歌曲数: {playList.TrackCount}",
                                 LineTwo = playList.Description,
                                 Order = subListIdx++,
-                                ResourceId = "pl" + playList.PlaylistId,
+                                Route = new AppRoute.Playlist($"{playList.PlaylistId}"),
+                                PlayResource = new MusicResource.Playlist($"{playList.PlaylistId}"),
                                 Title = playList.Name,
                                 CanPlay = true
                             }

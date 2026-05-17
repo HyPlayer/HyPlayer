@@ -1246,11 +1246,6 @@
                                         Visibility="Visible" />
                                 </controls3:SettingsCard.Header>
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Click="BtnXboxReserve_Click" IsClickEnabled="True">
-                                <controls3:SettingsCard.Header>
-                                    <TextBlock x:Name="BtnXboxReserve" Text="Xbox 进后台模式" />
-                                </controls3:SettingsCard.Header>
-                            </controls3:SettingsCard>
 
                         </StackPanel>
                     </ScrollViewer>

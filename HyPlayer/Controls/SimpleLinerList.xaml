@@ -31,7 +31,7 @@
                         Margin="0,15,0,15"
                         HorizontalAlignment="Stretch"
                         Background="Transparent"
-                        Tag="{x:Bind ResourceId}">
+                        Tag="{x:Bind Route}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="60" />

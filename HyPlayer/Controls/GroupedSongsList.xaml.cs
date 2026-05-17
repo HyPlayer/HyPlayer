@@ -32,10 +32,10 @@ public sealed partial class GroupedSongsList : UserControl
         "GroupedSongs", typeof(CollectionViewSource), typeof(GroupedSongsList),
         new PropertyMetadata(default(CollectionViewSource)));
 
-    public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
-        "ListSource", typeof(string),
+    public static readonly DependencyProperty QueueScopeProperty = DependencyProperty.Register(
+        "QueueScope", typeof(SongListQueueScope),
         typeof(GroupedSongsList),
-        new PropertyMetadata(null)
+        new PropertyMetadata(SongListQueueScope.Visible)
     );
 
 
@@ -97,10 +97,10 @@ public sealed partial class GroupedSongsList : UserControl
         set => SetValue(IsMySongListProperty, value);
     }
 
-    public string ListSource
+    public SongListQueueScope QueueScope
     {
-        get => (string)GetValue(ListSourceProperty);
-        set => SetValue(ListSourceProperty, value);
+        get => (SongListQueueScope)GetValue(QueueScopeProperty);
+        set => SetValue(QueueScopeProperty, value);
     }
 
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
@@ -192,7 +192,17 @@ public sealed partial class GroupedSongsList : UserControl
     {
         if (e.ClickedItem is not NCSong clickedSong) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        await ViewModel.PlayClickedSongAsync(clickedSong, ListSource, SongContainer.Items.Cast<NCSong>().ToList());
+        await ViewModel.PlayClickedSongAsync(clickedSong, QueueScope, GetVisibleSongs());
+    }
+
+    private IReadOnlyList<NCSong> GetVisibleSongs()
+    {
+        if (GroupedSongs?.Source is IEnumerable<DiscSongs> discs)
+        {
+            return discs.SelectMany(t => t).ToList();
+        }
+
+        return SongContainer.Items.Cast<NCSong>().ToList();
     }
 
     private IReadOnlyList<NCSong> GetSelectedSongs()

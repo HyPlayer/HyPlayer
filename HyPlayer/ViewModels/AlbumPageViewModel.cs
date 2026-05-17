@@ -27,6 +27,7 @@ namespace HyPlayer.ViewModels
         private readonly Setting _setting;
         private readonly INotificationService _notification;
         private readonly INavigationService _navigation;
+        private readonly IAppNavigator _navigator;
         private readonly IBackgroundTaskRunner _taskRunner;
 
         public AlbumPageViewModel(
@@ -35,6 +36,7 @@ namespace HyPlayer.ViewModels
             Setting setting,
             INotificationService notification,
             INavigationService navigation,
+            IAppNavigator navigator,
             IBackgroundTaskRunner taskRunner)
         {
             _playlist = playlist;
@@ -42,7 +44,9 @@ namespace HyPlayer.ViewModels
             _setting = setting;
             _notification = notification;
             _navigation = navigation;
+            _navigator = navigator;
             _taskRunner = taskRunner;
+            QueueScope = SongListQueueScope.Visible;
         }
 
         [ObservableProperty]
@@ -56,7 +60,7 @@ namespace HyPlayer.ViewModels
         [ObservableProperty]
         public partial string Description { get; set; }
         [ObservableProperty]
-        public partial string SourceId { get; set; }
+        public partial SongListQueueScope QueueScope { get; set; }
         [ObservableProperty]
         public partial bool Subscribed { get; set; }
         [ObservableProperty]
@@ -109,7 +113,7 @@ namespace HyPlayer.ViewModels
                 AuthorString = string.Join(" / ", artists?.Select(t => t.Name) ?? []);
                 Description = (string.Join(" / ", rst.Album.Alias) + rst.Album.Alias != null ? "\r\n" : string.Empty) + rst.Album.Description;
                 var idx = 0;
-                SourceId = "al" + Album.Id;
+                QueueScope = SongListQueueScope.Album(Album.Id);
                 PublishTime = rst.Album.PublishTime;
                 AlbumSongsViewSource = new CollectionViewSource() 
                 { 
@@ -152,8 +156,7 @@ namespace HyPlayer.ViewModels
             try
             {
                 _playlist.Clear();
-                await _playlist.AppendNcSourceAsync("al" + Album.Id);
-                _playlist.PlaySourceId = "al" + Album.Id;
+                await _navigator.AppendAsync(new MusicResource.Album(Album.Id));
                 await _playlist.MoveToAsync(_playlist.Items.FirstOrDefault());
             }
             catch (Exception ex)
@@ -174,7 +177,7 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void NavigateComment()
         {
-            _navigation.Navigate(typeof(Comments), "al" + Album.Id);
+            _navigation.Navigate(typeof(Comments), CommentTarget.Album(Album.Id));
         }
 
         [RelayCommand]
@@ -189,7 +192,7 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void AddAllToPlaylist()
         {
-            _playlist.AppendNcSourceAsync("al" + Album.Id).SafeFireAndForget();
+            _navigator.AppendAsync(new MusicResource.Album(Album.Id)).SafeFireAndForget();
         }
     }
 }

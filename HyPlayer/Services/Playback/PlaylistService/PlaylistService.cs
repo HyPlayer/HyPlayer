@@ -29,7 +29,8 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     private readonly INotificationService _notification;
     private readonly Setting _setting;
     private readonly ILocalFileImportService _localFileImport;
-    private readonly INeteaseQueueSourceService _neteaseQueueSource;
+    private readonly IReadOnlyDictionary<SongListQueueScopeKind, IQueueSourceProvider> _providersByKind;
+    private readonly IReadOnlyDictionary<string, IQueueSourceProvider> _providersByPrefix;
     private readonly IBackgroundTaskRunner _taskRunner;
 
     private readonly List<HyPlayItem> _items = new();
@@ -59,7 +60,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         INotificationService notification,
         Setting setting,
         ILocalFileImportService localFileImport,
-        INeteaseQueueSourceService neteaseQueueSource,
+        IEnumerable<IQueueSourceProvider> queueSourceProviders,
         IBackgroundTaskRunner taskRunner)
     {
         _strategies = strategies.ToDictionary(s => s.Id, StringComparer.Ordinal);
@@ -70,7 +71,14 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         _notification = notification;
         _setting = setting;
         _localFileImport = localFileImport;
-        _neteaseQueueSource = neteaseQueueSource;
+
+        var providerList = queueSourceProviders.ToList();
+        _providersByKind = providerList.GroupBy(p => p.Kind).ToDictionary(g => g.Key, g => g.First());
+        var byPrefix = providerList.ToDictionary(p => p.Prefix, StringComparer.Ordinal);
+        if (byPrefix.TryGetValue(QueueSourcePrefixes.Singer, out var singerProvider))
+            byPrefix[QueueSourcePrefixes.SingerAlias] = singerProvider;
+        _providersByPrefix = byPrefix;
+
         _taskRunner = taskRunner;
 
         var strategyId = _setting.ActiveStrategyId;
@@ -216,14 +224,28 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             if (_items.Count == 0)
                 return;
 
-            if (stopPlayback && _player.GlobalPlaybackStatus == PlaybackStatus.Playing)
-                _control.Pause();   
+            if (stopPlayback)
+            {
+                if (_player.GlobalPlaybackStatus == PlaybackStatus.Playing)
+                    _control.Pause();
 
-            _player.RemoveAllPlaybackSource();
-            DisposePlayItems(_items);
-            _items.Clear();
-            _nowPlayingIndex = -1;
-            _state.NowPlayingItem = null;
+                _player.RemoveAllPlaybackSource();
+                DisposePlayItems(_items);
+                _items.Clear();
+                _nowPlayingIndex = -1;
+                _state.NowPlayingItem = null;
+            }
+            else
+            {
+                HyPlayItem? nowPlayingItem = null;
+                if (_nowPlayingIndex >= 0 && _nowPlayingIndex < _items.Count)
+                    nowPlayingItem = _items[_nowPlayingIndex];
+
+                var itemsToDispose = _items.Where(t => t != nowPlayingItem).ToList();
+
+                _items.Clear();
+                DisposePlayItems(itemsToDispose);
+            }
 
             NotifyAppendDone();
         }

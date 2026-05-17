@@ -16,7 +16,8 @@ namespace HyPlayer.Classes
         public string LineThree { get; set; }
         public string LineTwo { get; set; }
         public int Order { get; set; } = 0;
-        public string ResourceId { get; set; }
+        public AppRoute? Route { get; set; }
+        public MusicResource? PlayResource { get; set; }
         public string Title { get; set; }
 
         public Uri CoverUri =>
@@ -33,12 +34,9 @@ namespace HyPlayer.Classes
         [RelayCommand]
         public async Task Play()
         {
-            var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-            playlist.Clear();
-            playlist.PlaySourceId = ResourceId;
-            await playlist.AppendNcSourceAsync(ResourceId);
-            await playlist.MoveNextAsync(true);
+            if (PlayResource is null) return;
 
+            await Ioc.Default.GetRequiredService<IAppNavigator>().PlayAsync(PlayResource);
         }
     }
 }
