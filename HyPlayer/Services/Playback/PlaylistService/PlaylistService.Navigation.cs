@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;

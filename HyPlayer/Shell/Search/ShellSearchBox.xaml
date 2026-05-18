@@ -1,0 +1,14 @@
+<UserControl
+    x:Class="HyPlayer.Pages.ShellSearchBox"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <AutoSuggestBox
+        x:Name="SearchAutoSuggestBox"
+        VerticalContentAlignment="Center"
+        LostFocus="SearchBox_LostFocus"
+        PlaceholderText="搜索音乐、创作者与音乐视频"
+        QueryIcon="Find"
+        QuerySubmitted="SearchBox_QuerySubmitted"
+        SuggestionChosen="SearchBox_SuggestionChosen"
+        TextChanged="SearchBox_TextChanged" />
+</UserControl>

@@ -1,0 +1,50 @@
+<ContentDialog
+    x:Class="HyPlayer.Pages.PreLoginHintDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    CloseButtonText="取消"
+    PrimaryButtonStyle="{StaticResource AccentButtonStyle}"
+    PrimaryButtonText="继续登录"
+    Style="{StaticResource DefaultContentDialogStyle}">
+
+    <StackPanel Orientation="Vertical" Spacing="8">
+        <TextBlock Text="由于网易云音乐登录风控加强, 现无法通过正常途径登录" TextWrapping="Wrap" />
+        <TextBlock Text="我们只能通过一些方法进行缓解, 但请注意由此带来的风险需由用户承担" TextWrapping="Wrap" />
+        <TextBlock Text="如果你继续代表你已经知晓风险" TextWrapping="Wrap" />
+        <TextBlock Text="我们提供以下手段缓解 (任选其一):" TextWrapping="Wrap" />
+
+        <Grid Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Text="抓取官方客户端登录信息 (稳定, 保存后重启)"
+                TextWrapping="Wrap" />
+            <HyperlinkButton
+                Grid.Column="1"
+                Click="TutorialLink_Click"
+                Content="查看教程" />
+        </Grid>
+
+        <Grid Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Text="使用当前设备信息尝试伪造 (最新缓解)"
+                TextWrapping="Wrap" />
+            <HyperlinkButton
+                Grid.Column="1"
+                Click="RegisterLink_Click"
+                Content="立即生成" />
+        </Grid>
+
+        <TextBlock Text="请在缓解后使用扫码登录" TextWrapping="Wrap" />
+    </StackPanel>
+</ContentDialog>

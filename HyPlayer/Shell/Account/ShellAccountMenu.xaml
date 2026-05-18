@@ -1,0 +1,57 @@
+<UserControl
+    x:Class="HyPlayer.Pages.ShellAccountMenu"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Button
+        x:Name="AccountAvatarButton"
+        Width="36"
+        Height="36"
+        Padding="0"
+        Background="Transparent"
+        BorderThickness="0">
+        <Button.Flyout>
+            <MenuFlyout Placement="Bottom">
+                <MenuFlyoutItem
+                    x:Name="AccountSummaryItem"
+                    IsEnabled="False"
+                    Text="{x:Bind _navigationShell.AccountName, Mode=OneWay}">
+                    <MenuFlyoutItem.Icon>
+                        <SymbolIcon Symbol="Contact" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem
+                    IsEnabled="False"
+                    Text="{x:Bind _navigationShell.AccountSubtitle, Mode=OneWay}" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem
+                    x:Name="AccountProfileMenuItem"
+                    Click="OpenProfile_Click"
+                    Text="{x:Bind _navigationShell.AccountProfileButtonText, Mode=OneWay}">
+                    <MenuFlyoutItem.Icon>
+                        <SymbolIcon Symbol="Contact" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Click="OpenSettings_Click" Text="设置">
+                    <MenuFlyoutItem.Icon>
+                        <SymbolIcon Symbol="Setting" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator Visibility="{x:Bind _navigationShell.AccountSignOutVisibility, Mode=OneWay}" />
+                <MenuFlyoutItem
+                    x:Name="AccountSignOutMenuItem"
+                    Click="SignOut_Click"
+                    Text="退出登录"
+                    Visibility="{x:Bind _navigationShell.AccountSignOutVisibility, Mode=OneWay}">
+                    <MenuFlyoutItem.Icon>
+                        <SymbolIcon Symbol="Back" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+            </MenuFlyout>
+        </Button.Flyout>
+        <PersonPicture
+            Width="28"
+            Height="28"
+            Initials="{x:Bind _navigationShell.AccountInitials, Mode=OneWay}"
+            ProfilePicture="{x:Bind _navigationShell.AccountAvatarSource, Mode=OneWay}" />
+    </Button>
+</UserControl>

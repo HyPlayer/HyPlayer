@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using Windows.Storage;

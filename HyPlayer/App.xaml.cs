@@ -152,8 +152,10 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<INotificationService, NotificationService>();
         serviceCollection.AddSingleton<NotificationDispatcher>();
         serviceCollection.AddSingleton<IUIStateService, UIStateService>();
+        serviceCollection.AddTransient<ShellSearchViewModel>();
         serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>, PlaybarVisibilityChangedHandler>();
         serviceCollection.AddSingleton<INotificationHandler<EnterForegroundFromBackgroundNotification>, EnterForegroundHandler>();
+        serviceCollection.AddSingleton<ShellLoginService>();
 
         // ── ViewModels ──
         serviceCollection.AddTransient<HomeViewModel>();

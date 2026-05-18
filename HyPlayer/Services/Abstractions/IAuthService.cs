@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using HyPlayer.Classes;
 
-using HyPlayer.Services.Abstractions;
 namespace HyPlayer.Services.Abstractions;
 
 /// <summary>
@@ -22,11 +21,32 @@ public interface IAuthService
     /// <summary>用户歌单列表</summary>
     List<NCPlayList> MySongLists { get; }
 
-    /// <summary>执行登录流程</summary>
-    Task LoginAsync();
+    /// <summary>清理运行时 Cookie。</summary>
+    void ClearRuntimeCookies();
 
-    /// <summary>登出</summary>
-    void Logout();
+    /// <summary>写入运行时 Cookie。</summary>
+    void SetRuntimeCookie(string name, string value);
+
+    /// <summary>尝试使用已保存 Cookie 恢复登录。</summary>
+    Task<AuthResult> TryLoadSavedLoginAsync();
+
+    /// <summary>使用手机号或邮箱登录。</summary>
+    Task<AuthResult> LoginWithPasswordAsync(string account, string password);
+
+    /// <summary>创建二维码登录 Key。</summary>
+    Task<AuthQrKeyResult> CreateQrLoginKeyAsync();
+
+    /// <summary>检查二维码登录状态。</summary>
+    Task<AuthQrCheckResult> CheckQrLoginAsync(string key);
+
+    /// <summary>注册当前设备信息。</summary>
+    Task<AuthDeviceRegisterResult> RegisterCurrentDeviceAsync();
+
+    /// <summary>完成登录后的认证状态同步。</summary>
+    Task<AuthResult> CompleteLoginAsync(bool clearLoginCache);
+
+    /// <summary>登出并清理认证缓存。</summary>
+    Task<AuthResult> LogoutAsync();
 
     /// <summary>通知登录完成（发送 LoginCompletedMessage）</summary>
     void NotifyLoginCompleted();

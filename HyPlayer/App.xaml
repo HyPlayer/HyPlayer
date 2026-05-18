@@ -11,10 +11,9 @@
                 <muxc:XamlControlsResources />
                 <ResourceDictionary Source="/Resources/Acrylic.xaml" />
                 <ResourceDictionary Source="/Resources/UnsupportedFontIcon.xaml" />
-                <ResourceDictionary Source="/Classes/ConvertersDictionary.xaml" />
+                <ResourceDictionary Source="/UI/Converters/ConvertersDictionary.xaml" />
                 <ResourceDictionary Source="/Resources/ListView.xaml" />
                 <ResourceDictionary Source="/Resources/NavigationView.xaml" />
-                <ResourceDictionary Source="/Resources/ContentDialog.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <Style x:Key="BaseStyle" TargetType="controls:ImageEx">
                 <Setter Property="IsCacheEnabled" Value="False" />

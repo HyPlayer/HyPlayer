@@ -16,7 +16,10 @@
 ## Project Boundaries
 
 - Main app code is under `HyPlayer/`; the MSIX packaging project is `HyPlayer.Package/HyPlayer.Package.wapproj` and points at `..\HyPlayer\HyPlayer.csproj` as the entry point.
+- The main app is organized by responsibility: `HyPlayer/App/` for app-level pages/settings/history except root `App.xaml`, `HyPlayer/Shell/` for the shell host and navigation shell, `HyPlayer/Features/` for feature pages/view models, `HyPlayer/Domain/` for domain models, `HyPlayer/Services/` for app services, `HyPlayer/Infrastructure/` for low-level helpers, and `HyPlayer/UI/` for reusable controls/converters/behaviors.
+- Keep `HyPlayer/App.xaml` and `HyPlayer/App.xaml.cs` at the project root. UWP application entry-point/XAML generation depends on that location; moving them can produce `CS5001` (`Main` method not found).
 - App composition starts in `HyPlayer/App.xaml.cs`: `InitializeServices` builds the `CommunityToolkit.Mvvm.DependencyInjection.Ioc` service provider and registers playback services, media providers, strategies, transitions, notification handlers, and view models.
+- Shell composition starts in `HyPlayer/Shell/BasePage.xaml`; `NavigationView` menu items are managed imperatively by `HyPlayer/Services/Navigation/AppNavigator.cs`, not by `Binding`, `x:Bind`, `ItemsSource`, or `MenuItemsSource`. Non-`NavigationView` shell controls may still use MVVM/`x:Bind`.
 - Playback state is centralized in `Services/Playback/PlaybackStateService.cs`; UI view models mirror state through `WeakReferenceMessenger` messages from `Services/Playback/Messages/PlaybackMessages.cs`.
 - Media source routing is `HyPlayItem.ProviderId` -> `IMediaSourceProvider` in `Services/Playback/MediaProviders/MediaSourceService.cs`. Provider IDs are `ncm`, `lcl`, `nca`, and `nst`.
 - Playlist behavior is strategy-based in `Services/Playback/PlaylistService.cs`; play strategies are registered with IDs such as `seq`, `sgl`, `shn`, `pfm`, and `ltg`, and transition strategies use IDs such as `dir`, `xfd`, and `gap`.
@@ -25,6 +28,7 @@
 
 - The main app enables AOT-related settings (`PublishAot`, `LangVersion=preview`, `NoWarn=IL2026;IL3050`). Avoid reflection-heavy or dynamic-serialization changes unless they are explicitly source-generation safe.
 - JSON serialization is source-generated in `HyPlayer/Classes/JsonDefaultContext.cs`; add new app-level serialized types there when using `System.Text.Json` in AOT-sensitive paths.
+- Keep `HyPlayer/Classes/JsonDefaultContext.cs`, `HyPlayer/Classes/BuildInfo.cs`, and `HyPlayer/Classes/LastFMConstants.cs` in `HyPlayer/Classes/` unless the CI replacement/source-generation paths are also updated and verified.
 - `HyPlayer.NeteaseProvider/HyPlayer.NeteaseApi` uses T4/source-generated JSON context files (`NeteaseJsonSerializeContext.tt` and generated `.g.g.cs`). Do not hand-edit generated output unless you have verified the generation path.
 - `BuildInfo.cs` and `LastFMConstants.cs` contain placeholders that CI replaces before packaging. Do not commit real Last.fm secrets or local build metadata into these files.
 
