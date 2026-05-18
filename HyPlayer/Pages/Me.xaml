@@ -192,22 +192,6 @@
                                 Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
                                 IsTextSelectionEnabled="True"
                                 Text="{x:Bind ViewModel.User.Signature, Mode=OneWay}" />
-                            <Button
-                                x:Name="ButtonLogout"
-                                VerticalAlignment="Bottom"
-                                Click="Logout_OnClick"
-                                Foreground="{ThemeResource SystemControlForegroundAccentBrush}">
-                                <StackPanel Orientation="Horizontal">
-                                    <!--  ReSharper disable once Xaml.InvalidResourceType  -->
-                                    <FontIcon
-                                        Margin="0,0,8,0"
-                                        FontSize="14"
-                                        Foreground="{ThemeResource SystemBaseMediumHighColor}"
-                                        Glyph="&#xF3B1;" />
-                                    <!--  ReSharper disable once Xaml.InvalidResourceType  -->
-                                    <TextBlock Foreground="{ThemeResource SystemBaseMediumHighColor}" Text="退出登录" />
-                                </StackPanel>
-                            </Button>
                         </StackPanel>
                     </controls:DockPanel>
                 </Grid>

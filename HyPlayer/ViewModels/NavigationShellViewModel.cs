@@ -10,7 +10,10 @@ using HyPlayer.Services.Messages;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.ViewModels;
 
@@ -27,16 +30,30 @@ public partial class NavigationShellViewModel : ObservableObject
     public ObservableCollection<NavigationNode> MenuItems { get; } = [];
 
     [ObservableProperty]
-    public partial NavigationNode? SelectedItem { get; set; }
+    public partial bool IsLoading { get; set; }
 
     [ObservableProperty]
-    public partial bool IsLoading { get; set; }
+    public partial ImageSource? AccountAvatarSource { get; set; }
+
+    [ObservableProperty]
+    public partial string AccountInitials { get; set; } = "HP";
+
+    [ObservableProperty]
+    public partial string AccountName { get; set; } = "未登录";
+
+    [ObservableProperty]
+    public partial string AccountSubtitle { get; set; } = "登录以同步歌单与收藏";
+
+    [ObservableProperty]
+    public partial string AccountProfileButtonText { get; set; } = "登录";
+
+    [ObservableProperty]
+    public partial Visibility AccountSignOutVisibility { get; set; } = Visibility.Collapsed;
 
     // 跟踪需要动态更新的节点
     private NavigationNode? _createdContainer;
     private NavigationNode? _subscribedContainer;
     private NavigationNode? _likedSongsNode;
-    private NavigationNode? _loginNode;
 
     public NavigationShellViewModel(
         NeteaseCloudMusicApiHandler api,
@@ -48,6 +65,7 @@ public partial class NavigationShellViewModel : ObservableObject
         _notification = notification;
 
         BuildMenuItems();
+        UpdateAccountStatus();
 
         WeakReferenceMessenger.Default.Register<PlaylistCollectionChangedMessage>(this, (r, _) =>
             ((NavigationShellViewModel)r).LoadPlaylistsCommand.Execute(null));
@@ -79,10 +97,6 @@ public partial class NavigationShellViewModel : ObservableObject
         _subscribedContainer = new NavigationNode { Title = "我收藏的歌单", Icon = new SymbolIcon { Symbol = Symbol.List }, IsVisible = false };
         MenuItems.Add(_subscribedContainer);
 
-        // 底部导航项（放在 MenuItems 末尾而非 FooterItems，避免被 PlayBar 遮挡）
-        _loginNode = new NavigationNode { Title = "登录", Icon = new SymbolIcon { Symbol = Symbol.Contact }, Route = new AppRoute.Me() };
-        MenuItems.Add(_loginNode);
-        MenuItems.Add(new NavigationNode { Title = "设置", Icon = new FontIcon { Glyph = "\uE713" }, Route = new AppRoute.Settings() });
     }
 
     /// <summary>根据导航后的页面类型和参数找到对应的 NavigationNode</summary>
@@ -115,14 +129,53 @@ public partial class NavigationShellViewModel : ObservableObject
     {
         if (_auth.CurrentUser is null) return;
 
-        _loginNode.Title = _auth.CurrentUser.Name;
-        _loginNode.Icon = new BitmapIcon
-        {
-            UriSource = new Uri(_auth.CurrentUser.Avatar + "?param=" + StaticSource.PICSIZE_NAVITEM_USERAVATAR),
-            ShowAsMonochrome = false
-        };
-
+        UpdateAccountStatus();
         _ = LoadPlaylistsAsync();
+    }
+
+    public void UpdateAfterLogout()
+    {
+        _createdContainer?.Children.Clear();
+        _subscribedContainer?.Children.Clear();
+
+        if (_createdContainer is not null)
+            _createdContainer.IsVisible = false;
+        if (_subscribedContainer is not null)
+            _subscribedContainer.IsVisible = false;
+        if (_likedSongsNode is not null)
+            _likedSongsNode.IsVisible = false;
+
+        IsLoading = false;
+        UpdateAccountStatus();
+    }
+
+    public void UpdateAccountStatus()
+    {
+        if (_auth.IsLoggedIn && _auth.CurrentUser is { } user)
+        {
+            AccountAvatarSource = string.IsNullOrEmpty(user.Avatar)
+                ? null
+                : new BitmapImage(new Uri(user.Avatar + "?param=" + StaticSource.PICSIZE_NAVITEM_USERAVATAR));
+            AccountInitials = GetUserInitials(user.Name);
+            AccountName = string.IsNullOrEmpty(user.Name) ? "已登录" : user.Name;
+            AccountSubtitle = string.IsNullOrEmpty(user.Signature) ? "查看个人主页" : user.Signature;
+            AccountProfileButtonText = "个人资料";
+            AccountSignOutVisibility = Visibility.Visible;
+            return;
+        }
+
+        AccountAvatarSource = null;
+        AccountInitials = "HP";
+        AccountName = "未登录";
+        AccountSubtitle = "登录以同步歌单与收藏";
+        AccountProfileButtonText = "登录";
+        AccountSignOutVisibility = Visibility.Collapsed;
+    }
+
+    private static string GetUserInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "HP";
+        return name.Trim()[0].ToString().ToUpperInvariant();
     }
 
     [RelayCommand]

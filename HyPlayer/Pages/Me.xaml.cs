@@ -43,32 +43,10 @@ public sealed partial class Me : Page
         if (e.Parameter != null)
         {
             ViewModel.InitializeUserInfo((string)e.Parameter).SafeFireAndForget();
-            ButtonLogout.Visibility = Visibility.Collapsed;
         }
         else
         {
             ViewModel.InitializeUserInfo(_auth.CurrentUser.Id).SafeFireAndForget();
-        }
-    }
-
-    private void Logout_OnClick(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            _auth.IsLoggedIn = false;
-            _auth.CurrentUser = new NCUser();
-            if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("Cookies", out var container))
-            {
-                container.Values.Clear();
-            }
-            _api.Option.Cookies.Clear();
-            Setting.SaveCookies();
-            (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).MainFrame.Navigate(typeof(BasePage));
-            SimpleCacher.ClearCacheAsync(CacheType.Login).SafeFireAndForget();
-            App.InitializeJumpList().SafeFireAndForget();
-        }
-        catch
-        {
         }
     }
 

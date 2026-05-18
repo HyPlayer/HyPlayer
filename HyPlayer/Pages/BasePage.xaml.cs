@@ -19,7 +19,6 @@ using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using HyPlayer.ViewModels;
-using Microsoft.UI.Xaml.Controls;
 using QRCoder;
 using System;
 using System.Collections.Generic;
@@ -27,6 +26,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Security.ExchangeActiveSyncProvisioning;
+using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI;
@@ -39,10 +39,8 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using WinRT;
-using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
-using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
-using NavigationViewItemInvokedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;
-using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
+using InfoBarSeverity = Microsoft.UI.Xaml.Controls.InfoBarSeverity;
+using TeachingTip = Microsoft.UI.Xaml.Controls.TeachingTip;
 
 #endregion
 
@@ -61,11 +59,9 @@ public sealed partial class BasePage : Page
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
-    private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
-    /// <summary>导航侧边栏 ViewModel，供 XAML {x:Bind} 使用</summary>
-    public NavigationShellViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<NavigationShellViewModel>();
+    private readonly NavigationShellViewModel _navigationShell = Ioc.Default.GetRequiredService<NavigationShellViewModel>();
 
     private string nowqrkey;
     private readonly IPlaybackControlService _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
@@ -86,6 +82,8 @@ public sealed partial class BasePage : Page
 
         ApplicationView.TerminateAppOnFinalViewClose = false;
         Ioc.Default.GetRequiredService<INavigationService>().RootFrame = BaseFrame;
+        _navigator.AttachNavigationView(NavMain, _navigationShell, ShowLoginRequiredDialogAsync);
+        _navigationShell.UpdateAccountStatus();
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
     }
@@ -94,6 +92,7 @@ public sealed partial class BasePage : Page
     {
         base.OnNavigatedFrom(e);
         WeakReferenceMessenger.Default.UnregisterAll(this);
+        _navigator.DetachNavigationView(NavMain);
         Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
         var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
@@ -304,7 +303,7 @@ public sealed partial class BasePage : Page
             };
 
         _auth.IsLoggedIn = true;
-        ViewModel.UpdateAfterLogin();
+        _navigationShell.UpdateAfterLogin();
         InfoBarLoginHint.Severity = InfoBarSeverity.Success;
         InfoBarLoginHint.Message = "欢迎 " + _auth.CurrentUser.Name;
         DialogLogin.Hide();
@@ -322,7 +321,6 @@ public sealed partial class BasePage : Page
         }
         else
         {
-            ViewModel.SelectedItem = ViewModel.FindNode(new AppRoute.Me());
             await _navigator.NavigateAsync(new AppRoute.Me());
         }
 
@@ -351,56 +349,39 @@ public sealed partial class BasePage : Page
         auth.LikedSongs.AddRange(likedSongs);
     }
 
-    private void NavMain_OnSelectionChanged(NavigationView sender,
-                                                  NavigationViewSelectionChangedEventArgs args)
+    private async Task ShowLoginRequiredDialogAsync()
     {
-        if (_uiState.NavigatingBack) return;
-        if (_navigation.CanGoBack)
-            NavMain.IsBackEnabled = true;
-
-        // 导航路由在 ItemInvoked 中处理；选中态由 ViewModel.SelectedItem 双向绑定管理
+        _api?.Option.Cookies.Clear();
+        await DialogPreLoginHint.ShowAsync();
     }
 
-    private async void NavMain_ItemInvoked(NavigationView sender,
-                                           NavigationViewItemInvokedEventArgs args)
+    private async void AccountProfileButton_Click(object sender, RoutedEventArgs e)
     {
-        if (args.InvokedItemContainer?.Tag is not NavigationNode node) return;
-
-        try
+        if (!_auth.IsLoggedIn)
         {
-            // 登录门控
-            if (node.Route is AppRoute.Me && !_auth.IsLoggedIn)
-            {
-                ViewModel.SelectedItem = null;
-                _api?.Option.Cookies.Clear();
-                await DialogPreLoginHint.ShowAsync();
-                return;
-            }
+            await ShowLoginRequiredDialogAsync();
+            return;
+        }
 
-            if (node.Route is not null)
-            {
-                await _navigator.NavigateAsync(node.Route);
-            }
-            else if (node.Action is { } action)
-            {
-                switch (action)
-                {
-                    case AppNavigationAction.CreatePlaylist:
-                        _ = new CreateSonglistDialog().ShowAsync();
-                        break;
-                    case AppNavigationAction.PersonalFM:
-                        PersonalFM.InitPersonalFM();
-                        break;
-                    case AppNavigationAction.HeartBeat:
-                        Api.EnterIntelligencePlay().SafeFireAndForget();
-                        break;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("导航失败", ex.Message);
-        }
+        await _navigator.NavigateAsync(new AppRoute.Me());
+    }
+
+    private async void AccountSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await _navigator.NavigateAsync(new AppRoute.Settings());
+    }
+
+    private void AccountSignOutButton_Click(object sender, RoutedEventArgs e)
+    {
+        _auth.Logout();
+        if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("Cookies", out var container))
+            container.Values.Clear();
+        _api.Option.Cookies.Clear();
+        Setting.SaveCookies();
+        _navigationShell.UpdateAfterLogout();
+        _navigation.Navigate(typeof(Welcome));
+        SimpleCacher.ClearCacheAsync(CacheType.Login).SafeFireAndForget();
+        App.InitializeJumpList().SafeFireAndForget();
     }
 
     private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
@@ -520,12 +501,6 @@ public sealed partial class BasePage : Page
         BaseFrame.Navigate(typeof(ThirdPartyLogin), (sender?.As<Button>()).Tag.ToString());
     }
 
-    private void NavigationViewItem_Tapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
-    {
-        NavMain.SelectedItem = sender;
-    }
-
-
     private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         _navigation.Navigate(typeof(Search), sender.Text);
@@ -613,24 +588,9 @@ public sealed partial class BasePage : Page
         sender.ItemsSource = json.Value.Result.AllMatch?.Select(t => t.Keyword).ToList();
     }
 
-    private async void BaseFrame_Navigated(object sender, NavigationEventArgs e)
+    private void BaseFrame_Navigated(object sender, NavigationEventArgs e)
     {
-        _ = _notification.InvokeOnUIThread(async () =>
-            {
-                try
-                {
-                    await Task.Delay(500);
-                    // 根据当前页面路由同步 NavigationView 选中态
-                    var route = _navigator.InferRoute(e.SourcePageType, e.Parameter);
-                    if (route is not null)
-                        ViewModel.SelectedItem = ViewModel.FindNode(route);
-                }
-                catch
-                {
-                    // ignored
-                }
-            }
-        );
+        _navigator.SyncNavigationViewSelection(e.SourcePageType, e.Parameter);
     }
 
     private void BtnApiAddParamClick(object sender, RoutedEventArgs e)
