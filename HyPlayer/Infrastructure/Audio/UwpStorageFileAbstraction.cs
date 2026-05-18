@@ -5,7 +5,7 @@ using File = TagLib.File;
 
 namespace HyPlayer.Classes;
 
-public sealed class UwpStorageFileAbstraction : File.IFileAbstraction, IDisposable
+public sealed partial class UwpStorageFileAbstraction : File.IFileAbstraction, IDisposable
 {
     private bool _disposed;
 
