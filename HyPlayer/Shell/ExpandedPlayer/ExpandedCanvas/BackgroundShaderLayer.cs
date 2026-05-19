@@ -14,7 +14,7 @@ using Windows.Storage;
 using Windows.Storage.Streams;
 using WinRT;
 
-namespace HyPlayer.UI.Playback.ExpandedCanvas;
+namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
 /// <summary>
 /// Win2D composable layer that owns the Isolation-mode pixel shader background.

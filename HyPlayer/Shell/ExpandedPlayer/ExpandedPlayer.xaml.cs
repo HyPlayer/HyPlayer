@@ -55,8 +55,8 @@ using Windows.UI.Xaml.Navigation;
 using HyALRCLyricInfo = HyPlayer.Classes.HyALRCLyricInfo;
 using LrcConverter = HyPlayer.Classes.LrcConverter;
 using HyPlayer.Services.Messages;
-using HyPlayer.UI.Playback.ExpandedCanvas;
 using HyPlayer.Shell.Playback;
+using HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
 #endregion
 
@@ -100,7 +100,6 @@ public sealed partial class ExpandedPlayer : Page
     private bool _needsRedesign = true;
     private int _nowHeight;
     private int _nowWidth;
-    private bool _isProgramClick;
     private bool _isRealClick;
     private ExpandedWindowMode _windowMode;
     private AppWindow? expandedPlayerWindow;
@@ -663,7 +662,6 @@ public sealed partial class ExpandedPlayer : Page
 
     private void BtnToggleFullScreen_Checked(object sender, RoutedEventArgs e)
     {
-        if (_isProgramClick) return;
         if (BtnToggleFullScreen.IsChecked)
         {
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();

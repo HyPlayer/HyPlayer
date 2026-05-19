@@ -4,7 +4,7 @@ using HyPlayer.Classes;
 using HyPlayer.LyricRenderer;
 using Microsoft.Graphics.Canvas.Effects;
 
-namespace HyPlayer.UI.Playback.ExpandedCanvas;
+namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
 public sealed class ExpandedCanvasState
 {

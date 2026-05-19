@@ -5,7 +5,7 @@ using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Windows.UI;
 
-namespace HyPlayer.UI.Playback.ExpandedCanvas;
+namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
 /// <summary>
 /// Win2D composable layer that renders an FFT spectrum visualization.

@@ -3,7 +3,7 @@ using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Windows.UI.Xaml.Input;
 
-namespace HyPlayer.UI.Playback.ExpandedCanvas;
+namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
 /// <summary>
 /// Shared Win2D canvas host for the expanded playback surface.
