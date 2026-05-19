@@ -101,11 +101,11 @@ public sealed partial class WidgetPage : Page
         _widget.WindowBoundsChanged += OnResized;
         _widget.RequestedThemeChanged += RequestedThemeChanged;
         _hotkeyWatcher.HotkeySetStateChanged += OnHotkeySetStateChanged;
-        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (_, m) => HyPlayList_OnPlayItemChange(m.Item));
-        WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (_, m) => HyPlayList_OnPlayPositionChange(m.Position));
-        WeakReferenceMessenger.Default.Register<PlaybackStateChangedMessage>(this, (_, m) => { HyPlayList_OnPlaybackStatusChanged(); });
-        WeakReferenceMessenger.Default.Register<LyricLoadedMessage>(this, (_, m) => LoadLyrics());
-        WeakReferenceMessenger.Default.Register<SeekRequestedMessage>(this, (_, m) => HyPlayList_OnManualSeek());
+        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((WidgetPage)r).HyPlayList_OnPlayItemChange(m.Item));
+        WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, m) => ((WidgetPage)r).HyPlayList_OnPlayPositionChange(m.Position));
+        WeakReferenceMessenger.Default.Register<PlaybackStateChangedMessage>(this, (r, m) => ((WidgetPage)r).HyPlayList_OnPlaybackStatusChanged());
+        WeakReferenceMessenger.Default.Register<LyricLoadedMessage>(this, (r, m) => ((WidgetPage)r).LoadLyrics());
+        WeakReferenceMessenger.Default.Register<SeekRequestedMessage>(this, (r, m) => ((WidgetPage)r).HyPlayList_OnManualSeek());
         _eventsRegistered = true;
         TipContent.Visibility = Visibility.Collapsed;
         LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
@@ -154,9 +154,8 @@ public sealed partial class WidgetPage : Page
             _eventsRegistered = false;
         }
 
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
         if (_widget is not null)
-            uiState.ClearReferences(_widget);
+            Ioc.Default.GetRequiredService<IGameBarWidgetService>().ClearReference(_widget);
         if (_windowClosedRegistered)
         {
             Window.Current.Closed -= WidgetPage_Closed;

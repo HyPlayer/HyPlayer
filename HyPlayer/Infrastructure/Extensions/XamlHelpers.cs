@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
-using HyPlayer.Services.Abstractions;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
@@ -18,11 +17,6 @@ internal static class XamlHelpers
     /// 全局 Setting 实例，供 XAML x:Bind 使用。
     /// </summary>
     public static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
-
-    /// <summary>
-    /// 全局 BrushManagement 实例，供 XAML x:Bind 使用。
-    /// </summary>
-    public static BrushManagement BrushManagement => Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement;
 
     /// <summary>
     /// 通用右键菜单处理器，供 XAML RightTapped 事件绑定。

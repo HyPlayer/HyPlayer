@@ -11,7 +11,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
-using CommunityToolkit.Mvvm.DependencyInjection;
 using System.Diagnostics.CodeAnalysis;
 using Windows.ApplicationModel.DataTransfer;
 namespace HyPlayer.ViewModels;
@@ -47,17 +46,7 @@ public partial class PlayBarViewModel : ObservableRecipient
         _taskRunner = taskRunner;
         _authService = authService;
         _dataTransferManager = DataTransferManager.GetForCurrentView();
-        // Initialize from current state
-        NowPlayingItem = _state.NowPlayingItem;
-        IsPlaying = _state.IsPlaying;
-        Position = _state.Position;
-        Duration = _state.Duration;
-        Volume = _state.Volume;
-        ActiveStrategyId = _state.ActiveStrategyId;
-        LyricIndex = _state.LyricIndex;
-        LyricInfo = _state.LyricInfo;
-        IsInFm = _state.IsInFm;
-        QualityTag = _state.QualityTag;
+        SyncFromState();
 
         // Activate messenger registrations
         IsActive = true;
@@ -209,17 +198,10 @@ public partial class PlayBarViewModel : ObservableRecipient
     {
         var messenger = Messenger;
 
-        messenger.Register<TrackChangedMessage>(this, (r, m) =>
+        messenger.Register<TrackChangedMessage>(this, (r, _) =>
         {
             var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() =>
-            {
-                vm.NowPlayingItem = m.Item;
-                vm.Duration = TimeSpan.FromMilliseconds(m.Item?.LengthInMilliseconds ?? 0);
-                vm.QualityTag = vm._state.QualityTag;
-                vm.IsInFm = vm._state.IsInFm;
-                vm.ActiveStrategyId = vm._state.ActiveStrategyId;
-            });
+            vm.RunOnUIThread(vm.SyncFromState);
         });
 
         messenger.Register<PlaybackStateChangedMessage>(this, (r, m) =>
@@ -228,16 +210,19 @@ public partial class PlayBarViewModel : ObservableRecipient
             vm.RunOnUIThread(() => vm.IsPlaying = m.IsPlaying);
         });
 
-        messenger.Register<PlaylistChangedMessage>(this, (r, m) =>
+        messenger.Register<QualityTagChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() =>
-            {
-                vm.ActiveStrategyId = vm._state.ActiveStrategyId;
-                vm.RefreshPlaylistItems();
-            });
+            vm.RunOnUIThread(() => vm.QualityTag = m.Tag);
         });
 
+        messenger.Register<LyricLoadedMessage>(this, (r, m) =>
+        {
+            var vm = (PlayBarViewModel)r;
+            vm.RunOnUIThread(() => vm.LyricInfo = m.Info);
+        });
+
+        // ── High-frequency position: keep direct subscription ──
         messenger.Register<PositionTickMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
@@ -248,22 +233,21 @@ public partial class PlayBarViewModel : ObservableRecipient
             });
         });
 
-        messenger.Register<QualityTagChangedMessage>(this, (r, m) =>
-        {
-            var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() => vm.QualityTag = m.Tag);
-        });
-
         messenger.Register<LyricIndexChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
             vm.RunOnUIThread(() => vm.LyricIndex = m.Index);
         });
 
-        messenger.Register<LyricLoadedMessage>(this, (r, m) =>
+        // ── Playlist: keep for playlist-refresh and strategy-sync behavior ──
+        messenger.Register<PlaylistChangedMessage>(this, (r, m) =>
         {
             var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() => vm.LyricInfo = m.Info);
+            vm.RunOnUIThread(() =>
+            {
+                vm.ActiveStrategyId = vm._state.ActiveStrategyId;
+                vm.RefreshPlaylistItems();
+            });
         });
     }
 

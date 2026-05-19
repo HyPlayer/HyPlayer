@@ -115,16 +115,17 @@ public static class Utils
 
     public static async Task ConvertKawazuRomaji(List<SongLyric> lyrics)
     {
-        if (Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv is null) return;
+        var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>().Converter;
+        if (kawazu is null) return;
         foreach (var lyricItem in lyrics)
         {
             if (!string.IsNullOrWhiteSpace(lyricItem.LyricLine.CurrentLyric))
             {
                 if (!Utilities.HasKana(lyricItem.LyricLine.CurrentLyric)) continue;
                 lyricItem.Romaji =
-                    await Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
+                    await kawazu.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
                 if (lyricItem.LyricLine is not KaraokeLyricsLine klyric) continue;
-                var list = await Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv.GetDivisions(lyricItem.LyricLine.CurrentLyric, To.Romaji,
+                var list = await kawazu.GetDivisions(lyricItem.LyricLine.CurrentLyric, To.Romaji,
                     Mode.Separated, RomajiSystem.Hepburn, "", "");
                 SetRomajiKaraoke(list, [.. klyric.WordInfos]);
             }

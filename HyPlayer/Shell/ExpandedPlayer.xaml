@@ -282,7 +282,7 @@
                             x:Name="TextBlockSongTitle"
                             FontSize="46"
                             FontWeight="Bold"
-                            Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
+                            Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}"
                             HorizontalTextAlignment="Center"
                             IsTextSelectionEnabled="True"
                             Text="{x:Bind ViewModel.SongName, Mode=OneWay}" />
@@ -300,7 +300,7 @@
                             Name="SingerHyperlinkBtn"
                             Click="TextBlockSinger_OnTapped"
                             FontSize="20"
-                            Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
+                            Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}"
                             Style="{StaticResource TextBlockButtonStyle}">
                             <controls1:AutoScrollView IsPlaying="True">
                                 <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist, Mode=OneWay}" />
@@ -310,7 +310,7 @@
                             Name="AlbumHyperlinkBtn"
                             Click="AlbumHyperlinkBtn_OnTapped"
                             FontSize="20"
-                            Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}"
+                            Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}"
                             Style="{StaticResource TextBlockButtonStyle}">
                             <controls1:AutoScrollView IsPlaying="True">
                                 <TextBlock x:Name="AlbumTextBlock" Text="{x:Bind ViewModel.Album, Mode=OneWay}" />
@@ -457,7 +457,7 @@
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>
-                    <FontIcon Foreground="{x:Bind hyplayer:XamlHelpers.BrushManagement.AccentBrush, Mode=OneWay}" Glyph="&#xEDE3;" />
+                    <FontIcon Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}" Glyph="&#xEDE3;" />
                 </Button.Content>
             </Button>
         </Grid>

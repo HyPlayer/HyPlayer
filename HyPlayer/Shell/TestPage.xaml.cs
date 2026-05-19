@@ -149,8 +149,8 @@ public sealed partial class TestPage : Page
             CurrentPlaySource = playlist.PlaySourceId,
             CurrentUser = _auth.CurrentUser,
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
-            IsInBackground = Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground,
-            ErrorMessageList = [.. Ioc.Default.GetRequiredService<IUIStateService>().ErrorMessageList.TakeLast(15)]
+            IsInBackground = Ioc.Default.GetRequiredService<IAppLifecycleStateService>().IsInBackground,
+            ErrorMessageList = [.. Ioc.Default.GetRequiredService<IDiagnosticsStateService>().ErrorMessages.TakeLast(15)]
         }, JsonDefaults.Options);
         var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("dump-" +
             DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid() + ".txt");

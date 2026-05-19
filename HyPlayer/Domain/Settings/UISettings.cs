@@ -224,7 +224,7 @@ namespace HyPlayer.Classes.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybarTime)] = value;
-                Ioc.Default.GetRequiredService<IUIStateService>().PlaybarSecondCounter = 0;
+                Ioc.Default.GetRequiredService<IPlayBarAutoHideService>().SecondCounter = 0;
             }
         }
 

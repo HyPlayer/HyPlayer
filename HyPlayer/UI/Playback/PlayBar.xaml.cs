@@ -16,6 +16,7 @@ using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using HyPlayer.ViewModels;
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -44,6 +45,9 @@ namespace HyPlayer.Controls;
 
 public sealed partial class PlayBar
 {
+    private SolidColorBrush _playbackAccentBrush = PlaybackThemeSnapshot.Default.AccentBrush;
+    private ElementTheme _playbackAccentTheme = ElementTheme.Dark;
+
     // ---------------------------------------------------------------
     //  ViewModel (resolved from DI; holds all business logic)
     // ---------------------------------------------------------------
@@ -58,16 +62,39 @@ public sealed partial class PlayBar
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+    private readonly IDiagnosticsStateService _diagnostics = Ioc.Default.GetRequiredService<IDiagnosticsStateService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
+    private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
 
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding = false;
     private TimeSpan StartingTimeSpan = TimeSpan.Zero;
     public ObservableCollection<HyPlayItem> PlayItems => ViewModel.PlaylistItems;
+
+    public SolidColorBrush PlaybackAccentBrush
+    {
+        get => _playbackAccentBrush;
+        private set
+        {
+            _playbackAccentBrush = value;
+            Bindings.Update();
+        }
+    }
+
+    public ElementTheme PlaybackAccentTheme
+    {
+        get => _playbackAccentTheme;
+        private set
+        {
+            _playbackAccentTheme = value;
+            Bindings.Update();
+        }
+    }
+
 #nullable enable
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
 #nullable restore
@@ -80,8 +107,63 @@ DoubleAnimation verticalAnimation;
 
     public PlayBar()
     {
-        _uiState.BarPlayBar = this;
         InitializeComponent();
+    }
+
+    private void OnPlaybackSurfaceModeChanged(PlaybackSurfaceMode mode)
+    {
+        // Projection from the centralized PlaybackSurfaceStore provides derived visibility booleans.
+        // The store is updated by PlaybackShellStateMachine before this message is sent.
+        var projection = _surfaceStore.PlayBarProjection;
+        var isExpanded = mode == PlaybackSurfaceMode.Expanded;
+
+        RunOnUIThread(() =>
+        {
+            ButtonExpand.Visibility = projection.ShowExpandButton ? Visibility.Visible : Visibility.Collapsed;
+            ButtonCollapse.Visibility = projection.ShowCollapseButton ? Visibility.Visible : Visibility.Collapsed;
+            GridSongInfo.Visibility = projection.ShowSongInfo ? Visibility.Visible : Visibility.Collapsed;
+            GridSongAdvancedOperation.Visibility = projection.ShowAdvancedOperations ? Visibility.Visible : Visibility.Collapsed;
+
+            if (!isExpanded)
+                ApplyPlaybackTheme(PlaybackThemeSnapshot.Default);
+
+            if (!isExpanded)
+                StartPreparedCollapseAnimations();
+
+            if (!isExpanded)
+                RefreshPlayBarCover(ViewModel.NowPlayingItem);
+        });
+    }
+
+    private void ApplyPlaybackTheme(PlaybackThemeSnapshot theme)
+    {
+        PlaybackAccentBrush = theme.AccentBrush;
+        PlaybackAccentTheme = theme.IsBright ? ElementTheme.Light : ElementTheme.Dark;
+    }
+
+    private void StartPreparedCollapseAnimations()
+    {
+        if (!_setting.expandAnimation || GridSongInfoContainer.Visibility != Visibility.Visible) return;
+
+        ConnectedAnimation anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
+        ConnectedAnimation anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
+        ConnectedAnimation anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+        ConnectedAnimation anim4 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongAlbum");
+        anim4?.Configuration = new DirectConnectedAnimationConfiguration();
+        anim3?.Configuration = new DirectConnectedAnimationConfiguration();
+        anim2?.Configuration = new DirectConnectedAnimationConfiguration();
+        anim1?.Configuration = new DirectConnectedAnimationConfiguration();
+        try
+        {
+            anim3?.TryStart(TbSingerName);
+            anim1?.TryStart(TbSongName);
+            anim2?.TryStart(AlbumImage);
+            anim4?.TryStart(TbAlbumName);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"PlayBar collapse connected animation failed: {ex.Message}");
+        }
     }
 
     private void HyPlayListOnOnSongRemoveAll()
@@ -157,6 +239,13 @@ DoubleAnimation verticalAnimation;
         TbSongNameScrollStoryBoard.Children.Add(verticalAnimation);
         TbSongNameScrollStoryBoard.Begin();
         */
+        RunOnUIThread(TryExpandPendingSurface);
+    }
+
+    private void TryExpandPendingSurface()
+    {
+        if (_surfaceStore.HasPendingExpandedIntent)
+            _surfaceCoordinator.Expand();
     }
 
     private void RefreshPlayModeDisplay()
@@ -232,18 +321,11 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    public void ShowExpandedPlayer()
+    private void RequestExpandedPlayer()
     {
         if (!_player.PlayerCreated || ViewModel.NowPlayingItem?.PlayItem?.AudioGraphPlaybackSource == null) return;
-        ButtonExpand.Visibility = Visibility.Collapsed;
-        ButtonCollapse.Visibility = Visibility.Visible;
-        (_uiState.PageMain as MainPage).ExpandedPlayer.Visibility = Visibility.Visible;
-        (_uiState.PageMain as MainPage).ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
-            new EntranceNavigationTransitionInfo());
-        (_uiState.PageMain as MainPage).GridPlayBar.BorderThickness = new Thickness(0);
-        (_uiState.PageMain as MainPage).MainFrame.Visibility = Visibility.Collapsed;
-        (_uiState.PageMain as MainPage).GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;
-        (_uiState.PageMain as MainPage).GridPlayBar.Background = null;
+
+        // Prepare ConnectedAnimations from PlayBar elements before coordinator animates ExpandedPlayer
         if (_setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
             try
             {
@@ -252,71 +334,31 @@ DoubleAnimation verticalAnimation;
                     ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
 
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
-                (_uiState.PageExpandedPlayer as ExpandedPlayer).StartExpandAnimation();
             }
             catch
             {
                 //ignore
             }
-        _uiState.IsExpanded = true;
-        GridSongInfo.Visibility = Visibility.Collapsed;
-        GridSongAdvancedOperation.Visibility = Visibility.Visible;
+
+        // Delegate frame-level operations; UI state updated via PlaybackSurfaceModeChangedMessage
+        _surfaceCoordinator.Expand();
     }
 
     private void ButtonExpand_OnClick(object sender, RoutedEventArgs e)
     {
-        ShowExpandedPlayer();
+        RequestExpandedPlayer();
     }
 
-    public void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
+    private void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
     {
-        CollapseExpandedPlayer();
+        RequestCompactPlayer();
     }
 
-    public void CollapseExpandedPlayer()
+    private void RequestCompactPlayer()
     {
-        (_uiState.PageMain as MainPage).IsExpandedPlayerInitialized = false;
-        if (_uiState.PageExpandedPlayer == null) return;
-        (_uiState.PageExpandedPlayer as ExpandedPlayer).StartCollapseAnimation();
-        GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
-        GridSongInfo.Visibility = Visibility.Visible;
-        _uiState.BrushManagement.AccentBrush = null;
-        if (_setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
-        {
-            ConnectedAnimation anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
-            ConnectedAnimation anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
-            ConnectedAnimation anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
-            ConnectedAnimation anim4 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongAlbum");
-            anim4?.Configuration = new DirectConnectedAnimationConfiguration();
-            anim3?.Configuration = new DirectConnectedAnimationConfiguration();
-            anim2?.Configuration = new DirectConnectedAnimationConfiguration();
-            anim1?.Configuration = new DirectConnectedAnimationConfiguration();
-            try
-            {
-                anim3?.TryStart(TbSingerName);
-                anim1?.TryStart(TbSongName);
-                anim2?.TryStart(AlbumImage);
-                anim4?.TryStart(TbAlbumName);
-            }
-            catch
-            {
-                //ignore
-            }
-        }
-
-        ButtonExpand.Visibility = Visibility.Visible;
-        ButtonCollapse.Visibility = Visibility.Collapsed;
-        (_uiState.PageMain as MainPage).GridPlayBarMarginBlur.Visibility = Visibility.Visible;
-        (_uiState.PageBase as BasePage).AppTitleBar.ReleasePointerCaptures();
-        (_uiState.PageMain as MainPage).ExpandedPlayer.Navigate(typeof(BlankPage));
-        (_uiState.PageMain as MainPage).GridPlayBar.BorderThickness = new Thickness(1);
-        (_uiState.PageMain as MainPage).GridPlayBar.Background = Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"].As<Brush>();
-        (_uiState.PageMain as MainPage).MainFrame.Visibility = Visibility.Visible;
-        (_uiState.PageMain as MainPage).ExpandedPlayer.Visibility = Visibility.Collapsed;
-        var region = (_uiState.PageBase as BasePage).AppTitleBar.FindDescendant("PART_DragRegion")?.As<Grid>();
-        Window.Current.SetTitleBar(region);
-        _uiState.IsExpanded = false;
-        RefreshPlayBarCover(ViewModel.NowPlayingItem);
+        // Delegate frame-level operations (animation, visibility, navigation, background, border) to coordinator;
+        // the coordinator sends PlaybackSurfaceModeChangedMessage which updates PlayBar UI state.
+        _surfaceCoordinator.Collapse();
     }
 
     private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
@@ -382,7 +424,7 @@ DoubleAnimation verticalAnimation;
                             ViewModel.NowPlayingItem.Artist[0].Id);
                 }
 
-                //CollapseExpandedPlayer();
+                //RequestCompactPlayer();
             }
         }
         catch
@@ -433,7 +475,7 @@ DoubleAnimation verticalAnimation;
             _navigation.Navigate(typeof(Comments), CommentTarget.Song(ViewModel.NowPlayingItem.Id));
         else
             _navigation.Navigate(typeof(Comments), CommentTarget.RadioProgram(ViewModel.NowPlayingItem.Album.Alias));
-        CollapseExpandedPlayer();
+        RequestCompactPlayer();
     }
 
     private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
@@ -527,6 +569,7 @@ DoubleAnimation verticalAnimation;
 
     internal void OnEnteringForeground()
     {
+        ViewModel.SyncFromState();
         LoadPlayingFile(ViewModel.NowPlayingItem);
         RefreshPlayBarCover(ViewModel.NowPlayingItem);
     }
@@ -538,26 +581,32 @@ DoubleAnimation verticalAnimation;
         SliderAudioRate.Value = (double)_setting.Volume;
         ViewModel.SyncFromState();
         RefreshPlayModeDisplay();
+        var messenger = WeakReferenceMessenger.Default;
+        messenger.Register<PlaybackSurfaceModeChangedMessage>(this, (r, m) => ((PlayBar)r).OnPlaybackSurfaceModeChanged(m.Mode));
+        messenger.Register<PlaybackThemeChangedMessage>(this, (r, m) => ((PlayBar)r).ApplyPlaybackTheme(m.Theme));
+        messenger.Register<TrackChangedMessage>(this, (r, m) => ((PlayBar)r).LoadPlayingFile(m.Item));
+        if (_surfaceStore.HasPendingExpandedIntent)
+            TryExpandPendingSurface();
+        else if (_surfaceCoordinator.IsExpanded)
+            OnPlaybackSurfaceModeChanged(PlaybackSurfaceMode.Expanded);
 
         // --- Messenger-based event subscriptions ---
-        var messenger = WeakReferenceMessenger.Default;
-        messenger.Register<TrackChangedMessage>(this, (_, m) => LoadPlayingFile(m.Item));
-        messenger.Register<PlaylistChangedMessage>(this, (_, m) =>
+        messenger.Register<PlaylistChangedMessage>(this, (r, m) =>
         {
-            if (ViewModel.Items.Count == 0)
+            var vm = ((PlayBar)r).ViewModel;
+            if (vm.Items.Count == 0)
                 HyPlayListOnOnSongRemoveAll();
-            PlayListTitle.Text = ViewModel.GetPlaylistTitle();
+            PlayListTitle.Text = vm.GetPlaylistTitle();
         });
-        messenger.Register<SongLikeStatusChangedMessage>(this, (_, m) => HyPlayList_OnSongLikeStatusChange(m.IsLiked));
-        messenger.Register<CoverChangedMessage>(this, (_, m) => RefreshPlayBarCover(m.Item));
-        messenger.Register<LoginCompletedMessage>(this, (_, _) => HyPlayListOnOnLoginDone());
+        messenger.Register<SongLikeStatusChangedMessage>(this, (r, m) => ((PlayBar)r).HyPlayList_OnSongLikeStatusChange(m.IsLiked));
+        messenger.Register<CoverChangedMessage>(this, (r, m) => ((PlayBar)r).RefreshPlayBarCover(m.Item));
+        messenger.Register<PlayBarCoverRefreshRequestedMessage>(this, (r, m) => ((PlayBar)r).RefreshPlayBarCover(m.Item));
+        messenger.Register<EnterForegroundFromBackgroundNotification>(this, (r, _) => ((PlayBar)r).OnEnteringForeground());
+        messenger.Register<LoginCompletedMessage>(this, (r, _) => ((PlayBar)r).HyPlayListOnOnLoginDone());
 
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
-        _uiState.Logs.Add("Now PlaySource is " + ViewModel.PlaySourceId);
-
-        if (_uiState.IsExpanded)
-            (_uiState.BarPlayBar as PlayBar).ShowExpandedPlayer();
+        _diagnostics.Logs.Add("Now PlaySource is " + ViewModel.PlaySourceId);
 
         if (_setting.hotlyricOnStartup)
             try
@@ -735,7 +784,6 @@ DoubleAnimation verticalAnimation;
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
         ViewModel.DataTransferManager.DataRequested -= DataTransferManager_DataRequested;
-        _uiState.ClearReferences(this);
     }
 
     private void RunOnUIThread(Action action)

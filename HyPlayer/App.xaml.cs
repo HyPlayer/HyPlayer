@@ -15,6 +15,7 @@ using HyPlayer.Services.Playback.Messages;
 using HyPlayer.Services.Playback.Strategies;
 using HyPlayer.Services.Playback.QueueProviders;
 using HyPlayer.Services.Playback.Transitions;
+using HyPlayer.Shell.Playback;
 using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
@@ -83,12 +84,14 @@ public sealed partial class App : Application
         var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
         api.Option.AdditionalParameters = setting.ApiAdditionalParameters;
         api.Option.FakeCheckToken = setting.EnableCheckTokenApi;
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-        uiState.GlobalSecondTimer.Elapsed += (_, _) => WeakReferenceMessenger.Default.Send(new GlobalSecondTimerMessage());
+        var globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
+        var teachingTip = Ioc.Default.GetRequiredService<ITeachingTipService>();
+        var playBarAutoHide = Ioc.Default.GetRequiredService<IPlayBarAutoHideService>();
+        globalTimer.Timer.Elapsed += (_, _) => WeakReferenceMessenger.Default.Send(new GlobalSecondTimerMessage());
         WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(_messagingAnchor, (_, _) =>
         {
-            uiState.RollTeachingTip();
-            uiState.ChangePlaybarVisibility();
+            teachingTip.Roll();
+            playBarAutoHide.Tick();
         });
     }
 
@@ -151,7 +154,20 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<NavigationShellViewModel>();
         serviceCollection.AddSingleton<INotificationService, NotificationService>();
         serviceCollection.AddSingleton<NotificationDispatcher>();
-        serviceCollection.AddSingleton<IUIStateService, UIStateService>();
+        serviceCollection.AddSingleton<IAppLifecycleStateService, AppLifecycleStateService>();
+        serviceCollection.AddSingleton<IDisplayKeepAwakeService, DisplayKeepAwakeService>();
+        serviceCollection.AddSingleton<IKawazuStateService, KawazuStateService>();
+        serviceCollection.AddSingleton<IDiagnosticsStateService, DiagnosticsStateService>();
+        serviceCollection.AddSingleton<IGameBarWidgetService, GameBarWidgetService>();
+        serviceCollection.AddSingleton<IShellHostStateService, ShellHostStateService>();
+        serviceCollection.AddSingleton<IGlobalTimerService, GlobalTimerService>();
+        serviceCollection.AddSingleton<ITeachingTipService, TeachingTipService>();
+        serviceCollection.AddSingleton<IPlayBarAutoHideService, PlayBarAutoHideService>();
+
+        // ── 播放 UI：状态存储 / shell 状态机 / 表面协调器 ──
+        serviceCollection.AddSingleton<PlaybackSurfaceStore>();
+        serviceCollection.AddSingleton<PlaybackShellStateMachine>();
+        serviceCollection.AddSingleton<IPlaybackSurfaceCoordinator, PlaybackSurfaceCoordinator>();
         serviceCollection.AddTransient<ShellSearchViewModel>();
         serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>, PlaybarVisibilityChangedHandler>();
         serviceCollection.AddSingleton<INotificationHandler<EnterForegroundFromBackgroundNotification>, EnterForegroundHandler>();
@@ -175,35 +191,37 @@ public sealed partial class App : Application
         {
             await SimpleCacher.InitializeAsync();
             var sf = await ApplicationData.Current.LocalFolder.TryGetItemAsync("Romaji");
-            if (sf != null) Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv = new KawazuConverter(sf.Path);
+            if (sf != null) Ioc.Default.GetRequiredService<IKawazuStateService>().Converter = new KawazuConverter(sf.Path);
         }
         catch
         {
             // ignored
         }
 
-        if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
+        if (Ioc.Default.GetRequiredService<PlaybackSurfaceStore>().IsExpanded)
             Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(
                 Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
                 {
-                    (Ioc.Default.GetRequiredService<IUIStateService>().PageMain as MainPage).ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
+                    Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().Host
+                        ?.NavigateExpandedPlayerFrame();
                 }),
                 "navigate expanded player during app initialization");
     }
 
     private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
     {
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-        if (uiState.IsInBackground)
+        var lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
+        if (lifecycle.IsInBackground)
         {
-            uiState.IsInBackground = false;
-            uiState.InvokeEnterForeground();
+            lifecycle.IsInBackground = false;
+            Ioc.Default.GetRequiredService<NotificationDispatcher>()
+                .Publish(new EnterForegroundFromBackgroundNotification());
         }
     }
 
     private void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
     {
-        Ioc.Default.GetRequiredService<IUIStateService>().IsInBackground = true;
+        Ioc.Default.GetRequiredService<IAppLifecycleStateService>().IsInBackground = true;
     }
 
     protected override void OnActivated(IActivatedEventArgs args)
@@ -239,11 +257,12 @@ public sealed partial class App : Application
                 }
                 else
                 {
-                    Ioc.Default.GetRequiredService<IUIStateService>().XboxGameBarWidget = new XboxGameBarWidget(
+                    var gameBarWidget = new XboxGameBarWidget(
                         widgetArgs,
                         Window.Current.CoreWindow,
                         widgetFrame);
-                    widgetFrame.Navigate(typeof(WidgetPage), (Ioc.Default.GetRequiredService<IUIStateService>().XboxGameBarWidget as XboxGameBarWidget));
+                    Ioc.Default.GetRequiredService<IGameBarWidgetService>().Widget = gameBarWidget;
+                    widgetFrame.Navigate(typeof(WidgetPage), gameBarWidget);
 
                 }
                 OnLaunchedOrActivatedAsync(args);
@@ -267,12 +286,18 @@ public sealed partial class App : Application
 
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
-            if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded) return;
-            var animation = Ioc.Default.GetRequiredService<Setting>().expandAnimation;
-            Ioc.Default.GetRequiredService<Setting>().expandAnimation = false;
-            (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).ShowExpandedPlayer();
-            var a = Ioc.Default.GetRequiredService<Setting>().expandAnimation;
-            Ioc.Default.GetRequiredService<Setting>().expandAnimation = animation;
+            if (Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().IsExpanded) return;
+            var setting = Ioc.Default.GetRequiredService<Setting>();
+            var animation = setting.expandAnimation;
+            try
+            {
+                setting.expandAnimation = false;
+                Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().Expand();
+            }
+            finally
+            {
+                setting.expandAnimation = animation;
+            }
         }
         if (args.Kind == ActivationKind.Protocol)
         {
@@ -286,7 +311,7 @@ public sealed partial class App : Application
 
     private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        Ioc.Default.GetRequiredService<IUIStateService>().ErrorMessageList.Add(e.Exception.ToString());
+        Ioc.Default.GetRequiredService<IDiagnosticsStateService>().ErrorMessages.Add(e.Exception.ToString());
         e.Handled = true;
     }
 
@@ -356,7 +381,7 @@ public sealed partial class App : Application
             var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
             var localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
             playlist.PlaySourceId = "local";
-            Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded = true;
+            Ioc.Default.GetRequiredService<PlaybackSurfaceStore>().RestoreExpandedIntent();
             ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
 
             NavigateToRootPage();
@@ -418,7 +443,7 @@ public sealed partial class App : Application
             ? neteaseItems.IndexOf(currentItem)
             : -1;
         await HistoryManagement.SetcurPlayingListHistory([.. neteaseItems.Select(t => t.Id)], currentIndex);
-        (Ioc.Default.GetRequiredService<IUIStateService>().XboxGameBarWidget as XboxGameBarWidget)?.Close();
+        Ioc.Default.GetRequiredService<IGameBarWidgetService>().Widget?.Close();
         deferral.Complete();
     }
 }

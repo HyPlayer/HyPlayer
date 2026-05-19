@@ -208,19 +208,19 @@ public sealed partial class Comments : Page
                 await Task.Delay(1000);
                 _commentLoaderTask = LoadComments(3);
                 _notification.ShowMessage("评论成功");
-                Ioc.Default.GetRequiredService<IUIStateService>().RollTeachingTip();
+                Ioc.Default.GetRequiredService<ITeachingTipService>().Roll();
             }
             catch (Exception ex)
             {
                 _notification.ShowMessage("出现问题，评论失败", ex.Message);
-                Ioc.Default.GetRequiredService<IUIStateService>().RollTeachingTip();
+                Ioc.Default.GetRequiredService<ITeachingTipService>().Roll();
             }
         }
 
         else if (string.IsNullOrWhiteSpace(CommentEdit.Text))
         {
             _notification.ShowMessage("评论不能为空");
-            Ioc.Default.GetRequiredService<IUIStateService>().RollTeachingTip();
+            Ioc.Default.GetRequiredService<ITeachingTipService>().Roll();
         }
         else
         {

@@ -6,6 +6,7 @@ using HyPlayer.NeteaseApi;
 using HyPlayer.Pages;
 using HyPlayer.Services.Playback;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI;
 using Microsoft.Graphics.Canvas.Effects;
 using System;
 using System.Numerics;
@@ -16,6 +17,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 using WinRT;
@@ -24,6 +26,7 @@ using ColorStop = (float offset, Windows.UI.Color color);
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
 using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.Messaging;
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -34,14 +37,13 @@ namespace HyPlayer;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class MainPage : Page
+public sealed partial class MainPage : Page, IPlaybackSurfaceHost
 {
     bool IsPlaybarOnShow = true;
-    public bool IsExpandedPlayerInitialized = false;
+    public bool IsExpandedPlayerInitialized { get; set; }
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     public MainPage()
     {
-        Ioc.Default.GetRequiredService<IUIStateService>().PageMain = this;
         var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
         if (api != null)
         {
@@ -56,33 +58,101 @@ public sealed partial class MainPage : Page
 
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
+        WeakReferenceMessenger.Default.Register<PlaybarVisibilityChangedNotification>(this, (r, m) => ((MainPage)r).OnPlaybarVisibilityChanged(m.IsActivated));
+        Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().Host = this;
         UIElement PlayBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
         ActualThemeChanged += MainPage_ActualThemeChanged;
-        Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IsBright = ActualTheme == ElementTheme.Light;
         if (_setting.displayMaintain)
         {
-            // displayRequest
-            Ioc.Default.GetRequiredService<IUIStateService>().DisplayRequest.RequestActive();
+            Ioc.Default.GetRequiredService<IDisplayKeepAwakeService>().RequestActive();
         }
     }
+
+    // ── IPlaybackSurfaceHost implementation ──
+
+    public void ShowExpandedPlayerFrame()
+    {
+        ExpandedPlayer.Visibility = Visibility.Visible;
+    }
+
+    public void NavigateExpandedPlayerFrame()
+    {
+        ExpandedPlayer.Content = new ExpandedPlayer();
+    }
+
+    public void HideExpandedPlayerFrame()
+    {
+        ExpandedPlayer.Content = null;
+        ExpandedPlayer.Visibility = Visibility.Collapsed;
+    }
+
+    public void ShowMainFrame()
+    {
+        MainFrame.Visibility = Visibility.Visible;
+    }
+
+    public void HideMainFrame()
+    {
+        MainFrame.Visibility = Visibility.Collapsed;
+    }
+
+    public void SetPlayBarBorderless()
+    {
+        GridPlayBar.BorderThickness = new Thickness(0);
+    }
+
+    public void SetPlayBarDefaultBorder()
+    {
+        GridPlayBar.BorderThickness = new Thickness(1);
+        GridPlayBar.Background = Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"].As<Brush>();
+    }
+
+    public void ClearPlayBarBackground()
+    {
+        GridPlayBar.Background = null;
+    }
+
+    public void ShowPlayBarBlur()
+    {
+        GridPlayBarMarginBlur.Visibility = Visibility.Visible;
+    }
+
+    public void HidePlayBarBlur()
+    {
+        GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;
+    }
+
+    public void SetExpandedPlayerFrameOffsetY(double offset)
+    {
+        ExpandedPlayerPositionOffset.Y = offset;
+    }
+
+    public void BeginImageResetAnimation()
+    {
+        ImageResetPositionAni.Begin();
+    }
+
+    // ── End IPlaybackSurfaceHost ──
 
     private void MainPage_ActualThemeChanged(FrameworkElement sender, object args)
     {
         _setting.OnPropertyChanged("acrylicBackgroundStatus");
         _setting.OnPropertyChanged("playbarBackgroundAcrylic");
-        if (!Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded) Ioc.Default.GetRequiredService<IUIStateService>().BrushManagement.IsBright = ActualTheme == ElementTheme.Light;
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        var coordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
+        if (ReferenceEquals(coordinator.Host, this)) coordinator.Host = null;
         ActualThemeChanged -= MainPage_ActualThemeChanged;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().Host = this;
         if (ApplicationView.GetForCurrentView().IsFullScreenMode)
         {
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
@@ -124,7 +194,7 @@ public sealed partial class MainPage : Page
         if (!IsPlaybarOnShow)
         {
             PointerInAni.Begin();
-            (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).RefreshPlayBarCover(Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
+            WeakReferenceMessenger.Default.Send(new PlayBarCoverRefreshRequestedMessage(Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem));
         }
     }
 
@@ -324,12 +394,6 @@ public sealed partial class MainPage : Page
     private void Page_PointerMoved(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
         if (e.IsGenerated) return;
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-        uiState.PlaybarSecondCounter = 0;
-        if (!uiState.PlaybarIsVisible)
-        {
-            uiState.InvokePlaybarVisibilityChanged(true);
-            uiState.PlaybarIsVisible = true;
-        }
+        Ioc.Default.GetRequiredService<IPlayBarAutoHideService>().Show();
     }
 }

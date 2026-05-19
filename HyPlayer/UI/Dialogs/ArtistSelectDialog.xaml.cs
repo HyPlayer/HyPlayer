@@ -29,9 +29,10 @@ public sealed partial class ArtistSelectDialog : ContentDialog
     private void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].Id);
-        if (Ioc.Default.GetRequiredService<IUIStateService>().IsExpanded)
+        var surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
+        if (surfaceCoordinator.IsExpanded)
         {
-            (Ioc.Default.GetRequiredService<IUIStateService>().BarPlayBar as PlayBar).CollapseExpandedPlayer();
+            surfaceCoordinator.Collapse();
         }
 
         Hide();

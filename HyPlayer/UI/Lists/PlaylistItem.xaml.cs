@@ -29,8 +29,6 @@ public sealed partial class PlaylistItem : UserControl
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
-    private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-
     public PlaylistItem(NCPlayList playList)
     {
         this.playList = playList;

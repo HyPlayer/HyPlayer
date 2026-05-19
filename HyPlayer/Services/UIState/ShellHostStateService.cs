@@ -1,0 +1,15 @@
+#nullable enable
+using CommunityToolkit.WinUI.Controls;
+using HyPlayer.Services.Abstractions;
+
+namespace HyPlayer.Services;
+
+public sealed class ShellHostStateService : IShellHostStateService
+{
+    public TitleBar? AppTitleBar { get; set; }
+
+    public void ClearReference(TitleBar owner)
+    {
+        if (ReferenceEquals(AppTitleBar, owner)) AppTitleBar = null;
+    }
+}

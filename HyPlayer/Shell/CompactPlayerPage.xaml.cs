@@ -69,8 +69,6 @@ public sealed partial class CompactPlayerPage : Page
     private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
-    private readonly IUIStateService _uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-
     private readonly SolidColorBrush TransparentBrush = new(Colors.Transparent);
     public bool _lyricIsKaraokeLyric;
     public SongLyric Lrc;
@@ -81,11 +79,10 @@ public sealed partial class CompactPlayerPage : Page
         WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, m) => ((CompactPlayerPage)r).HyPlayList_OnPlayPositionChange(m.Position));
         WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((CompactPlayerPage)r).OnChangePlayItem(m.Item));
         WeakReferenceMessenger.Default.Register<LyricIndexChangedMessage>(this, (r, m) => ((CompactPlayerPage)r).OnLyricChanged());
-        _player.OnGlobalPlaybackStatusChanged += Player_OnGlobalPlaybackStatusChanged;
+        WeakReferenceMessenger.Default.Register<PlaybackStateChangedMessage>(this, (r, m) => ((CompactPlayerPage)r).Player_OnGlobalPlaybackStatusChanged());
         //LeaveAnimation.Completed += LeaveAnimation_Completed;
-        WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (_, m) => HyPlayList_OnSongCoverChanged(m.Item));
-        WeakReferenceMessenger.Default.Register<SongLikeStatusChangedMessage>(this, (_, m) => HyPlayList_OnSongLikeStatusChange(m.IsLiked));
-        _uiState.PageCompactPlayer = this;
+        WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (r, m) => ((CompactPlayerPage)r).HyPlayList_OnSongCoverChanged(m.Item));
+        WeakReferenceMessenger.Default.Register<SongLikeStatusChangedMessage>(this, (r, m) => ((CompactPlayerPage)r).HyPlayList_OnSongLikeStatusChange(m.IsLiked));
         Unloaded += CompactPlayerPage_Unloaded;
         //CompactPlayerAni.Begin();
     }
@@ -93,11 +90,9 @@ public sealed partial class CompactPlayerPage : Page
     private void CompactPlayerPage_Unloaded(object sender, RoutedEventArgs e)
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        _uiState.ClearReferences(this);
-        _player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
     }
 
-    private void Player_OnGlobalPlaybackStatusChanged(PlaybackStatus status)
+    private void Player_OnGlobalPlaybackStatusChanged()
     {
         RunOnUIThread(() =>
         {

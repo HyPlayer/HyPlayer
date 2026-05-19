@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using HyPlayer.Services.Abstractions;
+using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.UI.Core;
@@ -12,29 +14,31 @@ namespace HyPlayer.Services;
 /// </summary>
 public class NotificationService : INotificationService
 {
-    private readonly IUIStateService _uiState;
+    private readonly IAppLifecycleStateService _lifecycle;
+    private readonly ITeachingTipService _teachingTip;
 
-    public NotificationService(IUIStateService uiState)
+    public NotificationService(IAppLifecycleStateService lifecycle, ITeachingTipService teachingTip)
     {
-        _uiState = uiState;
+        _lifecycle = lifecycle;
+        _teachingTip = teachingTip;
     }
 
     /// <inheritdoc />
     public void ShowMessage(string title, string? message = null)
     {
-        _uiState.TeachingTipList.Enqueue(new KeyValuePair<string, string?>(title, message));
+        _teachingTip.Items.Enqueue(new KeyValuePair<string, string?>(title, message));
         _ = InvokeOnUIThread(() =>
         {
-            var tip = _uiState.GlobalTip as Microsoft.UI.Xaml.Controls.TeachingTip;
+            var tip = _teachingTip.Tip as TeachingTip;
             if (tip != null && !tip.IsOpen)
-                _uiState.RollTeachingTip(false);
+                _teachingTip.Roll(false);
         });
     }
 
     /// <inheritdoc />
     public IAsyncAction? InvokeOnUIThread(Action action)
     {
-        if (_uiState.IsInBackground) return null;
+        if (_lifecycle.IsInBackground) return null;
         try
         {
             if (CoreApplication.Views.Count > 0)
@@ -42,9 +46,9 @@ public class NotificationService : INotificationService
                     CoreDispatcherPriority.Normal,
                     () => { action(); });
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore dispatcher errors
+            Debug.WriteLine($"Notification dispatch failed: {ex.Message}");
         }
 
         return null;

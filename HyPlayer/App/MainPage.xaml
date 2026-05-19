@@ -67,17 +67,16 @@
             Name="MainFrame"
             x:FieldModifier="public"
             SourcePageType="hyPlayerPage:BasePage" />
-        <Frame
+        <ContentControl
             Name="ExpandedPlayer"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch"
             x:FieldModifier="public"
-            CacheSize="0"
-            IsNavigationStackEnabled="False"
-            SourcePageType="hyPlayerPage:BlankPage"
             Visibility="Collapsed">
-            <Frame.RenderTransform>
+            <ContentControl.RenderTransform>
                 <TranslateTransform x:Name="ExpandedPlayerPositionOffset" x:FieldModifier="public" />
-            </Frame.RenderTransform>
-        </Frame>
+            </ContentControl.RenderTransform>
+        </ContentControl>
         <Grid
             Name="GridPlayBarMarginBlur"
             Height="110"

@@ -71,9 +71,9 @@ public sealed partial class Settings : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-        RomajiStatus.Header = (uiState.KawazuConv == null ? "请下载Kawazu资源文件" : "可以转换");
-        ButtonDownloadRomaji.Visibility = uiState.KawazuConv == null ? Visibility.Visible : Visibility.Collapsed;
+        var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>();
+        RomajiStatus.Header = (kawazu.Converter == null ? "请下载Kawazu资源文件" : "可以转换");
+        ButtonDownloadRomaji.Visibility = kawazu.Converter == null ? Visibility.Visible : Visibility.Collapsed;
         if (_setting.audioRate.EndsWith('0') || _setting.downloadAudioRate.EndsWith('0'))
         {
             _setting.audioRate = "exhigh";
@@ -191,7 +191,7 @@ public sealed partial class Settings : Page
             archive.ExtractToDirectory(path);
             _ = obj.ResultFile.DeleteAsync();
 
-            Ioc.Default.GetRequiredService<IUIStateService>().KawazuConv = new KawazuConverter(path);
+            Ioc.Default.GetRequiredService<IKawazuStateService>().Converter = new KawazuConverter(path);
         }
         catch (Exception e)
         {
@@ -199,10 +199,10 @@ public sealed partial class Settings : Page
         }
         finally
         {
-            var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
+            var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>();
             RomajiStatus.Header =
-                (uiState.KawazuConv == null ? "请重新下载资源文件" : "可以转换");
-            ButtonDownloadRomaji.Visibility = uiState.KawazuConv != null ? Visibility.Visible : Visibility.Collapsed;
+                (kawazu.Converter == null ? "请重新下载资源文件" : "可以转换");
+            ButtonDownloadRomaji.Visibility = kawazu.Converter == null ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
@@ -439,12 +439,12 @@ public sealed partial class Settings : Page
 
     private void DisplayMaintain_OnChecked(object sender, RoutedEventArgs e)
     {
-        Ioc.Default.GetRequiredService<IUIStateService>().DisplayRequest.RequestActive();
+        Ioc.Default.GetRequiredService<IDisplayKeepAwakeService>().RequestActive();
     }
 
     private void DisplayMaintain_OnUnchecked(object sender, RoutedEventArgs e)
     {
-        Ioc.Default.GetRequiredService<IUIStateService>().DisplayRequest.RequestRelease();
+        Ioc.Default.GetRequiredService<IDisplayKeepAwakeService>().RequestRelease();
     }
 
     private async void BtnClearCache_Click(object sender, RoutedEventArgs e)

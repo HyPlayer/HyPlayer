@@ -145,51 +145,43 @@ namespace HyPlayer.ViewModels
         [RequiresDynamicCode("This method requires the generated CommunityToolkit.Mvvm.Messaging.__Internals.__IMessengerExtensions type not to be removed to use the fast path. If that is present, the method is AOT safe, as the only methods being invoked to register the messages will be the ones produced by the source generator. If it isn't, this method will need to dynamically create the generic methods to register messages, which might not be available at runtime. Alternatively, OnActivated() can be manually overwritten, and registration can be done individually for each required message for this recipient.")]
         protected override void OnActivated()
         {
-            // Low-frequency events via messenger
-            Messenger.Register<TrackChangedMessage>(this, (r, m) =>
+            Messenger.Register<TrackChangedMessage>(this, (r, _) =>
             {
-                _ = _notification.InvokeOnUIThread(() => {
-                    var vm = (ExpandedPlayerViewModel)r;
-                    vm.NowPlayingItem = m.Item;
-                    vm.SongName = m.Item?.Name;
-                    vm.Album = m.Item?.AlbumString;
-                    vm.Artist = m.Item?.ArtistString;
-                    vm.Duration = TimeSpan.FromMilliseconds(m.Item?.LengthInMilliseconds ?? 0);
-                });
+                var vm = (ExpandedPlayerViewModel)r;
+                vm.RunOnUIThread(vm.SyncFromState);
             });
 
             Messenger.Register<PlaybackStateChangedMessage>(this, (r, m) =>
             {
-                ((ExpandedPlayerViewModel)r).IsPlaying = m.IsPlaying;
-            });
-
-            Messenger.Register<CoverChangedMessage>(this, (_, _) =>
-            {
-                // Cover refresh is handled by code-behind (needs BitmapImage + stream)
-                // ViewModel Cover property is set by code-behind after processing
+                var vm = (ExpandedPlayerViewModel)r;
+                vm.RunOnUIThread(() => vm.IsPlaying = m.IsPlaying);
             });
 
             Messenger.Register<LyricLoadedMessage>(this, (r, m) =>
             {
-                ((ExpandedPlayerViewModel)r).LyricInfo = m.Info;
-            });
-
-            Messenger.Register<LyricIndexChangedMessage>(this, (r, m) =>
-            {
-                ((ExpandedPlayerViewModel)r).LyricIndex = m.Index;
+                var vm = (ExpandedPlayerViewModel)r;
+                vm.RunOnUIThread(() => vm.LyricInfo = m.Info);
             });
 
             Messenger.Register<SongLikeStatusChangedMessage>(this, (r, m) =>
             {
-                ((ExpandedPlayerViewModel)r).IsLiked = m.IsLiked;
+                var vm = (ExpandedPlayerViewModel)r;
+                vm.RunOnUIThread(() => vm.IsLiked = m.IsLiked);
             });
 
+            // ── High-frequency position: keep direct subscription ──
             Messenger.Register<PositionTickMessage>(this, (r, m) =>
             {
-                ((ExpandedPlayerViewModel)r).Position = m.Position;
+                var vm = (ExpandedPlayerViewModel)r;
+                vm.RunOnUIThread(() => vm.Position = m.Position);
             });
 
-            // Sync initial state from services
+            Messenger.Register<LyricIndexChangedMessage>(this, (r, m) =>
+            {
+                var vm = (ExpandedPlayerViewModel)r;
+                vm.RunOnUIThread(() => vm.LyricIndex = m.Index);
+            });
+
             SyncFromState();
         }
 
@@ -201,9 +193,9 @@ namespace HyPlayer.ViewModels
         {
             NowPlayingItem = _state.NowPlayingItem;
             IsPlaying = _state.IsPlaying;
+            Volume = _state.Volume;
             Position = _state.Position;
             Duration = _state.Duration;
-            Volume = _state.Volume;
             ActiveStrategyId = _state.ActiveStrategyId;
             LyricInfo = _state.LyricInfo;
             LyricIndex = _state.LyricIndex;
@@ -217,6 +209,17 @@ namespace HyPlayer.ViewModels
                 Album = NowPlayingItem.AlbumString;
                 Artist = NowPlayingItem.ArtistString;
             }
+            else
+            {
+                SongName = string.Empty;
+                Album = string.Empty;
+                Artist = string.Empty;
+            }
+        }
+
+        private void RunOnUIThread(Action action)
+        {
+            _ = _notification.InvokeOnUIThread(action);
         }
     }
 }

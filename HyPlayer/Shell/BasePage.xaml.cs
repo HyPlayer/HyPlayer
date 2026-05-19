@@ -39,13 +39,14 @@ public sealed partial class BasePage : Page
     private readonly NavigationShellViewModel _navigationShell = Ioc.Default.GetRequiredService<NavigationShellViewModel>();
     private readonly IPlaybackControlService _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+    private readonly IShellHostStateService _shellHost = Ioc.Default.GetRequiredService<IShellHostStateService>();
+    private readonly ITeachingTipService _teachingTip = Ioc.Default.GetRequiredService<ITeachingTipService>();
 
     public BasePage()
     {
         InitializeComponent();
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-        uiState.PageBase = this;
-        uiState.GlobalTip = TheTeachingTip;
+        _shellHost.AppTitleBar = AppTitleBar;
+        _teachingTip.Tip = TheTeachingTip;
 
         if (!_player.PlayerCreated)
         {
@@ -66,9 +67,9 @@ public sealed partial class BasePage : Page
         _navigator.DetachNavigationView(NavMain);
         Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-        uiState.ClearReferences(this);
-        uiState.ClearReferences(TheTeachingTip);
+        _shellHost.ClearReference(AppTitleBar);
+        if (ReferenceEquals(_teachingTip.Tip, TheTeachingTip))
+            _teachingTip.Tip = null;
     }
 
 
@@ -99,9 +100,9 @@ public sealed partial class BasePage : Page
 
     private bool CollapseExpandedPlayerIfNeeded()
     {
-        var uiState = Ioc.Default.GetRequiredService<IUIStateService>();
-        if (!uiState.IsExpanded) return false;
-        (uiState.BarPlayBar as PlayBar)?.CollapseExpandedPlayer();
+        var surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
+        if (!surfaceCoordinator.IsExpanded) return false;
+        surfaceCoordinator.Collapse();
         return true;
     }
 
@@ -130,7 +131,7 @@ public sealed partial class BasePage : Page
 
     private void TheTeachingTip_OnCloseButtonClick(TeachingTip sender, object args)
     {
-        Ioc.Default.GetRequiredService<IUIStateService>().TeachingTipList.Clear();
+        Ioc.Default.GetRequiredService<ITeachingTipService>().Clear();
     }
 
     private void BaseFrame_Navigated(object sender, NavigationEventArgs e)
