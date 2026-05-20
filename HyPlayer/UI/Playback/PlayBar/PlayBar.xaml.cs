@@ -120,8 +120,15 @@ DoubleAnimation verticalAnimation;
 
     private void OnPlaybackStatePropertyChanged(string? propertyName)
     {
-        if (propertyName == nameof(PlaybackStateService.NowPlayingItem))
-            RunOnUIThread(() => LoadPlayingFile(_state.NowPlayingItem));
+        switch (propertyName)
+        {
+            case nameof(PlaybackStateService.NowPlayingItem):
+                RunOnUIThread(() => LoadPlayingFile(_state.NowPlayingItem));
+                break;
+            case nameof(PlaybackStateService.CoverStream):
+                RefreshPlayBarCover(_state.NowPlayingItem);
+                break;
+        }
     }
 
     private void OnSurfaceStorePropertyChanged(PlaybackSurfaceStore store, string? propertyName)

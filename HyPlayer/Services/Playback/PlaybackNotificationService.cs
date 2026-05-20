@@ -24,7 +24,6 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     private readonly IPlayer _player;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly ITileService _tileService;
-    private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator;
 
     public PlaybackNotificationService(
         PlaybackStateService state,
@@ -32,8 +31,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         HttpClient http,
         IPlayer player,
         IBackgroundTaskRunner taskRunner,
-        ITileService tileService,
-        IPlaybackSurfaceCoordinator surfaceCoordinator)
+        ITileService tileService)
     {
         _state = state;
         _setting = setting;
@@ -41,7 +39,6 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         _player = player;
         _taskRunner = taskRunner;
         _tileService = tileService;
-        _surfaceCoordinator = surfaceCoordinator;
     }
 
     /// <inheritdoc />
@@ -57,7 +54,6 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         {
             await RefreshCoverAsync(item);
             UpdateSmtcThumbnail();
-            _surfaceCoordinator.RefreshPlaybackCover(item);
         }
         await _tileService.UpdateTile(item, _state.CoverStream);
 
@@ -98,8 +94,8 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
 
             // Atomic swap
             var oldStream = _state.CoverStream;
-            _state.CoverStream = newStream;
             _state.CoverStreamReference = newRef;
+            _state.CoverStream = newStream;
             oldStream?.Dispose();
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

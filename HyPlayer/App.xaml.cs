@@ -223,8 +223,7 @@ public sealed partial class App : Application
             Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(
                 Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
                 {
-                    Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().Host
-                        ?.NavigateExpandedPlayerFrame();
+                    Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().RestoreExpandedSurface();
                 }),
                 "navigate expanded player during app initialization");
     }

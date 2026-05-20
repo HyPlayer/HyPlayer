@@ -15,6 +15,21 @@ public partial class PlaybackSurfaceStore : ObservableObject
     [ObservableProperty]
     public partial PlaybackThemeSnapshot Theme { get; set; } = PlaybackThemeSnapshot.Default;
 
+    [ObservableProperty]
+    public partial ExpandedPlayerTransition RequestedTransition { get; set; }
+
+    [ObservableProperty]
+    public partial long TransitionRequestId { get; set; }
+
+    [ObservableProperty]
+    public partial double ExpandedFrameOffsetY { get; set; }
+
+    [ObservableProperty]
+    public partial long ExpandedFrameResetRequestId { get; set; }
+
+    [ObservableProperty]
+    public partial long ExpandedSurfaceRestoreRequestId { get; set; }
+
     /// <summary>Convenience: true when the surface is in Expanded mode.</summary>
     public bool IsExpanded => SurfaceMode == PlaybackSurfaceMode.Expanded;
 
@@ -53,6 +68,22 @@ public partial class PlaybackSurfaceStore : ObservableObject
     public void RestoreExpandedIntent()
     {
         HasPendingExpandedIntent = true;
+    }
+
+    public void RequestTransition(ExpandedPlayerTransition transition)
+    {
+        RequestedTransition = transition;
+        TransitionRequestId++;
+    }
+
+    public void RequestExpandedFrameReset()
+    {
+        ExpandedFrameResetRequestId++;
+    }
+
+    public void RequestExpandedSurfaceRestore()
+    {
+        ExpandedSurfaceRestoreRequestId++;
     }
 }
 

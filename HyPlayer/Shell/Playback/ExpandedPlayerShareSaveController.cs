@@ -60,39 +60,16 @@ public sealed class ExpandedPlayerShareSaveController
     {
         try
         {
+            using var coverStream = _state.CoverStream.CloneStream();
             var filepicker = new FileSavePicker
             {
                 SuggestedFileName = _state.NowPlayingItem.Name + "-Cover.jpg"
             };
             filepicker.FileTypeChoices.Add("图片文件", [".png", ".jpg"]);
             var file = await filepicker.PickSaveFileAsync();
-            if (file == null) return;
-
-            // Remote / streaming item – download cover from URL
-            if (_state.NowPlayingItem.ItemType is not (HyPlayItemType.Local or HyPlayItemType.LocalProgressive))
-            {
-                using var coverResult =
-                    await _httpClient.GetAsync(new Uri(_state.NowPlayingItem.Album.Cover));
-                if (coverResult.IsSuccessStatusCode)
-                {
-                    var cover = (await coverResult.Content.ReadAsByteArrayAsync()).AsBuffer();
-                    await FileIO.WriteBufferAsync(file, cover);
-                }
-                else
-                {
-                    _notification.ShowMessage("专辑封面保存失败", "专辑封面下载失败");
-                }
-            }
-            // Local file – extract thumbnail from the storage file
-            else
-            {
-                using var thumbnail =
-                    await _playlist.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999);
-                var buffer = new Buffer((uint)thumbnail.Size);
-                await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
-                await FileIO.WriteBufferAsync(file, buffer);
-                buffer.Length = 0;
-            }
+            var buffer = new Buffer((uint)coverStream.Size);
+            await coverStream.ReadAsync(buffer, (uint)coverStream.Size, InputStreamOptions.None);
+            await FileIO.WriteBufferAsync(file, buffer);
         }
         catch (Exception ex)
         {

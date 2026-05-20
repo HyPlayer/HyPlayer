@@ -4,11 +4,13 @@ using HyPlayer.Services.Abstractions;
 using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Notifications;
+using Buffer = Windows.Storage.Streams.Buffer;
 
 namespace HyPlayer.Services.Tiles
 {
@@ -137,10 +139,14 @@ namespace HyPlayer.Services.Tiles
                 var file = await storageFolder.CreateFileAsync(item.Album.Id);
                 var decoder = await BitmapDecoder.CreateAsync(coverStream);
                 using var bitmap = await decoder.GetSoftwareBitmapAsync();
-                using var encoderStream = await file.OpenAsync(FileAccessMode.ReadWrite);
+                using var encoderStream = new InMemoryRandomAccessStream();
                 var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, encoderStream);
                 encoder.SetSoftwareBitmap(bitmap);
                 await encoder.FlushAsync();
+                encoderStream.Seek(0);
+                var buffer = new Buffer((uint)encoderStream.Size);
+                await encoderStream.ReadAsync(buffer, (uint)encoderStream.Size, InputStreamOptions.None);
+                await FileIO.WriteBufferAsync(file, buffer);
             }
             var cover = new TileBackgroundImage()
             {

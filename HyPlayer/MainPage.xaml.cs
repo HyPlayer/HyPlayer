@@ -2,6 +2,8 @@
 
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Library;
@@ -12,11 +14,10 @@ using HyPlayer.NeteaseApi;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.Shell.ExpandedPlayer;
-using HyPlayer.UI.Playback.PlayBar;
 using Microsoft.Graphics.Canvas.Effects;
-using System.Numerics;
-using System.Linq;
+using System.ComponentModel;
 using System.Threading.Tasks;
+using System.Numerics;
 using Windows.UI;
 using Windows.UI.Composition;
 using Windows.UI.ViewManagement;
@@ -39,11 +40,13 @@ namespace HyPlayer;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class MainPage : Page, IPlaybackSurfaceHost
+public sealed partial class MainPage : Page
 {
     bool IsPlaybarOnShow = true;
-    public bool IsExpandedPlayerInitialized { get; set; }
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
+    private readonly IShellHostStateService _shellHost = Ioc.Default.GetRequiredService<IShellHostStateService>();
+    private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
     public MainPage()
     {
         var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
@@ -61,7 +64,7 @@ public sealed partial class MainPage : Page, IPlaybackSurfaceHost
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
         Ioc.Default.GetRequiredService<IPlayBarAutoHideService>().VisibilityChanged += (_, e) => OnPlaybarVisibilityChanged(e.IsActivated);
-        Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().Host = this;
+        AttachSurfaceStoreListener();
         UIElement PlayBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
         ActualThemeChanged += MainPage_ActualThemeChanged;
@@ -71,87 +74,77 @@ public sealed partial class MainPage : Page, IPlaybackSurfaceHost
         }
     }
 
-    // ── IPlaybackSurfaceHost implementation ──
+    private void AttachSurfaceStoreListener()
+    {
+        _surfaceStoreChangedListener?.Detach();
+        _surfaceStoreChangedListener = new WeakEventListener<MainPage, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.OnSurfaceStorePropertyChanged(args.PropertyName),
+            OnDetachAction = weakEventListener => { _surfaceStore.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _surfaceStore.PropertyChanged += _surfaceStoreChangedListener.OnEvent;
+        ApplySurfaceMode(_surfaceStore.SurfaceMode);
+    }
 
-    public void ShowExpandedPlayerFrame()
+    private void OnSurfaceStorePropertyChanged(string? propertyName)
+    {
+        switch (propertyName)
+        {
+            case nameof(PlaybackSurfaceStore.SurfaceMode):
+                ApplySurfaceMode(_surfaceStore.SurfaceMode);
+                break;
+            case nameof(PlaybackSurfaceStore.ExpandedFrameOffsetY):
+                ExpandedPlayerPositionOffset.Y = _surfaceStore.ExpandedFrameOffsetY;
+                break;
+            case nameof(PlaybackSurfaceStore.ExpandedFrameResetRequestId):
+                ImageResetPositionAni.Begin();
+                break;
+            case nameof(PlaybackSurfaceStore.ExpandedSurfaceRestoreRequestId):
+                EnsureExpandedPlayerFrame();
+                break;
+        }
+    }
+
+    private void ApplySurfaceMode(PlaybackSurfaceMode mode)
+    {
+        if (mode == PlaybackSurfaceMode.Expanded)
+            PresentExpandedSurface();
+        else
+            RestoreCompactSurface();
+    }
+
+    private void PresentExpandedSurface()
     {
         ExpandedPlayer.Visibility = Visibility.Visible;
-    }
-
-    public void NavigateExpandedPlayerFrame()
-    {
-        ExpandedPlayer.Content = new ExpandedPlayer();
-    }
-
-    public void HideExpandedPlayerFrame()
-    {
-        ExpandedPlayer.Content = null;
-        ExpandedPlayer.Visibility = Visibility.Collapsed;
-    }
-
-    public void ShowMainFrame()
-    {
-        MainFrame.Visibility = Visibility.Visible;
-    }
-
-    public void HideMainFrame()
-    {
-        MainFrame.Visibility = Visibility.Collapsed;
-    }
-
-    public void SetPlayBarBorderless()
-    {
+        EnsureExpandedPlayerFrame();
         GridPlayBar.BorderThickness = new Thickness(0);
-    }
-
-    public void SetPlayBarDefaultBorder()
-    {
-        GridPlayBar.BorderThickness = new Thickness(1);
-        GridPlayBar.Background = Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"].As<Brush>();
-    }
-
-    public void ClearPlayBarBackground()
-    {
+        MainFrame.Visibility = Visibility.Collapsed;
+        GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;
         GridPlayBar.Background = null;
     }
 
-    public void ShowPlayBarBlur()
+    private void RestoreCompactSurface()
     {
         GridPlayBarMarginBlur.Visibility = Visibility.Visible;
+        _shellHost.AppTitleBar?.ReleasePointerCaptures();
+        ExpandedPlayer.Content = null;
+        ExpandedPlayer.Visibility = Visibility.Collapsed;
+        GridPlayBar.BorderThickness = new Thickness(1);
+        GridPlayBar.Background = Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"].As<Brush>();
+        MainFrame.Visibility = Visibility.Visible;
+
+        if (_shellHost.AppTitleBar is { } titleBar)
+        {
+            var dragRegion = titleBar.FindDescendant("PART_DragRegion")?.As<Grid>();
+            Window.Current.SetTitleBar(dragRegion);
+        }
     }
 
-    public void HidePlayBarBlur()
+    private void EnsureExpandedPlayerFrame()
     {
-        GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;
+        ExpandedPlayer.Visibility = Visibility.Visible;
+        ExpandedPlayer.Content ??= new ExpandedPlayer();
     }
-
-    public void SetExpandedPlayerFrameOffsetY(double offset)
-    {
-        ExpandedPlayerPositionOffset.Y = offset;
-    }
-
-    public void BeginImageResetAnimation()
-    {
-        ImageResetPositionAni.Begin();
-    }
-
-    public void RefreshPlaybackCover(HyPlayItem? item)
-    {
-        GridPlayBar.Children.OfType<PlayBar>().FirstOrDefault()?.RefreshPlayBarCover(item);
-        if (ExpandedPlayer.Content is Shell.ExpandedPlayer.ExpandedPlayer expandedPlayer)
-            expandedPlayer.RefreshAlbumCover(item);
-    }
-
-    public void StartExpandedPlayerTransition(ExpandedPlayerTransition transition)
-    {
-        if (ExpandedPlayer.Content is not Shell.ExpandedPlayer.ExpandedPlayer expandedPlayer) return;
-        if (transition == ExpandedPlayerTransition.Expand)
-            expandedPlayer.StartExpandAnimation();
-        else
-            expandedPlayer.StartCollapseAnimation();
-    }
-
-    // ── End IPlaybackSurfaceHost ──
 
     private void MainPage_ActualThemeChanged(FrameworkElement sender, object args)
     {
@@ -162,15 +155,15 @@ public sealed partial class MainPage : Page, IPlaybackSurfaceHost
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        var coordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
-        if (ReferenceEquals(coordinator.Host, this)) coordinator.Host = null;
+        _surfaceStoreChangedListener?.Detach();
+        _surfaceStoreChangedListener = null;
         ActualThemeChanged -= MainPage_ActualThemeChanged;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().Host = this;
+        AttachSurfaceStoreListener();
         if (ApplicationView.GetForCurrentView().IsFullScreenMode)
         {
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
@@ -212,8 +205,7 @@ public sealed partial class MainPage : Page, IPlaybackSurfaceHost
         if (!IsPlaybarOnShow)
         {
             PointerInAni.Begin();
-            Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>()
-                .RefreshPlaybackCover(Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
+            IsPlaybarOnShow = true;
         }
     }
 

@@ -89,6 +89,7 @@ public sealed partial class ExpandedPlayer : Page
     private readonly WeakEventListener<ExpandedPlayer, object?, EventArgs> _enteredForegroundListener;
     private readonly WeakEventListener<ExpandedPlayer, object?, PlayBarVisibilityChangedEventArgs> _playBarVisibilityListener;
     private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs> _stateChangedListener;
+    private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs> _surfaceStoreChangedListener;
     private readonly WeakEventListener<ExpandedPlayer, object?, SeekRequestedEventArgs> _seekRequestedListener;
 
     // Services accessed via ViewModel; shortcuts for code-behind convenience
@@ -186,6 +187,12 @@ public sealed partial class ExpandedPlayer : Page
             OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
         };
         _state.PropertyChanged += _stateChangedListener.OnEvent;
+        _surfaceStoreChangedListener = new WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.OnSurfaceStorePropertyChanged(args.PropertyName),
+            OnDetachAction = weakEventListener => { _surfaceStore.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _surfaceStore.PropertyChanged += _surfaceStoreChangedListener.OnEvent;
         _seekRequestedListener = new WeakEventListener<ExpandedPlayer, object?, SeekRequestedEventArgs>(this)
         {
             OnEventAction = static (instance, _, _) => instance.HyPlayList_OnManualSeek(),
@@ -237,8 +244,27 @@ public sealed partial class ExpandedPlayer : Page
             case nameof(PlaybackStateService.NowPlayingItem):
                 OnSongChange(_state.NowPlayingItem);
                 break;
+            case nameof(PlaybackStateService.CoverStream):
+                RefreshAlbumCover(_state.NowPlayingItem);
+                break;
             case nameof(PlaybackStateService.LyricInfo):
                 HyPlayList_OnLyricLoaded();
+                break;
+        }
+    }
+
+    private void OnSurfaceStorePropertyChanged(string? propertyName)
+    {
+        switch (propertyName)
+        {
+            case nameof(PlaybackSurfaceStore.TransitionRequestId):
+                if (_surfaceStore.RequestedTransition == ExpandedPlayerTransition.Expand)
+                    StartExpandAnimation();
+                else
+                    StartCollapseAnimation();
+                break;
+            case nameof(PlaybackSurfaceStore.ExpandedFrameOffsetY):
+                // MainPage observes the same store value and moves the frame. ExpandedPlayer keeps the gesture local state here.
                 break;
         }
     }
@@ -957,8 +983,6 @@ public sealed partial class ExpandedPlayer : Page
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-        if (_surfaceCoordinator.Host is { } host)
-            host.IsExpandedPlayerInitialized = true;
         if (_settings.albumRound) ImageAlbum.CornerRadius = new CornerRadius(300);
         ImageAlbum.BorderThickness = new Thickness(_settings.albumBorderLength);
         Window.Current.SetTitleBar(AppTitleBar);
@@ -1060,8 +1084,7 @@ public sealed partial class ExpandedPlayer : Page
                     // 竖直方向滑动
                     if (e.Cumulative.Translation.Y >= 0)
                     {
-                        if (_surfaceCoordinator.Host is { } host)
-                            host.SetExpandedPlayerFrameOffsetY(e.Cumulative.Translation.Y);
+                        _surfaceCoordinator.UpdateExpandedFrameOffset(e.Cumulative.Translation.Y);
                     }
                     else
                     {
@@ -1091,8 +1114,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private async void ImageAlbum_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
     {
-        if (_surfaceCoordinator.Host is { } host)
-            host.BeginImageResetAnimation();
+        _surfaceCoordinator.ResetExpandedFrameOffset();
         if (_settings.gestureMode == 0)
         {
             if (Math.Abs(e.Cumulative.Translation.Y) < Math.Abs(e.Cumulative.Translation.X))
@@ -1350,6 +1372,7 @@ public sealed partial class ExpandedPlayer : Page
         _enteredForegroundListener.Detach();
         _playBarVisibilityListener.Detach();
         _stateChangedListener.Detach();
+        _surfaceStoreChangedListener.Detach();
         _seekRequestedListener.Detach();
         Window.Current.SizeChanged -= Current_SizeChanged;
         _lyricBox.OnBeforeRender -= _lyricBox_OnBeforeRender;

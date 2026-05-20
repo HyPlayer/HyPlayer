@@ -63,9 +63,10 @@ public partial class PlaybackStateService : ObservableObject
     [ObservableProperty]
     public partial string QualityTag { get; set; } = string.Empty;
 
-    /// <summary>封面流（异步加载）</summary>
-    public InMemoryRandomAccessStream? CoverStream { get; set; }
+    /// <summary>封面流（异步加载，供 UI 观察刷新）。</summary>
+    [ObservableProperty]
+    public partial InMemoryRandomAccessStream? CoverStream { get; set; }
 
-    /// <summary>封面流引用（用于 SMTC 等）</summary>
+    /// <summary>封面流引用（用于 SMTC 等服务层调用，不触发 UI 更新）。</summary>
     public RandomAccessStreamReference? CoverStreamReference { get; set; }
 }
