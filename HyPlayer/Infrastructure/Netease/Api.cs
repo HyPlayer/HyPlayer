@@ -1,12 +1,12 @@
 #region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 #endregion
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Infrastructure.Netease;
 
 internal class Api
 {

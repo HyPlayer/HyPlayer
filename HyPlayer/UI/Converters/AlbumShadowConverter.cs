@@ -1,8 +1,9 @@
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Settings;
 using System;
 using Windows.UI.Xaml.Data;
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-namespace HyPlayer.Classes
+namespace HyPlayer.UI.Converters
 {
     public partial class AlbumShadowConverter : IValueConverter
     {

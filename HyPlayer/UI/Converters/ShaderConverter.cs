@@ -1,8 +1,9 @@
+using HyPlayer.Domain;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Data;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.UI.Converters
 {
     public partial class ShaderConverter : IValueConverter
     {

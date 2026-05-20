@@ -1,26 +1,27 @@
 ﻿using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using HyPlayer.Classes;
-using HyPlayer.Services.Downloads;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
-using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Cache;
+using HyPlayer.Services.Downloads;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace HyPlayer.ViewModels
+namespace HyPlayer.Features.Album
 {
-    public partial class AlbumPageViewModel :ObservableRecipient
+    public partial class AlbumPageViewModel : ObservableRecipient
     {
         private readonly IPlaylistService _playlist;
         private readonly NeteaseCloudMusicApiHandler _api;
@@ -115,8 +116,8 @@ namespace HyPlayer.ViewModels
                 var idx = 0;
                 QueueScope = SongListQueueScope.Album(Album.Id);
                 PublishTime = rst.Album.PublishTime;
-                AlbumSongsViewSource = new CollectionViewSource() 
-                { 
+                AlbumSongsViewSource = new CollectionViewSource()
+                {
                     IsSourceGrouped = true,
                     Source = rst.Songs?.Select(song =>
                     {
@@ -177,7 +178,7 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void NavigateComment()
         {
-            _navigation.Navigate(typeof(Comments), CommentTarget.Album(Album.Id));
+            _navigation.Navigate(typeof(Comments.Comments), CommentTarget.Album(Album.Id));
         }
 
         [RelayCommand]

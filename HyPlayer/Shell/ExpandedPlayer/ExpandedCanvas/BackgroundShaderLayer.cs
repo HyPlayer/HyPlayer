@@ -1,5 +1,4 @@
-using CommunityToolkit.WinUI.Media;
-using HyPlayer.Classes;
+using HyPlayer.Domain;
 using Impressionist.Implementations;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
@@ -12,7 +11,6 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using WinRT;
 
 namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 

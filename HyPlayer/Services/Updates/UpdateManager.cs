@@ -1,4 +1,7 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Serialization;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Net.Http;
@@ -9,7 +12,7 @@ using Windows.ApplicationModel;
 using Windows.Services.Store;
 using Windows.UI.Xaml.Controls;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Services.Updates;
 
 public static class UpdateManager
 {
@@ -143,7 +146,7 @@ public static class UpdateManager
 
     public static Task PopupVersionCheck(bool isStartup = false)
     {
-        return Task.Run(async () =>
+        return Task.Run((Func<Task?>)(async () =>
         {
             var remoteResult = await GetRemoteVersion((UpdateSource)Ioc.Default.GetRequiredService<Setting>().UpdateSource);
             var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
@@ -156,10 +159,10 @@ public static class UpdateManager
             }
 
             var message = remoteResult.UpdateLog +
-            "\r\n最新版本: " + remoteResult.Version +
-            "\r\n更新时间: " + remoteResult.UpdateTime.ToString() +
-            "\r\n当前版本: " + localVersion +
-            (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
+                          "\r\n最新版本: " + remoteResult.Version +
+                          "\r\n更新时间: " + remoteResult.UpdateTime.ToString() +
+                          "\r\n当前版本: " + localVersion +
+                          (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
             if (isStartup)
             {
                 Ioc.Default.GetRequiredService<INotificationService>().ShowMessage(title, message);
@@ -181,7 +184,7 @@ public static class UpdateManager
                     await contentDialog.ShowAsync();
                 });
             }
-        });
+        }));
 
     }
 

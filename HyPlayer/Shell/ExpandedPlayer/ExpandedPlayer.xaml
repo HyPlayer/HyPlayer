@@ -1,13 +1,13 @@
 <Page
-    x:Class="HyPlayer.Pages.ExpandedPlayer"
+    x:Class="HyPlayer.Shell.ExpandedPlayer.ExpandedPlayer"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ani="using:CommunityToolkit.WinUI.Animations"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
-    xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:controls1="using:HyPlayer.UI.Controls"
+    xmlns:alignableWrapPanel="using:HyPlayer.UI.Controls.AlignableWrapPanel"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:hyplayer="using:HyPlayer"
-    xmlns:lyricrenderer="using:HyPlayer.LyricRenderer"
+    xmlns:hyplayer="using:HyPlayer.Infrastructure.Extensions"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:CommunityToolkit.WinUI"
@@ -288,7 +288,7 @@
                             Text="{x:Bind ViewModel.SongName, Mode=OneWay}" />
                     </controls1:AutoScrollView>
 
-                    <controls1:AlignableWrapPanel
+                    <alignableWrapPanel:AlignableWrapPanel
                         Grid.Row="1"
                         HorizontalContentAlignment="Center"
                         HorizontalSpacing="12"
@@ -318,7 +318,7 @@
 
                         </HyperlinkButton>
 
-                    </controls1:AlignableWrapPanel>
+                    </alignableWrapPanel:AlignableWrapPanel>
                 </Grid>
             </Grid>
             <Grid x:Name="RightPanel" Grid.Column="1" />

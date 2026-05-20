@@ -1,21 +1,19 @@
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Features.Playlist;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Messages;
-using HyPlayer.ViewModels;
+using HyPlayer.Services.Notifications.Messages;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using WinRT;
 
-
-
-namespace HyPlayer.Pages
+namespace HyPlayer.Features.Home
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.

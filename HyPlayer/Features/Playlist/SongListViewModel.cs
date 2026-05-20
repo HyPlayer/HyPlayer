@@ -1,17 +1,24 @@
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
-using HyPlayer.Services.Downloads;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.User;
+using HyPlayer.Infrastructure.Imaging;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
-using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
+using HyPlayer.Services.Cache;
+using HyPlayer.Services.Downloads;
+using HyPlayer.Services.Notifications.Messages;
+using HyPlayer.UI.Converters;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -21,9 +28,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.UI;
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Services.Messages;
-namespace HyPlayer.ViewModels
+namespace HyPlayer.Features.Playlist
 {
     public partial class SongListViewModel : ObservableRecipient
     {
@@ -294,7 +299,7 @@ namespace HyPlayer.ViewModels
         [RelayCommand]
         private void NavigateToComments()
         {
-            _navigation.Navigate(typeof(Comments), CommentTarget.Playlist(PlayList.PlaylistId));
+            _navigation.Navigate(typeof(Comments.Comments), CommentTarget.Playlist(PlayList.PlaylistId));
         }
         [RelayCommand]
         private async Task ResetCacheAsync()

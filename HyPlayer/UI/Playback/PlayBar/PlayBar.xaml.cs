@@ -2,28 +2,30 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
-using CommunityToolkit.WinUI;
-using HyPlayer.Classes;
-using HyPlayer.Services.Downloads;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Album;
+using HyPlayer.Features.Artist;
+using HyPlayer.Features.Comments;
+using HyPlayer.Features.User;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
-using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Downloads;
+using HyPlayer.Services.History;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
-using HyPlayer.UWP.Chopin;
+using HyPlayer.UI.Dialogs;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
-using HyPlayer.ViewModels;
 using System;
-using System.Diagnostics;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage;
 using Windows.System;
 using Windows.System.Profile;
 using Windows.UI;
@@ -31,7 +33,6 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -41,7 +42,7 @@ using WinRT;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了"用户控件"项模板
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Playback.PlayBar;
 
 public sealed partial class PlayBar
 {
@@ -700,8 +701,8 @@ DoubleAnimation verticalAnimation;
                         {
                             ListBoxPlayList.ScrollIntoView(PlayItems[targetingIndex]);
                         }
-        });
-    }
+                    });
+                }
 
             }
         }

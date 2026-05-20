@@ -7,7 +7,7 @@ using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Markup;
 using WinRT;
 
-namespace HyPlayer.Controls.Primitives;
+namespace HyPlayer.UI.Controls.Primitives;
 
 [ContentProperty(Name = nameof(Child))]
 public partial class RedirectVisualView : Control

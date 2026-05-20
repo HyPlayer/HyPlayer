@@ -1,10 +1,11 @@
 using ALRC.Abstraction;
 using ALRC.Converters;
-using HyPlayer.Classes.LyricEnhancers;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Lyrics.LyricEnhancers;
+using HyPlayer.Domain.Settings;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -12,8 +13,7 @@ using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Color = System.Drawing.Color;
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-namespace HyPlayer.Classes;
+namespace HyPlayer.Domain.Lyrics;
 
 public static class LrcConverter
 {

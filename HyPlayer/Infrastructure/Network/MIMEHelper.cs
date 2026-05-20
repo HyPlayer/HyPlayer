@@ -6,7 +6,7 @@ using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
 using Buffer = Windows.Storage.Streams.Buffer;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Infrastructure.Network
 {
     public static class MIMEHelper
     {

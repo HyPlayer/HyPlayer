@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using HyPlayer.Domain.Music;
+using System.Collections.Generic;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Infrastructure.Diagnostics
 {
     public class DumpInfo
     {

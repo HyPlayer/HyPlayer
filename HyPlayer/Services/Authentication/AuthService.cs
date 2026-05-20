@@ -1,24 +1,27 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Netease;
+using HyPlayer.Infrastructure.Network;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Login;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Utils;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Messages;
+using HyPlayer.Services.Cache;
+using HyPlayer.Services.Notifications.Messages;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.Services.Authentication;
 
 /// <summary>
 /// 认证服务实现，管理用户登录状态与收藏数据

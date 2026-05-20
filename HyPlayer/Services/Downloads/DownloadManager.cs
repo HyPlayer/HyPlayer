@@ -2,13 +2,18 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Audio;
+using HyPlayer.Infrastructure.Extensions;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Messages;
+using HyPlayer.Services.Notifications.Messages;
 using Microsoft.Toolkit.Uwp.Helpers;
 using System;
 using System.Collections.Generic;
@@ -25,6 +30,7 @@ using Windows.Graphics.Imaging;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using UwpStorageFileAbstraction = HyPlayer.Infrastructure.Audio.UwpStorageFileAbstraction;
 
 #endregion
 

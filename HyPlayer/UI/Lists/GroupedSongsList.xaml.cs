@@ -2,10 +2,9 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
-using HyPlayer.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
@@ -20,7 +19,7 @@ using WinRT;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Lists;
 
 public sealed partial class GroupedSongsList : UserControl
 {

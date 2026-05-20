@@ -1,21 +1,20 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
 using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.RollingCalculators;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
-using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Gaming.XboxGameBar;
 using Microsoft.Gaming.XboxGameBar.Input;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
@@ -28,7 +27,7 @@ using WinRT;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Features.Widgets;
 
 public sealed partial class WidgetPage : Page
 {
@@ -280,7 +279,7 @@ public sealed partial class WidgetPage : Page
         if (_player.PrimaryAudioInputNode == null) return;
         LyricBox.Context.IsPlaying = _player.GlobalPlaybackStatus == PlaybackStatus.Playing;
         long position = 0;
-        if(_player.PrimaryAudioInputNode != null) position = (long)_player.PrimaryAudioInputNode.Position.TotalMilliseconds;
+        if (_player.PrimaryAudioInputNode != null) position = (long)_player.PrimaryAudioInputNode.Position.TotalMilliseconds;
         if (position < LyricBox.Context.CurrentLyricTime)
         {
             LyricBox.Context.CurrentLyricTime = position;

@@ -3,7 +3,7 @@ using ALRC.Converters;
 using System;
 using System.Linq;
 
-namespace HyPlayer.Classes.LyricEnhancers;
+namespace HyPlayer.Domain.Lyrics.LyricEnhancers;
 
 public class SublineAlignmentEnhancer : ILyricEnhancer<bool>
 {

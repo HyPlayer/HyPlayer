@@ -1,8 +1,8 @@
 ﻿<ContentDialog
-    x:Class="HyPlayer.Controls.LyricShareDialog"
+    x:Class="HyPlayer.UI.Dialogs.LyricShareDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:HyPlayer.Controls"
+    xmlns:local="using:HyPlayer.UI.Dialogs"
     Title="复制歌词"
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
     PrimaryButtonStyle="{StaticResource AccentButtonStyle}"

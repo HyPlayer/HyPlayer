@@ -1,11 +1,10 @@
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using HyPlayer.Services.Abstractions;
 using Windows.Foundation;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.Services.Background;
 
 /// <inheritdoc />
 public sealed class BackgroundTaskRunner : IBackgroundTaskRunner

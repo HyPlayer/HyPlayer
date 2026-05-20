@@ -1,13 +1,13 @@
+using HyPlayer.Services.Abstractions;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using HyPlayer.Services.Abstractions;
-using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.UI.Core;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.Services.Notifications;
 
 /// <summary>
 /// 通知服务实现，管理 UI 消息提示与线程调度

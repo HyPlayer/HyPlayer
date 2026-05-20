@@ -1,6 +1,6 @@
 using HyPlayer.Services.Abstractions;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.Services.AppState;
 
 public sealed class AppLifecycleStateService : IAppLifecycleStateService
 {

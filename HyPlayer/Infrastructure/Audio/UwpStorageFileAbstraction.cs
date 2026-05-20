@@ -3,7 +3,7 @@ using System.IO;
 using Windows.Storage;
 using File = TagLib.File;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Infrastructure.Audio;
 
 public sealed partial class UwpStorageFileAbstraction : File.IFileAbstraction, IDisposable
 {

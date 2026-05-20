@@ -1,4 +1,6 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using LiteFM;
 using LiteFM.Abstractions.ApiContracts;
@@ -6,7 +8,8 @@ using LiteFM.Api;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-namespace HyPlayer.Classes
+
+namespace HyPlayer.Services.LastFM
 {
     public static class LastFMManager
     {

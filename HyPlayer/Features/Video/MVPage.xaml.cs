@@ -1,11 +1,13 @@
 ﻿#region
 
-using HyPlayer.Classes;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Video;
 using HyPlayer.Services.Abstractions;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -19,7 +21,7 @@ using Windows.UI.Xaml.Navigation;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Features.Video;
 
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
@@ -96,9 +98,9 @@ public sealed partial class MVPage : Page
     private void LoadComment()
     {
         if (Regex.IsMatch(MVId, "^[0-9]*$"))
-            CommentFrame.Navigate(typeof(Comments), CommentTarget.MV(MVId));
+            CommentFrame.Navigate(typeof(Comments.Comments), CommentTarget.MV(MVId));
         else
-            CommentFrame.Navigate(typeof(Comments), CommentTarget.MLog(MVId));
+            CommentFrame.Navigate(typeof(Comments.Comments), CommentTarget.MLog(MVId));
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)

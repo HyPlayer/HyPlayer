@@ -1,4 +1,4 @@
-using HyPlayer.Classes;
+using HyPlayer.Domain;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;

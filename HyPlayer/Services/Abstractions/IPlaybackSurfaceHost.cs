@@ -1,10 +1,11 @@
-using System;
+using HyPlayer.Shell;
+using HyPlayer.Shell.ExpandedPlayer;
 
 namespace HyPlayer.Services.Abstractions;
 
 /// <summary>
 /// Abstraction over MainPage frame controls, attached by MainPage so that
-/// <see cref="IPlaybackSurfaceCoordinator"/> and <see cref="Pages.ExpandedPlayer"/>
+/// <see cref="IPlaybackSurfaceCoordinator"/> and <see cref="ExpandedPlayer"/>
 /// can manipulate frame-level UI without reaching into concrete pages.
 /// </summary>
 public interface IPlaybackSurfaceHost
@@ -17,7 +18,7 @@ public interface IPlaybackSurfaceHost
     /// <summary>Navigate the ExpandedPlayer frame to <paramref name="pageType"/>.</summary>
     void NavigateExpandedPlayerFrame();
 
-    /// <summary>Navigate the ExpandedPlayer frame to <see cref="Pages.BlankPage"/> and hide it.</summary>
+    /// <summary>Navigate the ExpandedPlayer frame to <see cref="BlankPage"/> and hide it.</summary>
     void HideExpandedPlayerFrame();
 
     /// <summary>Show the main navigation frame.</summary>

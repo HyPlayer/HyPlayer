@@ -3,7 +3,7 @@ using Polly.Retry;
 using System;
 using System.Threading.Tasks;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Infrastructure.Network
 {
     /// <summary>
     /// Polly 重试策略配置类

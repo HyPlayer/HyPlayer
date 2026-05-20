@@ -1,10 +1,10 @@
-using HyPlayer.Classes;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Infrastructure.Serialization;
 using HyPlayer.NeteaseApi;
 using System.Text.Json;
 using Windows.Storage;
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-namespace HyPlayer.Classes.Settings
+namespace HyPlayer.Domain.Settings
 {
     /// <summary>
     /// Settings related to API configuration, proxy, and network options.

@@ -1,15 +1,19 @@
 #region
 
-using HyPlayer.Classes;
-using HyPlayer.Services.Downloads;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.User;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Services.Cache;
+using HyPlayer.Services.Downloads;
+using HyPlayer.Services.Notifications.Messages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -20,11 +24,10 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Services.Messages;
 
 #endregion
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Features.Radio;
 
 public sealed partial class RadioPage : Page
 {

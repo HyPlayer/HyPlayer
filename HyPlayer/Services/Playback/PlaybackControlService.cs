@@ -1,7 +1,9 @@
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.LastFM;
 using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
@@ -10,7 +12,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media;
-using Windows.Media.Playback;
+using PlayItem = HyPlayer.Domain.Music.PlayItem;
 
 namespace HyPlayer.Services.Playback;
 
@@ -172,7 +174,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     public void Play()
     {
         _player.PlayAll();
-        if(_player.PrimaryPlaybackSource.PlaybackStatus is not PlaybackStatus.Playing)
+        if (_player.PrimaryPlaybackSource.PlaybackStatus is not PlaybackStatus.Playing)
         {
             _player.PlayPlaybackSource(_player.PrimaryPlaybackSource);
         }
@@ -243,7 +245,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             var mediaSource = await _mediaSourceService.CreateMediaSourceAsync(item, ct);
             if (mediaSource is null) return;
 
-            ct.ThrowIfCancellationRequested();          
+            ct.ThrowIfCancellationRequested();
             item.PlayItem ??= new PlayItem();
             mediaSource.CustomProperties["nowPlayingItem"] = item;
 

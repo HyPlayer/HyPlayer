@@ -1,9 +1,9 @@
 ﻿<Page
-    x:Class="HyPlayer.Pages.Comments"
+    x:Class="HyPlayer.Features.Comments.Comments"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hycontrols="using:HyPlayer.Controls"
+    xmlns:hycontrols="using:HyPlayer.UI.Lists"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
     Unloaded="Page_Unloaded"

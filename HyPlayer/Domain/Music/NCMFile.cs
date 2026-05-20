@@ -1,15 +1,16 @@
 #region
 
+using HyPlayer.Infrastructure.Netease;
+using HyPlayer.Infrastructure.Serialization;
 using System;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
 #endregion
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Domain.Music;
 
 internal static class NCMFile
 {

@@ -1,11 +1,11 @@
 ﻿<Page
-    x:Class="HyPlayer.Pages.Search"
+    x:Class="HyPlayer.Features.Search.Search"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hycontrol="using:HyPlayer.Controls"
-    xmlns:hyplayer="using:HyPlayer"
+    xmlns:history="using:HyPlayer.Services.History"
+    xmlns:hycontrol="using:HyPlayer.UI.Lists"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
@@ -32,7 +32,7 @@
                 x:Name="HistoryComboBox"
                 Margin="15,0,15,5"
                 HorizontalAlignment="Stretch"
-                ItemsSource="{x:Bind hyplayer:HistoryManagement.GetSearchHistory()}"
+                ItemsSource="{x:Bind history:HistoryManagement.GetSearchHistory()}"
                 PlaceholderText="展开搜索历史"
                 SelectionChanged="HistoryComboBox_SelectionChanged" />
         </StackPanel>

@@ -1,9 +1,9 @@
-using System;
 using HyPlayer.Services.Abstractions;
+using System;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.Services.Navigation;
 
 /// <summary>
 /// 纯导航服务实现，使用 Frame 原生导航栈。

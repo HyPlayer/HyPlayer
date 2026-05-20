@@ -1,18 +1,19 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Services.Playback.Transitions;
 
 /// <summary>
 /// 交叉淡入淡出过渡策略。
 /// <para>
-/// 在当前曲目即将结束时预加载下一首，并在剩余时间 ≤ <see cref="Setting.CrossFadeTime"/> 时
+/// 在当前曲目即将结束时预加载下一首，并在剩余时间 ≤ <see cref="HyPlayer.App.Setting.CrossFadeTime"/> 时
 /// 同时对当前曲目执行淡出、对下一曲目执行淡入，实现平滑过渡。
 /// </para>
 /// </summary>

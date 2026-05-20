@@ -1,5 +1,7 @@
 ﻿#nullable enable
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Serialization;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -7,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Services.Cache;
 
 public static class SimpleCacher
 {

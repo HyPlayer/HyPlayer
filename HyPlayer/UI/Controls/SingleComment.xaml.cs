@@ -1,10 +1,15 @@
 #region
 
-using HyPlayer.Classes;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Features.User;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Comment;
-using HyPlayer.Pages;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Cache;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -17,13 +22,11 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 
-using HyPlayer.Services.Abstractions;
-using CommunityToolkit.Mvvm.DependencyInjection;
 #endregion
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Controls;
 
 public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 {

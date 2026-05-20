@@ -1,12 +1,12 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Domain.Music
 {
     public partial class SimpleListItem
     {

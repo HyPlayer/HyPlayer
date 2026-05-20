@@ -1,20 +1,21 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Domain.Music;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.ListenTogether;
 using HyPlayer.NeteaseApi.ApiContracts.ListenTogether.Dual;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Messages;
+using HyPlayer.Services.Notifications.Messages;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Infrastructure.Netease;
 
 /// <summary>
 /// 一起听管理器。

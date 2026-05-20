@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Domain.Music
 {
     public class NCPlayList
     {

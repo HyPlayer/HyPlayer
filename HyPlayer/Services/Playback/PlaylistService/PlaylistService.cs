@@ -1,18 +1,14 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback.Messages;
-using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
-using Windows.Storage;
 
-namespace HyPlayer.Services.Playback;
+namespace HyPlayer.Services.Playback.PlaylistService;
 
 /// <summary>
 /// 播放列表服务 — 编排播放策略 (<see cref="IPlayStrategy"/>) 与过渡策略 (<see cref="ITrackTransition"/>)，

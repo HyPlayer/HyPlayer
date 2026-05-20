@@ -1,4 +1,4 @@
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

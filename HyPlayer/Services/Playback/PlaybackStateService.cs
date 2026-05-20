@@ -1,6 +1,7 @@
-using System;
 using CommunityToolkit.Mvvm.ComponentModel;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Music;
+using System;
 using Windows.Storage.Streams;
 
 namespace HyPlayer.Services.Playback;

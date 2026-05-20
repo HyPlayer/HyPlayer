@@ -1,16 +1,17 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Features.Playlist;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-namespace HyPlayer.ViewModels
+namespace HyPlayer.Features.Home
 {
     public partial class HomeViewModel : ObservableRecipient
     {

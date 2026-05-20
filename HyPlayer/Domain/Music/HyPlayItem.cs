@@ -1,17 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Settings;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using TagLib;
-using Windows.Media.Core;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Domain.Music
 {
     public partial class PlayItem : IDisposable
     {
@@ -95,12 +92,13 @@ namespace HyPlayer.Classes
         /// </summary>
         public string ProviderId
         {
-            get {
+            get
+            {
                 switch (ItemType)
                 {
                     case HyPlayItemType.Local:
                     case HyPlayItemType.LocalProgressive:
-                        if(SubExt == ".ncm") return "ncm";
+                        if (SubExt == ".ncm") return "ncm";
                         return "lcl";
                     case HyPlayItemType.Netease:
                     case HyPlayItemType.Radio:
@@ -123,7 +121,7 @@ namespace HyPlayer.Classes
         public string GetQualityTagText(string fallbackLevel = null)
         {
             if (!string.IsNullOrWhiteSpace(QualityTag)) return QualityTag;
-            if(IsLocalFile) return "本地歌曲";
+            if (IsLocalFile) return "本地歌曲";
             return FormatAudioLevel(fallbackLevel);
         }
 
@@ -175,4 +173,4 @@ namespace HyPlayer.Classes
         }
     }
 }
-    
+

@@ -1,27 +1,35 @@
 #region
 
 #nullable enable annotations
-using ALRC.Abstraction;
 using ALRC.Converters;
 using ALRC.Converters.Enhancers;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.WinUI.Animations;
 using CommunityToolkit.WinUI.Media;
-using HyPlayer.Classes;
-using HyPlayer.Classes.LyricParser.Abstraction;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Album;
+using HyPlayer.Features.Artist;
+using HyPlayer.Features.Radio;
+using HyPlayer.Features.User;
+using HyPlayer.Infrastructure.Imaging;
 using HyPlayer.LyricRenderer;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Cache;
+using HyPlayer.Services.Notifications.Messages;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
+using HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
+using HyPlayer.Shell.Playback;
+using HyPlayer.UI.Dialogs;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
-using HyPlayer.UWP.Chopin.Utils;
-using HyPlayer.ViewModels;
 using Impressionist.Abstractions;
 using Impressionist.Implementations;
 using Microsoft.Graphics.Canvas;
@@ -31,13 +39,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Numerics;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.DataTransfer;
 using Windows.Devices.Input;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
-using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using Windows.UI;
@@ -51,18 +56,15 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
-using HyALRCLyricInfo = HyPlayer.Classes.HyALRCLyricInfo;
-using LrcConverter = HyPlayer.Classes.LrcConverter;
-using HyPlayer.Services.Messages;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
+using HyALRCLyricInfo = HyPlayer.Domain.Lyrics.HyALRCLyricInfo;
+using LrcConverter = HyPlayer.Domain.Lyrics.LrcConverter;
+using UISettings = Windows.UI.ViewManagement.UISettings;
 
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Shell.ExpandedPlayer;
 
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
@@ -381,7 +383,7 @@ public sealed partial class ExpandedPlayer : Page
                 BtnToggleLyric.IsChecked = true;
                 LeftPanel.Visibility = Visibility.Collapsed;
                 RightPanel.Visibility = Visibility.Visible;
-                InfoPanelColumn.Width =  new GridLength(0);
+                InfoPanelColumn.Width = new GridLength(0);
                 LyricPanelColumn.Width = new GridLength(1, GridUnitType.Star);
                 break;
         }
@@ -394,7 +396,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         // 这个函数里面放无法用XAML实现的页面布局方式
         BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
-    
+
         if (Math.Abs(lastChangedLyricWidth - LyricWidth) > 0.001f && Math.Abs(_canvasState.LyricRenderXOffset - RightPanel.ActualOffset.X) > 0.001f)
         {
             _canvasState.LyricRenderXOffset = RightPanel.ActualOffset.X;
@@ -1022,10 +1024,10 @@ public sealed partial class ExpandedPlayer : Page
                 {
                     // 竖直方向滑动
                     if (e.Cumulative.Translation.Y >= 0)
-                {
-                    if (_surfaceCoordinator.Host is { } host)
-                        host.SetExpandedPlayerFrameOffsetY(e.Cumulative.Translation.Y);
-                }
+                    {
+                        if (_surfaceCoordinator.Host is { } host)
+                            host.SetExpandedPlayerFrameOffsetY(e.Cumulative.Translation.Y);
+                    }
                     else
                     {
                         ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;

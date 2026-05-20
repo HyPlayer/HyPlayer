@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using System;
+using System.Collections.Generic;
 using Windows.UI.Xaml.Input;
 
 namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;

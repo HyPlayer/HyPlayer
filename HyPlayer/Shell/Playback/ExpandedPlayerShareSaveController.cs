@@ -1,8 +1,9 @@
 #region
 
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
+using HyPlayer.UI.Dialogs;
 using System;
 using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -102,7 +103,7 @@ public sealed class ExpandedPlayerShareSaveController
     /// <summary>Open the lyric-share dialog with the current lyric lines.</summary>
     public void ShowLyricShareDialog()
     {
-        _ = new HyPlayer.Controls.LyricShareDialog
+        _ = new LyricShareDialog
         {
             Lyrics = _state.LyricInfo.Lyrics
         }.ShowAsync();

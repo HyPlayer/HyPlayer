@@ -1,4 +1,4 @@
-namespace HyPlayer.Classes
+namespace HyPlayer.UI.Converters
 {
     public partial class BoolToLikeStringConverter : BoolToLikeConverterBase
     {

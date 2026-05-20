@@ -1,7 +1,8 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Comment;
@@ -23,7 +24,7 @@ using Point = Windows.Foundation.Point;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Features.Comments;
 
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。

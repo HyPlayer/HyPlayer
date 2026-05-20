@@ -1,4 +1,4 @@
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
 using HyPlayer.Services.Abstractions;
 using System.Collections.Generic;
 using System.Linq;

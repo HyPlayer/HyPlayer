@@ -1,8 +1,9 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
 using System;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.ViewModels;
 using Frame = Windows.UI.Xaml.Controls.Frame;
+using NavigationShellViewModel = HyPlayer.Shell.Navigation.NavigationShellViewModel;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 
 namespace HyPlayer.Services.Abstractions;

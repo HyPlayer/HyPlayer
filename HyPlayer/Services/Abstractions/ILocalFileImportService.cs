@@ -1,6 +1,6 @@
+using HyPlayer.Domain.Music;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
 using Windows.Storage;
 
 namespace HyPlayer.Services.Abstractions;

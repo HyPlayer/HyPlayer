@@ -2,7 +2,7 @@
 using HyPlayer.Services.Abstractions;
 using Microsoft.Gaming.XboxGameBar;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.Features.Widgets.Services;
 
 public sealed class GameBarWidgetService : IGameBarWidgetService
 {

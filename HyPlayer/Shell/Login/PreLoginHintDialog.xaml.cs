@@ -2,7 +2,7 @@ using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Shell.Login;
 
 public sealed partial class PreLoginHintDialog : ContentDialog
 {

@@ -1,11 +1,12 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.Services.Abstractions;
 
-namespace HyPlayer.Services.Playback;
+namespace HyPlayer.Services.Playback.PlaylistService;
 
 public sealed partial class PlaylistService
 {

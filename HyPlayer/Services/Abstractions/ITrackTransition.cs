@@ -1,7 +1,7 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using System;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 
 namespace HyPlayer.Services.Abstractions;
 

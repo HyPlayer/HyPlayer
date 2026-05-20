@@ -2,22 +2,29 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
-using HyPlayer.Services.Downloads;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Album;
+using HyPlayer.Features.Artist;
+using HyPlayer.Features.Comments;
+using HyPlayer.Features.Playlist;
+using HyPlayer.Features.User;
+using HyPlayer.Features.Video;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Cloud;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Downloads;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
+using HyPlayer.UI.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -31,7 +38,7 @@ using WinRT;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Lists;
 
 public sealed partial class SongsList : UserControl
 {

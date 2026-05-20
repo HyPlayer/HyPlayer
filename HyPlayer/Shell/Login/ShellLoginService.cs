@@ -1,9 +1,10 @@
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Welcome;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.ViewModels;
-using Microsoft.UI.Xaml.Controls;
+using HyPlayer.Shell.Navigation;
 using QRCoder;
 using System;
 using System.Threading;
@@ -13,7 +14,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using InfoBarSeverity = Microsoft.UI.Xaml.Controls.InfoBarSeverity;
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Shell.Login;
 
 /// <summary>
 /// Coordinates shell login UI while AuthService owns authentication state and API calls.

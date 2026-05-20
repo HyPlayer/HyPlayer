@@ -2,7 +2,7 @@
 using ALRC.Converters;
 using System;
 
-namespace HyPlayer.Classes.LyricEnhancers;
+namespace HyPlayer.Domain.Lyrics.LyricEnhancers;
 
 public class NearbyLineAlignmentEnhancer : ILyricEnhancer<bool>
 {

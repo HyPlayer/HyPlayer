@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace HyPlayer.Classes.LyricParser.Abstraction
+namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction
 {
     public sealed class LrcLyricsLine : LyricLine
     {

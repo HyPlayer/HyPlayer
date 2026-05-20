@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Shell.Search;
 
 public sealed class ShellSearchViewModel
 {
@@ -40,6 +40,6 @@ public sealed class ShellSearchViewModel
 
     public void NavigateToSearch(string keyword)
     {
-        _navigation.Navigate(typeof(Search), keyword);
+        _navigation.Navigate(typeof(Features.Search.Search), keyword);
     }
 }

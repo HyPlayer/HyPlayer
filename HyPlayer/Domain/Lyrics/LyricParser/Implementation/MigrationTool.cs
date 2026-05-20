@@ -1,10 +1,10 @@
 ﻿using F23.StringSimilarity;
-using HyPlayer.Classes.LyricParser.Abstraction;
+using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace HyPlayer.Classes.LyricParser.Implementation
+namespace HyPlayer.Domain.Lyrics.LyricParser.Implementation
 {
     public static class MigrationTool
     {

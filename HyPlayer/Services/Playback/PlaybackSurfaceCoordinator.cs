@@ -1,8 +1,6 @@
 #nullable enable
-using System;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.WinUI;
-using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
 using HyPlayer.Shell.Playback;

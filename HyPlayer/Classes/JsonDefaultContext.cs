@@ -1,9 +1,10 @@
-﻿using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.Extensions.JsonSerializer;
-using HyPlayer;
+﻿using HyPlayer.Domain.Lyrics;
+using HyPlayer.Infrastructure.Netease;
+using HyPlayer.NeteaseApi;
+using HyPlayer.Services.History;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using static HyPlayer.Classes.UpdateManager;
+using static HyPlayer.Services.Updates.UpdateManager;
 
 namespace HyPlayer.Classes
 {

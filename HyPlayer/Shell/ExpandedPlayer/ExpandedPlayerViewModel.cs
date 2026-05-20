@@ -1,17 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace HyPlayer.ViewModels
+namespace HyPlayer.Shell.ExpandedPlayer
 {
     public partial class ExpandedPlayerViewModel : ObservableRecipient
     {

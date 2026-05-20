@@ -1,4 +1,6 @@
-﻿using Microsoft.Xaml.Interactivity;
+﻿#nullable enable
+
+using Microsoft.Xaml.Interactivity;
 using System;
 using System.Linq;
 using System.Numerics;
@@ -9,9 +11,8 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Media;
 using WinRT;
-#nullable enable
 
-namespace HyPlayer.Behaviors
+namespace HyPlayer.UI.Behaviors
 {
     public class ButtonContentSnapBehavior : Behavior<ButtonBase>
     {

@@ -1,13 +1,14 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
+using HyPlayer.NeteaseApi;
+using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
-using HyPlayer.Services.Abstractions;
 
 namespace HyPlayer.Services.Playback.QueueProviders;
 

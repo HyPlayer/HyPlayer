@@ -1,4 +1,7 @@
 ﻿#region
+
+using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +12,7 @@ using TagLib;
 
 #endregion
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Infrastructure.Netease;
 
 internal static class The163KeyHelper
 {

@@ -1,12 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Messages;
+using HyPlayer.Services.Cache;
+using HyPlayer.Services.Notifications.Messages;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -15,7 +18,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace HyPlayer.ViewModels;
+namespace HyPlayer.Shell.Navigation;
 
 /// <summary>
 /// 导航侧边栏 ViewModel — 管理所有导航节点（静态页 + 动态歌单 + 底部项）。

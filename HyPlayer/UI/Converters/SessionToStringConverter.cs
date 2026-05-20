@@ -2,7 +2,7 @@ using LiteFM.Abstractions;
 using System;
 using Windows.UI.Xaml.Data;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.UI.Converters
 {
     public partial class SessionToStringConverter : IValueConverter
     {

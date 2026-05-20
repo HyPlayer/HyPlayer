@@ -1,7 +1,7 @@
 using System;
 using Windows.UI.Xaml.Data;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.UI.Converters
 {
     public partial class LuminousConverter : IValueConverter
     {

@@ -1,19 +1,24 @@
 ﻿using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using HyPlayer.Classes;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Cache;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace HyPlayer.ViewModels
+namespace HyPlayer.Features.Artist
 {
     public partial class ArtistPageViewModel : ObservableRecipient
     {

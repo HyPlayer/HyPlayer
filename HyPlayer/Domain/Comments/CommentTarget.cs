@@ -1,6 +1,6 @@
 using HyPlayer.NeteaseApi.Models;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Domain.Comments;
 
 public sealed record CommentTarget(NeteaseResourceType ResourceType, string ResourceId)
 {

@@ -1,11 +1,11 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Settings;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using WinRT;
 
-namespace HyPlayer;
+namespace HyPlayer.Infrastructure.Extensions;
 
 /// <summary>
 /// XAML x:Bind 专用静态辅助类。

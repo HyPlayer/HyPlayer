@@ -1,14 +1,19 @@
 #region
 
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.NeteaseApi;
-using HyPlayer.Pages;
-using HyPlayer.Services.Playback;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.WinUI;
+using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Library;
+using HyPlayer.Features.Playlist;
+using HyPlayer.Features.Search;
+using HyPlayer.Features.User;
+using HyPlayer.NeteaseApi;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.Messages;
+using HyPlayer.Shell.ExpandedPlayer;
 using Microsoft.Graphics.Canvas.Effects;
-using System;
 using System.Numerics;
 using System.Threading.Tasks;
 using Windows.UI;
@@ -23,10 +28,6 @@ using Windows.UI.Xaml.Navigation;
 using WinRT;
 using ColorStop = (float offset, Windows.UI.Color color);
 
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback.Messages;
-using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.Messaging;
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -184,7 +185,7 @@ public sealed partial class MainPage : Page, IPlaybackSurfaceHost
             }
             else
             {
-               CollapseBar().SafeFireAndForget();
+                CollapseBar().SafeFireAndForget();
             }
         });
     }

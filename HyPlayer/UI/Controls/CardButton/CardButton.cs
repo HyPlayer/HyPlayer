@@ -1,6 +1,6 @@
 ﻿using Windows.UI.Xaml.Controls.Primitives;
 
-namespace HyPlayer.Controls.CardButton
+namespace HyPlayer.UI.Controls.CardButton
 {
     public sealed partial class CardButton : ButtonBase
     {

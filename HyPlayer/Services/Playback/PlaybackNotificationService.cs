@@ -1,6 +1,9 @@
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.LastFM;
 using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
@@ -45,7 +48,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     {
         if (item == null) return;
         UpdateSmtcDisplayInfo(item);
-        
+
         WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item));
 
         // 1. 刷新封面

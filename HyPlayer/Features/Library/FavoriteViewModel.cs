@@ -1,18 +1,21 @@
 ﻿using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Cache;
+using HyPlayer.UI.Converters;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
 
-namespace HyPlayer.ViewModels
+namespace HyPlayer.Features.Library
 {
     public partial class FavoriteViewModel : ObservableRecipient
     {

@@ -1,11 +1,11 @@
 #nullable enable
+using HyPlayer.Domain.Music;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.Services.Abstractions;
 using Windows.Media.Core;
 
 namespace HyPlayer.Services.Playback.MediaProviders;

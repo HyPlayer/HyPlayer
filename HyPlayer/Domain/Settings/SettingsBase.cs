@@ -1,9 +1,6 @@
-using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using Windows.Storage;
 
-namespace HyPlayer.Classes.Settings
+namespace HyPlayer.Domain.Settings
 {
     /// <summary>
     /// Base class for sub-settings groups providing shared storage and notification infrastructure.

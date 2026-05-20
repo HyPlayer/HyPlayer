@@ -1,8 +1,9 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
-#nullable enable
-namespace HyPlayer.Classes.LyricParser.Abstraction
+
+namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction
 {
     [DebuggerDisplay("Word = {CurrentWords}, Transliteration = {Transliteration}")]
     public sealed class KaraokeWordInfo

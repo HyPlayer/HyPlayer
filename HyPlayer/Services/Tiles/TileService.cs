@@ -1,4 +1,5 @@
-﻿using HyPlayer.Classes;
+﻿using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
@@ -9,7 +10,7 @@ using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Notifications;
 
-namespace HyPlayer.Services
+namespace HyPlayer.Services.Tiles
 {
     public class TileService : ITileService
     {

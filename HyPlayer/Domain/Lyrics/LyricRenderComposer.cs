@@ -1,5 +1,5 @@
 #nullable enable
-using HyPlayer.Classes.LyricParser.Abstraction;
+using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Geometry;
@@ -14,7 +14,7 @@ using Windows.UI.Xaml.Media.Animation;
 using FontStyle = Windows.UI.Text.FontStyle;
 using Size = Windows.Foundation.Size;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Domain.Lyrics;
 
 public static class LyricRenderComposer
 {

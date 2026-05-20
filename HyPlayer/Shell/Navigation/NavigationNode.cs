@@ -1,9 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using HyPlayer.Domain.Navigation;
 using System;
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml.Controls;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Shell.Navigation;
 
 public sealed partial class NavigationNode : ObservableObject
 {

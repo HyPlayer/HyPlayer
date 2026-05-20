@@ -1,3 +1,4 @@
+using HyPlayer.Services.Playback;
 using System;
 
 namespace HyPlayer.Shell.Playback;
@@ -7,16 +8,16 @@ namespace HyPlayer.Shell.Playback;
 /// Owns the canonical playback shell state and enforces valid transitions
 /// between Compact ↔ ExpandAnimating ↔ Expanded states.
 ///
-/// Updates <see cref="Services.Playback.PlaybackSurfaceStore"/> to keep UI projections in sync.
+/// Updates <see cref="PlaybackSurfaceStore"/> to keep UI projections in sync.
 /// Intended to sit above <c>PlaybackSurfaceCoordinator</c> so that higher-level
 /// expand/collapse intent flows through the state machine and store before
 /// frame-level orchestration executes.
 /// </summary>
 public class PlaybackShellStateMachine
 {
-    private readonly Services.Playback.PlaybackSurfaceStore _surfaceStore;
+    private readonly PlaybackSurfaceStore _surfaceStore;
 
-    public PlaybackShellStateMachine(Services.Playback.PlaybackSurfaceStore surfaceStore)
+    public PlaybackShellStateMachine(PlaybackSurfaceStore surfaceStore)
     {
         _surfaceStore = surfaceStore;
     }
@@ -37,7 +38,7 @@ public class PlaybackShellStateMachine
             return false;
 
         TransitionTo(PlaybackShellState.ExpandAnimating);
-        _surfaceStore.SurfaceMode = Services.Playback.PlaybackSurfaceMode.Expanded;
+        _surfaceStore.SurfaceMode = PlaybackSurfaceMode.Expanded;
         TransitionTo(PlaybackShellState.Expanded);
         return true;
     }
@@ -52,7 +53,7 @@ public class PlaybackShellStateMachine
             return false;
 
         TransitionTo(PlaybackShellState.CollapseAnimating);
-        _surfaceStore.SurfaceMode = Services.Playback.PlaybackSurfaceMode.Compact;
+        _surfaceStore.SurfaceMode = PlaybackSurfaceMode.Compact;
         TransitionTo(PlaybackShellState.Compact);
         return true;
     }

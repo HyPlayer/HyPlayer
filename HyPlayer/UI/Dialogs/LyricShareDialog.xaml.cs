@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Lyrics;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ using Windows.UI.Xaml.Controls;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Dialogs;
 
 public sealed partial class LyricShareDialog : ContentDialog
 {

@@ -1,8 +1,24 @@
-using HyPlayer.Classes;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Album;
+using HyPlayer.Features.Artist;
+using HyPlayer.Features.Comments;
+using HyPlayer.Features.Downloads;
+using HyPlayer.Features.Home;
+using HyPlayer.Features.Library;
+using HyPlayer.Features.Playlist;
+using HyPlayer.Features.Radio;
+using HyPlayer.Features.Settings;
+using HyPlayer.Features.User;
+using HyPlayer.Features.Video;
+using HyPlayer.Features.Welcome;
+using HyPlayer.Infrastructure.Diagnostics;
+using HyPlayer.Infrastructure.Serialization;
 using HyPlayer.NeteaseApi;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +35,7 @@ using Windows.UI.Xaml.Navigation;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Shell;
 
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
@@ -54,7 +70,7 @@ public sealed partial class TestPage : Page
         [typeof(MVPage)] = "14417823",
         [typeof(PageFavorite)] = null,
         [typeof(RadioPage)] = "793914432",
-        [typeof(Search)] = "初音未来",
+        [typeof(Features.Search.Search)] = "初音未来",
         [typeof(Settings)] = null,
         [typeof(SongListDetail)] = "897784673",
         [typeof(Welcome)] = null,
@@ -68,7 +84,7 @@ public sealed partial class TestPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        TbAdditionalApiParameters.Text = JsonSerializer.Serialize(_setting.ApiAdditionalParameters, JsonDefaults.Options);
+        TbAdditionalApiParameters.Text = JsonSerializer.Serialize<AdditionalParameters>(_setting.ApiAdditionalParameters, JsonDefaults.Options);
     }
 
     public string ResourceId

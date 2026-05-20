@@ -1,13 +1,17 @@
 ﻿#region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Infrastructure.Extensions;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.Bases;
 using HyPlayer.NeteaseApi.Models;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.History;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -23,7 +27,7 @@ using WinRT;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Features.Search;
 
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。

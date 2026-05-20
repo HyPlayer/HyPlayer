@@ -1,6 +1,6 @@
 using Windows.UI.Xaml;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.UI.Converters
 {
     public partial class PlayBarImageRadiusConverter : PlayBarValueConverter
     {

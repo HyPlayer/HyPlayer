@@ -4,7 +4,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Infrastructure.Imaging
 {
     public static class ImageDecoder
     {

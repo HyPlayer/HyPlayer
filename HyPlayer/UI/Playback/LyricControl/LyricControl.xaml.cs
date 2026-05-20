@@ -1,16 +1,14 @@
-using HyPlayer.Classes;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback;
-using HyPlayer.UWP.Chopin;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Graphics.Canvas.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
-namespace HyPlayer.Controls.LyricControl
+namespace HyPlayer.UI.Playback.LyricControl
 {
     public sealed partial class LyricControl : UserControl
     {

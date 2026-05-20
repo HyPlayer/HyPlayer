@@ -1,10 +1,7 @@
-using HyPlayer.Classes;
-using HyPlayer.UWP.Chopin;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Windows.Storage;
 using Windows.UI;
 
-namespace HyPlayer.Classes.Settings
+namespace HyPlayer.Domain.Settings
 {
     /// <summary>
     /// Settings related to lyric display, rendering, and behavior.

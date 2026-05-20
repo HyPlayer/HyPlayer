@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 #endregion
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Infrastructure.Netease;
 
 /// <summary>
 /// 私人 FM 控制器。

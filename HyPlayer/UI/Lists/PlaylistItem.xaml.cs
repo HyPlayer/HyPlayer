@@ -1,14 +1,16 @@
 #region
 
-using HyPlayer.Classes;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Playlist;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Messages;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Services.Notifications.Messages;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -18,7 +20,7 @@ using Windows.UI.Xaml.Input;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Lists;
 
 public sealed partial class PlaylistItem : UserControl
 {

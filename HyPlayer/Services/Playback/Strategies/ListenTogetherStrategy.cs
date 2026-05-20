@@ -1,4 +1,4 @@
-using HyPlayer.Classes;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Services.Abstractions;
 
 namespace HyPlayer.Services.Playback.Strategies;

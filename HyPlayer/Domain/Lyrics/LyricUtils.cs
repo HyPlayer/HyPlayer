@@ -1,15 +1,16 @@
 using ALRC.Abstraction;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
-using HyPlayer.Classes.LyricParser.Abstraction;
-using HyPlayer.Classes.LyricParser.Implementation;
+using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
+using HyPlayer.Domain.Lyrics.LyricParser.Implementation;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using Kawazu;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-namespace HyPlayer.HyPlayControl;
+
+namespace HyPlayer.Domain.Lyrics;
 
 public static class Utils
 {

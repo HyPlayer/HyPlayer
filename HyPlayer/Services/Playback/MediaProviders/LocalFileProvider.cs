@@ -1,16 +1,16 @@
 #nullable enable
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Audio;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
-using TagLib.Ape;
-using TagLib.Matroska;
 using Windows.Media.Core;
 using Windows.Storage;
+using PlayItem = HyPlayer.Domain.Music.PlayItem;
+using UwpStorageFileAbstraction = HyPlayer.Infrastructure.Audio.UwpStorageFileAbstraction;
 
 namespace HyPlayer.Services.Playback.MediaProviders;
 
@@ -42,7 +42,7 @@ public sealed class LocalFileProvider : IMediaSourceProvider
             return null;
         using var abstraction = new UwpStorageFileAbstraction(file);
         using var tagFile = TagLibHelper.Create(abstraction, file.FileType);
-        if(item.ItemType == HyPlayItemType.LocalProgressive)
+        if (item.ItemType == HyPlayItemType.LocalProgressive)
         {
             var songPerformersList = tagFile.Tag.Performers
                 .Select(t => new NCArtist { Name = t, Type = HyPlayItemType.Local }).ToList();

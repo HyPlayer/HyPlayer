@@ -1,13 +1,15 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Netease;
+using HyPlayer.NeteaseApi;
+using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
-using HyPlayer.Services.Abstractions;
 
 namespace HyPlayer.Services.Playback.Strategies;
 
@@ -18,7 +20,7 @@ namespace HyPlayer.Services.Playback.Strategies;
 /// 由 PlaylistService 调用 <see cref="LoadMoreAsync"/> 获取新曲目追加到列表。
 /// </para>
 /// <para>
-/// 支持普通 FM 模式和 AI DJ 模式，通过 <see cref="Setting.useAiDj"/> 切换。
+/// 支持普通 FM 模式和 AI DJ 模式，通过 <see cref="HyPlayer.App.Setting.useAiDj"/> 切换。
 /// </para>
 /// </summary>
 public sealed class PersonalFmStrategy : IAsyncPlayStrategy

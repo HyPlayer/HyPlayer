@@ -2,7 +2,7 @@
 using CommunityToolkit.WinUI.Controls;
 using HyPlayer.Services.Abstractions;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.Shell.Services;
 
 public sealed class ShellHostStateService : IShellHostStateService
 {

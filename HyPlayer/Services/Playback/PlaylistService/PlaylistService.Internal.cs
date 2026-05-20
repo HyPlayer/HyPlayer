@@ -1,18 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
-using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
-using Windows.Storage;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace HyPlayer.Services.Playback;
+namespace HyPlayer.Services.Playback.PlaylistService;
 
 public sealed partial class PlaylistService
 {

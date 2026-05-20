@@ -1,17 +1,16 @@
 ﻿#region
+
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Services.Abstractions;
-using System;
-using Windows.UI.Xaml;
+using HyPlayer.Shell.Login;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using WinRT;
 
 #endregion
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Features.Welcome;
 
 /// <summary>
 ///     An empty page that can be used on its own or navigated to within a Frame.

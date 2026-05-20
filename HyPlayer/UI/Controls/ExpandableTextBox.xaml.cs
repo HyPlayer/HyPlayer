@@ -3,7 +3,7 @@ using Windows.UI.Xaml.Controls;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Controls;
 
 public sealed partial class ExpandableTextBox : UserControl
 {

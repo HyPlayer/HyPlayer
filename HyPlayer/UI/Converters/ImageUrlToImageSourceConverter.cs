@@ -1,8 +1,8 @@
 using System;
-using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Media.Imaging;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.UI.Converters
 {
     public partial class ImageUrlToImageSourceConverter : IValueConverter
     {

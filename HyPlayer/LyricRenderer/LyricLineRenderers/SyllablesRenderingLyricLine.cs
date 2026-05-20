@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Settings;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
@@ -282,10 +283,10 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 finalEffectBuilder.AddGaussianBlurEffect(Math.Clamp(gap, 0, 250));
             }
 
-            if (Ioc.Default.GetRequiredService<HyPlayer.Setting>()!.lyricRenderFade && !context.IsScrolling)
+            if (Ioc.Default.GetRequiredService<Setting>()!.lyricRenderFade && !context.IsScrolling)
             {
                 finalEffectBuilder.AddOpacityEffect(1 -
-                                                    Math.Clamp(gap / (10f - (Ioc.Default.GetRequiredService<HyPlayer.Setting>().lyricFadingRatio / 10f)), 0,
+                                                    Math.Clamp(gap / (10f - (Ioc.Default.GetRequiredService<Setting>().lyricFadingRatio / 10f)), 0,
                                                         0.9f));
             }
             session.DrawImage(finalEffectBuilder.Build(), 0, drawingTop);
@@ -638,7 +639,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         }
                         if (currentLineLength + length > requestedWidth)
                         {
-                            if (lastSpaceIndex != 0){
+                            if (lastSpaceIndex != 0)
+                            {
                                 sb.Append('\n');
                                 sb.Append(span[(lastSpaceIndex + 1)..i]);
                             }

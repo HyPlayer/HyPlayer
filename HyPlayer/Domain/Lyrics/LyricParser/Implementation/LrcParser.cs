@@ -1,9 +1,9 @@
-﻿using HyPlayer.Classes.LyricParser.Abstraction;
+﻿using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 
-namespace HyPlayer.Classes.LyricParser.Implementation
+namespace HyPlayer.Domain.Lyrics.LyricParser.Implementation
 {
     public static class LrcParser
     {

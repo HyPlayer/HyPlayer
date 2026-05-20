@@ -1,7 +1,8 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Shell.Login;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Web.WebView2.Core;
 using System;
@@ -9,12 +10,11 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
-using HyPlayer.Services.Abstractions;
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Features.Welcome;
 
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。

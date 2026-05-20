@@ -1,10 +1,11 @@
+using HyPlayer.Classes;
+using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.Extensions.JsonSerializer;
+using LiteFM;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
-using HyPlayer.NeteaseApi.Extensions.JsonSerializer;
-using HyPlayer.NeteaseApi.ApiContracts;
-using LiteFM;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Infrastructure.Serialization;
 
 /// <summary>
 /// 全局 JSON 序列化选项

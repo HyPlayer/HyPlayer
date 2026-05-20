@@ -7,7 +7,7 @@ using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using Windows.Storage;
 
-namespace HyPlayer.Classes.Settings
+namespace HyPlayer.Domain.Settings
 {
     /// <summary>
     /// Settings related to audio playback, caching, and audio device configuration.

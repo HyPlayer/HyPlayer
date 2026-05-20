@@ -1,15 +1,20 @@
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.Services.Downloads;
-using HyPlayer.Pages;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Music;
+using HyPlayer.Features.Album;
+using HyPlayer.Features.Artist;
+using HyPlayer.Features.Comments;
+using HyPlayer.Features.User;
+using HyPlayer.Features.Video;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Downloads;
 using HyPlayer.Services.Playback;
+using HyPlayer.UI.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HyPlayer.ViewModels;
+namespace HyPlayer.UI.Lists;
 
 public partial class GroupedSongsListViewModel(
     IPlaylistService playlist,

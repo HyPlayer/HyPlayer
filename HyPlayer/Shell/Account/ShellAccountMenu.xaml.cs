@@ -1,11 +1,12 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Navigation;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.ViewModels;
+using HyPlayer.Shell.Login;
+using HyPlayer.Shell.Navigation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Shell.Account;
 
 public sealed partial class ShellAccountMenu : UserControl
 {

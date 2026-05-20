@@ -9,7 +9,7 @@ using Windows.UI.Xaml.Input;
 using WinRT;
 using InfoBarSeverity = Microsoft.UI.Xaml.Controls.InfoBarSeverity;
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Shell.Login;
 
 public sealed partial class LoginDialog : ContentDialog
 {

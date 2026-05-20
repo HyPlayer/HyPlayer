@@ -2,12 +2,16 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
+using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseApi;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Cache;
+using HyPlayer.Services.History;
+using HyPlayer.Services.Updates;
+using HyPlayer.Shell;
 using Kawazu;
 using LiteFM;
 using Microsoft.Graphics.Canvas.Text;
-using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,7 +41,7 @@ using Point = Windows.Foundation.Point;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Features.Settings;
 
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。

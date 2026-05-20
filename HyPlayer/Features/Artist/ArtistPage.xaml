@@ -1,11 +1,11 @@
 <Page
-    x:Class="HyPlayer.Pages.ArtistPage"
+    x:Class="HyPlayer.Features.Artist.ArtistPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
-    xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:controls1="using:HyPlayer.UI.Lists"
+    xmlns:uiControls="using:HyPlayer.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:ui="using:CommunityToolkit.WinUI"
@@ -106,7 +106,7 @@
                 </StackPanel>
 
             </controls:DockPanel>
-            <controls1:ExpandableTextBox
+            <uiControls:ExpandableTextBox
                 x:Name="TextBlockDesc"
                 Grid.Row="1"
                 Margin="0,12,0,0"
@@ -116,10 +116,10 @@
                 Selectable="True"
                 Text="{x:Bind ViewModel.Artist.Description}"
                 TextWrapping="WrapWholeWords">
-                <controls1:ExpandableTextBox.RenderTransform>
+                <uiControls:ExpandableTextBox.RenderTransform>
                     <ScaleTransform x:Name="DescScale" CenterX="125" CenterY="0" />
-                </controls1:ExpandableTextBox.RenderTransform>
-            </controls1:ExpandableTextBox>
+                </uiControls:ExpandableTextBox.RenderTransform>
+            </uiControls:ExpandableTextBox>
             <ui:Effects.Shadow>
                 <media:AttachedCardShadow
                     CornerRadius="0"

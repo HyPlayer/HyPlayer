@@ -1,4 +1,4 @@
-﻿using HyPlayer.Classes;
+﻿using HyPlayer.Domain.Comments;
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -7,7 +7,7 @@ using WinRT;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
-namespace HyPlayer.Controls
+namespace HyPlayer.UI.Lists
 {
     public sealed partial class CommentsList : UserControl
     {

@@ -1,5 +1,6 @@
 #nullable enable
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Network;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.IO;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using PlayItem = HyPlayer.Domain.Music.PlayItem;
 
 namespace HyPlayer.Services.Playback.MediaProviders;
 
@@ -62,7 +64,7 @@ public sealed class NcmFileProvider : IMediaSourceProvider
             encStream.CopyTo(targetStream);
             item.PlayItem.NcmPlayableStream = songDataStream;
             item.PlayItem.NcmPlayableStreamMIMEType = MIMEHelper.GetNCMFileMimeType(info.format);
-            if(item.ItemType == HyPlayItemType.LocalProgressive)
+            if (item.ItemType == HyPlayItemType.LocalProgressive)
             {
                 item.Album = new NCAlbum
                 {
@@ -76,7 +78,7 @@ public sealed class NcmFileProvider : IMediaSourceProvider
                 item.TrackId = -1;
                 item.CDName = "01";
                 item.Name = info.musicName;
-                item.Artist = [.. info.artist.Select(t => new NCArtist{ Name = t[0].ToString()!, Id = t[1].ToString()!})];
+                item.Artist = [.. info.artist.Select(t => new NCArtist { Name = t[0].ToString()!, Id = t[1].ToString()! })];
                 item.InfoTag = file.Provider.DisplayName + " NCM";
             }
 

@@ -1,7 +1,7 @@
-using System.Timers;
 using HyPlayer.Services.Abstractions;
+using System.Timers;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.Services.Runtime;
 
 public sealed class GlobalTimerService : IGlobalTimerService
 {

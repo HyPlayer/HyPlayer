@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Security.Cryptography;
 using HyPlayer.Services.Abstractions;
 
 namespace HyPlayer.Services.Playback.Strategies;
@@ -16,7 +14,7 @@ public sealed class ShuffleNoRepeatStrategy : IPlayStrategy
     /// <inheritdoc />
     public int? GetNext(PlayStrategyContext ctx)
     {
-        if ((ctx.ShuffledItems?.Count ?? 0)== 0) return null;
+        if ((ctx.ShuffledItems?.Count ?? 0) == 0) return null;
         int index = ctx.ShuffledIndex.Value + 1;
         if (index >= ctx.ShuffledItems.Count)
         {
@@ -42,7 +40,7 @@ public sealed class ShuffleNoRepeatStrategy : IPlayStrategy
     }
 
     /// <inheritdoc />
-    public void OnPlaylistChanged(PlayStrategyContext ctx){ }
+    public void OnPlaylistChanged(PlayStrategyContext ctx) { }
 
     /// <inheritdoc />
     public PlayStrategyAction OnTrackEnded(PlayStrategyContext ctx) => PlayStrategyAction.MoveNext;

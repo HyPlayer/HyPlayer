@@ -1,5 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Netease;
+using HyPlayer.Infrastructure.Serialization;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
@@ -11,7 +14,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-namespace HyPlayer
+namespace HyPlayer.Services.History
 {
     public sealed record CurPlayingListHistoryState(List<string> SongIds, int CurrentIndex);
 

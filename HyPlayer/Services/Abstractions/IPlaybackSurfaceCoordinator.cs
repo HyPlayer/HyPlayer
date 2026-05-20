@@ -17,7 +17,7 @@ public interface IPlaybackSurfaceCoordinator
     bool IsExpanded { get; }
 
     /// <summary>
-    /// The host that manages frame-level UI orchestration. Attached by <see cref="MainPage"/> during construction.
+    /// The host that manages frame-level UI orchestration. Attached by <see cref="HyPlayer.App.MainPage"/> during construction.
     /// </summary>
     IPlaybackSurfaceHost? Host { get; set; }
 }

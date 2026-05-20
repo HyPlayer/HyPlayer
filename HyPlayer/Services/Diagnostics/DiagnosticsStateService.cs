@@ -1,8 +1,8 @@
+using HyPlayer.Services.Abstractions;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using HyPlayer.Services.Abstractions;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.Services.Diagnostics;
 
 public sealed class DiagnosticsStateService : IDiagnosticsStateService
 {

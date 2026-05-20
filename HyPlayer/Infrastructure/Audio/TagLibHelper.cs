@@ -1,7 +1,7 @@
 ﻿using System;
 using TagLib;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Infrastructure.Audio
 {
     public static class TagLibHelper
     {

@@ -1,22 +1,18 @@
 #region
 
-using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback;
-using HyPlayer.UWP.Chopin;
+using HyPlayer.Services.Updates;
+using HyPlayer.Shell.Login;
+using HyPlayer.Shell.Navigation;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
-using HyPlayer.ViewModels;
-using System;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using TeachingTip = Microsoft.UI.Xaml.Controls.TeachingTip;
 
@@ -25,7 +21,7 @@ using TeachingTip = Microsoft.UI.Xaml.Controls.TeachingTip;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了"空白页"项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Shell;
 
 /// <summary>
 ///     Root shell page: title bar, navigation frame, and global input.

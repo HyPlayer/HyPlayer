@@ -1,11 +1,10 @@
 ﻿using ALRC.Abstraction;
-using HyPlayer.Classes.LyricParser.Abstraction;
+using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.Json.Serialization;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Domain.Lyrics
 {
     public class KaraokLyricInfo : PureLyricInfo
     {

@@ -3,7 +3,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Infrastructure.Extensions;
 
 public static class Extensions
 {

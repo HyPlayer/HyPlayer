@@ -1,7 +1,7 @@
 ﻿using ALRC.Abstraction;
 using ALRC.Converters;
 
-namespace HyPlayer.Classes.LyricEnhancers;
+namespace HyPlayer.Domain.Lyrics.LyricEnhancers;
 
 public class BreathLineEnhancer : ILyricEnhancer<bool>
 {

@@ -1,15 +1,19 @@
 ﻿using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Cache;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace HyPlayer.ViewModels
+namespace HyPlayer.Features.User
 {
     public partial class MeViewModel : ObservableRecipient
     {

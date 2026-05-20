@@ -1,12 +1,16 @@
 #nullable enable
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Audio;
+using HyPlayer.Infrastructure.Network;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Cache;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.Media.Core;
 
 namespace HyPlayer.Services.Playback.MediaProviders;

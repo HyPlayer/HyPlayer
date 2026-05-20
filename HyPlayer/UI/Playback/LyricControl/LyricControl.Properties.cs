@@ -1,5 +1,5 @@
-﻿using HyPlayer.Classes;
-using HyPlayer.Classes.LyricParser.Abstraction;
+﻿using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas.Text;
 using System;
 using Windows.UI;
@@ -8,7 +8,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 
-namespace HyPlayer.Controls.LyricControl
+namespace HyPlayer.UI.Playback.LyricControl
 {
     public partial class LyricControl
     {

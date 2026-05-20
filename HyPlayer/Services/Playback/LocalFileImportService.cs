@@ -1,14 +1,17 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Audio;
+using HyPlayer.Infrastructure.Netease;
+using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
+using UwpStorageFileAbstraction = HyPlayer.Infrastructure.Audio.UwpStorageFileAbstraction;
 
 namespace HyPlayer.Services.Playback;
 

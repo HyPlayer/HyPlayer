@@ -1,4 +1,6 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Settings;
 using Impressionist.Abstractions;
 using Impressionist.Implementations;
 using System;
@@ -7,7 +9,7 @@ using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
 using Windows.UI;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Infrastructure.Imaging
 {
     public static class ColorExtractor
     {

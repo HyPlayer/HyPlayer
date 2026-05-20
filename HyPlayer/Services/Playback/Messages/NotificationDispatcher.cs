@@ -1,5 +1,5 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace HyPlayer.Services.Playback.Messages;
 

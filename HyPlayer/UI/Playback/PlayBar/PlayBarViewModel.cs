@@ -1,19 +1,22 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-
-using System.Diagnostics.CodeAnalysis;
 using Windows.ApplicationModel.DataTransfer;
-namespace HyPlayer.ViewModels;
+
+namespace HyPlayer.UI.Playback.PlayBar;
 
 public partial class PlayBarViewModel : ObservableRecipient
 {

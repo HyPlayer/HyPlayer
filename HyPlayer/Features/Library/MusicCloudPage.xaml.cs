@@ -1,15 +1,17 @@
 #region
 
-using HyPlayer.Classes;
-using HyPlayer.Services.Downloads;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Cloud;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Services.Cache;
+using HyPlayer.Services.Downloads;
+using HyPlayer.Services.Notifications.Messages;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -19,13 +21,12 @@ using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Services.Messages;
 
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Features.Library;
 
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。

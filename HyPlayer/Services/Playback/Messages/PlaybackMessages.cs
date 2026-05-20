@@ -1,6 +1,6 @@
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Music;
 using System;
-using HyPlayer.Classes;
-using HyPlayer.Services.Playback;
 
 namespace HyPlayer.Services.Playback.Messages;
 

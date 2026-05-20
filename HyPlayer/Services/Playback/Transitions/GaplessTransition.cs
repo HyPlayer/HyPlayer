@@ -1,9 +1,9 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Services.Playback.Transitions;
 

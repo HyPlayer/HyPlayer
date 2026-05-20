@@ -1,11 +1,10 @@
 <UserControl
-    x:Class="HyPlayer.Controls.SimpleLinerList"
+    x:Class="HyPlayer.UI.Lists.SimpleLinerList"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviors="using:CommunityToolkit.WinUI.Behaviors"
-    xmlns:classes="using:HyPlayer.Classes"
+    xmlns:classes="using:HyPlayer.Domain.Music"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:hyplayer="using:HyPlayer"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     x:Name="SongListRoot">
 

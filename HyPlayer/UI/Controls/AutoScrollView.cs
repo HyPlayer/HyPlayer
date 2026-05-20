@@ -1,11 +1,11 @@
-﻿using HyPlayer.Controls.Primitives;
+﻿using HyPlayer.UI.Controls.Primitives;
 using System;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Hosting;
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Controls;
 
 /// <summary>
 /// Marquee effect for UIElement

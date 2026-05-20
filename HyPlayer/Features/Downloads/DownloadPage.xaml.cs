@@ -1,7 +1,7 @@
 ﻿#region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Downloads;
 using System;
 using System.Linq;
@@ -14,7 +14,7 @@ using WinRT;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Features.Downloads;
 
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。

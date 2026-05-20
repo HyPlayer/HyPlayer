@@ -1,11 +1,10 @@
-using HyPlayer.NeteaseApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-using HyPlayer.Services.Abstractions;
 using CommunityToolkit.Mvvm.DependencyInjection;
-namespace HyPlayer.Classes
+using HyPlayer.Domain.Music;
+using HyPlayer.NeteaseApi.Models;
+using HyPlayer.Services.Abstractions;
+using System;
+
+namespace HyPlayer.Domain.Comments
 {
     public class Comment
     {

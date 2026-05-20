@@ -2,7 +2,7 @@ using System;
 using Windows.UI;
 using Windows.UI.Xaml.Data;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.UI.Converters
 {
     public partial class TransparentColorConverter : IValueConverter
     {

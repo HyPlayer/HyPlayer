@@ -1,7 +1,7 @@
 using System;
 using Windows.UI;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Infrastructure.Imaging;
 
 internal class ColorHelper
 {

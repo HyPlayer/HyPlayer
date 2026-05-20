@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Domain.Lyrics;
 
 public class HyLyricInfo
 {

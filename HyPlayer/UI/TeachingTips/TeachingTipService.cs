@@ -1,14 +1,13 @@
+using HyPlayer.Services.Abstractions;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.UI.Core;
 
-using HyPlayer.Services.Abstractions;
-
-namespace HyPlayer.Services;
+namespace HyPlayer.UI.TeachingTips;
 
 public sealed class TeachingTipService : ITeachingTipService
 {

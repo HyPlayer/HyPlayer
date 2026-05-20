@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace HyPlayer.Classes.LyricParser.Abstraction
+namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction
 {
     [JsonDerivedType(typeof(KaraokeLyricsLine), "karaoke")]
     [JsonDerivedType(typeof(LrcLyricsLine), "lrc")]

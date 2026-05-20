@@ -1,9 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
 using System;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Domain
 {
     public class UserDisplay
     {

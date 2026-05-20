@@ -5,16 +5,15 @@ using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.Pages;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Messages;
-using System;
+using HyPlayer.Services.Notifications.Messages;
 using Windows.UI.Xaml.Controls;
+
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Dialogs;
 
 public sealed partial class CreateSonglistDialog : ContentDialog
 {

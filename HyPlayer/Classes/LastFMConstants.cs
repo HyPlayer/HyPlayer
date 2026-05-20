@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace HyPlayer.Classes
+﻿namespace HyPlayer.Classes
 {
     public static class LastFMConstants
     {

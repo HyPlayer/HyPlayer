@@ -1,17 +1,17 @@
 #region
 
-using HyPlayer.Classes;
-using HyPlayer.Pages;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Music;
+using HyPlayer.Features.Artist;
+using HyPlayer.Services.Abstractions;
 using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
 
-using HyPlayer.Services.Abstractions;
-using CommunityToolkit.Mvvm.DependencyInjection;
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Dialogs;
 
 public sealed partial class ArtistSelectDialog : ContentDialog
 {

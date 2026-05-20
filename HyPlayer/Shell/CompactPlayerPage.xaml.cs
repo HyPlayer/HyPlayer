@@ -1,15 +1,15 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.WinUI.Media;
-using HyPlayer.Classes;
-using HyPlayer.Classes.LyricParser.Abstraction;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.Messages;
-using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.WindowManagement;
@@ -22,7 +22,7 @@ using WinRT;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Shell;
 
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。

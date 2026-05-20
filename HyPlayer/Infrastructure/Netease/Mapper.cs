@@ -1,10 +1,13 @@
+using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Music;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.Models.ResponseModels;
+using HyPlayer.UI.Converters;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Infrastructure.Netease;
 
 public static class Mapper
 {

@@ -1,15 +1,15 @@
 #region
 
-using HyPlayer.Classes;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Music;
+using HyPlayer.Services.Abstractions;
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-using HyPlayer.Services.Abstractions;
-using CommunityToolkit.Mvvm.DependencyInjection;
 #endregion
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Lists;
 
 public partial class SimpleLinerList : UserControl
 {

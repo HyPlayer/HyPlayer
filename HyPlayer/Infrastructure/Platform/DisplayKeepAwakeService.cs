@@ -1,7 +1,7 @@
 using HyPlayer.Services.Abstractions;
 using Windows.System.Display;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.Infrastructure.Platform;
 
 public sealed class DisplayKeepAwakeService : IDisplayKeepAwakeService
 {

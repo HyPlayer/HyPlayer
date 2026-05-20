@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-namespace HyPlayer.Pages;
+namespace HyPlayer.Shell.Search;
 
 public sealed partial class ShellSearchBox : UserControl
 {

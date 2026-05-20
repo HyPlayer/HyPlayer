@@ -1,8 +1,5 @@
 using System;
-using System.Threading.Tasks;
 using Windows.Foundation;
-
-using HyPlayer.Services.Abstractions;
 namespace HyPlayer.Services.Abstractions;
 
 /// <summary>

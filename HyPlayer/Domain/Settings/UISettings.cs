@@ -1,11 +1,8 @@
-using HyPlayer.Classes;
-using Windows.Storage;
-using Windows.UI;
-using Windows.UI.ViewManagement;
-
-using HyPlayer.Services.Abstractions;
 using CommunityToolkit.Mvvm.DependencyInjection;
-namespace HyPlayer.Classes.Settings
+using HyPlayer.Services.Abstractions;
+using Windows.Storage;
+
+namespace HyPlayer.Domain.Settings
 {
     /// <summary>
     /// Settings related to UI appearance, themes, animations, and visual effects.

@@ -1,22 +1,15 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
-using HyPlayer.Classes.Settings;
 using HyPlayer.NeteaseApi;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback;
-using HyPlayer.UWP.Chopin;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using LiteFM.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using Windows.Storage;
 using Windows.UI;
-using HyPlayerUISettings = HyPlayer.Classes.Settings.UISettings;
+using HyPlayerUISettings = HyPlayer.Domain.Settings.UISettings;
 
-namespace HyPlayer
+namespace HyPlayer.Domain.Settings
 {
     public partial class Setting : INotifyPropertyChanged
     {
@@ -98,11 +91,11 @@ namespace HyPlayer
         public bool animationAdaptBPM { get => UI.animationAdaptBPM; set { UI.animationAdaptBPM = value; OnPropertyChanged(); } }
         public bool gentleBPMAnimation { get => UI.gentleBPMAnimation; set { UI.gentleBPMAnimation = value; OnPropertyChanged(); } }
         public bool DisablePopUp { get => UI.DisablePopUp; set { UI.DisablePopUp = value; OnPropertyChanged(); } }
-         public bool canaryChannelAvailability { get => UI.canaryChannelAvailability; set { UI.canaryChannelAvailability = value; OnPropertyChanged(); } }
+        public bool canaryChannelAvailability { get => UI.canaryChannelAvailability; set { UI.canaryChannelAvailability = value; OnPropertyChanged(); } }
         public bool localProgressiveLoad { get => UI.localProgressiveLoad; set { UI.localProgressiveLoad = value; OnPropertyChanged(); } }
         public UpdateSource UpdateSource { get => UI.UpdateSource; set { UI.UpdateSource = value; OnPropertyChanged(); } }
-        public bool EnableTile { get=>UI.EnableTile; set { UI.EnableTile = value; OnPropertyChanged(); } }
-        public bool EnableTileBackground { get => UI.EnableTileBackground; set { UI.EnableTileBackground = value; OnPropertyChanged(); } }  
+        public bool EnableTile { get => UI.EnableTile; set { UI.EnableTile = value; OnPropertyChanged(); } }
+        public bool EnableTileBackground { get => UI.EnableTileBackground; set { UI.EnableTileBackground = value; OnPropertyChanged(); } }
 
         // --- ApiSettings delegates ---
 

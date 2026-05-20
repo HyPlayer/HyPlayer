@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using System.Numerics;
-using HyPlayer.Classes;
+using HyPlayer.Domain;
 using HyPlayer.LyricRenderer;
 using Microsoft.Graphics.Canvas.Effects;
+using System.Collections.Generic;
+using System.Numerics;
 
 namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 

@@ -1,18 +1,18 @@
 <Page
-    x:Class="HyPlayer.Pages.SongListDetail"
+    x:Class="HyPlayer.Features.Playlist.SongListDetail"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviors="using:CommunityToolkit.WinUI.Behaviors"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
-    xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:controls1="using:HyPlayer.UI.Lists"
+    xmlns:uiControls="using:HyPlayer.UI.Controls"
     xmlns:controls2="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:hyplayer="using:HyPlayer"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
-    xmlns:pages="using:HyPlayer.Pages"
+    xmlns:pages="using:HyPlayer.Features.Playlist"
     xmlns:ui="using:CommunityToolkit.WinUI"
     x:Name="Page"
     d:DataContext="{d:DesignInstance Type=pages:SongListDetail}"
@@ -204,7 +204,7 @@
                             </Button>
 
                         </StackPanel>
-                        <controls1:ExpandableTextBox
+                        <uiControls:ExpandableTextBox
                             x:Name="DescriptionTextBlock"
                             Grid.Row="1"
                             Grid.ColumnSpan="2"

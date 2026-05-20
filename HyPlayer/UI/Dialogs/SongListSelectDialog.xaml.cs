@@ -1,15 +1,15 @@
 #region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.Services.Abstractions;
 using Windows.UI.Xaml.Controls;
 
-using HyPlayer.Services.Abstractions;
-using CommunityToolkit.Mvvm.DependencyInjection;
 #endregion
 
-namespace HyPlayer.Controls;
+namespace HyPlayer.UI.Dialogs;
 
 public sealed partial class SongListSelect : ContentDialog
 {

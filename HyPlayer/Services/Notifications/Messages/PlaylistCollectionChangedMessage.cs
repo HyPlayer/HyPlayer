@@ -1,4 +1,4 @@
-namespace HyPlayer.Services.Messages;
+namespace HyPlayer.Services.Notifications.Messages;
 
 /// <summary>
 /// 歌单集合变更通知（创建/删除/公开/收藏歌单后触发）。

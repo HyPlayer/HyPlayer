@@ -1,5 +1,5 @@
-using System.Threading.Tasks;
 using HyPlayer.Services.Abstractions;
+using System.Threading.Tasks;
 
 namespace HyPlayer.Services.Playback.Transitions;
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace HyPlayer.Classes.LyricParser.Abstraction
+namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction
 {
     public sealed class KaraokeLyricsLine : LyricLine
     {

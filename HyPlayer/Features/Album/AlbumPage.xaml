@@ -1,9 +1,10 @@
 ﻿<Page
-    x:Class="HyPlayer.Pages.AlbumPage"
+    x:Class="HyPlayer.Features.Album.AlbumPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
-    xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:controls1="using:HyPlayer.UI.Lists"
+    xmlns:uiControls="using:HyPlayer.UI.Controls"
     NavigationCacheMode="Disabled">
     <Grid>
         <Grid.RowDefinitions>
@@ -90,7 +91,7 @@
                                 Content="收藏" />
                             <Button Command="{x:Bind ViewModel.NavigateCommentCommand}" Content="评论" />
                         </StackPanel>
-                        <controls1:ExpandableTextBox
+                        <uiControls:ExpandableTextBox
                             x:Name="TextBlockDesc"
                             MaxWidth="700"
                             Margin="0,8,0,0"

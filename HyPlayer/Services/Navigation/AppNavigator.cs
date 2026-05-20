@@ -1,28 +1,37 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Features.Album;
+using HyPlayer.Features.Artist;
+using HyPlayer.Features.Home;
+using HyPlayer.Features.Library;
+using HyPlayer.Features.Playlist;
+using HyPlayer.Features.Radio;
+using HyPlayer.Features.Settings;
+using HyPlayer.Features.User;
+using HyPlayer.Features.Video;
+using HyPlayer.Infrastructure.Netease;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Shell.Navigation;
+using HyPlayer.UI.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.Pages;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.ViewModels;
-using Windows.ApplicationModel.Core;
 using Windows.UI.Xaml;
+using BitmapIcon = Windows.UI.Xaml.Controls.BitmapIcon;
+using FontIcon = Windows.UI.Xaml.Controls.FontIcon;
 using Frame = Windows.UI.Xaml.Controls.Frame;
+using IconElement = Windows.UI.Xaml.Controls.IconElement;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewItemHeader = Microsoft.UI.Xaml.Controls.NavigationViewItemHeader;
 using NavigationViewItemInvokedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;
 using NavigationViewItemSeparator = Microsoft.UI.Xaml.Controls.NavigationViewItemSeparator;
-using BitmapIcon = Windows.UI.Xaml.Controls.BitmapIcon;
-using FontIcon = Windows.UI.Xaml.Controls.FontIcon;
-using IconElement = Windows.UI.Xaml.Controls.IconElement;
 using SymbolIcon = Windows.UI.Xaml.Controls.SymbolIcon;
-
-namespace HyPlayer.Services;
+using HistoryRoute = HyPlayer.Domain.Navigation.AppRoute.History;
+namespace HyPlayer.Services.Navigation;
 
 public sealed class AppNavigator : IAppNavigator
 {
@@ -485,22 +494,22 @@ public sealed class AppNavigator : IAppNavigator
     public Task NavigateAsync(AppRoute route) =>
         route switch
         {
-            AppRoute.Album album           => NavigatePage(typeof(AlbumPage), album.Id),
-            AppRoute.Artist artist         => NavigatePage(typeof(ArtistPage), artist.Id),
-            AppRoute.DailyRecommend        => NavigatePage(typeof(SongListDetail), CreateDailyRecommendPlaylist()),
-            AppRoute.Favorite              => NavigatePage(typeof(PageFavorite)),
-            AppRoute.History               => NavigatePage(typeof(History)),
-            AppRoute.Home                  => NavigatePage(typeof(HomePage)),
-            AppRoute.LikedSongs            => LikedSongsPage(),
-            AppRoute.LocalMusic            => NavigatePage(typeof(LocalMusicPage)),
-            AppRoute.Me me                 => NavigatePage(typeof(Me), me.UserId),
-            AppRoute.MusicCloud            => NavigatePage(typeof(MusicCloudPage)),
-            AppRoute.MV mv                 => NavigatePage(typeof(MVPage), mv.Id),
-            AppRoute.Playlist playlist     => NavigatePage(typeof(SongListDetail), playlist.Id),
-            AppRoute.Radio radio           => NavigatePage(typeof(RadioPage), radio.Id),
-            AppRoute.Settings              => NavigatePage(typeof(Settings)),
-            AppRoute.Song song             => PlaySongAsync(song.Id),
-            _                                => throw new InvalidOperationException($"Unrecognized route: {route.GetType().Name}")
+            AppRoute.Album album => NavigatePage(typeof(AlbumPage), album.Id),
+            AppRoute.Artist artist => NavigatePage(typeof(ArtistPage), artist.Id),
+            AppRoute.DailyRecommend => NavigatePage(typeof(SongListDetail), CreateDailyRecommendPlaylist()),
+            AppRoute.Favorite => NavigatePage(typeof(PageFavorite)),
+            AppRoute.History => NavigatePage(typeof(HistoryRoute)),
+            AppRoute.Home => NavigatePage(typeof(HomePage)),
+            AppRoute.LikedSongs => LikedSongsPage(),
+            AppRoute.LocalMusic => NavigatePage(typeof(LocalMusicPage)),
+            AppRoute.Me me => NavigatePage(typeof(Me), me.UserId),
+            AppRoute.MusicCloud => NavigatePage(typeof(MusicCloudPage)),
+            AppRoute.MV mv => NavigatePage(typeof(MVPage), mv.Id),
+            AppRoute.Playlist playlist => NavigatePage(typeof(SongListDetail), playlist.Id),
+            AppRoute.Radio radio => NavigatePage(typeof(RadioPage), radio.Id),
+            AppRoute.Settings => NavigatePage(typeof(Settings)),
+            AppRoute.Song song => PlaySongAsync(song.Id),
+            _ => throw new InvalidOperationException($"Unrecognized route: {route.GetType().Name}")
         };
 
     private Task NavigatePage(Type pageType, object? parameter = null)
@@ -525,7 +534,7 @@ public sealed class AppNavigator : IAppNavigator
     {
         if (pageType == typeof(HomePage)) return new AppRoute.Home();
         if (pageType == typeof(LocalMusicPage)) return new AppRoute.LocalMusic();
-        if (pageType == typeof(History)) return new AppRoute.History();
+        if (pageType == typeof(HistoryRoute)) return new AppRoute.History();
         if (pageType == typeof(PageFavorite)) return new AppRoute.Favorite();
         if (pageType == typeof(MusicCloudPage)) return new AppRoute.MusicCloud();
         if (pageType == typeof(Settings)) return new AppRoute.Settings();

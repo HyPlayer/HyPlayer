@@ -1,25 +1,15 @@
 ﻿#region
 
-using ALRC.Abstraction;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Input;
-using HyPlayer.Classes.LyricParser.Abstraction;
-using HyPlayer.NeteaseApi.Models;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
+using HyPlayer.Domain.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using TagLib;
-using Windows.Media.Core;
-using Windows.Storage;
-using Windows.Storage.Streams;
 
 #endregion
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Domain.Music;
+
 public class NCSong
 {
     public NCAlbum Album { get; set; }

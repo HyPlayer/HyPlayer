@@ -1,6 +1,7 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Infrastructure.Audio;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Cloud;
@@ -19,7 +20,7 @@ using Windows.Storage;
 
 #endregion
 
-namespace HyPlayer.Classes;
+namespace HyPlayer.Infrastructure.Netease;
 
 /// <summary>
 ///     网易云音乐云盘上载

@@ -1,4 +1,4 @@
-namespace HyPlayer.Classes;
+namespace HyPlayer.Domain.Music;
 
 public enum SongListQueueScopeKind
 {

@@ -1,8 +1,9 @@
+using HyPlayer.Infrastructure.Serialization;
 using LiteFM.Abstractions;
 using System.Text.Json;
 using Windows.Storage;
 
-namespace HyPlayer.Classes.Settings
+namespace HyPlayer.Domain.Settings
 {
     /// <summary>
     /// Settings related to Last.FM integration.

@@ -1,8 +1,8 @@
-using HyPlayer.Classes;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.Messages;
 
-namespace HyPlayer.Services;
+namespace HyPlayer.UI.Playback.PlayBar;
 
 public sealed class PlayBarAutoHideService : IPlayBarAutoHideService
 {

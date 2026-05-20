@@ -1,4 +1,4 @@
-﻿namespace HyPlayer.Classes;
+﻿namespace HyPlayer.Domain;
 
 internal static class StaticSource
 {

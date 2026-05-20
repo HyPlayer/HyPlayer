@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace HyPlayer.Classes
+﻿namespace HyPlayer.Infrastructure.Netease
 {
     /// <summary>
     /// 资源类型ID定义类
