@@ -26,7 +26,7 @@ namespace HyPlayer.Features.Library;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class History : Page
+public sealed partial class HistoryPage : Page
 {
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
@@ -38,7 +38,7 @@ public sealed partial class History : Page
     private Task _songRankWeekLoaderTask;
     private Task _songRankAllLoaderTask;
 
-    public History()
+    public HistoryPage()
     {
         InitializeComponent();
         HisModeNavView.SelectedItem = SongHis;

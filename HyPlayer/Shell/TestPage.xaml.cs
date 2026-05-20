@@ -62,7 +62,7 @@ public sealed partial class TestPage : Page
         // [typeof(CompactPlayerPage)] = null, // need new app window
         [typeof(DownloadPage)] = null,
         // [typeof(ExpandedPlayer)] = null,
-        [typeof(History)] = null,
+        [typeof(HistoryPage)] = null,
         [typeof(HomePage)] = null,
         [typeof(LocalMusicPage)] = null,
         [typeof(Me)] = null,

@@ -30,7 +30,6 @@ using NavigationViewItemHeader = Microsoft.UI.Xaml.Controls.NavigationViewItemHe
 using NavigationViewItemInvokedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;
 using NavigationViewItemSeparator = Microsoft.UI.Xaml.Controls.NavigationViewItemSeparator;
 using SymbolIcon = Windows.UI.Xaml.Controls.SymbolIcon;
-using HistoryRoute = HyPlayer.Domain.Navigation.AppRoute.History;
 namespace HyPlayer.Services.Navigation;
 
 public sealed class AppNavigator : IAppNavigator
@@ -485,7 +484,7 @@ public sealed class AppNavigator : IAppNavigator
             AppRoute.Artist artist => NavigatePage(typeof(ArtistPage), artist.Id),
             AppRoute.DailyRecommend => NavigatePage(typeof(SongListDetail), CreateDailyRecommendPlaylist()),
             AppRoute.Favorite => NavigatePage(typeof(PageFavorite)),
-            AppRoute.History => NavigatePage(typeof(HistoryRoute)),
+            AppRoute.History => NavigatePage(typeof(HistoryPage)),
             AppRoute.Home => NavigatePage(typeof(HomePage)),
             AppRoute.LikedSongs => LikedSongsPage(),
             AppRoute.LocalMusic => NavigatePage(typeof(LocalMusicPage)),
@@ -521,7 +520,7 @@ public sealed class AppNavigator : IAppNavigator
     {
         if (pageType == typeof(HomePage)) return new AppRoute.Home();
         if (pageType == typeof(LocalMusicPage)) return new AppRoute.LocalMusic();
-        if (pageType == typeof(HistoryRoute)) return new AppRoute.History();
+        if (pageType == typeof(HistoryPage)) return new AppRoute.History();
         if (pageType == typeof(PageFavorite)) return new AppRoute.Favorite();
         if (pageType == typeof(MusicCloudPage)) return new AppRoute.MusicCloud();
         if (pageType == typeof(Settings)) return new AppRoute.Settings();

@@ -1,6 +1,7 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Music;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
@@ -67,9 +68,8 @@ internal class Api
             var playItem = ncSong.ToHyPlayItem();
             playItem.InfoTag = item.Recommended ? "为你推荐" : "我的喜欢";
             playlist.AppendItem(playItem);
-            playlist.NotifyAppendDone();
-            await playlist.MoveToAsync(playlist.Items.FirstOrDefault());
-
         }
+        playlist.NotifyAppendDone();
+        await playlist.MoveToAsync(playlist.Items[0]);
     }
 }
