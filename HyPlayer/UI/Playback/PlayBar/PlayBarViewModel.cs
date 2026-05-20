@@ -1,24 +1,23 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
+using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace HyPlayer.UI.Playback.PlayBar;
 
-public partial class PlayBarViewModel : ObservableRecipient
+public partial class PlayBarViewModel : ObservableObject
 {
     private readonly IPlaylistService _playlist;
     private readonly IPlaybackControlService _control;
@@ -29,6 +28,8 @@ public partial class PlayBarViewModel : ObservableRecipient
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IAuthService _authService;
     private readonly DataTransferManager _dataTransferManager;
+    private readonly WeakEventListener<PlayBarViewModel, object?, PropertyChangedEventArgs> _stateChangedListener;
+    private readonly WeakEventListener<PlayBarViewModel, object?, PlaylistChangedEventArgs> _playlistChangedListener;
 
     public PlayBarViewModel(
         IPlaylistService playlist,
@@ -50,9 +51,18 @@ public partial class PlayBarViewModel : ObservableRecipient
         _authService = authService;
         _dataTransferManager = DataTransferManager.GetForCurrentView();
         SyncFromState();
-
-        // Activate messenger registrations
-        IsActive = true;
+        _stateChangedListener = new WeakEventListener<PlayBarViewModel, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.OnPlaybackStatePropertyChanged(args.PropertyName),
+            OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _state.PropertyChanged += _stateChangedListener.OnEvent;
+        _playlistChangedListener = new WeakEventListener<PlayBarViewModel, object?, PlaylistChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.OnPlaylistChanged(),
+            OnDetachAction = weakEventListener => { _playlist.PlaylistChanged -= weakEventListener.OnEvent; }
+        };
+        _playlist.PlaylistChanged += _playlistChangedListener.OnEvent;
     }
 
     // ── Observable Properties (partial property pattern for AOT) ──
@@ -194,63 +204,41 @@ public partial class PlayBarViewModel : ObservableRecipient
             await _playlist.MoveToAsync(item);
     }
 
-    // ── Messenger Registrations ──
-    [RequiresUnreferencedCode("This method requires the generated CommunityToolkit.Mvvm.Messaging.__Internals.__IMessengerExtensions type not to be removed to use the fast path. If this type is removed by the linker, or if the target recipient was created dynamically and was missed by the source generator, a slower fallback path using a compiled LINQ expression will be used. This will have more overhead in the first invocation of this method for any given recipient type. Alternatively, OnActivated() can be manually overwritten, and registration can be done individually for each required message for this recipient.")]
-    [RequiresDynamicCode("This method requires the generated CommunityToolkit.Mvvm.Messaging.__Internals.__IMessengerExtensions type not to be removed to use the fast path. If that is present, the method is AOT safe, as the only methods being invoked to register the messages will be the ones produced by the source generator. If it isn't, this method will need to dynamically create the generic methods to register messages, which might not be available at runtime. Alternatively, OnActivated() can be manually overwritten, and registration can be done individually for each required message for this recipient.")]
-    protected override void OnActivated()
+    private void OnPlaybackStatePropertyChanged(string? propertyName)
     {
-        var messenger = Messenger;
-
-        messenger.Register<TrackChangedMessage>(this, (r, _) =>
+        RunOnUIThread(() =>
         {
-            var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(vm.SyncFromState);
-        });
-
-        messenger.Register<PlaybackStateChangedMessage>(this, (r, m) =>
-        {
-            var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() => vm.IsPlaying = m.IsPlaying);
-        });
-
-        messenger.Register<QualityTagChangedMessage>(this, (r, m) =>
-        {
-            var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() => vm.QualityTag = m.Tag);
-        });
-
-        messenger.Register<LyricLoadedMessage>(this, (r, m) =>
-        {
-            var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() => vm.LyricInfo = m.Info);
-        });
-
-        // ── High-frequency position: keep direct subscription ──
-        messenger.Register<PositionTickMessage>(this, (r, m) =>
-        {
-            var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() =>
+            switch (propertyName)
             {
-                vm.Position = m.Position;
-                vm.Duration = vm._state.Duration;
-            });
+                case nameof(PlaybackStateService.NowPlayingItem):
+                    SyncFromState();
+                    break;
+                case nameof(PlaybackStateService.IsPlaying):
+                    IsPlaying = _state.IsPlaying;
+                    break;
+                case nameof(PlaybackStateService.QualityTag):
+                    QualityTag = _state.QualityTag;
+                    break;
+                case nameof(PlaybackStateService.LyricInfo):
+                    LyricInfo = _state.LyricInfo;
+                    break;
+                case nameof(PlaybackStateService.Position):
+                    Position = _state.Position;
+                    Duration = _state.Duration;
+                    break;
+                case nameof(PlaybackStateService.LyricIndex):
+                    LyricIndex = _state.LyricIndex;
+                    break;
+            }
         });
+    }
 
-        messenger.Register<LyricIndexChangedMessage>(this, (r, m) =>
+    private void OnPlaylistChanged()
+    {
+        RunOnUIThread(() =>
         {
-            var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() => vm.LyricIndex = m.Index);
-        });
-
-        // ── Playlist: keep for playlist-refresh and strategy-sync behavior ──
-        messenger.Register<PlaylistChangedMessage>(this, (r, m) =>
-        {
-            var vm = (PlayBarViewModel)r;
-            vm.RunOnUIThread(() =>
-            {
-                vm.ActiveStrategyId = vm._state.ActiveStrategyId;
-                vm.RefreshPlaylistItems();
-            });
+            ActiveStrategyId = _state.ActiveStrategyId;
+            RefreshPlaylistItems();
         });
     }
 

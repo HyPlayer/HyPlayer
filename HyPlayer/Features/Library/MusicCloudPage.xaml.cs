@@ -1,7 +1,7 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
@@ -11,7 +11,6 @@ using HyPlayer.NeteaseApi.ApiContracts.Cloud;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Downloads;
-using HyPlayer.Services.Notifications.Messages;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -21,7 +20,6 @@ using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -36,6 +34,9 @@ public sealed partial class MusicCloudPage : Page
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
+    private readonly WeakEventListener<MusicCloudPage, object?, EventArgs> _secondTickListener;
+    private bool _isSecondTickSubscribed;
 
     private readonly ObservableCollection<NCSong> Items = new();
     private int page;
@@ -47,6 +48,11 @@ public sealed partial class MusicCloudPage : Page
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
+        _secondTickListener = new WeakEventListener<MusicCloudPage, object?, EventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.GreedlyLoad(),
+            OnDetachAction = weakEventListener => { _globalTimer.SecondTick -= weakEventListener.OnEvent; },
+        };
     }
 
     public async Task LoadMusicCloudItem()
@@ -95,7 +101,7 @@ public sealed partial class MusicCloudPage : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        WeakReferenceMessenger.Default.UnregisterAll(this);
+        DetachSecondTick();
 
         if (_loadResultTask != null && !_loadResultTask.IsCompleted)
         {
@@ -118,7 +124,21 @@ public sealed partial class MusicCloudPage : Page
         base.OnNavigatedTo(e);
         _loadResultTask = LoadMusicCloudItem();
         if (_setting.greedlyLoadPlayContainerItems)
-            WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(this, (r, _) => ((MusicCloudPage)r).GreedlyLoad());
+            AttachSecondTick();
+    }
+
+    private void AttachSecondTick()
+    {
+        if (_isSecondTickSubscribed) return;
+        _globalTimer.SecondTick += _secondTickListener.OnEvent;
+        _isSecondTickSubscribed = true;
+    }
+
+    private void DetachSecondTick()
+    {
+        if (!_isSecondTickSubscribed) return;
+        _secondTickListener.Detach();
+        _isSecondTickSubscribed = false;
     }
 
     int treashold = 3;
@@ -141,7 +161,7 @@ public sealed partial class MusicCloudPage : Page
             }
             else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
-                WeakReferenceMessenger.Default.Unregister<GlobalSecondTimerMessage>(this);
+                DetachSecondTick();
                 OnLoadedAllSongs();
             }
         });

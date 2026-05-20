@@ -2,7 +2,7 @@
 
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Library;
 using HyPlayer.Features.Playlist;
@@ -11,10 +11,11 @@ using HyPlayer.Features.User;
 using HyPlayer.NeteaseApi;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
 using HyPlayer.Shell.ExpandedPlayer;
+using HyPlayer.UI.Playback.PlayBar;
 using Microsoft.Graphics.Canvas.Effects;
 using System.Numerics;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Composition;
@@ -59,7 +60,7 @@ public sealed partial class MainPage : Page, IPlaybackSurfaceHost
 
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
-        WeakReferenceMessenger.Default.Register<PlaybarVisibilityChangedNotification>(this, (r, m) => ((MainPage)r).OnPlaybarVisibilityChanged(m.IsActivated));
+        Ioc.Default.GetRequiredService<IPlayBarAutoHideService>().VisibilityChanged += (_, e) => OnPlaybarVisibilityChanged(e.IsActivated);
         Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().Host = this;
         UIElement PlayBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
@@ -134,6 +135,22 @@ public sealed partial class MainPage : Page, IPlaybackSurfaceHost
         ImageResetPositionAni.Begin();
     }
 
+    public void RefreshPlaybackCover(HyPlayItem? item)
+    {
+        GridPlayBar.Children.OfType<PlayBar>().FirstOrDefault()?.RefreshPlayBarCover(item);
+        if (ExpandedPlayer.Content is Shell.ExpandedPlayer.ExpandedPlayer expandedPlayer)
+            expandedPlayer.RefreshAlbumCover(item);
+    }
+
+    public void StartExpandedPlayerTransition(ExpandedPlayerTransition transition)
+    {
+        if (ExpandedPlayer.Content is not Shell.ExpandedPlayer.ExpandedPlayer expandedPlayer) return;
+        if (transition == ExpandedPlayerTransition.Expand)
+            expandedPlayer.StartExpandAnimation();
+        else
+            expandedPlayer.StartCollapseAnimation();
+    }
+
     // ── End IPlaybackSurfaceHost ──
 
     private void MainPage_ActualThemeChanged(FrameworkElement sender, object args)
@@ -195,7 +212,8 @@ public sealed partial class MainPage : Page, IPlaybackSurfaceHost
         if (!IsPlaybarOnShow)
         {
             PointerInAni.Begin();
-            WeakReferenceMessenger.Default.Send(new PlayBarCoverRefreshRequestedMessage(Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem));
+            Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>()
+                .RefreshPlaybackCover(Ioc.Default.GetRequiredService<PlaybackStateService>().NowPlayingItem);
         }
     }
 

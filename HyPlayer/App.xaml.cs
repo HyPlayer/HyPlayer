@@ -1,7 +1,6 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Classes;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
@@ -20,10 +19,8 @@ using HyPlayer.Services.LastFM;
 using HyPlayer.Services.Lyrics;
 using HyPlayer.Services.Navigation;
 using HyPlayer.Services.Notifications;
-using HyPlayer.Services.Notifications.Messages;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.MediaProviders;
-using HyPlayer.Services.Playback.Messages;
 using HyPlayer.Services.Playback.PlaylistService;
 using HyPlayer.Services.Playback.QueueProviders;
 using HyPlayer.Services.Playback.Strategies;
@@ -51,7 +48,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Storage;
-using Windows.UI.StartScreen;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -106,8 +102,6 @@ public sealed partial class App : Application
         Ioc.Default.ConfigureServices(provider);
     }
 
-    private static readonly object _messagingAnchor = new();
-
     private static void InitializeCommonServices()
     {
         var setting = Ioc.Default.GetRequiredService<Setting>();
@@ -117,12 +111,11 @@ public sealed partial class App : Application
         var globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
         var teachingTip = Ioc.Default.GetRequiredService<ITeachingTipService>();
         var playBarAutoHide = Ioc.Default.GetRequiredService<IPlayBarAutoHideService>();
-        globalTimer.Timer.Elapsed += (_, _) => WeakReferenceMessenger.Default.Send(new GlobalSecondTimerMessage());
-        WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(_messagingAnchor, (_, _) =>
+        globalTimer.SecondTick += (_, _) =>
         {
             teachingTip.Roll();
             playBarAutoHide.Tick();
-        });
+        };
     }
 
     private static void InitializeServices(ServiceCollection serviceCollection)
@@ -183,7 +176,6 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<IAppNavigator, AppNavigator>();
         serviceCollection.AddSingleton<NavigationShellViewModel>();
         serviceCollection.AddSingleton<INotificationService, NotificationService>();
-        serviceCollection.AddSingleton<NotificationDispatcher>();
         serviceCollection.AddSingleton<IAppLifecycleStateService, AppLifecycleStateService>();
         serviceCollection.AddSingleton<IDisplayKeepAwakeService, DisplayKeepAwakeService>();
         serviceCollection.AddSingleton<IKawazuStateService, KawazuStateService>();
@@ -193,14 +185,13 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<IGlobalTimerService, GlobalTimerService>();
         serviceCollection.AddSingleton<ITeachingTipService, TeachingTipService>();
         serviceCollection.AddSingleton<IPlayBarAutoHideService, PlayBarAutoHideService>();
+        serviceCollection.AddSingleton<IPlaylistCollectionChangeNotifier, PlaylistCollectionChangeNotifier>();
 
         // ── 播放 UI：状态存储 / shell 状态机 / 表面协调器 ──
         serviceCollection.AddSingleton<PlaybackSurfaceStore>();
         serviceCollection.AddSingleton<PlaybackShellStateMachine>();
         serviceCollection.AddSingleton<IPlaybackSurfaceCoordinator, PlaybackSurfaceCoordinator>();
         serviceCollection.AddTransient<ShellSearchViewModel>();
-        serviceCollection.AddSingleton<INotificationHandler<PlaybarVisibilityChangedNotification>, PlaybarVisibilityChangedHandler>();
-        serviceCollection.AddSingleton<INotificationHandler<EnterForegroundFromBackgroundNotification>, EnterForegroundHandler>();
         serviceCollection.AddSingleton<ShellLoginService>();
 
         // ── ViewModels ──
@@ -244,8 +235,7 @@ public sealed partial class App : Application
         if (lifecycle.IsInBackground)
         {
             lifecycle.IsInBackground = false;
-            Ioc.Default.GetRequiredService<NotificationDispatcher>()
-                .Publish(new EnterForegroundFromBackgroundNotification());
+            lifecycle.NotifyEnteredForeground();
         }
     }
 
@@ -345,40 +335,12 @@ public sealed partial class App : Application
         e.Handled = true;
     }
 
-    public static async Task InitializeJumpList()
-    {
-        var jumpList = await JumpList.LoadCurrentAsync();
-        jumpList.Items.Clear();
-
-        var item1 = JumpListItem.CreateWithArguments("search", "搜索");
-        item1.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistSearch.png");
-        if (Ioc.Default.GetRequiredService<IAuthService>().IsLoggedIn)
-        {
-            var item2 = JumpListItem.CreateWithArguments("account", "账户");
-            item2.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistAccount.png");
-            var item3 = JumpListItem.CreateWithArguments("likedsongs", "我喜欢的音乐");
-            item3.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLikedSongs.png");
-            jumpList.Items.Add(item2);
-            jumpList.Items.Add(item3);
-        }
-
-        var item4 = JumpListItem.CreateWithArguments("local", "本地音乐");
-        item4.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLocal.png");
-
-        jumpList.Items.Add(item1);
-
-        jumpList.Items.Add(item4);
-        await jumpList.SaveAsync();
-    }
-
     protected override void OnFileActivated(FileActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
 
     protected override void OnLaunched(LaunchActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
 
     private async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
     {
-        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(InitializeJumpList, "initialize jump list");
-
         base.OnActivated(args);
 
         rootFrame = Window.Current.Content?.As<Frame>();
@@ -411,7 +373,6 @@ public sealed partial class App : Application
             var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
             var localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
             playlist.PlaySourceId = "local";
-            Ioc.Default.GetRequiredService<PlaybackSurfaceStore>().RestoreExpandedIntent();
             ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
 
             NavigateToRootPage();

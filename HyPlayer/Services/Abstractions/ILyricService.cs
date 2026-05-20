@@ -11,6 +11,9 @@ namespace HyPlayer.Services.Abstractions;
 /// </summary>
 public interface ILyricService
 {
+    event EventHandler<LyricLoadedEventArgs>? LyricLoaded;
+    event EventHandler<LyricIndexChangedEventArgs>? LyricIndexChanged;
+
     /// <summary>当前歌词信息</summary>
     HyLyricInfo CurrentLyricInfo { get; }
 

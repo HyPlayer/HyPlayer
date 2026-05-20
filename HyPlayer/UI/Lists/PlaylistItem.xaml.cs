@@ -1,7 +1,6 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
@@ -10,7 +9,6 @@ using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Notifications.Messages;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -29,6 +27,7 @@ public sealed partial class PlaylistItem : UserControl
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier = Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     public PlaylistItem(NCPlayList playList)
@@ -77,7 +76,7 @@ public sealed partial class PlaylistItem : UserControl
         else
         {
             _notification.ShowMessage("成功公开歌单");
-            WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
+            _playlistCollectionChangeNotifier.NotifyChanged();
         }
     }
 
@@ -95,7 +94,7 @@ public sealed partial class PlaylistItem : UserControl
         else
         {
             _notification.ShowMessage("成功删除");
-            WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
+            _playlistCollectionChangeNotifier.NotifyChanged();
             _navigation.NavigateRefresh();
         }
     }

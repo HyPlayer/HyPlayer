@@ -57,6 +57,7 @@
     <PackageReference Include="CommunityToolkit.Uwp.Extensions">
       <Version>8.2.251219</Version>
     </PackageReference>
+    <PackageReference Include="CommunityToolkit.Uwp.Helpers" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.Uwp.Media">
       <Version>8.2.251219</Version>
     </PackageReference>

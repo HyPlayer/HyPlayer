@@ -2,7 +2,6 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
@@ -17,8 +16,8 @@ using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Downloads;
-using HyPlayer.Services.Notifications.Messages;
 using HyPlayer.UI.Converters;
+using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -39,6 +38,9 @@ namespace HyPlayer.Features.Playlist
         private readonly INavigationService _navigation;
         private readonly IAppNavigator _navigator;
         private readonly HttpClient _httpClient;
+        private readonly IGlobalTimerService _globalTimer;
+        private readonly WeakEventListener<SongListViewModel, object?, EventArgs> _secondTickListener;
+        private bool _isSecondTickSubscribed;
 
         public SongListViewModel(
             IPlaylistService playlist,
@@ -47,7 +49,8 @@ namespace HyPlayer.Features.Playlist
             INotificationService notification,
             INavigationService navigation,
             IAppNavigator navigator,
-            HttpClient httpClient)
+            HttpClient httpClient,
+            IGlobalTimerService globalTimer)
         {
             _playlist = playlist;
             _api = api;
@@ -56,6 +59,12 @@ namespace HyPlayer.Features.Playlist
             _navigation = navigation;
             _navigator = navigator;
             _httpClient = httpClient;
+            _globalTimer = globalTimer;
+            _secondTickListener = new WeakEventListener<SongListViewModel, object?, EventArgs>(this)
+            {
+                OnEventAction = static (instance, _, _) => instance.GreedlyLoad(),
+                OnDetachAction = weakEventListener => { _globalTimer.SecondTick -= weakEventListener.OnEvent; }
+            };
             QueueScope = SongListQueueScope.Visible;
         }
 
@@ -141,9 +150,22 @@ namespace HyPlayer.Features.Playlist
                 await LoadDailyRcmdItems();
             }
             if (_setting.greedlyLoadPlayContainerItems)
-                // Use WeakReferenceMessenger for second-timer driven greedy loading
-                WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(this, (r, _) => ((SongListViewModel)r).GreedlyLoad());
+                AttachSecondTick();
             IsLoading = false;
+        }
+
+        private void AttachSecondTick()
+        {
+            if (_isSecondTickSubscribed) return;
+            _globalTimer.SecondTick += _secondTickListener.OnEvent;
+            _isSecondTickSubscribed = true;
+        }
+
+        private void DetachSecondTick()
+        {
+            if (!_isSecondTickSubscribed) return;
+            _secondTickListener.Detach();
+            _isSecondTickSubscribed = false;
         }
 
         public async Task LoadDailyRcmdItems()
@@ -278,8 +300,7 @@ namespace HyPlayer.Features.Playlist
             }
             else if (HasMore == false)
             {
-                // Unregister greedy-load tick handler
-                WeakReferenceMessenger.Default.Unregister<GlobalSecondTimerMessage>(this);
+                DetachSecondTick();
             }
         }
         [RelayCommand]

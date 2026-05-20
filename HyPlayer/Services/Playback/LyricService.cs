@@ -1,6 +1,5 @@
 using ALRC.Converters;
 using ALRC.Converters.Enhancers;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Music;
@@ -10,7 +9,6 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
-using HyPlayer.Services.Playback.Messages;
 using System;
 using System.IO;
 using System.Linq;
@@ -27,6 +25,9 @@ namespace HyPlayer.Services.Playback;
 /// </summary>
 public sealed class LyricService : ILyricService
 {
+    public event EventHandler<LyricLoadedEventArgs>? LyricLoaded;
+    public event EventHandler<LyricIndexChangedEventArgs>? LyricIndexChanged;
+
     private readonly NeteaseCloudMusicApiHandler _api;
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
@@ -72,7 +73,7 @@ public sealed class LyricService : ILyricService
             {
                 _state.LyricInfo = cached;
                 _state.LyricIndex = 0;
-                WeakReferenceMessenger.Default.Send(new LyricLoadedMessage(cached));
+                LyricLoaded?.Invoke(this, new LyricLoadedEventArgs(cached));
                 return;
             }
         }
@@ -133,7 +134,7 @@ public sealed class LyricService : ILyricService
         _state.LyricInfo = lyricInfo;
         _state.LyricIndex = 0;
 
-        WeakReferenceMessenger.Default.Send(new LyricLoadedMessage(lyricInfo));
+        LyricLoaded?.Invoke(this, new LyricLoadedEventArgs(lyricInfo));
 
         // 5. 写入缓存
         if (canUseHyLyricInfoCache && HasCacheableLyrics(lyricInfo, item))
@@ -192,7 +193,7 @@ public sealed class LyricService : ILyricService
         if (changed)
         {
             _state.LyricIndex = idx;
-            WeakReferenceMessenger.Default.Send(new LyricIndexChangedMessage(idx));
+            LyricIndexChanged?.Invoke(this, new LyricIndexChangedEventArgs(idx));
         }
     }
 
@@ -347,7 +348,7 @@ public sealed class LyricService : ILyricService
             lyricInfo.SongMetadata = ttmlLyric.SongMetadata;
             lyricInfo.PureLyricInfo = ttmlLyric;
 
-            WeakReferenceMessenger.Default.Send(new LyricLoadedMessage(lyricInfo));
+        LyricLoaded?.Invoke(this, new LyricLoadedEventArgs(lyricInfo));
 
             if (HasCacheableLyrics(lyricInfo, item))
             {

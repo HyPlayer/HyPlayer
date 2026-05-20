@@ -1,13 +1,11 @@
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Music;
 using HyPlayer.Features.Playlist;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Notifications.Messages;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -23,6 +21,7 @@ namespace HyPlayer.Features.Home
         private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
         private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
         private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+        private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier = Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>();
 
         private HomeViewModel ViewModel => (HomeViewModel)DataContext;
         public HomePage()
@@ -67,7 +66,7 @@ namespace HyPlayer.Features.Home
             else
             {
                 _notification.ShowMessage("成功公开歌单");
-                WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
+                _playlistCollectionChangeNotifier.NotifyChanged();
             }
         }
 
@@ -86,7 +85,7 @@ namespace HyPlayer.Features.Home
             else
             {
                 _notification.ShowMessage("成功删除");
-                WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
+                _playlistCollectionChangeNotifier.NotifyChanged();
                 _navigation.NavigateRefresh();
             }
         }

@@ -4,7 +4,6 @@
 using ALRC.Converters;
 using ALRC.Converters.Enhancers;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.WinUI.Animations;
 using CommunityToolkit.WinUI.Media;
 using HyPlayer.Domain;
@@ -23,9 +22,7 @@ using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
-using HyPlayer.Services.Notifications.Messages;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
 using HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 using HyPlayer.Shell.Playback;
 using HyPlayer.UI.Dialogs;
@@ -33,8 +30,10 @@ using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Impressionist.Abstractions;
 using Impressionist.Implementations;
 using Microsoft.Graphics.Canvas;
+using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -81,8 +80,16 @@ public sealed partial class ExpandedPlayer : Page
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly IAppLifecycleStateService _lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
+    private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
+    private readonly IPlayBarAutoHideService _playBarAutoHide = Ioc.Default.GetRequiredService<IPlayBarAutoHideService>();
     private readonly HttpClient _httpClient = Ioc.Default.GetRequiredService<HttpClient>();
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
+    private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
+    private readonly WeakEventListener<ExpandedPlayer, object?, EventArgs> _secondTickListener;
+    private readonly WeakEventListener<ExpandedPlayer, object?, EventArgs> _enteredForegroundListener;
+    private readonly WeakEventListener<ExpandedPlayer, object?, PlayBarVisibilityChangedEventArgs> _playBarVisibilityListener;
+    private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs> _stateChangedListener;
+    private readonly WeakEventListener<ExpandedPlayer, object?, SeekRequestedEventArgs> _seekRequestedListener;
 
     // Services accessed via ViewModel; shortcuts for code-behind convenience
     private IPlaylistService _playlist => ViewModel.Playlist;
@@ -155,24 +162,36 @@ public sealed partial class ExpandedPlayer : Page
         _spectrumLayer = new SpectrumLayer(_canvasState, _player);
         _lyricsLayer = new LyricsLayer(_canvasState);
         DataContext = ViewModel;
-        WeakReferenceMessenger.Default.Register<PlaybackStateChangedMessage>(this, (r, m) =>
+        _secondTickListener = new WeakEventListener<ExpandedPlayer, object?, EventArgs>(this)
         {
-            if (m.IsPlaying) ((ExpandedPlayer)r).HyPlayList_OnPlay(); else ((ExpandedPlayer)r).HyPlayList_OnPause();
-        });
-        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((ExpandedPlayer)r).OnSongChange(m.Item));
-        WeakReferenceMessenger.Default.Register<CoverChangedMessage>(this, (r, m) => ((ExpandedPlayer)r).RefreshAlbumCover(m.Item));
-        WeakReferenceMessenger.Default.Register<LyricLoadedMessage>(this, (r, _) => ((ExpandedPlayer)r).HyPlayList_OnLyricLoaded());
-        WeakReferenceMessenger.Default.Register<SeekRequestedMessage>(this, (r, m) => ((ExpandedPlayer)r).HyPlayList_OnManualSeek());
-        WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(this, (r, _) => ((ExpandedPlayer)r).HyPlayList_OnTimerTicked());
-        WeakReferenceMessenger.Default.Register<EnterForegroundFromBackgroundNotification>(this, (r, _) => ((ExpandedPlayer)r).OnEnteringForeground());
-        WeakReferenceMessenger.Default.Register<PlaybarVisibilityChangedNotification>(this, (r, m) => ((ExpandedPlayer)r).OnPlaybarVisibilityChanged(m.IsActivated));
-        WeakReferenceMessenger.Default.Register<ExpandedPlayerTransitionRequestedMessage>(this, (r, m) =>
+            OnEventAction = static (instance, _, _) => instance.HyPlayList_OnTimerTicked(),
+            OnDetachAction = weakEventListener => { _globalTimer.SecondTick -= weakEventListener.OnEvent; }
+        };
+        _globalTimer.SecondTick += _secondTickListener.OnEvent;
+        _enteredForegroundListener = new WeakEventListener<ExpandedPlayer, object?, EventArgs>(this)
         {
-            if (m.Transition == ExpandedPlayerTransition.Expand)
-                ((ExpandedPlayer)r).StartExpandAnimation();
-            else
-                ((ExpandedPlayer)r).StartCollapseAnimation();
-        });
+            OnEventAction = static (instance, _, _) => instance.OnEnteringForeground(),
+            OnDetachAction = weakEventListener => { _lifecycle.EnteredForeground -= weakEventListener.OnEvent; }
+        };
+        _lifecycle.EnteredForeground += _enteredForegroundListener.OnEvent;
+        _playBarVisibilityListener = new WeakEventListener<ExpandedPlayer, object?, PlayBarVisibilityChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.OnPlaybarVisibilityChanged(args.IsActivated),
+            OnDetachAction = weakEventListener => { _playBarAutoHide.VisibilityChanged -= weakEventListener.OnEvent; }
+        };
+        _playBarAutoHide.VisibilityChanged += _playBarVisibilityListener.OnEvent;
+        _stateChangedListener = new WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.OnPlaybackStatePropertyChanged(args.PropertyName),
+            OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _state.PropertyChanged += _stateChangedListener.OnEvent;
+        _seekRequestedListener = new WeakEventListener<ExpandedPlayer, object?, SeekRequestedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.HyPlayList_OnManualSeek(),
+            OnDetachAction = weakEventListener => { _control.SeekRequested -= weakEventListener.OnEvent; }
+        };
+        _control.SeekRequested += _seekRequestedListener.OnEvent;
         Window.Current.SizeChanged += Current_SizeChanged;
         _lyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         _lyricBox.OnBeforeRender += _lyricBox_OnBeforeRender;
@@ -206,6 +225,22 @@ public sealed partial class ExpandedPlayer : Page
         _shareSave = new ExpandedPlayerShareSaveController(
             _state, _httpClient, _playlist, _notification,
             () => TextBlockSongTitle.Text);
+    }
+
+    private void OnPlaybackStatePropertyChanged(string? propertyName)
+    {
+        switch (propertyName)
+        {
+            case nameof(PlaybackStateService.IsPlaying):
+                if (_state.IsPlaying) HyPlayList_OnPlay(); else HyPlayList_OnPause();
+                break;
+            case nameof(PlaybackStateService.NowPlayingItem):
+                OnSongChange(_state.NowPlayingItem);
+                break;
+            case nameof(PlaybackStateService.LyricInfo):
+                HyPlayList_OnLyricLoaded();
+                break;
+        }
     }
 
     private void HyPlayList_OnManualSeek()
@@ -532,7 +567,7 @@ public sealed partial class ExpandedPlayer : Page
         _playbackTheme = theme;
         _canvasState.IsBrightTheme = theme.IsBright;
         Bindings.Update();
-        WeakReferenceMessenger.Default.Send(new PlaybackThemeChangedMessage(theme));
+        _surfaceStore.Theme = theme;
     }
 
     public void StartExpandAnimation()
@@ -1099,7 +1134,7 @@ public sealed partial class ExpandedPlayer : Page
         ImageResetPositionAni.Begin();
     }
 
-    public async void RefreshAlbumCover(HyPlayItem playItem)
+    public async void RefreshAlbumCover(HyPlayItem? playItem)
     {
         if (_state.CoverStream == null || _lifecycle.IsInBackground) return;
         using var stream = _state.CoverStream.CloneStream();
@@ -1311,7 +1346,11 @@ public sealed partial class ExpandedPlayer : Page
         if (_isCleanedUp) return;
         _isCleanedUp = true;
 
-        WeakReferenceMessenger.Default.UnregisterAll(this);
+        _secondTickListener.Detach();
+        _enteredForegroundListener.Detach();
+        _playBarVisibilityListener.Detach();
+        _stateChangedListener.Detach();
+        _seekRequestedListener.Detach();
         Window.Current.SizeChanged -= Current_SizeChanged;
         _lyricBox.OnBeforeRender -= _lyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked -= _lyricBoxOnOnRequestSeek;

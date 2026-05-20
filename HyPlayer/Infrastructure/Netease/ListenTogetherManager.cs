@@ -1,15 +1,12 @@
 #nullable enable
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Music;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.ListenTogether;
 using HyPlayer.NeteaseApi.ApiContracts.ListenTogether.Dual;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Notifications.Messages;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,18 +21,14 @@ namespace HyPlayer.Infrastructure.Netease;
 /// 以兼容现有调用方，内部通过 <see cref="Ioc.Default"/> 解析 DI 服务，不再直接引用 HyPlayList。
 /// </para>
 /// </summary>
-internal sealed class ListenTogetherManager :
-    IRecipient<GlobalSecondTimerMessage>,
-    IRecipient<TrackChangedMessage>,
-    IRecipient<PlaybackStateChangedMessage>,
-    IRecipient<SeekRequestedMessage>,
-    IRecipient<PlaylistChangedMessage>
+internal sealed class ListenTogetherManager
 {
     private static ListenTogetherManager? _instance;
 
     private readonly IPlaylistService _playlist;
     private readonly PlaybackStateService _state;
     private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly IGlobalTimerService _globalTimer;
 
     public bool IsInRoom { get; private set; }
     public RoomInfo? CurrentRoomInfo { get; private set; }
@@ -53,6 +46,7 @@ internal sealed class ListenTogetherManager :
         _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     }
 
     // ---------------------------------------------------------------
@@ -155,30 +149,27 @@ internal sealed class ListenTogetherManager :
     //  Messenger handlers
     // ---------------------------------------------------------------
 
-    void IRecipient<GlobalSecondTimerMessage>.Receive(GlobalSecondTimerMessage message)
+    private void OnSecondTick(object? sender, EventArgs e)
     {
         HeartbeatTick();
     }
 
-    void IRecipient<TrackChangedMessage>.Receive(TrackChangedMessage message)
+    private void OnPlaybackStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        OnPlayItemChanged(message.Item);
-    }
-
-    void IRecipient<PlaybackStateChangedMessage>.Receive(PlaybackStateChangedMessage message)
-    {
-        if (message.IsPlaying)
+        if (e.PropertyName == nameof(PlaybackStateService.NowPlayingItem) && _state.NowPlayingItem is { } item)
+            OnPlayItemChanged(item);
+        else if (e.PropertyName == nameof(PlaybackStateService.IsPlaying) && _state.IsPlaying)
             OnPlay();
-        else
+        else if (e.PropertyName == nameof(PlaybackStateService.IsPlaying))
             OnPause();
     }
 
-    void IRecipient<SeekRequestedMessage>.Receive(SeekRequestedMessage message)
+    private void OnSeekRequested(object? sender, SeekRequestedEventArgs message)
     {
         OnManualSeek(message.Position);
     }
 
-    void IRecipient<PlaylistChangedMessage>.Receive(PlaylistChangedMessage message)
+    private void OnPlaylistChanged(object? sender, PlaylistChangedEventArgs message)
     {
         OnPlayListChanged(message.IsShuffleTrigger);
     }
@@ -383,19 +374,20 @@ internal sealed class ListenTogetherManager :
 
     private void RegisterMessages()
     {
-        var messenger = WeakReferenceMessenger.Default;
-        messenger.Register<GlobalSecondTimerMessage>(this);
-        messenger.Register<TrackChangedMessage>(this);
-        messenger.Register<PlaybackStateChangedMessage>(this);
-        messenger.Register<SeekRequestedMessage>(this);
-        messenger.Register<PlaylistChangedMessage>(this);
+        _globalTimer.SecondTick += OnSecondTick;
+        _state.PropertyChanged += OnPlaybackStatePropertyChanged;
+        Ioc.Default.GetRequiredService<IPlaybackControlService>().SeekRequested += OnSeekRequested;
+        _playlist.PlaylistChanged += OnPlaylistChanged;
     }
 
     private static void CleanupInstance()
     {
         if (_instance is not null)
         {
-            WeakReferenceMessenger.Default.UnregisterAll(_instance);
+            _instance._globalTimer.SecondTick -= _instance.OnSecondTick;
+            _instance._state.PropertyChanged -= _instance.OnPlaybackStatePropertyChanged;
+            Ioc.Default.GetRequiredService<IPlaybackControlService>().SeekRequested -= _instance.OnSeekRequested;
+            _instance._playlist.PlaylistChanged -= _instance.OnPlaylistChanged;
             _instance.IsInRoom = false;
             _instance = null;
         }

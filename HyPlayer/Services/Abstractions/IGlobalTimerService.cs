@@ -1,8 +1,8 @@
-using System.Timers;
+using System;
 
 namespace HyPlayer.Services.Abstractions;
 
 public interface IGlobalTimerService
 {
-    Timer Timer { get; }
+    event EventHandler? SecondTick;
 }

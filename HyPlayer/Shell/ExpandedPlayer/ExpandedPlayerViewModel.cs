@@ -1,21 +1,20 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
+using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Shell.ExpandedPlayer
 {
-    public partial class ExpandedPlayerViewModel : ObservableRecipient
+    public partial class ExpandedPlayerViewModel : ObservableObject
     {
         // ── Services ──────────────────────────────────────────────
         private readonly IPlaylistService _playlist;
@@ -24,6 +23,9 @@ namespace HyPlayer.Shell.ExpandedPlayer
         private readonly ILyricService _lyricService;
         private readonly INotificationService _notification;
         private readonly Setting _settings;
+        private readonly IAuthService _authService;
+        private readonly WeakEventListener<ExpandedPlayerViewModel, object?, PropertyChangedEventArgs> _stateChangedListener;
+        private readonly WeakEventListener<ExpandedPlayerViewModel, object?, SongLikeStatusChangedEventArgs> _songLikeStatusChangedListener;
 
         public ExpandedPlayerViewModel(
             IPlaylistService playlist,
@@ -31,7 +33,8 @@ namespace HyPlayer.Shell.ExpandedPlayer
             PlaybackStateService state,
             ILyricService lyricService,
             INotificationService notification,
-            Setting settings)
+            Setting settings,
+            IAuthService authService)
         {
             _playlist = playlist;
             _control = control;
@@ -39,9 +42,20 @@ namespace HyPlayer.Shell.ExpandedPlayer
             _lyricService = lyricService;
             _notification = notification;
             _settings = settings;
-
-            // Activate messenger registrations
-            IsActive = true;
+            _authService = authService;
+            SyncFromState();
+            _stateChangedListener = new WeakEventListener<ExpandedPlayerViewModel, object?, PropertyChangedEventArgs>(this)
+            {
+                OnEventAction = static (instance, _, args) => instance.OnPlaybackStatePropertyChanged(args.PropertyName),
+                OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
+            };
+            _state.PropertyChanged += _stateChangedListener.OnEvent;
+            _songLikeStatusChangedListener = new WeakEventListener<ExpandedPlayerViewModel, object?, SongLikeStatusChangedEventArgs>(this)
+            {
+                OnEventAction = static (instance, _, args) => instance.RunOnUIThread(() => instance.IsLiked = args.IsLiked),
+                OnDetachAction = weakEventListener => { _authService.SongLikeStatusChanged -= weakEventListener.OnEvent; }
+            };
+            _authService.SongLikeStatusChanged += _songLikeStatusChangedListener.OnEvent;
         }
 
         // ── Observable properties ─────────────────────────────────
@@ -136,55 +150,35 @@ namespace HyPlayer.Shell.ExpandedPlayer
         private void LikeSong()
         {
             IsLiked = !IsLiked;
-            // Actual API call is handled by the like service via messenger
+            _authService.LikeSong();
         }
 
         [RelayCommand]
         private void TogglePlaylist() => IsPlaylistVisible = !IsPlaylistVisible;
 
-        // ── Messenger registrations ───────────────────────────────
-        [RequiresUnreferencedCode("This method requires the generated CommunityToolkit.Mvvm.Messaging.__Internals.__IMessengerExtensions type not to be removed to use the fast path. If this type is removed by the linker, or if the target recipient was created dynamically and was missed by the source generator, a slower fallback path using a compiled LINQ expression will be used. This will have more overhead in the first invocation of this method for any given recipient type. Alternatively, OnActivated() can be manually overwritten, and registration can be done individually for each required message for this recipient.")]
-        [RequiresDynamicCode("This method requires the generated CommunityToolkit.Mvvm.Messaging.__Internals.__IMessengerExtensions type not to be removed to use the fast path. If that is present, the method is AOT safe, as the only methods being invoked to register the messages will be the ones produced by the source generator. If it isn't, this method will need to dynamically create the generic methods to register messages, which might not be available at runtime. Alternatively, OnActivated() can be manually overwritten, and registration can be done individually for each required message for this recipient.")]
-        protected override void OnActivated()
+        private void OnPlaybackStatePropertyChanged(string? propertyName)
         {
-            Messenger.Register<TrackChangedMessage>(this, (r, _) =>
+            RunOnUIThread(() =>
             {
-                var vm = (ExpandedPlayerViewModel)r;
-                vm.RunOnUIThread(vm.SyncFromState);
+                switch (propertyName)
+                {
+                    case nameof(PlaybackStateService.NowPlayingItem):
+                        SyncFromState();
+                        break;
+                    case nameof(PlaybackStateService.IsPlaying):
+                        IsPlaying = _state.IsPlaying;
+                        break;
+                    case nameof(PlaybackStateService.LyricInfo):
+                        LyricInfo = _state.LyricInfo;
+                        break;
+                    case nameof(PlaybackStateService.Position):
+                        Position = _state.Position;
+                        break;
+                    case nameof(PlaybackStateService.LyricIndex):
+                        LyricIndex = _state.LyricIndex;
+                        break;
+                }
             });
-
-            Messenger.Register<PlaybackStateChangedMessage>(this, (r, m) =>
-            {
-                var vm = (ExpandedPlayerViewModel)r;
-                vm.RunOnUIThread(() => vm.IsPlaying = m.IsPlaying);
-            });
-
-            Messenger.Register<LyricLoadedMessage>(this, (r, m) =>
-            {
-                var vm = (ExpandedPlayerViewModel)r;
-                vm.RunOnUIThread(() => vm.LyricInfo = m.Info);
-            });
-
-            Messenger.Register<SongLikeStatusChangedMessage>(this, (r, m) =>
-            {
-                var vm = (ExpandedPlayerViewModel)r;
-                vm.RunOnUIThread(() => vm.IsLiked = m.IsLiked);
-            });
-
-            // ── High-frequency position: keep direct subscription ──
-            Messenger.Register<PositionTickMessage>(this, (r, m) =>
-            {
-                var vm = (ExpandedPlayerViewModel)r;
-                vm.RunOnUIThread(() => vm.Position = m.Position);
-            });
-
-            Messenger.Register<LyricIndexChangedMessage>(this, (r, m) =>
-            {
-                var vm = (ExpandedPlayerViewModel)r;
-                vm.RunOnUIThread(() => vm.LyricIndex = m.Index);
-            });
-
-            SyncFromState();
         }
 
         /// <summary>

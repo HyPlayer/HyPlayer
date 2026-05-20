@@ -1,19 +1,19 @@
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback.Messages;
+using System;
 
 namespace HyPlayer.UI.Playback.PlayBar;
 
 public sealed class PlayBarAutoHideService : IPlayBarAutoHideService
 {
     private readonly Setting _setting;
-    private readonly NotificationDispatcher _dispatcher;
 
-    public PlayBarAutoHideService(Setting setting, NotificationDispatcher dispatcher)
+    public PlayBarAutoHideService(Setting setting)
     {
         _setting = setting;
-        _dispatcher = dispatcher;
     }
+
+    public event EventHandler<PlayBarVisibilityChangedEventArgs>? VisibilityChanged;
 
     public int SecondCounter { get; set; }
     public bool IsVisible { get; set; } = true;
@@ -23,7 +23,7 @@ public sealed class PlayBarAutoHideService : IPlayBarAutoHideService
         if (++SecondCounter < _setting.AutoHidePlaybarTime) return;
         if (!IsVisible) return;
 
-        _dispatcher.Publish(new PlaybarVisibilityChangedNotification(false));
+        VisibilityChanged?.Invoke(this, new PlayBarVisibilityChangedEventArgs(false));
         IsVisible = false;
     }
 
@@ -32,7 +32,7 @@ public sealed class PlayBarAutoHideService : IPlayBarAutoHideService
         SecondCounter = 0;
         if (IsVisible) return;
 
-        _dispatcher.Publish(new PlaybarVisibilityChangedNotification(true));
+        VisibilityChanged?.Invoke(this, new PlayBarVisibilityChangedEventArgs(true));
         IsVisible = true;
     }
 }

@@ -1,5 +1,4 @@
 using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Welcome;
@@ -30,6 +29,8 @@ public sealed class ShellLoginService
 
     private ContentDialog? _currentLoginDialog;
     private ContentDialog? _currentPreLoginDialog;
+
+    public event EventHandler<QrLoginStatusChangedEventArgs>? QrLoginStatusChanged;
 
     public ShellLoginService(
         IAuthService auth,
@@ -75,7 +76,6 @@ public sealed class ShellLoginService
 
         _navigationShell.UpdateAfterLogout();
         _navigation.Navigate(typeof(Welcome));
-        App.InitializeJumpList().SafeFireAndForget();
     }
 
     private async Task ShowPreLoginHintAsync()
@@ -182,9 +182,9 @@ public sealed class ShellLoginService
         }
     }
 
-    private static void SendQrLoginStatus(Guid sessionId, string title, InfoBarSeverity severity = InfoBarSeverity.Informational)
+    private void SendQrLoginStatus(Guid sessionId, string title, InfoBarSeverity severity = InfoBarSeverity.Informational)
     {
-        WeakReferenceMessenger.Default.Send(new QrLoginStatusMessage(sessionId, title, severity));
+        QrLoginStatusChanged?.Invoke(this, new QrLoginStatusChangedEventArgs(sessionId, title, severity));
     }
 
     public static async Task<BitmapImage> GenerateQrImageAsync(string key)
@@ -256,7 +256,6 @@ public sealed class ShellLoginService
         _navigationShell.UpdateAfterLogin();
         _currentLoginDialog?.Hide();
         _currentPreLoginDialog?.Hide();
-        App.InitializeJumpList().SafeFireAndForget();
 
         if (_setting.noImage)
         {

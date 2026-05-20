@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Infrastructure.Netease;
@@ -9,7 +8,6 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
-using HyPlayer.Services.Notifications.Messages;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -61,7 +59,8 @@ public partial class NavigationShellViewModel : ObservableObject
     public NavigationShellViewModel(
         NeteaseCloudMusicApiHandler api,
         IAuthService auth,
-        INotificationService notification)
+        INotificationService notification,
+        IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
         _api = api;
         _auth = auth;
@@ -70,8 +69,7 @@ public partial class NavigationShellViewModel : ObservableObject
         BuildMenuItems();
         UpdateAccountStatus();
 
-        WeakReferenceMessenger.Default.Register<PlaylistCollectionChangedMessage>(this, (r, _) =>
-            ((NavigationShellViewModel)r).LoadPlaylistsCommand.Execute(null));
+        playlistCollectionChangeNotifier.Changed += (_, _) => LoadPlaylistsCommand.Execute(null);
     }
 
     private void BuildMenuItems()

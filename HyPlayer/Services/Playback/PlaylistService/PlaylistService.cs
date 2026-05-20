@@ -16,6 +16,8 @@ namespace HyPlayer.Services.Playback.PlaylistService;
 /// </summary>
 public sealed partial class PlaylistService : IPlaylistService, IDisposable
 {
+    public event EventHandler<PlaylistChangedEventArgs>? PlaylistChanged;
+
     private readonly Dictionary<string, IPlayStrategy> _strategies;
     private readonly Dictionary<string, ITrackTransition> _transitions;
     private readonly PlaybackStateService _state;

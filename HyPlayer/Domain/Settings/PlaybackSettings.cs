@@ -1,8 +1,6 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using Windows.Storage;
@@ -103,17 +101,20 @@ namespace HyPlayer.Domain.Settings
                 _abRepeatStatus = value;
                 if (value)
                 {
-                    WeakReferenceMessenger.Default.Register<PlaybackSettings, PositionTickMessage>(this, (_, m) =>
-                    {
-                        var control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-                        control.CheckABTimeRemaining(m.Position);
-                    });
+                    Ioc.Default.GetRequiredService<PlaybackStateService>().PropertyChanged += OnPlaybackStatePropertyChanged;
                 }
                 else
                 {
-                    WeakReferenceMessenger.Default.Unregister<PositionTickMessage>(this);
+                    Ioc.Default.GetRequiredService<PlaybackStateService>().PropertyChanged -= OnPlaybackStatePropertyChanged;
                 }
             }
+        }
+
+        private static void OnPlaybackStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(PlaybackStateService.Position)) return;
+            var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+            Ioc.Default.GetRequiredService<IPlaybackControlService>().CheckABTimeRemaining(state.Position);
         }
 
         private static bool _abRepeatStatus = false;

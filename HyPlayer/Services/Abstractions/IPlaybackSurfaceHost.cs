@@ -1,5 +1,7 @@
 using HyPlayer.Shell;
 using HyPlayer.Shell.ExpandedPlayer;
+using HyPlayer.Domain.Music;
+using HyPlayer.Services.Playback;
 
 namespace HyPlayer.Services.Abstractions;
 
@@ -50,4 +52,8 @@ public interface IPlaybackSurfaceHost
 
     /// <summary>Start the animation that resets the ExpandedPlayer frame offset to zero.</summary>
     void BeginImageResetAnimation();
+
+    void RefreshPlaybackCover(HyPlayItem? item);
+
+    void StartExpandedPlayerTransition(ExpandedPlayerTransition transition);
 }

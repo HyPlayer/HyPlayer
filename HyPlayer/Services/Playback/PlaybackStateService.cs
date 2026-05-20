@@ -10,7 +10,7 @@ namespace HyPlayer.Services.Playback;
 /// 播放状态中心 — 唯一的播放状态真相来源。
 /// <para>
 /// 所有播放相关服务写入此对象，ViewModel 通过 PropertyChanged 或 x:Bind 观察。
-/// 高频属性（Position、LyricIndex）直接绑定，低频事件走 WeakReferenceMessenger。
+    /// 高频属性（Position、LyricIndex）和低频播放状态均通过状态属性观察。
 /// </para>
 /// </summary>
 public partial class PlaybackStateService : ObservableObject
@@ -63,19 +63,9 @@ public partial class PlaybackStateService : ObservableObject
     [ObservableProperty]
     public partial string QualityTag { get; set; } = string.Empty;
 
-    private InMemoryRandomAccessStream? _coverStream;
     /// <summary>封面流（异步加载）</summary>
-    public InMemoryRandomAccessStream? CoverStream
-    {
-        get => _coverStream;
-        set => SetProperty(ref _coverStream, value);
-    }
+    public InMemoryRandomAccessStream? CoverStream { get; set; }
 
-    private RandomAccessStreamReference? _coverStreamReference;
     /// <summary>封面流引用（用于 SMTC 等）</summary>
-    public RandomAccessStreamReference? CoverStreamReference
-    {
-        get => _coverStreamReference;
-        set => SetProperty(ref _coverStreamReference, value);
-    }
+    public RandomAccessStreamReference? CoverStreamReference { get; set; }
 }

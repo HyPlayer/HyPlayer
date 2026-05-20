@@ -1,10 +1,8 @@
 using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.LastFM;
-using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,18 +17,13 @@ namespace HyPlayer.Services.Playback;
 /// <summary>
 /// 播放控制服务 — 封装底层 <see cref="IPlayer"/> 操作，协调播放状态更新。
 /// <para>
-/// 通过 <see cref="WeakReferenceMessenger"/> 发送事件消息，避免与 PlaylistService 产生循环依赖：
-/// <list type="bullet">
-///   <item><see cref="TrackEndedMessage"/> — 曲目自然播放结束</item>
-///   <item><see cref="TrackChangedMessage"/> — 当前播放曲目切换</item>
-///   <item><see cref="PlaybackStateChangedMessage"/> — 播放/暂停状态变化</item>
-///   <item><see cref="PositionTickMessage"/> — 播放位置更新</item>
-///   <item><see cref="SeekRequestedMessage"/> — 用户手动拖动进度条</item>
-/// </list>
+/// 通过 <see cref="PlaybackStateService"/> 写入播放状态，并通过 owner service events 发布业务事件。
 /// </para>
 /// </summary>
 public sealed partial class PlaybackControlService : IPlaybackControlService, IDisposable
 {
+    public event EventHandler<SeekRequestedEventArgs>? SeekRequested;
+
     private readonly IPlayer _player;
     private readonly IMediaSourceService _mediaSourceService;
     private readonly PlaybackStateService _state;
@@ -210,7 +203,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             if (_player is AudioGraphPlayer graphPlayer)
                 _player.SeekPlaybackSource(target, graphPlayer.PrimaryPlaybackSource);
 
-            WeakReferenceMessenger.Default.Send(new SeekRequestedMessage(target));
+            SeekRequested?.Invoke(this, new SeekRequestedEventArgs(target));
 
             // 与原始实现一致，等待 seek 稳定
             await Task.Delay(500);
@@ -288,7 +281,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         _state.Position = position;
         _lyricService.Tick(position);
         GetPlaylistService()?.OnPositionTick(position, _state.Duration);
-        WeakReferenceMessenger.Default.Send(new PositionTickMessage(position));
     }
 
     /// <summary>
@@ -300,7 +292,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
         {
             _state.IsPlaying = playing;
-            WeakReferenceMessenger.Default.Send(new PlaybackStateChangedMessage(playing));
         }), "publish playback status changed");
     }
 
@@ -315,7 +306,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         var item = agSource?.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
         if (item is null) return;
 
-        WeakReferenceMessenger.Default.Send(new TrackEndedMessage(item!));
         if (_setting.LastFMScrobble)
         {
             _taskRunner.Forget(LastFMManager.Scrobble(item), "update Last.FM now playing");

@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Music;
@@ -9,12 +8,13 @@ using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.RollingCalculators;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Gaming.XboxGameBar;
 using Microsoft.Gaming.XboxGameBar.Input;
+using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
@@ -45,11 +45,23 @@ public sealed partial class WidgetPage : Page
     private bool _eventsRegistered;
     private bool _windowClosedRegistered;
     private bool _positionChangedBySeeking;
+    private readonly WeakEventListener<WidgetPage, object?, PropertyChangedEventArgs> _stateChangedListener;
+    private readonly WeakEventListener<WidgetPage, object?, SeekRequestedEventArgs> _seekRequestedListener;
 
 
     public WidgetPage()
     {
         this.InitializeComponent();
+        _stateChangedListener = new WeakEventListener<WidgetPage, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.OnPlaybackStatePropertyChanged(args.PropertyName),
+            OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _seekRequestedListener = new WeakEventListener<WidgetPage, object?, SeekRequestedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.HyPlayList_OnManualSeek(),
+            OnDetachAction = weakEventListener => { _control.SeekRequested -= weakEventListener.OnEvent; }
+        };
         _gameBarSettings = new GameBarSettings(Dispatcher);
         Instance = this;
         Window.Current.Closed += WidgetPage_Closed;
@@ -100,11 +112,8 @@ public sealed partial class WidgetPage : Page
         _widget.WindowBoundsChanged += OnResized;
         _widget.RequestedThemeChanged += RequestedThemeChanged;
         _hotkeyWatcher.HotkeySetStateChanged += OnHotkeySetStateChanged;
-        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((WidgetPage)r).HyPlayList_OnPlayItemChange(m.Item));
-        WeakReferenceMessenger.Default.Register<PositionTickMessage>(this, (r, m) => ((WidgetPage)r).HyPlayList_OnPlayPositionChange(m.Position));
-        WeakReferenceMessenger.Default.Register<PlaybackStateChangedMessage>(this, (r, m) => ((WidgetPage)r).HyPlayList_OnPlaybackStatusChanged());
-        WeakReferenceMessenger.Default.Register<LyricLoadedMessage>(this, (r, m) => ((WidgetPage)r).LoadLyrics());
-        WeakReferenceMessenger.Default.Register<SeekRequestedMessage>(this, (r, m) => ((WidgetPage)r).HyPlayList_OnManualSeek());
+        _state.PropertyChanged += _stateChangedListener.OnEvent;
+        _control.SeekRequested += _seekRequestedListener.OnEvent;
         _eventsRegistered = true;
         TipContent.Visibility = Visibility.Collapsed;
         LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
@@ -149,7 +158,8 @@ public sealed partial class WidgetPage : Page
             }
             if (_hotkeyWatcher is not null)
                 _hotkeyWatcher.HotkeySetStateChanged -= OnHotkeySetStateChanged;
-            WeakReferenceMessenger.Default.UnregisterAll(this);
+            _stateChangedListener.Detach();
+            _seekRequestedListener.Detach();
             _eventsRegistered = false;
         }
 
@@ -163,6 +173,25 @@ public sealed partial class WidgetPage : Page
         if (ReferenceEquals(Instance, this))
             Instance = null;
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, LyricView.RemoveFromVisualTree);
+    }
+
+    private void OnPlaybackStatePropertyChanged(string? propertyName)
+    {
+        switch (propertyName)
+        {
+            case nameof(PlaybackStateService.NowPlayingItem):
+                HyPlayList_OnPlayItemChange(_state.NowPlayingItem);
+                break;
+            case nameof(PlaybackStateService.Position):
+                HyPlayList_OnPlayPositionChange(_state.Position);
+                break;
+            case nameof(PlaybackStateService.IsPlaying):
+                HyPlayList_OnPlaybackStatusChanged();
+                break;
+            case nameof(PlaybackStateService.LyricInfo):
+                LoadLyrics();
+                break;
+        }
     }
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
@@ -185,7 +214,7 @@ public sealed partial class WidgetPage : Page
         }
     }
 
-    private void HyPlayList_OnPlayItemChange(HyPlayItem playItem)
+    private void HyPlayList_OnPlayItemChange(HyPlayItem? playItem)
     {
         var playItemName = _state.NowPlayingItem.Name;
         var artistName = _state.NowPlayingItem.ArtistString;

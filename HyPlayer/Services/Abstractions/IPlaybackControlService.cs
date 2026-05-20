@@ -9,6 +9,8 @@ namespace HyPlayer.Services.Abstractions;
 /// </summary>
 public interface IPlaybackControlService
 {
+    event EventHandler<SeekRequestedEventArgs>? SeekRequested;
+
     /// <summary>是否正在播放</summary>
     bool IsPlaying { get; }
 

@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +14,7 @@ namespace HyPlayer.Shell.Login;
 public sealed partial class LoginDialog : ContentDialog
 {
     private readonly ShellLoginService _loginService;
+    private readonly WeakEventListener<LoginDialog, object?, QrLoginStatusChangedEventArgs> _qrLoginStatusListener;
     private CancellationTokenSource? _qrLoginCts;
     private Guid? _qrLoginStatusSessionId;
     private bool _isPasswordLoginRunning;
@@ -22,8 +23,12 @@ public sealed partial class LoginDialog : ContentDialog
     {
         _loginService = loginService;
         InitializeComponent();
-        WeakReferenceMessenger.Default.Register<QrLoginStatusMessage>(this,
-            (recipient, message) => ((LoginDialog)recipient).UpdateQrLoginStatus(message));
+        _qrLoginStatusListener = new WeakEventListener<LoginDialog, object?, QrLoginStatusChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.UpdateQrLoginStatus(args),
+            OnDetachAction = weakEventListener => { _loginService.QrLoginStatusChanged -= weakEventListener.OnEvent; }
+        };
+        _loginService.QrLoginStatusChanged += _qrLoginStatusListener.OnEvent;
 
         PrimaryButtonClick += OnPrimaryButtonClick;
         Closed += OnDialogClosed;
@@ -46,7 +51,7 @@ public sealed partial class LoginDialog : ContentDialog
     private void OnDialogClosed(ContentDialog sender, ContentDialogClosedEventArgs args)
     {
         StopQrLoginPolling();
-        WeakReferenceMessenger.Default.UnregisterAll(this);
+        _qrLoginStatusListener.Detach();
     }
 
     private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
@@ -146,7 +151,7 @@ public sealed partial class LoginDialog : ContentDialog
         _qrLoginStatusSessionId = null;
     }
 
-    private void UpdateQrLoginStatus(QrLoginStatusMessage message)
+    private void UpdateQrLoginStatus(QrLoginStatusChangedEventArgs message)
     {
         if (_qrLoginCts is null || message.SessionId != _qrLoginStatusSessionId) return;
 

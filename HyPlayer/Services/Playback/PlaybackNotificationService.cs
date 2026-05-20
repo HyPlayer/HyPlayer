@@ -1,10 +1,8 @@
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.LastFM;
-using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
@@ -26,6 +24,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     private readonly IPlayer _player;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly ITileService _tileService;
+    private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator;
 
     public PlaybackNotificationService(
         PlaybackStateService state,
@@ -33,7 +32,8 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         HttpClient http,
         IPlayer player,
         IBackgroundTaskRunner taskRunner,
-        ITileService tileService)
+        ITileService tileService,
+        IPlaybackSurfaceCoordinator surfaceCoordinator)
     {
         _state = state;
         _setting = setting;
@@ -41,6 +41,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         _player = player;
         _taskRunner = taskRunner;
         _tileService = tileService;
+        _surfaceCoordinator = surfaceCoordinator;
     }
 
     /// <inheritdoc />
@@ -49,14 +50,14 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         if (item == null) return;
         UpdateSmtcDisplayInfo(item);
 
-        WeakReferenceMessenger.Default.Send(new TrackChangedMessage(item));
+        _state.NowPlayingItem = item;
 
         // 1. 刷新封面
         if (!_setting.noImage)
         {
             await RefreshCoverAsync(item);
             UpdateSmtcThumbnail();
-            WeakReferenceMessenger.Default.Send(new CoverChangedMessage(item));
+            _surfaceCoordinator.RefreshPlaybackCover(item);
         }
         await _tileService.UpdateTile(item, _state.CoverStream);
 

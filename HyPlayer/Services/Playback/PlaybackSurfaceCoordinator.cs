@@ -1,8 +1,7 @@
 #nullable enable
-using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.WinUI;
+using HyPlayer.Domain.Music;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback.Messages;
 using HyPlayer.Shell.Playback;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Windows.UI.Xaml;
@@ -65,9 +64,7 @@ public sealed class PlaybackSurfaceCoordinator : IPlaybackSurfaceCoordinator
         host.HidePlayBarBlur();
         host.ClearPlayBarBackground();
 
-        WeakReferenceMessenger.Default.Send(new ExpandedPlayerTransitionRequestedMessage(ExpandedPlayerTransition.Expand));
-
-        WeakReferenceMessenger.Default.Send(new PlaybackSurfaceModeChangedMessage(_surfaceStore.SurfaceMode));
+        host.StartExpandedPlayerTransition(ExpandedPlayerTransition.Expand);
     }
 
     /// <inheritdoc />
@@ -81,7 +78,7 @@ public sealed class PlaybackSurfaceCoordinator : IPlaybackSurfaceCoordinator
 
         host.IsExpandedPlayerInitialized = false;
 
-        WeakReferenceMessenger.Default.Send(new ExpandedPlayerTransitionRequestedMessage(ExpandedPlayerTransition.Collapse));
+        host.StartExpandedPlayerTransition(ExpandedPlayerTransition.Collapse);
 
         host.ShowPlayBarBlur();
 
@@ -98,8 +95,17 @@ public sealed class PlaybackSurfaceCoordinator : IPlaybackSurfaceCoordinator
             Window.Current.SetTitleBar(dragRegion);
         }
 
-        WeakReferenceMessenger.Default.Send(new PlaybackSurfaceModeChangedMessage(_surfaceStore.SurfaceMode));
-        WeakReferenceMessenger.Default.Send(new PlaybackThemeChangedMessage(PlaybackThemeSnapshot.Default));
+        _surfaceStore.Theme = PlaybackThemeSnapshot.Default;
+    }
+
+    public void RefreshPlaybackCover(HyPlayItem? item)
+    {
+        Host?.RefreshPlaybackCover(item);
+    }
+
+    public void StartExpandedTransition(ExpandedPlayerTransition transition)
+    {
+        Host?.StartExpandedPlayerTransition(transition);
     }
 
     private bool CanExpand()

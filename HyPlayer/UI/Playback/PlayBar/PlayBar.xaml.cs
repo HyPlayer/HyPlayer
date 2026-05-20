@@ -1,7 +1,6 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
@@ -17,11 +16,12 @@ using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
 using HyPlayer.Services.History;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
 using HyPlayer.UI.Dialogs;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
+using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using Windows.ApplicationModel;
@@ -70,6 +70,13 @@ public sealed partial class PlayBar
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
+    private readonly IAppLifecycleStateService _lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
+    private WeakEventListener<PlayBar, object?, EventArgs>? _enteredForegroundListener;
+    private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _stateChangedListener;
+    private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
+    private WeakEventListener<PlayBar, object?, PlaylistChangedEventArgs>? _playlistChangedListener;
+    private WeakEventListener<PlayBar, object?, SongLikeStatusChangedEventArgs>? _songLikeStatusChangedListener;
+    private WeakEventListener<PlayBar, object?, EventArgs>? _loginCompletedListener;
 
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding = false;
@@ -109,6 +116,35 @@ DoubleAnimation verticalAnimation;
     public PlayBar()
     {
         InitializeComponent();
+    }
+
+    private void OnPlaybackStatePropertyChanged(string? propertyName)
+    {
+        if (propertyName == nameof(PlaybackStateService.NowPlayingItem))
+            RunOnUIThread(() => LoadPlayingFile(_state.NowPlayingItem));
+    }
+
+    private void OnSurfaceStorePropertyChanged(PlaybackSurfaceStore store, string? propertyName)
+    {
+        switch (propertyName)
+        {
+            case nameof(PlaybackSurfaceStore.SurfaceMode):
+                OnPlaybackSurfaceModeChanged(store.SurfaceMode);
+                break;
+            case nameof(PlaybackSurfaceStore.Theme):
+                ApplyPlaybackTheme(store.Theme);
+                break;
+        }
+    }
+
+    private void OnPlaylistChanged()
+    {
+        RunOnUIThread(() =>
+        {
+            if (ViewModel.Items.Count == 0)
+                HyPlayListOnOnSongRemoveAll();
+            PlayListTitle.Text = ViewModel.GetPlaylistTitle();
+        });
     }
 
     private void OnPlaybackSurfaceModeChanged(PlaybackSurfaceMode mode)
@@ -341,7 +377,7 @@ DoubleAnimation verticalAnimation;
                 //ignore
             }
 
-        // Delegate frame-level operations; UI state updated via PlaybackSurfaceModeChangedMessage
+        // Delegate frame-level operations; UI state updated via PlaybackSurfaceStore
         _surfaceCoordinator.Expand();
     }
 
@@ -358,7 +394,7 @@ DoubleAnimation verticalAnimation;
     private void RequestCompactPlayer()
     {
         // Delegate frame-level operations (animation, visibility, navigation, background, border) to coordinator;
-        // the coordinator sends PlaybackSurfaceModeChangedMessage which updates PlayBar UI state.
+            // the coordinator updates PlaybackSurfaceStore which updates PlayBar UI state.
         _surfaceCoordinator.Collapse();
     }
 
@@ -582,28 +618,52 @@ DoubleAnimation verticalAnimation;
         SliderAudioRate.Value = (double)_setting.Volume;
         ViewModel.SyncFromState();
         RefreshPlayModeDisplay();
-        var messenger = WeakReferenceMessenger.Default;
-        messenger.Register<PlaybackSurfaceModeChangedMessage>(this, (r, m) => ((PlayBar)r).OnPlaybackSurfaceModeChanged(m.Mode));
-        messenger.Register<PlaybackThemeChangedMessage>(this, (r, m) => ((PlayBar)r).ApplyPlaybackTheme(m.Theme));
-        messenger.Register<TrackChangedMessage>(this, (r, m) => ((PlayBar)r).LoadPlayingFile(m.Item));
+        _enteredForegroundListener?.Detach();
+        _stateChangedListener?.Detach();
+        _surfaceStoreChangedListener?.Detach();
+        _playlistChangedListener?.Detach();
+        _songLikeStatusChangedListener?.Detach();
+        _loginCompletedListener?.Detach();
+        _enteredForegroundListener = new WeakEventListener<PlayBar, object?, EventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.OnEnteringForeground(),
+            OnDetachAction = weakEventListener => { _lifecycle.EnteredForeground -= weakEventListener.OnEvent; }
+        };
+        _lifecycle.EnteredForeground += _enteredForegroundListener.OnEvent;
+        _stateChangedListener = new WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.OnPlaybackStatePropertyChanged(args.PropertyName),
+            OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _state.PropertyChanged += _stateChangedListener.OnEvent;
+        _surfaceStoreChangedListener = new WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, source, args) => instance.OnSurfaceStorePropertyChanged((PlaybackSurfaceStore)source, args.PropertyName),
+            OnDetachAction = weakEventListener => { _surfaceStore.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _surfaceStore.PropertyChanged += _surfaceStoreChangedListener.OnEvent;
+        _playlistChangedListener = new WeakEventListener<PlayBar, object?, PlaylistChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.OnPlaylistChanged(),
+            OnDetachAction = weakEventListener => { _playlist.PlaylistChanged -= weakEventListener.OnEvent; }
+        };
+        _playlist.PlaylistChanged += _playlistChangedListener.OnEvent;
+        _songLikeStatusChangedListener = new WeakEventListener<PlayBar, object?, SongLikeStatusChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.HyPlayList_OnSongLikeStatusChange(args.IsLiked),
+            OnDetachAction = weakEventListener => { _auth.SongLikeStatusChanged -= weakEventListener.OnEvent; }
+        };
+        _auth.SongLikeStatusChanged += _songLikeStatusChangedListener.OnEvent;
+        _loginCompletedListener = new WeakEventListener<PlayBar, object?, EventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.HyPlayListOnOnLoginDone(),
+            OnDetachAction = weakEventListener => { _auth.LoginCompleted -= weakEventListener.OnEvent; }
+        };
+        _auth.LoginCompleted += _loginCompletedListener.OnEvent;
         if (_surfaceStore.HasPendingExpandedIntent)
             TryExpandPendingSurface();
         else if (_surfaceCoordinator.IsExpanded)
             OnPlaybackSurfaceModeChanged(PlaybackSurfaceMode.Expanded);
-
-        // --- Messenger-based event subscriptions ---
-        messenger.Register<PlaylistChangedMessage>(this, (r, m) =>
-        {
-            var vm = ((PlayBar)r).ViewModel;
-            if (vm.Items.Count == 0)
-                HyPlayListOnOnSongRemoveAll();
-            PlayListTitle.Text = vm.GetPlaylistTitle();
-        });
-        messenger.Register<SongLikeStatusChangedMessage>(this, (r, m) => ((PlayBar)r).HyPlayList_OnSongLikeStatusChange(m.IsLiked));
-        messenger.Register<CoverChangedMessage>(this, (r, m) => ((PlayBar)r).RefreshPlayBarCover(m.Item));
-        messenger.Register<PlayBarCoverRefreshRequestedMessage>(this, (r, m) => ((PlayBar)r).RefreshPlayBarCover(m.Item));
-        messenger.Register<EnterForegroundFromBackgroundNotification>(this, (r, _) => ((PlayBar)r).OnEnteringForeground());
-        messenger.Register<LoginCompletedMessage>(this, (r, _) => ((PlayBar)r).HyPlayListOnOnLoginDone());
 
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
@@ -642,7 +702,7 @@ DoubleAnimation verticalAnimation;
         request.Data = dataPackage;
     }
 
-    public async void RefreshPlayBarCover(HyPlayItem playItem)
+    public async void RefreshPlayBarCover(HyPlayItem? playItem)
     {
         if (ViewModel.CoverStream == null) return;
         _taskRunner.Forget(_notification.InvokeOnUIThread(async () =>
@@ -783,7 +843,12 @@ DoubleAnimation verticalAnimation;
 
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)
     {
-        WeakReferenceMessenger.Default.UnregisterAll(this);
+        _enteredForegroundListener?.Detach();
+        _stateChangedListener?.Detach();
+        _surfaceStoreChangedListener?.Detach();
+        _playlistChangedListener?.Detach();
+        _songLikeStatusChangedListener?.Detach();
+        _loginCompletedListener?.Detach();
         ViewModel.DataTransferManager.DataRequested -= DataTransferManager_DataRequested;
     }
 

@@ -1,7 +1,6 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
@@ -13,7 +12,7 @@ using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Downloads;
-using HyPlayer.Services.Notifications.Messages;
+using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -33,6 +32,9 @@ public sealed partial class RadioPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
+    private readonly WeakEventListener<RadioPage, object?, EventArgs> _secondTickListener;
+    private bool _isSecondTickSubscribed;
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
@@ -51,12 +53,17 @@ public sealed partial class RadioPage : Page
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
+        _secondTickListener = new WeakEventListener<RadioPage, object?, EventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.GreedlyLoad(),
+            OnDetachAction = weakEventListener => {_globalTimer.SecondTick -= weakEventListener.OnEvent; }
+        };
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        WeakReferenceMessenger.Default.UnregisterAll(this);
+        DetachSecondTick();
 
         if (_programLoaderTask != null && !_programLoaderTask.IsCompleted)
         {
@@ -157,7 +164,21 @@ public sealed partial class RadioPage : Page
         SongContainer.QueueScope = SongListQueueScope.Radio(Radio.Id);
         _programLoaderTask = LoadProgram();
         if (_setting.greedlyLoadPlayContainerItems)
-            WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(this, (r, _) => ((RadioPage)r).GreedlyLoad());
+            AttachSecondTick();
+    }
+
+    private void AttachSecondTick()
+    {
+        if (_isSecondTickSubscribed) return;
+        _globalTimer.SecondTick += _secondTickListener.OnEvent;
+        _isSecondTickSubscribed = true;
+    }
+
+    private void DetachSecondTick()
+    {
+        if (!_isSecondTickSubscribed) return;
+        _secondTickListener.Detach();
+        _isSecondTickSubscribed = false;
     }
 
     int treashold = 3;
@@ -180,7 +201,7 @@ public sealed partial class RadioPage : Page
             }
             else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
-                WeakReferenceMessenger.Default.Unregister<GlobalSecondTimerMessage>(this);
+                DetachSecondTick();
             }
         });
     }

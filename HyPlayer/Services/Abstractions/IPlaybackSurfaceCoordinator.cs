@@ -1,3 +1,6 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Services.Playback;
+
 namespace HyPlayer.Services.Abstractions;
 
 /// <summary>
@@ -12,6 +15,10 @@ public interface IPlaybackSurfaceCoordinator
 
     /// <summary>Collapse the playback surface: hide expanded player frame, restore main frame and blur overlay.</summary>
     void Collapse();
+
+    void RefreshPlaybackCover(HyPlayItem? item);
+
+    void StartExpandedTransition(ExpandedPlayerTransition transition);
 
     /// <summary>Whether the expanded player is currently shown.</summary>
     bool IsExpanded { get; }

@@ -1,4 +1,3 @@
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
@@ -10,9 +9,7 @@ using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Utils;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
-using HyPlayer.Services.Notifications.Messages;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,22 +25,28 @@ namespace HyPlayer.Services.Authentication;
 /// </summary>
 public class AuthService : IAuthService
 {
+    public event EventHandler? LoginCompleted;
+    public event EventHandler<SongLikeStatusChangedEventArgs>? SongLikeStatusChanged;
+
     private readonly PlaybackStateService _state;
     private readonly NeteaseCloudMusicApiHandler _api;
     private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
+    private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier;
     private readonly SemaphoreSlim _likeSongGate = new(1, 1);
 
     public AuthService(
         PlaybackStateService state,
         NeteaseCloudMusicApiHandler api,
         INotificationService notification,
-        IBackgroundTaskRunner taskRunner)
+        IBackgroundTaskRunner taskRunner,
+        IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
         _state = state;
         _api = api;
         _notification = notification;
         _taskRunner = taskRunner;
+        _playlistCollectionChangeNotifier = playlistCollectionChangeNotifier;
     }
 
     /// <inheritdoc />
@@ -209,7 +212,7 @@ public class AuthService : IAuthService
         IsLoggedIn = true;
 
         _taskRunner.Forget(LoadMyLikelistAsync(), "load liked songs after login");
-        WeakReferenceMessenger.Default.Send(new PlaylistCollectionChangedMessage());
+        _playlistCollectionChangeNotifier.NotifyChanged();
         NotifyLoginCompleted();
 
         return new AuthResult(true);
@@ -242,7 +245,7 @@ public class AuthService : IAuthService
     /// <inheritdoc />
     public void NotifyLoginCompleted()
     {
-        WeakReferenceMessenger.Default.Send(new LoginCompletedMessage());
+        LoginCompleted?.Invoke(this, EventArgs.Empty);
     }
 
     /// <inheritdoc />
@@ -282,13 +285,13 @@ public class AuthService : IAuthService
                         {
                             if (isLiked) LikedSongs.Remove(item.Id);
                             else LikedSongs.Add(item.Id);
-                            WeakReferenceMessenger.Default.Send(new SongLikeStatusChangedMessage(!isLiked));
+                            SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
                         }
                         else throw new Exception("红心操作失败");
                         break;
                     case HyPlayItemType.Radio:
                         _notification.ShowMessage("暂不支持红心电台歌曲", "将在后续版本中支持");
-                        WeakReferenceMessenger.Default.Send(new SongLikeStatusChangedMessage(!isLiked));
+                        SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
                         break;
                 }
             });

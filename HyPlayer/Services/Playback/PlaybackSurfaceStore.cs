@@ -12,6 +12,9 @@ public partial class PlaybackSurfaceStore : ObservableObject
     [ObservableProperty]
     public partial PlaybackSurfaceMode SurfaceMode { get; set; }
 
+    [ObservableProperty]
+    public partial PlaybackThemeSnapshot Theme { get; set; } = PlaybackThemeSnapshot.Default;
+
     /// <summary>Convenience: true when the surface is in Expanded mode.</summary>
     public bool IsExpanded => SurfaceMode == PlaybackSurfaceMode.Expanded;
 

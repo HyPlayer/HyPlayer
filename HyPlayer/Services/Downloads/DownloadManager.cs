@@ -1,7 +1,6 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Music;
@@ -13,7 +12,6 @@ using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Notifications.Messages;
 using Microsoft.Toolkit.Uwp.Helpers;
 using System;
 using System.Collections.Generic;
@@ -483,8 +481,8 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
 
 internal static class DownloadManager
 {
-    private static readonly object _timerRecipient = new();
     private static bool Timered;
+    private static IGlobalTimerService GlobalTimer => Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private static INotificationService Notification => Ioc.Default.GetRequiredService<INotificationService>();
     private static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
     private static HttpClient HttpClient => Ioc.Default.GetRequiredService<HttpClient>();
@@ -505,7 +503,7 @@ internal static class DownloadManager
     {
         if (!Timered)
         {
-            WeakReferenceMessenger.Default.Register<GlobalSecondTimerMessage>(_timerRecipient, (r, _) => Timer_Elapsed());
+            GlobalTimer.SecondTick += Timer_Elapsed;
             Timered = true;
         }
     }
@@ -514,7 +512,7 @@ internal static class DownloadManager
     {
         if (Timered)
         {
-            WeakReferenceMessenger.Default.Unregister<GlobalSecondTimerMessage>(_timerRecipient);
+            GlobalTimer.SecondTick -= Timer_Elapsed;
             Timered = false;
         }
         WritingTasks.RemoveAll(t => t.IsCompleted);
@@ -528,6 +526,11 @@ internal static class DownloadManager
         EnsureTimerStarted();
 
         DownloadLists.Add(CreateDownloadObject(song));
+    }
+
+    private static void Timer_Elapsed(object? sender, EventArgs e)
+    {
+        Timer_Elapsed();
     }
 
     private static void Timer_Elapsed()

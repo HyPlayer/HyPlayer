@@ -1,11 +1,12 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Music;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback.Messages;
+using HyPlayer.Services.Playback;
+using CommunityToolkit.WinUI.Helpers;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Windows.Foundation;
 using Windows.UI.Xaml;
@@ -24,6 +25,8 @@ namespace HyPlayer.UI.Lists;
 public sealed partial class GroupedSongsList : UserControl
 {
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+    private readonly WeakEventListener<GroupedSongsList, object?, PropertyChangedEventArgs> _stateChangedListener;
     public GroupedSongsListViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<GroupedSongsListViewModel>();
 
     public static readonly DependencyProperty GroupedSongsProperty = DependencyProperty.Register(
@@ -53,12 +56,21 @@ public sealed partial class GroupedSongsList : UserControl
     public GroupedSongsList()
     {
         InitializeComponent();
-        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((GroupedSongsList)r).HyPlayListOnOnPlayItemChange(m.Item));
+        _stateChangedListener = new WeakEventListener<GroupedSongsList, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) =>
+            {
+                if (args.PropertyName == nameof(PlaybackStateService.NowPlayingItem))
+                    instance.HyPlayListOnOnPlayItemChange(instance._state.NowPlayingItem);
+            },
+            OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _state.PropertyChanged += _stateChangedListener.OnEvent;
     }
 
     private void GroupedSongsList_Unloaded(object sender, RoutedEventArgs e)
     {
-        WeakReferenceMessenger.Default.UnregisterAll(this);
+        _stateChangedListener.Detach();
     }
 
     public CollectionViewSource GroupedSongs
@@ -101,7 +113,7 @@ public sealed partial class GroupedSongsList : UserControl
         set => SetValue(QueueScopeProperty, value);
     }
 
-    private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
+    private void HyPlayListOnOnPlayItemChange(HyPlayItem? playitem)
     {
         _ = _notification.InvokeOnUIThread(() =>
         {

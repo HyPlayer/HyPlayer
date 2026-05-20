@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,6 +10,9 @@ namespace HyPlayer.Services.Abstractions;
 /// </summary>
 public interface IAuthService
 {
+    event EventHandler? LoginCompleted;
+    event EventHandler<SongLikeStatusChangedEventArgs>? SongLikeStatusChanged;
+
     /// <summary>是否已登录</summary>
     bool IsLoggedIn { get; set; }
 
@@ -48,7 +52,7 @@ public interface IAuthService
     /// <summary>登出并清理认证缓存。</summary>
     Task<AuthResult> LogoutAsync();
 
-    /// <summary>通知登录完成（发送 LoginCompletedMessage）</summary>
+    /// <summary>通知登录完成</summary>
     void NotifyLoginCompleted();
 
     /// <summary>红心/取消红心当前播放歌曲</summary>

@@ -1,7 +1,5 @@
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Music;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback.Messages;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -118,7 +116,7 @@ public sealed partial class PlaylistService
     {
         SyncIndex();
         _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
-            WeakReferenceMessenger.Default.Send(new PlaylistChangedMessage(isShuffleTrigger))),
+            PlaylistChanged?.Invoke(this, new PlaylistChangedEventArgs(isShuffleTrigger))),
             "publish playlist changed");
     }
 

@@ -1,7 +1,6 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
@@ -18,12 +17,13 @@ using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.Messages;
+using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.UI.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using Windows.Foundation;
 using Windows.UI;
@@ -50,6 +50,7 @@ public sealed partial class SongsList : UserControl
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly ISongListQueueBuilder _songListQueueBuilder = Ioc.Default.GetRequiredService<ISongListQueueBuilder>();
+    private readonly WeakEventListener<SongsList, object?, PropertyChangedEventArgs> _stateChangedListener;
 
     public static readonly DependencyProperty MultiSelectProperty =
         DependencyProperty.Register("MultiSelect", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
@@ -103,12 +104,21 @@ public sealed partial class SongsList : UserControl
     public SongsList()
     {
         InitializeComponent();
-        WeakReferenceMessenger.Default.Register<TrackChangedMessage>(this, (r, m) => ((SongsList)r).HyPlayListOnOnPlayItemChange(m.Item));
+        _stateChangedListener = new WeakEventListener<SongsList, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) =>
+            {
+                if (args.PropertyName == nameof(PlaybackStateService.NowPlayingItem))
+                    instance.HyPlayListOnOnPlayItemChange(instance._state.NowPlayingItem);
+            },
+            OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _state.PropertyChanged += _stateChangedListener.OnEvent;
     }
 
     private void SongsList_Unloaded(object sender, RoutedEventArgs e)
     {
-        WeakReferenceMessenger.Default.UnregisterAll(this);
+        _stateChangedListener.Detach();
         Songs?.CollectionChanged -= Songs_CollectionChanged;
     }
 
@@ -196,7 +206,7 @@ public sealed partial class SongsList : UserControl
 
     public bool IsAddingSongToPlaylist = false;
 
-    private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
+    private void HyPlayListOnOnPlayItemChange(HyPlayItem? playitem)
     {
         if (playitem?.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive || playitem?.PlayItem == null)
         {
