@@ -25,9 +25,6 @@ public class PlaybackShellStateMachine
     /// <summary>Current shell playback state.</summary>
     public PlaybackShellState CurrentState { get; private set; } = PlaybackShellState.Compact;
 
-    /// <summary>Fired after state transitions complete (Idle states only).</summary>
-    public event EventHandler<PlaybackShellState>? StateChanged;
-
     /// <summary>
     /// Guarded transition from Compact → ExpandAnimating → Expanded.
     /// Returns false if the current state does not allow an expand (e.g. already expanded or mid-animation).
@@ -72,7 +69,6 @@ public class PlaybackShellStateMachine
     {
         if (CurrentState == newState) return;
         CurrentState = newState;
-        StateChanged?.Invoke(this, newState);
     }
 }
 

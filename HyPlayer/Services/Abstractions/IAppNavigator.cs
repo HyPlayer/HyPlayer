@@ -14,8 +14,7 @@ public interface IAppNavigator
 
     void AttachNavigationView(NavigationView navigationView,
                               Frame rootFrame,
-                              NavigationShellViewModel shellViewModel,
-                              Func<Task>? loginRequiredAsync = null);
+                              NavigationShellViewModel shellViewModel);
 
     void DetachNavigationView(NavigationView navigationView);
 

@@ -7,16 +7,8 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Domain
 {
-    public class UserDisplay
+    public record class UserDisplay(NCUser User)
     {
-        private NCUser user;
-        public UserDisplay(NCUser user)
-        {
-            this.user = user;
-        }
-        public string UserName => user.Name;
-        public string Signature => user.Signature;
-        private Uri avatarUri => Ioc.Default.GetRequiredService<Setting>().noImage ? new("ms-appx:///Assets/icon.png") : new(user.Avatar, UriKind.RelativeOrAbsolute);
-        public ImageSource AvatarSource => new BitmapImage(avatarUri);
+        public Uri AvatarUri => Ioc.Default.GetRequiredService<Setting>().noImage ? new("ms-appx:///Assets/icon.png") : new(User.Avatar, UriKind.RelativeOrAbsolute);
     }
 }

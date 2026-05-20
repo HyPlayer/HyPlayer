@@ -50,7 +50,7 @@ public sealed partial class BasePage : Page
         }
 
         ApplicationView.TerminateAppOnFinalViewClose = false;
-        _navigator.AttachNavigationView(NavMain, BaseFrame, _navigationShell, _loginService.ShowLoginRequiredDialogAsync);
+        _navigator.AttachNavigationView(NavMain, BaseFrame, _navigationShell);
         _navigationShell.UpdateAccountStatus();
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;

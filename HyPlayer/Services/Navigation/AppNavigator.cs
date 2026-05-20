@@ -41,7 +41,6 @@ public sealed class AppNavigator : IAppNavigator
     private readonly INotificationService _notification;
     private NavigationView? _navigationView;
     private NavigationShellViewModel? _shellViewModel;
-    private Func<Task>? _loginRequiredAsync;
     private Frame? _rootFrame;
     private readonly Dictionary<NavigationNode, NavigationNodeSubscription> _nodeSubscriptions = [];
     private readonly Dictionary<NavigationNode, object> _navigationObjects = [];
@@ -60,8 +59,7 @@ public sealed class AppNavigator : IAppNavigator
 
     public void AttachNavigationView(NavigationView navigationView,
                                      Frame rootFrame,
-                                     NavigationShellViewModel shellViewModel,
-                                     Func<Task>? loginRequiredAsync = null)
+                                     NavigationShellViewModel shellViewModel)
     {
         DetachCurrentNavigationView();
 
@@ -69,7 +67,6 @@ public sealed class AppNavigator : IAppNavigator
         _rootFrame = rootFrame;
         _navigationView = navigationView;
         _shellViewModel = shellViewModel;
-        _loginRequiredAsync = loginRequiredAsync;
 
         shellViewModel.MenuItems.CollectionChanged += MenuItems_CollectionChanged;
         navigationView.ItemInvoked += NavigationView_ItemInvoked;
@@ -124,7 +121,6 @@ public sealed class AppNavigator : IAppNavigator
 
         _navigationView = null;
         _shellViewModel = null;
-        _loginRequiredAsync = null;
         _rootFrame = null;
     }
 
@@ -451,13 +447,6 @@ public sealed class AppNavigator : IAppNavigator
 
         try
         {
-            if (node.Route is AppRoute.Me && !_auth.IsLoggedIn)
-            {
-                sender.SelectedItem = null;
-                await InvokeLoginRequiredAsync();
-                return;
-            }
-
             if (node.Route is not null)
             {
                 await NavigateAsync(node.Route);
@@ -472,8 +461,6 @@ public sealed class AppNavigator : IAppNavigator
             _notification.ShowMessage("导航失败", ex.Message);
         }
     }
-
-    private Task InvokeLoginRequiredAsync() => _loginRequiredAsync?.Invoke() ?? Task.CompletedTask;
 
     private static void InvokeAction(AppNavigationAction action)
     {
@@ -621,13 +608,13 @@ public sealed class AppNavigator : IAppNavigator
             _node = node;
             _updateNode = updateNode;
             _updateChildren = updateChildren;
-            _node.Changed += Node_Changed;
+            _node.PropertyChanged += Node_Changed;
             _node.Children.CollectionChanged += Children_CollectionChanged;
         }
 
         public void Dispose()
         {
-            _node.Changed -= Node_Changed;
+            _node.PropertyChanged -= Node_Changed;
             _node.Children.CollectionChanged -= Children_CollectionChanged;
         }
 
