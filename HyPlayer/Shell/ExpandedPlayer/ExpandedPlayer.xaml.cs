@@ -897,7 +897,7 @@ public sealed partial class ExpandedPlayer : Page
         {
             if (!resultGenerated)
             {
-                finalResult = ActualTheme == ElementTheme.Light;
+                finalResult = false; //如果颜色生成失败（例如解码失败），默认使用黑色字体
                 resultGenerated = true;
             }
         }
