@@ -45,7 +45,7 @@ public interface IPlaylistService
     void RemoveAt(int index);
 
     /// <summary>清空播放列表</summary>
-    void Clear(bool clearFirst = true);
+    void Clear(bool clearAll = true);
 
     /// <summary>跳转到指定曲目</summary>
     Task MoveToAsync(HyPlayItem item);
@@ -96,7 +96,7 @@ public interface IPlaylistService
     HyPlayItem AppendNcSong(NCSong ncSong, int position = -1);
 
     /// <summary>批量追加网易云歌曲</summary>
-    void AppendNcSongs(IList<NCSong> ncSongs, bool clearFirst = true, string currentSongId = "-1");
+    void AppendNcSongs(IList<NCSong> ncSongs, bool clearFirst = true);
 
     /// <summary>批量追加并返回实际追加的列表</summary>
     List<HyPlayItem> AppendNcSongRange(List<NCSong> ncSongs, int position = -1);

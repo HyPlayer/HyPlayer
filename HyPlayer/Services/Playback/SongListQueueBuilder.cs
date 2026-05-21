@@ -30,7 +30,8 @@ internal sealed class SongListQueueBuilder(
         }
         else
         {
-            playlist.AppendNcSongs(visibleSongs.ToList(), currentSongId: clickedSong.SongId);
+            playlist.Clear(!shiftSong);
+            playlist.AppendNcSongs(visibleSongs.ToList());
         }
 
         var playSourceId = scope.ToPlaySourceId();

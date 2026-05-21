@@ -207,7 +207,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
-    public void Clear(bool clearFirst = true)
+    public void Clear(bool clearAll = true)
     {
         ExitPersonalFmForSourceChange();
 
@@ -216,7 +216,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             if (_items.Count == 0)
                 return;
 
-            if (clearFirst)
+            if (clearAll)
             {
                 _player.RemoveAllPlaybackSource();
                 DisposePlayItems(_items);

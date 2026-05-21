@@ -80,7 +80,7 @@ public sealed partial class PlaylistService
         lock (_lock)
         {
             var index = _items.IndexOf(item);
-            if (index < 0 || ReferenceEquals(item, _state.NowPlayingItem))
+            if (index < 0 || ReferenceEquals(item, NowPlayingItem))
                 return;
             _items[index] = item;
             _nowPlayingIndex = index;

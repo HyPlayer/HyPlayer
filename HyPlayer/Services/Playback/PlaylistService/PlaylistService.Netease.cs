@@ -38,7 +38,7 @@ public sealed partial class PlaylistService
     }
 
     /// <inheritdoc />
-    public void AppendNcSongs(IList<NCSong> ncSongs, bool clearFirst = true, string currentSongId = "-1")
+    public void AppendNcSongs(IList<NCSong> ncSongs, bool clearFirst = true)
     {
         if (ncSongs == null) return;
         try
