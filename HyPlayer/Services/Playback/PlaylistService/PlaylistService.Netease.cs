@@ -48,8 +48,7 @@ public sealed partial class PlaylistService
                 ExitPersonalFmForSourceChange();
                 lock (_lock)
                 {
-                    DisposePlayItems(_items);
-                    _items.Clear();
+                    Clear(clearFirst);
                 }
             }
 

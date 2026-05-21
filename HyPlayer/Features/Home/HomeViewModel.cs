@@ -74,9 +74,8 @@ namespace HyPlayer.Features.Home
         [RelayCommand]
         private async Task OnPlayAllRecommendedSongsClickedAsync()
         {
-            _playlist.Clear();
             var items = RecommendedSongs.Select(s => s.ToHyPlayItem());
-            _playlist.AppendItems(items);
+            _playlist.AppendItems(items, true);
             _playlist.NotifyAppendDone();
             await _playlist.MoveNextAsync(userInitiated: true);
         }

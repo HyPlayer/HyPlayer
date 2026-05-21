@@ -435,7 +435,6 @@ public sealed partial class SongsList : UserControl
     {
         if (e.ClickedItem is not NCSong ncSong || IsAddingSongToPlaylist) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        bool shiftSong = ncSong.SongId == _state.NowPlayingItem?.Id;
 
         if (!ncSong.IsAvailable)
         {

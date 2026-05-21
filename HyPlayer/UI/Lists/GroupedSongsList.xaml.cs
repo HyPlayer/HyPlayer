@@ -118,7 +118,7 @@ public sealed partial class GroupedSongsList : UserControl
         _ = _notification.InvokeOnUIThread(() =>
         {
             SongContainer.SelectedItem = null;
-            if (playitem.PlayItem == null || GroupedSongs?.Source == null) return;
+            if (playitem?.PlayItem == null || GroupedSongs?.Source == null) return;
             foreach (var disc in GroupedSongs.Source as IEnumerable<DiscSongs>)
             {
                 var nowPlayingItem = disc.FirstOrDefault(t => t.SongId == playitem.Id);

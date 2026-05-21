@@ -471,6 +471,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             _audioInputNodes.Clear();
             _audioInputNodesReverseDictionary.Clear();
             _primaryPlaybackSource = null;
+            _defaultPlayer.Stop();
+             GlobalPlaybackStatus = PlaybackStatus.Closed;
         }
 
         public List<AudioGraphPlaybackSource> GetConnectedPlaybackSource()

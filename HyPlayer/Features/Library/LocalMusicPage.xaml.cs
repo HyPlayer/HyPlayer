@@ -88,8 +88,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private async void Playall_Click(object sender, RoutedEventArgs e)
     {
-        _playlist.Clear();
-        _playlist.AppendItems(localHyItems);
+        _playlist.AppendItems(localHyItems, true);
         var firstItem = localHyItems.FirstOrDefault();
         if (firstItem is not null)
             await _playlist.MoveToAsync(firstItem);
@@ -180,8 +179,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private async void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
-        _playlist.Clear();
-        _playlist.AppendItems(localHyItems);
+        _playlist.AppendItems(localHyItems, true);
         if (ListBoxLocalMusicContainer.SelectedItem is HyPlayItem selectedItem)
             await _playlist.MoveToAsync(selectedItem);
     }

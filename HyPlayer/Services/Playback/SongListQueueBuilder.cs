@@ -15,7 +15,8 @@ internal sealed class SongListQueueBuilder(
     {
         if (visibleSongs.Count == 0) return;
 
-        var shiftSong = clickedSong.SongId == state.NowPlayingItem?.Id;
+        var shiftSong = clickedSong.SongId == state.NowPlayingItem?.Id && state.IsPlaying;
+        var nowPlaying = state.NowPlayingItem;
 
         if (!clickedSong.IsAvailable)
         {
@@ -29,7 +30,7 @@ internal sealed class SongListQueueBuilder(
         }
         else
         {
-            playlist.AppendNcSongs(visibleSongs.ToList(), clearFirst: !shiftSong, currentSongId: clickedSong.SongId);
+            playlist.AppendNcSongs(visibleSongs.ToList(), currentSongId: clickedSong.SongId);
         }
 
         var playSourceId = scope.ToPlaySourceId();
@@ -38,17 +39,16 @@ internal sealed class SongListQueueBuilder(
 
         if (!shiftSong)
         {
-            var targetItem = playlist.Items.ToList().Find(song => song?.Id == clickedSong.SongId);
+            var targetItem = playlist.Items.FirstOrDefault(song => song?.Id == clickedSong.SongId);
             if (targetItem != null)
                 await playlist.MoveToAsync(targetItem);
             return;
         }
 
-        notification.ShowMessage("无感歌单切换", "成功无感切换到歌单 " + playSourceId);
-        var targetIndex = playlist.Items.ToList().FindIndex(song => song.Id == clickedSong.SongId);
-        if (targetIndex != -1)
+        notification.ShowMessage("无感歌单切换", "成功无感切换到歌单");
+        if (nowPlaying != null)
         {
-            playlist.RestoreNowPlayingIndex(targetIndex);
+            playlist.RestoreNowPlayingItem(nowPlaying);
             playlist.NotifyAppendDone();
         }
     }

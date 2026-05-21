@@ -353,9 +353,8 @@ namespace HyPlayer.Features.Playlist
             }
             else
             {
-                _playlist.Clear();
                 var items = Songs.Select(s => s.ToHyPlayItem());
-                _playlist.AppendItems(items);
+                _playlist.AppendItems(items, true);
                 _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.PlaylistId));
                 _playlist.NotifyAppendDone();
                 await _playlist.MoveNextAsync(userInitiated: true);

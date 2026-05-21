@@ -168,12 +168,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
 
         lock (_lock)
         {
-            if (clearFirst)
-            {
-                DisposePlayItems(_items);
-                _items.Clear();
-            }
-
+            Clear(clearFirst);
             _items.AddRange(items);
         }
     }
@@ -212,7 +207,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
-    public void Clear(bool stopPlayback = true)
+    public void Clear(bool clearFirst = true)
     {
         ExitPersonalFmForSourceChange();
 
@@ -221,11 +216,8 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             if (_items.Count == 0)
                 return;
 
-            if (stopPlayback)
+            if (clearFirst)
             {
-                if (_player.GlobalPlaybackStatus == PlaybackStatus.Playing)
-                    _control.Pause();
-
                 _player.RemoveAllPlaybackSource();
                 DisposePlayItems(_items);
                 _items.Clear();
