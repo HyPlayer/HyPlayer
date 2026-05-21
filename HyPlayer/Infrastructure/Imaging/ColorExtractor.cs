@@ -21,15 +21,8 @@ namespace HyPlayer.Infrastructure.Imaging
 
             var setting = Ioc.Default.GetRequiredService<Setting>();
 
-            if (setting.ColorGeneratorType is ColorGeneratorType.OctTree)
-            {
-                color = await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, true);
+            color = KMeansPaletteGenerator.CreateThemeColor(colors, true, true);
 
-            }
-            else
-            {
-                color = await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, true, true);
-            }
             return Color.FromArgb(255, (byte)color.Color.X, (byte)color.Color.Y, (byte)color.Color.Z);
         }
     }

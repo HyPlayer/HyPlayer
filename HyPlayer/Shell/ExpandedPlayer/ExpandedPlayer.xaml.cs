@@ -848,24 +848,20 @@ public sealed partial class ExpandedPlayer : Page
             PaletteResult palette;
             if (_settings.expandedPlayerBackgroundType != BackgroundType.Animated && _settings.expandedPlayerBackgroundType != BackgroundType.Isolation)
             {
-                themeColor = _settings.ColorGeneratorType switch
-                {
-                    ColorGeneratorType.OctTree => await PaletteGenerators.OctTreePaletteGenerator.CreateThemeColor(colors, true),
-                    _ => await PaletteGenerators.KMeansPaletteGenerator.CreateThemeColor(colors, true, true),
-                };
+                themeColor = KMeansPaletteGenerator.CreateThemeColor(colors, true, true);
                 albumMainColor = Color.FromArgb(255, (byte)themeColor.Color.X, (byte)themeColor.Color.Y, (byte)themeColor.Color.Z);
             }
             else
             {
                 palette = _settings.ColorGeneratorType switch
                 {
-                    ColorGeneratorType.KMeans => await PaletteGenerators.KMeansPaletteGenerator.CreatePalette(
+                    ColorGeneratorType.KMeans => await KMeansPaletteGenerator.CreatePalette(
                                                 colors,
                                                 _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
                                                 true,
                                                 true,
                                                 true),
-                    ColorGeneratorType.OctTree => palette = await PaletteGenerators.OctTreePaletteGenerator.CreatePalette(
+                    ColorGeneratorType.OctTree => palette = await OctTreePaletteGenerator.CreatePalette(
                                                 colors,
                                                 _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
                                                 true),

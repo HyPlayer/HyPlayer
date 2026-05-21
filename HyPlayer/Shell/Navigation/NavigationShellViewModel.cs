@@ -206,10 +206,18 @@ public partial class NavigationShellViewModel : ObservableObject
             _auth.MySongLists.Clear();
 
             var playlists = response?.Playlists ?? [];
-            var isFirst = true;
-
-            foreach (var pl in playlists)
+            if (playlists.Length == 0)
             {
+                if (_likedSongsNode is not null)
+                    _likedSongsNode.IsVisible = false;
+                return;
+            }
+            _auth.MySongLists.Add(playlists[0].MapToNCPlayList());
+
+
+            for (int i = 1; i < playlists.Length; i++)
+            {
+                var pl = playlists[i];
                 if (string.IsNullOrEmpty(pl.Id) || string.IsNullOrEmpty(pl.Name))
                     continue;
 
@@ -224,13 +232,6 @@ public partial class NavigationShellViewModel : ObservableObject
                 }
                 else
                 {
-                    if (isFirst)
-                    {
-                        isFirst = false;
-                        _auth.MySongLists.Add(pl.MapToNCPlayList());
-                        continue;
-                    }
-
                     _auth.MySongLists.Add(pl.MapToNCPlayList());
                     _createdContainer?.Children.Add(new NavigationNode
                     {
