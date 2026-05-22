@@ -4,7 +4,6 @@ using HyPlayer.Services.Abstractions;
 using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -21,45 +20,38 @@ namespace HyPlayer.Services.Tiles
         public async Task UpdateTile(HyPlayItem item, IRandomAccessStream coverStream)
         {
             if (!_setting.EnableTile) return;
-            var cover = await GetTileBackgroundAsync(item, coverStream);
-            var tileContent = new TileContent()
+            var infoContent = new TileContent()
             {
                 Visual = new TileVisual()
                 {
                     DisplayName = "HyPlayer 正在播放",
-                    TileSmall = new TileBinding()
-                    {
-                        Content = new TileBindingContentAdaptive()
-                        {
-                            BackgroundImage = cover,
-                        }
-                    },
                     TileMedium = new TileBinding()
                     {
                         Branding = TileBranding.NameAndLogo,
                         Content = new TileBindingContentAdaptive()
                         {
-                            BackgroundImage = cover,
                             Children =
                             {
                                 new AdaptiveText()
                                 {
                                     Text = item.Name,
-                                    HintStyle = AdaptiveTextStyle.Base
+                                    HintStyle = AdaptiveTextStyle.Base,
+                                    HintMaxLines = 2,
+                                    HintWrap = true
                                 },
                                 new AdaptiveText()
                                 {
                                     Text = item.ArtistString,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                    HintWrap = true,
-                                    HintMaxLines = 2
+                                    HintMaxLines = 1,
+                                    HintWrap = true
                                 },
                                 new AdaptiveText()
                                 {
                                     Text = item.AlbumString,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                    HintWrap = true,
-                                    HintMaxLines = 2
+                                    HintMaxLines = 1,
+                                    HintWrap = true
                                 }
                             }
                         }
@@ -69,25 +61,28 @@ namespace HyPlayer.Services.Tiles
                         Branding = TileBranding.NameAndLogo,
                         Content = new TileBindingContentAdaptive()
                         {
-                            BackgroundImage = cover,
                             Children =
                             {
                                 new AdaptiveText()
                                 {
                                     Text = item.Name,
-                                    HintStyle = AdaptiveTextStyle.Base
+                                    HintStyle = AdaptiveTextStyle.Base,                     
+                                    HintMaxLines = 2,
+                                    HintWrap = true
                                 },
                                 new AdaptiveText()
                                 {
                                     Text = item.ArtistString,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                    HintWrap = true,
-                                    HintMaxLines = 3
+                                    HintMaxLines = 2,
+                                    HintWrap = true
                                 },
                                 new AdaptiveText()
                                 {
                                     Text = item.AlbumString,
-                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                    HintMaxLines = 1,
+                                    HintWrap = true
                                 }
                             }
                         }
@@ -97,35 +92,73 @@ namespace HyPlayer.Services.Tiles
                         Branding = TileBranding.NameAndLogo,
                         Content = new TileBindingContentAdaptive()
                         {
-                            BackgroundImage = cover,
                             Children =
                             {
                                 new AdaptiveText()
                                 {
                                     Text = item.Name,
-                                    HintStyle = AdaptiveTextStyle.Base
+                                    HintStyle = AdaptiveTextStyle.Base,
+                                    HintMaxLines = 3,
+                                    HintWrap = true
                                 },
                                 new AdaptiveText()
                                 {
                                     Text = item.ArtistString,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                    HintWrap = true,
-                                    HintMaxLines = 3
+                                    HintMaxLines = 1,
+                                    HintWrap = true
                                 },
                                 new AdaptiveText()
                                 {
                                     Text = item.AlbumString,
-                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                    HintMaxLines = 1,
+                                    HintWrap = true
                                 }
                             }
                         }
                     }
                 }
             };
-
-            var notification = new TileNotification(tileContent.GetXml());
-
-            _tileUpdater.Update(notification);
+            var notificationInfo = new TileNotification(infoContent.GetXml()) { Tag = "Info" };
+            _tileUpdater.Update(notificationInfo);
+            if (_setting.EnableTileBackground)
+            {
+                var cover = await GetTileBackgroundAsync(item, coverStream);
+                var coverContent = new TileContent()
+                {
+                    Visual = new TileVisual()
+                    {
+                        DisplayName = "HyPlayer 正在播放",
+                        TileMedium = new TileBinding()
+                        {
+                            Branding = TileBranding.NameAndLogo,
+                            Content = new TileBindingContentAdaptive()
+                            {
+                                BackgroundImage = cover
+                            }
+                        },
+                        TileWide = new TileBinding()
+                        {
+                            Branding = TileBranding.NameAndLogo,
+                            Content = new TileBindingContentAdaptive()
+                            {
+                                BackgroundImage = cover
+                            }
+                        },
+                        TileLarge = new TileBinding()
+                        {
+                            Branding = TileBranding.NameAndLogo,
+                            Content = new TileBindingContentAdaptive()
+                            {
+                                BackgroundImage = cover
+                            }
+                        }
+                    }
+                };
+                var notificationCover = new TileNotification(coverContent.GetXml()) { Tag = "Cover" };
+                _tileUpdater.Update(notificationCover);
+            }
         }
         public async Task<TileBackgroundImage?> GetTileBackgroundAsync(HyPlayItem item, IRandomAccessStream stream)
         {
@@ -150,13 +183,13 @@ namespace HyPlayer.Services.Tiles
             }
             var cover = new TileBackgroundImage()
             {
-                Source = $"ms-appdata:///temp/TileImages/{item.Album.Id}",
-                HintOverlay = 50
+                Source = $"ms-appdata:///temp/TileImages/{item.Album.Id}"
             };
             return cover;
         }
         public async Task ClearAllTiles()
         {
+            _tileUpdater.EnableNotificationQueue(false);
             _tileUpdater.Clear();
             var item = await ApplicationData.Current.TemporaryFolder.TryGetItemAsync("TileImages");
             await item?.DeleteAsync();
@@ -164,6 +197,7 @@ namespace HyPlayer.Services.Tiles
         public TileService(Setting setting)
         {
             _setting = setting;
+            _tileUpdater.EnableNotificationQueue(true);
         }
     }
 }
