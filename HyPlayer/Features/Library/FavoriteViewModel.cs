@@ -3,10 +3,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Album;
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
+using HyPlayer.NeteaseProvider.Constants;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.UI.Converters;
@@ -19,14 +18,14 @@ namespace HyPlayer.Features.Library
 {
     public partial class FavoriteViewModel : ObservableRecipient
     {
-        private readonly NeteaseCloudMusicApiHandler _api;
+        private readonly IUserLibraryProvidable _userLibraryProvider;
         private readonly INotificationService _notification;
 
         public FavoriteViewModel(
-            NeteaseCloudMusicApiHandler api,
+            IUserLibraryProvidable userLibraryProvider,
             INotificationService notification)
         {
-            _api = api;
+            _userLibraryProvider = userLibraryProvider;
             _notification = notification;
         }
 
@@ -58,31 +57,24 @@ namespace HyPlayer.Features.Library
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"djchannel_subscribed_{CurrentPage}",
                     async () =>
                     {
-                        var json = await _api.RequestAsync(NeteaseApis.DjChannelSubscribedApi);
-                        if (json.IsError)
-                        {
-                            _notification.ShowMessage("加载订阅播客列表错误", json.Error.Message);
-                            return null;
-                        }
-
-                        return json.Value;
+                        return await _userLibraryProvider.GetUserLibraryItemsAsync(NeteaseTypeIds.RadioChannel, CurrentPage * 200, 200);
                     });
 
 
-            HasMore = jv.Data?.HasMore is true;
-            foreach (var pljs in jv.Data?.Data ?? [])
+            HasMore = jv.HasMore;
+            foreach (var item in jv.Items.OfType<NeteaseRadioChannel>())
             {
                 Content.Add(new SimpleListItem
                 {
-                    Title = pljs.Name,
-                    LineOne = pljs.UserName,
-                    LineTwo = pljs.Description,
+                    Title = item.Name,
+                    LineOne = string.Join(" / ", item.CreatorList ?? []),
+                    LineTwo = item.Description,
                     LineThree =
-                        $"{DateConverter.FriendFormat(DateConverter.GetDateTimeFromTimeStamp(pljs.LastProgramCreateTime))}前 | 最后一个节目: " +
-                        pljs.LastVoiceName,
-                    Route = new AppRoute.Radio($"{pljs.Id}"),
-                    PlayResource = new MusicResource.Radio($"{pljs.Id}"),
-                    CoverLink = pljs.CoverUrl,
+                        $"{DateConverter.FriendFormat(DateConverter.GetDateTimeFromTimeStamp(item.LastProgramCreateTime))}前 | 最后一个节目: " +
+                        item.LastProgramName,
+                    Route = new AppRoute.Radio($"{item.ActualId}"),
+                    PlayResource = new MusicResource.Radio($"{item.ActualId}"),
+                    CoverLink = item.CoverUrl,
                     Order = _currentIndex++,
                     CanPlay = true
                 });
@@ -94,23 +86,11 @@ namespace HyPlayer.Features.Library
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"artist_sublist_{CurrentPage}",
                     async () =>
                     {
-                        var json = await _api.RequestAsync(NeteaseApis.ArtistSublistApi,
-                            new ArtistSublistRequest()
-                            {
-                                Limit = 25,
-                                Offset = CurrentPage * 25
-                            });
-                        if (json.IsError)
-                        {
-                            _notification.ShowMessage("加载关注歌手列表错误", json.Error.Message);
-                            return null;
-                        }
-
-                        return json.Value;
+                        return await _userLibraryProvider.GetUserLibraryItemsAsync(NeteaseTypeIds.Artist, CurrentPage * 25, 25);
                     });
 
             HasMore = jv.HasMore;
-            foreach (var singerjson in jv.Artists ?? [])
+            foreach (var singerjson in jv.Items.OfType<NeteaseArtist>())
             {
                 Content.Add(new SimpleListItem
                 {
@@ -118,9 +98,9 @@ namespace HyPlayer.Features.Library
                     LineOne = singerjson.Translation,
                     LineTwo = string.Join("/", singerjson.Alias ?? []),
                     LineThree = $"专辑数 {singerjson.AlbumSize} | MV 数 {singerjson.MvSize}",
-                    Route = new AppRoute.Artist($"{singerjson.Id}"),
-                    PlayResource = new MusicResource.Artist($"{singerjson.Id}"),
-                    CoverLink = singerjson.Img1v1Url,
+                    Route = new AppRoute.Artist($"{singerjson.ActualId}"),
+                    PlayResource = new MusicResource.Artist($"{singerjson.ActualId}"),
+                    CoverLink = singerjson.CoverUrl,
                     Order = _currentIndex++,
                     CanPlay = true
                 });
@@ -132,32 +112,20 @@ namespace HyPlayer.Features.Library
             var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"album_sublist_{CurrentPage}",
                     async () =>
                     {
-                        var jv = await _api!.RequestAsync(NeteaseApis.AlbumSublistApi,
-                            new AlbumSublistRequest()
-                            {
-                                Limit = 25,
-                                Offset = CurrentPage * 25
-                            });
-                        if (jv.IsError)
-                        {
-                            _notification.ShowMessage("加载收藏专辑列表错误", jv.Error?.Message);
-                            return null;
-                        }
-
-                        return jv.Value;
+                        return await _userLibraryProvider.GetUserLibraryItemsAsync(NeteaseTypeIds.Album, CurrentPage * 25, 25);
                     });
 
             HasMore = json.HasMore;
-            foreach (var albumjson in json?.Data ?? [])
+            foreach (var albumjson in json?.Items.OfType<NeteaseAlbum>() ?? [])
             {
                 Content.Add(new SimpleListItem
                 {
                     Title = albumjson.Name,
-                    LineOne = string.Join(" / ", albumjson.Artists?.Select(t => t.Name) ?? []),
+                    LineOne = string.Join(" / ", albumjson.CreatorList ?? []),
                     LineTwo = string.Join(" / ", albumjson.Alias ?? []),
-                    LineThree = $"歌曲数:{albumjson.Size}",
-                    Route = new AppRoute.Album($"{albumjson.Id}"),
-                    PlayResource = new MusicResource.Album($"{albumjson.Id}"),
+                    LineThree = albumjson.SubType,
+                    Route = new AppRoute.Album($"{albumjson.ActualId}"),
+                    PlayResource = new MusicResource.Album($"{albumjson.ActualId}"),
                     CoverLink = albumjson.PictureUrl,
                     Order = _currentIndex++,
                     CanPlay = true
