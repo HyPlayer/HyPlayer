@@ -8,12 +8,12 @@ namespace HyPlayer.Services.Playback.PlaylistService;
 
 public sealed partial class PlaylistService
 {
-    private void SchedulePlayCoreShadowSync()
+    private void SchedulePlayCorePlaylistSync()
     {
-        _taskRunner.Forget(SyncPlayCoreShadowAsync, "sync playlist to playcore shadow");
+        _taskRunner.Forget(SyncPlayCorePlaylistAsync, "sync playlist to PlayCore");
     }
 
-    private async Task SyncPlayCoreShadowAsync()
+    private async Task SyncPlayCorePlaylistAsync()
     {
         try
         {
@@ -49,7 +49,7 @@ public sealed partial class PlaylistService
         }
         catch
         {
-            // Shadow sync must never break legacy playlist operations.
+            // PlayCore playlist sync must not break the temporary UI boundary.
         }
     }
 }

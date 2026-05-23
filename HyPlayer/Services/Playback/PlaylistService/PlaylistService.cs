@@ -3,7 +3,6 @@ using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,7 +47,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <param name="transitions">所有已注册的过渡策略</param>
     /// <param name="state">播放状态中心</param>
     /// <param name="control">播放控制服务</param>
-    /// <param name="player">底层播放器</param>
     /// <param name="api">网易云 API 处理器</param>
     public PlaylistService(
         IEnumerable<IPlayStrategy> strategies,
@@ -222,7 +220,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
 
             if (clearAll)
             {
-                _player.RemoveAllPlaybackSource();
+                _taskRunner.Forget(_playCore.StopAsync(), "stop PlayCore before clearing playlist");
                 DisposePlayItems(_items);
                 _items.Clear();
                 _nowPlayingIndex = -1;
@@ -253,6 +251,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         else
             SendPlaylistChanged();
 
-        SchedulePlayCoreShadowSync();
+        SchedulePlayCorePlaylistSync();
     }
 }
