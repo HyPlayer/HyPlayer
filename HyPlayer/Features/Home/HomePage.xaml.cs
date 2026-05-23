@@ -2,10 +2,9 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.Features.Playlist;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
+using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -18,7 +17,7 @@ namespace HyPlayer.Features.Home
     /// </summary>
     public sealed partial class HomePage : Page
     {
-        private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        private readonly IContainerManagementProvidable _containerManager = Ioc.Default.GetRequiredService<IContainerManagementProvidable>();
         private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
         private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
         private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier = Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>();
@@ -54,39 +53,31 @@ namespace HyPlayer.Features.Home
         private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
         {
             var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
-            var result = await _api.RequestAsync(NeteaseApis.PlaylistPrivacyApi,
-               new PlaylistPrivacyRequest()
-               {
-                   Id = playList.PlaylistId
-               });
-            if (result.IsError)
+            try
             {
-                _notification.ShowMessage("公开歌单失败", result.Error?.Message ?? "未知错误");
-            }
-            else
-            {
+                await _containerManager.SetContainerPrivacyAsync(playList.PlaylistId, true);
                 _notification.ShowMessage("成功公开歌单");
                 _playlistCollectionChangeNotifier.NotifyChanged();
+            }
+            catch (Exception ex)
+            {
+                _notification.ShowMessage("公开歌单失败", ex.Message);
             }
         }
 
         private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
         {
             var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
-            var result = await _api.RequestAsync(NeteaseApis.PlaylistDeleteApi,
-            new PlaylistDeleteRequest()
+            try
             {
-                Id = playList.PlaylistId
-            });
-            if (result.IsError)
-            {
-                _notification.ShowMessage("删除歌单失败", result.Error?.Message ?? "未知错误");
-            }
-            else
-            {
+                await _containerManager.DeleteContainerAsync(playList.PlaylistId);
                 _notification.ShowMessage("成功删除");
                 _playlistCollectionChangeNotifier.NotifyChanged();
                 _navigation.NavigateRefresh();
+            }
+            catch (Exception ex)
+            {
+                _notification.ShowMessage("删除歌单失败", ex.Message);
             }
         }
 
