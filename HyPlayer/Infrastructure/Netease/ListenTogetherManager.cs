@@ -1,10 +1,8 @@
 #nullable enable
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.ListenTogether;
-using HyPlayer.NeteaseApi.ApiContracts.ListenTogether.Dual;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using System;
@@ -27,7 +25,7 @@ internal sealed class ListenTogetherManager
 
     private readonly IPlaylistService _playlist;
     private readonly PlaybackStateService _state;
-    private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly IListenTogetherProvidable _listenTogetherProvider;
     private readonly IGlobalTimerService _globalTimer;
 
     public bool IsInRoom { get; private set; }
@@ -45,7 +43,7 @@ internal sealed class ListenTogetherManager
     {
         _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-        _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        _listenTogetherProvider = Ioc.Default.GetRequiredService<IListenTogetherProvidable>();
         _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     }
 
@@ -69,17 +67,9 @@ internal sealed class ListenTogetherManager
         var mgr = new ListenTogetherManager();
         _instance = mgr;
 
-        var res = await mgr._api.RequestAsync(NeteaseApis.ListenTogetherRoomCreateApi,
-            new ListenTogetherRoomCreateRequest());
-        if (res.IsError)
-        {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建一起听房间失败", res.Error?.Message);
-            _instance = null;
-            return;
-        }
-
-        var roomId = res.Value?.Data?.RoomInfo?.RoomId;
-        if (roomId == null)
+        var roomId = await mgr._listenTogetherProvider.CreateListenTogetherRoomAsync(
+            mgr._playlist.Items.Select(item => item.ToSingleSong()).Where(song => song is not null).Select(song => song!).ToList());
+        if (string.IsNullOrWhiteSpace(roomId))
         {
             Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建一起听房间失败", "房间ID为空");
             _instance = null;
@@ -129,12 +119,16 @@ internal sealed class ListenTogetherManager
 
     public static async Task<bool> CheckRoomCanJoin(string roomId)
     {
-        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-        var res = await api.RequestAsync(NeteaseApis.ListenTogetherRoomCheckApi,
-            new ListenTogetherRoomCheckRequest { RoomId = roomId });
-        if (!res.IsError) return res.Value?.Data?.Joinable is true;
-        Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取一起听房间信息失败", res.Error?.Message);
-        return false;
+        try
+        {
+            return await Ioc.Default.GetRequiredService<IListenTogetherProvidable>()
+                .CanJoinListenTogetherRoomAsync(roomId);
+        }
+        catch (Exception ex)
+        {
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取一起听房间信息失败", ex.Message);
+            return false;
+        }
     }
 
     /// <summary>
@@ -183,19 +177,16 @@ internal sealed class ListenTogetherManager
         if (!IsInRoom || CurrentRoomInfo is null) return;
         try
         {
-            var req = new ListenTogetherPlayCommandRequest
+            var command = new ProviderListenTogetherPlaybackCommand
             {
-                RoomId = CurrentRoomInfo.RoomId,
-                CommandType = ListenTogetherPlayCommandRequest.ListenTogetherPlayCommandRequestCommandType.Play,
-                PlayStatus = _state.IsPlaying
-                    ? ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Play
-                    : ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Pause,
-                FormerSongId = _state.NowPlayingItem?.Id ?? "",
-                TargetSongId = playItem.Id,
+                CommandId = "play",
+                IsPlaying = _state.IsPlaying,
+                FormerItemId = _state.NowPlayingItem?.Id ?? "",
+                TargetItemId = playItem.Id,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
-                Progress = 0
+                Position = TimeSpan.Zero
             };
-            _ = _api.RequestAsync(NeteaseApis.ListenTogetherPlayCommandApi, req);
+            _ = _listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId, command);
         }
         catch
         {
@@ -208,17 +199,16 @@ internal sealed class ListenTogetherManager
         if (!IsInRoom || CurrentRoomInfo is null) return;
         try
         {
-            var req = new ListenTogetherPlayCommandRequest
+            var command = new ProviderListenTogetherPlaybackCommand
             {
-                RoomId = CurrentRoomInfo.RoomId,
-                CommandType = ListenTogetherPlayCommandRequest.ListenTogetherPlayCommandRequestCommandType.Play,
-                PlayStatus = ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Play,
-                FormerSongId = _state.NowPlayingItem?.Id ?? "",
-                TargetSongId = _state.NowPlayingItem?.Id ?? "",
+                CommandId = "play",
+                IsPlaying = true,
+                FormerItemId = _state.NowPlayingItem?.Id ?? "",
+                TargetItemId = _state.NowPlayingItem?.Id ?? "",
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
-                Progress = (long)_state.Position.TotalMilliseconds
+                Position = _state.Position
             };
-            _ = _api.RequestAsync(NeteaseApis.ListenTogetherPlayCommandApi, req);
+            _ = _listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId, command);
         }
         catch
         {
@@ -231,17 +221,16 @@ internal sealed class ListenTogetherManager
         if (!IsInRoom || CurrentRoomInfo is null) return;
         try
         {
-            var req = new ListenTogetherPlayCommandRequest
+            var command = new ProviderListenTogetherPlaybackCommand
             {
-                RoomId = CurrentRoomInfo.RoomId,
-                CommandType = ListenTogetherPlayCommandRequest.ListenTogetherPlayCommandRequestCommandType.Pause,
-                PlayStatus = ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Pause,
-                FormerSongId = _state.NowPlayingItem?.Id ?? "",
-                TargetSongId = _state.NowPlayingItem?.Id ?? "",
+                CommandId = "pause",
+                IsPlaying = false,
+                FormerItemId = _state.NowPlayingItem?.Id ?? "",
+                TargetItemId = _state.NowPlayingItem?.Id ?? "",
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
-                Progress = (long)_state.Position.TotalMilliseconds
+                Position = _state.Position
             };
-            _ = _api.RequestAsync(NeteaseApis.ListenTogetherPlayCommandApi, req);
+            _ = _listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId, command);
         }
         catch
         {
@@ -254,17 +243,14 @@ internal sealed class ListenTogetherManager
         if (!IsInRoom || CurrentRoomInfo is null) return;
         try
         {
-            _ = _api.RequestAsync(NeteaseApis.ListenTogetherPlayCommandApi,
-                new ListenTogetherPlayCommandRequest
+            _ = _listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId,
+                new ProviderListenTogetherPlaybackCommand
                 {
-                    RoomId = CurrentRoomInfo.RoomId,
-                    CommandType = ListenTogetherPlayCommandRequest.ListenTogetherPlayCommandRequestCommandType.Progress,
-                    Progress = (long)position.TotalMilliseconds,
-                    PlayStatus = _state.IsPlaying
-                        ? ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Play
-                        : ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Pause,
-                    FormerSongId = _state.NowPlayingItem?.Id ?? "",
-                    TargetSongId = _state.NowPlayingItem?.Id ?? "",
+                    CommandId = "progress",
+                    Position = position,
+                    IsPlaying = _state.IsPlaying,
+                    FormerItemId = _state.NowPlayingItem?.Id ?? "",
+                    TargetItemId = _state.NowPlayingItem?.Id ?? "",
                     ClientSeq = ++CurrentRoomInfo.ClientSeq
                 });
         }
@@ -280,21 +266,17 @@ internal sealed class ListenTogetherManager
         if (isShuffle) return;
         try
         {
-            var strategyId = _state.ActiveStrategyId;
-            var req = new ListenTogetherSyncListReportRequest
+            var report = new ProviderListenTogetherQueueReport
             {
-                RoomId = CurrentRoomInfo.RoomId,
-                CommandType =
-                    ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportCommandType.PlayModeChange,
-                PlayMode = MapStrategyToSyncPlayMode(strategyId),
-                UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.Id!,
+                Queue = _playlist.Items.Select(item => item.ToSingleSong()).Where(song => song is not null).Select(song => song!).ToList(),
+                PlayModeId = _state.ActiveStrategyId,
+                UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.Id,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 AnchorPosition = _state.NowPlayingIndex,
-                AnchorSongId = _state.NowPlayingItem?.Id ?? "",
-                DisplaySongList = _playlist.Items.Select(t => t.Id).ToArray()
+                AnchorItemId = _state.NowPlayingItem?.Id ?? ""
             };
 
-            _ = _api.RequestAsync(NeteaseApis.ListenTogetherSyncListReportApi, req);
+            _ = _listenTogetherProvider.ReportListenTogetherQueueAsync(CurrentRoomInfo.RoomId, report);
         }
         catch
         {
@@ -311,50 +293,44 @@ internal sealed class ListenTogetherManager
             if (_heartbeatDefer > 0) return;
             _heartbeatDefer = 5;
 
-            var res = await _api.RequestAsync(NeteaseApis.ListenTogetherStatusApi,
-                new ListenTogetherStatusRequest());
-
-            if (res.IsError)
+            var status = await _listenTogetherProvider.GetListenTogetherStatusAsync(CurrentRoomInfo?.RoomId ?? string.Empty);
+            if (status is null)
             {
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取一起听房间信息失败", res.Error?.Message);
+                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取一起听房间信息失败", "房间状态为空");
                 return;
             }
 
-            if (res.Value?.Data?.IsInRoom is false)
+            if (!status.IsInRoom)
             {
                 IsInRoom = false;
             }
 
-            if (res.Value?.Data?.RoomInfo is not null)
+            if (!string.IsNullOrWhiteSpace(status.RoomId))
             {
                 if (CurrentRoomInfo is null)
                 {
                     CurrentRoomInfo = new RoomInfo
                     {
-                        RoomId = res.Value.Data.RoomInfo.RoomId!,
+                        RoomId = status.RoomId,
                         ClientSeq = 0
                     };
                 }
 
-                var roomInfo = res.Value.Data.RoomInfo;
-                if (roomInfo != null)
+                if (status.RoomId != CurrentRoomInfo.RoomId)
                 {
-                    if (roomInfo.RoomId != CurrentRoomInfo.RoomId)
-                    {
-                        Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("一起听状态异常", "房间信息不匹配");
-                        return;
-                    }
+                    Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("一起听状态异常", "房间信息不匹配");
+                    return;
+                }
 
-                    if (roomInfo.RoomUsers?.Count != CurrentRoomInfo.Users.Count)
+                if (status.Users.Count != CurrentRoomInfo.Users.Count)
+                {
+                    CurrentRoomInfo.Users = status.Users.Select(t => new RoomInfo.UserInfo
                     {
-                        CurrentRoomInfo.Users = roomInfo.RoomUsers?.Select(t => new RoomInfo.UserInfo
-                        {
-                            UserId = t.UserId!,
-                            Nickname = t.Nickname!,
-                            AvatarUrl = t.AvatarUrl!
-                        }).ToList() ?? [];
-                        OnUserChanged?.Invoke(CurrentRoomInfo.Users.ToArray());
-                    }
+                        UserId = t.UserId,
+                        Nickname = t.Nickname,
+                        AvatarUrl = t.AvatarUrl
+                    }).ToList();
+                    OnUserChanged?.Invoke(CurrentRoomInfo.Users.ToArray());
                 }
             }
             else
@@ -393,16 +369,6 @@ internal sealed class ListenTogetherManager
         }
     }
 
-    private static ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportPlayMode MapStrategyToSyncPlayMode(
-        string strategyId)
-    {
-        return strategyId switch
-        {
-            "sgl" => ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportPlayMode.SingleLoop,
-            "shn" => ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportPlayMode.Random,
-            _ => ListenTogetherSyncListReportRequest.ListenTogetherSyncListReportPlayMode.OrderLoop
-        };
-    }
 }
 
 public class RoomInfo
