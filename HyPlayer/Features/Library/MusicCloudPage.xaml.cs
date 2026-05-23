@@ -5,9 +5,9 @@ using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Cloud;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Downloads;
@@ -32,7 +32,7 @@ namespace HyPlayer.Features.Library;
 public sealed partial class MusicCloudPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly IUserLibraryProvidable _userLibraryProvider = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private readonly WeakEventListener<MusicCloudPage, object?, EventArgs> _secondTickListener;
@@ -60,32 +60,29 @@ public sealed partial class MusicCloudPage : Page
         _cancellationToken.ThrowIfCancellationRequested();
         var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userCloud_" + page, async () =>
         {
-            var json = await _api.RequestAsync(NeteaseApis.CloudGetApi,
-                new CloudGetRequest()
-                {
-                    Limit = 749,
-                    Offset = page * 749
-                }, _cancellationToken);
-            if (json is { IsError: true, Error.ErrorCode: 405 })
+            try
+            {
+                return await _userLibraryProvider.GetCloudLibraryItemsAsync(page * 749, 749, _cancellationToken);
+            }
+            catch (Exception ex)
             {
                 treashold = ++cooldownTime * 10;
                 page--;
-                _notification.ShowMessage("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+                _notification.ShowMessage("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求: {ex.Message}");
+                return null;
             }
-
-            return json.Value;
         });
 
 
 
 
         var idx = page * 200;
-        foreach (var jToken in jv.Songs ?? [])
+        foreach (var jToken in jv?.Items ?? [])
         {
             _cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                var ret = jToken.MapNCSong();
+                var ret = MapCloudLibraryItemToNcSong(jToken);
                 ret.Order = idx++;
                 SongContainer.Songs.Add(ret);
             }
@@ -216,5 +213,27 @@ public sealed partial class MusicCloudPage : Page
         SongContainer.Songs.Clear();
         page = 0;
         _loadResultTask = LoadMusicCloudItem();
+    }
+
+    private static NCSong MapCloudLibraryItemToNcSong(HyPlayer.PlayCore.Abstraction.Models.Containers.CloudLibraryItemBase item)
+    {
+        if (item is NeteaseCloudLibraryItem { Song: SingleSongBase song })
+        {
+            var playItem = song.ToHyPlayItem();
+            var ncSong = playItem.ToNCSong();
+            ncSong.IsCloud = true;
+            return ncSong;
+        }
+
+        return new NCSong
+        {
+            SongId = item.ActualId,
+            SongName = item.Name,
+            IsAvailable = true,
+            IsCloud = true,
+            Artist = [],
+            Album = new NCAlbum { Id = string.Empty, Name = string.Empty, Cover = string.Empty, AlbumType = HyPlayItemType.Netease },
+            Type = HyPlayItemType.Netease
+        };
     }
 }
