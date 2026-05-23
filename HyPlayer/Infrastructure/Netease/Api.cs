@@ -2,6 +2,7 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -62,11 +63,13 @@ internal class Api
 
         try
         {
-            var recommendationContainer = await neteaseProvider.GetContextRecommendationAsync(
-                seedSong,
-                NeteaseTypeIds.SingleSong,
-                likedSongs.Count,
-                cancellationToken);
+            var recommendationContainer = new NeteaseContextRecommendationContainer
+            {
+                ActualId = seedSong,
+                SeedItemId = seedSong,
+                Name = "相关推荐",
+                Count = likedSongs.Count
+            };
 
             var songs = await GetContainerSongsAsync(recommendationContainer, likedSongs.Count, cancellationToken);
             foreach (var song in songs)

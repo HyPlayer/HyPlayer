@@ -27,17 +27,14 @@ namespace HyPlayer.Services.Playback.Strategies;
 /// </summary>
 public sealed class PersonalFmStrategy : IAsyncPlayStrategy
 {
-    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
     private readonly Setting _setting;
 
     /// <summary>
     /// 创建私人 FM 策略实例
     /// </summary>
-    /// <param name="neteaseProvider">网易云 provider</param>
     /// <param name="setting">应用设置</param>
-    public PersonalFmStrategy(global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider, Setting setting)
+    public PersonalFmStrategy(Setting setting)
     {
-        _neteaseProvider = neteaseProvider ?? throw new ArgumentNullException(nameof(neteaseProvider));
         _setting = setting ?? throw new ArgumentNullException(nameof(setting));
     }
 
@@ -99,13 +96,15 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
     {
         if (ctx.CurrentItem?.ToSingleSong() is { } currentSong)
         {
-            var container = await _neteaseProvider.GetContextRecommendationAsync(currentSong.ActualId ?? currentSong.Name, HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.SingleSong, 10, ct)
-                .ConfigureAwait(false);
-            var items = container is IProgressiveLoadingContainer progressive
-                ? (await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount, ct).ConfigureAwait(false)).Item2
-                : container is LinerContainerBase liner
-                    ? await liner.GetAllItemsAsync(ct).ConfigureAwait(false)
-                    : [];
+            var itemId = currentSong.ActualId ?? currentSong.Name;
+            var container = new NeteaseContextRecommendationContainer
+            {
+                ActualId = itemId,
+                SeedItemId = itemId,
+                Name = "相关推荐",
+                Count = 10
+            };
+            var items = await container.GetAllItemsAsync(ct).ConfigureAwait(false);
 
             var songs = items.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem()).ToList();
             if (songs.Count > 0) return songs;
