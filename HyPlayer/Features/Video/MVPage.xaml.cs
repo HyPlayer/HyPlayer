@@ -4,9 +4,11 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Video;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -28,7 +30,7 @@ namespace HyPlayer.Features.Video;
 /// </summary>
 public sealed partial class MVPage : Page
 {
-    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly IRichMediaProvidable _richMediaProvider = Ioc.Default.GetRequiredService<IRichMediaProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
 
     private readonly List<NCMlog> sources = new();
@@ -74,21 +76,11 @@ public sealed partial class MVPage : Page
     private async Task LoadRelateive()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        var json = await _api.RequestAsync(NeteaseApis.MlogRcmdFeedListApi,
-                new MlogRcmdFeedListRequest()
-                {
-                    Id = MVId,
-                    SongId = songid,
-                    Limit = 10
-                });
-        if (json.IsError)
+        var result = await _richMediaProvider.GetRichMediaFeedAsync($"song:{songid}", 0, 10, _cancellationToken);
+        foreach (var item in result.Items)
         {
-            _notification.ShowMessage("加载相关视频时出错", json.Error.Message);
-            return;
+            sources.Add(MapRichMediaToNcMlog(item));
         }
-
-        foreach (var jToken in json.Value.Data?.Feeds ?? [])
-            sources.Add(jToken.Resource?.BaseData.MapToNcMlog());
 
         RelativeList.ItemsSource = sources;
 
@@ -153,41 +145,26 @@ public sealed partial class MVPage : Page
         //纯MV
         _cancellationToken.ThrowIfCancellationRequested();
         LoadingControl.IsLoading = true;
-        string url;
-        if (Regex.IsMatch(MVId, "^[0-9]*$"))
+        var resource = await _richMediaProvider.GetRichMediaResourceAsync(
+            MVId,
+            MvIdRegex().IsMatch(MVId) ? NeteaseTypeIds.Mv : NeteaseTypeIds.MBlog,
+            mvquality,
+            _cancellationToken);
+        var resourceResult = resource is null ? null : await resource.GetResourceAsync(ctk: _cancellationToken);
+        if (resourceResult is not IResourceResultOf<Uri?> uriResource)
         {
-            var json = await _api.RequestAsync(NeteaseApis.VideoUrlApi,
-                new VideoUrlRequest()
-                {
-                    Id = MVId,
-                    Resolution = mvquality
-                }, _cancellationToken);
-            if (json.IsError)
-            {
-                _notification.ShowMessage("加载视频时出错", json.Error.Message);
-                return;
-            }
-
-            url = json.Value.Data?.Url;
-        }
-        else
-        {
-            var json = await _api.RequestAsync(NeteaseApis.MlogUrlApi,
-                new MlogUrlRequest()
-                {
-                    Id = MVId,
-                    Resolution = mvquality
-                }, _cancellationToken);
-            if (json.IsError)
-            {
-                _notification.ShowMessage("加载视频时出错", json.Error.Message);
-                return;
-            }
-
-            url = json.Value.Data?.GetValueOrDefault(MVId).UrlInfo?.Url;
+            _notification.ShowMessage("加载视频时出错", "视频资源为空");
+            return;
         }
 
-        MediaPlayerElement.Source = MediaSource.CreateFromUri(new Uri(url!));
+        var uri = await uriResource.GetResourceAsync(_cancellationToken);
+        if (uri is null)
+        {
+            _notification.ShowMessage("加载视频时出错", "视频地址为空");
+            return;
+        }
+
+        MediaPlayerElement.Source = MediaSource.CreateFromUri(uri);
         var mediaPlayer = MediaPlayerElement.MediaPlayer;
         mediaPlayer.Play();
         LoadingControl.IsLoading = false;
@@ -198,48 +175,40 @@ public sealed partial class MVPage : Page
         _cancellationToken.ThrowIfCancellationRequested();
         if (MvIdRegex().IsMatch(MVId))
         {
-            var json = await _api.RequestAsync(NeteaseApis.VideoDetailApi,
-                   new VideoDetailRequest()
-                   {
-                       Id = MVId
-                   }, _cancellationToken);
-            if (json.IsError)
+            var richMedia = await _richMediaProvider.GetRichMediaAsync(MVId, NeteaseTypeIds.Mv, _cancellationToken);
+            if (richMedia is not NeteaseMv mv)
             {
-                _notification.ShowMessage("加载视频信息时出错", json.Error.Message);
+                _notification.ShowMessage("加载视频信息时出错", "视频信息为空");
                 return;
             }
 
-            TextBoxVideoName.Text = json.Value?.Data?.Resource?.Data?.Name;
-            TextBoxSinger.Text = string.Join(" / ", json.Value?.Data?.Resource?.Data?.ArtistName);
-            TextBoxDesc.Text = json.Value?.Data?.Resource?.Data?.Description;
+            TextBoxVideoName.Text = mv.Name;
+            TextBoxSinger.Text = mv.CreatorName;
+            TextBoxDesc.Text = mv.Description;
             TextBoxOtherInfo.Text =
-                $"发布时间: {json.Value?.Data?.Resource?.Data?.PublishTime} | 播放量: {json.Value?.Data?.Resource?.Data?.PlayCount}次 | 收藏量: {json.Value?.Data?.Resource?.Data?.SubCount}次";
-            foreach (var br in json.Value?.Data?.Resource?.Data?.Brs ?? [])
+                $"发布时间: {mv.PublishTime} | 播放量: {mv.PlayCount}次 | 收藏量: {mv.SubCount}次";
+            foreach (var br in mv.AvailableQualities)
             {
-                VideoQualityBox.Items?.Add(br.Br.ToString());
+                VideoQualityBox.Items?.Add(br.ToString());
             }
 
-            VideoQualityBox.SelectedItem = json.Value?.Data?.Resource?.Mp?.PlayResolution.ToString();
+            VideoQualityBox.SelectedItem = mv.AvailableQualities.Count > 0 ? mv.AvailableQualities[0].ToString() : mvquality;
         }
         else
         {
-            var json = await _api.RequestAsync(NeteaseApis.MlogDetailApi,
-                    new MlogDetailRequest()
-                    {
-                        MlogId = MVId
-                    }, _cancellationToken);
-            if (json.IsError)
+            var richMedia = await _richMediaProvider.GetRichMediaAsync(MVId, NeteaseTypeIds.MBlog, _cancellationToken);
+            if (richMedia is not NeteaseMlog mlog)
             {
-                _notification.ShowMessage("加载视频信息时出错", json.Error.Message);
+                _notification.ShowMessage("加载视频信息时出错", "视频信息为空");
                 return;
             }
 
-            TextBoxVideoName.Text = json.Value?.Data?.Resource?.Content?.Title;
+            TextBoxVideoName.Text = mlog.Name;
 
-            TextBoxSinger.Text = json.Value?.Data?.Resource?.Profile?.Nickname;
-            TextBoxDesc.Text = json.Value?.Data?.Resource?.Content?.Text;
+            TextBoxSinger.Text = mlog.CreatorName;
+            TextBoxDesc.Text = mlog.Description;
             TextBoxOtherInfo.Text =
-                $"发布时间: {json.Value?.Data?.Resource?.PublishTime} | 播放量: {json.Value?.Data?.Resource?.LikedCount}次";
+                $"发布时间: {mlog.PublishTime} | 播放量: {mlog.LikedCount}次";
         }
     }
 
@@ -257,4 +226,16 @@ public sealed partial class MVPage : Page
 
     [GeneratedRegex("^[0-9]*$")]
     private static partial Regex MvIdRegex();
+
+    private static NCMlog MapRichMediaToNcMlog(RichMediaBase item)
+    {
+        return new NCMlog
+        {
+            Id = item.ActualId ?? string.Empty,
+            Title = item.Name,
+            Description = item.Description,
+            Duration = (int)item.Duration,
+            Cover = item is NeteaseMlog mlog ? mlog.CoverUrl : string.Empty
+        };
+    }
 }
