@@ -10,10 +10,7 @@ using HyPlayer.Features.Comments;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Cloud;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
 using HyPlayer.Services.Playback;
@@ -45,7 +42,8 @@ public sealed partial class SongsList : UserControl
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly IProvableItemLikable _providerLikes = Ioc.Default.GetRequiredService<IProvableItemLikable>();
+    private readonly IUserLibraryProvidable _userLibrary = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
@@ -374,21 +372,13 @@ public sealed partial class SongsList : UserControl
         if (!IsCloudStorageList)
         {
             if (QueueScope is not { Kind: SongListQueueScopeKind.Playlist, Id: not null }) return;
-            await _api.RequestAsync(NeteaseApis.PlaylistTracksEditApi,
-            new PlaylistTracksEditRequest()
-            {
-                IdList = ids,
-                IsAdd = false,
-                PlaylistId = QueueScope.Id
-            });
+            foreach (var id in ids)
+                await _providerLikes.UnlikeProvidableItemAsync($"sg{id}", QueueScope.Id);
         }
         else
         {
-            await _api.RequestAsync(NeteaseApis.CloudDeleteApi,
-            new CloudDeleteRequest()
-            {
-                IdList = ids
-            });
+            foreach (var id in ids)
+                await _userLibrary.DeleteCloudLibraryItemAsync(id);
 
         }
         VisibleSongs.Remove(SongContainer.SelectedItem as NCSong);

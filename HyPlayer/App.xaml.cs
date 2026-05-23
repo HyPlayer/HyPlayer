@@ -1,6 +1,8 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
+using Depository.Abstraction.Enums;
+using Depository.Abstraction.Interfaces;
+using Depository.Extensions;
 using HyPlayer.Classes;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
@@ -8,6 +10,9 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Widgets.Services;
 using HyPlayer.Infrastructure.Platform;
 using HyPlayer.NeteaseApi;
+using HyPlayer.NeteaseProvider;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.AppState;
 using HyPlayer.Services.Authentication;
@@ -39,7 +44,6 @@ using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Kawazu;
 using LiteFM;
 using LiteFM.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Gaming.XboxGameBar;
 using System;
 using System.Linq;
@@ -89,28 +93,26 @@ public sealed partial class App : Application
         UnhandledException += App_UnhandledException;
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
-        if (Ioc.Default.GetRequiredService<Setting>().themeRequest != ThemeRequest.Auto)
-            RequestedTheme = Ioc.Default.GetRequiredService<Setting>().themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
-        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(InitializeThings, "initialize app cache and converters");
+        if (AppDepository.Resolve<Setting>().themeRequest != ThemeRequest.Auto)
+            RequestedTheme = AppDepository.Resolve<Setting>().themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
+        AppDepository.Resolve<IBackgroundTaskRunner>().Forget(InitializeThings, "initialize app cache and converters");
     }
 
     private static void InitializeServices()
     {
-        var serviceCollection = new ServiceCollection();
-        InitializeServices(serviceCollection);
-        var provider = serviceCollection.BuildServiceProvider();
-        Ioc.Default.ConfigureServices(provider);
+        AppDepository.Initialize();
+        InitializeServices(AppDepository.Root);
     }
 
     private static void InitializeCommonServices()
     {
-        var setting = Ioc.Default.GetRequiredService<Setting>();
-        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+        var setting = AppDepository.Resolve<Setting>();
+        var api = AppDepository.Resolve<NeteaseCloudMusicApiHandler>();
         api.Option.AdditionalParameters = setting.ApiAdditionalParameters;
         api.Option.FakeCheckToken = setting.EnableCheckTokenApi;
-        var globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
-        var teachingTip = Ioc.Default.GetRequiredService<ITeachingTipService>();
-        var playBarAutoHide = Ioc.Default.GetRequiredService<IPlayBarAutoHideService>();
+        var globalTimer = AppDepository.Resolve<IGlobalTimerService>();
+        var teachingTip = AppDepository.Resolve<ITeachingTipService>();
+        var playBarAutoHide = AppDepository.Resolve<IPlayBarAutoHideService>();
         globalTimer.SecondTick += (_, _) =>
         {
             teachingTip.Roll();
@@ -118,92 +120,116 @@ public sealed partial class App : Application
         };
     }
 
-    private static void InitializeServices(ServiceCollection serviceCollection)
+    private static void InitializeServices(IDepository depository)
     {
         var setting = new Setting();
         var handler = NeteaseCloudMusicApiHandler.HttpClientHandler;
         handler.UseProxy = setting.EnableProxy;
         var client = new HttpClient(handler);
-        serviceCollection.AddSingleton(client);
-        serviceCollection.AddSingleton(new NeteaseCloudMusicApiHandler(client));
-        serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = LastFMConstants.APIKEY, ApiSecret = LastFMConstants.SECRET }, client));
-        serviceCollection.AddSingleton(setting);
-        serviceCollection.AddSingleton<AudioGraphPlayer>();
-        serviceCollection.AddSingleton<IPlayer>(sp => sp.GetRequiredService<AudioGraphPlayer>());
+        var neteaseProvider = new global::HyPlayer.NeteaseProvider.NeteaseProvider();
+        neteaseProvider.Handler.HttpClient = client;
+        depository.AddSingleton<HttpClient>(client);
+        depository.AddSingleton<NeteaseCloudMusicApiHandler>(neteaseProvider.Handler);
+        depository.AddSingleton<global::HyPlayer.NeteaseProvider.NeteaseProvider>(neteaseProvider);
+        depository.AddSingleton<ProviderBase>(neteaseProvider);
+        depository.AddSingleton<IProvableItemLikable>(neteaseProvider);
+        depository.AddSingleton<IContainerManagementProvidable>(neteaseProvider);
+        depository.AddSingleton<IUserLibraryProvidable>(neteaseProvider);
+        depository.AddSingleton<IPersonalFmProvidable>(neteaseProvider);
+        depository.AddSingleton<IAuthenticationProvidable>(neteaseProvider);
+        depository.AddSingleton<IQrAuthenticationProvidable>(neteaseProvider);
+        depository.AddSingleton<ISearchSuggestionProvidable>(neteaseProvider);
+        depository.AddSingleton<ICommentProvidable>(neteaseProvider);
+        depository.AddSingleton<IProvidableItemCommentProvidable>(neteaseProvider);
+        depository.AddSingleton<ILyricProvidable>(neteaseProvider);
+        depository.AddSingleton<IMusicResourceProvidable>(neteaseProvider);
+        depository.AddSingleton<IProvidableItemProvidable>(neteaseProvider);
+        depository.AddSingleton<IProvidableItemRangeProvidable>(neteaseProvider);
+        depository.AddSingleton<ISearchableProvider>(neteaseProvider);
+        depository.AddSingleton<IRecommendationProvidable>(neteaseProvider);
+        depository.AddSingleton<IContainerPageProvidable>(neteaseProvider);
+        depository.AddSingleton<IContainerCategoryProvidable>(neteaseProvider);
+        depository.AddSingleton<IContextRecommendationProvidable>(neteaseProvider);
+        depository.AddSingleton<IScopedItemRangeProvidable>(neteaseProvider);
+        depository.AddSingleton<IProvidableItemDynamicMetadataProvidable>(neteaseProvider);
+        depository.AddSingleton<LastFMClient>(new LastFMClient(new LastFMOptions() { ApiKey = LastFMConstants.APIKEY, ApiSecret = LastFMConstants.SECRET }, client));
+        depository.AddSingleton<Setting>(setting);
+        depository.AddSingleton<AudioGraphPlayer>();
+        depository.Add(typeof(IPlayer), typeof(AudioGraphPlayer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<AudioGraphPlayer>());
 
         // ── 播放核心：状态中心 ──
-        serviceCollection.AddSingleton<PlaybackStateService>();
+        depository.AddSingleton<PlaybackStateService>();
 
         // ── 播放核心：媒体源 Provider 链（注册顺序 = 优先级）──
-        serviceCollection.AddSingleton<IMediaSourceProvider, NcmFileProvider>();           // ncm — NCM 加密文件
-        serviceCollection.AddSingleton<IMediaSourceProvider, LocalFileProvider>();          // lcl — 普通本地文件
-        serviceCollection.AddSingleton<IMediaSourceProvider, CachedNeteaseProvider>();      // nca — 网易云在线 + 缓存
-        serviceCollection.AddSingleton<IMediaSourceProvider, NeteaseStreamingProvider>();   // nst — 网易云纯流式
-        serviceCollection.AddSingleton<IMediaSourceService, MediaSourceService>();
+        depository.AddSingleton<IMediaSourceProvider, NcmFileProvider>();           // ncm — NCM 加密文件
+        depository.AddSingleton<IMediaSourceProvider, LocalFileProvider>();          // lcl — 普通本地文件
+        depository.AddSingleton<IMediaSourceProvider, CachedNeteaseProvider>();      // nca — 网易云在线 + 缓存
+        depository.AddSingleton<IMediaSourceProvider, NeteaseStreamingProvider>();   // nst — 网易云纯流式
+        depository.AddSingleton<IMediaSourceService, MediaSourceService>();
 
         // ── 播放核心：播放策略 ──
-        serviceCollection.AddSingleton<IPlayStrategy, SequentialStrategy>();       // seq — 列表循环
-        serviceCollection.AddSingleton<IPlayStrategy, SingleRepeatStrategy>();     // sgl — 单曲循环
-        serviceCollection.AddSingleton<IPlayStrategy, ShuffleNoRepeatStrategy>();  // shn — 随机不重复
-        serviceCollection.AddSingleton<IPlayStrategy, PersonalFmStrategy>();       // pfm — 私人 FM
-        serviceCollection.AddSingleton<IPlayStrategy, ListenTogetherStrategy>();   // ltg — 一起听
+        depository.AddSingleton<IPlayStrategy, SequentialStrategy>();       // seq — 列表循环
+        depository.AddSingleton<IPlayStrategy, SingleRepeatStrategy>();     // sgl — 单曲循环
+        depository.AddSingleton<IPlayStrategy, ShuffleNoRepeatStrategy>();  // shn — 随机不重复
+        depository.AddSingleton<IPlayStrategy, PersonalFmStrategy>();       // pfm — 私人 FM
+        depository.AddSingleton<IPlayStrategy, ListenTogetherStrategy>();   // ltg — 一起听
 
         // ── 播放核心：曲目过渡策略 ──
-        serviceCollection.AddSingleton<ITrackTransition, DirectTransition>();      // dir — 直接切歌
-        serviceCollection.AddSingleton<ITrackTransition, CrossFadeTransition>();   // xfd — 交叉淡入淡出
-        serviceCollection.AddSingleton<ITrackTransition, GaplessTransition>();     // gap — 无缝衔接
+        depository.AddSingleton<ITrackTransition, DirectTransition>();      // dir — 直接切歌
+        depository.AddSingleton<ITrackTransition, CrossFadeTransition>();   // xfd — 交叉淡入淡出
+        depository.AddSingleton<ITrackTransition, GaplessTransition>();     // gap — 无缝衔接
 
         // ── 播放核心：队列源 Provider ──
-        serviceCollection.AddSingleton<IQueueSourceProvider, PlaylistQueueSourceProvider>();
-        serviceCollection.AddSingleton<IQueueSourceProvider, AlbumQueueSourceProvider>();
-        serviceCollection.AddSingleton<IQueueSourceProvider, RadioQueueSourceProvider>();
-        serviceCollection.AddSingleton<IQueueSourceProvider, SingerHotQueueSourceProvider>();
-        serviceCollection.AddSingleton<IQueueSourceProvider, SingleSongQueueSourceProvider>();
+        depository.AddSingleton<IQueueSourceProvider, PlaylistQueueSourceProvider>();
+        depository.AddSingleton<IQueueSourceProvider, AlbumQueueSourceProvider>();
+        depository.AddSingleton<IQueueSourceProvider, RadioQueueSourceProvider>();
+        depository.AddSingleton<IQueueSourceProvider, SingerHotQueueSourceProvider>();
+        depository.AddSingleton<IQueueSourceProvider, SingleSongQueueSourceProvider>();
 
         // ── 播放核心：服务 ──
-        serviceCollection.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
-        serviceCollection.AddSingleton<ILocalFileImportService, LocalFileImportService>();
-        serviceCollection.AddSingleton<IPlaybackControlService, PlaybackControlService>();
-        serviceCollection.AddSingleton<IPlaylistService, PlaylistService>();
-        serviceCollection.AddSingleton<ISongListQueueBuilder, SongListQueueBuilder>();
-        serviceCollection.AddSingleton<ILyricService, LyricService>();
-        serviceCollection.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
-        serviceCollection.AddSingleton<ITileService, TileService>();
+        depository.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
+        depository.AddSingleton<ILocalFileImportService, LocalFileImportService>();
+        depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
+        depository.AddSingleton<IPlaylistService, PlaylistService>();
+        depository.AddSingleton<ISongListQueueBuilder, SongListQueueBuilder>();
+        depository.AddSingleton<ILyricService, LyricService>();
+        depository.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
+        depository.AddSingleton<ITileService, TileService>();
 
         // ── 应用核心：认证 / 导航 / 通知 / UI 状态 ──
-        serviceCollection.AddSingleton<IAuthService, AuthService>();
-        serviceCollection.AddSingleton<INavigationService, NavigationService>();
-        serviceCollection.AddSingleton<IAppNavigator, AppNavigator>();
-        serviceCollection.AddSingleton<NavigationShellViewModel>();
-        serviceCollection.AddSingleton<INotificationService, NotificationService>();
-        serviceCollection.AddSingleton<IAppLifecycleStateService, AppLifecycleStateService>();
-        serviceCollection.AddSingleton<IDisplayKeepAwakeService, DisplayKeepAwakeService>();
-        serviceCollection.AddSingleton<IKawazuStateService, KawazuStateService>();
-        serviceCollection.AddSingleton<IDiagnosticsStateService, DiagnosticsStateService>();
-        serviceCollection.AddSingleton<IGameBarWidgetService, GameBarWidgetService>();
-        serviceCollection.AddSingleton<IShellHostStateService, ShellHostStateService>();
-        serviceCollection.AddSingleton<IGlobalTimerService, GlobalTimerService>();
-        serviceCollection.AddSingleton<ITeachingTipService, TeachingTipService>();
-        serviceCollection.AddSingleton<IPlayBarAutoHideService, PlayBarAutoHideService>();
-        serviceCollection.AddSingleton<IPlaylistCollectionChangeNotifier, PlaylistCollectionChangeNotifier>();
+        depository.AddSingleton<IAuthService, AuthService>();
+        depository.AddSingleton<INavigationService, NavigationService>();
+        depository.AddSingleton<IAppNavigator, AppNavigator>();
+        depository.AddSingleton<NavigationShellViewModel>();
+        depository.AddSingleton<INotificationService, NotificationService>();
+        depository.AddSingleton<IAppLifecycleStateService, AppLifecycleStateService>();
+        depository.AddSingleton<IDisplayKeepAwakeService, DisplayKeepAwakeService>();
+        depository.AddSingleton<IKawazuStateService, KawazuStateService>();
+        depository.AddSingleton<IDiagnosticsStateService, DiagnosticsStateService>();
+        depository.AddSingleton<IGameBarWidgetService, GameBarWidgetService>();
+        depository.AddSingleton<IShellHostStateService, ShellHostStateService>();
+        depository.AddSingleton<IGlobalTimerService, GlobalTimerService>();
+        depository.AddSingleton<ITeachingTipService, TeachingTipService>();
+        depository.AddSingleton<IPlayBarAutoHideService, PlayBarAutoHideService>();
+        depository.AddSingleton<IPlaylistCollectionChangeNotifier, PlaylistCollectionChangeNotifier>();
 
         // ── 播放 UI：状态存储 / shell 状态机 / 表面协调器 ──
-        serviceCollection.AddSingleton<PlaybackSurfaceStore>();
-        serviceCollection.AddSingleton<PlaybackShellStateMachine>();
-        serviceCollection.AddSingleton<IPlaybackSurfaceCoordinator, PlaybackSurfaceCoordinator>();
-        serviceCollection.AddTransient<ShellSearchViewModel>();
-        serviceCollection.AddSingleton<ShellLoginService>();
+        depository.AddSingleton<PlaybackSurfaceStore>();
+        depository.AddSingleton<PlaybackShellStateMachine>();
+        depository.AddSingleton<IPlaybackSurfaceCoordinator, PlaybackSurfaceCoordinator>();
+        depository.AddTransient<ShellSearchViewModel>();
+        depository.AddSingleton<ShellLoginService>();
 
         // ── ViewModels ──
-        serviceCollection.AddTransient<HomeViewModel>();
-        serviceCollection.AddTransient<MeViewModel>();
-        serviceCollection.AddTransient<ExpandedPlayerViewModel>();
-        serviceCollection.AddTransient<ArtistPageViewModel>();
-        serviceCollection.AddTransient<SongListViewModel>();
-        serviceCollection.AddTransient<FavoriteViewModel>();
-        serviceCollection.AddTransient<AlbumPageViewModel>();
-        serviceCollection.AddTransient<PlayBarViewModel>();
-        serviceCollection.AddTransient<GroupedSongsListViewModel>();
+        depository.AddTransient<HomeViewModel>();
+        depository.AddTransient<MeViewModel>();
+        depository.AddTransient<ExpandedPlayerViewModel>();
+        depository.AddTransient<ArtistPageViewModel>();
+        depository.AddTransient<SongListViewModel>();
+        depository.AddTransient<FavoriteViewModel>();
+        depository.AddTransient<AlbumPageViewModel>();
+        depository.AddTransient<PlayBarViewModel>();
+        depository.AddTransient<GroupedSongsListViewModel>();
     }
 
     private static async Task InitializeThings()
@@ -212,25 +238,25 @@ public sealed partial class App : Application
         {
             await SimpleCacher.InitializeAsync();
             var sf = await ApplicationData.Current.LocalFolder.TryGetItemAsync("Romaji");
-            if (sf != null) Ioc.Default.GetRequiredService<IKawazuStateService>().Converter = new KawazuConverter(sf.Path);
+            if (sf != null) AppDepository.Resolve<IKawazuStateService>().Converter = new KawazuConverter(sf.Path);
         }
         catch
         {
             // ignored
         }
 
-        if (Ioc.Default.GetRequiredService<PlaybackSurfaceStore>().IsExpanded)
-            Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(
-                Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        if (AppDepository.Resolve<PlaybackSurfaceStore>().IsExpanded)
+            AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
+                AppDepository.Resolve<INotificationService>().InvokeOnUIThread(() =>
                 {
-                    Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().RestoreExpandedSurface();
+                    AppDepository.Resolve<IPlaybackSurfaceCoordinator>().RestoreExpandedSurface();
                 }),
                 "navigate expanded player during app initialization");
     }
 
     private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
     {
-        var lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
+        var lifecycle = AppDepository.Resolve<IAppLifecycleStateService>();
         if (lifecycle.IsInBackground)
         {
             lifecycle.IsInBackground = false;
@@ -240,7 +266,7 @@ public sealed partial class App : Application
 
     private void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
     {
-        Ioc.Default.GetRequiredService<IAppLifecycleStateService>().IsInBackground = true;
+        AppDepository.Resolve<IAppLifecycleStateService>().IsInBackground = true;
     }
 
     protected override void OnActivated(IActivatedEventArgs args)
@@ -280,7 +306,7 @@ public sealed partial class App : Application
                         widgetArgs,
                         Window.Current.CoreWindow,
                         widgetFrame);
-                    Ioc.Default.GetRequiredService<IGameBarWidgetService>().Widget = gameBarWidget;
+                    AppDepository.Resolve<IGameBarWidgetService>().Widget = gameBarWidget;
                     widgetFrame.Navigate(typeof(WidgetPage), gameBarWidget);
 
                 }
@@ -305,13 +331,13 @@ public sealed partial class App : Application
 
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
-            if (Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().IsExpanded) return;
-            var setting = Ioc.Default.GetRequiredService<Setting>();
+            if (AppDepository.Resolve<IPlaybackSurfaceCoordinator>().IsExpanded) return;
+            var setting = AppDepository.Resolve<Setting>();
             var animation = setting.expandAnimation;
             try
             {
                 setting.expandAnimation = false;
-                Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().Expand();
+                AppDepository.Resolve<IPlaybackSurfaceCoordinator>().Expand();
             }
             finally
             {
@@ -322,7 +348,7 @@ public sealed partial class App : Application
         {
             var launchUri = (args?.As<IProtocolActivatedEventArgs>())?.Uri;
             if (launchUri?.Host == "link.last.fm")
-                Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(
+                AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
                     LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty)),
                     "complete Last.FM browser login");
         }
@@ -330,7 +356,7 @@ public sealed partial class App : Application
 
     private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        Ioc.Default.GetRequiredService<IDiagnosticsStateService>().ErrorMessages.Add(e.Exception.ToString());
+        AppDepository.Resolve<IDiagnosticsStateService>().ErrorMessages.Add(e.Exception.ToString());
         e.Handled = true;
     }
 
@@ -369,18 +395,18 @@ public sealed partial class App : Application
         // 本地播放
         else if (args is FileActivatedEventArgs)
         {
-            var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-            var localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
+            var playlist = AppDepository.Resolve<IPlaylistService>();
+            var localFileImport = AppDepository.Resolve<ILocalFileImportService>();
             playlist.PlaySourceId = "local";
             ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
 
             NavigateToRootPage();
             Window.Current.Activate();
-            var control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-            var player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+            var control = AppDepository.Resolve<IPlaybackControlService>();
+            var player = AppDepository.Resolve<AudioGraphPlayer>();
             if (!player.PlayerCreated)
             {
-                Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(control.InitializeAsync(), "initialize player for file activation");
+                AppDepository.Resolve<IBackgroundTaskRunner>().Forget(control.InitializeAsync(), "initialize player for file activation");
             }
             foreach (var storageItem in (args?.As<FileActivatedEventArgs>()).Files)
             {
@@ -424,7 +450,7 @@ public sealed partial class App : Application
     private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
-        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        var playlist = AppDepository.Resolve<IPlaylistService>();
         var neteaseItems = playlist.Items
             .Where(t => t.ItemType == HyPlayItemType.Netease)
             .ToList();
@@ -433,7 +459,7 @@ public sealed partial class App : Application
             ? neteaseItems.IndexOf(currentItem)
             : -1;
         await HistoryManagement.SetcurPlayingListHistory([.. neteaseItems.Select(t => t.Id)], currentIndex);
-        Ioc.Default.GetRequiredService<IGameBarWidgetService>().Widget?.Close();
+        AppDepository.Resolve<IGameBarWidgetService>().Widget?.Close();
         deferral.Complete();
     }
 }

@@ -1,9 +1,7 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
 using Windows.UI.Xaml.Controls;
 
@@ -23,24 +21,17 @@ public sealed partial class CreateSonglistDialog : ContentDialog
     private async void ContentDialog_PrimaryButtonClick(ContentDialog sender,
         ContentDialogButtonClickEventArgs args)
     {
-        string realIpBackup = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.XRealIP;
-        // This request would return with a 250 error without RealIP set
-        Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.XRealIP = "118.88.88.88";
-
-        var result = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().RequestAsync(NeteaseApis.PlaylistCreateApi,
-                new PlaylistCreateRequest()
-                {
-                    Name = SonglistTitle.Text,
-                    Privacy = (bool)PrivateCheckBox.IsChecked ? 10 : 0
-                });
-        if (result.IsError)
+        try
         {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建失败", result.Error.Message);
+            await Ioc.Default.GetRequiredService<IContainerManagementProvidable>()
+                .CreateContainerAsync(SonglistTitle.Text, PrivateCheckBox.IsChecked is true);
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建成功");
+            Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>().NotifyChanged();
         }
-
-        Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建成功");
-        Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>().NotifyChanged();
-        Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.XRealIP = realIpBackup;// Restore user setting
+        catch (System.Exception ex)
+        {
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建失败", ex.Message);
+        }
     }
 
     private void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)

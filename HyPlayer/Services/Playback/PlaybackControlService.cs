@@ -1,11 +1,11 @@
 using AsyncAwaitBestPractices;
+using HyPlayer;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.LastFM;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,7 +32,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private readonly INotificationService _notification;
     private readonly IPlaybackNotificationService _playbackNotification;
     private readonly IBackgroundTaskRunner _taskRunner;
-    private readonly IServiceProvider _serviceProvider;
     private bool _resolvingPlaylistService;
     private IPlaylistService? _playlistService;
     private SystemMediaTransportControls? _smtc;
@@ -58,8 +57,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         ILyricService lyricService,
         INotificationService notification,
         IPlaybackNotificationService playbackNotification,
-        IBackgroundTaskRunner taskRunner,
-        IServiceProvider serviceProvider)
+        IBackgroundTaskRunner taskRunner)
     {
         _player = player ?? throw new ArgumentNullException(nameof(player));
         _mediaSourceService = mediaSourceService ?? throw new ArgumentNullException(nameof(mediaSourceService));
@@ -69,7 +67,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         _notification = notification ?? throw new ArgumentNullException(nameof(notification));
         _playbackNotification = playbackNotification ?? throw new ArgumentNullException(nameof(playbackNotification));
         _taskRunner = taskRunner ?? throw new ArgumentNullException(nameof(taskRunner));
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     }
 
     #region IPlaybackControlService
@@ -371,7 +368,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         try
         {
             _resolvingPlaylistService = true;
-            _playlistService = _serviceProvider.GetRequiredService<IPlaylistService>();
+            _playlistService = AppDepository.Resolve<IPlaylistService>();
             return _playlistService;
         }
         finally

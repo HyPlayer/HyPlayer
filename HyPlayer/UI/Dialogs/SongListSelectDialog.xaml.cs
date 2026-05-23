@@ -1,9 +1,7 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
 using Windows.UI.Xaml.Controls;
 
@@ -25,13 +23,8 @@ public sealed partial class SongListSelect : ContentDialog
 
     private async void ListViewSongList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>()?.RequestAsync(NeteaseApis.PlaylistTracksEditApi,
-            new PlaylistTracksEditRequest
-            {
-                IsAdd = true,
-                PlaylistId = Ioc.Default.GetRequiredService<IAuthService>().MySongLists[ListViewSongList.SelectedIndex].PlaylistId,
-                Id = SongId,
-            });
+        await Ioc.Default.GetRequiredService<IProvableItemLikable>()
+            .LikeProvidableItemAsync($"sg{SongId}", Ioc.Default.GetRequiredService<IAuthService>().MySongLists[ListViewSongList.SelectedIndex].PlaylistId);
         Hide();
     }
 }

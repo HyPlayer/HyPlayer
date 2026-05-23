@@ -64,9 +64,6 @@
     <PackageReference Include="F23.StringSimilarity">
       <Version>7.0.1</Version>
     </PackageReference>
-    <PackageReference Include="HyPlayer.PlayCore.Abstraction">
-      <Version>0.1.4</Version>
-    </PackageReference>
     <PackageReference Include="LiteFM" Version="1.0.3" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection">
       <Version>10.0.8</Version>
@@ -86,10 +83,15 @@
     <PackageReference Include="Polly">
       <Version>8.6.6</Version>
     </PackageReference>
+    <PackageReference Include="Depository">
+      <Version>4.0.1</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HyPlayer.Frieren\HyPlayer.Frieren.csproj" />
-    <ProjectReference Include="..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\HyPlayer.NeteaseApi.csproj" />
+    <ProjectReference Include="..\..\HyPlayer.PlayCore\HyPlayer.PlayCore.Abstraction\HyPlayer.PlayCore.Abstraction.csproj" />
+    <ProjectReference Include="..\..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseProvider\HyPlayer.NeteaseProvider.csproj" />
+    <ProjectReference Include="..\..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\HyPlayer.NeteaseApi.csproj" />
     <ProjectReference Include="..\HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj" />
     <ProjectReference Include="..\Impressionist\Impressionist\Impressionist.csproj" />
     <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj" />
