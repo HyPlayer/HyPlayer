@@ -1,10 +1,8 @@
 using HyPlayer.Domain.Music;
-using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Album;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Cache;
 using System;
 using System.Linq;
 using System.Threading;
@@ -18,12 +16,12 @@ namespace HyPlayer.Services.Playback.QueueProviders;
 /// </summary>
 internal sealed class AlbumQueueSourceProvider : IQueueSourceProvider
 {
-    private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly IProvidableItemProvidable _provider;
     private readonly INotificationService _notification;
 
-    public AlbumQueueSourceProvider(NeteaseCloudMusicApiHandler api, INotificationService notification)
+    public AlbumQueueSourceProvider(IProvidableItemProvidable provider, INotificationService notification)
     {
-        _api = api;
+        _provider = provider;
         _notification = notification;
     }
 
@@ -35,23 +33,12 @@ internal sealed class AlbumQueueSourceProvider : IQueueSourceProvider
     {
         try
         {
-            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, id, async () =>
-            {
-                var json = await _api.RequestAsync(NeteaseApis.AlbumApi,
-                    new AlbumRequest { Id = id });
-                if (json.IsError)
-                {
-                    _notification.ShowMessage("获取专辑信息失败", json.Error?.Message);
-                    return null;
-                }
-
-                return json.Value;
-            }, cancellationToken: cancellationToken);
-
-            if (rst is null)
+            var album = await _provider.GetProvidableItemByIdAsync("al" + id, cancellationToken);
+            if (album is not IProgressiveLoadingContainer container)
                 return NeteaseQueueSourceLoadResult.Failed;
 
-            return NeteaseQueueSourceLoadResult.FromSongs(rst.Songs?.Select(t => t.MapToNcSong()).ToList() ?? []);
+            var result = await container.GetProgressiveItemsListAsync(0, container.MaxProgressiveCount, cancellationToken);
+            return NeteaseQueueSourceLoadResult.FromSongs(result.Item2.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem().ToNCSong()).ToList());
         }
         catch (Exception ex)
         {

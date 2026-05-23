@@ -1,8 +1,7 @@
 using HyPlayer.Domain.Music;
-using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -18,12 +17,12 @@ namespace HyPlayer.Services.Playback.QueueProviders;
 /// </summary>
 internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
 {
-    private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly IProvidableItemProvidable _provider;
     private readonly INotificationService _notification;
 
-    public RadioQueueSourceProvider(NeteaseCloudMusicApiHandler api, INotificationService notification)
+    public RadioQueueSourceProvider(IProvidableItemProvidable provider, INotificationService notification)
     {
-        _api = api;
+        _provider = provider;
         _notification = notification;
     }
 
@@ -39,30 +38,25 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
     {
         try
         {
-            bool? hasMore = true;
-            var page = 0;
+            var radio = await _provider.GetProvidableItemByIdAsync("dj" + id, cancellationToken);
+            if (radio is not IProgressiveLoadingContainer container)
+                return NeteaseQueueSourceLoadResult.Failed;
+
+            var hasMore = true;
+            var offset = 0;
             var batches = new List<IList<NCSong>>();
-            while (hasMore is true)
+            const int count = 100;
+            while (hasMore)
             {
-                var json = await _api.RequestAsync(NeteaseApis.DjChannelProgramsApi,
-                    new DjChannelProgramsRequest
-                    {
-                        RadioId = id,
-                        Offset = page * 100,
-                        Limit = 100,
-                        Asc = asc
-                    });
-                if (json.IsError)
-                {
-                    _notification.ShowMessage("获取电台节目失败", json.Error.Message);
-                    return NeteaseQueueSourceLoadResult.Failed;
-                }
+                var result = await container.GetProgressiveItemsListAsync(offset, count, cancellationToken);
+                hasMore = result.Item1;
+                var songs = result.Item2.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
+                if (asc)
+                    songs.Reverse();
+                if (songs.Count > 0)
+                    batches.Add(songs);
 
-                hasMore = json.Value is { Data.More: true };
-                if (json.Value?.Data?.Programs is { Length: > 0 })
-                    batches.Add([.. json.Value.Data.Programs.Select(t => (NCSong)t.MapToNCFmItem())]);
-
-                page++;
+                offset += count;
             }
 
             return NeteaseQueueSourceLoadResult.FromBatches(batches);

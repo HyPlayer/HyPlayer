@@ -1,10 +1,7 @@
 using HyPlayer.Domain.Music;
-using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Cache;
 using System;
 using System.Linq;
 using System.Threading;
@@ -18,12 +15,12 @@ namespace HyPlayer.Services.Playback.QueueProviders;
 /// </summary>
 internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
 {
-    private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly IScopedItemRangeProvidable _provider;
     private readonly INotificationService _notification;
 
-    public SingerHotQueueSourceProvider(NeteaseCloudMusicApiHandler api, INotificationService notification)
+    public SingerHotQueueSourceProvider(IScopedItemRangeProvidable provider, INotificationService notification)
     {
-        _api = api;
+        _provider = provider;
         _notification = notification;
     }
 
@@ -35,21 +32,11 @@ internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
     {
         try
         {
-            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, id, async () =>
-            {
-                var j1 = await _api.RequestAsync(NeteaseApis.ArtistTopSongApi,
-                    new ArtistTopSongRequest { ArtistId = id });
-                if (j1.IsError)
-                {
-                    _notification.ShowMessage("获取歌手热门歌曲失败", j1.Error?.Message);
-                    return null;
-                }
+            var page = await _provider.GetScopedItemsPageAsync(id, "ar", "sg", 0, 100, cancellationToken);
+            var songs = page.Items.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
 
-                return j1.Value?.Songs;
-            }, cancellationToken: cancellationToken);
-
-            return rst is { Length: > 0 }
-                ? NeteaseQueueSourceLoadResult.FromSongs([.. rst.Select(t => t.MapNcSong())])
+            return songs.Count > 0
+                ? NeteaseQueueSourceLoadResult.FromSongs(songs)
                 : NeteaseQueueSourceLoadResult.Failed;
         }
         catch (Exception ex)

@@ -1,11 +1,10 @@
 using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Cache;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,12 +16,12 @@ namespace HyPlayer.Services.Playback.QueueProviders;
 /// </summary>
 internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
 {
-    private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly IProvidableItemRangeProvidable _provider;
     private readonly INotificationService _notification;
 
-    public SingleSongQueueSourceProvider(NeteaseCloudMusicApiHandler api, INotificationService notification)
+    public SingleSongQueueSourceProvider(IProvidableItemRangeProvidable provider, INotificationService notification)
     {
-        _api = api;
+        _provider = provider;
         _notification = notification;
     }
 
@@ -34,29 +33,11 @@ internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
     {
         try
         {
-            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongDetail,
-                string.Concat("ncm", id.AsSpan()),
-                async () =>
-                {
-                    var result = await _api.RequestAsync(NeteaseApis.SongDetailApi,
-                        new SongDetailRequest { Id = id });
-                    if (result.IsError)
-                    {
-                        _notification.ShowMessage("获取歌曲信息失败", result.Error?.Message);
-                        return null;
-                    }
+            var songs = await _provider.GetProvidableItemsRangeAsync(["sg" + id], cancellationToken);
+            var song = songs.OfType<SingleSongBase>().FirstOrDefault();
 
-                    if (result.Value?.Songs is not { Length: > 0 })
-                    {
-                        _notification.ShowMessage("获取歌曲信息失败", "歌曲信息为空");
-                        return null;
-                    }
-
-                    return result.Value.Songs[0];
-                }, cancellationToken: cancellationToken);
-
-            return rst is not null
-                ? NeteaseQueueSourceLoadResult.FromSongs([rst.MapToNcSong()])
+            return song is not null
+                ? NeteaseQueueSourceLoadResult.FromSongs([song.ToHyPlayItem().ToNCSong()])
                 : NeteaseQueueSourceLoadResult.Failed;
         }
         catch (Exception ex)
