@@ -5,14 +5,16 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
+using HyPlayer.NeteaseProvider.Constants;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,16 +24,17 @@ namespace HyPlayer.Features.Artist
 {
     public partial class ArtistPageViewModel : ObservableRecipient
     {
-        private readonly NeteaseCloudMusicApiHandler _api;
+        private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
         private readonly Setting _setting;
         private readonly INotificationService _notification;
+        private NeteaseArtist _providerArtist;
 
         public ArtistPageViewModel(
-            NeteaseCloudMusicApiHandler api,
+            global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
             Setting setting,
             INotificationService notification)
         {
-            _api = api;
+            _neteaseProvider = neteaseProvider;
             _setting = setting;
             _notification = notification;
         }
@@ -59,38 +62,33 @@ namespace HyPlayer.Features.Artist
                 _notification.ShowMessage("艺人ID为空", "请检查传入的参数是否正确");
                 return;
             }
-            var res = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
+            _providerArtist = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
             {
-                var resp = await _api.RequestAsync(NeteaseApis.ArtistDetailApi,
-                    new ArtistDetailRequest() { ArtistId = artistId });
-                if (resp.IsError && resp.Error?.ErrorCode.ToString() == "404")
+                try
                 {
-                    _notification.ShowMessage("艺人不存在", null);
+                    return await GetProviderArtistAsync(artistId);
+                }
+                catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
+                {
+                    _notification.ShowMessage("获取艺人信息失败", ex.Message);
                     return null;
                 }
-                if (resp.IsError)
-                {
-                    _notification.ShowMessage("获取艺人信息失败", resp.Error?.Message);
-                    return null;
-                }
-
-                return resp.Value;
             });
 
-            if (res is null)
+            if (_providerArtist is null)
             {
                 return;
             }
 
-            Artist = res?.Artist.MapToNcArtist();
-            if (res?.Artist?.PicUrl?.StartsWith("http") is true)
+            Artist = MapToNcArtist(_providerArtist);
+            if (Artist.Avatar?.StartsWith("http") is true)
             {
                 if (_setting.noImage)
                 {
                     Image = null;
                 }
 
-                BitmapImage image = new(new Uri(res.Artist.PicUrl + "?param=" + StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
+                BitmapImage image = new(new Uri(Artist.Avatar + "?param=" + StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
                 Image = image;
             }
             LoadHotSongs().SafeFireAndForget();
@@ -101,107 +99,60 @@ namespace HyPlayer.Features.Artist
         {
 
             HotSongs.Clear();
-            var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, Artist.Id, async () =>
+            var songs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, Artist.Id, async () =>
             {
-                var j1res = await _api.RequestAsync(NeteaseApis.ArtistTopSongApi,
-                    new ArtistTopSongRequest() { ArtistId = Artist.Id });
-                if (j1res.IsError)
-                {
-                    _notification.ShowMessage("获取歌手热门歌曲失败", j1res.Error?.Message);
-                    return null;
-                }
-
-                return j1res.Value?.Songs;
+                var container = await GetArtistSubContainerAsync("hot");
+                return await LoadProgressiveItemsAsync(container, 0, 50);
             });
             var idx = 0;
-            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongDetail, Artist.Id, async () =>
-            {
-                var json = await _api.RequestAsync(NeteaseApis.SongDetailApi,
-                    new SongDetailRequest() { IdList = j1?.Select(t => t.Id).ToList() });
-                if (json.IsError)
-                {
-                    _notification.ShowMessage("获取歌手歌曲信息失败", json.Error.Message);
-                    return null;
-                }
-
-                return json.Value;
-            });
-            if (jv is null)
+            if (songs is null)
             {
                 return;
             }
 
-            foreach (var item in jv?.Songs ?? [])
+            foreach (var item in songs.OfType<SingleSongBase>())
             {
-                var ncSong = item.MapToNcSong();
-                ncSong.Order = idx++;
+                var ncSong = await MapToNcSongAsync(item, idx++);
                 HotSongs.Add(ncSong);
             }
         }
 
         private async Task LoadSongs()
         {
-            var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial, Artist.Id + "_" + CurrentPage,
+            var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial, Artist.Id + "_" + CurrentPage,
                     async () =>
                     {
-                        var resp = await _api.RequestAsync(NeteaseApis.ArtistSongsApi,
-                            new ArtistSongsRequest() { ArtistId = Artist.Id, Limit = 50, Offset = CurrentPage * 50 });
-                        if (resp.IsError)
-                        {
-                            _notification.ShowMessage("获取歌手歌曲失败", resp.Error?.Message);
-                            return null;
-                        }
-
-                        return resp.Value;
+                        var container = await GetArtistSubContainerAsync("tim");
+                        return await LoadProgressivePageAsync<SingleSongBase>(container, CurrentPage * 50, 50);
                     });
             var idx = 0;
-            foreach (var item in j1.Songs)
+            foreach (var item in page?.Items ?? [])
             {
-                var ncSong = item.MapNcSong();
-                ncSong.IsAvailable = item.Privilege.St == 0;
+                var ncSong = await MapToNcSongAsync(item, CurrentPage * 50 + idx);
                 ncSong.Order = CurrentPage * 50 + idx++;
                 AllSongs.Add(ncSong);
             }
-            HasNextPage = j1.HasMore;
+            HasNextPage = page?.HasMore ?? false;
+            HasPreviousPage = CurrentPage > 0;
         }
         private async Task LoadAlbum()
         {
             try
             {
                 Albums.Clear();
-                var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList, Artist.Id + "_" + CurrentPage,
+                var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList, Artist.Id + "_" + CurrentPage,
                     async () =>
                     {
-                        var resp = await _api.RequestAsync(NeteaseApis.ArtistAlbumsApi,
-                            new ArtistAlbumsRequest() { ArtistId = Artist.Id, Limit = 50, Start = CurrentPage * 50 });
-                        if (resp.IsError)
-                        {
-                            _notification.ShowMessage("获取歌手专辑失败", resp.Error?.Message);
-                            return null;
-                        }
-
-                        return resp.Value;
+                        var container = await GetArtistSubContainerAsync("alb");
+                        return await LoadProgressivePageAsync<NeteaseAlbum>(container, CurrentPage * 50, 50);
                     });
 
                 var i = 0;
-                foreach (var album in jv?.Albums ?? [])
+                foreach (var album in page?.Items ?? [])
                 {
-                    Albums.Add(new SimpleListItem
-                    {
-                        Title = album.Name,
-                        LineOne = string.Join("/", album.Artists?.Select(t => t.Name) ?? []),
-                        LineTwo = album.Alias != null
-                            ? string.Join(" / ", album.Alias)
-                            : "",
-                        LineThree = album.Paid ? "付费专辑" : "",
-                        Route = new AppRoute.Album($"{album.Id}"),
-                        PlayResource = new MusicResource.Album($"{album.Id}"),
-                        CoverLink = album.PictureUrl,
-                        Order = CurrentPage * 50 + i++,
-                        CanPlay = true
-                    });
+                    Albums.Add(MapToSimpleListItem(album, CurrentPage * 50 + i++));
                 }
-                HasNextPage = jv?.HasMore ?? false;
+                HasNextPage = page?.HasMore ?? false;
                 HasPreviousPage = CurrentPage > 0;
             }
             catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
@@ -226,6 +177,124 @@ namespace HyPlayer.Features.Artist
                 LoadSongs().SafeFireAndForget();
             else if (CurrentPivotIndex == 2)
                 LoadAlbum().SafeFireAndForget();
+        }
+
+        private async Task<NeteaseArtist> GetProviderArtistAsync(string artistId)
+        {
+            try
+            {
+                if (await _neteaseProvider.GetProvidableItemByIdAsync(NeteaseTypeIds.Artist + artistId) is NeteaseArtist artist)
+                {
+                    return artist;
+                }
+            }
+            catch (NotImplementedException)
+            {
+                // Current provider builds artist subcontainers from ActualId; fall back until artist lookup is implemented.
+            }
+
+            return new NeteaseArtist
+            {
+                ActualId = artistId,
+                Name = artistId
+            };
+        }
+
+        private async Task<IProgressiveLoadingContainer> GetArtistSubContainerAsync(string prefix)
+        {
+            var subContainers = _providerArtist is null ? [] : await _providerArtist.GetSubContainerAsync();
+            return subContainers.OfType<NeteaseArtistSubContainer>()
+                       .FirstOrDefault(container => container.ActualId?.StartsWith(prefix) is true)
+                   ?? new NeteaseArtistSubContainer
+                   {
+                       ActualId = prefix + Artist.Id,
+                       Name = Artist.Name
+                   };
+        }
+
+        private static async Task<List<ProvidableItemBase>> LoadProgressiveItemsAsync(IProgressiveLoadingContainer container, int start, int count)
+        {
+            return (await container.GetProgressiveItemsListAsync(start, count)).Item2;
+        }
+
+        private static async Task<ProgressivePage<T>> LoadProgressivePageAsync<T>(IProgressiveLoadingContainer container, int start, int count)
+            where T : ProvidableItemBase
+        {
+            var (hasMore, items) = await container.GetProgressiveItemsListAsync(start, count);
+            return new ProgressivePage<T>
+            {
+                HasMore = hasMore,
+                Items = items.OfType<T>().ToList()
+            };
+        }
+
+        private static NCArtist MapToNcArtist(NeteaseArtist artist)
+        {
+            return new NCArtist
+            {
+                Id = artist.ActualId,
+                Name = artist.Name,
+                Type = HyPlayItemType.Netease
+            };
+        }
+
+        private static async Task<NCSong> MapToNcSongAsync(SingleSongBase song, int order)
+        {
+            var creators = await song.GetCreatorsAsync();
+            var neteaseSong = song as NeteaseSong;
+            return new NCSong
+            {
+                Album = new NCAlbum
+                {
+                    AlbumType = HyPlayItemType.Netease,
+                    Cover = neteaseSong?.CoverUrl,
+                    Id = song.Album?.ActualId,
+                    Name = song.Album?.Name
+                },
+                Alias = neteaseSong?.Alias is not null ? string.Join(",", neteaseSong.Alias) : null,
+                Artist = creators?.Select(artist => new NCArtist
+                         {
+                             Id = artist.ActualId,
+                             Name = artist.Name,
+                             Type = HyPlayItemType.Netease
+                         }).ToList() ?? [],
+                CDName = neteaseSong?.CdName,
+                IsCloud = false,
+                IsVip = false,
+                LengthInMilliseconds = song.Duration,
+                MVId = neteaseSong?.MvId,
+                Order = order,
+                SongId = song.ActualId,
+                SongName = song.Name,
+                TrackId = neteaseSong?.TrackNumber ?? 0,
+                TranslatedName = neteaseSong?.Translation,
+                IsAvailable = song.Available,
+                Type = HyPlayItemType.Netease,
+            };
+        }
+
+        private static SimpleListItem MapToSimpleListItem(NeteaseAlbum album, int order)
+        {
+            return new SimpleListItem
+            {
+                Title = album.Name,
+                LineOne = string.Join("/", album.CreatorList ?? album.Artists?.Select(t => t.Name) ?? []),
+                LineTwo = album.Alias != null
+                    ? string.Join(" / ", album.Alias)
+                    : "",
+                LineThree = album.AlbumType ?? "",
+                Route = new AppRoute.Album($"{album.ActualId}"),
+                PlayResource = new MusicResource.Album($"{album.ActualId}"),
+                CoverLink = album.PictureUrl,
+                Order = order,
+                CanPlay = true
+            };
+        }
+
+        private sealed class ProgressivePage<T> where T : ProvidableItemBase
+        {
+            public bool HasMore { get; set; }
+            public List<T> Items { get; set; } = [];
         }
     }
 }
