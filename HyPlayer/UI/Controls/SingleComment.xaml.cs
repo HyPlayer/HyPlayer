@@ -5,9 +5,10 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Comment;
+using HyPlayer.NeteaseApi.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using System;
@@ -85,57 +86,81 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         if (!IsLoadMoreComments) floorComments.Clear();
         var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ResourceType}_{MainComment.ResourceId}_{MainComment.CommentId}", async () =>
         {
-            var rst = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>()!.RequestAsync(NeteaseApis.CommentFloorApi,
-                new CommentFloorRequest()
-                {
-                    ParentCommentId = MainComment.CommentId,
-                    ResourceId = MainComment.ResourceId,
-                    ResourceType = MainComment.ResourceType,
-                    Time = !IsLoadMoreComments ? 0 : long.Parse(time ?? "0")
-                }
-            );
-            if (rst.IsError)
-            {
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("加载楼层评论错误", rst.Error?.Message ?? "未知错误");
-                return null;
-            }
-            return rst.Value;
+            return await Ioc.Default.GetRequiredService<ICommentProvidable>()
+                .GetThreadedCommentsAsync(
+                    MainComment.ResourceId,
+                    MapCommentTypeId(MainComment.ResourceType),
+                    MainComment.CommentId,
+                    !IsLoadMoreComments ? 0 : int.Parse(time ?? "0"),
+                    20);
         }, TimeSpan.FromMinutes(5));
         if (result == null)
         {
             return;
         }
-        foreach (var floorcomment in result.Data?.Comments ?? [])
+        foreach (var floorcomment in result.Items)
         {
-            var floorComment = floorcomment.MapToComment();
+            var floorComment = MapProviderComment(floorcomment);
             floorComment.ResourceId = MainComment.ResourceId;
             floorComment.ResourceType = MainComment.ResourceType;
             floorComment.IsMainComment = false;
             floorComments.Add(floorComment);
         }
 
-        time = result?.Data?.Time.ToString();
-        LoadMore.Visibility = result?.Data?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
+        time = (result?.NextOffset ?? 0).ToString();
+        LoadMore.Visibility = result?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void Like_Click(object sender, RoutedEventArgs e)
     {
-        var result = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().RequestAsync(NeteaseApis.CommentLikeApi,
-            new CommentLikeRequest()
-            {
-                CommentId = MainComment.CommentId,
-                ResourceType = MainComment.ResourceType,
-                IsLike = !MainComment.HasLiked
-            });
-        if (result.IsError)
+        try
         {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("点赞失败", result.Error?.Message ?? "未知错误");
+            await Ioc.Default.GetRequiredService<ICommentProvidable>().SetCommentLikeStateAsync(
+                MainComment.ResourceId,
+                MapCommentTypeId(MainComment.ResourceType),
+                MainComment.CommentId,
+                !MainComment.HasLiked);
+        }
+        catch (Exception ex)
+        {
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("点赞失败", ex.Message);
             return;
         }
 
         MainComment.LikedCount += MainComment.HasLiked ? -1 : 1;
         MainComment.HasLiked = !MainComment.HasLiked;
         LikeCountTB.Text = MainComment.LikedCount.ToString();
+    }
+
+    private static string MapCommentTypeId(NeteaseResourceType resourceType)
+    {
+        return resourceType switch
+        {
+            NeteaseResourceType.Song => "sg",
+            NeteaseResourceType.Album => "al",
+            NeteaseResourceType.Playlist => "pl",
+            NeteaseResourceType.MV => "mv",
+            NeteaseResourceType.Video => "vd",
+            NeteaseResourceType.RadioChannel => "dj",
+            _ => "sg"
+        };
+    }
+
+    private static Comment MapProviderComment(CommentBase comment)
+    {
+        return new Comment
+        {
+            CommentId = comment.ActualId ?? string.Empty,
+            Content = comment.Content ?? comment.Name,
+            LikedCount = comment.LikedCount,
+            SendTime = comment.SendDate > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(comment.SendDate).LocalDateTime : DateTime.MinValue,
+            CommentUser = new Domain.Music.NCUser
+            {
+                Id = comment.Sender?.ActualId ?? string.Empty,
+                Name = comment.Sender?.Name ?? string.Empty,
+                Avatar = string.Empty,
+            }
+        };
     }
 
     private void Delete_Click(object sender, RoutedEventArgs e)
