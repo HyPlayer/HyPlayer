@@ -3,10 +3,10 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Infrastructure.Network;
 using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Login;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.NeteaseApi.ApiContracts.Utils;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Playback;
@@ -30,6 +30,9 @@ public class AuthService : IAuthService
 
     private readonly PlaybackStateService _state;
     private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly IAuthenticationProvidable _authenticationProvider;
+    private readonly IQrAuthenticationProvidable _qrAuthenticationProvider;
+    private readonly IProvableItemLikable _likeProvider;
     private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier;
@@ -38,12 +41,18 @@ public class AuthService : IAuthService
     public AuthService(
         PlaybackStateService state,
         NeteaseCloudMusicApiHandler api,
+        IAuthenticationProvidable authenticationProvider,
+        IQrAuthenticationProvidable qrAuthenticationProvider,
+        IProvableItemLikable likeProvider,
         INotificationService notification,
         IBackgroundTaskRunner taskRunner,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
         _state = state;
         _api = api;
+        _authenticationProvider = authenticationProvider;
+        _qrAuthenticationProvider = qrAuthenticationProvider;
+        _likeProvider = likeProvider;
         _notification = notification;
         _taskRunner = taskRunner;
         _playlistCollectionChangeNotifier = playlistCollectionChangeNotifier;
@@ -94,35 +103,19 @@ public class AuthService : IAuthService
     {
         try
         {
-            bool isPhone = System.Text.RegularExpressions.Regex.IsMatch(account, "^[0-9]+$");
-            string contryCode = string.Empty;
+            string countryCode = string.Empty;
             if (account.StartsWith('+'))
             {
-                isPhone = true;
                 int spaceIdx = account.IndexOf(' ');
-                contryCode = account[1..spaceIdx];
+                countryCode = account[1..spaceIdx];
                 account = account[(spaceIdx + 1)..];
             }
+            if (!string.IsNullOrEmpty(countryCode) && countryCode != "86")
+                return new AuthResult(false, "Provider login currently supports the default phone country code only.");
 
-            if (isPhone)
-            {
-                var response = await _api.RequestAsync(NeteaseApis.LoginCellphoneApi,
-                    new LoginCellphoneRequest
-                    {
-                        Cellphone = account,
-                        CountryCode = string.IsNullOrEmpty(contryCode) ? null : contryCode,
-                        Password = password
-                    });
-                if (response.IsError)
-                    return new AuthResult(false, response.Error.Message);
-            }
-            else
-            {
-                var response = await _api.RequestAsync(NeteaseApis.LoginEmailApi,
-                    new LoginEmailRequest { Email = account, Password = password });
-                if (response.IsError)
-                    return new AuthResult(false, response.Error.Message);
-            }
+            var sessionInfo = await _authenticationProvider.LoginAsync(account, password);
+            if (!sessionInfo.IsAuthenticated)
+                return new AuthResult(false, "登录失败");
 
             return await CompleteLoginAsync(true);
         }
@@ -135,20 +128,29 @@ public class AuthService : IAuthService
     /// <inheritdoc />
     public async Task<AuthQrKeyResult> CreateQrLoginKeyAsync()
     {
-        var key = await _api.RequestAsync(NeteaseApis.LoginQrCodeUnikeyApi, new LoginQrCodeUnikeyRequest());
-        return key.IsError
-            ? new AuthQrKeyResult(false, ErrorMessage: key.Error.Message)
-            : new AuthQrKeyResult(true, key.Value.Unikey);
+        try
+        {
+            var challenge = await _qrAuthenticationProvider.CreateQrLoginChallengeAsync();
+            return new AuthQrKeyResult(true, challenge.ChallengeId);
+        }
+        catch (Exception ex)
+        {
+            return new AuthQrKeyResult(false, ErrorMessage: ex.Message);
+        }
     }
 
     /// <inheritdoc />
     public async Task<AuthQrCheckResult> CheckQrLoginAsync(string key)
     {
-        var res = await _api.RequestAsync(NeteaseApis.LoginQrCodeCheckApi,
-            new LoginQrCodeCheckRequest { Unikey = key });
-        return res.IsError && res.Value.Code != 803
-            ? new AuthQrCheckResult(res.Value.Code, res.Error?.Message)
-            : new AuthQrCheckResult(res.Value.Code);
+        try
+        {
+            var state = await _qrAuthenticationProvider.GetQrLoginStateAsync(key);
+            return new AuthQrCheckResult(MapQrStatusCode(state.Status), state.Message);
+        }
+        catch (Exception ex)
+        {
+            return new AuthQrCheckResult(0, ex.Message);
+        }
     }
 
     /// <inheritdoc />
@@ -160,16 +162,8 @@ public class AuthService : IAuthService
             var deviceId = deviceInfo.Id;
             var androidId = deviceId.ToString("N")[..16];
             var imei = deviceId.ToString("N")[16..];
-            var rst = await _api.RequestAsync(NeteaseApis.LoginAnnounceDeviceApi, new LoginAnnounceDeviceRequest
-            {
-                Imei = imei,
-                AndroidId = androidId,
-                LocalId = null,
-                DeviceName = deviceInfo.FriendlyName,
-            });
-            return rst.IsError
-                ? new AuthDeviceRegisterResult(false, ErrorMessage: rst.Error.Message)
-                : new AuthDeviceRegisterResult(true, rst.Value.Data?.Id?.ToString());
+            await _authenticationProvider.AnnounceDeviceAsync(deviceInfo.FriendlyName);
+            return new AuthDeviceRegisterResult(true, deviceId.ToString("N"));
         }
         catch (Exception ex)
         {
@@ -185,28 +179,26 @@ public class AuthService : IAuthService
 
         var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userStatus", async () =>
         {
-            var statusResult = await _api.RequestAsync(NeteaseApis.LoginStatusApi);
-            if (statusResult.IsError)
-            {
-                _notification.ShowMessage("登录失败", statusResult.Error?.Message);
+            var statusResult = await _authenticationProvider.GetSessionInfoAsync();
+            if (!statusResult.IsAuthenticated)
                 return null;
-            }
-            return statusResult.Value;
+            return statusResult;
         });
 
-        if (result?.Account == null)
+        if (result is not { IsAuthenticated: true })
             return new AuthResult(false);
 
         Setting.SaveCookies();
 
-        CurrentUser = result.Profile != null
-            ? result.Profile.MapToNcUser()
+        var providerUser = await TryGetCurrentProviderUserAsync();
+        CurrentUser = providerUser is not null
+            ? await MapProviderUserAsync(providerUser)
             : new NCUser
             {
                 Avatar = "ms-appx:///Assets/icon.png",
-                Id = result.Account.Id,
-                Name = result.Account.UserName,
-                Signature = "此账号未进行手机号验证, 请使用网易云音乐客户端登录后再继续操作"
+                Id = result.UserId ?? string.Empty,
+                Name = result.DisplayName ?? "已登录",
+                Signature = string.Empty
             };
 
         IsLoggedIn = true;
@@ -228,7 +220,7 @@ public class AuthService : IAuthService
 
         if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("Cookies", out var container))
             container.Values.Clear();
-        _api.Option.Cookies.Clear();
+        await _authenticationProvider.LogoutAsync();
         Setting.SaveCookies();
 
         try
@@ -280,14 +272,13 @@ public class AuthService : IAuthService
                 switch (item.ItemType)
                 {
                     case HyPlayItemType.Netease:
-                        bool res = await Api.LikeSong(item.Id, !isLiked);
-                        if (res)
-                        {
-                            if (isLiked) LikedSongs.Remove(item.Id);
-                            else LikedSongs.Add(item.Id);
-                            SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
-                        }
-                        else throw new Exception("红心操作失败");
+                        if (isLiked)
+                            await _likeProvider.UnlikeProvidableItemAsync(item.Id, null);
+                        else
+                            await _likeProvider.LikeProvidableItemAsync(item.Id, null);
+                        if (isLiked) LikedSongs.Remove(item.Id);
+                        else LikedSongs.Add(item.Id);
+                        SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
                         break;
                     case HyPlayItemType.Radio:
                         _notification.ShowMessage("暂不支持红心电台歌曲", "将在后续版本中支持");
@@ -304,20 +295,46 @@ public class AuthService : IAuthService
 
     private async Task LoadMyLikelistAsync()
     {
-        var ids = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
-        {
-            var js = await _api.RequestAsync(NeteaseApis.LikelistApi,
-                new LikelistRequest { Uid = CurrentUser!.Id });
-            if (js.IsError)
-            {
-                _notification.ShowMessage("获取喜欢列表失败", js.Error?.Message);
-                return null;
-            }
-            return js.Value;
-        });
-
-        var likedSongs = ids?.TrackIds?.ToList() ?? [];
+        var likedSongs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
+            await _likeProvider.GetLikedProvidableIdsAsync("sg"));
         LikedSongs.Clear();
-        LikedSongs.AddRange(likedSongs);
+        LikedSongs.AddRange(likedSongs ?? []);
+    }
+
+    private async Task<NeteaseUser?> TryGetCurrentProviderUserAsync()
+    {
+        if (_authenticationProvider is not IUserLibraryProvidable userLibraryProvider) return null;
+        return await userLibraryProvider.GetUserAsync() as NeteaseUser;
+    }
+
+    private static async Task<NCUser> MapProviderUserAsync(NeteaseUser user)
+    {
+        return new NCUser
+        {
+            Id = user.ActualId ?? string.Empty,
+            Name = user.Name,
+            Signature = user.Description ?? string.Empty,
+            Avatar = await GetProviderUserAvatarAsync(user) ?? string.Empty
+        };
+    }
+
+    private static async Task<string?> GetProviderUserAvatarAsync(NeteaseUser user)
+    {
+        var resource = await user.GetCoverAsync();
+        if (resource is IResourceResultOf<Uri?> uriResource)
+            return (await uriResource.GetResourceAsync())?.ToString();
+        return user.AvatarUrl;
+    }
+
+    private static int MapQrStatusCode(ProviderQrLoginStatus status)
+    {
+        return status switch
+        {
+            ProviderQrLoginStatus.Authorized => 803,
+            ProviderQrLoginStatus.Expired => 800,
+            ProviderQrLoginStatus.WaitingForScan => 801,
+            ProviderQrLoginStatus.WaitingForConfirmation => 802,
+            _ => 0
+        };
     }
 }
