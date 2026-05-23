@@ -4,13 +4,14 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.User;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace HyPlayer.Features.User
@@ -24,12 +25,12 @@ namespace HyPlayer.Features.User
         [ObservableProperty]
         public partial NCUser User { get; set; }
 
-        private NeteaseCloudMusicApiHandler _neteaseApi;
+        private IUserLibraryProvidable _userLibraryProvider;
         private Setting _settings;
         private readonly INotificationService _notification;
-        public MeViewModel(NeteaseCloudMusicApiHandler api, Setting settings, INotificationService notification)
+        public MeViewModel(IUserLibraryProvidable userLibraryProvider, Setting settings, INotificationService notification)
         {
-            _neteaseApi = api;
+            _userLibraryProvider = userLibraryProvider;
             _settings = settings;
             _notification = notification;
         }
@@ -37,20 +38,9 @@ namespace HyPlayer.Features.User
         {
             var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserDetail, uid, async () =>
             {
-                var json = await _neteaseApi.RequestAsync(NeteaseApis.UserDetailApi,
-                    new UserDetailRequest()
-                    {
-                        UserId = uid
-                    });
-                if (json.IsError)
-                {
-                    _notification.ShowMessage("用户信息获取失败", json.Error?.Message);
-                    return null;
-                }
-
-                return json.Value;
+                return await _userLibraryProvider.GetUserAsync(uid);
             });
-            User = resp?.Profile?.MapToNcUser();
+            User = MapUser(resp);
             if (_settings.noImage) User.Avatar = null;
             LoadPlayList().SafeFireAndForget();
         }
@@ -60,27 +50,15 @@ namespace HyPlayer.Features.User
             {
                 var val = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserPlaylist, User.Id, async () =>
                 {
-                    var json = await _neteaseApi.RequestAsync(NeteaseApis.UserPlaylistApi,
-                        new UserPlaylistRequest()
-                        {
-                            Uid = User.Id,
-                            Limit = 1000 // 为什么这么大, 官方客户端也是这么大
-                        });
-                    if (json.IsError)
-                    {
-                        _notification.ShowMessage("用户歌单获取失败", json.Error?.Message);
-                        return null;
-                    }
-
-                    return json.Value;
+                    return await _userLibraryProvider.GetUserContainersAsync(User.Id, 0, 1000);
                 });
 
                 var subListIdx = 0;
                 var likedList = new List<SimpleListItem>();
                 var myList = new List<SimpleListItem>();
-                foreach (var valuePlaylist in val?.Playlists ?? [])
+                foreach (var valuePlaylist in val?.Items.OfType<NeteasePlaylist>() ?? [])
                 {
-                    var playList = valuePlaylist.MapToNCPlayList();
+                    var playList = MapPlaylist(valuePlaylist);
                     if (playList.Creator.Id != User.Id)
                     {
                         likedList.Add(
@@ -123,6 +101,45 @@ namespace HyPlayer.Features.User
             {
                 _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
+        }
+
+        private static NCUser MapUser(HyPlayer.PlayCore.Abstraction.Models.ProvidableItemBase? item)
+        {
+            if (item is NeteaseUser user)
+            {
+                return new NCUser
+                {
+                    Avatar = user.AvatarUrl,
+                    Id = user.ActualId,
+                    Name = user.Name,
+                    Signature = user.Description
+                };
+            }
+
+            return new NCUser { Id = item?.ActualId ?? string.Empty, Name = item?.Name ?? string.Empty };
+        }
+
+        private static NCPlayList MapPlaylist(NeteasePlaylist playlist)
+        {
+            return new NCPlayList
+            {
+                Cover = playlist.CoverUrl,
+                Creator = new NCUser
+                {
+                    Avatar = playlist.Creator?.AvatarUrl,
+                    Id = playlist.Creator?.ActualId,
+                    Name = playlist.Creator?.Name,
+                    Signature = playlist.Creator?.Description
+                },
+                Description = playlist.Description,
+                Name = playlist.Name,
+                PlaylistId = playlist.ActualId,
+                HasSubscribed = playlist.Subscribed,
+                PlayCount = playlist.PlayCount,
+                TrackCount = playlist.TrackCount,
+                BookCount = playlist.SubscribedCount,
+                UpdateTime = HyPlayer.UI.Converters.DateConverter.GetDateTimeFromTimeStamp(playlist.UpdateTime)
+            };
         }
     }
 }
