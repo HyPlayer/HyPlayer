@@ -33,6 +33,7 @@ public class AuthService : IAuthService
     private readonly IAuthenticationProvidable _authenticationProvider;
     private readonly IQrAuthenticationProvidable _qrAuthenticationProvider;
     private readonly IProvableItemLikable _likeProvider;
+    private readonly IProvidableItemProvidable _itemProvider;
     private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier;
@@ -44,6 +45,7 @@ public class AuthService : IAuthService
         IAuthenticationProvidable authenticationProvider,
         IQrAuthenticationProvidable qrAuthenticationProvider,
         IProvableItemLikable likeProvider,
+        IProvidableItemProvidable itemProvider,
         INotificationService notification,
         IBackgroundTaskRunner taskRunner,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
@@ -53,6 +55,7 @@ public class AuthService : IAuthService
         _authenticationProvider = authenticationProvider;
         _qrAuthenticationProvider = qrAuthenticationProvider;
         _likeProvider = likeProvider;
+        _itemProvider = itemProvider;
         _notification = notification;
         _taskRunner = taskRunner;
         _playlistCollectionChangeNotifier = playlistCollectionChangeNotifier;
@@ -303,8 +306,10 @@ public class AuthService : IAuthService
 
     private async Task<NeteaseUser?> TryGetCurrentProviderUserAsync()
     {
-        if (_authenticationProvider is not IUserLibraryProvidable userLibraryProvider) return null;
-        return await userLibraryProvider.GetUserAsync() as NeteaseUser;
+        var session = await _authenticationProvider.GetSessionInfoAsync();
+        return string.IsNullOrWhiteSpace(session.UserId)
+            ? null
+            : await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + session.UserId) as NeteaseUser;
     }
 
     private static async Task<NCUser> MapProviderUserAsync(NeteaseUser user)

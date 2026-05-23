@@ -18,11 +18,11 @@ namespace HyPlayer.Features.Library
 {
     public partial class FavoriteViewModel : ObservableRecipient
     {
-        private readonly IUserLibraryProvidable _userLibraryProvider;
+        private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _userLibraryProvider;
         private readonly INotificationService _notification;
 
         public FavoriteViewModel(
-            IUserLibraryProvidable userLibraryProvider,
+            global::HyPlayer.NeteaseProvider.NeteaseProvider userLibraryProvider,
             INotificationService notification)
         {
             _userLibraryProvider = userLibraryProvider;

@@ -26,7 +26,7 @@ namespace HyPlayer.Features.Library;
 /// </summary>
 public sealed partial class HistoryPage : Page
 {
-    private readonly IUserLibraryProvidable _userLibraryProvider = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
+    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _userLibraryProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 

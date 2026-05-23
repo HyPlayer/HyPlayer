@@ -5,6 +5,7 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.ObjectModel;
@@ -23,7 +24,7 @@ namespace HyPlayer.Shell.Navigation;
 /// </summary>
 public partial class NavigationShellViewModel : ObservableObject
 {
-    private readonly IUserLibraryProvidable _userLibraryProvider;
+    private readonly IProvidableItemProvidable _itemProvider;
     private readonly IAuthService _auth;
     private readonly INotificationService _notification;
 
@@ -56,12 +57,12 @@ public partial class NavigationShellViewModel : ObservableObject
     private NavigationNode? _likedSongsNode;
 
     public NavigationShellViewModel(
-        IUserLibraryProvidable userLibraryProvider,
+        IProvidableItemProvidable itemProvider,
         IAuthService auth,
         INotificationService notification,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
-        _userLibraryProvider = userLibraryProvider;
+        _itemProvider = itemProvider;
         _auth = auth;
         _notification = notification;
 
@@ -186,13 +187,21 @@ public partial class NavigationShellViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var response = await _userLibraryProvider.GetUserContainersAsync(_auth.CurrentUser.Id, 0, 100);
+            var user = await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + _auth.CurrentUser.Id);
+            var containers = user is ContainersContainer containersContainer
+                ? await containersContainer.GetSubContainerAsync()
+                : [];
 
             _createdContainer?.Children.Clear();
             _subscribedContainer?.Children.Clear();
             _auth.MySongLists.Clear();
 
-            var playlists = response.Items.OfType<NeteasePlaylist>().ToList();
+            var playlists = new System.Collections.Generic.List<NeteasePlaylist>();
+            foreach (var container in containers.OfType<NeteaseUserPlaylistSubContainer>())
+            {
+                var items = await container.GetAllItemsAsync();
+                playlists.AddRange(items.OfType<NeteasePlaylist>());
+            }
             if (playlists.Count == 0)
             {
                 if (_likedSongsNode is not null)

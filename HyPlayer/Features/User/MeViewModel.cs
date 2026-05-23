@@ -25,12 +25,12 @@ namespace HyPlayer.Features.User
         [ObservableProperty]
         public partial NCUser User { get; set; }
 
-        private IUserLibraryProvidable _userLibraryProvider;
+        private IProvidableItemProvidable _itemProvider;
         private Setting _settings;
         private readonly INotificationService _notification;
-        public MeViewModel(IUserLibraryProvidable userLibraryProvider, Setting settings, INotificationService notification)
+        public MeViewModel(IProvidableItemProvidable itemProvider, Setting settings, INotificationService notification)
         {
-            _userLibraryProvider = userLibraryProvider;
+            _itemProvider = itemProvider;
             _settings = settings;
             _notification = notification;
         }
@@ -38,7 +38,7 @@ namespace HyPlayer.Features.User
         {
             var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserDetail, uid, async () =>
             {
-                return await _userLibraryProvider.GetUserAsync(uid);
+                return await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + uid);
             });
             User = MapUser(resp);
             if (_settings.noImage) User.Avatar = null;
@@ -50,13 +50,23 @@ namespace HyPlayer.Features.User
             {
                 var val = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserPlaylist, User.Id, async () =>
                 {
-                    return await _userLibraryProvider.GetUserContainersAsync(User.Id, 0, 1000);
+                    var userItem = await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + User.Id);
+                    return userItem is ContainersContainer containersContainer
+                        ? await containersContainer.GetSubContainerAsync()
+                        : [];
                 });
 
                 var subListIdx = 0;
                 var likedList = new List<SimpleListItem>();
                 var myList = new List<SimpleListItem>();
-                foreach (var valuePlaylist in val?.Items.OfType<NeteasePlaylist>() ?? [])
+                var playlists = new List<NeteasePlaylist>();
+                foreach (var container in val?.OfType<NeteaseUserPlaylistSubContainer>() ?? [])
+                {
+                    var items = await container.GetAllItemsAsync();
+                    playlists.AddRange(items.OfType<NeteasePlaylist>());
+                }
+
+                foreach (var valuePlaylist in playlists)
                 {
                     var playList = MapPlaylist(valuePlaylist);
                     if (playList.Creator.Id != User.Id)

@@ -43,7 +43,7 @@ public sealed partial class SongsList : UserControl
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly IProvableItemLikable _providerLikes = Ioc.Default.GetRequiredService<IProvableItemLikable>();
-    private readonly IUserLibraryProvidable _userLibrary = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
+    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _userLibrary = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();

@@ -32,7 +32,7 @@ namespace HyPlayer.Features.Library;
 public sealed partial class MusicCloudPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IUserLibraryProvidable _userLibraryProvider = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
+    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _userLibraryProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private readonly WeakEventListener<MusicCloudPage, object?, EventArgs> _secondTickListener;

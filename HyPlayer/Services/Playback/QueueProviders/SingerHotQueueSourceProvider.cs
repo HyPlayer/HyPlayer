@@ -1,5 +1,5 @@
 using HyPlayer.Domain.Music;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
@@ -15,12 +15,10 @@ namespace HyPlayer.Services.Playback.QueueProviders;
 /// </summary>
 internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
 {
-    private readonly IScopedItemRangeProvidable _provider;
     private readonly INotificationService _notification;
 
-    public SingerHotQueueSourceProvider(IScopedItemRangeProvidable provider, INotificationService notification)
+    public SingerHotQueueSourceProvider(INotificationService notification)
     {
-        _provider = provider;
         _notification = notification;
     }
 
@@ -32,8 +30,9 @@ internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
     {
         try
         {
-            var page = await _provider.GetScopedItemsPageAsync(id, "ar", "sg", 0, 100, cancellationToken);
-            var songs = page.Items.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
+            var container = new NeteaseArtistSubContainer { ActualId = $"hot{id}", Name = id };
+            var items = (await container.GetProgressiveItemsListAsync(0, 100, cancellationToken)).Item2;
+            var songs = items.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
 
             return songs.Count > 0
                 ? NeteaseQueueSourceLoadResult.FromSongs(songs)

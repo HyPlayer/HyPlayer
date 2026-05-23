@@ -140,8 +140,6 @@ public sealed partial class App : Application
         depository.AddSingleton<ProviderBase>(neteaseProvider);
         depository.AddSingleton<IProvableItemLikable>(neteaseProvider);
         depository.AddSingleton<IContainerManagementProvidable>(neteaseProvider);
-        depository.AddSingleton<IUserLibraryProvidable>(neteaseProvider);
-        depository.AddSingleton<IPersonalFmProvidable>(neteaseProvider);
         depository.AddSingleton<IAuthenticationProvidable>(neteaseProvider);
         depository.AddSingleton<IQrAuthenticationProvidable>(neteaseProvider);
         depository.AddSingleton<ISearchSuggestionProvidable>(neteaseProvider);
@@ -154,9 +152,7 @@ public sealed partial class App : Application
         depository.AddSingleton<ISearchableProvider>(neteaseProvider);
         depository.AddSingleton<IRecommendationProvidable>(neteaseProvider);
         depository.AddSingleton<IContainerPageProvidable>(neteaseProvider);
-        depository.AddSingleton<IContainerCategoryProvidable>(neteaseProvider);
         depository.AddSingleton<IContextRecommendationProvidable>(neteaseProvider);
-        depository.AddSingleton<IScopedItemRangeProvidable>(neteaseProvider);
         depository.AddSingleton<IProvidableItemDynamicMetadataProvidable>(neteaseProvider);
         var localProvider = new LocalProvider();
         depository.AddSingleton<LocalProvider>(localProvider);
