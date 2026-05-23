@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
@@ -29,6 +30,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     private readonly IReadOnlyDictionary<SongListQueueScopeKind, IQueueSourceProvider> _providersByKind;
     private readonly IReadOnlyDictionary<string, IQueueSourceProvider> _providersByPrefix;
     private readonly IBackgroundTaskRunner _taskRunner;
+    private readonly PlayCoreBase _playCore;
 
     private readonly List<HyPlayItem> _items = new();
     private readonly Lock _lock = new();
@@ -58,7 +60,8 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         Setting setting,
         ILocalFileImportService localFileImport,
         IEnumerable<IQueueSourceProvider> queueSourceProviders,
-        IBackgroundTaskRunner taskRunner)
+        IBackgroundTaskRunner taskRunner,
+        PlayCoreBase playCore)
     {
         _strategies = strategies.ToDictionary(s => s.Id, StringComparer.Ordinal);
         _transitions = transitions.ToDictionary(t => t.Id, StringComparer.Ordinal);
@@ -77,6 +80,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         _providersByPrefix = byPrefix;
 
         _taskRunner = taskRunner;
+        _playCore = playCore;
 
         var strategyId = _setting.ActiveStrategyId;
         _activeStrategy = _strategies.GetValueOrDefault(strategyId)
@@ -248,5 +252,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             CreateShufflePlayLists();
         else
             SendPlaylistChanged();
+
+        _taskRunner.Forget(SyncPlayCoreShadowAsync, "sync playlist to playcore shadow");
     }
 }
