@@ -3,10 +3,8 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.User;
-using HyPlayer.NeteaseApi.Bases;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
 using System;
@@ -28,7 +26,7 @@ namespace HyPlayer.Features.Library;
 /// </summary>
 public sealed partial class HistoryPage : Page
 {
-    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly IUserLibraryProvidable _userLibraryProvider = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
@@ -101,41 +99,25 @@ public sealed partial class HistoryPage : Page
 
     private async Task LoadRankAll()
     {
-        await LoadRank(async cancellationToken =>
-        {
-            var response = await _api.RequestAsync<UserRecordAllResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
-                new UserRecordRequest() { UserId = _auth.CurrentUser.Id, RecordType = UserRecordType.All }, cancellationToken);
-            return (response.IsError, response.Error?.Message, response.Value?.AllData);
-        }, record => record.Song.MapNcSong());
+        await LoadRank("all");
     }
 
     private async Task LoadRankWeek()
     {
-        await LoadRank(async cancellationToken =>
-        {
-            var response = await _api.RequestAsync<UserRecordWeekResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
-                new UserRecordRequest() { UserId = _auth.CurrentUser.Id, RecordType = UserRecordType.WeekData }, cancellationToken);
-            return (response.IsError, response.Error?.Message, response.Value?.WeekData);
-        }, record => record.Song.MapNcSong());
+        await LoadRank("recent");
     }
 
-    private async Task LoadRank<TRecord>(Func<CancellationToken, Task<(bool IsError, string ErrorMessage, TRecord[] Records)>> requestRank, Func<TRecord, NCSong> mapSong)
+    private async Task LoadRank(string rangeId)
     {
         Songs.Clear();
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var result = await requestRank(_cancellationToken);
-            if (result.IsError)
-            {
-                _notification.ShowMessage("获取播放记录失败", result.ErrorMessage);
-                return;
-            }
-            var rankData = result.Records ?? [];
-            for (var i = 0; i < rankData.Length; i++)
+            var rankData = await _userLibraryProvider.GetUserListeningHistoryAsync(_auth.CurrentUser.Id, rangeId, _cancellationToken);
+            for (var i = 0; i < rankData.Count; i++)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
-                var song = mapSong(rankData[i]);
+                var song = MapHistoryItemToNcSong(rankData[i]);
                 song.Order = i;
                 Songs.Add(song);
             }
@@ -144,5 +126,11 @@ public sealed partial class HistoryPage : Page
         {
             _notification.ShowMessage("获取播放记录失败", ex.Message);
         }
+    }
+
+    private static NCSong MapHistoryItemToNcSong(ProvidableItemBase item)
+    {
+        var playItem = item.ToHyPlayItem();
+        return playItem.ToNCSong();
     }
 }
