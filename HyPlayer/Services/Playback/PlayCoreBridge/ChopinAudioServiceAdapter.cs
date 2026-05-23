@@ -40,7 +40,7 @@ public sealed class ChopinAudioServiceAdapter :
     public override async Task<AudioTicketBase> GetAudioTicketAsync(MusicResourceBase musicResource, CancellationToken ctk = default)
     {
         ctk.ThrowIfCancellationRequested();
-        if (musicResource.Uri is null)
+        if (musicResource is not LegacyMediaSourceMusicResource && musicResource.Uri is null)
         {
             throw new ArgumentException("Music resource must have a Uri.", nameof(musicResource));
         }
@@ -48,15 +48,35 @@ public sealed class ChopinAudioServiceAdapter :
         AudioGraphPlaybackSource? source = null;
         try
         {
-            source = new AudioGraphPlaybackSource(musicResource.Uri);
-            await source.CreatePlaybackSource();
+            var targetVolume = 1d;
+            if (musicResource is LegacyMediaSourceMusicResource legacyResource)
+            {
+                if (legacyResource.LegacyMediaSource is null)
+                {
+                    throw new ArgumentException("Legacy music resource must have a MediaSource.", nameof(musicResource));
+                }
+
+                if (!legacyResource.LegacyMediaSource.CustomProperties.ContainsKey("nowPlayingItem"))
+                {
+                    legacyResource.LegacyMediaSource.CustomProperties["nowPlayingItem"] = legacyResource.LegacyItem;
+                }
+
+                targetVolume = legacyResource.SuggestedVolume ?? legacyResource.LegacyItem.Volume ?? 1d;
+                source = new AudioGraphPlaybackSource(legacyResource.LegacyMediaSource);
+            }
+            else
+            {
+                source = new AudioGraphPlaybackSource(musicResource.Uri);
+                await source.CreatePlaybackSource();
+            }
+
             ctk.ThrowIfCancellationRequested();
 
             await _player.ConnectPlaybackSourceAsync(source, new PlaybackOptions
             {
                 AutoPlay = false,
                 SetAsPrimarySource = false,
-                Volume = 1d
+                Volume = targetVolume
             });
 
             var ticket = new ChopinAudioTicket
@@ -65,7 +85,7 @@ public sealed class ChopinAudioServiceAdapter :
                 AudioServiceId = Id,
                 MusicResource = musicResource,
                 PlaybackSource = source,
-                Volume = 1d
+                Volume = targetVolume
             };
 
             lock (_ticketSyncRoot)
