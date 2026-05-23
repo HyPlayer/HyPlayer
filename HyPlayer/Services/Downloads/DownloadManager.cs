@@ -8,9 +8,10 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Audio;
 using HyPlayer.Infrastructure.Extensions;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Lyric;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.Services.Abstractions;
 using Microsoft.Toolkit.Uwp.Helpers;
 using System;
@@ -41,7 +42,8 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
     private readonly INotificationService _notification;
     private readonly Setting _setting;
     private readonly HttpClient _httpClient;
-    private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly ILyricProvidable _lyricProvider;
+    private readonly IMusicResourceProvidable _musicResourceProvider;
     private readonly IDiagnosticsStateService _diagnostics;
     private readonly NCSong _song;
 
@@ -76,13 +78,15 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         INotificationService notification,
         Setting setting,
         HttpClient httpClient,
-        NeteaseCloudMusicApiHandler api,
+        ILyricProvidable lyricProvider,
+        IMusicResourceProvidable musicResourceProvider,
         IDiagnosticsStateService diagnostics)
     {
         _notification = notification;
         _setting = setting;
         _httpClient = httpClient;
-        _api = api;
+        _lyricProvider = lyricProvider;
+        _musicResourceProvider = musicResourceProvider;
         _diagnostics = diagnostics;
         _song = song;
         ncsong = song;
@@ -265,17 +269,21 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         //下载歌词
         return Task.Run(async () =>
         {
-            var lyricRequest = new LyricRequest() { Id = ncsong.SongId };
-            var lyricResult = await _api.RequestAsync(NeteaseApis.LyricApi, lyricRequest);
-            if (lyricResult.IsSuccess)
+            try
             {
-                var data = lyricResult.Value;
-                if (data.Lyric == null) return;
-                if (data.Lyric.Lyric == "[99:00.00]纯音乐，请欣赏") return;
-                var lrc = Utils.ConvertPureLyric(data.Lyric.Lyric);
-                if (_setting.downloadTranslation && data.TranslationLyric != null)
+                var lyrics = await _lyricProvider.GetLyricInfoAsync(ncsong.ToHyPlayItem().ToSingleSong()!);
+                var original = lyrics.OfType<NeteaseRawLyricInfo>()
+                    .FirstOrDefault(lyric => !lyric.IsWord && lyric.LyricType == LyricType.Original)
+                    ?.LyricText;
+                if (string.IsNullOrWhiteSpace(original)) return;
+                if (original == "[99:00.00]纯音乐，请欣赏") return;
+                var lrc = Utils.ConvertPureLyric(original);
+                var translation = lyrics.OfType<NeteaseRawLyricInfo>()
+                    .FirstOrDefault(lyric => !lyric.IsWord && lyric.LyricType == LyricType.Translation)
+                    ?.LyricText;
+                if (_setting.downloadTranslation && !string.IsNullOrWhiteSpace(translation))
                 {
-                    Utils.ConvertTranslation(data.TranslationLyric.Lyric, lrc);
+                    Utils.ConvertTranslation(translation, lrc);
                 }
                 var lrctxt = string.Join("\r\n", lrc.Select(t =>
                 {
@@ -291,17 +299,17 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                         CreationCollisionOption.ReplaceExisting);
                 await FileIO.WriteTextAsync(sf, lrctxt);
             }
-            else
+            catch (Exception ex)
             {
                 Status = DownloadStatus.Error;
                 _ = _notification.InvokeOnUIThread(() =>
                 {
-                    Message = "下载歌词错误: " + lyricResult.Error.Message;
+                    Message = "下载歌词错误: " + ex.Message;
                     HasError = true;
                     HasPaused = true;
                     Progress = 100;
                 });
-                _notification.ShowMessage("下载歌词错误: " + lyricResult.Error.Message);
+                _notification.ShowMessage("下载歌词错误: " + ex.Message);
             }
         });
     }
@@ -404,10 +412,11 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                 HasPaused = false;
                 Message = "正在获取下载链接";
             });
-            var urlRequest = new SongUrlRequest() { Id = ncsong.SongId, Level = _setting.downloadAudioRate };
-            var urlResult = await _api.RequestAsync(NeteaseApis.SongUrlApi, urlRequest);
+            var musicResource = await _musicResourceProvider.GetMusicResourceAsync(
+                ncsong.ToHyPlayItem().ToSingleSong()!,
+                new NeteaseMusicQualityTag(_setting.downloadAudioRate));
 
-            if (urlResult.IsError || urlResult.Value?.SongUrls?[0] is null)
+            if (musicResource?.Uri is null)
             {
                 Status = DownloadStatus.Error;
                 _ = _notification.InvokeOnUIThread(() =>
@@ -420,29 +429,20 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                 return;
             }
 
-            if (urlResult.Value.SongUrls[0].FreeTrialInfo is not null && _setting.jumpVipSongDownloading)
-            {
-                Status = DownloadStatus.Paused;
-                _ = _notification.InvokeOnUIThread(() =>
-                {
-                    HasPaused = true;
-                    Progress = 100;
-                    Message = "VIP 试听歌曲, 跳过";
-                });
-                return;
-            }
-
-            FileName += "." + urlResult.Value.SongUrls[0].Type?.ToLowerInvariant();
+            var neteaseResource = musicResource as NeteaseMusicResource;
+            var extension = (neteaseResource?.MusicType ?? neteaseResource?.EncodeType ?? musicResource.ExtensionName ?? "mp3")
+                .ToLowerInvariant();
+            FileName += "." + extension;
             PlayItem = ncsong.ToHyPlayItem();
-            PlayItem.Bitrate = Convert.ToInt32(urlResult.Value.SongUrls[0].BitRate);
+            PlayItem.Bitrate = int.TryParse(neteaseResource?.BitRate, out var bitRate) ? bitRate : 0;
             PlayItem.QualityTag = "下载";
             PlayItem.InfoTag = "下载";
-            PlayItem.SubExt = urlResult.Value.SongUrls[0].Type.ToLowerInvariant();
-            PlayItem.Url = urlResult.Value.SongUrls[0].Url;
-            PlayItem.Size = urlResult.Value.SongUrls[0].Size;
+            PlayItem.SubExt = extension;
+            PlayItem.Url = musicResource.Uri.ToString();
+            PlayItem.Size = neteaseResource?.Size ?? 0;
 
             _downloadOperation = DownloadManager.Downloader.CreateDownload(
-                new Uri(urlResult.Value.SongUrls[0].Url),
+                musicResource.Uri,
                 await nowFolder.CreateFileAsync(Path.GetFileName(FileName))
             );
             FullPath = _downloadOperation.ResultFile.Path;
@@ -486,7 +486,8 @@ internal static class DownloadManager
     private static INotificationService Notification => Ioc.Default.GetRequiredService<INotificationService>();
     private static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
     private static HttpClient HttpClient => Ioc.Default.GetRequiredService<HttpClient>();
-    private static NeteaseCloudMusicApiHandler Api => Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private static ILyricProvidable LyricProvider => Ioc.Default.GetRequiredService<ILyricProvidable>();
+    private static IMusicResourceProvidable MusicResourceProvider => Ioc.Default.GetRequiredService<IMusicResourceProvidable>();
     private static IDiagnosticsStateService Diagnostics => Ioc.Default.GetRequiredService<IDiagnosticsStateService>();
     public static ObservableCollection<DownloadObject> DownloadLists = [];
     public static BackgroundDownloader Downloader = new();
@@ -578,7 +579,6 @@ internal static class DownloadManager
 
     private static DownloadObject CreateDownloadObject(NCSong song)
     {
-        return new DownloadObject(song, Notification, Setting, HttpClient, Api, Diagnostics);
+        return new DownloadObject(song, Notification, Setting, HttpClient, LyricProvider, MusicResourceProvider, Diagnostics);
     }
 }
-
