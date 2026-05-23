@@ -2,11 +2,11 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Comments;
-using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Comment;
+using HyPlayer.Domain.Music;
 using HyPlayer.NeteaseApi.Models;
+using HyPlayer.NeteaseProvider.Constants;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.ObjectModel;
@@ -31,7 +31,7 @@ namespace HyPlayer.Features.Comments;
 /// </summary>
 public sealed partial class Comments : Page
 {
-    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly IProvidableItemCommentProvidable _commentProvider = Ioc.Default.GetRequiredService<IProvidableItemCommentProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
 
 #nullable enable
@@ -114,35 +114,20 @@ public sealed partial class Comments : Page
         if (IsShiftingPage) return;
         _cancellationToken.ThrowIfCancellationRequested();
         var isHotCommentsPage = HotCommentsContainer.Visibility == Visibility.Visible;
-        var result = await _api.RequestAsync(NeteaseApis.CommentsApi, new CommentsRequest
-        {
-            ResourceType = resourcetype,
-            ResourceId = resourceid,
-            CommentSortType = type switch
-            {
-                2 => CommentSortType.Hot,
-                3 => CommentSortType.Time,
-                _ => CommentSortType.Recommend
-            },
-            PageSize = 20,
-            PageNo = page,
-            Cursor = page != 1 && type == 3 ? cursor : null
-        }, _cancellationToken);
 
-        if (result.IsError)
-        {
-            _notification.ShowMessage("加载评论时出错", result.Error.Message);
-            return;
-        }
+        var offset = type == 3 && page != 1 && int.TryParse(cursor, out var cursorOffset)
+            ? cursorOffset
+            : (page - 1) * 20;
+        var result = await LoadProviderCommentsAsync(offset);
 
         if (type == 2 && isHotCommentsPage)
             hotComments.Clear();
         else normalComments.Clear();
 
-        foreach (var comment in result.Value?.Data?.Comments ?? [])
+        foreach (var comment in result.Items)
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var cmt = comment.MapToComment();
+            var cmt = MapProviderComment(comment);
             cmt.ResourceType = resourcetype;
             cmt.ResourceId = resourceid;
             if (type == 2 && isHotCommentsPage)
@@ -151,17 +136,69 @@ public sealed partial class Comments : Page
         }
 
         if (type == 3)
-            cursor = result.Value?.Data?.Cursor;
+            cursor = result.NextOffset?.ToString();
 
-        if (result.Value?.Data?.HasMore == true)
-            NextPage.IsEnabled = true;
-        else
-            NextPage.IsEnabled = false;
+        NextPage.IsEnabled = result.HasMore;
+        PrevPage.IsEnabled = page > 1;
+    }
 
-        if (page > 1)
-            PrevPage.IsEnabled = true;
-        else
-            PrevPage.IsEnabled = false;
+    private async Task<HyPlayer.PlayCore.Abstraction.Models.ProviderPageResult<CommentBase>> LoadProviderCommentsAsync(int offset)
+    {
+        try
+        {
+            return await _commentProvider.GetCommentsAsync(
+                resourceid,
+                MapCommentTypeId(resourcetype),
+                offset,
+                20,
+                _cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("加载评论时出错", ex.Message);
+            return new HyPlayer.PlayCore.Abstraction.Models.ProviderPageResult<CommentBase>
+            {
+                Items = [],
+                HasMore = false
+            };
+        }
+    }
+
+    private static string MapCommentTypeId(NeteaseResourceType resourceType)
+    {
+        return resourceType switch
+        {
+            NeteaseResourceType.Song => "sg",
+            NeteaseResourceType.Album => NeteaseTypeIds.Album,
+            NeteaseResourceType.Playlist => NeteaseTypeIds.Playlist,
+            NeteaseResourceType.MV => "mv",
+            NeteaseResourceType.Video => "vd",
+            NeteaseResourceType.RadioProgram => NeteaseTypeIds.RadioProgram,
+            NeteaseResourceType.RadioChannel => NeteaseTypeIds.RadioChannel,
+            NeteaseResourceType.MLog => NeteaseTypeIds.MBlog,
+            _ => NeteaseTypeIds.SingleSong
+        };
+    }
+
+    private static Comment MapProviderComment(CommentBase comment)
+    {
+        return new Comment
+        {
+            CommentId = comment.ActualId ?? string.Empty,
+            Content = comment.Content ?? comment.Name,
+            LikedCount = comment.LikedCount,
+            SendTime = comment.SendDate > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(comment.SendDate).LocalDateTime : DateTime.MinValue,
+            CommentUser = new NCUser
+            {
+                Id = comment.Sender?.ActualId ?? string.Empty,
+                Name = comment.Sender?.Name ?? string.Empty,
+                Avatar = string.Empty,
+            }
+        };
     }
 
 
@@ -183,52 +220,6 @@ public sealed partial class Comments : Page
     {
         // NOTE: Comment risk control not yet implemented
         _notification.ShowMessage("评论功能暂时关闭", "由于网易云音乐风控策略，评论功能暂时关闭");
-        /*
-        if (!string.IsNullOrWhiteSpace(CommentEdit.Text) && Ioc.Default.GetRequiredService<IAuthService>().IsLoggedIn)
-        {
-            try
-            {
-                var result = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Comment,
-                    new Dictionary<string, object>
-                    {
-                        {
-                            "Id", resourceid
-                        },
-                        {
-                            "type", resourcetype
-                        },
-                        {
-                            "t", "1"
-                        },
-                        {
-                            "Content", CommentEdit.Text
-                        }
-                    });
-
-                CommentEdit.Text = string.Empty;
-                await Task.Delay(1000);
-                _commentLoaderTask = LoadComments(3);
-                _notification.ShowMessage("评论成功");
-                Ioc.Default.GetRequiredService<ITeachingTipService>().Roll();
-            }
-            catch (Exception ex)
-            {
-                _notification.ShowMessage("出现问题，评论失败", ex.Message);
-                Ioc.Default.GetRequiredService<ITeachingTipService>().Roll();
-            }
-        }
-
-        else if (string.IsNullOrWhiteSpace(CommentEdit.Text))
-        {
-            _notification.ShowMessage("评论不能为空");
-            Ioc.Default.GetRequiredService<ITeachingTipService>().Roll();
-        }
-        else
-        {
-            var dlg = new MessageDialog("请先登录");
-            await dlg.ShowAsync();
-        }
-        */
     }
 
     private void ComboBoxSortType_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

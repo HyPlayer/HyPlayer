@@ -6,11 +6,8 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Cache;
 using HyPlayer.Services.Downloads;
 using CommunityToolkit.WinUI.Helpers;
 using System;
@@ -31,7 +28,7 @@ namespace HyPlayer.Features.Radio;
 public sealed partial class RadioPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
     private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private readonly WeakEventListener<RadioPage, object?, EventArgs> _secondTickListener;
     private bool _isSecondTickSubscribed;
@@ -43,6 +40,8 @@ public sealed partial class RadioPage : Page
     private int i;
     private int page;
     private NCRadio Radio;
+    private NeteaseRadioChannel RadioChannel;
+    private List<NeteaseRadioProgram> _ascendingPrograms;
     private Task _programLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -84,39 +83,14 @@ public sealed partial class RadioPage : Page
     private async Task LoadProgram()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.Id + "_" + page + asc,
-                async () =>
-                {
-                    var rest = await _api.RequestAsync(NeteaseApis.DjChannelProgramsApi,
-                        new DjChannelProgramsRequest()
-                        {
-                            RadioId = Radio.Id,
-                            Limit = 100,
-                            Offset = page * 100,
-                            Asc = asc
-                        }, _cancellationToken);
-                    if (rest.IsError && rest.Error?.ErrorCode == 405)
-                    {
-                        treashold = ++cooldownTime * 10;
-                        page--;
-                        _notification.ShowMessage("贪婪加载冷却", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
-                        return null;
-                    }
-                    else if (rest.IsError)
-                    {
-                        _notification.ShowMessage("加载电台节目错误", rest.Error?.Message ?? "未知错误");
-                        return null;
-                    }
 
-                    return rest.Value;
-                });
+        var (hasMore, programs) = await LoadProgramPageAsync(page, asc);
 
-
-        NextPage.Visibility = json.Data?.More is true ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var jToken in json.Data?.Programs ?? [])
+        NextPage.Visibility = hasMore ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var program in programs)
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var song = jToken.MapToNCFmItem();
+            var song = MapToNCFmItem(program);
             song.Order = i++;
             song.TrackId = i;
             Songs.Add(song);
@@ -128,23 +102,21 @@ public sealed partial class RadioPage : Page
         base.OnNavigatedTo(e);
         if (e.Parameter is string rid)
         {
-            var json1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioInfo, rid, async () =>
+            RadioChannel = await GetRadioChannelAsync(rid);
+            if (RadioChannel is null)
             {
-                var json = await _api.RequestAsync(NeteaseApis.DjChannelDetailApi,
-                    new DjChannelDetailRequest() { Id = rid }, _cancellationToken);
-                if (json.IsError)
-                {
-                    _notification.ShowMessage("获取电台信息失败", json.Error?.Message ?? "未知错误");
-                    return null;
-                }
+                _notification.ShowMessage("获取电台信息失败", "未知错误");
+                return;
+            }
 
-                return json.Value;
-            });
-
-            Radio = json1.RadioData.MapToNCRadio();
+            Radio = MapToNCRadio(RadioChannel);
         }
 
-        if (e.Parameter is NCRadio radio) Radio = radio;
+        if (e.Parameter is NCRadio radio)
+        {
+            Radio = radio;
+            RadioChannel = MapToNeteaseRadioChannel(radio);
+        }
 
         TextBoxRadioName.Text = Radio.Name;
         TextBoxDJ.Content = Radio.DJ.Name;
@@ -161,6 +133,7 @@ public sealed partial class RadioPage : Page
         }
 
         Songs.Clear();
+        _ascendingPrograms = null;
         SongContainer.QueueScope = SongListQueueScope.Radio(Radio.Id);
         _programLoaderTask = LoadProgram();
         if (_setting.greedlyLoadPlayContainerItems)
@@ -231,6 +204,7 @@ public sealed partial class RadioPage : Page
         page = 0;
         i = 0;
         asc = !asc;
+        _ascendingPrograms = null;
         _programLoaderTask = LoadProgram();
     }
 
@@ -243,42 +217,156 @@ public sealed partial class RadioPage : Page
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
         var result = new List<NCSong>();
-        bool? hasMore = true;
-        var page = 0;
-        while (hasMore is true)
+        var programs = asc
+            ? await LoadAscendingProgramsAsync()
+            : await LoadAllProgramsAsync();
+
+        foreach (var program in programs)
         {
-            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.Id + "_" + page + asc,
-                        async () =>
-                        {
-                            var rest = await _api.RequestAsync(NeteaseApis.DjChannelProgramsApi,
-                                new DjChannelProgramsRequest()
-                                {
-                                    RadioId = Radio.Id,
-                                    Limit = 100,
-                                    Offset = page * 100,
-                                    Asc = asc
-                                }, _cancellationToken);
-                            if (rest.IsError)
-                            {
-                                _notification.ShowMessage("加载电台节目错误", rest.Error?.Message ?? "未知错误");
-                                return null;
-                            }
-
-                            return rest.Value;
-                        });
-            hasMore = json?.Data?.More is true;
-            foreach (var jToken in json?.Data?.Programs ?? [])
-            {
-                _cancellationToken.ThrowIfCancellationRequested();
-                var song = jToken.MapToNCFmItem();
-                song.Order = i++;
-                song.TrackId = i;
-                result.Add(song);
-            }
-
-            page++;
+            _cancellationToken.ThrowIfCancellationRequested();
+            var song = MapToNCFmItem(program);
+            song.Order = i++;
+            song.TrackId = i;
+            result.Add(song);
         }
 
         DownloadManager.AddDownload(result);
+    }
+
+    private async Task<NeteaseRadioChannel> GetRadioChannelAsync(string radioId)
+    {
+        return await _neteaseProvider.GetProvidableItemByIdAsync(global::HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.RadioChannel + radioId, _cancellationToken) as NeteaseRadioChannel;
+    }
+
+    private async Task<(bool HasMore, List<NeteaseRadioProgram> Programs)> LoadProgramPageAsync(int pageIndex, bool ascending)
+    {
+        if (ascending)
+        {
+            var allPrograms = await LoadAscendingProgramsAsync();
+            var programs = allPrograms.Skip(pageIndex * 100).Take(100).ToList();
+            return ((pageIndex + 1) * 100 < allPrograms.Count, programs);
+        }
+
+        var (hasMore, items) = await RadioChannel.GetProgressiveItemsListAsync(pageIndex * 100, 100, _cancellationToken);
+        return (hasMore, items.OfType<NeteaseRadioProgram>().ToList());
+    }
+
+    private async Task<List<NeteaseRadioProgram>> LoadAscendingProgramsAsync()
+    {
+        if (_ascendingPrograms is not null) return _ascendingPrograms;
+
+        var programs = await LoadAllProgramsAsync();
+        programs.Reverse();
+        _ascendingPrograms = programs;
+        return _ascendingPrograms;
+    }
+
+    private async Task<List<NeteaseRadioProgram>> LoadAllProgramsAsync()
+    {
+        var programs = await RadioChannel.GetAllItemsAsync(_cancellationToken);
+        return programs.OfType<NeteaseRadioProgram>().ToList();
+    }
+
+    private static NCRadio MapToNCRadio(NeteaseRadioChannel channel)
+    {
+        return new NCRadio
+        {
+            Cover = channel.CoverUrl,
+            Description = channel.Description,
+            DJ = MapToNCUser(channel.Host),
+            Id = channel.ActualId,
+            LastProgramName = channel.LastProgramName,
+            Name = channel.Name,
+            HasSubscribed = channel.Subscribed,
+        };
+    }
+
+    private static NeteaseRadioChannel MapToNeteaseRadioChannel(NCRadio radio)
+    {
+        return new NeteaseRadioChannel
+        {
+            ActualId = radio.Id,
+            Name = radio.Name,
+            CoverUrl = radio.Cover,
+            Description = radio.Description,
+            Host = radio.DJ is null ? null : new NeteaseUser
+            {
+                ActualId = radio.DJ.Id,
+                Name = radio.DJ.Name,
+                AvatarUrl = radio.DJ.Avatar,
+                Description = radio.DJ.Signature
+            },
+            LastProgramName = radio.LastProgramName,
+            Subscribed = radio.HasSubscribed,
+            CreatorList = radio.DJ is null ? [] : [radio.DJ.Name]
+        };
+    }
+
+    private static NCFmItem MapToNCFmItem(NeteaseRadioProgram program)
+    {
+        return new NCFmItem
+        {
+            Type = HyPlayItemType.Radio,
+            SongId = program.MainSong?.ActualId,
+            SongName = program.Name,
+            Artist = MapToNCArtists(program),
+            Album = MapToNCAlbum(program.RadioChannel),
+            LengthInMilliseconds = program.Duration,
+            MVId = program.MainSong?.MvId ?? "-1",
+            Alias = null,
+            TranslatedName = null,
+            FMId = program.ActualId,
+            Description = program.Description,
+            RadioId = program.RadioChannel?.ActualId,
+            RadioName = program.RadioChannel?.Name
+        };
+    }
+
+    private static NCUser MapToNCUser(NeteaseUser? user)
+    {
+        return new NCUser
+        {
+            Id = user?.ActualId,
+            Name = user?.Name,
+            Avatar = user?.AvatarUrl,
+            Signature = user?.Description
+        };
+    }
+
+    private static List<NCArtist> MapToNCArtists(NeteaseRadioProgram program)
+    {
+        if (program.Host is not null)
+        {
+            return
+            [
+                new NCArtist
+                {
+                    Type = HyPlayItemType.Radio,
+                    Id = program.Host.ActualId,
+                    Name = program.Host.Name,
+                    Avatar = program.Host.AvatarUrl
+                }
+            ];
+        }
+
+        return program.MainSong?.Artists?.Select(artist => new NCArtist
+        {
+            Type = HyPlayItemType.Radio,
+            Id = artist.ActualId,
+            Name = artist.Name
+        }).ToList() ?? [];
+    }
+
+    private static NCAlbum MapToNCAlbum(NeteaseRadioChannel channel)
+    {
+        return new NCAlbum
+        {
+            AlbumType = HyPlayItemType.Radio,
+            Id = channel?.ActualId,
+            Name = channel?.Name,
+            Cover = channel?.CoverUrl,
+            Alias = channel?.ActualId,
+            Description = channel?.Description
+        };
     }
 }
