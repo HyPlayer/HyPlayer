@@ -14,6 +14,7 @@ using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseProvider;
 using HyPlayer.PlayCore;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.AudioServices;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.PlayListControllers;
 using HyPlayer.Services.Abstractions;
@@ -174,6 +175,16 @@ public sealed partial class App : Application
         depository.Add(typeof(PlayControllerBase), typeof(OrderedRollPlayController), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<OrderedRollPlayController>());
         depository.AddSingleton<Chopin>();
         depository.Add(typeof(PlayCoreBase), typeof(Chopin), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<Chopin>());
+        depository.AddSingleton<ChopinAudioServiceAdapter>();
+        depository.Add(typeof(AudioServiceBase), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
+        depository.Add(typeof(IPlayAudioTicketService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
+        depository.Add(typeof(IPauseAudioTicketService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
+        depository.Add(typeof(IStopAudioTicketService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
+        depository.Add(typeof(IAudioTicketSeekableService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
+        depository.Add(typeof(IOutgoingVolumeChangeable), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
+        depository.Add(typeof(IAudioTicketVolumeChangeable), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
+        depository.Add(typeof(IPlaybackSpeedChangeable.IPlaybackRateChangeableService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
+        depository.Add(typeof(IAudioTicketListProvidable), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
 
         // ── 播放核心：状态中心 ──
         depository.AddSingleton<PlaybackStateService>();
