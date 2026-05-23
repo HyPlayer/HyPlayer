@@ -3,7 +3,7 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
@@ -26,7 +26,6 @@ namespace HyPlayer.Features.Library;
 /// </summary>
 public sealed partial class HistoryPage : Page
 {
-    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _userLibraryProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
@@ -113,7 +112,17 @@ public sealed partial class HistoryPage : Page
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var rankData = await _userLibraryProvider.GetUserListeningHistoryAsync(_auth.CurrentUser.Id, rangeId, _cancellationToken);
+            var container = new NeteaseUserLibrarySubContainer
+            {
+                ActualId = $"history-{rangeId}{_auth.CurrentUser.Id}",
+                Name = "听歌排行",
+                Kind = rangeId.Equals("recent", StringComparison.OrdinalIgnoreCase)
+                    ? NeteaseUserLibrarySubContainer.ListeningHistoryRecentKind
+                    : NeteaseUserLibrarySubContainer.ListeningHistoryAllKind,
+                UserId = _auth.CurrentUser.Id,
+                MaxProgressiveCount = 120
+            };
+            var rankData = await container.GetAllItemsAsync(_cancellationToken);
             for (var i = 0; i < rankData.Count; i++)
             {
                 _cancellationToken.ThrowIfCancellationRequested();

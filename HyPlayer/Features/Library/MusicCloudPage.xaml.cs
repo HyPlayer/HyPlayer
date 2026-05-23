@@ -6,12 +6,12 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Downloads;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -32,7 +32,6 @@ namespace HyPlayer.Features.Library;
 public sealed partial class MusicCloudPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _userLibraryProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private readonly WeakEventListener<MusicCloudPage, object?, EventArgs> _secondTickListener;
@@ -62,7 +61,19 @@ public sealed partial class MusicCloudPage : Page
         {
             try
             {
-                return await _userLibraryProvider.GetCloudLibraryItemsAsync(page * 749, 749, _cancellationToken);
+                var container = new NeteaseUserLibrarySubContainer
+                {
+                    ActualId = "cloud",
+                    Name = "音乐云盘",
+                    Kind = NeteaseUserLibrarySubContainer.CloudKind,
+                    MaxProgressiveCount = 749
+                };
+                var (hasMore, items) = await container.GetProgressiveItemsListAsync(page * 749, 749, _cancellationToken);
+                return new CloudLibraryPage
+                {
+                    HasMore = hasMore,
+                    Items = items.OfType<HyPlayer.PlayCore.Abstraction.Models.Containers.CloudLibraryItemBase>().ToList()
+                };
             }
             catch (Exception ex)
             {
@@ -93,6 +104,12 @@ public sealed partial class MusicCloudPage : Page
 
             NextPage.Visibility = jv.HasMore ? Visibility.Visible : Visibility.Collapsed;
         }
+    }
+
+    private sealed class CloudLibraryPage
+    {
+        public bool HasMore { get; init; }
+        public List<HyPlayer.PlayCore.Abstraction.Models.Containers.CloudLibraryItemBase> Items { get; init; } = [];
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)

@@ -10,6 +10,7 @@ using HyPlayer.Features.Comments;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
@@ -376,8 +377,14 @@ public sealed partial class SongsList : UserControl
         }
         else
         {
+            var cloudContainer = new NeteaseUserLibrarySubContainer
+            {
+                ActualId = "cloud",
+                Name = "音乐云盘",
+                Kind = NeteaseUserLibrarySubContainer.CloudKind
+            };
             foreach (var id in ids)
-                await _neteaseProvider.DeleteCloudLibraryItemAsync(id);
+                await cloudContainer.DeleteCloudItemAsync(id);
 
         }
         VisibleSongs.Remove(SongContainer.SelectedItem as NCSong);

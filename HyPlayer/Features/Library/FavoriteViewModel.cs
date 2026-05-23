@@ -5,10 +5,12 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.NeteaseProvider.Constants;
 using HyPlayer.NeteaseProvider.Models;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.UI.Converters;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -57,7 +59,7 @@ namespace HyPlayer.Features.Library
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"djchannel_subscribed_{CurrentPage}",
                     async () =>
                     {
-                        return await _userLibraryProvider.GetUserLibraryItemsAsync(NeteaseTypeIds.RadioChannel, CurrentPage * 200, 200);
+                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.RadioChannel, CurrentPage * 200, 200);
                     });
 
 
@@ -86,7 +88,7 @@ namespace HyPlayer.Features.Library
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"artist_sublist_{CurrentPage}",
                     async () =>
                     {
-                        return await _userLibraryProvider.GetUserLibraryItemsAsync(NeteaseTypeIds.Artist, CurrentPage * 25, 25);
+                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.Artist, CurrentPage * 25, 25);
                     });
 
             HasMore = jv.HasMore;
@@ -112,7 +114,7 @@ namespace HyPlayer.Features.Library
             var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"album_sublist_{CurrentPage}",
                     async () =>
                     {
-                        return await _userLibraryProvider.GetUserLibraryItemsAsync(NeteaseTypeIds.Album, CurrentPage * 25, 25);
+                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.Album, CurrentPage * 25, 25);
                     });
 
             HasMore = json.HasMore;
@@ -131,6 +133,29 @@ namespace HyPlayer.Features.Library
                     CanPlay = true
                 });
             }
+        }
+
+        private static async Task<UserLibraryPage> LoadUserLibraryPageAsync(string kind, int offset, int count)
+        {
+            var container = new NeteaseUserLibrarySubContainer
+            {
+                ActualId = $"library-{kind}",
+                Name = "用户资料库",
+                Kind = kind,
+                MaxProgressiveCount = count
+            };
+            var (hasMore, items) = await container.GetProgressiveItemsListAsync(offset, count);
+            return new UserLibraryPage
+            {
+                HasMore = hasMore,
+                Items = items
+            };
+        }
+
+        private sealed class UserLibraryPage
+        {
+            public bool HasMore { get; init; }
+            public List<ProvidableItemBase> Items { get; init; } = [];
         }
 
         public void OnSelectionChanged(NavigationViewItem item)
