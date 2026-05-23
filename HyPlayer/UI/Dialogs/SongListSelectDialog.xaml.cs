@@ -23,7 +23,7 @@ public sealed partial class SongListSelect : ContentDialog
 
     private async void ListViewSongList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        await Ioc.Default.GetRequiredService<IProvableItemLikable>()
+        await Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>()
             .LikeProvidableItemAsync($"sg{SongId}", Ioc.Default.GetRequiredService<IAuthService>().MySongLists[ListViewSongList.SelectedIndex].PlaylistId);
         Hide();
     }

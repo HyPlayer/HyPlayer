@@ -24,14 +24,14 @@ internal class Api
     public static async Task<bool> LikeSong(string songid, bool like)
     {
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
-        var likeProvider = Ioc.Default.GetRequiredService<IProvableItemLikable>();
+        var neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
 
         try
         {
             if (like)
-                await likeProvider.LikeProvidableItemAsync(songid, null);
+                await neteaseProvider.LikeProvidableItemAsync(songid, null);
             else
-                await likeProvider.UnlikeProvidableItemAsync(songid, null);
+                await neteaseProvider.UnlikeProvidableItemAsync(songid, null);
             return true;
         }
         catch (System.Exception ex)
@@ -44,7 +44,7 @@ internal class Api
     public static async Task EnterIntelligencePlay(CancellationToken cancellationToken = default)
     {
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
-        var recommendationProvider = Ioc.Default.GetRequiredService<IContextRecommendationProvidable>();
+        var neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
         var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         var auth = Ioc.Default.GetRequiredService<IAuthService>();
@@ -62,7 +62,7 @@ internal class Api
 
         try
         {
-            var recommendationContainer = await recommendationProvider.GetContextRecommendationAsync(
+            var recommendationContainer = await neteaseProvider.GetContextRecommendationAsync(
                 seedSong,
                 NeteaseTypeIds.SingleSong,
                 likedSongs.Count,

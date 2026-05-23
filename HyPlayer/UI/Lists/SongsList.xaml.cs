@@ -42,8 +42,7 @@ public sealed partial class SongsList : UserControl
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IProvableItemLikable _providerLikes = Ioc.Default.GetRequiredService<IProvableItemLikable>();
-    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _userLibrary = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
+    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
@@ -373,12 +372,12 @@ public sealed partial class SongsList : UserControl
         {
             if (QueueScope is not { Kind: SongListQueueScopeKind.Playlist, Id: not null }) return;
             foreach (var id in ids)
-                await _providerLikes.UnlikeProvidableItemAsync($"sg{id}", QueueScope.Id);
+                await _neteaseProvider.UnlikeProvidableItemAsync($"sg{id}", QueueScope.Id);
         }
         else
         {
             foreach (var id in ids)
-                await _userLibrary.DeleteCloudLibraryItemAsync(id);
+                await _neteaseProvider.DeleteCloudLibraryItemAsync(id);
 
         }
         VisibleSongs.Remove(SongContainer.SelectedItem as NCSong);

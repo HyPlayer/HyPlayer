@@ -138,7 +138,6 @@ public sealed partial class App : Application
         depository.AddSingleton<NeteaseCloudMusicApiHandler>(neteaseProvider.Handler);
         depository.AddSingleton<global::HyPlayer.NeteaseProvider.NeteaseProvider>(neteaseProvider);
         depository.AddSingleton<ProviderBase>(neteaseProvider);
-        depository.AddSingleton<IProvableItemLikable>(neteaseProvider);
         depository.AddSingleton<IContainerManagementProvidable>(neteaseProvider);
         depository.AddSingleton<IAuthenticationProvidable>(neteaseProvider);
         depository.AddSingleton<IQrAuthenticationProvidable>(neteaseProvider);
@@ -150,9 +149,7 @@ public sealed partial class App : Application
         depository.AddSingleton<IProvidableItemProvidable>(neteaseProvider);
         depository.AddSingleton<IProvidableItemRangeProvidable>(neteaseProvider);
         depository.AddSingleton<ISearchableProvider>(neteaseProvider);
-        depository.AddSingleton<IRecommendationProvidable>(neteaseProvider);
         depository.AddSingleton<IContainerPageProvidable>(neteaseProvider);
-        depository.AddSingleton<IContextRecommendationProvidable>(neteaseProvider);
         depository.AddSingleton<IProvidableItemDynamicMetadataProvidable>(neteaseProvider);
         var localProvider = new LocalProvider();
         depository.AddSingleton<LocalProvider>(localProvider);

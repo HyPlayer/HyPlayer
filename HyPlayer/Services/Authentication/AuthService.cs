@@ -32,7 +32,7 @@ public class AuthService : IAuthService
     private readonly NeteaseCloudMusicApiHandler _api;
     private readonly IAuthenticationProvidable _authenticationProvider;
     private readonly IQrAuthenticationProvidable _qrAuthenticationProvider;
-    private readonly IProvableItemLikable _likeProvider;
+    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
@@ -44,7 +44,7 @@ public class AuthService : IAuthService
         NeteaseCloudMusicApiHandler api,
         IAuthenticationProvidable authenticationProvider,
         IQrAuthenticationProvidable qrAuthenticationProvider,
-        IProvableItemLikable likeProvider,
+        global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
         IProvidableItemProvidable itemProvider,
         INotificationService notification,
         IBackgroundTaskRunner taskRunner,
@@ -54,7 +54,7 @@ public class AuthService : IAuthService
         _api = api;
         _authenticationProvider = authenticationProvider;
         _qrAuthenticationProvider = qrAuthenticationProvider;
-        _likeProvider = likeProvider;
+        _neteaseProvider = neteaseProvider;
         _itemProvider = itemProvider;
         _notification = notification;
         _taskRunner = taskRunner;
@@ -276,9 +276,9 @@ public class AuthService : IAuthService
                 {
                     case HyPlayItemType.Netease:
                         if (isLiked)
-                            await _likeProvider.UnlikeProvidableItemAsync(item.Id, null);
+                            await _neteaseProvider.UnlikeProvidableItemAsync(item.Id, null);
                         else
-                            await _likeProvider.LikeProvidableItemAsync(item.Id, null);
+                            await _neteaseProvider.LikeProvidableItemAsync(item.Id, null);
                         if (isLiked) LikedSongs.Remove(item.Id);
                         else LikedSongs.Add(item.Id);
                         SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
@@ -299,7 +299,7 @@ public class AuthService : IAuthService
     private async Task LoadMyLikelistAsync()
     {
         var likedSongs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
-            await _likeProvider.GetLikedProvidableIdsAsync("sg"));
+            await _neteaseProvider.GetLikedProvidableIdsAsync("sg"));
         LikedSongs.Clear();
         LikedSongs.AddRange(likedSongs ?? []);
     }

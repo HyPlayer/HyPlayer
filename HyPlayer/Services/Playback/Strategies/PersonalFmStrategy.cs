@@ -27,17 +27,17 @@ namespace HyPlayer.Services.Playback.Strategies;
 /// </summary>
 public sealed class PersonalFmStrategy : IAsyncPlayStrategy
 {
-    private readonly IContextRecommendationProvidable _provider;
+    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
     private readonly Setting _setting;
 
     /// <summary>
     /// 创建私人 FM 策略实例
     /// </summary>
-    /// <param name="provider">上下文推荐 Provider</param>
+    /// <param name="neteaseProvider">网易云 provider</param>
     /// <param name="setting">应用设置</param>
-    public PersonalFmStrategy(IContextRecommendationProvidable provider, Setting setting)
+    public PersonalFmStrategy(global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider, Setting setting)
     {
-        _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+        _neteaseProvider = neteaseProvider ?? throw new ArgumentNullException(nameof(neteaseProvider));
         _setting = setting ?? throw new ArgumentNullException(nameof(setting));
     }
 
@@ -99,7 +99,7 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
     {
         if (ctx.CurrentItem?.ToSingleSong() is { } currentSong)
         {
-            var container = await _provider.GetContextRecommendationAsync(currentSong.ActualId ?? currentSong.Name, HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.SingleSong, 10, ct)
+            var container = await _neteaseProvider.GetContextRecommendationAsync(currentSong.ActualId ?? currentSong.Name, HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.SingleSong, 10, ct)
                 .ConfigureAwait(false);
             var items = container is IProgressiveLoadingContainer progressive
                 ? (await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount, ct).ConfigureAwait(false)).Item2
