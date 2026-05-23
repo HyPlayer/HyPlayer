@@ -114,9 +114,9 @@ public sealed partial class App : Application
     private static void InitializeCommonServices()
     {
         var setting = AppDepository.Resolve<Setting>();
-        var api = AppDepository.Resolve<NeteaseCloudMusicApiHandler>();
-        api.Option.AdditionalParameters = setting.ApiAdditionalParameters;
-        api.Option.FakeCheckToken = setting.EnableCheckTokenApi;
+        var neteaseProvider = AppDepository.Resolve<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
+        neteaseProvider.ConfigureAdditionalParameters(setting.ApiAdditionalParameters);
+        neteaseProvider.ConfigureFakeCheckToken(setting.EnableCheckTokenApi);
         var globalTimer = AppDepository.Resolve<IGlobalTimerService>();
         var teachingTip = AppDepository.Resolve<ITeachingTipService>();
         var playBarAutoHide = AppDepository.Resolve<IPlayBarAutoHideService>();
@@ -136,7 +136,6 @@ public sealed partial class App : Application
         var neteaseProvider = new global::HyPlayer.NeteaseProvider.NeteaseProvider();
         neteaseProvider.Handler.HttpClient = client;
         depository.AddSingleton<HttpClient>(client);
-        depository.AddSingleton<NeteaseCloudMusicApiHandler>(neteaseProvider.Handler);
         depository.AddSingleton<global::HyPlayer.NeteaseProvider.NeteaseProvider>(neteaseProvider);
         depository.AddSingleton<ProviderBase>(neteaseProvider);
         depository.AddSingleton<IContainerManagementProvidable>(neteaseProvider);

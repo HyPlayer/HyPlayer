@@ -3,7 +3,6 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.Domain.Settings;
-using HyPlayer.NeteaseApi;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.History;
@@ -49,7 +48,7 @@ namespace HyPlayer.Features.Settings;
 public sealed partial class Settings : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
@@ -221,7 +220,7 @@ public sealed partial class Settings : Page
     {
         ApplicationData.Current.LocalSettings.Values["xRealIp"] =
             TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
-        _api?.Option.XRealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
+        _neteaseProvider.ConfigureXRealIP((string)ApplicationData.Current.LocalSettings.Values["xRealIp"]);
     }
 
     private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)

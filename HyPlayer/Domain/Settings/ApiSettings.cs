@@ -1,4 +1,3 @@
-using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Infrastructure.Serialization;
 using HyPlayer.NeteaseApi;
 using System.Text.Json;
@@ -65,7 +64,6 @@ namespace HyPlayer.Domain.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableCheckTokenApi)] = value;
-                Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>()?.Option.FakeCheckToken = value;
             }
         }
 

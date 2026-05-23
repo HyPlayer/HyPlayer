@@ -299,7 +299,7 @@ namespace HyPlayer.Domain.Settings
         {
             var container = ApplicationData.Current.LocalSettings.CreateContainer("LoginedUser", ApplicationDataCreateDisposition.Always);
             container.Values.Clear();
-            foreach (var item in Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.Cookies)
+            foreach (var item in Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>().GetRuntimeCookiesSnapshot())
             {
                 container.Values[item.Key] = item.Value;
             }
@@ -318,7 +318,7 @@ namespace HyPlayer.Domain.Settings
                 {
                     foreach (var item in container.Values)
                     {
-                        Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.Cookies.Add(item.Key, (string)item.Value);
+                        Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>().SetRuntimeCookie(item.Key, (string)item.Value);
                     }
 
                     return true;

@@ -2,7 +2,6 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Infrastructure.Network;
-using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -29,7 +28,6 @@ public class AuthService : IAuthService
     public event EventHandler<SongLikeStatusChangedEventArgs>? SongLikeStatusChanged;
 
     private readonly PlaybackStateService _state;
-    private readonly NeteaseCloudMusicApiHandler _api;
     private readonly IAuthenticationProvidable _authenticationProvider;
     private readonly IQrAuthenticationProvidable _qrAuthenticationProvider;
     private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
@@ -41,7 +39,6 @@ public class AuthService : IAuthService
 
     public AuthService(
         PlaybackStateService state,
-        NeteaseCloudMusicApiHandler api,
         IAuthenticationProvidable authenticationProvider,
         IQrAuthenticationProvidable qrAuthenticationProvider,
         global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
@@ -51,7 +48,6 @@ public class AuthService : IAuthService
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
         _state = state;
-        _api = api;
         _authenticationProvider = authenticationProvider;
         _qrAuthenticationProvider = qrAuthenticationProvider;
         _neteaseProvider = neteaseProvider;
@@ -76,13 +72,13 @@ public class AuthService : IAuthService
     /// <inheritdoc />
     public void ClearRuntimeCookies()
     {
-        _api.Option.Cookies.Clear();
+        _neteaseProvider.ClearRuntimeCookies();
     }
 
     /// <inheritdoc />
     public void SetRuntimeCookie(string name, string value)
     {
-        _api.Option.Cookies[name] = value;
+        _neteaseProvider.SetRuntimeCookie(name, value);
     }
 
     /// <inheritdoc />
@@ -90,7 +86,7 @@ public class AuthService : IAuthService
     {
         try
         {
-            if (!Setting.LoadCookies() && _api.Option.AdditionalParameters.Cookies.Count == 0)
+            if (!Setting.LoadCookies() && !_neteaseProvider.HasAdditionalCookies)
                 return new AuthResult(false);
 
             return await CompleteLoginAsync(false);

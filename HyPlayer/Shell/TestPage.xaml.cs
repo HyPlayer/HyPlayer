@@ -43,7 +43,7 @@ namespace HyPlayer.Shell;
 public sealed partial class TestPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
+    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
@@ -192,7 +192,7 @@ public sealed partial class TestPage : Page
             if (result != null)
             {
                 _setting.ApiAdditionalParameters = result;
-                _api.Option.AdditionalParameters = result;
+                _neteaseProvider.ConfigureAdditionalParameters(result);
                 var authService = Ioc.Default.GetRequiredService<IAuthService>();
                 authService.NotifyLoginCompleted();
                 _notification.ShowMessage("成功设置API附加参数", "请重启应用以使更改生效");

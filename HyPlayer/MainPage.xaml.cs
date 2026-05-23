@@ -10,7 +10,6 @@ using HyPlayer.Features.Library;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Features.Search;
 using HyPlayer.Features.User;
-using HyPlayer.NeteaseApi;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.Shell.ExpandedPlayer;
@@ -49,12 +48,9 @@ public sealed partial class MainPage : Page
     private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
     public MainPage()
     {
-        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-        if (api != null)
-        {
-            api.Option.XRealIP = Setting.GetSettings<string>("xRealIp", null);
-            api.Option.DegradeHttp = Setting.GetSettings("UseHttp", false);
-        }
+        var neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
+        neteaseProvider.ConfigureXRealIP(Setting.GetSettings<string>("xRealIp", null));
+        neteaseProvider.ConfigureDegradeHttp(Setting.GetSettings("UseHttp", false));
         if (_setting.uiSound)
         {
             ElementSoundPlayer.State = ElementSoundPlayerState.Off;
