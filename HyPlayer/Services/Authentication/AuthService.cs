@@ -272,9 +272,9 @@ public class AuthService : IAuthService
                 {
                     case HyPlayItemType.Netease:
                         if (isLiked)
-                            await _neteaseProvider.UnlikeProvidableItemAsync(item.Id, null);
+                            await new NeteaseSong { ActualId = item.Id[2..], Name = item.Name, Artists = [] }.UnlikeAsync();
                         else
-                            await _neteaseProvider.LikeProvidableItemAsync(item.Id, null);
+                            await new NeteaseSong { ActualId = item.Id[2..], Name = item.Name, Artists = [] }.LikeAsync();
                         if (isLiked) LikedSongs.Remove(item.Id);
                         else LikedSongs.Add(item.Id);
                         SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
@@ -295,7 +295,12 @@ public class AuthService : IAuthService
     private async Task LoadMyLikelistAsync()
     {
         var likedSongs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
-            await _neteaseProvider.GetLikedProvidableIdsAsync("sg"));
+            await new NeteaseUserLibrarySubContainer
+            {
+                ActualId = "liked-songs",
+                Kind = NeteaseUserLibrarySubContainer.LikedSongsKind,
+                Name = "我喜欢的音乐"
+            }.GetLikedSongIdsAsync());
         LikedSongs.Clear();
         LikedSongs.AddRange(likedSongs ?? []);
     }

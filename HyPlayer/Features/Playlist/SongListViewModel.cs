@@ -342,14 +342,14 @@ namespace HyPlayer.Features.Playlist
         {
             try
             {
-                var providerPlaylistId = global::HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.Playlist + PlayList.PlaylistId;
+                var playlist = new NeteasePlaylist { ActualId = PlayList.PlaylistId, Name = PlayList.Name };
                 if (PlayList.HasSubscribed)
                 {
-                    await _neteaseProvider.UnlikeProvidableItemAsync(providerPlaylistId, null);
+                    await playlist.UnsubscribeAsync();
                 }
                 else
                 {
-                    await _neteaseProvider.LikeProvidableItemAsync(providerPlaylistId, null);
+                    await playlist.SubscribeAsync();
                 }
                 PlayList.HasSubscribed = !PlayList.HasSubscribed;
             }

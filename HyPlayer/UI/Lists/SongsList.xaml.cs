@@ -372,8 +372,9 @@ public sealed partial class SongsList : UserControl
         if (!IsCloudStorageList)
         {
             if (QueueScope is not { Kind: SongListQueueScopeKind.Playlist, Id: not null }) return;
+            var playlist = new NeteasePlaylist { ActualId = QueueScope.Id, Name = string.Empty };
             foreach (var id in ids)
-                await _neteaseProvider.UnlikeProvidableItemAsync($"sg{id}", QueueScope.Id);
+                await playlist.RemoveSongAsync(id);
         }
         else
         {

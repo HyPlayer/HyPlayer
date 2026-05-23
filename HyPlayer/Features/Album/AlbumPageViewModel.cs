@@ -153,8 +153,8 @@ namespace HyPlayer.Features.Album
         private void Subscribe()
         {
             _taskRunner.Forget(Subscribed
-                    ? _neteaseProvider.UnlikeProvidableItemAsync(NeteaseTypeIds.Album + Album.Id, null)
-                    : _neteaseProvider.LikeProvidableItemAsync(NeteaseTypeIds.Album + Album.Id, null),
+                    ? new NeteaseAlbum { ActualId = Album.Id, Name = Album.Name }.UnsubscribeAsync()
+                    : new NeteaseAlbum { ActualId = Album.Id, Name = Album.Name }.SubscribeAsync(),
                 "toggle album subscription");
             Subscribed = !Subscribed;
         }

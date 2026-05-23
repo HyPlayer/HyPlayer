@@ -25,14 +25,19 @@ internal class Api
     public static async Task<bool> LikeSong(string songid, bool like)
     {
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
-        var neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
-
         try
         {
+            var song = new NeteaseSong
+            {
+                ActualId = songid.StartsWith(NeteaseTypeIds.SingleSong) ? songid[2..] : songid,
+                Name = string.Empty,
+                Artists = []
+            };
+
             if (like)
-                await neteaseProvider.LikeProvidableItemAsync(songid, null);
+                await song.LikeAsync();
             else
-                await neteaseProvider.UnlikeProvidableItemAsync(songid, null);
+                await song.UnlikeAsync();
             return true;
         }
         catch (System.Exception ex)
