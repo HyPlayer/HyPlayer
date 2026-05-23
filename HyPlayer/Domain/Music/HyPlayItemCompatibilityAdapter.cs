@@ -5,6 +5,7 @@ using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -23,7 +24,9 @@ public static class HyPlayItemCompatibilityAdapter
     private const string NeteaseAlbumTypeId = "al";
     private const string NeteaseArtistTypeId = "ar";
     private const string NeteaseRadioTypeId = "dj";
-    private const string LocalSongTypeId = "lcl";
+    private const string LocalProviderId = "lcl";
+    private const string LocalSongTypeId = "sg";
+    private const string LocalNcmSongTypeId = "ncm";
 
     private static readonly ConditionalWeakTable<HyPlayItem, HyPlayItemProviderMetadata> ProviderMetadata = new();
 
@@ -135,7 +138,7 @@ public static class HyPlayItemCompatibilityAdapter
             return metadata.ItemIdentity;
         }
 
-        return (GetFallbackProviderId(item), GetFallbackTypeId(item), item.Id ?? string.Empty);
+        return (GetFallbackProviderId(item), GetFallbackTypeId(item), GetFallbackActualId(item));
     }
 
     private static HyPlayItem CreateBaseHyPlayItem(ProvidableItemBase item, HyPlayItemProviderMetadata? metadata)
@@ -279,17 +282,44 @@ public static class HyPlayItemCompatibilityAdapter
 
     private static string GetFallbackProviderId(HyPlayItem item)
     {
+        if (item.IsLocalFile || item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+            return LocalProviderId;
+
         return item.ItemType is HyPlayItemType.Netease or HyPlayItemType.Radio ? NeteaseProviderId : item.ProviderId;
     }
 
     private static string GetFallbackTypeId(HyPlayItem item)
     {
+        if (item.IsLocalFile || item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+        {
+            return IsLocalNcmFile(item) ? LocalNcmSongTypeId : LocalSongTypeId;
+        }
+
         return item.ItemType switch
         {
-            HyPlayItemType.Local or HyPlayItemType.LocalProgressive => LocalSongTypeId,
             HyPlayItemType.Radio => NeteaseRadioTypeId,
             _ => NeteaseSongTypeId
         };
+    }
+
+    private static string GetFallbackActualId(HyPlayItem item)
+    {
+        if (item.IsLocalFile || item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+        {
+            return item.LocalStorageFile?.Path
+                   ?? item.Url
+                   ?? item.Id
+                   ?? string.Empty;
+        }
+
+        return item.Id ?? string.Empty;
+    }
+
+    private static bool IsLocalNcmFile(HyPlayItem item)
+    {
+        return string.Equals(item.LocalStorageFile?.FileType, ".ncm", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(item.SubExt, ".ncm", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(Path.GetExtension(item.Url), ".ncm", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string GetFallbackCreatorTypeId(NCArtist artist)
