@@ -2,12 +2,14 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
@@ -21,55 +23,83 @@ internal class Api
 {
     public static async Task<bool> LikeSong(string songid, bool like)
     {
-        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
-        var requestResult = await api.RequestAsync(NeteaseApis.LikeApi,
-            new LikeRequest() { TrackId = songid, Like = like, UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser.Id });
-        if (requestResult.IsSuccess)
+        var likeProvider = Ioc.Default.GetRequiredService<IProvableItemLikable>();
+
+        try
         {
+            if (like)
+                await likeProvider.LikeProvidableItemAsync(songid, null);
+            else
+                await likeProvider.UnlikeProvidableItemAsync(songid, null);
             return true;
         }
-        else
+        catch (System.Exception ex)
         {
-            notification.ShowMessage(requestResult.Error.Message);
+            notification.ShowMessage(ex.Message);
             return false;
         }
     }
 
     public static async Task EnterIntelligencePlay(CancellationToken cancellationToken = default)
     {
-        var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
+        var recommendationProvider = Ioc.Default.GetRequiredService<IContextRecommendationProvidable>();
         var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        var auth = Ioc.Default.GetRequiredService<IAuthService>();
         playlist.Clear();
-        var songList = Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].PlaylistId;
-        var likedSongs = Ioc.Default.GetRequiredService<IAuthService>().LikedSongs;
-        var randomSong = likedSongs[RandomNumberGenerator.GetInt32(likedSongs.Count)];
-        var jsoon = await api.RequestAsync(NeteaseApis.PlaymodeIntelligenceListApi,
-            new PlaymodeIntelligenceListRequest
-            {
-                PlaylistId = songList,
-                SongId = randomSong,
-                StartMusicId = state.NowPlayingItem?.Id ?? randomSong,
-                Count = likedSongs.Count
-            }, cancellationToken);
 
-        if (jsoon.IsError)
+        var likedSongs = auth.LikedSongs;
+        if (likedSongs.Count == 0)
         {
-            notification.ShowMessage("加载心动模式列表出错", jsoon.Error.Message);
+            notification.ShowMessage("无法进入心动模式", "当前账号还没有喜欢的歌曲");
             return;
         }
 
-        foreach (var item in jsoon.Value?.Data ?? [])
+        var randomSong = likedSongs[RandomNumberGenerator.GetInt32(likedSongs.Count)];
+        var seedSong = state.NowPlayingItem?.GetItemIdentity().ActualId ?? randomSong;
+
+        try
         {
-            if (item.SongInfo is null) continue;
-            var ncSong = item.SongInfo.MapNcSong();
-            var playItem = ncSong.ToHyPlayItem();
-            playItem.InfoTag = item.Recommended ? "为你推荐" : "我的喜欢";
-            playlist.AppendItem(playItem);
+            var recommendationContainer = await recommendationProvider.GetContextRecommendationAsync(
+                seedSong,
+                NeteaseTypeIds.SingleSong,
+                likedSongs.Count,
+                cancellationToken);
+
+            var songs = await GetContainerSongsAsync(recommendationContainer, likedSongs.Count, cancellationToken);
+            foreach (var song in songs)
+            {
+                var playItem = song.ToHyPlayItem();
+                playItem.InfoTag = likedSongs.Contains(song.ActualId ?? string.Empty) ? "我的喜欢" : "为你推荐";
+                playlist.AppendItem(playItem);
+            }
+
+            playlist.NotifyAppendDone();
+            if (playlist.Items.Count > 0)
+                await playlist.MoveToAsync(playlist.Items[0]);
         }
-        playlist.NotifyAppendDone();
-        await playlist.MoveToAsync(playlist.Items[0]);
+        catch (System.Exception ex)
+        {
+            notification.ShowMessage("加载心动模式列表出错", ex.Message);
+        }
+    }
+
+    private static async Task<List<SingleSongBase>> GetContainerSongsAsync(
+        ContainerBase container,
+        int count,
+        CancellationToken cancellationToken)
+    {
+        List<ProvidableItemBase> items = container switch
+        {
+            LinerContainerBase linerContainer => await linerContainer.GetAllItemsAsync(cancellationToken),
+            IProgressiveLoadingContainer progressiveContainer =>
+                (await progressiveContainer.GetProgressiveItemsListAsync(0, count, cancellationToken)).Item2,
+            UndeterminedContainerBase undeterminedContainer => await undeterminedContainer.GetNextItemsRangeAsync(cancellationToken),
+            _ => []
+        };
+
+        return items.OfType<SingleSongBase>().ToList();
     }
 }
