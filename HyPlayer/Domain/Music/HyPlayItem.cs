@@ -82,7 +82,7 @@ namespace HyPlayer.Domain.Music
         public string Url { get; set; }
 
         /// <summary>
-        /// 三字母媒体源提供者标识，用于路由到对应的 <see cref="Services.Abstractions.IMediaSourceProvider"/>。
+        /// 三字母媒体源提供者标识，用于兼容旧 UI 模型中的播放来源。
         /// <list type="bullet">
         ///   <item><c>lcl</c> — 普通本地音频文件</item>
         ///   <item><c>ncm</c> — NCM 加密文件（解密后播放）</item>
@@ -173,4 +173,3 @@ namespace HyPlayer.Domain.Music
         }
     }
 }
-

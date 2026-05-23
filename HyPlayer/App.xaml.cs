@@ -31,7 +31,6 @@ using HyPlayer.Services.Navigation;
 using HyPlayer.Services.Notifications;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.LocalProvider;
-using HyPlayer.Services.Playback.MediaProviders;
 using HyPlayer.Services.Playback.PlayCoreBridge;
 using HyPlayer.Services.Playback.PlaylistService;
 using HyPlayer.Services.Playback.QueueProviders;
@@ -191,13 +190,6 @@ public sealed partial class App : Application
 
         // ── 播放核心：状态中心 ──
         depository.AddSingleton<PlaybackStateService>();
-
-        // ── 播放核心：媒体源 Provider 链（注册顺序 = 优先级）──
-        depository.AddSingleton<IMediaSourceProvider, NcmFileProvider>();           // ncm — NCM 加密文件
-        depository.AddSingleton<IMediaSourceProvider, LocalFileProvider>();          // lcl — 普通本地文件
-        depository.AddSingleton<IMediaSourceProvider, CachedNeteaseProvider>();      // nca — 网易云在线 + 缓存
-        depository.AddSingleton<IMediaSourceProvider, NeteaseStreamingProvider>();   // nst — 网易云纯流式
-        depository.AddSingleton<IMediaSourceService, MediaSourceService>();
 
         // ── 播放核心：播放策略 ──
         depository.AddSingleton<IPlayStrategy, SequentialStrategy>();       // seq — 列表循环
