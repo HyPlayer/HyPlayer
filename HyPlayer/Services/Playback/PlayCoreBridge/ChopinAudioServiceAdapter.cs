@@ -70,7 +70,7 @@ public sealed class ChopinAudioServiceAdapter :
             await _player.ConnectPlaybackSourceAsync(source, new PlaybackOptions
             {
                 AutoPlay = false,
-                SetAsPrimarySource = false,
+                SetAsPrimarySource = true,
                 Volume = targetVolume
             });
 

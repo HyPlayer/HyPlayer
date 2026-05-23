@@ -1,7 +1,11 @@
 using AsyncAwaitBestPractices;
+using Depository.Abstraction.Interfaces;
 using HyPlayer;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Models.Notifications;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.LastFM;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
@@ -10,7 +14,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media;
-using PlayItem = HyPlayer.Domain.Music.PlayItem;
 
 namespace HyPlayer.Services.Playback;
 
@@ -25,7 +28,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     public event EventHandler<SeekRequestedEventArgs>? SeekRequested;
 
     private readonly IPlayer _player;
-    private readonly IMediaSourceService _mediaSourceService;
+    private readonly PlayCoreBase _playCore;
+    private readonly INotificationHub _playCoreNotificationHub;
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
     private readonly ILyricService _lyricService;
@@ -37,7 +41,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private SystemMediaTransportControls? _smtc;
 
     private readonly SemaphoreSlim _seekerLock = new(1, 1);
-    private CancellationTokenSource? _mediaSourceCts;
+    private CancellationTokenSource? _playbackCts;
     private CancellationTokenSource? _lyricCts;
     private bool _disposed;
     private bool _initialized;
@@ -51,7 +55,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     /// <param name="setting">应用设置</param>
     public PlaybackControlService(
         IPlayer player,
-        IMediaSourceService mediaSourceService,
+        PlayCoreBase playCore,
+        INotificationHub playCoreNotificationHub,
         PlaybackStateService state,
         Setting setting,
         ILyricService lyricService,
@@ -60,7 +65,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         IBackgroundTaskRunner taskRunner)
     {
         _player = player ?? throw new ArgumentNullException(nameof(player));
-        _mediaSourceService = mediaSourceService ?? throw new ArgumentNullException(nameof(mediaSourceService));
+        _playCore = playCore ?? throw new ArgumentNullException(nameof(playCore));
+        _playCoreNotificationHub = playCoreNotificationHub ?? throw new ArgumentNullException(nameof(playCoreNotificationHub));
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _setting = setting ?? throw new ArgumentNullException(nameof(setting));
         _lyricService = lyricService ?? throw new ArgumentNullException(nameof(lyricService));
@@ -163,18 +169,14 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     /// <inheritdoc />
     public void Play()
     {
-        _player.PlayAll();
-        if (_player.PrimaryPlaybackSource.PlaybackStatus is not PlaybackStatus.Playing)
-        {
-            _player.PlayPlaybackSource(_player.PrimaryPlaybackSource);
-        }
+        _taskRunner.Forget(_playCore.PlayAsync(), "play via PlayCore");
         _state.IsPlaying = true;
     }
 
     /// <inheritdoc />
     public void Pause()
     {
-        _player.PauseAll();
+        _taskRunner.Forget(_playCore.PauseAsync(), "pause via PlayCore");
         _state.IsPlaying = false;
     }
 
@@ -194,11 +196,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         {
             await _seekerLock.WaitAsync();
 
-            if (_player is AudioGraphPlayer agp && agp.PrimaryPlaybackSource is null)
-                return;
-
-            if (_player is AudioGraphPlayer graphPlayer)
-                _player.SeekPlaybackSource(target, graphPlayer.PrimaryPlaybackSource);
+            await _playCore.SeekAsync((long)target.TotalMilliseconds);
 
             SeekRequested?.Invoke(this, new SeekRequestedEventArgs(target));
 
@@ -214,48 +212,42 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     /// <inheritdoc />
     public async Task LoadAndPlayAsync(HyPlayItem item, bool setAsPrimary = true, bool autoPlay = true, bool removeCurrentSongs = true)
     {
-        // 取消上一次加载
-        _mediaSourceCts?.Cancel();
-        _mediaSourceCts?.Dispose();
-        _mediaSourceCts = new CancellationTokenSource();
-        var ct = _mediaSourceCts.Token;
+        _playbackCts?.Cancel();
+        _playbackCts?.Dispose();
+        _playbackCts = new CancellationTokenSource();
+        var ct = _playbackCts.Token;
 
         try
         {
+            var song = item.ToSingleSong();
+            if (song is null) return;
+
             if (removeCurrentSongs)
-            {
-                var oldItem = _state.NowPlayingItem;
-                _player.RemoveAllPlaybackSource();
-                oldItem?.PlayItem?.Dispose();
-                oldItem?.PlayItem = null;
-            }
-            item.PlayItem?.Dispose();
-            item.PlayItem = null;
+                await _playCore.StopAsync(ct);
 
-            var mediaSource = await _mediaSourceService.CreateMediaSourceAsync(item, ct);
-            if (mediaSource is null) return;
-
-            ct.ThrowIfCancellationRequested();
-            item.PlayItem ??= new PlayItem();
-            mediaSource.CustomProperties["nowPlayingItem"] = item;
-
-            var playbackSource = new AudioGraphPlaybackSource(mediaSource);
-            item.PlayItem.AudioGraphPlaybackSource = playbackSource;
-
-            var targetVolume = _setting.EnableAudioGain ? (item.Volume ?? 1d) : 1d;
-            var options = new PlaybackOptions
-            {
-                SetAsPrimarySource = setAsPrimary,
-                AutoPlay = autoPlay,
-                Volume = targetVolume
-            };
-
-            await _player.ConnectPlaybackSourceAsync(playbackSource, options);
+            await SetCurrentSongAsync(item, song, ct);
+            if (autoPlay)
+                await _playCore.PlayAsync(ct);
         }
         catch (OperationCanceledException)
         {
-            // 加载被取消，静默忽略
         }
+    }
+
+    private async Task SetCurrentSongAsync(HyPlayItem item, SingleSongBase song, CancellationToken ct)
+    {
+        _state.NowPlayingItem = item;
+        _state.Duration = TimeSpan.FromMilliseconds(Math.Max(0, item.LengthInMilliseconds));
+        _lyricCts?.Cancel();
+        _lyricCts?.Dispose();
+        _lyricCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+
+        await _playCoreNotificationHub.PublishNotificationAsync(
+            new CurrentSongChangedNotification { CurrentPlayingSong = song },
+            ct);
+
+        _taskRunner.Forget(LoadLyricsSafeAsync(item, _lyricCts.Token), "load lyrics for PlayCore current song");
+        _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item), "update playback notification on PlayCore current song");
     }
 
     /// <inheritdoc />
@@ -299,8 +291,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     {
         if (!ReferenceEquals(source, _player.PrimaryPlaybackSource)) return;
 
-        var agSource = source as AudioGraphPlaybackSource;
-        var item = agSource?.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
+        var item = _state.NowPlayingItem;
         if (item is null) return;
 
         if (_setting.LastFMScrobble)
@@ -315,10 +306,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     /// </summary>
     private void OnPrimaryPlaybackSourceChanged(IPlaybackSource source)
     {
-        if (source is AudioGraphPlaybackSource agSource
-            && agSource.PlaybackSource?.CustomProperties.TryGetValue("nowPlayingItem", out var obj) == true
-            && obj is HyPlayItem item)
+        if (source is AudioGraphPlaybackSource agSource)
         {
+            var item = _state.NowPlayingItem;
+            if (item is null) return;
+
             _state.Duration = agSource.PlaybackSource.Duration ?? TimeSpan.Zero;
             _lyricCts?.Cancel();
             _lyricCts?.Dispose();
@@ -396,8 +388,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         }
         _smtc?.ButtonPressed -= SMTC_ButtonPressed;
         _smtc?.PlaybackPositionChangeRequested -= SMTC_PlaybackPositionChangeRequested;
-        _mediaSourceCts?.Cancel();
-        _mediaSourceCts?.Dispose();
+        _playbackCts?.Cancel();
+        _playbackCts?.Dispose();
         _lyricCts?.Cancel();
         _lyricCts?.Dispose();
         _seekerLock.Dispose();
