@@ -2,6 +2,7 @@
 
 using Depository.Abstraction.Enums;
 using Depository.Abstraction.Interfaces;
+using Depository.Abstraction.Interfaces.NotificationHub;
 using Depository.Extensions;
 using HyPlayer.Classes;
 using HyPlayer.Domain;
@@ -11,8 +12,10 @@ using HyPlayer.Features.Widgets.Services;
 using HyPlayer.Infrastructure.Platform;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseProvider;
+using HyPlayer.PlayCore;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.PlayListControllers;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.AppState;
 using HyPlayer.Services.Authentication;
@@ -25,7 +28,9 @@ using HyPlayer.Services.Lyrics;
 using HyPlayer.Services.Navigation;
 using HyPlayer.Services.Notifications;
 using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.LocalProvider;
 using HyPlayer.Services.Playback.MediaProviders;
+using HyPlayer.Services.Playback.PlayCoreBridge;
 using HyPlayer.Services.Playback.PlaylistService;
 using HyPlayer.Services.Playback.QueueProviders;
 using HyPlayer.Services.Playback.Strategies;
@@ -152,10 +157,23 @@ public sealed partial class App : Application
         depository.AddSingleton<IContextRecommendationProvidable>(neteaseProvider);
         depository.AddSingleton<IScopedItemRangeProvidable>(neteaseProvider);
         depository.AddSingleton<IProvidableItemDynamicMetadataProvidable>(neteaseProvider);
+        var localProvider = new LocalProvider();
+        depository.AddSingleton<LocalProvider>(localProvider);
+        depository.AddSingleton<ProviderBase>(localProvider);
+        depository.AddSingleton<IMusicResourceProvidable>(localProvider);
         depository.AddSingleton<LastFMClient>(new LastFMClient(new LastFMOptions() { ApiKey = LastFMConstants.APIKEY, ApiSecret = LastFMConstants.SECRET }, client));
         depository.AddSingleton<Setting>(setting);
         depository.AddSingleton<AudioGraphPlayer>();
         depository.Add(typeof(IPlayer), typeof(AudioGraphPlayer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<AudioGraphPlayer>());
+
+        // ── PlayCore foundation (side-by-side; existing playback remains active) ──
+        depository.AddSingleton<INotificationHub, PlayCoreNotificationHub>();
+        depository.AddSingleton<DefaultPlayListManager>();
+        depository.Add(typeof(PlayListManagerBase), typeof(DefaultPlayListManager), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<DefaultPlayListManager>());
+        depository.AddSingleton<OrderedRollPlayController>();
+        depository.Add(typeof(PlayControllerBase), typeof(OrderedRollPlayController), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<OrderedRollPlayController>());
+        depository.AddSingleton<Chopin>();
+        depository.Add(typeof(PlayCoreBase), typeof(Chopin), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<Chopin>());
 
         // ── 播放核心：状态中心 ──
         depository.AddSingleton<PlaybackStateService>();
