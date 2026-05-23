@@ -4,9 +4,9 @@ using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Lyric;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using System;
@@ -28,20 +28,20 @@ public sealed class LyricService : ILyricService
     public event EventHandler<LyricLoadedEventArgs>? LyricLoaded;
     public event EventHandler<LyricIndexChangedEventArgs>? LyricIndexChanged;
 
-    private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly ILyricProvidable _lyricProvider;
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
     private readonly HttpClient _httpClient;
     private readonly IBackgroundTaskRunner _taskRunner;
 
     public LyricService(
-        NeteaseCloudMusicApiHandler api,
+        ILyricProvidable lyricProvider,
         PlaybackStateService state,
         Setting setting,
         HttpClient httpClient,
         IBackgroundTaskRunner taskRunner)
     {
-        _api = api;
+        _lyricProvider = lyricProvider;
         _state = state;
         _setting = setting;
         _httpClient = httpClient;
@@ -203,77 +203,21 @@ public sealed class LyricService : ILyricService
     {
         try
         {
-            if (item.ItemType != HyPlayItemType.Netease || item.PlayItem == null || string.IsNullOrWhiteSpace(item.Id))
+            if (item.ItemType != HyPlayItemType.Netease || string.IsNullOrWhiteSpace(item.Id))
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
 
             var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(
                 CacheType.LyricApi, item.Id,
-                async () =>
-                {
-                    var resp = await _api.RequestAsync(NeteaseApis.LyricApi, new LyricRequest { Id = item.Id });
-                    return resp.IsError ? null : resp.Value;
-                },
+                async () => await _lyricProvider.GetLyricInfoAsync(item.ToSingleSong()!, ct),
                 cancellationToken: ct);
 
             if (lyricResult is null)
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 歌词获取失败" };
 
-            if (lyricResult.Lyric is null && lyricResult.YunLyric is null)
+            if (lyricResult.Count == 0)
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
 
-            static string CleanLrc(string text) =>
-                string.IsNullOrEmpty(text)
-                    ? string.Empty
-                    : string.Join('\n', text.Split("\n").Where(t => !t.StartsWith('{')).ToArray());
-
-            PureLyricInfo res;
-
-            if (lyricResult.YunLyric?.Lyric is null)
-            {
-                res = new PureLyricInfo
-                {
-                    PureLyrics = CleanLrc(lyricResult.Lyric?.Lyric),
-                    TrLyrics = lyricResult.TranslationLyric?.Lyric,
-                    NeteaseRomaji = lyricResult.RomajiLyric?.Lyric,
-                };
-            }
-            else
-            {
-                res = new KaraokLyricInfo
-                {
-                    PureLyrics = CleanLrc(lyricResult.Lyric?.Lyric),
-                    TrLyrics = lyricResult.TranslationLyric?.Lyric,
-                    NeteaseRomaji = lyricResult.RomajiLyric?.Lyric,
-                    KaraokLyric = CleanLrc(lyricResult.YunLyric.Lyric),
-                    YrTrLyrics = lyricResult.YunTranslationLyric?.Lyric,
-                    YrNeteaseRomaji = lyricResult.YunRomajiLyric?.Lyric,
-                };
-            }
-
-            // metadata
-            if (lyricResult.LyricUser?.UserId is not null)
-            {
-                res.LyricMetadata.Add(new LyricInfoMetadata
-                {
-                    Key = "lyric_user",
-                    Value = lyricResult.LyricUser.Nickname,
-                    ActionUri = $"hyplayer://us{lyricResult.LyricUser.UserId}",
-                    DisplayName = "歌词贡献者"
-                });
-            }
-
-            if (lyricResult.TranslationUser?.UserId is not null)
-            {
-                res.LyricMetadata.Add(new LyricInfoMetadata
-                {
-                    Key = "translation_user",
-                    Value = lyricResult.TranslationUser.Nickname,
-                    ActionUri = $"hyplayer://us{lyricResult.TranslationUser.UserId}",
-                    DisplayName = "翻译贡献者"
-                });
-            }
-
-            return res;
+            return ConvertProviderLyrics(lyricResult);
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception ex)
@@ -281,6 +225,58 @@ public sealed class LyricService : ILyricService
             System.Diagnostics.Debug.WriteLine($"Lyric error: {ex.Message}");
             return new PureLyricInfo();
         }
+    }
+
+    private static PureLyricInfo ConvertProviderLyrics(System.Collections.Generic.IEnumerable<RawLyricInfo> lyrics)
+    {
+        static string CleanLrc(string? text) =>
+            string.IsNullOrEmpty(text)
+                ? string.Empty
+                : string.Join('\n', text.Split("\n").Where(t => !t.StartsWith('{')).ToArray());
+
+        var providerLyrics = lyrics.OfType<NeteaseRawLyricInfo>().ToList();
+        var wordLyrics = providerLyrics.Where(lyric => lyric.IsWord).ToList();
+        var normalLyrics = providerLyrics.Where(lyric => !lyric.IsWord).ToList();
+
+        var original = normalLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Original);
+        var translation = normalLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Translation);
+        var romaji = normalLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Romaji);
+        var wordOriginal = wordLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Original);
+        var wordTranslation = wordLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Translation);
+        var wordRomaji = wordLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Romaji);
+
+        PureLyricInfo result = wordOriginal is null
+            ? new PureLyricInfo
+            {
+                PureLyrics = CleanLrc(original?.LyricText),
+                TrLyrics = translation?.LyricText,
+                NeteaseRomaji = romaji?.LyricText,
+            }
+            : new KaraokLyricInfo
+            {
+                PureLyrics = CleanLrc(original?.LyricText),
+                TrLyrics = translation?.LyricText,
+                NeteaseRomaji = romaji?.LyricText,
+                KaraokLyric = CleanLrc(wordOriginal.LyricText),
+                YrTrLyrics = wordTranslation?.LyricText,
+                YrNeteaseRomaji = wordRomaji?.LyricText,
+            };
+
+        AddLyricMetadata(result, original, "lyric_user", "歌词贡献者");
+        AddLyricMetadata(result, translation, "translation_user", "翻译贡献者");
+        return result;
+    }
+
+    private static void AddLyricMetadata(PureLyricInfo result, NeteaseRawLyricInfo? lyric, string key, string displayName)
+    {
+        if (lyric?.Author?.ActualId is null) return;
+        result.LyricMetadata.Add(new LyricInfoMetadata
+        {
+            Key = key,
+            Value = lyric.Author.Name,
+            ActionUri = $"hyplayer://us{lyric.Author.ActualId}",
+            DisplayName = displayName
+        });
     }
 
     private static async Task<PureLyricInfo> LoadLocalLyricAsync(HyPlayItem item)

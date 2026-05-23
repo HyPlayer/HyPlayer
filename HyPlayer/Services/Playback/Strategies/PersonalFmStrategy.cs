@@ -1,9 +1,10 @@
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -25,18 +26,17 @@ namespace HyPlayer.Services.Playback.Strategies;
 /// </summary>
 public sealed class PersonalFmStrategy : IAsyncPlayStrategy
 {
-    private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly IPersonalFmProvidable _provider;
     private readonly Setting _setting;
-    private bool _isNewToAiDj = true;
 
     /// <summary>
     /// 创建私人 FM 策略实例
     /// </summary>
-    /// <param name="api">网易云音乐 API 处理器</param>
+    /// <param name="provider">私人 FM Provider</param>
     /// <param name="setting">应用设置</param>
-    public PersonalFmStrategy(NeteaseCloudMusicApiHandler api, Setting setting)
+    public PersonalFmStrategy(IPersonalFmProvidable provider, Setting setting)
     {
-        _api = api ?? throw new ArgumentNullException(nameof(api));
+        _provider = provider ?? throw new ArgumentNullException(nameof(provider));
         _setting = setting ?? throw new ArgumentNullException(nameof(setting));
     }
 
@@ -78,7 +78,7 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
         if (!_setting.useAiDj)
             return await LoadPersonalFmAsync(ct).ConfigureAwait(false);
 
-        return await LoadAiDjAsync(ct).ConfigureAwait(false);
+        return await LoadAiDjAsync(ctx, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -86,79 +86,30 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
     /// </summary>
     private async Task<IEnumerable<HyPlayItem>> LoadPersonalFmAsync(CancellationToken ct)
     {
-        var result = await _api.RequestAsync(NeteaseApis.PersonalFmApi, ct).ConfigureAwait(false);
-        if (result.IsError || result.Value?.Items is not { Length: > 0 })
-            return [];
-
-        return result.Value.Items
-            .Select(item => item.MapToNcSong())
+        return (await _provider.GetPersonalFmQueueAsync(ct).ConfigureAwait(false))
             .Select(song => song.ToHyPlayItem());
     }
 
     /// <summary>
     /// 从 AI DJ 接口加载曲目
     /// </summary>
-    private async Task<IEnumerable<HyPlayItem>> LoadAiDjAsync(CancellationToken ct)
+    private async Task<IEnumerable<HyPlayItem>> LoadAiDjAsync(PlayStrategyContext ctx, CancellationToken ct)
     {
-        var result = await _api.RequestAsync(NeteaseApis.AiDjContentRcmdInfoApi,
-            new AiDjContentRcmdInfoRequest { IsNewToAidj = _isNewToAiDj }, ct).ConfigureAwait(false);
-        _isNewToAiDj = false;
-
-        if (result.IsError || result.Value?.Data?.AiDjResources is not { Length: > 0 })
-            return [];
-
-        var items = new List<HyPlayItem>();
-        foreach (var resource in result.Value.Data.AiDjResources)
+        if (ctx.CurrentItem?.ToSingleSong() is { } currentSong)
         {
-            switch (resource)
-            {
-                case AiDjContentRcmdInfoResponse.AiDjContentRcmdInfoData.AiDjContentRcmdAudioResource audioResource:
-                    foreach (var audio in audioResource.Value?.Audio ?? [])
-                    {
-                        items.Add(new HyPlayItem
-                        {
-                            ItemType = HyPlayItemType.Netease,
-                            Album = new NCAlbum
-                            {
-                                AlbumType = HyPlayItemType.Netease,
-                                Alias = "私人 DJ",
-                                Cover = "https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg",
-                                Description = "私人 DJ",
-                                Id = "126368130",
-                                Name = "私人 DJ 推荐语"
-                            },
-                            Artist =
-                            [
-                                new NCArtist
-                                {
-                                    Alias = "私人 DJ",
-                                    Avatar = "https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg",
-                                    Id = "1",
-                                    Name = "私人 DJ",
-                                    Type = HyPlayItemType.Netease
-                                }
-                            ],
-                            Bitrate = 0,
-                            Id = audio.Id ?? "-1",
-                            IsLocalFile = false,
-                            LengthInMilliseconds = audio.Duration,
-                            Name = "私人 DJ 推荐语",
-                            InfoTag = "私人 DJ",
-                            Url = audio.Url,
-                            Size = audio.Size ?? 0
-                        });
-                    }
-                    break;
+            var container = await _provider.GetPersonalFmContextAsync(currentSong.ActualId ?? currentSong.Name, ct)
+                .ConfigureAwait(false);
+            var items = container is IProgressiveLoadingContainer progressive
+                ? (await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount, ct).ConfigureAwait(false)).Item2
+                : container is LinerContainerBase liner
+                    ? await liner.GetAllItemsAsync(ct).ConfigureAwait(false)
+                    : [];
 
-                case AiDjContentRcmdInfoResponse.AiDjContentRcmdInfoData.AiDjContentRcmdAudioSong songResource:
-                    var ncSong = songResource.Value?.SongName?.MapToNcSong();
-                    if (ncSong is not null)
-                        items.Add(ncSong.ToHyPlayItem());
-                    break;
-            }
+            var songs = items.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem()).ToList();
+            if (songs.Count > 0) return songs;
         }
 
-        return items;
+        return await LoadPersonalFmAsync(ct).ConfigureAwait(false);
     }
 
 }

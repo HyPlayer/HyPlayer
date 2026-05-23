@@ -1,6 +1,6 @@
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Recommend;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,15 +10,15 @@ namespace HyPlayer.Shell.Search;
 
 public sealed class ShellSearchViewModel
 {
-    private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly ISearchSuggestionProvidable _suggestionProvider;
     private readonly INavigationService _navigation;
     private readonly INotificationService _notification;
 
-    public ShellSearchViewModel(NeteaseCloudMusicApiHandler api,
-                                INavigationService navigation,
-                                INotificationService notification)
+    public ShellSearchViewModel(ISearchSuggestionProvidable suggestionProvider,
+                                 INavigationService navigation,
+                                 INotificationService notification)
     {
-        _api = api;
+        _suggestionProvider = suggestionProvider;
         _navigation = navigation;
         _notification = notification;
     }
@@ -27,15 +27,23 @@ public sealed class ShellSearchViewModel
     {
         if (string.IsNullOrEmpty(keyword)) return null;
 
-        var json = await _api.RequestAsync(NeteaseApis.SearchSuggestionApi,
-                                           new SearchSuggestionRequest { Keyword = keyword });
-        if (json.IsError)
+        try
         {
-            _notification.ShowMessage("获取推荐词失败", json.Error.Message);
-            return null;
+            var container = await _suggestionProvider.GetSearchSuggestionsAsync(keyword);
+            var items = container is LinerContainerBase liner ? await liner.GetAllItemsAsync() : [];
+            return items.Select(GetSuggestionText).Where(text => !string.IsNullOrWhiteSpace(text)).ToList();
+        }
+        catch (System.Exception ex)
+        {
+            _notification.ShowMessage("获取推荐词失败", ex.Message);
         }
 
-        return json.Value.Result.AllMatch?.Select(t => t.Keyword).ToList();
+        return null;
+    }
+
+    private static string? GetSuggestionText(ProvidableItemBase item)
+    {
+        return !string.IsNullOrWhiteSpace(item.Name) ? item.Name : item.ActualId;
     }
 
     public void NavigateToSearch(string keyword)
