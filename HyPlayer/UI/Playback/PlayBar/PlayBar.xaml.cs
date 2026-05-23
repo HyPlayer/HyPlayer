@@ -9,8 +9,7 @@ using HyPlayer.Features.Artist;
 using HyPlayer.Features.Comments;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
@@ -67,6 +66,7 @@ public sealed partial class PlayBar
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly NeteasePersonalFMContainer _personalFmContainer = Ioc.Default.GetRequiredService<NeteasePersonalFMContainer>();
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private readonly IAppLifecycleStateService _lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
@@ -433,7 +433,7 @@ DoubleAnimation verticalAnimation;
         }
         else
         {
-            _taskRunner.Forget(global::HyPlayer.NeteaseProvider.NeteaseProvider.Instance.RequestAsync(NeteaseApis.PersonalFmTrashApi, new FmTrashRequest { Id = ViewModel.NowPlayingItem.Id }), "trash personal FM item");
+            _taskRunner.Forget(_personalFmContainer.MoveItemToTrashAsync(ViewModel.NowPlayingItem.Id), "trash personal FM item");
             PersonalFM.LoadNextFMStatic();
         }
         ViewModel.SyncFromState();

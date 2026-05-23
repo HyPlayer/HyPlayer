@@ -12,6 +12,7 @@ using HyPlayer.Features.Widgets.Services;
 using HyPlayer.Infrastructure.Platform;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseProvider;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.AudioServices;
@@ -151,6 +152,7 @@ public sealed partial class App : Application
         depository.AddSingleton<ISearchableProvider>(neteaseProvider);
         depository.AddSingleton<IContainerPageProvidable>(neteaseProvider);
         depository.AddSingleton<IProvidableItemDynamicMetadataProvidable>(neteaseProvider);
+        depository.AddSingleton<NeteasePersonalFMContainer>(new NeteasePersonalFMContainer { ActualId = "default", Name = "私人 FM" });
         var localProvider = new LocalProvider();
         depository.AddSingleton<LocalProvider>(localProvider);
         depository.AddSingleton<ProviderBase>(localProvider);
