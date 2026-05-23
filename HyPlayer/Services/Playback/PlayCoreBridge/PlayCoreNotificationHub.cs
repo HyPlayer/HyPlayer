@@ -1,18 +1,30 @@
 using Depository.Abstraction.Interfaces;
+using Depository.Abstraction.Interfaces.NotificationHub;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace HyPlayer.Services.Playback.PlayCoreBridge;
 
-public sealed class PlayCoreNotificationHub : INotificationHub
+public sealed class PlayCoreNotificationHub(IDepository depository) : INotificationHub
 {
-    public Task PublishNotificationAsync<TNotification>(
+    public async Task PublishNotificationAsync<TNotification>(
         TNotification notification,
         CancellationToken ctk = default)
     {
         ctk.ThrowIfCancellationRequested();
-        return Task.CompletedTask;
+
+        var subscribers = depository
+            .ResolveDependencies(typeof(IEnumerable<INotificationSubscriber<TNotification>>))
+            .OfType<INotificationSubscriber<TNotification>>()
+            .ToList();
+
+        foreach (var subscriber in subscribers)
+        {
+            ctk.ThrowIfCancellationRequested();
+            await subscriber.HandleNotificationAsync(notification, ctk).ConfigureAwait(false);
+        }
     }
 
     public Task<List<TResult>> PublishNotificationWithResultAsync<TNotification, TResult>(

@@ -16,6 +16,7 @@ using HyPlayer.PlayCore;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.AudioServices;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Notifications;
 using HyPlayer.PlayCore.PlayListControllers;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.AppState;
@@ -173,8 +174,10 @@ public sealed partial class App : Application
         depository.Add(typeof(PlayListManagerBase), typeof(DefaultPlayListManager), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<DefaultPlayListManager>());
         depository.AddSingleton<OrderedRollPlayController>();
         depository.Add(typeof(PlayControllerBase), typeof(OrderedRollPlayController), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<OrderedRollPlayController>());
+        depository.Add(typeof(INotificationSubscriber<InnerPlayListChangedNotification>), typeof(OrderedRollPlayController), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<OrderedRollPlayController>());
         depository.AddSingleton<Chopin>();
         depository.Add(typeof(PlayCoreBase), typeof(Chopin), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<Chopin>());
+        depository.Add(typeof(INotificationSubscriber<CurrentSongChangedNotification>), typeof(Chopin), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<Chopin>());
         depository.AddSingleton<ChopinAudioServiceAdapter>();
         depository.Add(typeof(AudioServiceBase), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
         depository.Add(typeof(IPlayAudioTicketService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
