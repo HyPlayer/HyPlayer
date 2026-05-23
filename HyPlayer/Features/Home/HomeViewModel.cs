@@ -41,22 +41,22 @@ namespace HyPlayer.Features.Home
 
         public async Task GetDataAsync()
         {
-            ToplistPlaylist = (await LoadContainerItemsAsync(await _neteaseProvider.GetRecommendationAsync(global::HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.Chart)))
+            ToplistPlaylist = (await LoadContainerItemsAsync(new NeteaseToplistContainer { ActualId = "chart", Name = "排行榜" }))
                 .OfType<NeteasePlaylist>()
                 .Select(MapToNCPlayList)
                 .ToList();
-            OfficialPlaylists = (await LoadContainerItemsAsync(await _neteaseProvider.GetRecommendationAsync(global::HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.PlaylistCategory + "官方")))
+            OfficialPlaylists = (await LoadContainerItemsAsync(new NeteasePlaylistCategoryContainer { ActualId = "官方", Category = "官方", Name = "官方推荐歌单" }))
                 .OfType<NeteasePlaylist>()
                 .Select(MapToNCPlayList)
                 .ToList();
             // 登录内容
             if (Ioc.Default.GetRequiredService<IAuthService>().IsLoggedIn)
             {
-                RecommendedPlaylist = (await LoadContainerItemsAsync(await _neteaseProvider.GetRecommendationAsync(global::HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.Playlist)))
+                RecommendedPlaylist = (await LoadContainerItemsAsync(new NeteaseRecommendPlaylistContainer { ActualId = "rcpl", Name = "推荐歌单" }))
                     .OfType<NeteasePlaylist>()
                     .Select(MapToNCPlayList)
                     .ToList();
-                RecommendedSongs = (await LoadContainerItemsAsync(await _neteaseProvider.GetRecommendationAsync(global::HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.SingleSong)))
+                RecommendedSongs = (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
                     .OfType<SingleSongBase>()
                     .Select(song => song.ToHyPlayItem().ToNCSong())
                     .ToList();

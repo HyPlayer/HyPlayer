@@ -166,7 +166,7 @@ namespace HyPlayer.Features.Playlist
             {
                 try
                 {
-                    return (await LoadContainerItemsAsync(await _neteaseProvider.GetRecommendationAsync(global::HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.SingleSong)))
+                    return (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
                         .OfType<SingleSongBase>()
                         .Select(MapToNCSong)
                         .ToList();
