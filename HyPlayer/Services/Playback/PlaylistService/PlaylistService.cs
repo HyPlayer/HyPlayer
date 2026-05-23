@@ -253,6 +253,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         else
             SendPlaylistChanged();
 
-        _taskRunner.Forget(SyncPlayCoreShadowAsync, "sync playlist to playcore shadow");
+        SchedulePlayCoreShadowSync();
     }
 }

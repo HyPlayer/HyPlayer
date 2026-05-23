@@ -8,6 +8,11 @@ namespace HyPlayer.Services.Playback.PlaylistService;
 
 public sealed partial class PlaylistService
 {
+    private void SchedulePlayCoreShadowSync()
+    {
+        _taskRunner.Forget(SyncPlayCoreShadowAsync, "sync playlist to playcore shadow");
+    }
+
     private async Task SyncPlayCoreShadowAsync()
     {
         try

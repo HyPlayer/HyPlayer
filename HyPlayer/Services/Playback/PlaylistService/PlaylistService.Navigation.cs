@@ -44,6 +44,7 @@ public sealed partial class PlaylistService
             item = _items[_nowPlayingIndex];
             SyncIndex();
         }
+        SchedulePlayCoreShadowSync();
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
@@ -67,6 +68,7 @@ public sealed partial class PlaylistService
             item = _items[_nowPlayingIndex];
             SyncIndex();
         }
+        SchedulePlayCoreShadowSync();
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
@@ -90,6 +92,7 @@ public sealed partial class PlaylistService
             _nowPlayingIndex = index;
             SyncIndex();
         }
+        SchedulePlayCoreShadowSync();
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
