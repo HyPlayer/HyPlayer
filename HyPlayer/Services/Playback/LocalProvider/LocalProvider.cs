@@ -1,13 +1,21 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Network;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Services.Playback.PlayCoreBridge;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Media.Core;
+using Windows.Storage;
+using Windows.Storage.Streams;
 
 namespace HyPlayer.Services.Playback.LocalProvider;
 
@@ -37,13 +45,13 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
             if (!Path.IsPathFullyQualified(path))
                 return Task.FromResult<MusicResourceBase?>(null);
 
-            // TODO: Add NCM decryption support for local encrypted files.
             MusicResourceBase resource = new LocalMusicResource
             {
                 Uri = new Uri(path),
                 ResourceName = song.Name,
                 HasContent = true,
                 ExtensionName = Path.GetExtension(path),
+                TypeId = song.TypeId,
             };
 
             return Task.FromResult<MusicResourceBase?>(resource);
@@ -54,8 +62,12 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
         }
     }
 
-    private sealed class LocalMusicResource : MusicResourceBase
+    private sealed class LocalMusicResource : MusicResourceBase, IChopinPlaybackSourceResource
     {
+        public required string TypeId { get; init; }
+
+        public double? SuggestedVolume => 1d;
+
         public override Task<ResourceResultBase> GetResourceAsync(
             ResourceQualityTag? qualityTag = null,
             CancellationToken ctk = default)
@@ -68,6 +80,37 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
                 ExternalException = exists ? null : new FileNotFoundException("Local music file was not found.", Uri?.LocalPath),
                 ResourceStatus = exists ? ResourceStatus.Success : ResourceStatus.Fail,
             });
+        }
+
+        public async Task<AudioGraphPlaybackSource?> CreatePlaybackSourceAsync(CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            if (Uri?.IsFile != true)
+                return null;
+
+            var file = await StorageFile.GetFileFromPathAsync(Uri.LocalPath);
+            MediaSource mediaSource;
+            if (TypeId == "ncm")
+            {
+                using var stream = await file.OpenStreamForReadAsync();
+                if (!NCMFile.IsCorrectNCMFile(stream))
+                    return null;
+
+                var info = NCMFile.GetNCMMusicInfo(stream);
+                using var encryptedStream = NCMFile.GetEncryptedStream(stream);
+                encryptedStream.Seek(0, SeekOrigin.Begin);
+
+                var playableStream = new InMemoryRandomAccessStream();
+                await encryptedStream.CopyToAsync(playableStream.AsStreamForWrite(), ctk);
+                playableStream.Seek(0);
+                mediaSource = MediaSource.CreateFromStream(playableStream, MIMEHelper.GetNCMFileMimeType(info.format));
+            }
+            else
+            {
+                mediaSource = MediaSource.CreateFromStorageFile(file);
+            }
+
+            return new AudioGraphPlaybackSource(mediaSource);
         }
     }
 

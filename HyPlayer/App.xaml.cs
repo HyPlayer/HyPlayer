@@ -159,8 +159,6 @@ public sealed partial class App : Application
         depository.AddSingleton<IContextRecommendationProvidable>(neteaseProvider);
         depository.AddSingleton<IScopedItemRangeProvidable>(neteaseProvider);
         depository.AddSingleton<IProvidableItemDynamicMetadataProvidable>(neteaseProvider);
-        depository.AddSingleton<LegacyMediaSourceResourceProvider>();
-        depository.Add(typeof(IMusicResourceProvidable), typeof(LegacyMediaSourceResourceProvider), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<LegacyMediaSourceResourceProvider>());
         var localProvider = new LocalProvider();
         depository.AddSingleton<LocalProvider>(localProvider);
         depository.AddSingleton<ProviderBase>(localProvider);

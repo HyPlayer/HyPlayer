@@ -40,7 +40,7 @@ public sealed class ChopinAudioServiceAdapter :
     public override async Task<AudioTicketBase> GetAudioTicketAsync(MusicResourceBase musicResource, CancellationToken ctk = default)
     {
         ctk.ThrowIfCancellationRequested();
-        if (musicResource is not LegacyMediaSourceMusicResource && musicResource.Uri is null)
+        if (musicResource is not IChopinPlaybackSourceResource && musicResource.Uri is null)
         {
             throw new ArgumentException("Music resource must have a Uri.", nameof(musicResource));
         }
@@ -49,20 +49,15 @@ public sealed class ChopinAudioServiceAdapter :
         try
         {
             var targetVolume = 1d;
-            if (musicResource is LegacyMediaSourceMusicResource legacyResource)
+            if (musicResource is IChopinPlaybackSourceResource chopinResource)
             {
-                if (legacyResource.LegacyMediaSource is null)
+                source = await chopinResource.CreatePlaybackSourceAsync(ctk);
+                if (source is null)
                 {
-                    throw new ArgumentException("Legacy music resource must have a MediaSource.", nameof(musicResource));
+                    throw new ArgumentException("Music resource did not create a playback source.", nameof(musicResource));
                 }
 
-                if (!legacyResource.LegacyMediaSource.CustomProperties.ContainsKey("nowPlayingItem"))
-                {
-                    legacyResource.LegacyMediaSource.CustomProperties["nowPlayingItem"] = legacyResource.LegacyItem;
-                }
-
-                targetVolume = legacyResource.SuggestedVolume ?? legacyResource.LegacyItem.Volume ?? 1d;
-                source = new AudioGraphPlaybackSource(legacyResource.LegacyMediaSource);
+                targetVolume = chopinResource.SuggestedVolume ?? 1d;
             }
             else
             {
