@@ -1,15 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain;
+using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
-using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.User;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Cache;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -24,7 +23,7 @@ namespace HyPlayer.Shell.Navigation;
 /// </summary>
 public partial class NavigationShellViewModel : ObservableObject
 {
-    private readonly NeteaseCloudMusicApiHandler _api;
+    private readonly IUserLibraryProvidable _userLibraryProvider;
     private readonly IAuthService _auth;
     private readonly INotificationService _notification;
 
@@ -57,12 +56,12 @@ public partial class NavigationShellViewModel : ObservableObject
     private NavigationNode? _likedSongsNode;
 
     public NavigationShellViewModel(
-        NeteaseCloudMusicApiHandler api,
+        IUserLibraryProvidable userLibraryProvider,
         IAuthService auth,
         INotificationService notification,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
-        _api = api;
+        _userLibraryProvider = userLibraryProvider;
         _auth = auth;
         _notification = notification;
 
@@ -187,38 +186,27 @@ public partial class NavigationShellViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var response = await SimpleCacher.GetOrCreateCacheAsync(
-                CacheType.Login, "mySongList",
-                async () =>
-                {
-                    var json = await _api.RequestAsync(NeteaseApis.UserPlaylistApi,
-                        new UserPlaylistRequest { Uid = _auth.CurrentUser.Id });
-                    if (json.IsError)
-                    {
-                        _notification.ShowMessage("获取歌单失败", json.Error?.Message);
-                        return null;
-                    }
-                    return json.Value;
-                });
+            var response = await _userLibraryProvider.GetUserContainersAsync(_auth.CurrentUser.Id, 0, 100);
 
             _createdContainer?.Children.Clear();
             _subscribedContainer?.Children.Clear();
             _auth.MySongLists.Clear();
 
-            var playlists = response?.Playlists ?? [];
-            if (playlists.Length == 0)
+            var playlists = response.Items.OfType<NeteasePlaylist>().ToList();
+            if (playlists.Count == 0)
             {
                 if (_likedSongsNode is not null)
                     _likedSongsNode.IsVisible = false;
                 return;
             }
-            _auth.MySongLists.Add(playlists[0].MapToNCPlayList());
+
+            _auth.MySongLists.Add(MapToNCPlayList(playlists[0]));
 
 
-            for (int i = 1; i < playlists.Length; i++)
+            for (int i = 1; i < playlists.Count; i++)
             {
                 var pl = playlists[i];
-                if (string.IsNullOrEmpty(pl.Id) || string.IsNullOrEmpty(pl.Name))
+                if (string.IsNullOrEmpty(pl.ActualId) || string.IsNullOrEmpty(pl.Name))
                     continue;
 
                 if (pl.Subscribed)
@@ -226,18 +214,18 @@ public partial class NavigationShellViewModel : ObservableObject
                     _subscribedContainer?.Children.Add(new NavigationNode
                     {
                         Title = pl.Name,
-                        Route = new AppRoute.Playlist(pl.Id),
-                        Icon = new FontIcon { Glyph = pl.Privacy != 0 ? "\uE72E" : "\uE142" }
+                        Route = new AppRoute.Playlist(pl.ActualId),
+                        Icon = new FontIcon { Glyph = "\uE142" }
                     });
                 }
                 else
                 {
-                    _auth.MySongLists.Add(pl.MapToNCPlayList());
+                    _auth.MySongLists.Add(MapToNCPlayList(pl));
                     _createdContainer?.Children.Add(new NavigationNode
                     {
                         Title = pl.Name,
-                        Route = new AppRoute.Playlist(pl.Id),
-                        Icon = new FontIcon { Glyph = pl.Privacy != 0 ? "\uE72E" : "\uE142" }
+                        Route = new AppRoute.Playlist(pl.ActualId),
+                        Icon = new FontIcon { Glyph = "\uE142" }
                     });
                 }
             }
@@ -247,11 +235,40 @@ public partial class NavigationShellViewModel : ObservableObject
             if (_subscribedContainer is not null)
                 _subscribedContainer.IsVisible = _subscribedContainer.Children.Count > 0;
             if (_likedSongsNode is not null)
-                _likedSongsNode.IsVisible = playlists.Length > 0;
+                _likedSongsNode.IsVisible = playlists.Count > 0;
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("获取歌单失败", ex.Message);
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    private static NCPlayList MapToNCPlayList(NeteasePlaylist playlist)
+    {
+        return new NCPlayList
+        {
+            PlaylistId = playlist.ActualId ?? string.Empty,
+            Name = playlist.Name,
+            Description = playlist.Description,
+            Cover = playlist.CoverUrl,
+            Creator = playlist.Creator is null
+                ? null
+                : new NCUser
+                {
+                    Id = playlist.Creator.ActualId ?? string.Empty,
+                    Name = playlist.Creator.Name,
+                    Avatar = string.Empty,
+                    Signature = string.Empty
+                },
+            HasSubscribed = playlist.Subscribed,
+            TrackCount = playlist.TrackCount,
+            PlayCount = playlist.PlayCount,
+            BookCount = playlist.SubscribedCount,
+            UpdateTime = playlist.UpdateTime > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(playlist.UpdateTime).LocalDateTime : DateTime.MinValue
+        };
     }
 }
