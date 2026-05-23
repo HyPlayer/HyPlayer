@@ -1,11 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Infrastructure.Serialization;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -125,15 +123,8 @@ namespace HyPlayer.Services.History
             {
                 var songIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                     .Values["songHistory"].ToString(), JsonDefaults.Options);
-                var result = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().RequestAsync(NeteaseApis.SongDetailApi,
-                    new SongDetailRequest()
-                    {
-                        IdList = songIds
-                    });
-                if (result.IsSuccess)
-                {
-                    return result.Value.Songs?.Select(t => t.MapToNcSong()).ToList();
-                }
+                var songs = await LoadNeteaseSongsAsync(songIds);
+                return songs.Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
             }
             catch (Exception e)
             {
@@ -167,20 +158,10 @@ namespace HyPlayer.Services.History
             {
                 var nowIds = trackIds.GetRange(nowIndex * 500,
                     Math.Min(500, trackIds.Count - nowIndex * 500));
-                var json = await Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>()?.RequestAsync(NeteaseApis.SongDetailApi,
-                         new SongDetailRequest()
-                         {
-                             IdList = nowIds
-                         });
+                var songs = await LoadNeteaseSongsAsync(nowIds);
                 nowIndex++;
-                if (json.IsError)
-                {
-                    Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("加载当前播放失败", json.Error.Message);
-                    continue;
-                }
-
-                var ncSongs = json.Value.Songs?.Select(t => t.MapToNcSong()).ToList();
-                retsongs.AddRange(ncSongs ?? []);
+                var ncSongs = songs.Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
+                retsongs.AddRange(ncSongs);
             }
 
             var currentIndex = historyState.CurrentIndex;
@@ -205,6 +186,15 @@ namespace HyPlayer.Services.History
             }
 
             return ParseCurPlayingListHistoryState(text);
+        }
+
+        private static async Task<List<SingleSongBase>> LoadNeteaseSongsAsync(List<string> songIds)
+        {
+            if (songIds.Count == 0) return [];
+
+            var items = await Ioc.Default.GetRequiredService<IProvidableItemRangeProvidable>()
+                .GetProvidableItemsRangeAsync(songIds);
+            return items.OfType<SingleSongBase>().ToList();
         }
 
         private static CurPlayingListHistoryState ParseCurPlayingListHistoryState(string text)
