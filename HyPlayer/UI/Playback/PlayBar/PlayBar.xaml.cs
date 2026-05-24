@@ -694,12 +694,12 @@ DoubleAnimation verticalAnimation;
     {
         var dataPackage = new DataPackage();
         dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" +
-                                       ViewModel.NowPlayingItem.Id));
-        dataPackage.Properties.Title = ViewModel.NowPlayingItem.Name;
+                                       (ViewModel.NowPlayingProviderItem?.ActualId ?? ViewModel.NowPlayingItem.Id)));
+        dataPackage.Properties.Title = ViewModel.NowPlayingProviderItem?.Name ?? ViewModel.NowPlayingItem.Name;
         dataPackage.Properties.Description =
-            "歌手: " + string.Join(';',
-                ViewModel.NowPlayingItem.Artist
-                    .Select(t => t.Name));
+            "歌手: " + (ViewModel.NowPlayingProviderItem?.CreatorList is { Count: > 0 } creators
+                ? string.Join(';', creators)
+                : string.Join(';', ViewModel.NowPlayingItem.Artist.Select(t => t.Name)));
         var request = args.Request;
         request.Data = dataPackage;
     }

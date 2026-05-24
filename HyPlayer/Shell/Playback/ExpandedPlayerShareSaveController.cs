@@ -63,7 +63,7 @@ public sealed class ExpandedPlayerShareSaveController
             using var coverStream = _state.CoverStream.CloneStream();
             var filepicker = new FileSavePicker
             {
-                SuggestedFileName = _state.NowPlayingItem.Name + "-Cover.jpg"
+                SuggestedFileName = (_playlist.NowPlayingProviderItem?.Name ?? _state.NowPlayingItem?.Name ?? "Cover") + "-Cover.jpg"
             };
             filepicker.FileTypeChoices.Add("图片文件", [".png", ".jpg"]);
             var file = await filepicker.PickSaveFileAsync();

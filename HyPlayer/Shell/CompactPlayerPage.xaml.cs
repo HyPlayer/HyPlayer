@@ -292,8 +292,11 @@ public sealed partial class CompactPlayerPage : Page
     {
         RunOnUIThread(() =>
         {
-            NowPlayingName = item?.Name;
-            NowPlayingArtists = item?.ArtistString;
+            var providerItem = _playlist.NowPlayingProviderItem;
+            NowPlayingName = providerItem?.Name ?? item?.Name;
+            NowPlayingArtists = providerItem?.CreatorList is { Count: > 0 } creators
+                ? string.Join("; ", creators)
+                : item?.ArtistString;
         });
         if (item is null)
             return;
