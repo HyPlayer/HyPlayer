@@ -1,4 +1,3 @@
-using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,22 +16,17 @@ public sealed partial class PlaylistService
     {
         try
         {
-            List<HyPlayItem> snapshot;
-            HyPlayItem? nowPlayingItem;
+            List<SingleSongBase?> snapshot;
             int nowPlayingIndex;
 
             lock (_lock)
             {
-                snapshot = _items.ToList();
+                snapshot = _providerItems.ToList();
                 nowPlayingIndex = _nowPlayingIndex;
-                nowPlayingItem = _nowPlayingIndex >= 0 && _nowPlayingIndex < _items.Count
-                    ? _items[_nowPlayingIndex]
-                    : null;
             }
 
             var converted = snapshot
-                .Select(item => item.ToSingleSong())
-                .Where(song => song is not null)
+                .Where(item => item is not null)
                 .Cast<SingleSongBase>()
                 .ToList();
 
@@ -41,8 +35,8 @@ public sealed partial class PlaylistService
 
             await _playCore.CurrentPlayList.SetSongListAsync(converted).ConfigureAwait(false);
 
-            var currentSong = nowPlayingItem is not null && nowPlayingIndex >= 0 && nowPlayingIndex < converted.Count
-                ? converted[nowPlayingIndex]
+            var currentSong = nowPlayingIndex >= 0 && nowPlayingIndex < snapshot.Count
+                ? snapshot[nowPlayingIndex]
                 : null;
             if (currentSong is not null && _playCore.CurrentPlayListController is not null)
                 await _playCore.MovePointerToAsync(currentSong).ConfigureAwait(false);
