@@ -553,6 +553,14 @@ internal static class DownloadManager
         DownloadLists.Add(CreateDownloadObject(song));
     }
 
+    public static void AddDownload(List<SingleSongBase> songs)
+    {
+        if (!CheckDownloadAbilityAndToast()) return;
+        EnsureTimerStarted();
+
+        songs.ForEach(t => { DownloadLists.Add(CreateDownloadObject(t)); });
+    }
+
     private static void Timer_Elapsed(object? sender, EventArgs e)
     {
         Timer_Elapsed();

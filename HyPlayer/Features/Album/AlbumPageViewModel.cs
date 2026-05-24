@@ -55,6 +55,7 @@ namespace HyPlayer.Features.Album
         public partial NCAlbum Album { get; set; }
         [ObservableProperty]
         public partial CollectionViewSource AlbumSongsViewSource { get; set; }
+        private List<SingleSongBase> _providerAlbumSongs = [];
         [ObservableProperty]
         public partial List<NCArtist> Artists { get; set; }
         [ObservableProperty]
@@ -106,6 +107,7 @@ namespace HyPlayer.Features.Album
                 QueueScope = SongListQueueScope.Album(Album.Id);
                 PublishTime = 0;
                 var songs = await LoadAlbumSongsAsync(providerAlbum);
+                _providerAlbumSongs = songs;
                 AlbumSongsViewSource = new CollectionViewSource()
                 {
                     IsSourceGrouped = true,
@@ -137,10 +139,14 @@ namespace HyPlayer.Features.Album
         [RelayCommand]
         private void DownloadAll()
         {
-            var songs = new List<NCSong>();
-            foreach (var discSongs in (IEnumerable<DiscSongs>)AlbumSongsViewSource.Source) songs.AddRange(discSongs);
-
-            DownloadManager.AddDownload(songs);
+            if (_providerAlbumSongs.Count > 0)
+                DownloadManager.AddDownload(_providerAlbumSongs);
+            else
+            {
+                var songs = new List<NCSong>();
+                foreach (var discSongs in (IEnumerable<DiscSongs>)AlbumSongsViewSource.Source) songs.AddRange(discSongs);
+                DownloadManager.AddDownload(songs);
+            }
         }
 
         [RelayCommand]
