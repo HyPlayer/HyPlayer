@@ -12,6 +12,7 @@ using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Lyric;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using Microsoft.Toolkit.Uwp.Helpers;
 using System;
@@ -46,6 +47,7 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
     private readonly IMusicResourceProvidable _musicResourceProvider;
     private readonly IDiagnosticsStateService _diagnostics;
     private readonly NCSong _song;
+    private readonly SingleSongBase _providerSong;
 
     private IStorageFile _resultFileBackingField;
     public IStorageFile ResultFile
@@ -90,6 +92,20 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         _diagnostics = diagnostics;
         _song = song;
         ncsong = song;
+        _providerSong = song.ToSingleSong();
+    }
+
+    public DownloadObject(
+        SingleSongBase song,
+        INotificationService notification,
+        Setting setting,
+        HttpClient httpClient,
+        ILyricProvidable lyricProvider,
+        IMusicResourceProvidable musicResourceProvider,
+        IDiagnosticsStateService diagnostics)
+        : this(song.ToNCSong(), notification, setting, httpClient, lyricProvider, musicResourceProvider, diagnostics)
+    {
+        _providerSong = song;
     }
 
     public int Progress
@@ -271,7 +287,7 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         {
             try
             {
-                var lyrics = await _lyricProvider.GetLyricInfoAsync(ncsong.ToSingleSong());
+                var lyrics = await _lyricProvider.GetLyricInfoAsync(_providerSong);
                 var original = lyrics.OfType<NeteaseRawLyricInfo>()
                     .FirstOrDefault(lyric => !lyric.IsWord && lyric.LyricType == LyricType.Original)
                     ?.LyricText;
@@ -413,7 +429,7 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                 Message = "正在获取下载链接";
             });
             var musicResource = await _musicResourceProvider.GetMusicResourceAsync(
-                ncsong.ToSingleSong(),
+                _providerSong,
                 new NeteaseMusicQualityTag(_setting.downloadAudioRate));
 
             if (musicResource?.Uri is null)
@@ -529,6 +545,14 @@ internal static class DownloadManager
         DownloadLists.Add(CreateDownloadObject(song));
     }
 
+    public static void AddDownload(SingleSongBase song)
+    {
+        if (!CheckDownloadAbilityAndToast()) return;
+        EnsureTimerStarted();
+
+        DownloadLists.Add(CreateDownloadObject(song));
+    }
+
     private static void Timer_Elapsed(object? sender, EventArgs e)
     {
         Timer_Elapsed();
@@ -578,6 +602,11 @@ internal static class DownloadManager
     }
 
     private static DownloadObject CreateDownloadObject(NCSong song)
+    {
+        return new DownloadObject(song, Notification, Setting, HttpClient, LyricProvider, MusicResourceProvider, Diagnostics);
+    }
+
+    private static DownloadObject CreateDownloadObject(SingleSongBase song)
     {
         return new DownloadObject(song, Notification, Setting, HttpClient, LyricProvider, MusicResourceProvider, Diagnostics);
     }
