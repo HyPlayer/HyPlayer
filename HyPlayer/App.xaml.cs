@@ -130,11 +130,8 @@ public sealed partial class App : Application
     private static void InitializeServices(IDepository depository)
     {
         var setting = new Setting();
-        var handler = NeteaseCloudMusicApiHandler.HttpClientHandler;
-        handler.UseProxy = setting.EnableProxy;
-        var client = new HttpClient(handler);
         var neteaseProvider = new global::HyPlayer.NeteaseProvider.NeteaseProvider();
-        neteaseProvider.Handler.HttpClient = client;
+        var client = neteaseProvider.ConfigureHttpClient(setting.EnableProxy);
         depository.AddSingleton<HttpClient>(client);
         depository.AddSingleton<global::HyPlayer.NeteaseProvider.NeteaseProvider>(neteaseProvider);
         depository.AddSingleton<ProviderBase>(neteaseProvider);
