@@ -122,6 +122,18 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
+    public IReadOnlyList<SingleSongBase?> ProviderQueueSnapshot
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _providerItems.ToArray();
+            }
+        }
+    }
+
+    /// <inheritdoc />
     public int NowPlayingIndex => _nowPlayingIndex;
 
     /// <inheritdoc />

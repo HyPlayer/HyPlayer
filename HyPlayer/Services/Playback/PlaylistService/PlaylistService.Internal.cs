@@ -20,13 +20,15 @@ public sealed partial class PlaylistService
         lock (_lock)
         {
             var items = _items.ToArray();
-            var providerItems = _providerItems.OfType<SingleSongBase>().ToArray();
+            var providerQueueItems = _providerItems.ToArray();
+            var providerItems = providerQueueItems.OfType<SingleSongBase>().ToArray();
             return new PlayStrategyContext
             {
                 Items = items,
                 CurrentIndex = _nowPlayingIndex,
                 CurrentItem = NowPlayingItem,
                 ProviderItems = providerItems,
+                ProviderQueueItems = providerQueueItems,
                 CurrentProviderItem = NowPlayingProviderItem,
                 UpdateShuffleActions = CreateShufflePlayLists,
                 ShuffledIndex = ActiveStrategyId == "shn" ? ShufflingIndex : null,
