@@ -106,6 +106,12 @@ public sealed class LyricService : ILyricService
     /// <inheritdoc />
     public async Task LoadLyricsAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct = default)
     {
+        if (providerItem is not null && item.ItemType == HyPlayItemType.Netease)
+        {
+            await LoadLyricsAsync(providerItem, ct);
+            return;
+        }
+
         // 1. 尝试从缓存获取
         var canUseHyLyricInfoCache = item.ItemType == HyPlayItemType.Netease && !string.IsNullOrWhiteSpace(item.Id);
         if (canUseHyLyricInfoCache)

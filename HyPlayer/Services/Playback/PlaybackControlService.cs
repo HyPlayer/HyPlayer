@@ -267,8 +267,15 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         if (nowPlayingProviderItem is not null && Matches(item, nowPlayingProviderItem))
             return nowPlayingProviderItem;
 
-        return playlist?.ProviderQueueSnapshot.FirstOrDefault(providerItem => providerItem is not null && Matches(item, providerItem))
-               ?? _state.NowPlayingProviderItem;
+        var queuedProviderItem = playlist?.ProviderQueueSnapshot.FirstOrDefault(providerItem => providerItem is not null && Matches(item, providerItem));
+        if (queuedProviderItem is not null)
+            return queuedProviderItem;
+
+        var stateProviderItem = _state.NowPlayingProviderItem;
+        if (stateProviderItem is not null && Matches(item, stateProviderItem))
+            return stateProviderItem;
+
+        return item.ToSingleSong();
     }
 
     private HyPlayItem ResolveLegacyItem(SingleSongBase song)
