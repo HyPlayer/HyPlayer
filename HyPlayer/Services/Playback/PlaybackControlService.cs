@@ -245,6 +245,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private async Task SetCurrentSongAsync(HyPlayItem item, SingleSongBase song, CancellationToken ct)
     {
         _state.NowPlayingItem = item;
+        _state.NowPlayingProviderItem = song;
         _state.Duration = TimeSpan.FromMilliseconds(Math.Max(0, item.LengthInMilliseconds));
         _lyricCts?.Cancel();
         _lyricCts?.Dispose();

@@ -145,6 +145,7 @@ public sealed partial class PlaylistService
     {
         _state.NowPlayingIndex = _nowPlayingIndex;
         _state.NowPlayingItem = NowPlayingItem;
+        _state.NowPlayingProviderItem = NowPlayingProviderItem;
         ShufflingIndex = ShuffleList.IndexOf(_nowPlayingIndex);
     }
 

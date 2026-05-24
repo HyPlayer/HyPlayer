@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using Windows.Storage.Streams;
 
@@ -18,6 +19,10 @@ public partial class PlaybackStateService : ObservableObject
     /// <summary>当前播放曲目</summary>
     [ObservableProperty]
     public partial HyPlayItem? NowPlayingItem { get; set; }
+
+    /// <summary>当前播放曲目的 Provider 模型视图。</summary>
+    [ObservableProperty]
+    public partial SingleSongBase? NowPlayingProviderItem { get; set; }
 
     /// <summary>当前播放位置</summary>
     [ObservableProperty]
