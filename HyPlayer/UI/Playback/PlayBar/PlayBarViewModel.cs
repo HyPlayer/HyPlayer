@@ -219,6 +219,9 @@ public partial class PlayBarViewModel : ObservableObject
                 case nameof(PlaybackStateService.NowPlayingItem):
                     SyncFromState();
                     break;
+                case nameof(PlaybackStateService.NowPlayingProviderItem):
+                    NowPlayingProviderItem = _state.NowPlayingProviderItem;
+                    break;
                 case nameof(PlaybackStateService.IsPlaying):
                     IsPlaying = _state.IsPlaying;
                     break;
@@ -336,7 +339,7 @@ public partial class PlayBarViewModel : ObservableObject
     public void SyncFromState()
     {
         NowPlayingItem = _state.NowPlayingItem;
-        NowPlayingProviderItem = _playlist.NowPlayingProviderItem;
+        NowPlayingProviderItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
         IsPlaying = _state.IsPlaying;
         Position = _state.Position;
         Duration = _state.Duration;
