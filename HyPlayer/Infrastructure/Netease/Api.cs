@@ -79,9 +79,8 @@ internal class Api
             var songs = await GetContainerSongsAsync(recommendationContainer, likedSongs.Count, cancellationToken);
             foreach (var song in songs)
             {
-                var playItem = song.ToHyPlayItem();
-                playItem.InfoTag = likedSongs.Contains(song.ActualId ?? string.Empty) ? "我的喜欢" : "为你推荐";
-                playlist.AppendItem(playItem);
+                playlist.AppendItem(song);
+                playlist.SetItemInfoTag(song, likedSongs.Contains(song.ActualId ?? string.Empty) ? "我的喜欢" : "为你推荐");
             }
 
             playlist.NotifyAppendDone();

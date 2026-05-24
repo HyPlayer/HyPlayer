@@ -229,6 +229,21 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
+    public void SetItemInfoTag(ProvidableItemBase item, string infoTag)
+    {
+        lock (_lock)
+        {
+            var index = _providerItems.FindIndex(providerItem => providerItem is not null
+                && providerItem.ProviderId == item.ProviderId
+                && providerItem.TypeId == item.TypeId
+                && providerItem.ActualId == item.ActualId);
+
+            if (index >= 0 && index < _items.Count)
+                _items[index].InfoTag = infoTag;
+        }
+    }
+
+    /// <inheritdoc />
     public void AppendItems(IEnumerable<HyPlayItem> items, bool clearFirst = false)
     {
         if (clearFirst)

@@ -52,6 +52,9 @@ public interface IPlaylistService
     /// <summary>追加 Provider 曲目</summary>
     void AppendItem(ProvidableItemBase item, int position = -1);
 
+    /// <summary>设置 Provider 曲目在旧播放列表投影视图中的显示标签</summary>
+    void SetItemInfoTag(ProvidableItemBase item, string infoTag);
+
     /// <summary>批量追加</summary>
     void AppendItems(IEnumerable<HyPlayItem> items, bool clearFirst = false);
 
