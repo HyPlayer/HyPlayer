@@ -271,7 +271,7 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         {
             try
             {
-                var lyrics = await _lyricProvider.GetLyricInfoAsync(ncsong.ToHyPlayItem().ToSingleSong()!);
+                var lyrics = await _lyricProvider.GetLyricInfoAsync(ncsong.ToSingleSong());
                 var original = lyrics.OfType<NeteaseRawLyricInfo>()
                     .FirstOrDefault(lyric => !lyric.IsWord && lyric.LyricType == LyricType.Original)
                     ?.LyricText;
@@ -413,7 +413,7 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                 Message = "正在获取下载链接";
             });
             var musicResource = await _musicResourceProvider.GetMusicResourceAsync(
-                ncsong.ToHyPlayItem().ToSingleSong()!,
+                ncsong.ToSingleSong(),
                 new NeteaseMusicQualityTag(_setting.downloadAudioRate));
 
             if (musicResource?.Uri is null)

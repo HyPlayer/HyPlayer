@@ -8,6 +8,7 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.UI.Converters;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -53,6 +54,38 @@ public static class Mapper
             TranslatedName = neteaseSong?.Translation,
             IsAvailable = song.Available,
             Type = HyPlayItemType.Netease
+        };
+    }
+
+    public static SingleSongBase ToSingleSong(this NCSong song)
+    {
+        return new NeteaseSong
+        {
+            ActualId = song.SongId,
+            Name = song.SongName,
+            Album = song.Album is null
+                ? null
+                : new NeteaseAlbum
+                {
+                    ActualId = song.Album.Id,
+                    Name = song.Album.Name,
+                    PictureUrl = song.Album.Cover,
+                    Alias = string.IsNullOrWhiteSpace(song.Album.Alias) ? null : [song.Album.Alias]
+                },
+            Artists = song.Artist?.Select(artist => new NeteaseArtist
+            {
+                ActualId = artist.Id,
+                Name = artist.Name
+            }).Cast<PersonBase>().ToList(),
+            CreatorList = song.Artist?.Select(artist => artist.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToList(),
+            Duration = (long)song.LengthInMilliseconds,
+            Available = song.IsAvailable,
+            Alias = string.IsNullOrWhiteSpace(song.Alias) ? null : song.Alias.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            MvId = song.MVId,
+            CdName = song.CDName,
+            TrackNumber = song.TrackId,
+            CoverUrl = song.Album?.Cover,
+            Translation = song.TranslatedName
         };
     }
 
