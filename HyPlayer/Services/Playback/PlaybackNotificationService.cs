@@ -1,6 +1,7 @@
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.LastFM;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
@@ -42,12 +43,14 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     }
 
     /// <inheritdoc />
-    public async Task OnTrackChangedAsync(HyPlayItem item)
+    public async Task OnTrackChangedAsync(HyPlayItem item, SingleSongBase? providerItem = null)
     {
         if (item == null) return;
-        UpdateSmtcDisplayInfo(item);
+        providerItem ??= _state.NowPlayingProviderItem;
+        UpdateSmtcDisplayInfo(item, providerItem);
 
         _state.NowPlayingItem = item;
+        _state.NowPlayingProviderItem = providerItem;
 
         // 1. 刷新封面
         if (!_setting.noImage)
@@ -110,11 +113,10 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         await LastFMManager.Scrobble(item);
     }
 
-    private void UpdateSmtcDisplayInfo(HyPlayItem item)
+    private void UpdateSmtcDisplayInfo(HyPlayItem item, SingleSongBase? providerItem)
     {
         if (_player is AudioGraphPlayer { SMTCManager: not null } graphPlayer)
         {
-            var providerItem = _state.NowPlayingProviderItem;
             var title = providerItem?.Name ?? item.Name;
             var artist = providerItem?.CreatorList is { Count: > 0 } creators
                 ? string.Join(" / ", creators)

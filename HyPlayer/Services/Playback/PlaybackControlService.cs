@@ -256,7 +256,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             ct);
 
         _taskRunner.Forget(LoadLyricsSafeAsync(item, song, _lyricCts.Token), "load lyrics for PlayCore current song");
-        _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item), "update playback notification on PlayCore current song");
+        _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item, song), "update playback notification on PlayCore current song");
     }
 
     /// <inheritdoc />
@@ -326,7 +326,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             _lyricCts = new CancellationTokenSource();
             _taskRunner.Forget(LoadLyricsSafeAsync(item, _state.NowPlayingProviderItem, _lyricCts.Token), "load lyrics for primary source");
 
-            _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item), "update playback notification on track changed");
+            _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item, _state.NowPlayingProviderItem), "update playback notification on track changed");
         }
     }
 

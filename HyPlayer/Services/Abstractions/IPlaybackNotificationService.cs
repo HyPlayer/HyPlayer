@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System.Threading.Tasks;
 
 namespace HyPlayer.Services.Abstractions;
@@ -11,7 +12,7 @@ public interface IPlaybackNotificationService
     /// <summary>
     /// 曲目切换时调用（更新 SMTC、磁贴、封面等）
     /// </summary>
-    Task OnTrackChangedAsync(HyPlayItem item);
+    Task OnTrackChangedAsync(HyPlayItem item, SingleSongBase? providerItem = null);
 
     /// <summary>
     /// 刷新封面
