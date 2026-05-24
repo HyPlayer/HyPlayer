@@ -90,20 +90,22 @@ internal sealed class PersonalFM
 
     private async Task AppendMoreTracksAsync()
     {
-        var moreItems = (await _personalFmStrategy.LoadMoreAsync(new PlayStrategyContext
+        var moreItems = (await _personalFmStrategy.LoadMoreProviderItemsAsync(new PlayStrategyContext
         {
             Items = _playlistService.Items.ToArray(),
             CurrentIndex = _playlistService.NowPlayingIndex,
             CurrentItem = _playlistService.NowPlayingIndex >= 0 && _playlistService.NowPlayingIndex < _playlistService.Items.Count
                 ? _playlistService.Items[_playlistService.NowPlayingIndex]
-                : null
+                : null,
+            ProviderItems = _playlistService.ProviderItems.ToArray(),
+            ProviderQueueItems = _playlistService.ProviderQueueSnapshot.ToArray(),
+            CurrentProviderItem = _playlistService.NowPlayingProviderItem
         })).ToList();
 
         if (!IsActiveSession || moreItems.Count == 0)
             return;
 
-        foreach (var item in moreItems)
-            _playlistService.AppendItem(item);
+        _playlistService.AppendItems(moreItems);
 
         if (IsActiveSession)
             _playlistService.NotifyAppendDone();
