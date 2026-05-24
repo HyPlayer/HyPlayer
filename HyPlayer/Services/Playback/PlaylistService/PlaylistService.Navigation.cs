@@ -1,5 +1,6 @@
 using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.Services.Abstractions;
 using System.Linq;
 using System.Threading.Tasks;
@@ -95,6 +96,12 @@ public sealed partial class PlaylistService
         SchedulePlayCorePlaylistSync();
 
         await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
+    }
+
+    /// <inheritdoc />
+    public Task MoveToAsync(ProvidableItemBase item)
+    {
+        return MoveToAsync(item.ToHyPlayItem());
     }
 
     private void ExitPersonalFmForSourceChange()

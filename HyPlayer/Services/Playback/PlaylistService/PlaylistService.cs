@@ -1,5 +1,7 @@
 using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
@@ -124,6 +126,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
+    public SingleSongBase? NowPlayingProviderItem => NowPlayingItem?.ToSingleSong();
+
+    /// <inheritdoc />
     public string ActiveStrategyId => _activeStrategy.Id;
 
     /// <inheritdoc />
@@ -163,6 +168,12 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
+    public void AppendItem(ProvidableItemBase item, int position = -1)
+    {
+        AppendItem(item.ToHyPlayItem(), position);
+    }
+
+    /// <inheritdoc />
     public void AppendItems(IEnumerable<HyPlayItem> items, bool clearFirst = false)
     {
         if (clearFirst)
@@ -173,6 +184,18 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             Clear(clearFirst);
             _items.AddRange(items);
         }
+    }
+
+    /// <inheritdoc />
+    public void AppendItems(IEnumerable<ProvidableItemBase> items, bool clearFirst = false)
+    {
+        AppendItems(items.Select(item => item.ToHyPlayItem()), clearFirst);
+    }
+
+    /// <inheritdoc />
+    public void AppendItems(IEnumerable<SingleSongBase> items, bool clearFirst = false)
+    {
+        AppendItems(items.Select(item => item.ToHyPlayItem()), clearFirst);
     }
 
     /// <inheritdoc />

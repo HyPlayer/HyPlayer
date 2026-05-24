@@ -1,7 +1,9 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace HyPlayer.Services.Playback.PlaylistService;
@@ -17,11 +19,15 @@ public sealed partial class PlaylistService
     {
         lock (_lock)
         {
+            var items = _items.ToArray();
+            var providerItems = items.Select(item => item.ToSingleSong()).OfType<SingleSongBase>().ToArray();
             return new PlayStrategyContext
             {
-                Items = _items.ToArray(),
+                Items = items,
                 CurrentIndex = _nowPlayingIndex,
                 CurrentItem = NowPlayingItem,
+                ProviderItems = providerItems,
+                CurrentProviderItem = NowPlayingItem?.ToSingleSong(),
                 UpdateShuffleActions = CreateShufflePlayLists,
                 ShuffledIndex = ActiveStrategyId == "shn" ? ShufflingIndex : null,
                 ShuffledItems = ActiveStrategyId == "shn" ? ShuffleList : null

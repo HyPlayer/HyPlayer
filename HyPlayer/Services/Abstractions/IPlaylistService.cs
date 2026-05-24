@@ -1,4 +1,6 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -23,6 +25,9 @@ public interface IPlaylistService
     /// <summary>当前播放曲目</summary>
     HyPlayItem? NowPlayingItem { get; }
 
+    /// <summary>当前播放曲目的 Provider 模型视图</summary>
+    SingleSongBase? NowPlayingProviderItem { get; }
+
     /// <summary>当前播放策略 Id</summary>
     string ActiveStrategyId { get; }
 
@@ -38,8 +43,17 @@ public interface IPlaylistService
     /// <summary>追加单曲</summary>
     void AppendItem(HyPlayItem item, int position = -1);
 
+    /// <summary>追加 Provider 曲目</summary>
+    void AppendItem(ProvidableItemBase item, int position = -1);
+
     /// <summary>批量追加</summary>
     void AppendItems(IEnumerable<HyPlayItem> items, bool clearFirst = false);
+
+    /// <summary>批量追加 Provider 曲目</summary>
+    void AppendItems(IEnumerable<ProvidableItemBase> items, bool clearFirst = false);
+
+    /// <summary>批量追加 Provider 单曲</summary>
+    void AppendItems(IEnumerable<SingleSongBase> items, bool clearFirst = false);
 
     /// <summary>移除指定位置的曲目</summary>
     void RemoveAt(int index);
@@ -49,6 +63,9 @@ public interface IPlaylistService
 
     /// <summary>跳转到指定曲目</summary>
     Task MoveToAsync(HyPlayItem item);
+
+    /// <summary>跳转到指定 Provider 曲目</summary>
+    Task MoveToAsync(ProvidableItemBase item);
 
     /// <summary>下一首</summary>
     Task MoveNextAsync(bool userInitiated = false);

@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -19,6 +20,13 @@ public class PlayStrategyContext
 
     /// <summary>当前播放曲目</summary>
     public HyPlayItem? CurrentItem { get; init; }
+
+    /// <summary>当前播放列表的 Provider 单曲视图</summary>
+    public IReadOnlyList<SingleSongBase>? ProviderItems { get; init; }
+
+    /// <summary>当前播放曲目的 Provider 单曲视图</summary>
+    public SingleSongBase? CurrentProviderItem { get; init; }
+
     /// <summary>当前播放列表</summary>
     public IReadOnlyList<int>? ShuffledItems { get; init; }
 
