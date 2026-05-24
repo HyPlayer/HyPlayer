@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using CommunityToolkit.WinUI.Helpers;
@@ -62,6 +63,9 @@ namespace HyPlayer.Shell.ExpandedPlayer
 
         [ObservableProperty]
         public partial HyPlayItem? NowPlayingItem { get; set; }
+
+        [ObservableProperty]
+        public partial SingleSongBase? NowPlayingProviderItem { get; set; }
 
         [ObservableProperty]
         public partial bool IsPlaying { get; set; }
@@ -188,6 +192,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
         public void SyncFromState()
         {
             NowPlayingItem = _state.NowPlayingItem;
+            NowPlayingProviderItem = _playlist.NowPlayingProviderItem;
             IsPlaying = _state.IsPlaying;
             Volume = _state.Volume;
             Position = _state.Position;
@@ -199,7 +204,15 @@ namespace HyPlayer.Shell.ExpandedPlayer
             QualityTag = _state.QualityTag;
             PlaylistItems = _playlist.Items;
 
-            if (NowPlayingItem != null)
+            if (NowPlayingProviderItem != null)
+            {
+                SongName = NowPlayingProviderItem.Name;
+                Album = NowPlayingProviderItem.Album?.Name ?? string.Empty;
+                Artist = NowPlayingProviderItem.CreatorList is { Count: > 0 } creators
+                    ? string.Join("; ", creators)
+                    : string.Empty;
+            }
+            else if (NowPlayingItem != null)
             {
                 SongName = NowPlayingItem.Name;
                 Album = NowPlayingItem.AlbumString;
