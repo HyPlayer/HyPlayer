@@ -321,11 +321,14 @@ DoubleAnimation verticalAnimation;
 
     private async void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
-        if (!_player.PlayerCreated || ViewModel.NowPlayingItem == null) return;
+        if (!_player.PlayerCreated || (ViewModel.NowPlayingProviderItem == null && ViewModel.NowPlayingItem == null)) return;
 
         if (_player.PrimaryPlaybackSource == null)
         {
-            await _control.LoadAndPlayAsync(ViewModel.NowPlayingItem, setAsPrimary: true, autoPlay: true, removeCurrentSongs: true);
+            if (ViewModel.NowPlayingProviderItem != null)
+                await _control.LoadAndPlayAsync(ViewModel.NowPlayingProviderItem, autoPlay: true, removeCurrentSongs: true);
+            else if (ViewModel.NowPlayingItem != null)
+                await _control.LoadAndPlayAsync(ViewModel.NowPlayingItem, setAsPrimary: true, autoPlay: true, removeCurrentSongs: true);
             return;
         }
 
@@ -433,7 +436,9 @@ DoubleAnimation verticalAnimation;
         }
         else
         {
-            _taskRunner.Forget(_personalFmContainer.MoveItemToTrashAsync(ViewModel.NowPlayingItem.Id), "trash personal FM item");
+            var songId = ViewModel.NowPlayingProviderItem?.ActualId ?? ViewModel.NowPlayingItem?.Id;
+            if (!string.IsNullOrEmpty(songId))
+                _taskRunner.Forget(_personalFmContainer.MoveItemToTrashAsync(songId), "trash personal FM item");
             PersonalFM.LoadNextFMStatic();
         }
         ViewModel.SyncFromState();
@@ -448,7 +453,14 @@ DoubleAnimation verticalAnimation;
     {
         try
         {
-            if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
+            {
+                if (providerSong.Artists.Count > 1)
+                    await new ArtistSelectDialog(providerSong.Artists.Select(t => t.ToNCArtist()).ToList()).ShowAsync();
+                else if (providerSong.Artists.Count == 1)
+                    _navigation.Navigate(typeof(ArtistPage), providerSong.Artists[0].ActualId);
+            }
+            else if (ViewModel.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
             {
                 if (ViewModel.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
                 {
@@ -475,7 +487,13 @@ DoubleAnimation verticalAnimation;
     {
         try
         {
-            if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
+            {
+                var albumId = providerSong.Album?.ActualId;
+                if (!string.IsNullOrEmpty(albumId) && albumId != "0")
+                    _navigation.Navigate(typeof(AlbumPage), albumId);
+            }
+            else if (ViewModel.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
             {
                 if (ViewModel.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
                 {
@@ -496,13 +514,22 @@ DoubleAnimation verticalAnimation;
 
     private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            await new SongListSelect(ViewModel.NowPlayingItem.Id).ShowAsync();
+        var songId = ViewModel.NowPlayingProviderItem is NeteaseSong providerSong
+            ? providerSong.ActualId
+            : ViewModel.NowPlayingItem?.ItemType == HyPlayItemType.Netease
+                ? ViewModel.NowPlayingItem.Id
+                : null;
+        if (!string.IsNullOrEmpty(songId))
+            await new SongListSelect(songId).ShowAsync();
     }
 
     private void Btn_Down_OnClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.NowPlayingItem.ItemType is HyPlayItemType.Netease or HyPlayItemType.Radio)
+        if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
+        {
+            DownloadManager.AddDownload(providerSong.ToNCSong());
+        }
+        else if (ViewModel.NowPlayingItem?.ItemType is HyPlayItemType.Netease or HyPlayItemType.Radio)
         {
             DownloadManager.AddDownload(ViewModel.NowPlayingItem.ToNCSong());
         }
@@ -510,9 +537,11 @@ DoubleAnimation verticalAnimation;
 
     private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+        if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
+            _navigation.Navigate(typeof(Comments), CommentTarget.Song(providerSong.ActualId));
+        else if (ViewModel.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
             _navigation.Navigate(typeof(Comments), CommentTarget.Song(ViewModel.NowPlayingItem.Id));
-        else
+        else if (ViewModel.NowPlayingItem != null)
             _navigation.Navigate(typeof(Comments), CommentTarget.RadioProgram(ViewModel.NowPlayingItem.Album.Alias));
         RequestCompactPlayer();
     }
@@ -520,7 +549,7 @@ DoubleAnimation verticalAnimation;
     private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
     {
         // NOTE: 分享电台节目功能尚未实现
-        if (ViewModel.NowPlayingItem.ItemType != HyPlayItemType.Netease) return;
+        if (ViewModel.NowPlayingProviderItem is not NeteaseSong && ViewModel.NowPlayingItem?.ItemType != HyPlayItemType.Netease) return;
 
         //展示系统的共享ui
         DataTransferManager.ShowShareUI();
@@ -693,8 +722,9 @@ DoubleAnimation verticalAnimation;
     private void DataTransferManager_DataRequested(DataTransferManager sender, DataRequestedEventArgs args)
     {
         var dataPackage = new DataPackage();
-        dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" +
-                                       (ViewModel.NowPlayingProviderItem?.ActualId ?? ViewModel.NowPlayingItem.Id)));
+        var songId = ViewModel.NowPlayingProviderItem?.ActualId ?? ViewModel.NowPlayingItem?.Id;
+        if (string.IsNullOrEmpty(songId)) return;
+        dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" + songId));
         dataPackage.Properties.Title = ViewModel.NowPlayingProviderItem?.Name ?? ViewModel.NowPlayingItem.Name;
         dataPackage.Properties.Description =
             "歌手: " + (ViewModel.NowPlayingProviderItem?.CreatorList is { Count: > 0 } creators

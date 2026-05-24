@@ -4,6 +4,7 @@ using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
@@ -128,7 +129,8 @@ public partial class PlayBarViewModel : ObservableObject
     public double ProgressMilliseconds => Position.TotalMilliseconds;
     public double DurationMilliseconds => Duration != TimeSpan.Zero ? Duration.TotalMilliseconds : NowPlayingProviderItem?.Duration ?? NowPlayingItem?.LengthInMilliseconds ?? 0;
     public string PlayStateGlyph => IsPlaying ? "\uF8AE" : "\uF5B0";
-    public bool CanShareCurrentSong => NowPlayingItem is { ItemType: not HyPlayItemType.Local and not HyPlayItemType.LocalProgressive };
+    public bool CanShareCurrentSong => NowPlayingProviderItem is NeteaseSong
+                                       || NowPlayingItem is { ItemType: not HyPlayItemType.Local and not HyPlayItemType.LocalProgressive };
     public DataTransferManager DataTransferManager => _dataTransferManager;
 
     // ── Relay Commands ──

@@ -112,7 +112,7 @@ public static class Mapper
         }).ToList() ?? [];
     }
 
-    private static NCArtist ToNCArtist(PersonBase artist)
+    public static NCArtist ToNCArtist(this PersonBase artist)
     {
         return new NCArtist
         {
