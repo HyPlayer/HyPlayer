@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
@@ -39,7 +40,7 @@ internal sealed class PlaylistQueueSourceProvider : IQueueSourceProvider
             while (true)
             {
                 var page = await _provider.GetContainerItemsPageAsync(id, offset, count, cancellationToken);
-                var songs = page.Items.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
+                var songs = page.Items.OfType<SingleSongBase>().Select(song => song.ToNCSong()).ToList();
                 if (songs.Count > 0)
                     batches.Add(songs);
 

@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
@@ -32,7 +33,7 @@ internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
         {
             var container = new NeteaseArtistSubContainer { ActualId = $"hot{id}", Name = id };
             var items = (await container.GetProgressiveItemsListAsync(0, 100, cancellationToken)).Item2;
-            var songs = items.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
+            var songs = items.OfType<SingleSongBase>().Select(song => song.ToNCSong()).ToList();
 
             return songs.Count > 0
                 ? NeteaseQueueSourceLoadResult.FromSongs(songs)

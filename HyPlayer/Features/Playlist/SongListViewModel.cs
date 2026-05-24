@@ -397,7 +397,7 @@ namespace HyPlayer.Features.Playlist
 
         private static NCSong MapToNCSong(SingleSongBase song)
         {
-            var ncSong = song.ToHyPlayItem().ToNCSong();
+            var ncSong = song.ToNCSong();
             ncSong.IsAvailable = song.Available;
             return ncSong;
         }

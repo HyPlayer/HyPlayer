@@ -37,7 +37,7 @@ internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
             var song = songs.OfType<SingleSongBase>().FirstOrDefault();
 
             return song is not null
-                ? NeteaseQueueSourceLoadResult.FromSongs([song.ToHyPlayItem().ToNCSong()])
+                ? NeteaseQueueSourceLoadResult.FromSongs([song.ToNCSong()])
                 : NeteaseQueueSourceLoadResult.Failed;
         }
         catch (Exception ex)

@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Infrastructure.Serialization;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -124,7 +125,7 @@ namespace HyPlayer.Services.History
                 var songIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                     .Values["songHistory"].ToString(), JsonDefaults.Options);
                 var songs = await LoadNeteaseSongsAsync(songIds);
-                return songs.Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
+                return songs.Select(song => song.ToNCSong()).ToList();
             }
             catch (Exception e)
             {
@@ -160,7 +161,7 @@ namespace HyPlayer.Services.History
                     Math.Min(500, trackIds.Count - nowIndex * 500));
                 var songs = await LoadNeteaseSongsAsync(nowIds);
                 nowIndex++;
-                var ncSongs = songs.Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
+                var ncSongs = songs.Select(song => song.ToNCSong()).ToList();
                 retsongs.AddRange(ncSongs);
             }
 

@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -38,7 +39,7 @@ internal sealed class AlbumQueueSourceProvider : IQueueSourceProvider
                 return NeteaseQueueSourceLoadResult.Failed;
 
             var result = await container.GetProgressiveItemsListAsync(0, container.MaxProgressiveCount, cancellationToken);
-            return NeteaseQueueSourceLoadResult.FromSongs(result.Item2.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem().ToNCSong()).ToList());
+            return NeteaseQueueSourceLoadResult.FromSongs(result.Item2.OfType<SingleSongBase>().Select(song => song.ToNCSong()).ToList());
         }
         catch (Exception ex)
         {

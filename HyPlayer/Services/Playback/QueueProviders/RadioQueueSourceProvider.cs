@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -50,7 +51,7 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
             {
                 var result = await container.GetProgressiveItemsListAsync(offset, count, cancellationToken);
                 hasMore = result.Item1;
-                var songs = result.Item2.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem().ToNCSong()).ToList();
+                var songs = result.Item2.OfType<SingleSongBase>().Select(song => song.ToNCSong()).ToList();
                 if (asc)
                     songs.Reverse();
                 if (songs.Count > 0)

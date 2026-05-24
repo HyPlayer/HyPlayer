@@ -58,7 +58,7 @@ namespace HyPlayer.Features.Home
                     .ToList();
                 RecommendedSongs = (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
                     .OfType<SingleSongBase>()
-                    .Select(song => song.ToHyPlayItem().ToNCSong())
+                    .Select(song => song.ToNCSong())
                     .ToList();
             }
         }
