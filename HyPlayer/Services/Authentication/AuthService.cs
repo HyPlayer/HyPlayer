@@ -261,22 +261,38 @@ public class AuthService : IAuthService
 
     private async Task LikeSongCoreAsync()
     {
+        var providerItem = _state.NowPlayingProviderItem;
         var item = _state.NowPlayingItem;
-        if (item == null) return;
-        var isLiked = LikedSongs.Contains(item.Id);
+        var songId = providerItem?.ActualId ?? item?.Id;
+        if (string.IsNullOrWhiteSpace(songId)) return;
+        var isLiked = LikedSongs.Contains(songId);
         try
         {
             await RetryPolicies.ApiCallPolicy.ExecuteAsync(async () =>
             {
-                switch (item.ItemType)
+                if (providerItem is not null)
+                {
+                    var providerSong = providerItem as NeteaseSong ?? new NeteaseSong { ActualId = songId, Name = providerItem.Name, Artists = [] };
+                    if (isLiked)
+                        await providerSong.UnlikeAsync();
+                    else
+                        await providerSong.LikeAsync();
+                    if (isLiked) LikedSongs.Remove(songId);
+                    else LikedSongs.Add(songId);
+                    SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
+                    return;
+                }
+
+                switch (item?.ItemType)
                 {
                     case HyPlayItemType.Netease:
+                        var legacySong = new NeteaseSong { ActualId = songId, Name = item.Name, Artists = [] };
                         if (isLiked)
-                            await new NeteaseSong { ActualId = item.Id[2..], Name = item.Name, Artists = [] }.UnlikeAsync();
+                            await legacySong.UnlikeAsync();
                         else
-                            await new NeteaseSong { ActualId = item.Id[2..], Name = item.Name, Artists = [] }.LikeAsync();
-                        if (isLiked) LikedSongs.Remove(item.Id);
-                        else LikedSongs.Add(item.Id);
+                            await legacySong.LikeAsync();
+                        if (isLiked) LikedSongs.Remove(songId);
+                        else LikedSongs.Add(songId);
                         SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
                         break;
                     case HyPlayItemType.Radio:
