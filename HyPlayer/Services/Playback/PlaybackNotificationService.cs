@@ -114,10 +114,17 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     {
         if (_player is AudioGraphPlayer { SMTCManager: not null } graphPlayer)
         {
+            var providerItem = _state.NowPlayingProviderItem;
+            var title = providerItem?.Name ?? item.Name;
+            var artist = providerItem?.CreatorList is { Count: > 0 } creators
+                ? string.Join(" / ", creators)
+                : item.ArtistString;
+            var album = providerItem?.Album?.Name ?? item.AlbumString;
+
             graphPlayer.SMTCManager.UpdateDisplayInfo(
-                item.Name,
-                item.ArtistString,
-                item.AlbumString);
+                title,
+                artist,
+                album);
         }
     }
 

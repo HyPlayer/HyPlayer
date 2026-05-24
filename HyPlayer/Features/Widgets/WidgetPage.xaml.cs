@@ -180,6 +180,7 @@ public sealed partial class WidgetPage : Page
         switch (propertyName)
         {
             case nameof(PlaybackStateService.NowPlayingItem):
+            case nameof(PlaybackStateService.NowPlayingProviderItem):
                 HyPlayList_OnPlayItemChange(_state.NowPlayingItem);
                 break;
             case nameof(PlaybackStateService.Position):
@@ -195,9 +196,13 @@ public sealed partial class WidgetPage : Page
     }
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        if (_state.NowPlayingItem == null) return;
-        var progress = position.TotalMilliseconds / _state.NowPlayingItem.LengthInMilliseconds * 100;
-        var text = $"{position:mm\\:ss}/{TimeSpan.FromMilliseconds(_state.NowPlayingItem.LengthInMilliseconds):mm\\:ss}";
+        var durationMs = _state.NowPlayingProviderItem?.Duration
+                         ?? _state.NowPlayingItem?.LengthInMilliseconds
+                         ?? 0;
+        if (durationMs <= 0) return;
+
+        var progress = position.TotalMilliseconds / durationMs * 100;
+        var text = $"{position:mm\\:ss}/{TimeSpan.FromMilliseconds(durationMs):mm\\:ss}";
         try
         {
             _ = Dispatcher.RunAsync(
@@ -216,8 +221,11 @@ public sealed partial class WidgetPage : Page
 
     private void HyPlayList_OnPlayItemChange(HyPlayItem? playItem)
     {
-        var playItemName = _state.NowPlayingItem.Name;
-        var artistName = _state.NowPlayingItem.ArtistString;
+        var providerItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+        var playItemName = providerItem?.Name ?? playItem?.Name ?? string.Empty;
+        var artistName = providerItem?.CreatorList is { Count: > 0 } creators
+            ? string.Join(" / ", creators)
+            : playItem?.ArtistString ?? string.Empty;
         _ = Dispatcher.RunAsync(
            CoreDispatcherPriority.Normal,
            () =>

@@ -5,6 +5,7 @@ using HyPlayer.Features.Artist;
 using HyPlayer.Features.Comments;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
 using HyPlayer.Services.Playback;
@@ -24,6 +25,8 @@ public partial class GroupedSongsListViewModel(
     INavigationService navigation)
 {
     public HyPlayItem NowPlayingItem => state.NowPlayingItem;
+
+    public SingleSongBase? NowPlayingProviderItem => state.NowPlayingProviderItem;
 
     public async Task PlayNowAsync(IReadOnlyList<NCSong> selectedSongs, NCSong selectedSong)
     {
