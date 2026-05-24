@@ -16,6 +16,8 @@ using HyPlayer.Features.Artist;
 using HyPlayer.Features.Radio;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Imaging;
+using HyPlayer.Infrastructure.Netease;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
@@ -666,12 +668,18 @@ public sealed partial class ExpandedPlayer : Page
     {
         try
         {
-            if (_state.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            if (_state.NowPlayingProviderItem is NeteaseSong providerSong)
+            {
+                var albumId = providerSong.Album?.ActualId;
+                if (!string.IsNullOrEmpty(albumId) && albumId != "0")
+                    _navigation.Navigate(typeof(AlbumPage), albumId);
+            }
+            else if (_state.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
                 if (_state.NowPlayingItem.Album.Id != "0")
                     _navigation.Navigate(typeof(AlbumPage),
                         _state.NowPlayingItem.Album.Id);
 
-            if (_state.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
+            if (_state.NowPlayingItem?.Artist[0].Type == HyPlayItemType.Radio)
                 _navigation.Navigate(typeof(RadioPage), _state.NowPlayingItem.Album.Id);
 
             _surfaceCoordinator.Collapse();
@@ -685,7 +693,18 @@ public sealed partial class ExpandedPlayer : Page
     {
         try
         {
-            if (_state.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            if (_state.NowPlayingProviderItem is NeteaseSong providerSong)
+            {
+                if (providerSong.Artists.Count > 1)
+                {
+                    await new ArtistSelectDialog(providerSong.Artists.Select(t => t.ToNCArtist()).ToList()).ShowAsync();
+                    return;
+                }
+
+                if (providerSong.Artists.Count == 1)
+                    _navigation.Navigate(typeof(ArtistPage), providerSong.Artists[0].ActualId);
+            }
+            else if (_state.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
             {
                 if (_state.NowPlayingItem.Artist.Count > 1)
                 {
@@ -697,7 +716,7 @@ public sealed partial class ExpandedPlayer : Page
                     _state.NowPlayingItem.Artist[0].Id);
             }
 
-            if (_state.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
+            if (_state.NowPlayingItem?.Artist[0].Type == HyPlayItemType.Radio)
                 _navigation.Navigate(typeof(Me), _state.NowPlayingItem.Artist[0].Id);
 
             _surfaceCoordinator.Collapse();
@@ -806,9 +825,14 @@ public sealed partial class ExpandedPlayer : Page
                 Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics)
             };
             Utils.ConvertTranslation(ttmlLyric.TrLyrics, _state.LyricInfo.Lyrics);
-            if (_state.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            var cacheSongId = _state.NowPlayingProviderItem is NeteaseSong providerSong
+                ? providerSong.ActualId
+                : _state.NowPlayingItem?.ItemType == HyPlayItemType.Netease
+                    ? _state.NowPlayingItem.Id
+                    : null;
+            if (!string.IsNullOrEmpty(cacheSongId))
             {
-                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, _state.NowPlayingItem.Id,
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, cacheSongId,
                     () => Task.FromResult(_state.LyricInfo)!, forceRefresh: true);
             }
 
