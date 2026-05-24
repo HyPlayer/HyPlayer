@@ -22,6 +22,7 @@ namespace HyPlayer.Features.Home
         private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
         private readonly IPlaylistService _playlist;
         private readonly INavigationService _navigation;
+        private List<SingleSongBase> _recommendedProviderSongs = [];
 
         [ObservableProperty]
         public partial List<NCPlayList> RecommendedPlaylist { get; set; }
@@ -56,10 +57,10 @@ namespace HyPlayer.Features.Home
                     .OfType<NeteasePlaylist>()
                     .Select(MapToNCPlayList)
                     .ToList();
-                RecommendedSongs = (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
+                _recommendedProviderSongs = (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
                     .OfType<SingleSongBase>()
-                    .Select(song => song.ToNCSong())
                     .ToList();
+                RecommendedSongs = _recommendedProviderSongs.Select(song => song.ToNCSong()).ToList();
             }
         }
 
@@ -120,8 +121,7 @@ namespace HyPlayer.Features.Home
         [RelayCommand]
         private async Task OnPlayAllRecommendedSongsClickedAsync()
         {
-            var items = RecommendedSongs.Select(s => s.ToHyPlayItem());
-            _playlist.AppendItems(items, true);
+            _playlist.AppendItems(_recommendedProviderSongs, true);
             _playlist.NotifyAppendDone();
             await _playlist.MoveNextAsync(userInitiated: true);
         }

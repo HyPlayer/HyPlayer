@@ -70,6 +70,7 @@ namespace HyPlayer.Features.Playlist
         }
 
         public ObservableCollection<NCSong> Songs { get; set; } = [];
+        private readonly List<SingleSongBase> _dailyRecommendProviderSongs = [];
         [ObservableProperty]
         public partial NCPlayList PlayList { get; set; }
         [ObservableProperty]
@@ -166,10 +167,11 @@ namespace HyPlayer.Features.Playlist
             {
                 try
                 {
-                    return (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
+                    _dailyRecommendProviderSongs.Clear();
+                    _dailyRecommendProviderSongs.AddRange((await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
                         .OfType<SingleSongBase>()
-                        .Select(MapToNCSong)
-                        .ToList();
+                        .ToList());
+                    return _dailyRecommendProviderSongs.Select(MapToNCSong).ToList();
                 }
                 catch (Exception ex)
                 {
@@ -268,8 +270,10 @@ namespace HyPlayer.Features.Playlist
             }
             else
             {
-                var items = Songs.Select(s => s.ToHyPlayItem());
-                _playlist.AppendItems(items);
+                if (_dailyRecommendProviderSongs.Count == Songs.Count)
+                    _playlist.AppendItems(_dailyRecommendProviderSongs);
+                else
+                    _playlist.AppendItems(Songs.Select(s => s.ToHyPlayItem()));
                 _playlist.NotifyAppendDone();
             }
         }
@@ -310,8 +314,10 @@ namespace HyPlayer.Features.Playlist
             }
             else
             {
-                var items = Songs.Select(s => s.ToHyPlayItem());
-                _playlist.AppendItems(items, true);
+                if (_dailyRecommendProviderSongs.Count == Songs.Count)
+                    _playlist.AppendItems(_dailyRecommendProviderSongs, true);
+                else
+                    _playlist.AppendItems(Songs.Select(s => s.ToHyPlayItem()), true);
                 _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.PlaylistId));
                 _playlist.NotifyAppendDone();
                 await _playlist.MoveNextAsync(userInitiated: true);
