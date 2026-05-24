@@ -1,6 +1,7 @@
 using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,8 +29,7 @@ public sealed partial class PlaylistService
             {
                 lock (_lock)
                 {
-                    _items.AddRange(moreItems.Select(item => item.ToHyPlayItem()));
-                    _providerItems.AddRange(moreItems);
+                    InsertQueueItems(moreItems);
                 }
                 NotifyAppendDone();
                 nextIndex = _activeStrategy.GetNext(BuildStrategyContext());
@@ -40,15 +40,20 @@ public sealed partial class PlaylistService
             return;
 
         HyPlayItem item;
+        SingleSongBase? providerItem;
         lock (_lock)
         {
             _nowPlayingIndex = nextIndex.Value;
             item = _items[_nowPlayingIndex];
+            providerItem = _providerItems[_nowPlayingIndex];
             SyncIndex();
         }
         SchedulePlayCorePlaylistSync();
 
-        await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
+        if (providerItem is not null)
+            await _control.LoadAndPlayAsync(providerItem, removeCurrentSongs: true);
+        else
+            await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
     /// <inheritdoc />
@@ -64,15 +69,20 @@ public sealed partial class PlaylistService
             return;
 
         HyPlayItem item;
+        SingleSongBase? providerItem;
         lock (_lock)
         {
             _nowPlayingIndex = prevIndex.Value;
             item = _items[_nowPlayingIndex];
+            providerItem = _providerItems[_nowPlayingIndex];
             SyncIndex();
         }
         SchedulePlayCorePlaylistSync();
 
-        await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
+        if (providerItem is not null)
+            await _control.LoadAndPlayAsync(providerItem, removeCurrentSongs: true);
+        else
+            await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
     /// <inheritdoc />
@@ -86,17 +96,7 @@ public sealed partial class PlaylistService
         if (index < 0)
             return;
 
-        // 中断正在进行的过渡
-        await _activeTransition.OnManualSkipAsync(BuildTransitionContext());
-
-        lock (_lock)
-        {
-            _nowPlayingIndex = index;
-            SyncIndex();
-        }
-        SchedulePlayCorePlaylistSync();
-
-        await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
+        await MoveToIndexAsync(index);
     }
 
     /// <inheritdoc />
@@ -111,7 +111,29 @@ public sealed partial class PlaylistService
                 providerItem.ActualId == item.ActualId);
         }
 
-        return index >= 0 ? MoveToAsync(_items[index]) : MoveToAsync(item.ToHyPlayItem());
+        return index >= 0 ? MoveToIndexAsync(index) : Task.CompletedTask;
+    }
+
+    private async Task MoveToIndexAsync(int index)
+    {
+        // 中断正在进行的过渡
+        await _activeTransition.OnManualSkipAsync(BuildTransitionContext());
+
+        HyPlayItem item;
+        SingleSongBase? providerItem;
+        lock (_lock)
+        {
+            _nowPlayingIndex = index;
+            item = _items[_nowPlayingIndex];
+            providerItem = _providerItems[_nowPlayingIndex];
+            SyncIndex();
+        }
+        SchedulePlayCorePlaylistSync();
+
+        if (providerItem is not null)
+            await _control.LoadAndPlayAsync(providerItem, removeCurrentSongs: true);
+        else
+            await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
     private void ExitPersonalFmForSourceChange()

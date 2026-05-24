@@ -27,10 +27,7 @@ public sealed partial class PlaylistService
             if (_items.Contains(hpi))
                 return hpi;
 
-            if (position < 0 || position >= _items.Count)
-                _items.Add(hpi);
-            else
-                _items.Insert(position, hpi);
+            InsertQueueItem(hpi, ncSong.ToSingleSong(), position);
         }
 
         NotifyAppendDone();
@@ -55,7 +52,7 @@ public sealed partial class PlaylistService
             foreach (var ncSong in ncSongs)
             {
                 var hpi = NCSongToPlayItem(ncSong);
-                lock (_lock) { _items.Add(hpi); }
+                lock (_lock) { InsertQueueItem(hpi, ncSong.ToSingleSong()); }
             }
 
             NotifyAppendDone();
@@ -81,7 +78,14 @@ public sealed partial class PlaylistService
             if (insertList.Count <= 0)
                 return insertList;
 
-            _items.InsertRange(position, insertList);
+            foreach (var (ncSong, index) in ncSongs.Zip(Enumerable.Range(0, ncSongs.Count)))
+            {
+                var item = NCSongToPlayItem(ncSong);
+                if (_items.Contains(item))
+                    continue;
+
+                InsertQueueItem(item, ncSong.ToSingleSong(), position + index);
+            }
             NotifyAppendDone();
             return insertList;
         }
@@ -161,11 +165,11 @@ public sealed partial class PlaylistService
                             if (_items.Contains(singleItem))
                                 continue;
 
-                            _items.Add(singleItem);
+                            InsertQueueItem(singleItem, ncSong.ToSingleSong());
                         }
                         else
                         {
-                            _items.Add(NCSongToPlayItem(ncSong));
+                            InsertQueueItem(NCSongToPlayItem(ncSong), ncSong.ToSingleSong());
                         }
 
                         hasChanges = true;

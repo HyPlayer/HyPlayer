@@ -50,8 +50,7 @@ public sealed partial class PlaylistService
                             BuildStrategyContext(), ct);
                         lock (_lock)
                         {
-                            _items.AddRange(moreItems.Select(item => item.ToHyPlayItem()));
-                            _providerItems.AddRange(moreItems);
+                            InsertQueueItems(moreItems);
                         }
                         NotifyAppendDone();
                         await _activeTransition.OnTrackEndedAsync(BuildTransitionContext());

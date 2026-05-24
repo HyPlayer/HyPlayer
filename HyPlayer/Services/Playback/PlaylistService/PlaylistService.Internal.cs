@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
@@ -11,6 +12,49 @@ namespace HyPlayer.Services.Playback.PlaylistService;
 public sealed partial class PlaylistService
 {
     // ────────────── 内部辅助 ──────────────
+
+    private void InsertQueueItem(HyPlayItem item, int position = -1)
+    {
+        InsertQueueItem(item, item.ToSingleSong(), position);
+    }
+
+    private void InsertQueueItem(ProvidableItemBase item, int position = -1)
+    {
+        var playItem = item.ToHyPlayItem();
+        InsertQueueItem(playItem, item as SingleSongBase ?? playItem.ToSingleSong(), position);
+    }
+
+    private void InsertQueueItem(HyPlayItem item, SingleSongBase? providerItem, int position = -1)
+    {
+        if (position < 0 || position >= _items.Count)
+        {
+            _items.Add(item);
+            _providerItems.Add(providerItem);
+        }
+        else
+        {
+            _items.Insert(position, item);
+            _providerItems.Insert(position, providerItem);
+        }
+    }
+
+    private void InsertQueueItems(IEnumerable<HyPlayItem> items)
+    {
+        foreach (var item in items)
+            InsertQueueItem(item);
+    }
+
+    private void InsertQueueItems(IEnumerable<ProvidableItemBase> items)
+    {
+        foreach (var item in items)
+            InsertQueueItem(item);
+    }
+
+    private void InsertQueueItems(IEnumerable<SingleSongBase> items)
+    {
+        foreach (var item in items)
+            InsertQueueItem(item);
+    }
 
     /// <summary>
     /// 构建播放策略上下文

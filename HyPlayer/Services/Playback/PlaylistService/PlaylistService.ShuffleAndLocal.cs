@@ -29,8 +29,7 @@ public sealed partial class PlaylistService
 
         lock (_lock)
         {
-            _items.AddRange(items);
-            _providerItems.AddRange(items.Select(item => item.ToSingleSong()));
+            InsertQueueItems(items);
         }
 
         NotifyAppendDone();
