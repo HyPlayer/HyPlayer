@@ -63,6 +63,47 @@ public sealed class LyricService : ILyricService
         => await LoadLyricsAsync(item, null, ct);
 
     /// <inheritdoc />
+    public async Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default)
+    {
+        var cacheId = providerItem.ActualId;
+        var canUseHyLyricInfoCache = providerItem is NeteaseSong && !string.IsNullOrWhiteSpace(cacheId);
+        if (canUseHyLyricInfoCache)
+        {
+            var cached = await SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.HyLyricInfo, cacheId,
+                () => Task.FromResult<HyLyricInfo>(null),
+                cancellationToken: ct);
+
+            if (cached is not null && HasDisplayableLyrics(cached, providerItem))
+            {
+                _state.LyricInfo = cached;
+                _state.LyricIndex = 0;
+                LyricLoaded?.Invoke(this, new LyricLoadedEventArgs(cached));
+                return;
+            }
+        }
+
+        var pureLyricInfo = providerItem is NeteaseSong
+            ? await LoadNcLyricAsync(providerItem, ct)
+            : new PureLyricInfo();
+        var lyricInfo = await ConvertPureLyricInfoAsync(pureLyricInfo, GetArtistText(providerItem));
+
+        _state.LyricInfo = lyricInfo;
+        _state.LyricIndex = 0;
+
+        LyricLoaded?.Invoke(this, new LyricLoadedEventArgs(lyricInfo));
+
+        if (canUseHyLyricInfoCache && HasCacheableLyrics(lyricInfo, providerItem))
+        {
+            _taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.HyLyricInfo, cacheId,
+                () => Task.FromResult(lyricInfo),
+                cancellationToken: ct),
+                "cache provider lyric info");
+        }
+    }
+
+    /// <inheritdoc />
     public async Task LoadLyricsAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct = default)
     {
         // 1. 尝试从缓存获取
@@ -92,49 +133,7 @@ public sealed class LyricService : ILyricService
         };
 
         // 3. 转换歌词行
-        var lyricInfo = new HyLyricInfo();
-
-        if (pureLyricInfo is KaraokLyricInfo)
-        {
-            lyricInfo.Lyrics = Utils.ConvertKaraok(pureLyricInfo);
-        }
-        else
-        {
-            lyricInfo.Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics);
-        }
-
-        // 4. 空歌词时显示歌手名
-        if (lyricInfo.Lyrics.Count == 0)
-        {
-            if (_setting.showComposerInLyric)
-            {
-                lyricInfo.Lyrics.Add(new SongLyric
-                {
-                    LyricLine = new LrcLyricsLine(item.ArtistString, TimeSpan.Zero)
-                });
-            }
-        }
-        else
-        {
-            // 翻译 & 罗马音
-            if (pureLyricInfo is not KaraokLyricInfo)
-                Utils.ConvertTranslation(pureLyricInfo.TrLyrics, lyricInfo.Lyrics);
-            else
-                Utils.ConvertYrcTranslation((KaraokLyricInfo)pureLyricInfo, lyricInfo.Lyrics);
-
-            await Utils.ConvertRomaji(pureLyricInfo, lyricInfo.Lyrics);
-
-            // 确保首行从 0 开始
-            if (lyricInfo.Lyrics.Count != 0 && lyricInfo.Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
-            {
-                lyricInfo.Lyrics.Insert(0,
-                    new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, TimeSpan.Zero) });
-            }
-        }
-
-        lyricInfo.LyricMetadata = pureLyricInfo.LyricMetadata;
-        lyricInfo.SongMetadata = pureLyricInfo.SongMetadata;
-        lyricInfo.PureLyricInfo = pureLyricInfo;
+        var lyricInfo = await ConvertPureLyricInfoAsync(pureLyricInfo, item.ArtistString);
 
         _state.LyricInfo = lyricInfo;
         _state.LyricIndex = 0;
@@ -230,6 +229,86 @@ public sealed class LyricService : ILyricService
             System.Diagnostics.Debug.WriteLine($"Lyric error: {ex.Message}");
             return new PureLyricInfo();
         }
+    }
+
+    private async Task<PureLyricInfo> LoadNcLyricAsync(SingleSongBase providerItem, CancellationToken ct)
+    {
+        try
+        {
+            if (providerItem is not NeteaseSong || string.IsNullOrWhiteSpace(providerItem.ActualId))
+                return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
+
+            var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.LyricApi, providerItem.ActualId,
+                async () => await _lyricProvider.GetLyricInfoAsync(providerItem, ct),
+                cancellationToken: ct);
+
+            if (lyricResult is null)
+                return new PureLyricInfo { PureLyrics = "[00:00.000] 歌词获取失败" };
+
+            if (lyricResult.Count == 0)
+                return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
+
+            return ConvertProviderLyrics(lyricResult);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Lyric error: {ex.Message}");
+            return new PureLyricInfo();
+        }
+    }
+
+    private async Task<HyLyricInfo> ConvertPureLyricInfoAsync(PureLyricInfo pureLyricInfo, string artistText)
+    {
+        var lyricInfo = new HyLyricInfo();
+
+        if (pureLyricInfo is KaraokLyricInfo)
+        {
+            lyricInfo.Lyrics = Utils.ConvertKaraok(pureLyricInfo);
+        }
+        else
+        {
+            lyricInfo.Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics);
+        }
+
+        if (lyricInfo.Lyrics.Count == 0)
+        {
+            if (_setting.showComposerInLyric)
+            {
+                lyricInfo.Lyrics.Add(new SongLyric
+                {
+                    LyricLine = new LrcLyricsLine(artistText, TimeSpan.Zero)
+                });
+            }
+        }
+        else
+        {
+            if (pureLyricInfo is not KaraokLyricInfo)
+                Utils.ConvertTranslation(pureLyricInfo.TrLyrics, lyricInfo.Lyrics);
+            else
+                Utils.ConvertYrcTranslation((KaraokLyricInfo)pureLyricInfo, lyricInfo.Lyrics);
+
+            await Utils.ConvertRomaji(pureLyricInfo, lyricInfo.Lyrics);
+
+            if (lyricInfo.Lyrics.Count != 0 && lyricInfo.Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
+            {
+                lyricInfo.Lyrics.Insert(0,
+                    new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, TimeSpan.Zero) });
+            }
+        }
+
+        lyricInfo.LyricMetadata = pureLyricInfo.LyricMetadata;
+        lyricInfo.SongMetadata = pureLyricInfo.SongMetadata;
+        lyricInfo.PureLyricInfo = pureLyricInfo;
+        return lyricInfo;
+    }
+
+    private static string GetArtistText(SingleSongBase providerItem)
+    {
+        return providerItem.CreatorList is { Count: > 0 } creators
+            ? string.Join("; ", creators)
+            : string.Empty;
     }
 
     private static PureLyricInfo ConvertProviderLyrics(System.Collections.Generic.IEnumerable<RawLyricInfo> lyrics)
@@ -374,9 +453,22 @@ public sealed class LyricService : ILyricService
             !string.Equals(t.LyricLine.CurrentLyric, item.ArtistString, StringComparison.Ordinal));
     }
 
+    private static bool HasDisplayableLyrics(HyLyricInfo lyricInfo, SingleSongBase providerItem)
+    {
+        var artistText = GetArtistText(providerItem);
+        return lyricInfo.Lyrics.Any(t =>
+            !string.IsNullOrWhiteSpace(t.LyricLine.CurrentLyric) &&
+            !string.Equals(t.LyricLine.CurrentLyric, artistText, StringComparison.Ordinal));
+    }
+
     private static bool HasCacheableLyrics(HyLyricInfo lyricInfo, HyPlayItem item)
     {
         return HasDisplayableLyrics(lyricInfo, item);
+    }
+
+    private static bool HasCacheableLyrics(HyLyricInfo lyricInfo, SingleSongBase providerItem)
+    {
+        return HasDisplayableLyrics(lyricInfo, providerItem);
     }
 
     #endregion

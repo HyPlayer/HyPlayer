@@ -11,6 +11,7 @@ using HyPlayer.Services.LastFM;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media;
@@ -212,7 +213,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     /// <inheritdoc />
     public async Task LoadAndPlayAsync(HyPlayItem item, bool setAsPrimary = true, bool autoPlay = true, bool removeCurrentSongs = true)
     {
-        var song = GetPlaylistService()?.NowPlayingProviderItem ?? item.ToSingleSong();
+        var song = ResolveProviderSong(item);
         if (song is null) return;
 
         await LoadAndPlayAsync(song, autoPlay, removeCurrentSongs);
@@ -228,7 +229,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
         try
         {
-            var item = GetPlaylistService()?.NowPlayingItem ?? song.ToHyPlayItem();
+            var item = ResolveLegacyItem(song);
 
             if (removeCurrentSongs)
                 await _playCore.StopAsync(ct);
@@ -255,8 +256,49 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             new CurrentSongChangedNotification { CurrentPlayingSong = song },
             ct);
 
-        _taskRunner.Forget(LoadLyricsSafeAsync(item, song, _lyricCts.Token), "load lyrics for PlayCore current song");
+        _taskRunner.Forget(LoadLyricsSafeAsync(song, item, _lyricCts.Token), "load lyrics for PlayCore current song");
         _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item, song), "update playback notification on PlayCore current song");
+    }
+
+    private SingleSongBase? ResolveProviderSong(HyPlayItem item)
+    {
+        var playlist = GetPlaylistService();
+        var nowPlayingProviderItem = playlist?.NowPlayingProviderItem;
+        if (nowPlayingProviderItem is not null && Matches(item, nowPlayingProviderItem))
+            return nowPlayingProviderItem;
+
+        return playlist?.ProviderQueueSnapshot.FirstOrDefault(providerItem => providerItem is not null && Matches(item, providerItem))
+               ?? _state.NowPlayingProviderItem;
+    }
+
+    private HyPlayItem ResolveLegacyItem(SingleSongBase song)
+    {
+        var playlist = GetPlaylistService();
+        var nowPlayingItem = playlist?.NowPlayingItem;
+        if (nowPlayingItem is not null && Matches(nowPlayingItem, song))
+            return nowPlayingItem;
+
+        var stateItem = _state.NowPlayingItem;
+        if (stateItem is not null && Matches(stateItem, song))
+            return stateItem;
+
+        var snapshot = playlist?.Items;
+        if (snapshot is not null)
+        {
+            var item = snapshot.FirstOrDefault(item => Matches(item, song));
+            if (item is not null)
+                return item;
+        }
+
+        return song.ToHyPlayItem();
+    }
+
+    private static bool Matches(HyPlayItem item, SingleSongBase song)
+    {
+        var identity = item.GetItemIdentity();
+        return identity.ProviderId == song.ProviderId
+               && identity.TypeId == song.TypeId
+               && identity.ActualId == song.ActualId;
     }
 
     /// <inheritdoc />
@@ -324,17 +366,20 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             _lyricCts?.Cancel();
             _lyricCts?.Dispose();
             _lyricCts = new CancellationTokenSource();
-            _taskRunner.Forget(LoadLyricsSafeAsync(item, _state.NowPlayingProviderItem, _lyricCts.Token), "load lyrics for primary source");
+            _taskRunner.Forget(LoadLyricsSafeAsync(_state.NowPlayingProviderItem, item, _lyricCts.Token), "load lyrics for primary source");
 
             _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item, _state.NowPlayingProviderItem), "update playback notification on track changed");
         }
     }
 
-    private async Task LoadLyricsSafeAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct)
+    private async Task LoadLyricsSafeAsync(SingleSongBase? providerItem, HyPlayItem item, CancellationToken ct)
     {
         try
         {
-            await _lyricService.LoadLyricsAsync(item, providerItem, ct);
+            if (providerItem is not null)
+                await _lyricService.LoadLyricsAsync(providerItem, ct);
+            else
+                await _lyricService.LoadLyricsAsync(item, ct);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

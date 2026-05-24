@@ -35,6 +35,11 @@ public interface ILyricService
     Task LoadLyricsAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct = default);
 
     /// <summary>
+    /// 为指定 Provider 曲目加载歌词。
+    /// </summary>
+    Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default);
+
+    /// <summary>
     /// 根据播放位置更新当前歌词行
     /// </summary>
     void Tick(TimeSpan position);
