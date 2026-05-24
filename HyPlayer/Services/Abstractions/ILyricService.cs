@@ -1,5 +1,6 @@
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,6 +28,11 @@ public interface ILyricService
     /// 为指定曲目加载歌词
     /// </summary>
     Task LoadLyricsAsync(HyPlayItem item, CancellationToken ct = default);
+
+    /// <summary>
+    /// 为指定曲目加载歌词，优先使用 Provider 曲目模型。
+    /// </summary>
+    Task LoadLyricsAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct = default);
 
     /// <summary>
     /// 根据播放位置更新当前歌词行

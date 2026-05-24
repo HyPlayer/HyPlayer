@@ -219,7 +219,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
         try
         {
-            var song = item.ToSingleSong();
+            var song = GetPlaylistService()?.NowPlayingProviderItem ?? item.ToSingleSong();
             if (song is null) return;
 
             if (removeCurrentSongs)
@@ -246,7 +246,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             new CurrentSongChangedNotification { CurrentPlayingSong = song },
             ct);
 
-        _taskRunner.Forget(LoadLyricsSafeAsync(item, _lyricCts.Token), "load lyrics for PlayCore current song");
+        _taskRunner.Forget(LoadLyricsSafeAsync(item, song, _lyricCts.Token), "load lyrics for PlayCore current song");
         _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item), "update playback notification on PlayCore current song");
     }
 
@@ -315,17 +315,17 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             _lyricCts?.Cancel();
             _lyricCts?.Dispose();
             _lyricCts = new CancellationTokenSource();
-            _taskRunner.Forget(LoadLyricsSafeAsync(item, _lyricCts.Token), "load lyrics for primary source");
+            _taskRunner.Forget(LoadLyricsSafeAsync(item, GetPlaylistService()?.NowPlayingProviderItem, _lyricCts.Token), "load lyrics for primary source");
 
             _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item), "update playback notification on track changed");
         }
     }
 
-    private async Task LoadLyricsSafeAsync(HyPlayItem item, CancellationToken ct)
+    private async Task LoadLyricsSafeAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct)
     {
         try
         {
-            await _lyricService.LoadLyricsAsync(item, ct);
+            await _lyricService.LoadLyricsAsync(item, providerItem, ct);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

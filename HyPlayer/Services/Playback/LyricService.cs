@@ -7,6 +7,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Lyric;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using System;
@@ -59,6 +60,10 @@ public sealed class LyricService : ILyricService
 
     /// <inheritdoc />
     public async Task LoadLyricsAsync(HyPlayItem item, CancellationToken ct = default)
+        => await LoadLyricsAsync(item, null, ct);
+
+    /// <inheritdoc />
+    public async Task LoadLyricsAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct = default)
     {
         // 1. 尝试从缓存获取
         var canUseHyLyricInfoCache = item.ItemType == HyPlayItemType.Netease && !string.IsNullOrWhiteSpace(item.Id);
@@ -81,7 +86,7 @@ public sealed class LyricService : ILyricService
         // 2. 根据类型加载原始歌词
         var pureLyricInfo = item.ItemType switch
         {
-            HyPlayItemType.Netease => await LoadNcLyricAsync(item, ct),
+            HyPlayItemType.Netease => await LoadNcLyricAsync(item, providerItem, ct),
             HyPlayItemType.Local => await LoadLocalLyricAsync(item),
             _ => new PureLyricInfo()
         };
@@ -199,7 +204,7 @@ public sealed class LyricService : ILyricService
 
     #region Private helpers
 
-    private async Task<PureLyricInfo> LoadNcLyricAsync(HyPlayItem item, CancellationToken ct)
+    private async Task<PureLyricInfo> LoadNcLyricAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct)
     {
         try
         {
@@ -208,7 +213,7 @@ public sealed class LyricService : ILyricService
 
             var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(
                 CacheType.LyricApi, item.Id,
-                async () => await _lyricProvider.GetLyricInfoAsync(item.ToSingleSong()!, ct),
+                async () => await _lyricProvider.GetLyricInfoAsync(providerItem ?? item.ToSingleSong()!, ct),
                 cancellationToken: ct);
 
             if (lyricResult is null)
