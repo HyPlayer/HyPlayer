@@ -47,9 +47,12 @@ public sealed partial class PlaylistService
         Position = position,
         Duration = duration,
         CurrentItem = NowPlayingItem,
+        CurrentProviderItem = NowPlayingProviderItem,
         RequestNextItemAsync = RequestNextItemAsync,
+        RequestNextProviderItemAsync = RequestNextProviderItemAsync,
         CommitItemAsync = CommitItemAsync,
         LoadMediaSourceAsync = _control.LoadAndPlayAsync,
+        LoadProviderMediaSourceAsync = _control.LoadAndPlayAsync,
         Player = _player,
         TaskRunner = _taskRunner
     };
@@ -78,6 +81,34 @@ public sealed partial class PlaylistService
         }
 
         return Task.FromResult<HyPlayItem?>(item);
+    }
+
+    /// <summary>
+    /// 供过渡策略回调：获取下一首 Provider 曲目并保持和旧队列索引同步。
+    /// </summary>
+    private Task<SingleSongBase?> RequestNextProviderItemAsync(bool advance)
+    {
+        var nextIndex = _activeStrategy.GetNext(BuildStrategyContext());
+        if (nextIndex is null)
+            return Task.FromResult<SingleSongBase?>(null);
+
+        SingleSongBase? item;
+        lock (_lock)
+        {
+            if (!advance && nextIndex.Value == _nowPlayingIndex)
+                return Task.FromResult<SingleSongBase?>(null);
+
+            item = nextIndex.Value >= 0 && nextIndex.Value < _providerItems.Count
+                ? _providerItems[nextIndex.Value]
+                : null;
+            if (advance)
+            {
+                _nowPlayingIndex = nextIndex.Value;
+                SyncIndex();
+            }
+        }
+
+        return Task.FromResult(item);
     }
 
     private bool ShouldReplaySingleItem()

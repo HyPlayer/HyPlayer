@@ -28,6 +28,16 @@ public sealed class DirectTransition : ITrackTransition
     /// </summary>
     public async Task OnTrackEndedAsync(TrackTransitionContext ctx)
     {
+        if (ctx.RequestNextProviderItemAsync is not null && ctx.LoadProviderMediaSourceAsync is not null)
+        {
+            var nextProviderItem = await ctx.RequestNextProviderItemAsync(true).ConfigureAwait(false);
+            if (nextProviderItem is not null)
+            {
+                await ctx.LoadProviderMediaSourceAsync(nextProviderItem, true, true).ConfigureAwait(false);
+                return;
+            }
+        }
+
         var nextItem = await ctx.RequestNextItemAsync(true).ConfigureAwait(false);
         if (nextItem is not null)
         {
