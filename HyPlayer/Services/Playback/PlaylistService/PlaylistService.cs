@@ -110,6 +110,18 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
+    public IReadOnlyList<SingleSongBase> ProviderItems
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _providerItems.Where(item => item is not null).Select(item => item!).ToArray();
+            }
+        }
+    }
+
+    /// <inheritdoc />
     public int NowPlayingIndex => _nowPlayingIndex;
 
     /// <inheritdoc />

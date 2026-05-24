@@ -68,7 +68,7 @@ internal sealed class ListenTogetherManager
         _instance = mgr;
 
         var roomId = await mgr._listenTogetherProvider.CreateListenTogetherRoomAsync(
-            mgr._playlist.Items.Select(item => item.ToSingleSong()).Where(song => song is not null).Select(song => song!).ToList());
+            mgr._playlist.ProviderItems.ToList());
         if (string.IsNullOrWhiteSpace(roomId))
         {
             Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建一起听房间失败", "房间ID为空");
@@ -268,7 +268,7 @@ internal sealed class ListenTogetherManager
         {
             var report = new ProviderListenTogetherQueueReport
             {
-                Queue = _playlist.Items.Select(item => item.ToSingleSong()).Where(song => song is not null).Select(song => song!).ToList(),
+                Queue = _playlist.ProviderItems.ToList(),
                 PlayModeId = _state.ActiveStrategyId,
                 UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.Id,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
