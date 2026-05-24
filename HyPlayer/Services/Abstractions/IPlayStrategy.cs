@@ -29,6 +29,9 @@ public class PlayStrategyContext
     /// <summary>当前播放列表的 Provider 单曲位置对齐视图（本地/旧项可为 null）</summary>
     public IReadOnlyList<SingleSongBase?>? ProviderQueueItems { get; init; }
 
+    /// <summary>当前播放队列长度，优先使用位置对齐的 Provider 视图</summary>
+    public int QueueCount => ProviderQueueItems?.Count ?? Items.Count;
+
     /// <summary>当前播放曲目的 Provider 单曲视图</summary>
     public SingleSongBase? CurrentProviderItem { get; init; }
 

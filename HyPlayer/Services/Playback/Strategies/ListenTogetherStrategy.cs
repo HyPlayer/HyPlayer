@@ -30,7 +30,7 @@ public sealed class ListenTogetherStrategy : IPlayStrategy
         if (mgr?.ServerNextIndex is { } idx)
         {
             mgr.ServerNextIndex = null; // 消费后清除
-            return idx >= 0 && idx < ctx.Items.Count ? idx : null;
+            return idx >= 0 && idx < ctx.QueueCount ? idx : null;
         }
 
         return null;

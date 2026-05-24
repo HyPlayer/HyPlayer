@@ -44,15 +44,15 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
     /// <inheritdoc />
     public int? GetNext(PlayStrategyContext ctx)
     {
-        if (ctx.Items.Count == 0) return null;
+        if (ctx.QueueCount == 0) return null;
         var next = ctx.CurrentIndex + 1;
-        return next < ctx.Items.Count ? next : null;
+        return next < ctx.QueueCount ? next : null;
     }
 
     /// <inheritdoc />
     public int? GetPrevious(PlayStrategyContext ctx)
     {
-        if (ctx.Items.Count == 0) return null;
+        if (ctx.QueueCount == 0) return null;
         var prev = ctx.CurrentIndex - 1;
         return prev >= 0 ? prev : null;
     }
@@ -64,7 +64,7 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
     public PlayStrategyAction OnTrackEnded(PlayStrategyContext ctx)
     {
         // 当接近列表末尾时请求加载更多
-        if (ctx.CurrentIndex + 1 >= ctx.Items.Count)
+        if (ctx.CurrentIndex + 1 >= ctx.QueueCount)
             return PlayStrategyAction.LoadMore;
 
         return PlayStrategyAction.MoveNext;
