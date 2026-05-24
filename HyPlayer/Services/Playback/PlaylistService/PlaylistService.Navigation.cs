@@ -23,12 +23,12 @@ public sealed partial class PlaylistService
         var nextIndex = _activeStrategy.GetNext(BuildStrategyContext());
         if (nextIndex is null && _activeStrategy is IAsyncPlayStrategy asyncStrategy)
         {
-            var moreItems = (await asyncStrategy.LoadMoreAsync(BuildStrategyContext())).ToList();
+            var moreItems = (await asyncStrategy.LoadMoreProviderItemsAsync(BuildStrategyContext())).ToList();
             if (moreItems.Count > 0)
             {
                 lock (_lock)
                 {
-                    _items.AddRange(moreItems);
+                    _items.AddRange(moreItems.Select(item => item.ToHyPlayItem()));
                 }
                 NotifyAppendDone();
                 nextIndex = _activeStrategy.GetNext(BuildStrategyContext());

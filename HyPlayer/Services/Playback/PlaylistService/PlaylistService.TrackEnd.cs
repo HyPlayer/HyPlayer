@@ -1,5 +1,8 @@
+using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Services.Abstractions;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -43,11 +46,11 @@ public sealed partial class PlaylistService
                 case PlayStrategyAction.LoadMore:
                     if (_activeStrategy is IAsyncPlayStrategy asyncStrategy)
                     {
-                        var moreItems = await asyncStrategy.LoadMoreAsync(
+                        var moreItems = await asyncStrategy.LoadMoreProviderItemsAsync(
                             BuildStrategyContext(), ct);
                         lock (_lock)
                         {
-                            _items.AddRange(moreItems);
+                            _items.AddRange(moreItems.Select(item => item.ToHyPlayItem()));
                         }
                         NotifyAppendDone();
                         await _activeTransition.OnTrackEndedAsync(BuildTransitionContext());

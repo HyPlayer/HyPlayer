@@ -1,7 +1,9 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -106,5 +108,13 @@ public interface IAsyncPlayStrategy : IPlayStrategy
     /// <summary>
     /// 异步加载更多曲目追加到播放列表
     /// </summary>
-    Task<IEnumerable<HyPlayItem>> LoadMoreAsync(PlayStrategyContext ctx, CancellationToken ct = default);
+    async Task<IEnumerable<HyPlayItem>> LoadMoreAsync(PlayStrategyContext ctx, CancellationToken ct = default)
+    {
+        return (await LoadMoreProviderItemsAsync(ctx, ct).ConfigureAwait(false)).Select(item => item.ToHyPlayItem());
+    }
+
+    /// <summary>
+    /// 异步加载更多 Provider 曲目追加到播放列表
+    /// </summary>
+    Task<IEnumerable<SingleSongBase>> LoadMoreProviderItemsAsync(PlayStrategyContext ctx, CancellationToken ct = default);
 }

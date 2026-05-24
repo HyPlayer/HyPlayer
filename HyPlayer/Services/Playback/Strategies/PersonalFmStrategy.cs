@@ -71,7 +71,7 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<HyPlayItem>> LoadMoreAsync(PlayStrategyContext ctx, CancellationToken ct = default)
+    public async Task<IEnumerable<SingleSongBase>> LoadMoreProviderItemsAsync(PlayStrategyContext ctx, CancellationToken ct = default)
     {
         if (!_setting.useAiDj)
             return await LoadPersonalFmAsync(ct).ConfigureAwait(false);
@@ -82,19 +82,18 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
     /// <summary>
     /// 从普通私人 FM 接口加载曲目
     /// </summary>
-    private async Task<IEnumerable<HyPlayItem>> LoadPersonalFmAsync(CancellationToken ct)
+    private async Task<IEnumerable<SingleSongBase>> LoadPersonalFmAsync(CancellationToken ct)
     {
         return (await new NeteasePersonalFMContainer { ActualId = "default", Name = "私人 FM" }.GetNextItemsRangeAsync(ct).ConfigureAwait(false))
-            .OfType<SingleSongBase>()
-            .Select(song => song.ToHyPlayItem());
+            .OfType<SingleSongBase>();
     }
 
     /// <summary>
     /// 从 AI DJ 接口加载曲目
     /// </summary>
-    private async Task<IEnumerable<HyPlayItem>> LoadAiDjAsync(PlayStrategyContext ctx, CancellationToken ct)
+    private async Task<IEnumerable<SingleSongBase>> LoadAiDjAsync(PlayStrategyContext ctx, CancellationToken ct)
     {
-        if (ctx.CurrentItem?.ToSingleSong() is { } currentSong)
+        if (ctx.CurrentProviderItem is { } currentSong)
         {
             var itemId = currentSong.ActualId ?? currentSong.Name;
             var container = new NeteaseContextRecommendationContainer
@@ -106,7 +105,7 @@ public sealed class PersonalFmStrategy : IAsyncPlayStrategy
             };
             var items = await container.GetAllItemsAsync(ct).ConfigureAwait(false);
 
-            var songs = items.OfType<SingleSongBase>().Select(song => song.ToHyPlayItem()).ToList();
+            var songs = items.OfType<SingleSongBase>().ToList();
             if (songs.Count > 0) return songs;
         }
 
