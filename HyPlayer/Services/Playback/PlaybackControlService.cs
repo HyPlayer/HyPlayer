@@ -212,6 +212,15 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     /// <inheritdoc />
     public async Task LoadAndPlayAsync(HyPlayItem item, bool setAsPrimary = true, bool autoPlay = true, bool removeCurrentSongs = true)
     {
+        var song = GetPlaylistService()?.NowPlayingProviderItem ?? item.ToSingleSong();
+        if (song is null) return;
+
+        await LoadAndPlayAsync(song, autoPlay, removeCurrentSongs);
+    }
+
+    /// <inheritdoc />
+    public async Task LoadAndPlayAsync(SingleSongBase song, bool autoPlay = true, bool removeCurrentSongs = true)
+    {
         _playbackCts?.Cancel();
         _playbackCts?.Dispose();
         _playbackCts = new CancellationTokenSource();
@@ -219,8 +228,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
         try
         {
-            var song = GetPlaylistService()?.NowPlayingProviderItem ?? item.ToSingleSong();
-            if (song is null) return;
+            var item = GetPlaylistService()?.NowPlayingItem ?? song.ToHyPlayItem();
 
             if (removeCurrentSongs)
                 await _playCore.StopAsync(ct);
