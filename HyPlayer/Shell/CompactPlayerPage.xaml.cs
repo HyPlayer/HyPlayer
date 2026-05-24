@@ -111,6 +111,9 @@ public sealed partial class CompactPlayerPage : Page
                 OnChangePlayItem(_state.NowPlayingItem);
                 HyPlayList_OnSongCoverChanged(_state.NowPlayingItem);
                 break;
+            case nameof(PlaybackStateService.NowPlayingProviderItem):
+                OnChangePlayItem(_state.NowPlayingItem);
+                break;
             case nameof(PlaybackStateService.LyricIndex):
                 OnLyricChanged();
                 break;
@@ -292,7 +295,7 @@ public sealed partial class CompactPlayerPage : Page
     {
         RunOnUIThread(() =>
         {
-            var providerItem = _playlist.NowPlayingProviderItem;
+            var providerItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
             NowPlayingName = providerItem?.Name ?? item?.Name;
             NowPlayingArtists = providerItem?.CreatorList is { Count: > 0 } creators
                 ? string.Join("; ", creators)
@@ -303,7 +306,9 @@ public sealed partial class CompactPlayerPage : Page
 
         if (item.ItemType is not (HyPlayItemType.Local or HyPlayItemType.LocalProgressive))
         {
-            var isLiked = _auth.LikedSongs.Contains(_state.NowPlayingItem?.Id);
+            var providerItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+            var isLiked = _auth.LikedSongs.Contains(providerItem?.ActualId ?? item.Id);
+            var durationMs = providerItem?.Duration ?? item.LengthInMilliseconds;
             RunOnUIThread(() =>
             {
                 IconLiked.Foreground = isLiked
@@ -312,7 +317,7 @@ public sealed partial class CompactPlayerPage : Page
                 IconLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
-                TotalProgress = item?.LengthInMilliseconds ?? 0;
+                TotalProgress = durationMs;
             });
         }
     }
