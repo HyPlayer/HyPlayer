@@ -80,7 +80,7 @@ internal sealed class ListenTogetherManager
         {
             RoomId = roomId,
             ClientSeq = 0,
-            CurrentSongId = mgr._state.NowPlayingItem?.Id ?? ""
+            CurrentSongId = mgr.CurrentProviderSongId
         };
         mgr.IsInRoom = true;
 
@@ -181,8 +181,8 @@ internal sealed class ListenTogetherManager
             {
                 CommandId = "play",
                 IsPlaying = _state.IsPlaying,
-                FormerItemId = _state.NowPlayingItem?.Id ?? "",
-                TargetItemId = playItem.Id,
+                FormerItemId = CurrentProviderSongId,
+                TargetItemId = CurrentProviderSongId,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 Position = TimeSpan.Zero
             };
@@ -203,8 +203,8 @@ internal sealed class ListenTogetherManager
             {
                 CommandId = "play",
                 IsPlaying = true,
-                FormerItemId = _state.NowPlayingItem?.Id ?? "",
-                TargetItemId = _state.NowPlayingItem?.Id ?? "",
+                FormerItemId = CurrentProviderSongId,
+                TargetItemId = CurrentProviderSongId,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 Position = _state.Position
             };
@@ -225,8 +225,8 @@ internal sealed class ListenTogetherManager
             {
                 CommandId = "pause",
                 IsPlaying = false,
-                FormerItemId = _state.NowPlayingItem?.Id ?? "",
-                TargetItemId = _state.NowPlayingItem?.Id ?? "",
+                FormerItemId = CurrentProviderSongId,
+                TargetItemId = CurrentProviderSongId,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 Position = _state.Position
             };
@@ -249,8 +249,8 @@ internal sealed class ListenTogetherManager
                     CommandId = "progress",
                     Position = position,
                     IsPlaying = _state.IsPlaying,
-                    FormerItemId = _state.NowPlayingItem?.Id ?? "",
-                    TargetItemId = _state.NowPlayingItem?.Id ?? "",
+                    FormerItemId = CurrentProviderSongId,
+                    TargetItemId = CurrentProviderSongId,
                     ClientSeq = ++CurrentRoomInfo.ClientSeq
                 });
         }
@@ -273,7 +273,7 @@ internal sealed class ListenTogetherManager
                 UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.Id,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 AnchorPosition = _state.NowPlayingIndex,
-                AnchorItemId = _state.NowPlayingItem?.Id ?? ""
+                AnchorItemId = CurrentProviderSongId
             };
 
             _ = _listenTogetherProvider.ReportListenTogetherQueueAsync(CurrentRoomInfo.RoomId, report);
@@ -355,6 +355,8 @@ internal sealed class ListenTogetherManager
         Ioc.Default.GetRequiredService<IPlaybackControlService>().SeekRequested += OnSeekRequested;
         _playlist.PlaylistChanged += OnPlaylistChanged;
     }
+
+    private string CurrentProviderSongId => _state.NowPlayingProviderItem?.ActualId ?? _state.NowPlayingItem?.Id ?? string.Empty;
 
     private static void CleanupInstance()
     {
