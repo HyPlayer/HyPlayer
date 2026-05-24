@@ -5,6 +5,7 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
 using System;
@@ -139,7 +140,14 @@ public sealed partial class HistoryPage : Page
 
     private static NCSong MapHistoryItemToNcSong(ProvidableItemBase item)
     {
-        var playItem = item.ToHyPlayItem();
-        return playItem.ToNCSong();
+        return item is SingleSongBase song ? song.ToNCSong() : new NCSong
+        {
+            SongId = item.ActualId,
+            SongName = item.Name,
+            Artist = [],
+            Album = new NCAlbum { Id = string.Empty, Name = string.Empty, Cover = string.Empty, AlbumType = HyPlayItemType.Netease },
+            Type = HyPlayItemType.Netease,
+            IsAvailable = true
+        };
     }
 }

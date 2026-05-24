@@ -236,8 +236,7 @@ public sealed partial class MusicCloudPage : Page
     {
         if (item is NeteaseCloudLibraryItem { Song: SingleSongBase song })
         {
-            var playItem = song.ToHyPlayItem();
-            var ncSong = playItem.ToNCSong();
+            var ncSong = song.ToNCSong();
             ncSong.IsCloud = true;
             return ncSong;
         }

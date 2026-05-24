@@ -273,7 +273,7 @@ namespace HyPlayer.Features.Playlist
                 if (_dailyRecommendProviderSongs.Count == Songs.Count)
                     _playlist.AppendItems(_dailyRecommendProviderSongs);
                 else
-                    _playlist.AppendItems(Songs.Select(s => s.ToHyPlayItem()));
+                    _playlist.AppendItems(Songs.Select(s => s.ToSingleSong()));
                 _playlist.NotifyAppendDone();
             }
         }
@@ -317,7 +317,7 @@ namespace HyPlayer.Features.Playlist
                 if (_dailyRecommendProviderSongs.Count == Songs.Count)
                     _playlist.AppendItems(_dailyRecommendProviderSongs, true);
                 else
-                    _playlist.AppendItems(Songs.Select(s => s.ToHyPlayItem()), true);
+                    _playlist.AppendItems(Songs.Select(s => s.ToSingleSong()), true);
                 _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.PlaylistId));
                 _playlist.NotifyAppendDone();
                 await _playlist.MoveNextAsync(userInitiated: true);
