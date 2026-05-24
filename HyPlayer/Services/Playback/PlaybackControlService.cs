@@ -246,7 +246,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     {
         _state.NowPlayingItem = item;
         _state.NowPlayingProviderItem = song;
-        _state.Duration = TimeSpan.FromMilliseconds(Math.Max(0, item.LengthInMilliseconds));
+        _state.Duration = TimeSpan.FromMilliseconds(Math.Max(0, song.Duration));
         _lyricCts?.Cancel();
         _lyricCts?.Dispose();
         _lyricCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -324,7 +324,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             _lyricCts?.Cancel();
             _lyricCts?.Dispose();
             _lyricCts = new CancellationTokenSource();
-            _taskRunner.Forget(LoadLyricsSafeAsync(item, GetPlaylistService()?.NowPlayingProviderItem, _lyricCts.Token), "load lyrics for primary source");
+            _taskRunner.Forget(LoadLyricsSafeAsync(item, _state.NowPlayingProviderItem, _lyricCts.Token), "load lyrics for primary source");
 
             _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item), "update playback notification on track changed");
         }
