@@ -29,6 +29,7 @@ public sealed partial class PlaylistService
                 lock (_lock)
                 {
                     _items.AddRange(moreItems.Select(item => item.ToHyPlayItem()));
+                    _providerItems.AddRange(moreItems);
                 }
                 NotifyAppendDone();
                 nextIndex = _activeStrategy.GetNext(BuildStrategyContext());
@@ -101,7 +102,16 @@ public sealed partial class PlaylistService
     /// <inheritdoc />
     public Task MoveToAsync(ProvidableItemBase item)
     {
-        return MoveToAsync(item.ToHyPlayItem());
+        int index;
+        lock (_lock)
+        {
+            index = _providerItems.FindIndex(providerItem => providerItem is not null &&
+                providerItem.ProviderId == item.ProviderId &&
+                providerItem.TypeId == item.TypeId &&
+                providerItem.ActualId == item.ActualId);
+        }
+
+        return index >= 0 ? MoveToAsync(_items[index]) : MoveToAsync(item.ToHyPlayItem());
     }
 
     private void ExitPersonalFmForSourceChange()

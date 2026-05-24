@@ -34,6 +34,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     private readonly PlayCoreBase _playCore;
 
     private readonly List<HyPlayItem> _items = new();
+    private readonly List<SingleSongBase?> _providerItems = new();
     private readonly Lock _lock = new();
 
     private IPlayStrategy _activeStrategy;
@@ -126,7 +127,18 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
-    public SingleSongBase? NowPlayingProviderItem => NowPlayingItem?.ToSingleSong();
+    public SingleSongBase? NowPlayingProviderItem
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _nowPlayingIndex >= 0 && _nowPlayingIndex < _providerItems.Count
+                    ? _providerItems[_nowPlayingIndex]
+                    : null;
+            }
+        }
+    }
 
     /// <inheritdoc />
     public string ActiveStrategyId => _activeStrategy.Id;
@@ -161,16 +173,35 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         lock (_lock)
         {
             if (position < 0 || position >= _items.Count)
+            {
                 _items.Add(item);
+                _providerItems.Add(item.ToSingleSong());
+            }
             else
+            {
                 _items.Insert(position, item);
+                _providerItems.Insert(position, item.ToSingleSong());
+            }
         }
     }
 
     /// <inheritdoc />
     public void AppendItem(ProvidableItemBase item, int position = -1)
     {
-        AppendItem(item.ToHyPlayItem(), position);
+        var playItem = item.ToHyPlayItem();
+        lock (_lock)
+        {
+            if (position < 0 || position >= _items.Count)
+            {
+                _items.Add(playItem);
+                _providerItems.Add(item as SingleSongBase ?? playItem.ToSingleSong());
+            }
+            else
+            {
+                _items.Insert(position, playItem);
+                _providerItems.Insert(position, item as SingleSongBase ?? playItem.ToSingleSong());
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -182,20 +213,42 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         lock (_lock)
         {
             Clear(clearFirst);
-            _items.AddRange(items);
+            var playItems = items.ToList();
+            _items.AddRange(playItems);
+            _providerItems.AddRange(playItems.Select(item => item.ToSingleSong()));
         }
     }
 
     /// <inheritdoc />
     public void AppendItems(IEnumerable<ProvidableItemBase> items, bool clearFirst = false)
     {
-        AppendItems(items.Select(item => item.ToHyPlayItem()), clearFirst);
+        var providerItems = items.ToList();
+        var playItems = providerItems.Select(item => item.ToHyPlayItem()).ToList();
+        if (clearFirst)
+            ExitPersonalFmForSourceChange();
+
+        lock (_lock)
+        {
+            Clear(clearFirst);
+            _items.AddRange(playItems);
+            _providerItems.AddRange(providerItems.Select((item, index) => item as SingleSongBase ?? playItems[index].ToSingleSong()));
+        }
     }
 
     /// <inheritdoc />
     public void AppendItems(IEnumerable<SingleSongBase> items, bool clearFirst = false)
     {
-        AppendItems(items.Select(item => item.ToHyPlayItem()), clearFirst);
+        var providerItems = items.ToList();
+        var playItems = providerItems.Select(item => item.ToHyPlayItem()).ToList();
+        if (clearFirst)
+            ExitPersonalFmForSourceChange();
+
+        lock (_lock)
+        {
+            Clear(clearFirst);
+            _items.AddRange(playItems);
+            _providerItems.AddRange(providerItems);
+        }
     }
 
     /// <inheritdoc />
@@ -214,6 +267,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
 
             DisposePlayItem(_items[index]);
             _items.RemoveAt(index);
+            _providerItems.RemoveAt(index);
 
             // 调整当前播放索引
             if (index < _nowPlayingIndex)
@@ -246,6 +300,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 _taskRunner.Forget(_playCore.StopAsync(), "stop PlayCore before clearing playlist");
                 DisposePlayItems(_items);
                 _items.Clear();
+                _providerItems.Clear();
                 _nowPlayingIndex = -1;
                 _state.NowPlayingItem = null;
             }
@@ -256,9 +311,18 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                     nowPlayingItem = _items[_nowPlayingIndex];
 
                 var itemsToDispose = _items.Where(t => t != nowPlayingItem).ToList();
+                var nowPlayingProviderItem = _nowPlayingIndex >= 0 && _nowPlayingIndex < _providerItems.Count
+                    ? _providerItems[_nowPlayingIndex]
+                    : null;
 
                 _items.Clear();
+                _providerItems.Clear();
+                if (nowPlayingItem is not null)
+                    _items.Add(nowPlayingItem);
+                if (nowPlayingProviderItem is not null)
+                    _providerItems.Add(nowPlayingProviderItem);
                 DisposePlayItems(itemsToDispose);
+                _nowPlayingIndex = _items.Count > 0 ? 0 : -1;
             }
 
             NotifyAppendDone();

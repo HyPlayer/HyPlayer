@@ -51,6 +51,7 @@ public sealed partial class PlaylistService
                         lock (_lock)
                         {
                             _items.AddRange(moreItems.Select(item => item.ToHyPlayItem()));
+                            _providerItems.AddRange(moreItems);
                         }
                         NotifyAppendDone();
                         await _activeTransition.OnTrackEndedAsync(BuildTransitionContext());

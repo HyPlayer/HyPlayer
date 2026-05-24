@@ -27,7 +27,11 @@ public sealed partial class PlaylistService
         var items = await _localFileImport.PickLocalFilesAsync();
         if (items.Count == 0) return;
 
-        lock (_lock) { _items.AddRange(items); }
+        lock (_lock)
+        {
+            _items.AddRange(items);
+            _providerItems.AddRange(items.Select(item => item.ToSingleSong()));
+        }
 
         NotifyAppendDone();
         HyPlayItem? lastItem;
@@ -83,6 +87,7 @@ public sealed partial class PlaylistService
             if (index < 0 || ReferenceEquals(item, NowPlayingItem))
                 return;
             _items[index] = item;
+            _providerItems[index] = item.ToSingleSong();
             _nowPlayingIndex = index;
             SyncIndex();
         }
@@ -95,6 +100,7 @@ public sealed partial class PlaylistService
         lock (_lock)
         {
             _items.Reverse();
+            _providerItems.Reverse();
             if (_nowPlayingIndex >= 0 && _nowPlayingIndex < _items.Count)
                 _nowPlayingIndex = _items.Count - _nowPlayingIndex - 1;
             SyncIndex();
@@ -112,6 +118,7 @@ public sealed partial class PlaylistService
         _trackEndCts = null;
         DisposePlayItems(_items);
         _items.Clear();
+        _providerItems.Clear();
         _state.NowPlayingItem = null;
         _trackEndLock.Dispose();
     }
