@@ -6,7 +6,7 @@ namespace HyPlayer.Services.Abstractions;
 
 /// <summary>
 /// 队列源提供者 — 每种 <see cref="SongListQueueScopeKind"/> 对应一个实现。
-/// 负责从远程源（网易云 API）加载歌曲列表并返回批次结果。
+/// 负责从远程源加载歌曲列表并返回批次结果。
 /// </summary>
 public interface IQueueSourceProvider
 {
