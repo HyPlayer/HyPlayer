@@ -270,7 +270,7 @@ namespace HyPlayer.Features.Playlist
             }
             else
             {
-                if (_dailyRecommendProviderSongs.Count == Songs.Count)
+                if (HasCompleteDailyRecommendProviderSongs())
                     _playlist.AppendItems(_dailyRecommendProviderSongs);
                 else
                     _playlist.AppendNcSongs(Songs.ToList(), clearFirst: false);
@@ -314,7 +314,7 @@ namespace HyPlayer.Features.Playlist
             }
             else
             {
-                if (_dailyRecommendProviderSongs.Count == Songs.Count)
+                if (HasCompleteDailyRecommendProviderSongs())
                     _playlist.AppendItems(_dailyRecommendProviderSongs, true);
                 else
                     _playlist.AppendNcSongs(Songs.ToList(), clearFirst: true);
@@ -340,7 +340,15 @@ namespace HyPlayer.Features.Playlist
         [RelayCommand]
         private void DownloadAll()
         {
-            DownloadManager.AddDownload(Songs.ToList());
+            if (PlayList.IsDailyRecommend && HasCompleteDailyRecommendProviderSongs())
+                DownloadManager.AddDownload(_dailyRecommendProviderSongs);
+            else
+                DownloadManager.AddDownload(Songs.ToList());
+        }
+
+        private bool HasCompleteDailyRecommendProviderSongs()
+        {
+            return _dailyRecommendProviderSongs.Count > 0 && _dailyRecommendProviderSongs.Count == Songs.Count;
         }
 
         [RelayCommand]
