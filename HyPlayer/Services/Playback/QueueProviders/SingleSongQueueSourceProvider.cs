@@ -1,5 +1,4 @@
 using HyPlayer.Domain.Music;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
@@ -37,7 +36,7 @@ internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
             var song = songs.OfType<SingleSongBase>().FirstOrDefault();
 
             return song is not null
-                ? NeteaseQueueSourceLoadResult.FromSongs([song.ToNCSong()])
+                ? NeteaseQueueSourceLoadResult.FromSongs([song])
                 : NeteaseQueueSourceLoadResult.Failed;
         }
         catch (Exception ex)

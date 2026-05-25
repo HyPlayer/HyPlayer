@@ -155,9 +155,8 @@ public sealed partial class PlaylistService
                     if (batch is not { Count: > 0 })
                         continue;
 
-                    foreach (var ncSong in batch)
+                    foreach (var providerSong in batch)
                     {
-                        var providerSong = ncSong.ToSingleSong();
                         if (result.Batches.Count == 1 && batch.Count == 1)
                         {
                             var singleItem = ToLegacyQueueItem(providerSong);
