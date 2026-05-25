@@ -261,14 +261,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         }
     }
 
-    /// <inheritdoc />
-    public void CheckABTimeRemaining(TimeSpan position)
-    {
-        if (position >= _setting.ABEndPoint && _setting.ABEndPoint != TimeSpan.Zero &&
-            _setting.ABEndPoint > _setting.ABStartPoint)
-            _taskRunner.Forget(SeekAsync(_setting.ABStartPoint), "seek to AB repeat start");
-    }
-
     #endregion
 
     #region Player Event Handlers

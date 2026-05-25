@@ -3,8 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:classes="using:HyPlayer.Domain.Music"
-    xmlns:converters="using:HyPlayer.UI.Converters"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:converters="using:HyPlayer.UI.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:hy="using:HyPlayer.Infrastructure.Extensions"
@@ -1234,31 +1234,6 @@
                                 <FontIcon Glyph="&#xE72D;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutSeparator />
-                        <MenuFlyoutItem
-                            x:Name="ABRepeatStateButton"
-                            Click="ABRepeatStateButton_Click"
-                            Text="AB循环">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xE001;" Visibility="{x:Bind hy:XamlHelpers.Setting.ABRepeatStatus, Mode=OneWay}" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem
-                            HorizontalContentAlignment="Left"
-                            Click="SetABStartPointButton_Click"
-                            Text="设置开始点" />
-                        <MenuFlyoutItem
-                            Name="ABStartPointItem"
-                            HorizontalAlignment="Left"
-                            Text="{x:Bind hy:XamlHelpers.Setting.ABStartPointFriendlyValue, Mode=OneWay}" />
-                        <MenuFlyoutItem
-                            HorizontalContentAlignment="Left"
-                            Click="SetABEndPointButton_Click"
-                            Text="设置结束点" />
-                        <MenuFlyoutItem
-                            Name="ABEndPointItem"
-                            HorizontalAlignment="Left"
-                            Text="{x:Bind hy:XamlHelpers.Setting.ABEndPointFriendlyValue, Mode=OneWay}" />
                     </MenuFlyout>
                 </Button.Flyout>
                 <FontIcon Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}" Glyph="&#xE712;" />

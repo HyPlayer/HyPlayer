@@ -290,7 +290,7 @@ namespace HyPlayer.UI.Effects
             }
             else
             {
-                return new float4(Hlsl.Saturate(Srgb2OkLab(finalComp) + diter), 1.0f);
+                return new float4(Hlsl.Saturate(OkLab2Srgb(finalComp) + diter), 1.0f);
             }
         }
     }

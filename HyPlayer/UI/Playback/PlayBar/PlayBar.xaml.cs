@@ -779,21 +779,6 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
-    {
-        _setting.ABStartPoint = _player.PrimaryAudioInputNode.Position;
-    }
-
-    private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
-    {
-        _setting.ABEndPoint = _player.PrimaryAudioInputNode.Position;
-    }
-
-    private void ABRepeatStateButton_Click(object sender, RoutedEventArgs e)
-    {
-        _setting.ABRepeatStatus = !_setting.ABRepeatStatus;
-    }
-
     private void SliderProgress_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
     {
         _slidingEventArgs = null;

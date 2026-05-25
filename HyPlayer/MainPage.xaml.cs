@@ -209,7 +209,7 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private Task CollapseBar()
+    private void CollapseBar()
     {
         IsPlaybarOnShow = false;
         var PlayBarAni = new DoubleAnimation
@@ -241,7 +241,6 @@ public sealed partial class MainPage : Page
         PointerOutAni.Children.Add(PlayBarTransAni);
         PointerOutAni.Children.Add(PlayBarBlurTransAni);
         PointerOutAni.Begin();
-        return Task.CompletedTask;
     }
 
     private static void SetPlayBarMarginBlurEffect(UIElement sender)

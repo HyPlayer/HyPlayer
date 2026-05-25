@@ -543,8 +543,7 @@ public sealed partial class ExpandedPlayer : Page
 
     public void OnSongChange(HyPlayItem mpi)
     {
-        var lyricIsReady = _lastSong == _state.NowPlayingItem;
-        _lyricHasBeenLoaded = lyricIsReady;
+        _lyricHasBeenLoaded = _lastSong == _state.NowPlayingItem;
         _ = _notification.InvokeOnUIThread(() =>
         {
             var artistText = mpi?.ArtistString;
@@ -964,16 +963,6 @@ public sealed partial class ExpandedPlayer : Page
     {
         BtnToggleTinyMode.IsChecked = false;
         expandedPlayerWindow?.Closed -= ExpandedPlayerClosed;
-    }
-
-    private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
-    {
-        _settings.ABStartPoint = _player.PrimaryAudioInputNode.Position;
-    }
-
-    private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
-    {
-        _settings.ABEndPoint = _player.PrimaryAudioInputNode.Position;
     }
 
     private void Page_Loaded(object sender, RoutedEventArgs e)

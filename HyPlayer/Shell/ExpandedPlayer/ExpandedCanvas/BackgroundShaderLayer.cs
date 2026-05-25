@@ -86,8 +86,8 @@ public sealed class BackgroundShaderLayer : IExpandedCanvasLayer
         color2 = colors[1];
         color3 = colors[2];
         color4 = colors[3];
-        random1 = Random.Shared.Next(-10, 10);
-        random2 = Random.Shared.Next(-10, 10);
-        random3 = Random.Shared.Next(-10, 10);
+        random1 = Random.Shared.NextSingle();
+        random2 = Random.Shared.NextSingle();
+        random3 = Random.Shared.NextSingle();
     }
 }
