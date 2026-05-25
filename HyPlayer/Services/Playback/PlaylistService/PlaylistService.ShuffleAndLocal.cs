@@ -119,6 +119,7 @@ public sealed partial class PlaylistService
         _items.Clear();
         _providerItems.Clear();
         _state.NowPlayingItem = null;
+        _state.NowPlayingProviderItem = null;
         _trackEndLock.Dispose();
     }
 }
