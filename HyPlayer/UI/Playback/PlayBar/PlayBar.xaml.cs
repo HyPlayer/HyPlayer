@@ -527,7 +527,7 @@ DoubleAnimation verticalAnimation;
     {
         if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
         {
-            DownloadManager.AddDownload(providerSong.ToNCSong());
+            DownloadManager.AddDownload(providerSong);
         }
         else if (ViewModel.NowPlayingItem?.ItemType is HyPlayItemType.Netease or HyPlayItemType.Radio)
         {
