@@ -525,13 +525,9 @@ DoubleAnimation verticalAnimation;
 
     private void Btn_Down_OnClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
+        if (ViewModel.NowPlayingProviderItem != null)
         {
-            DownloadManager.AddDownload(providerSong);
-        }
-        else if (ViewModel.NowPlayingItem?.ItemType is HyPlayItemType.Netease or HyPlayItemType.Radio)
-        {
-            DownloadManager.AddDownload(ViewModel.NowPlayingItem.ToNCSong());
+            DownloadManager.AddDownload(ViewModel.NowPlayingProviderItem);
         }
     }
 
