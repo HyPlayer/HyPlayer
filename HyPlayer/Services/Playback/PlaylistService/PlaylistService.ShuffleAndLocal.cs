@@ -57,7 +57,7 @@ public sealed partial class PlaylistService
                 HashSet<int> shuffledNumbers = [];
                 if (currentSongId != "-1")
                 {
-                    int playItemIndex = _items.FindIndex(s => s.ToNCSong().SongId == currentSongId);
+                    int playItemIndex = _items.FindIndex(s => s.GetItemIdentity().ActualId == currentSongId);
                     if (playItemIndex != -1)
                     {
                         shuffledNumbers.Add(playItemIndex);
