@@ -16,23 +16,6 @@ namespace HyPlayer.Infrastructure.Netease;
 
 public static class Mapper
 {
-    public static HyPlayItem ToHyPlayItem(this NCSong ncSong)
-    {
-        return new HyPlayItem
-        {
-            ItemType = ncSong.Type,
-            InfoTag = ncSong.Alias,
-            Album = ncSong.Album,
-            Artist = ncSong.Artist,
-            Id = ncSong.SongId,
-            Translation = ncSong.TranslatedName,
-            Name = ncSong.SongName,
-            TrackId = ncSong.TrackId,
-            CDName = ncSong.CDName,
-            LengthInMilliseconds = ncSong.LengthInMilliseconds
-        };
-    }
-
     public static NCSong ToNCSong(this SingleSongBase song)
     {
         var neteaseSong = song as NeteaseSong;
