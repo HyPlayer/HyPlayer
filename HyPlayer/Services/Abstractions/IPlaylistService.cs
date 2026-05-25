@@ -115,9 +115,6 @@ public interface IPlaylistService
 
     // ────────────── NCSong 相关 ──────────────
 
-    /// <summary>将 NCSong 转换为 HyPlayItem</summary>
-    HyPlayItem NCSongToPlayItem(NCSong ncSong);
-
     /// <summary>追加单首网易云歌曲</summary>
     HyPlayItem AppendNcSong(NCSong ncSong, int position = -1);
 

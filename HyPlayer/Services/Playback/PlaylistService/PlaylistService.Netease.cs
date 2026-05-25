@@ -1,5 +1,6 @@
 using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -13,21 +14,16 @@ public sealed partial class PlaylistService
     // ────────────── NCSong 相关 ──────────────
 
     /// <inheritdoc />
-    public HyPlayItem NCSongToPlayItem(NCSong ncSong)
-    {
-        return ncSong.ToHyPlayItem();
-    }
-
-    /// <inheritdoc />
     public HyPlayItem AppendNcSong(NCSong ncSong, int position = -1)
     {
-        var hpi = NCSongToPlayItem(ncSong);
+        var providerSong = ncSong.ToSingleSong();
+        var hpi = ToLegacyQueueItem(providerSong);
         lock (_lock)
         {
             if (_items.Contains(hpi))
                 return hpi;
 
-            InsertQueueItem(hpi, ncSong.ToSingleSong(), position);
+            InsertQueueItem(hpi, providerSong, position);
         }
 
         NotifyAppendDone();
@@ -51,8 +47,9 @@ public sealed partial class PlaylistService
 
             foreach (var ncSong in ncSongs)
             {
-                var hpi = NCSongToPlayItem(ncSong);
-                lock (_lock) { InsertQueueItem(hpi, ncSong.ToSingleSong()); }
+                var providerSong = ncSong.ToSingleSong();
+                var hpi = ToLegacyQueueItem(providerSong);
+                lock (_lock) { InsertQueueItem(hpi, providerSong); }
             }
 
             NotifyAppendDone();
@@ -71,20 +68,21 @@ public sealed partial class PlaylistService
             if (position < 0)
                 position = _items.Count;
 
-            var insertList = ncSongs.Select(NCSongToPlayItem)
+            var providerSongs = ncSongs.Select(song => song.ToSingleSong()).ToList();
+            var insertList = providerSongs.Select(ToLegacyQueueItem)
                 .Where(t => !_items.Contains(t))
                 .ToList();
 
             if (insertList.Count <= 0)
                 return insertList;
 
-            foreach (var (ncSong, index) in ncSongs.Zip(Enumerable.Range(0, ncSongs.Count)))
+            foreach (var (providerSong, index) in providerSongs.Zip(Enumerable.Range(0, providerSongs.Count)))
             {
-                var item = NCSongToPlayItem(ncSong);
+                var item = ToLegacyQueueItem(providerSong);
                 if (_items.Contains(item))
                     continue;
 
-                InsertQueueItem(item, ncSong.ToSingleSong(), position + index);
+                InsertQueueItem(item, providerSong, position + index);
             }
             NotifyAppendDone();
             return insertList;
@@ -159,17 +157,18 @@ public sealed partial class PlaylistService
 
                     foreach (var ncSong in batch)
                     {
+                        var providerSong = ncSong.ToSingleSong();
                         if (result.Batches.Count == 1 && batch.Count == 1)
                         {
-                            var singleItem = NCSongToPlayItem(ncSong);
+                            var singleItem = ToLegacyQueueItem(providerSong);
                             if (_items.Contains(singleItem))
                                 continue;
 
-                            InsertQueueItem(singleItem, ncSong.ToSingleSong());
+                            InsertQueueItem(singleItem, providerSong);
                         }
                         else
                         {
-                            InsertQueueItem(NCSongToPlayItem(ncSong), ncSong.ToSingleSong());
+                            InsertQueueItem(ToLegacyQueueItem(providerSong), providerSong);
                         }
 
                         hasChanges = true;
@@ -184,5 +183,10 @@ public sealed partial class PlaylistService
         {
             _notification.ShowMessage("AppendNCSong时发生错误", ex.Message);
         }
+    }
+
+    private static HyPlayItem ToLegacyQueueItem(SingleSongBase song)
+    {
+        return song.ToHyPlayItem();
     }
 }
