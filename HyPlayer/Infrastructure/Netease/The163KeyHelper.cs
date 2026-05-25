@@ -2,6 +2,8 @@
 
 using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Serialization;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -183,6 +185,49 @@ internal static class The163KeyHelper
         {
             return false;
         }
+    }
+
+    public static bool TrySetMusicInfo(Tag tag, SingleSongBase song, int bitrate, string format)
+    {
+        if (tag is null)
+            throw new ArgumentNullException(nameof(tag));
+
+        try
+        {
+            var album = song.Album as NeteaseAlbum;
+            var key = new The163KeyClass
+            {
+                album = song.Album?.Name,
+                albumId = ulong.TryParse(song.Album?.ActualId, out var albumId) ? albumId : 0,
+                albumPic = album?.PictureUrl ?? (song as NeteaseSong)?.CoverUrl,
+                bitrate = bitrate,
+                duration = song.Duration,
+                musicId = long.TryParse(song.ActualId, out var musicId) ? musicId : 0,
+                musicName = song.Name,
+                format = format.ToLowerInvariant()
+            };
+
+            key.artist = GetArtistKey(song);
+            return TrySetMusicInfo(tag, key);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static List<List<object>> GetArtistKey(SingleSongBase song)
+    {
+        if (song is NeteaseSong { Artists: { Count: > 0 } artists })
+        {
+            return artists.Select(artist => new List<object>
+            {
+                artist.Name,
+                int.TryParse(artist.ActualId, out var artistId) ? artistId : 0
+            }).ToList();
+        }
+
+        return song.CreatorList?.Select(name => new List<object> { name, 0 }).ToList() ?? [];
     }
 
     public static string Get163Key(Tag tag)

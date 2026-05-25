@@ -38,7 +38,6 @@ namespace HyPlayer.Services.Downloads;
 
 internal sealed partial class DownloadObject : INotifyPropertyChanged
 {
-    public HyPlayItem PlayItem;
     private DownloadOperation _downloadOperation;
     private readonly INotificationService _notification;
     private readonly Setting _setting;
@@ -48,6 +47,8 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
     private readonly IDiagnosticsStateService _diagnostics;
     private readonly NCSong _song;
     private readonly SingleSongBase _providerSong;
+    private int _downloadBitrate;
+    private string _downloadFormat;
 
     private IStorageFile _resultFileBackingField;
     public IStorageFile ResultFile
@@ -218,8 +219,8 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
             using var file = TagLibHelper.Create(streamAbstraction, ResultFile.FileType);
             try
             {
-                if (_setting.write163Info && PlayItem is not null)
-                    The163KeyHelper.TrySetMusicInfo(file.Tag, PlayItem);
+                if (_setting.write163Info)
+                    The163KeyHelper.TrySetMusicInfo(file.Tag, _providerSong, _downloadBitrate, _downloadFormat);
                 //写相关信息
                 file.Tag.Album = ncsong.Album.Name;
                 file.Tag.Performers = [.. ncsong.Artist.Select(t => t.Name)];
@@ -449,13 +450,8 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
             var extension = (neteaseResource?.MusicType ?? neteaseResource?.EncodeType ?? musicResource.ExtensionName ?? "mp3")
                 .ToLowerInvariant();
             FileName += "." + extension;
-            PlayItem = ncsong.ToHyPlayItem();
-            PlayItem.Bitrate = int.TryParse(neteaseResource?.BitRate, out var bitRate) ? bitRate : 0;
-            PlayItem.QualityTag = "下载";
-            PlayItem.InfoTag = "下载";
-            PlayItem.SubExt = extension;
-            PlayItem.Url = musicResource.Uri.ToString();
-            PlayItem.Size = neteaseResource?.Size ?? 0;
+            _downloadBitrate = int.TryParse(neteaseResource?.BitRate, out var bitRate) ? bitRate : 0;
+            _downloadFormat = extension;
 
             _downloadOperation = DownloadManager.Downloader.CreateDownload(
                 musicResource.Uri,
