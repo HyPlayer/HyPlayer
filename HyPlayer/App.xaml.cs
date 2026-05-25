@@ -59,6 +59,7 @@ using FavoriteViewModel = HyPlayer.Features.Library.FavoriteViewModel;
 using HomeViewModel = HyPlayer.Features.Home.HomeViewModel;
 using MeViewModel = HyPlayer.Features.User.MeViewModel;
 using NavigationShellViewModel = HyPlayer.Shell.Navigation.NavigationShellViewModel;
+using CompactPlayerViewModel = HyPlayer.Shell.CompactPlayer.CompactPlayerViewModel;
 using PlayBarViewModel = HyPlayer.UI.Playback.PlayBar.PlayBarViewModel;
 using SongListViewModel = HyPlayer.Features.Playlist.SongListViewModel;
 using WidgetPage = HyPlayer.Features.Widgets.WidgetPage;
@@ -197,6 +198,7 @@ public sealed partial class App : Application
         // ── ViewModels ──
         serviceCollection.AddTransient<HomeViewModel>();
         serviceCollection.AddTransient<MeViewModel>();
+        serviceCollection.AddTransient<CompactPlayerViewModel>();
         serviceCollection.AddTransient<ExpandedPlayerViewModel>();
         serviceCollection.AddTransient<ArtistPageViewModel>();
         serviceCollection.AddTransient<SongListViewModel>();

@@ -415,14 +415,14 @@
                     Margin="12,0,0,0"
                     VerticalAlignment="Center"
                     Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
-                    Text="{x:Bind NowPlayingName, Mode=OneWay}" />
+                    Text="{x:Bind ViewModel.NowPlayingName, Mode=OneWay}" />
                 <TextBlock
                     Grid.Column="2"
                     Margin="4,0,64,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
                     Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                    Text="{x:Bind NowPlayingArtists, Mode=OneWay}"
+                    Text="{x:Bind ViewModel.NowPlayingArtists, Mode=OneWay}"
                     TextTrimming="CharacterEllipsis" />
             </Grid>
             <Grid
@@ -441,6 +441,8 @@
                     x:Name="LyricControl"
                     Height="500"
                     HorizontalAlignment="Stretch"
+                    Lyric="{x:Bind ViewModel.CurrentLyric, Mode=OneWay}"
+                    QuickRenderMode="{x:Bind ViewModel.LyricQuickRenderMode, Mode=OneWay}"
                     VerticalAlignment="Stretch"
                     WordWrapping="NoWrap" />
 
@@ -454,7 +456,7 @@
                         <TextBlock
                             x:Name="LyricSoundBlock"
                             Grid.Row="2"
-                            Text="{x:Bind LyricSound, Mode=OneWay}"
+                            Text="{x:Bind ViewModel.LyricSound, Mode=OneWay}"
                             TextAlignment="Center"
                             TextWrapping="WrapWholeWords">
                             <TextBlock.RenderTransform>
@@ -478,7 +480,7 @@
                             d:Text="Some Text"
                             RenderTransformOrigin="0.5,0.5"
                             Style="{StaticResource TitleTextBlockStyle}"
-                            Text="{x:Bind LyricText, Mode=OneWay}"
+                            Text="{x:Bind ViewModel.LyricText, Mode=OneWay}"
                             TextAlignment="Center"
                             TextWrapping="Wrap">
                             <TextBlock.RenderTransform>
@@ -491,7 +493,7 @@
                             Margin="20,0"
                             HorizontalAlignment="Center"
                             RenderTransformOrigin="0.5,0.5"
-                            Text="{x:Bind LyricTranslation, Mode=OneWay}"
+                            Text="{x:Bind ViewModel.LyricTranslation, Mode=OneWay}"
                             TextAlignment="Center"
                             TextWrapping="Wrap">
                             <TextBlock.RenderTransform>
@@ -514,12 +516,13 @@
                 Grid.Column="0"
                 Background="Transparent"
                 BorderBrush="Transparent"
-                Click="LikeButton_Click"
+                Command="{x:Bind ViewModel.LikeSongCommand}"
                 Opacity="0">
                 <FontIcon
                     x:Name="IconLiked"
                     FontSize="14"
-                    Glyph="&#xE00B;" />
+                    Foreground="{x:Bind ViewModel.LikeIconForeground, Mode=OneWay}"
+                    Glyph="{x:Bind ViewModel.LikeIconGlyph, Mode=OneWay}" />
                 <Button.RenderTransform>
                     <CompositeTransform />
                 </Button.RenderTransform>
@@ -529,7 +532,7 @@
                     x:Name="preBtn"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Click="MovePrevious"
+                    Command="{x:Bind ViewModel.MovePreviousCommand}"
                     Opacity="0.6">
                     <FontIcon FontSize="14" Glyph="&#xF8AC;" />
                     <Button.RenderTransform>
@@ -541,9 +544,9 @@
                     AutomationProperties.AcceleratorKey="Space"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Click="ChangePlayState"
+                    Command="{x:Bind ViewModel.TogglePlayPauseCommand}"
                     Opacity="0.6">
-                    <FontIcon x:Name="PlayStateIcon" Glyph="&#xEDB5;" />
+                    <FontIcon x:Name="PlayStateIcon" Glyph="{x:Bind ViewModel.PlayStateGlyph, Mode=OneWay}" />
                     <Button.RenderTransform>
                         <ScaleTransform x:Name="stateScale" CenterX="7" CenterY="14" />
                     </Button.RenderTransform>
@@ -552,7 +555,7 @@
                     x:Name="nextBtn"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Click="MoveNext"
+                    Command="{x:Bind ViewModel.MoveNextCommand}"
                     Opacity="0.6">
                     <FontIcon FontSize="14" Glyph="&#xF8AD;" />
                     <Button.RenderTransform>
@@ -565,7 +568,7 @@
                 HorizontalAlignment="Right"
                 Background="Transparent"
                 BorderBrush="Transparent"
-                Click="ExitButton_Click"
+                Command="{x:Bind ViewModel.ExitCompactOverlayCommand}"
                 Visibility="{x:Bind PlayProgress.Visibility, Mode=OneWay}">
                 <FontIcon FontSize="14" Glyph="&#xE78B;" />
                 <Button.RenderTransform>
@@ -577,9 +580,9 @@
             x:Name="PlayProgress"
             Grid.Row="1"
             VerticalAlignment="Bottom"
-            Maximum="{x:Bind Mode=OneWay, Path=TotalProgress}"
+            Maximum="{x:Bind Mode=OneWay, Path=ViewModel.TotalProgress}"
             Opacity="0"
-            Value="{x:Bind NowProgress, Mode=OneWay}" />
+            Value="{x:Bind ViewModel.NowProgress, Mode=OneWay}" />
         <Rectangle
             x:Name="AlbumImage"
             Grid.Row="3"

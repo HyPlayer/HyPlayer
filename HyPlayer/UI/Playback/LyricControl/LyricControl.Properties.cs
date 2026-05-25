@@ -54,7 +54,21 @@ namespace HyPlayer.UI.Playback.LyricControl
         /// <summary>
         /// 快速渲染模式
         /// </summary>
-        public bool QuickRenderMode { get; set; }
+        public bool QuickRenderMode
+        {
+            get => (bool)GetValue(QuickRenderModeProperty);
+            set => SetValue(QuickRenderModeProperty, value);
+        }
+
+        public static readonly DependencyProperty QuickRenderModeProperty =
+            DependencyProperty.Register(nameof(QuickRenderMode), typeof(bool), typeof(LyricControl), new PropertyMetadata(false, OnQuickRenderModeChanged));
+
+        private bool _quickRenderMode;
+
+        private static void OnQuickRenderModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((LyricControl)d)._quickRenderMode = (bool)e.NewValue;
+        }
 
 
 
