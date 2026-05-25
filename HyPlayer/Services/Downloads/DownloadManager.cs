@@ -46,6 +46,15 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
     private readonly IMusicResourceProvidable _musicResourceProvider;
     private readonly IDiagnosticsStateService _diagnostics;
     private readonly SingleSongBase _providerSong;
+    private readonly string _downloadAlbumName;
+    private readonly string[] _downloadArtistNames;
+    private readonly string _downloadSongName;
+    private readonly int _downloadOrder;
+    private readonly int _downloadTrackId;
+    private readonly string? _downloadCdName;
+    private readonly string _downloadSongId;
+    private readonly string? _downloadAlbumId;
+    private readonly string? _downloadAlbumCover;
     private int _downloadBitrate;
     private string _downloadFormat;
 
@@ -67,13 +76,19 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
 
     public string FullPath { get; set; }
 
+    public string SongName => _downloadSongName;
+
+    public string ArtistText => string.Join(';', _downloadArtistNames);
+
+    public string AlbumName => _downloadAlbumName;
+
+    public string? AlbumCover => _downloadAlbumCover;
+
     public ulong HadSize
     {
         get => _hadSize;
         set => SetField(ref _hadSize, value);
     }
-
-    public NCSong ncsong;
 
     public DownloadObject(
         NCSong song,
@@ -90,8 +105,16 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         _lyricProvider = lyricProvider;
         _musicResourceProvider = musicResourceProvider;
         _diagnostics = diagnostics;
-        ncsong = song;
         _providerSong = song.ToSingleSong();
+        _downloadAlbumName = song.Album?.Name ?? string.Empty;
+        _downloadArtistNames = song.Artist?.Select(t => t.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToArray() ?? [];
+        _downloadSongName = song.SongName ?? string.Empty;
+        _downloadOrder = song.Order;
+        _downloadTrackId = song.TrackId;
+        _downloadCdName = song.CDName;
+        _downloadSongId = song.SongId ?? string.Empty;
+        _downloadAlbumId = song.Album?.Id;
+        _downloadAlbumCover = song.Album?.Cover;
     }
 
     public DownloadObject(
@@ -109,8 +132,16 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         _lyricProvider = lyricProvider;
         _musicResourceProvider = musicResourceProvider;
         _diagnostics = diagnostics;
-        ncsong = song.ToNCSong();
         _providerSong = song;
+        _downloadAlbumName = song.Album?.Name ?? string.Empty;
+        _downloadArtistNames = GetProviderArtistNames(song);
+        _downloadSongName = song.Name ?? string.Empty;
+        _downloadOrder = 0;
+        _downloadTrackId = song is NeteaseSong neteaseSong ? neteaseSong.TrackNumber : 0;
+        _downloadCdName = song is NeteaseSong neteaseSongWithCd ? neteaseSongWithCd.CdName : null;
+        _downloadSongId = song.ActualId ?? string.Empty;
+        _downloadAlbumId = song.Album?.ActualId;
+        _downloadAlbumCover = GetProviderAlbumCover(song);
     }
 
     public int Progress
@@ -226,13 +257,13 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                 if (_setting.write163Info)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, _providerSong, _downloadBitrate, _downloadFormat);
                 //写相关信息
-                file.Tag.Album = ncsong.Album.Name;
-                file.Tag.Performers = [.. ncsong.Artist.Select(t => t.Name)];
-                file.Tag.Title = ncsong.SongName;
-                file.Tag.Track = (uint)(ncsong.TrackId == -1 ? ncsong.Order + 1 : ncsong.TrackId);
+                file.Tag.Album = _downloadAlbumName;
+                file.Tag.Performers = _downloadArtistNames;
+                file.Tag.Title = _downloadSongName;
+                file.Tag.Track = (uint)(_downloadTrackId == -1 ? _downloadOrder + 1 : _downloadTrackId);
 
                 // 获取 Disc Id
-                var regexRet = DiscInfoRegex().Match(ncsong.CDName ?? "01");
+                var regexRet = DiscInfoRegex().Match(_downloadCdName ?? "01");
                 if (regexRet.Success)
                 {
                     file.Tag.Disc = uint.Parse(regexRet.Value);
@@ -245,27 +276,31 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                 //file.Save();
 
                 Picture pic;
-                using var responseMessage = await _httpClient.GetAsync(new Uri(ncsong.Album.Cover + "?param=" +
-                                                                        StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
-                using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
-                using var stream = await responseMessage.Content.ReadAsStreamAsync();
-                using var inputStream = stream.AsRandomAccessStream();
-                SoftwareBitmap softwareBitmap;
-                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
-                softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-                BitmapEncoder encoder =
-                    await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
-                encoder.SetSoftwareBitmap(softwareBitmap);
-                await encoder.FlushAsync();
-                pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
-                DownloadManager.AlbumPicturesCache[ncsong.Album.Id] = pic;
+                if (!string.IsNullOrWhiteSpace(_downloadAlbumCover))
+                {
+                    using var responseMessage = await _httpClient.GetAsync(new Uri(_downloadAlbumCover + "?param=" +
+                                                                            StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
+                    using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
+                    using var stream = await responseMessage.Content.ReadAsStreamAsync();
+                    using var inputStream = stream.AsRandomAccessStream();
+                    SoftwareBitmap softwareBitmap;
+                    BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
+                    softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+                    BitmapEncoder encoder =
+                        await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                    encoder.SetSoftwareBitmap(softwareBitmap);
+                    await encoder.FlushAsync();
+                    pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
+                    if (!string.IsNullOrWhiteSpace(_downloadAlbumId))
+                        DownloadManager.AlbumPicturesCache[_downloadAlbumId] = pic;
 
-                file.Tag.Pictures =
-                [
-                    pic
-                ];
-                file.Tag.Pictures[0].MimeType = "image/jpeg";
-                file.Tag.Pictures[0].Description = "Cover.jpg";
+                    file.Tag.Pictures =
+                    [
+                        pic
+                    ];
+                    file.Tag.Pictures[0].MimeType = "image/jpeg";
+                    file.Tag.Pictures[0].Description = "Cover.jpg";
+                }
                 file.Save();
             }
             catch (Exception ex)
@@ -383,13 +418,13 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         try
         {
             FileName = _setting.downloadFileName
-                .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.Name)).EscapeForPath())
-                .Replace("{$SONGNAME}", ncsong.SongName.EscapeForPath())
-                .Replace("{$ALBUM}", ncsong.Album.Name.EscapeForPath())
+                .Replace("{$SINGER}", string.Join(';', _downloadArtistNames).EscapeForPath())
+                .Replace("{$SONGNAME}", _downloadSongName.EscapeForPath())
+                .Replace("{$ALBUM}", _downloadAlbumName.EscapeForPath())
                 .Replace("{$INDEX}",
-                    (ncsong.GetType() == typeof(NCAlbumSong) ? ncsong.Order : ncsong.Order + 1).ToString().EscapeForPath())
-                .Replace("{$CDNAME}", ncsong.CDName?.EscapeForPath())
-                .Replace("{$SONGID}", ncsong.SongId?.EscapeForPath());
+                    (_downloadTrackId > 0 ? _downloadTrackId : _downloadOrder + 1).ToString().EscapeForPath())
+                .Replace("{$CDNAME}", _downloadCdName?.EscapeForPath())
+                .Replace("{$SONGID}", _downloadSongId.EscapeForPath());
             var folderName = _setting.downloadDir;
             var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
             var ses = FileName.Replace('\\', '/').Split('/');
@@ -412,7 +447,7 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                         await (await nowFolder.GetFileAsync(Path.GetFileName(FileName))).DeleteAsync();
                         break;
                     case OccupySolution.AppendID:
-                        FileName = Path.GetFileNameWithoutExtension(FileName) + ncsong.SongId;
+                        FileName = Path.GetFileNameWithoutExtension(FileName) + _downloadSongId;
                         break;
                     case OccupySolution.UpdateInfo:
                         if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".mp3")))
@@ -472,8 +507,23 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         {
             Status = DownloadStatus.Error;
             _ = _notification.InvokeOnUIThread(() => { Message = "下载错误: " + ex.Message; });
-            _diagnostics.ErrorMessages.Add("无法下载歌曲 " + ncsong.SongName + "\n已自动将其从下载列表中移除" + ex.Message);
+            _diagnostics.ErrorMessages.Add("无法下载歌曲 " + _downloadSongName + "\n已自动将其从下载列表中移除" + ex.Message);
         }
+    }
+
+    private static string[] GetProviderArtistNames(SingleSongBase song)
+    {
+        if (song is NeteaseSong { Artists: { Count: > 0 } artists })
+            return artists.Select(artist => artist.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToArray();
+
+        return song.CreatorList?.Where(name => !string.IsNullOrWhiteSpace(name)).ToArray() ?? [];
+    }
+
+    private static string? GetProviderAlbumCover(SingleSongBase song)
+    {
+        return song.Album is NeteaseAlbum album
+            ? album.PictureUrl
+            : (song as NeteaseSong)?.CoverUrl;
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
