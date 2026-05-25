@@ -45,7 +45,6 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
     private readonly ILyricProvidable _lyricProvider;
     private readonly IMusicResourceProvidable _musicResourceProvider;
     private readonly IDiagnosticsStateService _diagnostics;
-    private readonly NCSong _song;
     private readonly SingleSongBase _providerSong;
     private int _downloadBitrate;
     private string _downloadFormat;
@@ -91,7 +90,6 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         _lyricProvider = lyricProvider;
         _musicResourceProvider = musicResourceProvider;
         _diagnostics = diagnostics;
-        _song = song;
         ncsong = song;
         _providerSong = song.ToSingleSong();
     }
@@ -104,8 +102,14 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         ILyricProvidable lyricProvider,
         IMusicResourceProvidable musicResourceProvider,
         IDiagnosticsStateService diagnostics)
-        : this(song.ToNCSong(), notification, setting, httpClient, lyricProvider, musicResourceProvider, diagnostics)
     {
+        _notification = notification;
+        _setting = setting;
+        _httpClient = httpClient;
+        _lyricProvider = lyricProvider;
+        _musicResourceProvider = musicResourceProvider;
+        _diagnostics = diagnostics;
+        ncsong = song.ToNCSong();
         _providerSong = song;
     }
 
