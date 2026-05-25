@@ -148,7 +148,6 @@ public sealed partial class ExpandedPlayer : Page
         _canvasState.BackgroundType = _settings.expandedPlayerBackgroundType;
         _canvasState.IsPlaying = _state.IsPlaying;
         _canvasState.EnableFft = _settings.EnableFFT;
-        _canvasState.IsolationLightWave = _settings.IsolationLightWave;
         _canvasState.WindowMode = _windowMode;
         _canvasState.AlbumColorVectors = _albumColorVectors;
     }
@@ -159,7 +158,7 @@ public sealed partial class ExpandedPlayer : Page
         ViewModel = Ioc.Default.GetRequiredService<ExpandedPlayerViewModel>();
         _canvasState.LyricBox = _lyricBox;
         SyncCanvasState();
-        _backgroundShaderLayer = new BackgroundShaderLayer(_canvasState);
+        _backgroundShaderLayer = new BackgroundShaderLayer(_canvasState, _settings);
         _spectrumLayer = new SpectrumLayer(_canvasState, _player);
         _lyricsLayer = new LyricsLayer(_canvasState);
         DataContext = ViewModel;
