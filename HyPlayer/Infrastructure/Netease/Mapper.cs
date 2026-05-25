@@ -31,6 +31,7 @@ public static class Mapper
             IsVip = false,
             LengthInMilliseconds = song.Duration,
             MVId = neteaseSong?.MvId,
+            ProviderSong = song,
             SongId = song.ActualId,
             SongName = song.Name,
             TrackId = neteaseSong?.TrackNumber ?? 0,

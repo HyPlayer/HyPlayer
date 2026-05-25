@@ -238,6 +238,7 @@ public sealed partial class MusicCloudPage : Page
         {
             var ncSong = song.ToNCSong();
             ncSong.IsCloud = true;
+            ncSong.ProviderSong = song;
             return ncSong;
         }
 

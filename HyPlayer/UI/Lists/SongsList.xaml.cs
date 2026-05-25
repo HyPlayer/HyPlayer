@@ -261,7 +261,12 @@ public sealed partial class SongsList : UserControl
         }
 
         foreach (NCSong ncsong in SongContainer.SelectedItems)
-            _playlist.AppendNcSong(ncsong);
+        {
+            if (ncsong.ProviderSong != null)
+                _playlist.AppendItem(ncsong.ProviderSong);
+            else
+                _playlist.AppendNcSong(ncsong);
+        }
         if (SongContainer.SelectedItem != null)
         {
             var targetPlayItem =
@@ -279,8 +284,10 @@ public sealed partial class SongsList : UserControl
             return;
         }
 
-        var playItems = _playlist.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(),
-            _playlist.NowPlayingIndex + 1);
+        var selectedSongs = SongContainer.SelectedItems.Cast<NCSong>().ToList();
+        var playItems = selectedSongs.All(song => song.ProviderSong != null)
+            ? AppendProviderSongs(selectedSongs.Select(song => song.ProviderSong).ToList(), _playlist.NowPlayingIndex + 1)
+            : _playlist.AppendNcSongRange(selectedSongs, _playlist.NowPlayingIndex + 1);
         if (_state.ActiveStrategyId == "shn")
         {
             List<int> playItemIndexes = [];
@@ -350,7 +357,12 @@ public sealed partial class SongsList : UserControl
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
     {
         foreach (NCSong ncsong in SongContainer.SelectedItems.Cast<NCSong>())
-            DownloadManager.AddDownload(ncsong);
+        {
+            if (ncsong.ProviderSong != null)
+                DownloadManager.AddDownload(ncsong.ProviderSong);
+            else
+                DownloadManager.AddDownload(ncsong);
+        }
     }
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)
@@ -472,6 +484,18 @@ public sealed partial class SongsList : UserControl
     private SongListQueueScope GetEffectiveQueueScope()
     {
         return IsShowingCompleteSource() ? QueueScope : SongListQueueScope.Visible;
+    }
+
+    private List<HyPlayItem> AppendProviderSongs(IReadOnlyList<HyPlayer.PlayCore.Abstraction.Models.SingleItems.SingleSongBase> providerSongs, int position)
+    {
+        var insertedItems = new List<HyPlayItem>();
+        for (var offset = 0; offset < providerSongs.Count; offset++)
+        {
+            _playlist.AppendItem(providerSongs[offset], position + offset);
+            insertedItems.Add(_playlist.Items[position + offset]);
+        }
+
+        return insertedItems;
     }
 
     private bool IsShowingCompleteSource()

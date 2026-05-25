@@ -2,6 +2,7 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,7 @@ public class NCSong
     public int Order { get; set; } = 0;
     public string SongId { get; set; }
     public string SongName { get; set; }
+    public SingleSongBase ProviderSong { get; set; }
     public int TrackId { get; set; } = -1;
     public string TranslatedName { get; set; }
     public HyPlayItemType Type { get; set; }
