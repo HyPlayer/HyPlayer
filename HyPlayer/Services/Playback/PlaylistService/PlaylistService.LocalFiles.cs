@@ -11,7 +11,8 @@ public sealed partial class PlaylistService
     /// <inheritdoc />
     public Task AppendStorageFilesAsync(IEnumerable<StorageFile> files)
     {
-        // 本地文件加载逻辑由 MediaProvider 层处理，此处仅作接口占位
+        // Local file loading is handled by PickLocalFileAsync() or LoadStorageFileAsync().
+        // This legacy interface slot is kept for API symmetry with older append paths.
         return Task.CompletedTask;
     }
 }

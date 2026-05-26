@@ -147,6 +147,8 @@ public sealed class LocalFileImportService : ILocalFileImportService
         var info = NCMFile.GetNCMMusicInfo(stream);
         var hyitem = new HyPlayItem
         {
+            // ItemType=Netease preserves NCM metadata such as album cover and musicId for legacy UI;
+            // IsLocalFile=true keeps playback routed through the HyPlayer main-project LocalProvider.
             ItemType = HyPlayItemType.Netease,
             Album = new NCAlbum
             {
