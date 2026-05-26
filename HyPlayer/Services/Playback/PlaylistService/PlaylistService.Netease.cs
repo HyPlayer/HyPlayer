@@ -16,7 +16,7 @@ public sealed partial class PlaylistService
     /// <inheritdoc />
     public HyPlayItem AppendNcSong(NCSong ncSong, int position = -1)
     {
-        var providerSong = ncSong.ToSingleSong();
+        var providerSong = ToProviderSong(ncSong);
         var hpi = ToLegacyQueueItem(providerSong);
         lock (_lock)
         {
@@ -47,7 +47,7 @@ public sealed partial class PlaylistService
 
             foreach (var ncSong in ncSongs)
             {
-                var providerSong = ncSong.ToSingleSong();
+                var providerSong = ToProviderSong(ncSong);
                 var hpi = ToLegacyQueueItem(providerSong);
                 lock (_lock) { InsertQueueItem(hpi, providerSong); }
             }
@@ -68,7 +68,7 @@ public sealed partial class PlaylistService
             if (position < 0)
                 position = _items.Count;
 
-            var providerSongs = ncSongs.Select(song => song.ToSingleSong()).ToList();
+            var providerSongs = ncSongs.Select(ToProviderSong).ToList();
             var insertList = providerSongs.Select(ToLegacyQueueItem)
                 .Where(t => !_items.Contains(t))
                 .ToList();
@@ -187,5 +187,10 @@ public sealed partial class PlaylistService
     private static HyPlayItem ToLegacyQueueItem(SingleSongBase song)
     {
         return song.ToHyPlayItem();
+    }
+
+    private static SingleSongBase ToProviderSong(NCSong song)
+    {
+        return song.ProviderSong ?? song.ToSingleSong();
     }
 }

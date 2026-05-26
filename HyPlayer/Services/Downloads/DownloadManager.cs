@@ -105,7 +105,7 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         _lyricProvider = lyricProvider;
         _musicResourceProvider = musicResourceProvider;
         _diagnostics = diagnostics;
-        _providerSong = song.ToSingleSong();
+        _providerSong = song.ProviderSong ?? song.ToSingleSong();
         _downloadAlbumName = song.Album?.Name ?? string.Empty;
         _downloadArtistNames = song.Artist?.Select(t => t.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToArray() ?? [];
         _downloadSongName = song.SongName ?? string.Empty;
