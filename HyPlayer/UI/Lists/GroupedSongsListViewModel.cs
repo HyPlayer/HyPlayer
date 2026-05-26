@@ -39,7 +39,10 @@ public partial class GroupedSongsListViewModel(
 
         foreach (var ncsong in selectedSongs)
         {
-            playlist.AppendNcSong(ncsong);
+            if (ncsong.ProviderSong != null)
+                playlist.AppendItem(ncsong.ProviderSong);
+            else
+                playlist.AppendNcSong(ncsong);
         }
 
         var targetPlayItem = playlist.Items.ToList().Find(t => t.Id == selectedSong.SongId);
@@ -56,7 +59,7 @@ public partial class GroupedSongsListViewModel(
             return;
         }
 
-        var playItems = playlist.AppendNcSongRange([.. selectedSongs], playlist.NowPlayingIndex + 1);
+        var playItems = AppendToNext(selectedSongs);
         if (state.ActiveStrategyId == "shn")
         {
             List<int> playItemIndexes = [];
@@ -117,8 +120,31 @@ public partial class GroupedSongsListViewModel(
     {
         foreach (var ncsong in selectedSongs)
         {
-            DownloadManager.AddDownload(ncsong);
+            if (ncsong.ProviderSong != null)
+                DownloadManager.AddDownload(ncsong.ProviderSong);
+            else
+                DownloadManager.AddDownload(ncsong);
         }
+    }
+
+    private List<HyPlayItem> AppendToNext(IReadOnlyList<NCSong> selectedSongs)
+    {
+        if (selectedSongs.All(song => song.ProviderSong != null))
+            return AppendProviderSongs(selectedSongs.Select(song => song.ProviderSong!).ToList(), playlist.NowPlayingIndex + 1);
+
+        return playlist.AppendNcSongRange([.. selectedSongs], playlist.NowPlayingIndex + 1);
+    }
+
+    private List<HyPlayItem> AppendProviderSongs(IReadOnlyList<SingleSongBase> providerSongs, int position)
+    {
+        var insertedItems = new List<HyPlayItem>();
+        for (var offset = 0; offset < providerSongs.Count; offset++)
+        {
+            playlist.AppendItem(providerSongs[offset], position + offset);
+            insertedItems.Add(playlist.Items[position + offset]);
+        }
+
+        return insertedItems;
     }
 
     public void OpenMv(NCSong selectedSong)

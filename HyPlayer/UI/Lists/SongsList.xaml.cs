@@ -12,6 +12,7 @@ using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
 using HyPlayer.Services.Playback;
@@ -286,7 +287,7 @@ public sealed partial class SongsList : UserControl
 
         var selectedSongs = SongContainer.SelectedItems.Cast<NCSong>().ToList();
         var playItems = selectedSongs.All(song => song.ProviderSong != null)
-            ? AppendProviderSongs(selectedSongs.Select(song => song.ProviderSong).ToList(), _playlist.NowPlayingIndex + 1)
+            ? AppendProviderSongs(selectedSongs.Select(song => song.ProviderSong!).ToList(), _playlist.NowPlayingIndex + 1)
             : _playlist.AppendNcSongRange(selectedSongs, _playlist.NowPlayingIndex + 1);
         if (_state.ActiveStrategyId == "shn")
         {
@@ -486,7 +487,7 @@ public sealed partial class SongsList : UserControl
         return IsShowingCompleteSource() ? QueueScope : SongListQueueScope.Visible;
     }
 
-    private List<HyPlayItem> AppendProviderSongs(IReadOnlyList<HyPlayer.PlayCore.Abstraction.Models.SingleItems.SingleSongBase> providerSongs, int position)
+    private List<HyPlayItem> AppendProviderSongs(IReadOnlyList<SingleSongBase> providerSongs, int position)
     {
         var insertedItems = new List<HyPlayItem>();
         for (var offset = 0; offset < providerSongs.Count; offset++)
