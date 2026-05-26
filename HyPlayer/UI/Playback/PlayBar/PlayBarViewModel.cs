@@ -109,7 +109,7 @@ public partial class PlayBarViewModel : ObservableObject
 
     // ── Playlist service pass-through ──
 
-    public IReadOnlyList<HyPlayItem> Items => _playlist.Items;
+    public int QueueCount => _playlist.QueueCount;
     public int NowPlayingIndex => _playlist.NowPlayingIndex;
     public string PlaySourceId => _playlist.PlaySourceId;
 
@@ -202,7 +202,7 @@ public partial class PlayBarViewModel : ObservableObject
     private void RemoveItem(HyPlayItem item)
     {
         if (item == null) return;
-        var index = _playlist.Items.ToList().IndexOf(item);
+        var index = _playlist.IndexOfItem(item);
         if (index >= 0)
             _playlist.RemoveAt(index);
     }
@@ -211,7 +211,7 @@ public partial class PlayBarViewModel : ObservableObject
     private async Task MoveToItemAsync(HyPlayItem item)
     {
         if (item == null || item == _playlist.NowPlayingItem) return;
-        var index = _playlist.Items.ToList().IndexOf(item);
+        var index = _playlist.IndexOfItem(item);
         if (index >= 0)
             await _playlist.MoveToIndexAsync(index);
     }

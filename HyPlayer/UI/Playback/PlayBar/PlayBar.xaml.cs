@@ -147,7 +147,7 @@ DoubleAnimation verticalAnimation;
     {
         RunOnUIThread(() =>
         {
-            if (ViewModel.Items.Count == 0)
+            if (ViewModel.QueueCount == 0)
                 HyPlayListOnOnSongRemoveAll();
             PlayListTitle.Text = ViewModel.GetPlaylistTitle();
         });

@@ -37,6 +37,9 @@ public interface IPlaylistService
     /// <summary>当前播放曲目的 Provider 模型视图</summary>
     SingleSongBase? NowPlayingProviderItem { get; }
 
+    /// <summary>查找旧播放列表投影项的队列索引</summary>
+    int IndexOfItem(HyPlayItem item);
+
     /// <summary>当前播放策略 Id</summary>
     string ActiveStrategyId { get; }
 

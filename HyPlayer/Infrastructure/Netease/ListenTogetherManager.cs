@@ -131,16 +131,6 @@ internal sealed class ListenTogetherManager
         }
     }
 
-    /// <summary>
-    /// 服务器指令：跳转到指定曲目
-    /// </summary>
-    internal async Task ServerMoveToAsync(HyPlayItem item)
-    {
-        var index = _playlist.Items.ToList().IndexOf(item);
-        if (index >= 0)
-            await _playlist.MoveToIndexAsync(index);
-    }
-
     // ---------------------------------------------------------------
     //  Messenger handlers
     // ---------------------------------------------------------------
