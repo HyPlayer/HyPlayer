@@ -130,10 +130,9 @@ public partial class GroupedSongsListViewModel(
 
     private List<int> AppendToNext(IReadOnlyList<NCSong> selectedSongs)
     {
-        if (selectedSongs.All(song => song.ProviderSong != null))
-            return AppendProviderSongs(selectedSongs.Select(song => song.ProviderSong!).ToList(), playlist.NowPlayingIndex + 1);
-
-        return playlist.AppendNcSongRange([.. selectedSongs], playlist.NowPlayingIndex + 1);
+        return AppendProviderSongs(
+            selectedSongs.Select(song => song.ProviderSong ?? song.ToProviderSong()).ToList(),
+            playlist.NowPlayingIndex + 1);
     }
 
     private List<int> AppendProviderSongs(IReadOnlyList<SingleSongBase> providerSongs, int position)
@@ -145,6 +144,8 @@ public partial class GroupedSongsListViewModel(
             playlist.AppendItem(providerSongs[offset], targetIndex);
             insertedIndexes.Add(targetIndex);
         }
+
+        playlist.NotifyAppendDone();
 
         return insertedIndexes;
     }

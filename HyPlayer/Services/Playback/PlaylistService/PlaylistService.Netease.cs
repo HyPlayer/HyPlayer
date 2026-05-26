@@ -11,41 +11,6 @@ namespace HyPlayer.Services.Playback.PlaylistService;
 
 public sealed partial class PlaylistService
 {
-    // ────────────── NCSong 相关 ──────────────
-
-    /// <inheritdoc />
-    public List<int> AppendNcSongRange(List<NCSong> ncSongs, int position = -1)
-    {
-        lock (_lock)
-        {
-            if (position < 0)
-                position = _items.Count;
-
-            var providerSongs = ncSongs.Select(song => song.ToProviderSong()).ToList();
-            var insertList = providerSongs.Select(ToLegacyQueueItem)
-                .Where(t => !_items.Contains(t))
-                .ToList();
-
-            if (insertList.Count <= 0)
-                return [];
-
-            var insertedIndexes = new List<int>();
-
-            foreach (var (providerSong, index) in providerSongs.Zip(Enumerable.Range(0, providerSongs.Count)))
-            {
-                var item = ToLegacyQueueItem(providerSong);
-                if (_items.Contains(item))
-                    continue;
-
-                var targetIndex = position + index;
-                InsertQueueItem(item, providerSong, targetIndex);
-                insertedIndexes.Add(targetIndex);
-            }
-            NotifyAppendDone();
-            return insertedIndexes;
-        }
-    }
-
     /// <inheritdoc />
     public async Task<bool> AppendNcSourceAsync(string sourceId)
     {

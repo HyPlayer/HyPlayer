@@ -109,11 +109,6 @@ public interface IPlaylistService
     /// </summary>
     void NotifyAppendDone();
 
-    // ────────────── NCSong 相关 ──────────────
-
-    /// <summary>批量追加并返回实际追加位置</summary>
-    List<int> AppendNcSongRange(List<NCSong> ncSongs, int position = -1);
-
     /// <summary>
     /// 根据来源 ID 追加歌曲（pl=歌单, ns=单曲, al=专辑, sh/sa=歌手, rd=电台）
     /// </summary>

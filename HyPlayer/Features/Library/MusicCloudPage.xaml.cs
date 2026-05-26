@@ -187,11 +187,8 @@ public sealed partial class MusicCloudPage : Page
         var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         if (_setting.AutoAddGreedilyLoadedSongsToPlayList && playlist.PlaySourceId == "Content")
         {
-            var providerSongs = Items.Select(song => song.ProviderSong).OfType<SingleSongBase>().ToList();
-            if (providerSongs.Count == Items.Count)
-                playlist.AppendItems(providerSongs);
-            else
-                playlist.AppendNcSongRange(Items.Select(song => song.SourceSong).ToList());
+            playlist.AppendItems(Items.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()));
+            playlist.NotifyAppendDone();
         }
     }
 

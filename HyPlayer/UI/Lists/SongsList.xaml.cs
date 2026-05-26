@@ -287,9 +287,9 @@ public sealed partial class SongsList : UserControl
         }
 
         var selectedSongs = GetSelectedSongs().ToList();
-        var playItemIndexes = selectedSongs.All(song => song.ProviderSong != null)
-            ? AppendProviderSongs(selectedSongs.Select(song => song.ProviderSong!).ToList(), _playlist.NowPlayingIndex + 1)
-            : _playlist.AppendNcSongRange(selectedSongs, _playlist.NowPlayingIndex + 1);
+        var playItemIndexes = AppendProviderSongs(
+            selectedSongs.Select(song => song.ProviderSong ?? song.ToProviderSong()).ToList(),
+            _playlist.NowPlayingIndex + 1);
         if (_state.ActiveStrategyId == "shn")
         {
             for (int i = 0; i < playItemIndexes.Count; i++)
@@ -478,6 +478,8 @@ public sealed partial class SongsList : UserControl
             _playlist.AppendItem(providerSongs[offset], targetIndex);
             insertedIndexes.Add(targetIndex);
         }
+
+        _playlist.NotifyAppendDone();
 
         return insertedIndexes;
     }
