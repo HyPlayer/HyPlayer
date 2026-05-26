@@ -10,6 +10,7 @@ using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Downloads;
+using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -37,7 +38,7 @@ public sealed partial class MusicCloudPage : Page
     private readonly WeakEventListener<MusicCloudPage, object?, EventArgs> _secondTickListener;
     private bool _isSecondTickSubscribed;
 
-    private readonly ObservableCollection<NCSong> Items = new();
+    private readonly ObservableCollection<SongListItemViewModel> Items = new();
     private int page;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -95,7 +96,7 @@ public sealed partial class MusicCloudPage : Page
             {
                 var ret = MapCloudLibraryItemToNcSong(jToken);
                 ret.Order = idx++;
-                SongContainer.Songs.Add(ret);
+                Items.Add(SongListItemViewModel.FromNCSong(ret));
             }
             catch
             {
@@ -168,12 +169,12 @@ public sealed partial class MusicCloudPage : Page
                 return;
             }
 
-            if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0)
+            if (Items.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0)
             {
                 NextPage_OnClickPage_OnClick(null, null);
                 treashold = 3;
             }
-            else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
+            else if (Items.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
                 DetachSecondTick();
                 OnLoadedAllSongs();
@@ -190,7 +191,7 @@ public sealed partial class MusicCloudPage : Page
             if (providerSongs.Count == Items.Count)
                 playlist.AppendItems(providerSongs);
             else
-                playlist.AppendNcSongRange(Items.ToList());
+                playlist.AppendNcSongRange(Items.Select(song => song.SourceSong).ToList());
         }
     }
 
@@ -202,7 +203,7 @@ public sealed partial class MusicCloudPage : Page
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        DownloadManager.AddDownload(Items.ToList());
+        DownloadManager.AddDownload(Items.Select(song => song.SourceSong).ToList());
     }
 
     private async void BtnUpload_Click(object sender, RoutedEventArgs e)
@@ -231,7 +232,7 @@ public sealed partial class MusicCloudPage : Page
     private async void BtnRefresh_OnClick(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
-        SongContainer.Songs.Clear();
+        Items.Clear();
         page = 0;
         _loadResultTask = LoadMusicCloudItem();
     }

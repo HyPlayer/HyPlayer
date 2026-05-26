@@ -13,6 +13,7 @@ using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
+using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -39,8 +40,8 @@ namespace HyPlayer.Features.Artist
             _notification = notification;
         }
 
-        public ObservableCollection<NCSong> AllSongs { get; set; } = [];
-        public ObservableCollection<NCSong> HotSongs { get; set; } = [];
+        public ObservableCollection<SongListItemViewModel> AllSongs { get; set; } = [];
+        public ObservableCollection<SongListItemViewModel> HotSongs { get; set; } = [];
         public ObservableCollection<SimpleListItem> Albums { get; set; } = [];
         [ObservableProperty]
         public partial NCArtist Artist { get; set; }
@@ -113,7 +114,7 @@ namespace HyPlayer.Features.Artist
             foreach (var item in songs.OfType<SingleSongBase>())
             {
                 var ncSong = await MapToNcSongAsync(item, idx++);
-                HotSongs.Add(ncSong);
+                HotSongs.Add(SongListItemViewModel.FromNCSong(ncSong));
             }
         }
 
@@ -130,7 +131,7 @@ namespace HyPlayer.Features.Artist
             {
                 var ncSong = await MapToNcSongAsync(item, CurrentPage * 50 + idx);
                 ncSong.Order = CurrentPage * 50 + idx++;
-                AllSongs.Add(ncSong);
+                AllSongs.Add(SongListItemViewModel.FromNCSong(ncSong));
             }
             HasNextPage = page?.HasMore ?? false;
             HasPreviousPage = CurrentPage > 0;
