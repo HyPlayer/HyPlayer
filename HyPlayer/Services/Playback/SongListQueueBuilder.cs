@@ -50,7 +50,8 @@ internal sealed class SongListQueueBuilder(
                 return;
             }
 
-            var targetIndex = playlist.Items.ToList().FindIndex(song => song?.Id == clickedSong.SongId);
+            var targetIndex = playlist.ProviderQueueSnapshot.ToList()
+                .FindIndex(song => song?.ActualId == clickedSong.SongId);
             if (targetIndex >= 0)
                 await playlist.MoveToIndexAsync(targetIndex);
             return;

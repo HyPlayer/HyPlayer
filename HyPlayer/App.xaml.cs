@@ -466,14 +466,15 @@ public sealed partial class App : Application
     {
         var deferral = e.SuspendingOperation.GetDeferral();
         var playlist = AppDepository.Resolve<IPlaylistService>();
-        var neteaseItems = playlist.Items
-            .Where(t => t.ItemType == HyPlayItemType.Netease)
+        var neteaseItems = playlist.ProviderQueueSnapshot
+            .Where(t => t is not null && t.ProviderId == "ncm")
+            .Select(t => t!)
             .ToList();
-        var currentItem = playlist.NowPlayingItem;
-        var currentIndex = currentItem?.ItemType == HyPlayItemType.Netease
-            ? neteaseItems.IndexOf(currentItem)
+        var currentItem = playlist.NowPlayingProviderItem;
+        var currentIndex = currentItem?.ProviderId == "ncm"
+            ? neteaseItems.FindIndex(item => item.TypeId == currentItem.TypeId && item.ActualId == currentItem.ActualId)
             : -1;
-        await HistoryManagement.SetcurPlayingListHistory([.. neteaseItems.Select(t => t.Id)], currentIndex);
+        await HistoryManagement.SetcurPlayingListHistory([.. neteaseItems.Select(t => t.ActualId).Where(id => !string.IsNullOrWhiteSpace(id))!], currentIndex);
         AppDepository.Resolve<IGameBarWidgetService>().Widget?.Close();
         deferral.Complete();
     }

@@ -269,7 +269,8 @@ public sealed partial class SongsList : UserControl
             }
             else
             {
-                var targetIndex = _playlist.Items.ToList().FindIndex(t => t.Id == selectedSong.SongId);
+                var targetIndex = _playlist.ProviderQueueSnapshot.ToList()
+                    .FindIndex(t => t?.ActualId == selectedSong.SongId);
                 if (targetIndex >= 0)
                     await _playlist.MoveToIndexAsync(targetIndex);
             }

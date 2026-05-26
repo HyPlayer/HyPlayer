@@ -51,7 +51,8 @@ public partial class GroupedSongsListViewModel(
         }
         else
         {
-            var targetIndex = playlist.Items.ToList().FindIndex(t => t.Id == selectedSong.SongId);
+            var targetIndex = playlist.ProviderQueueSnapshot.ToList()
+                .FindIndex(t => t?.ActualId == selectedSong.SongId);
             if (targetIndex >= 0)
                 await playlist.MoveToIndexAsync(targetIndex);
         }
