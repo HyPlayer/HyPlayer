@@ -171,19 +171,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public int NowPlayingIndex => _nowPlayingIndex;
 
-    private HyPlayItem? NowPlayingItem
-    {
-        get
-        {
-            lock (_lock)
-            {
-                return _nowPlayingIndex >= 0 && _nowPlayingIndex < _providerItems.Count && _providerItems[_nowPlayingIndex] is { } providerItem
-                    ? HyPlayItem.FromProviderSong(providerItem)
-                    : null;
-            }
-        }
-    }
-
     /// <inheritdoc />
     public SingleSongBase? NowPlayingProviderItem
     {

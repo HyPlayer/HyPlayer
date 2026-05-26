@@ -1,6 +1,5 @@
 #nullable enable
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.Services.Abstractions;
@@ -142,8 +141,8 @@ internal sealed class ListenTogetherManager
 
     private void OnPlaybackStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(PlaybackStateService.NowPlayingItem) && _state.NowPlayingItem is { } item)
-            OnPlayItemChanged(item);
+        if (e.PropertyName == nameof(PlaybackStateService.NowPlayingProviderItem) && _state.NowPlayingProviderItem is not null)
+            OnPlayItemChanged();
         else if (e.PropertyName == nameof(PlaybackStateService.IsPlaying) && _state.IsPlaying)
             OnPlay();
         else if (e.PropertyName == nameof(PlaybackStateService.IsPlaying))
@@ -164,7 +163,7 @@ internal sealed class ListenTogetherManager
     //  Event handlers (instance methods, no HyPlayList refs)
     // ---------------------------------------------------------------
 
-    private void OnPlayItemChanged(HyPlayItem playItem)
+    private void OnPlayItemChanged()
     {
         if (!IsInRoom || CurrentRoomInfo is null) return;
         try

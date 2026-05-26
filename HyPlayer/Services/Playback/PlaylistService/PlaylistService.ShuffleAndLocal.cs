@@ -17,7 +17,7 @@ public sealed partial class PlaylistService
     public void CreateShufflePlayLists()
     {
         ShuffleList.Clear();
-        var currentSongId = NowPlayingItem?.Id ?? "-1";
+        var currentSongId = NowPlayingProviderItem?.ActualId ?? "-1";
         lock (_lock)
         {
             if (_providerItems.Count != 0)
