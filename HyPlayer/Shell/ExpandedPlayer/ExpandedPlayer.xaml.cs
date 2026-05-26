@@ -8,7 +8,6 @@ using CommunityToolkit.WinUI.Animations;
 using CommunityToolkit.WinUI.Media;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Album;
@@ -18,6 +17,7 @@ using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Imaging;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
@@ -107,7 +107,8 @@ public sealed partial class ExpandedPlayer : Page
     private bool _positionChangedBySeeking;
     private int _lastHeight;
     private int _lastWidth;
-    public HyPlayItem? _lastSong;
+    public SingleSongBase? _lastSong;
+    private SingleSongBase? _lastCoverSong;
     private bool _isManualChangeMode;
     private bool _needsRedesign = true;
     private int _nowHeight;
@@ -243,11 +244,12 @@ public sealed partial class ExpandedPlayer : Page
             case nameof(PlaybackStateService.IsPlaying):
                 if (_state.IsPlaying) HyPlayList_OnPlay(); else HyPlayList_OnPause();
                 break;
-            case nameof(PlaybackStateService.NowPlayingItem):
-                OnSongChange(_state.NowPlayingItem);
+            case nameof(PlaybackStateService.NowPlayingProviderItem):
+            case nameof(PlaybackStateService.NowPlayingSnapshot):
+                OnSongChange();
                 break;
             case nameof(PlaybackStateService.CoverStream):
-                RefreshAlbumCover(_state.NowPlayingItem);
+                RefreshAlbumCover(_state.NowPlayingProviderItem);
                 break;
             case nameof(PlaybackStateService.LyricInfo):
                 HyPlayList_OnLyricLoaded();
@@ -530,7 +532,7 @@ public sealed partial class ExpandedPlayer : Page
                 _ => TextAlignment.Left
             });
             _lyricBox.ReflowTime(0);
-            if (_state.NowPlayingItem == null) return;
+            if (_state.NowPlayingProviderItem == null) return;
             RefreshUIColor();
             Redesign();
             _lyricHasBeenLoaded = true;
@@ -539,24 +541,25 @@ public sealed partial class ExpandedPlayer : Page
 
     internal void OnEnteringForeground()
     {
-        OnSongChange(_state.NowPlayingItem);
-        RefreshAlbumCover(_state.NowPlayingItem);
+        OnSongChange();
+        RefreshAlbumCover(_state.NowPlayingProviderItem);
         if (!_lyricHasBeenLoaded) HyPlayList_OnLyricLoaded();
     }
 
-    public void OnSongChange(HyPlayItem mpi)
+    public void OnSongChange()
     {
-        var lyricIsReady = _lastSong == _state.NowPlayingItem;
+        var providerItem = _state.NowPlayingProviderItem;
+        var lyricIsReady = ReferenceEquals(_lastSong, providerItem);
         _lyricHasBeenLoaded = lyricIsReady;
         _ = _notification.InvokeOnUIThread(() =>
         {
             ViewModel.SyncFromState();
-            if (mpi?.PlayItem == null)
+            if (providerItem == null)
             {
                 _lyricList.Clear();
             }
 
-            if (mpi?.PlayItem == null) return;
+            if (providerItem == null) return;
 
             if (!lyricIsReady)
             {
@@ -578,7 +581,8 @@ public sealed partial class ExpandedPlayer : Page
             }
 
             _needsRedesign = true;
-            NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
+            if (_player.PrimaryPlaybackSource != null)
+                NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_player.PrimaryPlaybackSource);
         });
     }
 
@@ -668,13 +672,10 @@ public sealed partial class ExpandedPlayer : Page
                 if (!string.IsNullOrEmpty(albumId) && albumId != "0")
                     _navigation.Navigate(typeof(AlbumPage), albumId);
             }
-            else if (_state.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
-                if (_state.NowPlayingItem.Album.Id != "0")
-                    _navigation.Navigate(typeof(AlbumPage),
-                        _state.NowPlayingItem.Album.Id);
-
-            if (_state.NowPlayingItem?.Artist[0].Type == HyPlayItemType.Radio)
-                _navigation.Navigate(typeof(RadioPage), _state.NowPlayingItem.Album.Id);
+            else if (_state.NowPlayingProviderItem is NeteaseRadioProgram { RadioChannel: not null } radioProgram)
+            {
+                _navigation.Navigate(typeof(RadioPage), radioProgram.RadioChannel.ActualId);
+            }
 
             _surfaceCoordinator.Collapse();
         }
@@ -698,20 +699,10 @@ public sealed partial class ExpandedPlayer : Page
                 if (providerSong.Artists.Count == 1)
                     _navigation.Navigate(typeof(ArtistPage), providerSong.Artists[0].ActualId);
             }
-            else if (_state.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
+            else if (_state.NowPlayingProviderItem is NeteaseRadioProgram { Host: not null } radioProgram)
             {
-                if (_state.NowPlayingItem.Artist.Count > 1)
-                {
-                    await new ArtistSelectDialog(_state.NowPlayingItem.Artist).ShowAsync();
-                    return;
-                }
-
-                _navigation.Navigate(typeof(ArtistPage),
-                    _state.NowPlayingItem.Artist[0].Id);
+                _navigation.Navigate(typeof(Me), radioProgram.Host.ActualId);
             }
-
-            if (_state.NowPlayingItem?.Artist[0].Type == HyPlayItemType.Radio)
-                _navigation.Navigate(typeof(Me), _state.NowPlayingItem.Artist[0].Id);
 
             _surfaceCoordinator.Collapse();
         }
@@ -821,9 +812,7 @@ public sealed partial class ExpandedPlayer : Page
             Utils.ConvertTranslation(ttmlLyric.TrLyrics, _state.LyricInfo.Lyrics);
             var cacheSongId = _state.NowPlayingProviderItem is NeteaseSong providerSong
                 ? providerSong.ActualId
-                : _state.NowPlayingItem?.ItemType == HyPlayItemType.Netease
-                    ? _state.NowPlayingItem.Id
-                    : null;
+                : null;
             if (!string.IsNullOrEmpty(cacheSongId))
             {
                 _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, cacheSongId,
@@ -852,7 +841,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private async Task<bool> IsBrightAsync(IRandomAccessStream stream)
     {
-        _lastSong = _state.NowPlayingItem;
+        _lastCoverSong = _state.NowPlayingProviderItem;
         var finalResult = false; //在不手动指定背景类型为2至5时需要执行颜色采样
         var resultGenerated = false; //标志返回颜色已经生成
         if (_settings.lyricColor != LyricColor.Auto && _settings.lyricColor != LyricColor.FollowCover)
@@ -860,7 +849,7 @@ public sealed partial class ExpandedPlayer : Page
             finalResult = _settings.lyricColor == LyricColor.Black;
             resultGenerated = true;
         }
-        if (_state.NowPlayingItem == null) return false;
+        if (_state.NowPlayingProviderItem == null) return false;
         try
         {
             BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
@@ -922,8 +911,8 @@ public sealed partial class ExpandedPlayer : Page
     }
     private void BtnSpeedMinusClick(object sender, RoutedEventArgs e)
     {
-        if (_state.NowPlayingItem == null) return;
-        var playbackSource = _state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource;
+        var playbackSource = _player.PrimaryPlaybackSource;
+        if (playbackSource == null) return;
         var currentSpeed = _player.GetPlaybackSourceSpeed(playbackSource);
         var newSpeed = Math.Max(0.5, currentSpeed - 0.1);
         _player.SetPlaybackSourceSpeed(newSpeed, playbackSource);
@@ -932,8 +921,8 @@ public sealed partial class ExpandedPlayer : Page
 
     private void BtnSpeedPlusClick(object sender, RoutedEventArgs e)
     {
-        if (_state.NowPlayingItem == null) return;
-        var playbackSource = _state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource;
+        var playbackSource = _player.PrimaryPlaybackSource;
+        if (playbackSource == null) return;
         var currentSpeed = _player.GetPlaybackSourceSpeed(playbackSource);
         var newSpeed = Math.Min(2.0, currentSpeed + 0.1);
         _player.SetPlaybackSourceSpeed(newSpeed, playbackSource);
@@ -942,7 +931,8 @@ public sealed partial class ExpandedPlayer : Page
 
     private void TbNowSpeed_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        var playbackSource = _state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource;
+        var playbackSource = _player.PrimaryPlaybackSource;
+        if (playbackSource == null) return;
         _player.SetPlaybackSourceSpeed(1, playbackSource);
         NowPlaybackSpeed = "x1";
     }
@@ -1009,9 +999,9 @@ public sealed partial class ExpandedPlayer : Page
         try
         {
             ViewModel.SyncFromState();
-            if (_state.NowPlayingItem is { } nowPlayingItem)
-                OnSongChange(nowPlayingItem);
-            RefreshAlbumCover(_state.NowPlayingItem);
+            if (_state.NowPlayingProviderItem != null)
+                OnSongChange();
+            RefreshAlbumCover(_state.NowPlayingProviderItem);
             ChangeWindowMode();
             _needsRedesign = true;
         }
@@ -1035,7 +1025,8 @@ public sealed partial class ExpandedPlayer : Page
             luminousColorsRotateStoryBoard.Children.Add(luminousColorsRotateAnimation);
             luminousColorsRotateStoryBoard.Begin();
         }
-        NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
+        if (_player.PrimaryPlaybackSource != null)
+            NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_player.PrimaryPlaybackSource);
         switch (_settings.expandedPlayerBackgroundType)
         {
             case BackgroundType.CoverBlur: // Default
@@ -1174,7 +1165,7 @@ public sealed partial class ExpandedPlayer : Page
         ImageResetPositionAni.Begin();
     }
 
-    public async void RefreshAlbumCover(HyPlayItem? playItem)
+    public async void RefreshAlbumCover(SingleSongBase? playItem)
     {
         if (_state.CoverStream == null || _lifecycle.IsInBackground) return;
         using var stream = _state.CoverStream.CloneStream();
@@ -1185,7 +1176,7 @@ public sealed partial class ExpandedPlayer : Page
             {
                 try
                 {
-                    if (playItem != _state.NowPlayingItem) return;
+                    if (!ReferenceEquals(playItem, _state.NowPlayingProviderItem) || !ReferenceEquals(playItem, _lastCoverSong)) return;
                     using var cover = _state.CoverStream.CloneStream();
                     var bitmap = new BitmapImage();
                     await bitmap.SetSourceAsync(cover);
@@ -1201,7 +1192,7 @@ public sealed partial class ExpandedPlayer : Page
                         imageBrush.ImageSource = bitmap;
                     }
 
-                    if (playItem != _state.NowPlayingItem) return;
+                    if (!ReferenceEquals(playItem, _state.NowPlayingProviderItem) || !ReferenceEquals(playItem, _lastCoverSong)) return;
                     if (_settings.expandedPlayerBackgroundType == BackgroundType.Animated && isBright)
                         BlackCover.Fill = new SolidColorBrush(Color.FromArgb(80, 255, 255, 255));
                     else if (_settings.expandedPlayerBackgroundType == BackgroundType.Animated && !isBright)

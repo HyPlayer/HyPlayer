@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
@@ -59,9 +58,6 @@ namespace HyPlayer.Shell.ExpandedPlayer
         }
 
         // ── Observable properties ─────────────────────────────────
-
-        [ObservableProperty]
-        public partial HyPlayItem? NowPlayingItem { get; set; }
 
         [ObservableProperty]
         public partial SingleSongBase? NowPlayingProviderItem { get; set; }
@@ -165,11 +161,8 @@ namespace HyPlayer.Shell.ExpandedPlayer
             {
                 switch (propertyName)
                 {
-                    case nameof(PlaybackStateService.NowPlayingItem):
-                    case nameof(PlaybackStateService.NowPlayingSnapshot):
-                        SyncFromState();
-                        break;
                     case nameof(PlaybackStateService.NowPlayingProviderItem):
+                    case nameof(PlaybackStateService.NowPlayingSnapshot):
                         SyncFromState();
                         break;
                     case nameof(PlaybackStateService.IsPlaying):
@@ -194,7 +187,6 @@ namespace HyPlayer.Shell.ExpandedPlayer
         /// </summary>
         public void SyncFromState()
         {
-            NowPlayingItem = _state.NowPlayingItem;
             NowPlayingProviderItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
             NowPlayingSnapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(NowPlayingProviderItem);
             IsPlaying = _state.IsPlaying;
