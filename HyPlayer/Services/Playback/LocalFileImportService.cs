@@ -3,6 +3,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Audio;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback.LocalProvider;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,7 +29,7 @@ public sealed class LocalFileImportService : ILocalFileImportService
     }
 
     /// <inheritdoc />
-    public async Task<IList<HyPlayItem>> PickLocalFilesAsync()
+    public async Task<IList<LocalSong>> PickLocalFilesAsync()
     {
         var fop = new FileOpenPicker();
         fop.FileTypeFilter.Add(".flac");
@@ -42,7 +43,7 @@ public sealed class LocalFileImportService : ILocalFileImportService
         if (files == null || files.Count == 0)
             return [];
 
-        var items = new List<HyPlayItem>();
+        var items = new List<LocalSong>();
         foreach (var file in files)
         {
             try
@@ -78,7 +79,7 @@ public sealed class LocalFileImportService : ILocalFileImportService
     }
 
     /// <inheritdoc />
-    public async Task<HyPlayItem> LoadStorageFileAsync(StorageFile sf, bool nocheck163 = false)
+    public async Task<LocalSong> LoadStorageFileAsync(StorageFile sf, bool nocheck163 = false)
     {
         if (string.Equals(Path.GetExtension(sf.Path), ".ncm", StringComparison.OrdinalIgnoreCase))
             return await LoadNcmStorageFileAsync(sf);
@@ -88,89 +89,84 @@ public sealed class LocalFileImportService : ILocalFileImportService
         if (nocheck163 || !The163KeyHelper.TryGetMusicInfo(tagFile.Tag, out var mi))
         {
             var songPerformersList = tagFile.Tag.Performers
-                .Select(t => new NCArtist { Name = t, Type = HyPlayItemType.Local }).ToList();
+                .Select(t => new LocalArtist { Name = t, ActualId = t }).ToList();
             if (songPerformersList.Count == 0)
-                songPerformersList.Add(new NCArtist { Name = "未知歌手", Type = HyPlayItemType.Local });
+                songPerformersList.Add(new LocalArtist { Name = "未知歌手", ActualId = string.Empty });
 
-            var hyPlayItem = new HyPlayItem
+            return new LocalSong
             {
-                IsLocalFile = true,
-                LocalFileTag = tagFile.Tag,
+                StorageFile = sf.Provider.Id == "network" ? sf : null,
+                FileTag = tagFile.Tag,
                 Bitrate = tagFile.Properties.AudioBitrate,
                 InfoTag = sf.Provider.DisplayName,
-                Id = null,
                 Name = tagFile.Tag.Title,
-                Artist = songPerformersList,
-                Album = new NCAlbum { Name = tagFile.Tag.Album },
-                TrackId = (int)tagFile.Tag.Track,
-                CDName = "01",
-                Url = sf.Path,
-                SubExt = sf.FileType,
-                Size = 0,
-                LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds,
-                ItemType = HyPlayItemType.Local
+                CreatorList = songPerformersList.Select(t => t.Name ?? string.Empty).ToList(),
+                Artists = songPerformersList,
+                Album = new LocalAlbum { Name = tagFile.Tag.Album, ActualId = string.Empty },
+                TrackNumber = (int)tagFile.Tag.Track,
+                CdName = "01",
+                ActualId = sf.Path,
+                ExtensionName = sf.FileType,
+                Duration = (long)tagFile.Properties.Duration.TotalMilliseconds,
+                Available = true
             };
-            if (sf.Provider.Id == "network")
-                hyPlayItem.LocalStorageFile = sf;
-            return hyPlayItem;
         }
 
         if (string.IsNullOrEmpty(mi.musicName))
             return await LoadStorageFileAsync(sf, true);
 
-        return new HyPlayItem
+        var artists = mi.artist
+            .Select(t => new LocalArtist { Name = t[0].ToString(), ActualId = t[1].ToString() })
+            .ToList();
+
+        return new LocalSong
         {
-            ItemType = HyPlayItemType.Local,
-            Album = new NCAlbum { Name = mi.album, Id = mi.albumId.ToString(), Cover = mi.albumPic },
-            Url = sf.Path,
-            SubExt = sf.FileType,
-            LocalFileTag = tagFile.Tag,
+            Album = new LocalAlbum { Name = mi.album, ActualId = mi.albumId.ToString() },
+            ActualId = sf.Path,
+            ExtensionName = sf.FileType,
+            FileTag = tagFile.Tag,
             Bitrate = mi.bitrate,
-            IsLocalFile = true,
-            LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds,
-            Id = mi.musicId.ToString(),
-            Artist = [.. mi.artist.Select(t => new NCArtist { Name = t[0].ToString(), Id = t[1].ToString() })],
+            Duration = (long)tagFile.Properties.Duration.TotalMilliseconds,
+            LegacyNeteaseId = mi.musicId.ToString(),
+            CreatorList = artists.Select(t => t.Name ?? string.Empty).ToList(),
+            Artists = artists,
             Name = mi.musicName,
-            LocalStorageFile = sf,
-            TrackId = (int)tagFile.Tag.Track,
-            CDName = "01",
-            InfoTag = sf.Provider.DisplayName
+            StorageFile = sf,
+            TrackNumber = (int)tagFile.Tag.Track,
+            CdName = "01",
+            InfoTag = sf.Provider.DisplayName,
+            Available = true
         };
     }
 
-    private static async Task<HyPlayItem> LoadNcmStorageFileAsync(StorageFile file)
+    private static async Task<LocalSong> LoadNcmStorageFileAsync(StorageFile file)
     {
         using var stream = await file.OpenStreamForReadAsync();
         if (!NCMFile.IsCorrectNCMFile(stream))
             throw new InvalidDataException("不是有效的 NCM 文件");
 
         var info = NCMFile.GetNCMMusicInfo(stream);
-        var hyitem = new HyPlayItem
+        var artists = info.artist
+            .Select(t => new LocalArtist { Name = t[0].ToString(), ActualId = t[1].ToString() })
+            .ToList();
+
+        return new LocalSong
         {
-            // ItemType=Netease preserves NCM metadata such as album cover and musicId for legacy UI;
-            // IsLocalFile=true keeps playback routed through the HyPlayer main-project LocalProvider.
-            ItemType = HyPlayItemType.Netease,
-            Album = new NCAlbum
-            {
-                Name = info.album,
-                Id = info.albumId.ToString(),
-                Cover = info.albumPic
-            },
-            LocalStorageFile = file,
-            Url = file.Path,
-            SubExt = info.format,
+            IsNcm = true,
+            Album = new LocalAlbum { Name = info.album, ActualId = info.albumId.ToString() },
+            StorageFile = file,
+            ActualId = file.Path,
+            ExtensionName = info.format,
             Bitrate = info.bitrate,
-            IsLocalFile = true,
-            LengthInMilliseconds = info.duration,
-            Id = info.musicId.ToString(),
-            TrackId = -1,
-            CDName = "01",
-            Artist = null,
+            Duration = (long)info.duration,
+            LegacyNeteaseId = info.musicId.ToString(),
+            TrackNumber = -1,
+            CdName = "01",
+            CreatorList = artists.Select(t => t.Name ?? string.Empty).ToList(),
+            Artists = artists,
             Name = info.musicName,
-            InfoTag = file.Provider.DisplayName + " NCM"
+            InfoTag = file.Provider.DisplayName + " NCM",
+            Available = true
         };
-        hyitem.Artist = [.. info.artist.Select(t => new NCArtist
-        { Name = t[0].ToString(), Id = t[1].ToString() })];
-        return hyitem;
     }
 }

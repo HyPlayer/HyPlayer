@@ -1,4 +1,4 @@
-using HyPlayer.Domain.Music;
+using HyPlayer.Services.Playback.LocalProvider;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -11,10 +11,10 @@ namespace HyPlayer.Services.Abstractions;
 public interface ILocalFileImportService
 {
     /// <summary>Shows the local audio file picker and returns playable items.</summary>
-    Task<IList<HyPlayItem>> PickLocalFilesAsync();
+    Task<IList<LocalSong>> PickLocalFilesAsync();
 
     /// <summary>Loads a single storage file as a playable item.</summary>
-    Task<HyPlayItem> LoadStorageFileAsync(StorageFile file, bool nocheck163 = false);
+    Task<LocalSong> LoadStorageFileAsync(StorageFile file, bool nocheck163 = false);
 
     /// <summary>Adds the file or its parent folder to the future access list.</summary>
     Task RegisterFutureAccessAsync(StorageFile file);

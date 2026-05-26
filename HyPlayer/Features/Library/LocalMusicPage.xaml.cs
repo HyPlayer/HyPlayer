@@ -6,6 +6,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Downloads;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback.LocalProvider;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -38,7 +39,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
-    private readonly ObservableCollection<HyPlayItem> localHyItems = new();
+    private readonly ObservableCollection<LocalSong> localHyItems = new();
     private string _notificationText;
     private Task CurrentFileScanTask;
     private CancellationTokenSource cancellationTokenSource = new();
@@ -133,38 +134,26 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         }
         else
         {
-            var undeterminedAlbum = new NCAlbum
-            {
-                AlbumType = HyPlayItemType.LocalProgressive,
-                Name = "未知专辑 - 播放后加载"
-            };
-            var undeterminedArtistList = new List<NCArtist>
-            {
-                new()
-                {
-                    Name = "未知歌手 - 播放后加载",
-                    Type = HyPlayItemType.LocalProgressive
-                }
-            };
+            var undeterminedAlbum = new LocalAlbum { Name = "未知专辑 - 播放后加载", ActualId = string.Empty };
+            var undeterminedArtistList = new List<LocalArtist> { new() { Name = "未知歌手 - 播放后加载", ActualId = string.Empty } };
             foreach (var storageFile in files)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
-                var item = new HyPlayItem
+                var item = new LocalSong
                 {
-                    ItemType = HyPlayItemType.LocalProgressive,
                     Album = undeterminedAlbum,
-                    Artist = undeterminedArtistList,
+                    Artists = undeterminedArtistList,
+                    CreatorList = undeterminedArtistList.Select(artist => artist.Name ?? string.Empty).ToList(),
                     Bitrate = 0,
-                    LocalStorageFile = storageFile,
-                    IsLocalFile = true,
-                    LengthInMilliseconds = 0,
+                    StorageFile = storageFile,
+                    Duration = 0,
                     Name = storageFile.Name,
-                    CDName = "01",
-                    Size = 0,
-                    SubExt = storageFile.FileType,
-                    TrackId = 0,
+                    CdName = "01",
+                    ExtensionName = storageFile.FileType,
+                    TrackNumber = 0,
                     InfoTag = "本地歌曲",
-                    Url = storageFile.Path
+                    ActualId = storageFile.Path,
+                    Available = true
                 };
                 localHyItems.Add(item);
             }
@@ -180,7 +169,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     {
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
         _playlist.AppendLocalItems(localHyItems, true);
-        if (ListBoxLocalMusicContainer.SelectedItem is HyPlayItem selectedItem)
+        if (ListBoxLocalMusicContainer.SelectedItem is LocalSong selectedItem)
         {
             var index = localHyItems.IndexOf(selectedItem);
             if (index >= 0)

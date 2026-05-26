@@ -21,14 +21,18 @@ namespace HyPlayer.Services.Playback.LocalProvider;
 
 public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
 {
+    public const string ProviderIdValue = "lcl";
+    public const string LocalSongTypeId = "sg";
+    public const string LocalNcmSongTypeId = "ncm";
+
     public override string Name => "本地音乐";
-    public override string Id => "lcl";
+    public override string Id => ProviderIdValue;
 
     public override List<ProvidableTypeId> ProvidableTypeIds =>
         new()
         {
-            new("sg", "本地歌曲", true),
-            new("ncm", "NCM 歌曲", true),
+            new(LocalSongTypeId, "本地歌曲", true),
+            new(LocalNcmSongTypeId, "NCM 歌曲", true),
         };
 
     public Task<MusicResourceBase?> GetMusicResourceAsync(

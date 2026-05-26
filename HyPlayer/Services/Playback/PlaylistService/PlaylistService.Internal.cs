@@ -2,6 +2,7 @@ using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback.LocalProvider;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,8 +21,47 @@ public sealed partial class PlaylistService
 
     private void InsertQueueItem(ProvidableItemBase item, int position = -1)
     {
-        var playItem = FindLegacyQueueItem(item) ?? HyPlayItem.FromProviderItem(item);
+        var playItem = FindLegacyQueueItem(item) ?? (item is LocalSong localSong ? ToLegacyQueueItem(localSong) : HyPlayItem.FromProviderItem(item));
         InsertQueueItem(playItem, item as SingleSongBase, position);
+    }
+
+    private static HyPlayItem ToLegacyQueueItem(LocalSong song)
+    {
+        return new HyPlayItem
+        {
+            ItemType = song.IsNcm ? HyPlayItemType.Netease : HyPlayItemType.Local,
+            Album = new NCAlbum
+            {
+                AlbumType = HyPlayItemType.Local,
+                Id = song.Album?.ActualId ?? string.Empty,
+                Name = song.Album?.Name ?? string.Empty,
+                Cover = string.Empty
+            },
+            Artist = song.Artists?.Select(artist => new NCArtist
+            {
+                Id = artist.ActualId ?? string.Empty,
+                Name = artist.Name ?? string.Empty,
+                Type = HyPlayItemType.Local
+            }).ToList() ?? [],
+            Bitrate = song.Bitrate,
+            CDName = song.CdName ?? "01",
+            Translation = song.Translation ?? string.Empty,
+            LocalStorageFile = song.StorageFile,
+            LocalFileTag = song.FileTag,
+            Id = song.LegacyNeteaseId,
+            IsLocalFile = true,
+            LengthInMilliseconds = song.Duration,
+            Name = song.Name ?? string.Empty,
+            Size = 0,
+            SubExt = song.ExtensionName ?? string.Empty,
+            QualityTag = string.Empty,
+            InfoTag = song.InfoTag ?? string.Empty,
+            TrackId = song.TrackNumber,
+            Url = song.ActualId ?? string.Empty,
+            ProviderIdentityProviderId = song.ProviderId,
+            ProviderIdentityTypeId = song.TypeId,
+            ProviderIdentityActualId = song.ActualId ?? string.Empty
+        };
     }
 
     private HyPlayItem? FindLegacyQueueItem(ProvidableItemBase item)
@@ -47,12 +87,6 @@ public sealed partial class PlaylistService
             _items.Insert(position, item);
             _providerItems.Insert(position, providerItem);
         }
-    }
-
-    private void InsertQueueItems(IEnumerable<HyPlayItem> items)
-    {
-        foreach (var item in items)
-            InsertQueueItem(item);
     }
 
     private void InsertQueueItems(IEnumerable<ProvidableItemBase> items)

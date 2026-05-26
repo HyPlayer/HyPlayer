@@ -1,6 +1,7 @@
 using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Services.Playback.LocalProvider;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -46,7 +47,7 @@ public interface IPlaylistService
     string PlaySourceId { get; set; }
 
     /// <summary>追加本地文件旧队列投影</summary>
-    void AppendLocalItem(HyPlayItem item, int position = -1);
+    void AppendLocalItem(LocalSong item, int position = -1);
 
     /// <summary>追加 Provider 曲目</summary>
     void AppendItem(ProvidableItemBase item, int position = -1);
@@ -55,7 +56,7 @@ public interface IPlaylistService
     void SetItemInfoTag(ProvidableItemBase item, string infoTag);
 
     /// <summary>批量加载本地文件旧队列投影</summary>
-    void AppendLocalItems(IEnumerable<HyPlayItem> items, bool clearFirst = false);
+    void AppendLocalItems(IEnumerable<LocalSong> items, bool clearFirst = false);
 
     /// <summary>批量追加 Provider 曲目</summary>
     void AppendItems(IEnumerable<ProvidableItemBase> items, bool clearFirst = false);

@@ -5,6 +5,7 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Playback.LocalProvider;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -226,7 +227,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     // ────────────── 列表操作 ──────────────
 
     /// <inheritdoc />
-    public void AppendLocalItem(HyPlayItem item, int position = -1)
+    public void AppendLocalItem(LocalSong item, int position = -1)
     {
         lock (_lock)
         {
@@ -263,7 +264,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
-    public void AppendLocalItems(IEnumerable<HyPlayItem> items, bool clearFirst = false)
+    public void AppendLocalItems(IEnumerable<LocalSong> items, bool clearFirst = false)
     {
         if (clearFirst)
             ExitPersonalFmForSourceChange();
