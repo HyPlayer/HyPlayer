@@ -6,6 +6,7 @@
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:lists="using:HyPlayer.UI.Lists"
     xmlns:local="using:HyPlayer.Infrastructure.Extensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
@@ -201,7 +202,7 @@
             </ListView.ContextFlyout>
 
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="classes:NCSong" ScrollViewer.CanContentRenderOutsideBounds="False">
+                <DataTemplate x:DataType="lists:SongListItemViewModel" ScrollViewer.CanContentRenderOutsideBounds="False">
                     <Border>
                         <Grid
                             Margin="0,8,0,8"

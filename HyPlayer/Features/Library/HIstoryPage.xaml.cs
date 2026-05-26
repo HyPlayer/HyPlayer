@@ -8,6 +8,7 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
+using HyPlayer.UI.Lists;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading;
@@ -30,7 +31,7 @@ public sealed partial class HistoryPage : Page
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
-    private readonly ObservableCollection<NCSong> Songs = new();
+    private readonly ObservableCollection<SongListItemViewModel> Songs = new();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _songRankWeekLoaderTask;
@@ -82,7 +83,7 @@ public sealed partial class HistoryPage : Page
                 foreach (var song in Songsl)
                 {
                     song.Order = songorder++;
-                    Songs.Add(song);
+                    Songs.Add(SongListItemViewModel.FromNCSong(song));
                 }
                 Songsl.Clear();
                 break;
@@ -129,7 +130,7 @@ public sealed partial class HistoryPage : Page
                 _cancellationToken.ThrowIfCancellationRequested();
                 var song = MapHistoryItemToNcSong(rankData[i]);
                 song.Order = i;
-                Songs.Add(song);
+                Songs.Add(SongListItemViewModel.FromNCSong(song));
             }
         }
         catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))

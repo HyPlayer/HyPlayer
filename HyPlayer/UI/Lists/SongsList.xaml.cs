@@ -19,6 +19,7 @@ using HyPlayer.Services.Playback;
 using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.UI.Dialogs;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -62,7 +63,7 @@ public sealed partial class SongsList : UserControl
     );
 
     public static readonly DependencyProperty SongsProperty = DependencyProperty.Register(
-        "Songs", typeof(ObservableCollection<NCSong>),
+        "Songs", typeof(IList),
         typeof(SongsList),
         new PropertyMetadata(null)
     );
@@ -94,7 +95,7 @@ public sealed partial class SongsList : UserControl
     public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
         "Footer", typeof(UIElement), typeof(SongsList), new PropertyMetadata(default(UIElement)));
 
-    private readonly ObservableCollection<NCSong> VisibleSongs = new();
+    private readonly ObservableCollection<SongListItemViewModel> VisibleSongs = new();
 
     public static readonly DependencyProperty CanViewCommentsProperty = DependencyProperty.Register(
         "CanViewComments", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
@@ -118,7 +119,8 @@ public sealed partial class SongsList : UserControl
     private void SongsList_Unloaded(object sender, RoutedEventArgs e)
     {
         _stateChangedListener.Detach();
-        Songs?.CollectionChanged -= Songs_CollectionChanged;
+        if (Songs is INotifyCollectionChanged notifyCollectionChanged)
+            notifyCollectionChanged.CollectionChanged -= Songs_CollectionChanged;
     }
 
     public bool MultiSelect
@@ -173,16 +175,19 @@ public sealed partial class SongsList : UserControl
         }
     }
 
-    public ObservableCollection<NCSong> Songs
+    public IList Songs
     {
-        get => (ObservableCollection<NCSong>)GetValue(SongsProperty);
+        get => (IList)GetValue(SongsProperty);
         set
         {
             try
             {
-                Songs?.CollectionChanged -= Songs_CollectionChanged;
+                if (Songs is INotifyCollectionChanged oldCollection)
+                    oldCollection.CollectionChanged -= Songs_CollectionChanged;
                 SetValue(SongsProperty, value);
-                Songs?.CollectionChanged += Songs_CollectionChanged;
+                if (Songs is INotifyCollectionChanged newCollection)
+                    newCollection.CollectionChanged += Songs_CollectionChanged;
+                RefreshVisibleSongs();
             }
             catch
             {
@@ -231,19 +236,7 @@ public sealed partial class SongsList : UserControl
 
     private void Songs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.NewItems != null)
-        {
-            foreach (var item in e.NewItems)
-                if (item is NCSong ncSong)
-                {
-                    VisibleSongs.Add(ncSong);
-                }
-        }
-
-        else
-        {
-            VisibleSongs.Clear();
-        }
+        RefreshVisibleSongs();
     }
 
 
@@ -254,14 +247,14 @@ public sealed partial class SongsList : UserControl
 
     private async void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
+        if (!TryGetSelectedSong(out var selectedSong)) return;
+        if (!selectedSong.IsAvailable)
         {
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
+            _notification.ShowMessage("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用");
             return;
         }
 
-        foreach (NCSong ncsong in SongContainer.SelectedItems)
+        foreach (var ncsong in GetSelectedSongs())
         {
             if (ncsong.ProviderSong != null)
                 _playlist.AppendItem(ncsong.ProviderSong);
@@ -271,21 +264,21 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItem != null)
         {
             var targetPlayItem =
-                _playlist.Items.ToList().Find(t => t.Id == (SongContainer.SelectedItem as NCSong).SongId);
+                _playlist.Items.ToList().Find(t => t.Id == selectedSong.SongId);
             await _playlist.MoveToAsync(targetPlayItem);
         }
     }
 
     private void FlyoutItemAddToPlaylist_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
+        if (!TryGetSelectedSong(out var selectedSong)) return;
+        if (!selectedSong.IsAvailable)
         {
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
+            _notification.ShowMessage("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用");
             return;
         }
 
-        var selectedSongs = SongContainer.SelectedItems.Cast<NCSong>().ToList();
+        var selectedSongs = GetSelectedSongs().ToList();
         var playItems = selectedSongs.All(song => song.ProviderSong != null)
             ? AppendProviderSongs(selectedSongs.Select(song => song.ProviderSong!).ToList(), _playlist.NowPlayingIndex + 1)
             : _playlist.AppendNcSongRange(selectedSongs, _playlist.NowPlayingIndex + 1);
@@ -311,9 +304,9 @@ public sealed partial class SongsList : UserControl
             }
         }
 
-        if (SongContainer.SelectedItems.Cast<NCSong>().Any(t => !t.IsAvailable))
+        if (selectedSongs.Any(t => !t.IsAvailable))
         {
-            var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable)
+            var unAvailableSongNames = selectedSongs.Where(t => !t.IsAvailable)
                 .Select(t => t.SongName).ToArray();
             _notification.ShowMessage("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
         }
@@ -321,43 +314,43 @@ public sealed partial class SongsList : UserControl
 
     private async void FlyoutItemSinger_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        if ((SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Type == HyPlayItemType.Radio)
+        if (!TryGetSelectedSong(out var selectedSong)) return;
+        if (selectedSong.Artist.FirstOrDefault().Type == HyPlayItemType.Radio)
         {
-            _navigation.Navigate(typeof(Me), (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Id);
+            _navigation.Navigate(typeof(Me), selectedSong.Artist.FirstOrDefault().Id);
         }
         else
         {
-            if ((SongContainer.SelectedItem as NCSong).Artist.Count > 1)
-                await new ArtistSelectDialog((SongContainer.SelectedItem as NCSong).Artist).ShowAsync();
+            if (selectedSong.Artist.Count > 1)
+                await new ArtistSelectDialog(selectedSong.Artist).ShowAsync();
             else
                 _navigation.Navigate(typeof(ArtistPage),
-                    (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Id);
+                    selectedSong.Artist.FirstOrDefault().Id);
         }
     }
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        if ((SongContainer.SelectedItem as NCSong).Album.Id == "0")
+        if (!TryGetSelectedSong(out var selectedSong)) return;
+        if (selectedSong.Album.Id == "0")
         {
             _notification.ShowMessage("此歌曲无专辑页面");
         }
         else
         {
-            _navigation.Navigate(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong).Album);
+            _navigation.Navigate(typeof(AlbumPage), selectedSong.Album);
         }
     }
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        _navigation.Navigate(typeof(Comments), CommentTarget.Song((SongContainer.SelectedItem as NCSong).SongId));
+        if (!TryGetSelectedSong(out var selectedSong)) return;
+        _navigation.Navigate(typeof(Comments), CommentTarget.Song(selectedSong.SongId));
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
     {
-        foreach (NCSong ncsong in SongContainer.SelectedItems.Cast<NCSong>())
+        foreach (var ncsong in GetSelectedSongs())
         {
             if (ncsong.ProviderSong != null)
                 DownloadManager.AddDownload(ncsong.ProviderSong);
@@ -368,20 +361,21 @@ public sealed partial class SongsList : UserControl
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        _navigation.Navigate(typeof(MVPage), (SongContainer.SelectedItem as NCSong));
+        if (!TryGetSelectedSong(out var selectedSong)) return;
+        _navigation.Navigate(typeof(MVPage), selectedSong);
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        await new SongListSelect((SongContainer.SelectedItem as NCSong).SongId).ShowAsync();
+        if (!TryGetSelectedSong(out var selectedSong)) return;
+        await new SongListSelect(selectedSong.SongId).ShowAsync();
     }
 
     private async void Btn_Del_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        var ids = SongContainer.SelectedItems.Cast<NCSong>().Select(t => t.SongId).ToList();
+        var selectedSongs = GetSelectedSongs().ToList();
+        if (selectedSongs.Count == 0) return;
+        var ids = selectedSongs.Select(t => t.SongId).ToList();
         if (!IsCloudStorageList)
         {
             if (QueueScope is not { Kind: SongListQueueScopeKind.Playlist, Id: not null }) return;
@@ -401,7 +395,8 @@ public sealed partial class SongsList : UserControl
                 await cloudContainer.DeleteCloudItemAsync(id);
 
         }
-        VisibleSongs.Remove(SongContainer.SelectedItem as NCSong);
+        if (SongContainer.SelectedItem is SongListItemViewModel row)
+            VisibleSongs.Remove(row);
     }
 
     private void Grid_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -426,7 +421,7 @@ public sealed partial class SongsList : UserControl
             : new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
     }
 
-    private bool Filter(NCSong ncsong)
+    private bool Filter(SongListItemViewModel ncsong)
     {
         if (ncsong == null) return false;
         return (ncsong.SongName ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
@@ -443,7 +438,7 @@ public sealed partial class SongsList : UserControl
 
     private async void SongContainer_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem is not NCSong ncSong || IsAddingSongToPlaylist) return;
+        if (!TryUnwrapSong(e.ClickedItem, out var ncSong) || IsAddingSongToPlaylist) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
 
         if (!ncSong.IsAvailable)
@@ -455,7 +450,7 @@ public sealed partial class SongsList : UserControl
         IsAddingSongToPlaylist = true;
         try
         {
-            await _songListQueueBuilder.BuildAndPlayAsync(ncSong, GetEffectiveQueueScope(), VisibleSongs.ToList());
+            await _songListQueueBuilder.BuildAndPlayAsync(ncSong, GetEffectiveQueueScope(), VisibleSongs.Select(song => song.SourceSong).ToList());
         }
         finally
         {
@@ -465,21 +460,7 @@ public sealed partial class SongsList : UserControl
 
     private void FilterBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        var vpos = -1;
-        for (var b = 0; b < VisibleSongs.Count; b++)
-            if (!Songs.Contains(VisibleSongs[b]))
-                VisibleSongs.RemoveAt(b);
-
-        for (var i = 0; i < Songs.Count; i++)
-            if (string.IsNullOrWhiteSpace(FilterBox.Text) || Filter(Songs[i]))
-            {
-                vpos++;
-                if (!VisibleSongs.Contains(Songs[i])) VisibleSongs.Insert(vpos, Songs[i]);
-            }
-            else
-            {
-                VisibleSongs.Remove(Songs[i]);
-            }
+        RefreshVisibleSongs();
     }
 
     private SongListQueueScope GetEffectiveQueueScope()
@@ -527,5 +508,60 @@ public sealed partial class SongsList : UserControl
     private void RunOnUIThread(Action action)
     {
         _taskRunner.Forget(_notification.InvokeOnUIThread(action), "SongsList UI update");
+    }
+
+    private void RefreshVisibleSongs()
+    {
+        VisibleSongs.Clear();
+        if (Songs == null) return;
+
+        foreach (var item in Songs)
+        {
+            if (!TryGetSongRow(item, out var row)) continue;
+            if (string.IsNullOrWhiteSpace(FilterBox?.Text) || Filter(row))
+                VisibleSongs.Add(row);
+        }
+    }
+
+    private IReadOnlyList<NCSong> GetSelectedSongs()
+    {
+        return [.. SongContainer.SelectedItems.Select(item => TryUnwrapSong(item, out var song) ? song : null).Where(song => song != null)];
+    }
+
+    private bool TryGetSelectedSong(out NCSong song)
+    {
+        return TryUnwrapSong(SongContainer.SelectedItem, out song);
+    }
+
+    private static bool TryUnwrapSong(object item, out NCSong song)
+    {
+        switch (item)
+        {
+            case SongListItemViewModel row:
+                song = row.SourceSong;
+                return true;
+            case NCSong ncSong:
+                song = ncSong;
+                return true;
+            default:
+                song = null;
+                return false;
+        }
+    }
+
+    private static bool TryGetSongRow(object item, out SongListItemViewModel row)
+    {
+        switch (item)
+        {
+            case SongListItemViewModel songRow:
+                row = songRow;
+                return true;
+            case NCSong ncSong:
+                row = SongListItemViewModel.FromNCSong(ncSong);
+                return true;
+            default:
+                row = null;
+                return false;
+        }
     }
 }
