@@ -41,6 +41,11 @@ public static class Mapper
         };
     }
 
+    public static List<NCSong> ToNCSongs(this IEnumerable<SingleSongBase> songs)
+    {
+        return songs.Select(ToNCSong).ToList();
+    }
+
     public static SingleSongBase ToSingleSong(this NCSong song)
     {
         return new NeteaseSong

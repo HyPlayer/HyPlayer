@@ -125,7 +125,7 @@ namespace HyPlayer.Services.History
                 var songIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                     .Values["songHistory"].ToString(), JsonDefaults.Options);
                 var songs = await LoadNeteaseSongsAsync(songIds);
-                return songs.Select(song => song.ToNCSong()).ToList();
+                return songs.ToNCSongs();
             }
             catch (Exception e)
             {
@@ -161,7 +161,7 @@ namespace HyPlayer.Services.History
                     Math.Min(500, trackIds.Count - nowIndex * 500));
                 var songs = await LoadNeteaseSongsAsync(nowIds);
                 nowIndex++;
-                var ncSongs = songs.Select(song => song.ToNCSong()).ToList();
+                var ncSongs = songs.ToNCSongs();
                 retsongs.AddRange(ncSongs);
             }
 
