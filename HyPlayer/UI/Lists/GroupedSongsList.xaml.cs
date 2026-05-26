@@ -138,48 +138,48 @@ public sealed partial class GroupedSongsList : UserControl
 
     private async void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
     {
-        if (TryGetSelectedSong(out var selectedSong))
-            await ViewModel.PlayNowAsync(GetSelectedSongs(), selectedSong);
+        if (TryGetSelectedRow(out var selectedSong))
+            await ViewModel.PlayNowAsync(GetSelectedRows(), selectedSong);
     }
 
     private void FlyoutItemAddToPlayList_Click(object sender, RoutedEventArgs e)
     {
-        if (TryGetSelectedSong(out var selectedSong))
-            ViewModel.AddToNext(GetSelectedSongs(), selectedSong);
+        if (TryGetSelectedRow(out var selectedSong))
+            ViewModel.AddToNext(GetSelectedRows(), selectedSong);
     }
 
     private async void FlyoutItemSinger_Click(object sender, RoutedEventArgs e)
     {
-        if (TryGetSelectedSong(out var selectedSong))
+        if (TryGetSelectedRow(out var selectedSong))
             await ViewModel.OpenSingerAsync(selectedSong);
     }
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
-        if (TryGetSelectedSong(out var selectedSong))
+        if (TryGetSelectedRow(out var selectedSong))
             ViewModel.OpenAlbum(selectedSong);
     }
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
-        if (TryGetSelectedSong(out var selectedSong))
+        if (TryGetSelectedRow(out var selectedSong))
             ViewModel.OpenComments(selectedSong);
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
     {
-        ViewModel.DownloadSongs(GetSelectedSongs());
+        ViewModel.DownloadSongs(GetSelectedRows());
     }
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
-        if (TryGetSelectedSong(out var selectedSong))
+        if (TryGetSelectedRow(out var selectedSong))
             ViewModel.OpenMv(selectedSong);
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
     {
-        if (TryGetSelectedSong(out var selectedSong))
+        if (TryGetSelectedRow(out var selectedSong))
             await ViewModel.CollectAsync(selectedSong);
     }
 
@@ -216,29 +216,19 @@ public sealed partial class GroupedSongsList : UserControl
         return SongContainer.Items.Select(item => TryGetSongRow(item, out var row) ? row : null).Where(row => row != null).ToList();
     }
 
-    private IReadOnlyList<NCSong> GetVisibleSongs()
+    private IReadOnlyList<SongListItemViewModel> GetSelectedRows()
     {
-        if (GroupedSongs?.Source is IEnumerable<SongListItemGroup> discs)
-        {
-            return discs.SelectMany(t => t.Select(song => song.SourceSong)).ToList();
-        }
-
-        return SongContainer.Items.Select(item => TryUnwrapSong(item, out var song) ? song : null).Where(song => song != null).ToList();
+        return [.. SongContainer.SelectedItems.Select(item => TryGetSongRow(item, out var row) ? row : null).Where(row => row != null)];
     }
 
-    private IReadOnlyList<NCSong> GetSelectedSongs()
+    private bool TryGetSelectedRow(out SongListItemViewModel selectedSong)
     {
-        return [.. SongContainer.SelectedItems.Select(item => TryUnwrapSong(item, out var song) ? song : null).Where(song => song != null)];
-    }
-
-    private bool TryGetSelectedSong(out NCSong selectedSong)
-    {
-        if (TryUnwrapSong(SongContainer.SelectedItem, out selectedSong))
+        if (TryGetSongRow(SongContainer.SelectedItem, out selectedSong))
         {
             return true;
         }
 
-        selectedSong = new NCSong();
+        selectedSong = null;
         return false;
     }
 

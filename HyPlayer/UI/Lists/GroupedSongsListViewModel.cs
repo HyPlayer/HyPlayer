@@ -29,7 +29,7 @@ public partial class GroupedSongsListViewModel(
 
     public SingleSongBase? NowPlayingProviderItem => state.NowPlayingProviderItem;
 
-    public async Task PlayNowAsync(IReadOnlyList<NCSong> selectedSongs, NCSong selectedSong)
+    public async Task PlayNowAsync(IReadOnlyList<SongListItemViewModel> selectedSongs, SongListItemViewModel selectedSong)
     {
         if (selectedSongs.Count == 0) return;
         if (!selectedSong.IsAvailable)
@@ -38,9 +38,9 @@ public partial class GroupedSongsListViewModel(
             return;
         }
 
-        foreach (var ncsong in selectedSongs)
+        foreach (var song in selectedSongs)
         {
-            playlist.AppendItem(ncsong.ProviderSong ?? ncsong.ToProviderSong());
+            playlist.AppendItem(song.ProviderSong ?? song.SourceSong.ToProviderSong());
         }
 
         if (selectedSong.ProviderSong is not null)
@@ -56,7 +56,7 @@ public partial class GroupedSongsListViewModel(
         }
     }
 
-    public void AddToNext(IReadOnlyList<NCSong> selectedSongs, NCSong selectedSong)
+    public void AddToNext(IReadOnlyList<SongListItemViewModel> selectedSongs, SongListItemViewModel selectedSong)
     {
         if (selectedSongs.Count == 0) return;
         if (!selectedSong.IsAvailable)
@@ -88,7 +88,7 @@ public partial class GroupedSongsListViewModel(
         }
     }
 
-    public async Task OpenSingerAsync(NCSong selectedSong)
+    public async Task OpenSingerAsync(SongListItemViewModel selectedSong)
     {
         if (selectedSong.Artist == null || selectedSong.Artist.Count == 0) return;
 
@@ -105,36 +105,36 @@ public partial class GroupedSongsListViewModel(
         }
     }
 
-    public void OpenAlbum(NCSong selectedSong)
+    public void OpenAlbum(SongListItemViewModel selectedSong)
     {
         navigation.Navigate(typeof(AlbumPage), selectedSong.Album.Id ?? "");
     }
 
-    public void OpenComments(NCSong selectedSong)
+    public void OpenComments(SongListItemViewModel selectedSong)
     {
         navigation.Navigate(typeof(Comments), CommentTarget.Song(selectedSong.SongId));
     }
 
-    public void DownloadSongs(IEnumerable<NCSong> selectedSongs)
+    public void DownloadSongs(IEnumerable<SongListItemViewModel> selectedSongs)
     {
         DownloadManager.AddDownload(selectedSongs
-            .Select(song => song.ProviderSong ?? song.ToProviderSong())
+            .Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong())
             .ToList());
     }
 
-    private List<int> AppendToNext(IReadOnlyList<NCSong> selectedSongs)
+    private List<int> AppendToNext(IReadOnlyList<SongListItemViewModel> selectedSongs)
     {
         return playlist.AppendItems(
-            selectedSongs.Select(song => song.ProviderSong ?? song.ToProviderSong()).ToList(),
+            selectedSongs.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList(),
             playlist.NowPlayingIndex + 1);
     }
 
-    public void OpenMv(NCSong selectedSong)
+    public void OpenMv(SongListItemViewModel selectedSong)
     {
-        navigation.Navigate(typeof(MVPage), selectedSong);
+        navigation.Navigate(typeof(MVPage), selectedSong.SourceSong);
     }
 
-    public async Task CollectAsync(NCSong selectedSong)
+    public async Task CollectAsync(SongListItemViewModel selectedSong)
     {
         await new SongListSelect(selectedSong.SongId).ShowAsync();
     }
