@@ -91,33 +91,6 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
     }
 
     public DownloadObject(
-        NCSong song,
-        INotificationService notification,
-        Setting setting,
-        HttpClient httpClient,
-        ILyricProvidable lyricProvider,
-        IMusicResourceProvidable musicResourceProvider,
-        IDiagnosticsStateService diagnostics)
-    {
-        _notification = notification;
-        _setting = setting;
-        _httpClient = httpClient;
-        _lyricProvider = lyricProvider;
-        _musicResourceProvider = musicResourceProvider;
-        _diagnostics = diagnostics;
-        _providerSong = song.ToProviderSong();
-        _downloadAlbumName = song.Album?.Name ?? string.Empty;
-        _downloadArtistNames = song.Artist?.Select(t => t.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToArray() ?? [];
-        _downloadSongName = song.SongName ?? string.Empty;
-        _downloadOrder = song.Order;
-        _downloadTrackId = song.TrackId;
-        _downloadCdName = song.CDName;
-        _downloadSongId = song.SongId ?? string.Empty;
-        _downloadAlbumId = song.Album?.Id;
-        _downloadAlbumCover = song.Album?.Cover;
-    }
-
-    public DownloadObject(
         SingleSongBase song,
         INotificationService notification,
         Setting setting,
@@ -587,14 +560,6 @@ internal static class DownloadManager
             AlbumPicturesCache.Clear();
     }
 
-    public static void AddDownload(NCSong song)
-    {
-        if (!CheckDownloadAbilityAndToast()) return;
-        EnsureTimerStarted();
-
-        DownloadLists.Add(CreateDownloadObject(song));
-    }
-
     public static void AddDownload(SingleSongBase song)
     {
         if (!CheckDownloadAbilityAndToast()) return;
@@ -649,19 +614,6 @@ internal static class DownloadManager
                     break;
             }
         }
-    }
-
-    public static void AddDownload(List<NCSong> songs)
-    {
-        if (!CheckDownloadAbilityAndToast()) return;
-        EnsureTimerStarted();
-
-        songs.ForEach(t => { DownloadLists.Add(CreateDownloadObject(t)); });
-    }
-
-    private static DownloadObject CreateDownloadObject(NCSong song)
-    {
-        return new DownloadObject(song, Notification, Setting, HttpClient, LyricProvider, MusicResourceProvider, Diagnostics);
     }
 
     private static DownloadObject CreateDownloadObject(SingleSongBase song)

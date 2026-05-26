@@ -541,19 +541,6 @@ DoubleAnimation verticalAnimation;
         {
             DownloadManager.AddDownload(ViewModel.NowPlayingProviderItem);
         }
-        else if (ViewModel.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
-        {
-            DownloadManager.AddDownload(new NCSong
-            {
-                Type = ViewModel.NowPlayingItem.ItemType,
-                Album = ViewModel.NowPlayingItem.Album,
-                Artist = ViewModel.NowPlayingItem.Artist,
-                LengthInMilliseconds = ViewModel.NowPlayingItem.LengthInMilliseconds,
-                SongId = ViewModel.NowPlayingItem.Id,
-                SongName = ViewModel.NowPlayingItem.Name,
-                TrackId = ViewModel.NowPlayingItem.TrackId
-            });
-        }
     }
 
     private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)

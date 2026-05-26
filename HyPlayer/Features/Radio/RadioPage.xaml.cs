@@ -7,6 +7,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
 using HyPlayer.UI.Lists;
@@ -217,21 +218,11 @@ public sealed partial class RadioPage : Page
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        var result = new List<NCSong>();
         var programs = asc
             ? await LoadAscendingProgramsAsync()
             : await LoadAllProgramsAsync();
 
-        foreach (var program in programs)
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            var song = MapToNCFmItem(program);
-            song.Order = i++;
-            song.TrackId = i;
-            result.Add(song);
-        }
-
-        DownloadManager.AddDownload(result);
+        DownloadManager.AddDownload(programs.Cast<SingleSongBase>().ToList());
     }
 
     private async Task<NeteaseRadioChannel> GetRadioChannelAsync(string radioId)
