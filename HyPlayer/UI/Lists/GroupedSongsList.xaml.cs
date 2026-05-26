@@ -2,6 +2,7 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using CommunityToolkit.WinUI.Helpers;
@@ -60,8 +61,8 @@ public sealed partial class GroupedSongsList : UserControl
         {
             OnEventAction = static (instance, _, args) =>
             {
-                if (args.PropertyName == nameof(PlaybackStateService.NowPlayingItem))
-                    instance.HyPlayListOnOnPlayItemChange(instance._state.NowPlayingItem);
+                if (args.PropertyName == nameof(PlaybackStateService.NowPlayingProviderItem))
+                    instance.HyPlayListOnOnPlayItemChange(instance._state.NowPlayingProviderItem);
             },
             OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
         };
@@ -80,7 +81,7 @@ public sealed partial class GroupedSongsList : UserControl
         {
             SetValue(GroupedSongsProperty, value);
             SongContainer.SelectedIndex = -1;
-            HyPlayListOnOnPlayItemChange(ViewModel.NowPlayingItem);
+            HyPlayListOnOnPlayItemChange(ViewModel.NowPlayingProviderItem);
         }
     }
 
@@ -113,15 +114,15 @@ public sealed partial class GroupedSongsList : UserControl
         set => SetValue(QueueScopeProperty, value);
     }
 
-    private void HyPlayListOnOnPlayItemChange(HyPlayItem? playitem)
+    private void HyPlayListOnOnPlayItemChange(SingleSongBase? providerItem)
     {
         _ = _notification.InvokeOnUIThread(() =>
         {
             SongContainer.SelectedItem = null;
-            if (playitem?.PlayItem == null || GroupedSongs?.Source == null) return;
+            if (providerItem == null || GroupedSongs?.Source == null) return;
             foreach (var disc in GroupedSongs.Source as IEnumerable<SongListItemGroup>)
             {
-                var nowPlayingItem = disc.FirstOrDefault(t => t.SongId == playitem.Id);
+                var nowPlayingItem = disc.FirstOrDefault(t => t.SongId == providerItem.ActualId);
                 if (nowPlayingItem != null)
                 {
                     SongContainer.SelectedItem = nowPlayingItem;

@@ -25,8 +25,6 @@ public partial class GroupedSongsListViewModel(
     INotificationService notification,
     INavigationService navigation)
 {
-    public HyPlayItem NowPlayingItem => state.NowPlayingItem;
-
     public SingleSongBase? NowPlayingProviderItem => state.NowPlayingProviderItem;
 
     public async Task PlayNowAsync(IReadOnlyList<SongListItemViewModel> selectedSongs, SongListItemViewModel selectedSong)

@@ -109,8 +109,8 @@ public sealed partial class SongsList : UserControl
         {
             OnEventAction = static (instance, _, args) =>
             {
-                if (args.PropertyName == nameof(PlaybackStateService.NowPlayingItem))
-                    instance.HyPlayListOnOnPlayItemChange(instance._state.NowPlayingItem);
+                if (args.PropertyName == nameof(PlaybackStateService.NowPlayingProviderItem))
+                    instance.HyPlayListOnOnPlayItemChange(instance._state.NowPlayingProviderItem);
             },
             OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
         };
@@ -211,9 +211,9 @@ public sealed partial class SongsList : UserControl
 
     public bool IsAddingSongToPlaylist = false;
 
-    private void HyPlayListOnOnPlayItemChange(HyPlayItem? playitem)
+    private void HyPlayListOnOnPlayItemChange(SingleSongBase? providerItem)
     {
-        if (playitem?.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive || playitem?.PlayItem == null)
+        if (providerItem?.ProviderId == "lcl" || providerItem == null)
         {
             RunOnUIThread(() =>
             {
@@ -225,7 +225,7 @@ public sealed partial class SongsList : UserControl
             return;
         }
 
-        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == playitem.Id);
+        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == providerItem.ActualId);
         if (idx == -1) return;
         RunOnUIThread(() =>
         {
@@ -478,8 +478,9 @@ public sealed partial class SongsList : UserControl
         switch (item.Tag)
         {
             case "FocusingCurrent":
-                if (_state.NowPlayingItem?.PlayItem is null) return;
-                var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == _state.NowPlayingItem.Id);
+                var providerItem = _state.NowPlayingProviderItem;
+                if (providerItem is null) return;
+                var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == providerItem.ActualId);
                 if (idx == -1) return;
                 SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
                 break;
