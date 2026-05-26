@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Services.Abstractions;
 using System;
 using Windows.Storage.Streams;
 
@@ -23,6 +24,10 @@ public partial class PlaybackStateService : ObservableObject
     /// <summary>当前播放曲目的 Provider 模型视图。</summary>
     [ObservableProperty]
     public partial SingleSongBase? NowPlayingProviderItem { get; set; }
+
+    /// <summary>当前播放曲目的 provider-first UI 快照。</summary>
+    [ObservableProperty]
+    public partial PlaybackCurrentItemSnapshot? NowPlayingSnapshot { get; set; }
 
     /// <summary>当前播放位置</summary>
     [ObservableProperty]
@@ -83,6 +88,7 @@ public partial class PlaybackStateService : ObservableObject
     {
         NowPlayingItem = item;
         NowPlayingProviderItem = providerItem;
+        NowPlayingSnapshot = PlaybackCurrentItemSnapshot.FromProvider(providerItem) ?? CreateLegacySnapshot(item);
     }
 
     /// <summary>Clears mirrored now-playing state and resets the playlist index.</summary>
@@ -90,5 +96,20 @@ public partial class PlaybackStateService : ObservableObject
     {
         SetNowPlaying(null, null);
         NowPlayingIndex = -1;
+    }
+
+    private static PlaybackCurrentItemSnapshot? CreateLegacySnapshot(HyPlayItem? item)
+    {
+        if (item is null)
+            return null;
+
+        return new PlaybackCurrentItemSnapshot(
+            item.Name ?? string.Empty,
+            item.Translation ?? string.Empty,
+            item.ArtistString ?? string.Empty,
+            item.AlbumString ?? string.Empty,
+            (long)Math.Max(0, item.LengthInMilliseconds),
+            item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive,
+            null);
     }
 }

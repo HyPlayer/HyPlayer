@@ -76,6 +76,9 @@ public partial class PlayBarViewModel : ObservableObject
     public partial SingleSongBase? NowPlayingProviderItem { get; set; }
 
     [ObservableProperty]
+    public partial PlaybackCurrentItemSnapshot? NowPlayingSnapshot { get; set; }
+
+    [ObservableProperty]
     public partial bool IsPlaying { get; set; }
 
     [ObservableProperty]
@@ -121,18 +124,16 @@ public partial class PlayBarViewModel : ObservableObject
     /// </summary>
     public Windows.Storage.Streams.InMemoryRandomAccessStream? CoverStream => _state.CoverStream;
 
-    public string SongName => NowPlayingProviderItem?.Name ?? NowPlayingItem?.Name ?? string.Empty;
-    public string ArtistName => NowPlayingProviderItem?.CreatorList is { Count: > 0 } creators
-        ? string.Join("; ", creators)
-        : NowPlayingItem?.ArtistString ?? string.Empty;
-    public string AlbumName => NowPlayingProviderItem?.Album?.Name ?? NowPlayingItem?.AlbumString ?? string.Empty;
+    public string SongName => NowPlayingSnapshot?.Name ?? string.Empty;
+    public string ArtistName => NowPlayingSnapshot?.ArtistText ?? string.Empty;
+    public string AlbumName => NowPlayingSnapshot?.AlbumName ?? string.Empty;
     public string QualityTagText => NowPlayingProviderItem != null && !string.IsNullOrWhiteSpace(QualityTag)
         ? HyPlayItem.FormatAudioLevel(QualityTag)
         : NowPlayingItem?.GetQualityTagText(_setting.audioRate) ?? "无歌曲";
-    public string TotalTimeText => FormatTime(Duration != TimeSpan.Zero ? Duration : TimeSpan.FromMilliseconds(NowPlayingProviderItem?.Duration ?? NowPlayingItem?.LengthInMilliseconds ?? 0));
+    public string TotalTimeText => FormatTime(Duration != TimeSpan.Zero ? Duration : TimeSpan.FromMilliseconds(NowPlayingSnapshot?.Duration ?? 0));
     public string NowTimeText => FormatTime(Position);
     public double ProgressMilliseconds => Position.TotalMilliseconds;
-    public double DurationMilliseconds => Duration != TimeSpan.Zero ? Duration.TotalMilliseconds : NowPlayingProviderItem?.Duration ?? NowPlayingItem?.LengthInMilliseconds ?? 0;
+    public double DurationMilliseconds => Duration != TimeSpan.Zero ? Duration.TotalMilliseconds : NowPlayingSnapshot?.Duration ?? 0;
     public string PlayStateGlyph => IsPlaying ? "\uF8AE" : "\uF5B0";
     public bool CanShareCurrentSong => NowPlayingProviderItem is NeteaseSong
                                        || NowPlayingItem is { ItemType: not HyPlayItemType.Local and not HyPlayItemType.LocalProgressive };
@@ -224,6 +225,7 @@ public partial class PlayBarViewModel : ObservableObject
             switch (propertyName)
             {
                 case nameof(PlaybackStateService.NowPlayingItem):
+                case nameof(PlaybackStateService.NowPlayingSnapshot):
                     SyncFromState();
                     break;
                 case nameof(PlaybackStateService.NowPlayingProviderItem):
@@ -264,6 +266,7 @@ public partial class PlayBarViewModel : ObservableObject
         RefreshPlaylistItems();
     }
     partial void OnNowPlayingProviderItemChanged(SingleSongBase? value) => NotifyPlayBarProperties();
+    partial void OnNowPlayingSnapshotChanged(PlaybackCurrentItemSnapshot? value) => NotifyPlayBarProperties();
     partial void OnIsPlayingChanged(bool value) => OnPropertyChanged(nameof(PlayStateGlyph));
     partial void OnPositionChanged(TimeSpan value)
     {
@@ -367,6 +370,7 @@ public partial class PlayBarViewModel : ObservableObject
     {
         NowPlayingItem = _state.NowPlayingItem;
         NowPlayingProviderItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+        NowPlayingSnapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(NowPlayingProviderItem);
         IsPlaying = _state.IsPlaying;
         Position = _state.Position;
         Duration = _state.Duration;

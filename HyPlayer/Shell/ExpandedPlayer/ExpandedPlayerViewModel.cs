@@ -67,6 +67,9 @@ namespace HyPlayer.Shell.ExpandedPlayer
         public partial SingleSongBase? NowPlayingProviderItem { get; set; }
 
         [ObservableProperty]
+        public partial PlaybackCurrentItemSnapshot? NowPlayingSnapshot { get; set; }
+
+        [ObservableProperty]
         public partial bool IsPlaying { get; set; }
 
         [ObservableProperty]
@@ -163,6 +166,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
                 switch (propertyName)
                 {
                     case nameof(PlaybackStateService.NowPlayingItem):
+                    case nameof(PlaybackStateService.NowPlayingSnapshot):
                         SyncFromState();
                         break;
                     case nameof(PlaybackStateService.NowPlayingProviderItem):
@@ -192,6 +196,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
         {
             NowPlayingItem = _state.NowPlayingItem;
             NowPlayingProviderItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+            NowPlayingSnapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(NowPlayingProviderItem);
             IsPlaying = _state.IsPlaying;
             Volume = _state.Volume;
             Position = _state.Position;
@@ -201,19 +206,11 @@ namespace HyPlayer.Shell.ExpandedPlayer
             LyricIndex = _state.LyricIndex;
             IsInFm = _state.IsInFm;
             QualityTag = _state.QualityTag;
-            if (NowPlayingProviderItem != null)
+            if (NowPlayingSnapshot != null)
             {
-                SongName = NowPlayingProviderItem.Name;
-                Album = NowPlayingProviderItem.Album?.Name ?? string.Empty;
-                Artist = NowPlayingProviderItem.CreatorList is { Count: > 0 } creators
-                    ? string.Join("; ", creators)
-                    : string.Empty;
-            }
-            else if (NowPlayingItem != null)
-            {
-                SongName = NowPlayingItem.Name;
-                Album = NowPlayingItem.AlbumString;
-                Artist = NowPlayingItem.ArtistString;
+                SongName = NowPlayingSnapshot.Name;
+                Album = NowPlayingSnapshot.AlbumName;
+                Artist = NowPlayingSnapshot.ArtistText;
             }
             else
             {
