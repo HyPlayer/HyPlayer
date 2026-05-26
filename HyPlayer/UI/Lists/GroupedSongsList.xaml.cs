@@ -239,9 +239,6 @@ public sealed partial class GroupedSongsList : UserControl
             case SongListItemViewModel songRow:
                 row = songRow;
                 return true;
-            case NCSong ncSong:
-                row = SongListItemViewModel.FromNCSong(ncSong);
-                return true;
             default:
                 row = null;
                 return false;

@@ -104,17 +104,17 @@ namespace HyPlayer.Features.Album
                 var artists = providerAlbum.Artists?.Select(artist => MapToNcArtist(artist)).ToList();
                 AuthorString = string.Join(" / ", artists?.Select(t => t.Name) ?? []);
                 Description = (providerAlbum.Alias is { Count: > 0 } ? string.Join(" / ", providerAlbum.Alias) + "\r\n" : string.Empty) + providerAlbum.Description;
-                var idx = 0;
                 QueueScope = SongListQueueScope.Album(Album.Id);
                 PublishTime = 0;
                 var songs = await LoadAlbumSongsAsync(providerAlbum);
                 _providerAlbumSongs = songs;
+                var songRows = await Task.WhenAll(songs.Select((song, index) => SongListItemViewModel.FromProviderSongAsync(song, index + 1)));
                 AlbumSongsViewSource = new CollectionViewSource()
                 {
                     IsSourceGrouped = true,
-                    Source = songs.Select(song => MapToNcAlbumSong(song, ++idx))
-                    .GroupBy(t => t.DiscName).OrderBy(t => t.Key)
-                    .Select(t => new SongListItemGroup(t.Select(SongListItemViewModel.FromNCSong)) { Key = t.Key }).ToList()
+                    Source = songRows
+                    .GroupBy(t => t.CDName).OrderBy(t => t.Key)
+                    .Select(t => new SongListItemGroup(t) { Key = t.Key }).ToList()
                 };
             }
             catch (Exception ex)
@@ -231,36 +231,6 @@ namespace HyPlayer.Features.Album
                 Id = artist.ActualId,
                 Name = artist.Name,
                 Type = HyPlayItemType.Netease
-            };
-        }
-
-        private static NCAlbumSong MapToNcAlbumSong(SingleSongBase song, int order)
-        {
-            var neteaseSong = song as NeteaseSong;
-            return new NCAlbumSong
-            {
-                Album = song.Album is NeteaseAlbum neteaseAlbum ? MapToNcAlbum(neteaseAlbum) : new NCAlbum
-                {
-                    AlbumType = HyPlayItemType.Netease,
-                    Cover = neteaseSong?.CoverUrl,
-                    Id = song.Album?.ActualId,
-                    Name = song.Album?.Name
-                },
-                Alias = neteaseSong?.Alias is not null ? string.Join(",", neteaseSong.Alias) : null,
-                Artist = GetArtists(song),
-                DiscName = neteaseSong?.CdName,
-                CDName = neteaseSong?.CdName,
-                IsCloud = false,
-                IsVip = false,
-                LengthInMilliseconds = song.Duration,
-                MVId = neteaseSong?.MvId,
-                SongId = song.ActualId,
-                Order = order,
-                SongName = song.Name,
-                TrackId = neteaseSong?.TrackNumber ?? 0,
-                TranslatedName = neteaseSong?.Translation,
-                IsAvailable = song.Available,
-                Type = HyPlayItemType.Netease,
             };
         }
 

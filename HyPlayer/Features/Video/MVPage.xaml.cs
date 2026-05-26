@@ -72,12 +72,6 @@ public sealed partial class MVPage : Page
             songid = providerSong.ActualId;
             LoadThings();
         }
-        else if (e.Parameter is NCSong input)
-        {
-            MVId = input.MVId.ToString();
-            songid = input.SongId;
-            _relateiveLoaderTask = LoadRelateive();
-        }
         else
         {
             MVId = e.Parameter.ToString();

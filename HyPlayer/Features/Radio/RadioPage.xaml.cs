@@ -92,10 +92,7 @@ public sealed partial class RadioPage : Page
         foreach (var program in programs)
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var song = MapToNCFmItem(program);
-            song.Order = i++;
-            song.TrackId = i;
-            Songs.Add(SongListItemViewModel.FromNCSong(song));
+            Songs.Add(SongListItemViewModel.FromRadioProgram(program, i++));
         }
     }
 
@@ -294,26 +291,6 @@ public sealed partial class RadioPage : Page
         };
     }
 
-    private static NCFmItem MapToNCFmItem(NeteaseRadioProgram program)
-    {
-        return new NCFmItem
-        {
-            Type = HyPlayItemType.Radio,
-            SongId = program.MainSong?.ActualId,
-            SongName = program.Name,
-            Artist = MapToNCArtists(program),
-            Album = MapToNCAlbum(program.RadioChannel),
-            LengthInMilliseconds = program.Duration,
-            MVId = program.MainSong?.MvId ?? "-1",
-            Alias = null,
-            TranslatedName = null,
-            FMId = program.ActualId,
-            Description = program.Description,
-            RadioId = program.RadioChannel?.ActualId,
-            RadioName = program.RadioChannel?.Name
-        };
-    }
-
     private static NCUser MapToNCUser(NeteaseUser? user)
     {
         return new NCUser
@@ -325,40 +302,4 @@ public sealed partial class RadioPage : Page
         };
     }
 
-    private static List<NCArtist> MapToNCArtists(NeteaseRadioProgram program)
-    {
-        if (program.Host is not null)
-        {
-            return
-            [
-                new NCArtist
-                {
-                    Type = HyPlayItemType.Radio,
-                    Id = program.Host.ActualId,
-                    Name = program.Host.Name,
-                    Avatar = program.Host.AvatarUrl
-                }
-            ];
-        }
-
-        return program.MainSong?.Artists?.Select(artist => new NCArtist
-        {
-            Type = HyPlayItemType.Radio,
-            Id = artist.ActualId,
-            Name = artist.Name
-        }).ToList() ?? [];
-    }
-
-    private static NCAlbum MapToNCAlbum(NeteaseRadioChannel channel)
-    {
-        return new NCAlbum
-        {
-            AlbumType = HyPlayItemType.Radio,
-            Id = channel?.ActualId,
-            Name = channel?.Name,
-            Cover = channel?.CoverUrl,
-            Alias = channel?.ActualId,
-            Description = channel?.Description
-        };
-    }
 }

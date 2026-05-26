@@ -16,31 +16,6 @@ namespace HyPlayer.Infrastructure.Netease;
 
 public static class Mapper
 {
-    public static NCSong ToNCSong(this SingleSongBase song)
-    {
-        var neteaseSong = song as NeteaseSong;
-        return new NCSong
-        {
-            Album = song.Album is null
-                ? new NCAlbum { AlbumType = HyPlayItemType.Netease, Id = string.Empty, Name = "未知专辑" }
-                : song.Album.ToNCAlbum(),
-            Alias = neteaseSong?.Alias is not null ? string.Join(",", neteaseSong.Alias) : null,
-            Artist = GetArtists(song),
-            CDName = neteaseSong?.CdName,
-            IsCloud = false,
-            IsVip = false,
-            LengthInMilliseconds = song.Duration,
-            MVId = neteaseSong?.MvId,
-            ProviderSong = song,
-            SongId = song.ActualId,
-            SongName = song.Name,
-            TrackId = neteaseSong?.TrackNumber ?? 0,
-            TranslatedName = neteaseSong?.Translation,
-            IsAvailable = song.Available,
-            Type = HyPlayItemType.Netease
-        };
-    }
-
     public static NCAlbum ToNCAlbum(this ContainerBase album)
     {
         return new NCAlbum
@@ -50,18 +25,6 @@ public static class Mapper
             Id = album.ActualId,
             Name = album.Name
         };
-    }
-
-    private static List<NCArtist> GetArtists(SingleSongBase song)
-    {
-        if (song is NeteaseSong { Artists: { Count: > 0 } artists })
-            return artists.Select(ToNCArtist).ToList();
-
-        return song.CreatorList?.Select(name => new NCArtist
-        {
-            Name = name,
-            Type = HyPlayItemType.Netease
-        }).ToList() ?? [];
     }
 
     public static NCArtist ToNCArtist(this PersonBase artist)

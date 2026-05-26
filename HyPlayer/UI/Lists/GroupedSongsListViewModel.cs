@@ -90,7 +90,7 @@ public partial class GroupedSongsListViewModel(
     {
         if (selectedSong.Artist == null || selectedSong.Artist.Count == 0) return;
 
-        if (selectedSong.Artist[0].Type == HyPlayItemType.Radio)
+        if (selectedSong.IsRadio)
         {
             navigation.Navigate(typeof(Me), selectedSong.Artist[0].Id ?? "");
         }

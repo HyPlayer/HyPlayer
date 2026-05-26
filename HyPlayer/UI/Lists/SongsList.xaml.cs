@@ -314,7 +314,7 @@ public sealed partial class SongsList : UserControl
     private async void FlyoutItemSinger_Click(object sender, RoutedEventArgs e)
     {
         if (!TryGetSelectedRow(out var selectedSong)) return;
-        if (selectedSong.Artist.FirstOrDefault().Type == HyPlayItemType.Radio)
+        if (selectedSong.IsRadio)
         {
             _navigation.Navigate(typeof(Me), selectedSong.Artist.FirstOrDefault().Id);
         }
@@ -526,9 +526,6 @@ public sealed partial class SongsList : UserControl
         {
             case SongListItemViewModel songRow:
                 row = songRow;
-                return true;
-            case NCSong ncSong:
-                row = SongListItemViewModel.FromNCSong(ncSong);
                 return true;
             default:
                 row = null;

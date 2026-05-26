@@ -14,41 +14,13 @@ namespace HyPlayer.UI.Lists;
 
 /// <summary>
 /// Provider-backed song row model for list XAML migration.
-/// It intentionally mirrors the current <see cref="NCSong"/> binding surface so pages can move one template at a time.
 /// </summary>
 public sealed class SongListItemViewModel
 {
     private const string DefaultCoverUrl = "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg";
-    private readonly NCSong? _sourceSong;
-
     private SongListItemViewModel()
     {
     }
-
-    public SongListItemViewModel(NCSong song)
-    {
-        ArgumentNullException.ThrowIfNull(song);
-        _sourceSong = song;
-
-        Album = song.Album ?? new NCAlbum { Id = string.Empty, Name = "未知专辑", Cover = string.Empty };
-        Alias = song.Alias ?? string.Empty;
-        Artist = song.Artist ?? [];
-        CDName = song.CDName ?? string.Empty;
-        IsAvailable = song.IsAvailable;
-        IsCloud = song.IsCloud;
-        IsVip = song.IsVip;
-        LengthInMilliseconds = song.LengthInMilliseconds;
-        MVId = song.MVId ?? string.Empty;
-        Order = song.Order;
-        SongId = song.SongId ?? string.Empty;
-        SongName = song.SongName ?? string.Empty;
-        ProviderSong = song.ProviderSong;
-        TrackId = song.TrackId;
-        TranslatedName = song.TranslatedName ?? string.Empty;
-        Type = song.Type;
-    }
-
-    public NCSong SourceSong => _sourceSong ?? ToNCSong();
 
     public NCAlbum Album { get; private init; }
     public string Alias { get; private init; }
@@ -66,6 +38,7 @@ public sealed class SongListItemViewModel
     public int TrackId { get; private init; }
     public string TranslatedName { get; private init; }
     public HyPlayItemType Type { get; private init; }
+    public bool IsRadio { get; private init; }
     public int DisplayOrder => Order + 1;
 
     public Uri? Cover => Ioc.Default.GetRequiredService<Setting>().noImage
@@ -79,32 +52,6 @@ public sealed class SongListItemViewModel
     public string ArtistString => Artist.Count == 0 ? string.Empty : string.Join(" / ", Artist.Select(t => t.Name));
 
     public string ConvertTranslate(string source) => string.IsNullOrEmpty(source) ? string.Empty : "(" + source + ")";
-
-    public NCSong ToNCSong()
-    {
-        if (_sourceSong != null)
-            return _sourceSong;
-
-        return new NCSong
-        {
-            Album = Album,
-            Alias = Alias,
-            Artist = Artist,
-            CDName = CDName,
-            IsAvailable = IsAvailable,
-            IsCloud = IsCloud,
-            IsVip = IsVip,
-            LengthInMilliseconds = LengthInMilliseconds,
-            MVId = MVId,
-            Order = Order,
-            SongId = SongId,
-            SongName = SongName,
-            ProviderSong = ProviderSong,
-            TrackId = TrackId,
-            TranslatedName = TranslatedName,
-            Type = Type
-        };
-    }
 
     public SingleSongBase ToProviderSong()
     {
@@ -141,11 +88,12 @@ public sealed class SongListItemViewModel
         };
     }
 
-    public static SongListItemViewModel FromNCSong(NCSong song) => new(song);
-
     public static async Task<SongListItemViewModel> FromProviderSongAsync(SingleSongBase song, int order, bool isCloud = false)
     {
         ArgumentNullException.ThrowIfNull(song);
+
+        if (song is NeteaseRadioProgram radioProgram)
+            return FromRadioProgram(radioProgram, order, isCloud);
 
         var creators = await song.GetCreatorsAsync();
         var neteaseSong = song as NeteaseSong;
@@ -178,7 +126,66 @@ public sealed class SongListItemViewModel
             TranslatedName = neteaseSong?.Translation,
             IsAvailable = song.Available,
             Type = HyPlayItemType.Netease,
+            IsRadio = false,
         };
+    }
+
+    public static SongListItemViewModel FromRadioProgram(NeteaseRadioProgram program, int order, bool isCloud = false)
+    {
+        ArgumentNullException.ThrowIfNull(program);
+
+        return new SongListItemViewModel
+        {
+            Album = new NCAlbum
+            {
+                AlbumType = HyPlayItemType.Radio,
+                Id = program.RadioChannel?.ActualId,
+                Name = program.RadioChannel?.Name,
+                Cover = program.RadioChannel?.CoverUrl,
+                Alias = program.RadioChannel?.ActualId,
+                Description = program.RadioChannel?.Description
+            },
+            Alias = string.Empty,
+            Artist = GetRadioArtists(program),
+            CDName = string.Empty,
+            IsCloud = isCloud,
+            IsVip = false,
+            LengthInMilliseconds = program.Duration,
+            MVId = program.MainSong?.MvId ?? "-1",
+            Order = order,
+            SongId = program.MainSong?.ActualId ?? program.ActualId,
+            SongName = program.Name,
+            ProviderSong = program,
+            TrackId = order + 1,
+            TranslatedName = string.Empty,
+            IsAvailable = program.Available,
+            Type = HyPlayItemType.Radio,
+            IsRadio = true,
+        };
+    }
+
+    private static List<NCArtist> GetRadioArtists(NeteaseRadioProgram program)
+    {
+        if (program.Host is not null)
+        {
+            return
+            [
+                new NCArtist
+                {
+                    Type = HyPlayItemType.Radio,
+                    Id = program.Host.ActualId,
+                    Name = program.Host.Name,
+                    Avatar = program.Host.AvatarUrl
+                }
+            ];
+        }
+
+        return program.MainSong?.Artists?.Select(artist => new NCArtist
+        {
+            Type = HyPlayItemType.Radio,
+            Id = artist.ActualId,
+            Name = artist.Name
+        }).ToList() ?? [];
     }
 
     public static SongListItemViewModel FromFallback(string? id, string? name, int order, bool isCloud = false)
@@ -201,6 +208,7 @@ public sealed class SongListItemViewModel
             TrackId = 0,
             TranslatedName = string.Empty,
             Type = HyPlayItemType.Netease,
+            IsRadio = false,
         };
     }
 }
