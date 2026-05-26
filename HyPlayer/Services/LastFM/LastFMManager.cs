@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Music;
+using HyPlayer.NeteaseProvider.Constants;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using LiteFM;
@@ -25,13 +26,13 @@ namespace HyPlayer.Services.LastFM
                 Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("Last.FM 登录失败", response.Error.Message);
             }
         }
-        public static async Task UpdateNowPlaying(HyPlayItem item)
+        public static async Task UpdateNowPlaying(SingleSongBase item)
         {
-            if (!Ioc.Default.GetRequiredService<Setting>().LastFMSession.HasLogined || !Ioc.Default.GetRequiredService<Setting>().UpdateLastFMNowPlaying || item.ItemType != HyPlayItemType.Netease) return;
+            if (!Ioc.Default.GetRequiredService<Setting>().LastFMSession.HasLogined || !Ioc.Default.GetRequiredService<Setting>().UpdateLastFMNowPlaying || item.ProviderId != "ncm" || item.TypeId != NeteaseTypeIds.SingleSong) return;
             var request = new UpdateNowPlayingRequest()
             {
-                Album = item.AlbumString,
-                Artist = item.Artist.FirstOrDefault()?.Name ?? string.Empty,
+                Album = item.Album?.Name ?? string.Empty,
+                Artist = item.CreatorList?.FirstOrDefault() ?? string.Empty,
                 Track = item.Name
             };
             var response = await Ioc.Default.GetRequiredService<LastFMClient>().RequestAsync(LastFMApi.UpdateNowPlayingApi, request, Ioc.Default.GetRequiredService<Setting>().LastFMSession);
@@ -40,15 +41,15 @@ namespace HyPlayer.Services.LastFM
                 Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("Last.FM 上传正在播放失败", response.Error.Message);
             }
         }
-        public static async Task Scrobble(HyPlayItem item)
+        public static async Task Scrobble(SingleSongBase item)
         {
-            if (!Ioc.Default.GetRequiredService<Setting>().LastFMSession.HasLogined || !Ioc.Default.GetRequiredService<Setting>().LastFMScrobble || item.ItemType != HyPlayItemType.Netease) return;
+            if (!Ioc.Default.GetRequiredService<Setting>().LastFMSession.HasLogined || !Ioc.Default.GetRequiredService<Setting>().LastFMScrobble || item.ProviderId != "ncm" || item.TypeId != NeteaseTypeIds.SingleSong) return;
             var request = new ScrobbleRequest()
             {
-                Album = item.AlbumString,
-                Artist = item.Artist.FirstOrDefault()?.Name ?? string.Empty,
+                Album = item.Album?.Name ?? string.Empty,
+                Artist = item.CreatorList?.FirstOrDefault() ?? string.Empty,
                 Track = item.Name,
-                TimeStamp = (uint)(DateTime.UtcNow - DateTime.UnixEpoch - TimeSpan.FromMilliseconds(item.LengthInMilliseconds)).TotalSeconds
+                TimeStamp = (uint)(DateTime.UtcNow - DateTime.UnixEpoch - TimeSpan.FromMilliseconds(item.Duration)).TotalSeconds
 
             };
             var response = await Ioc.Default.GetRequiredService<LastFMClient>().RequestAsync(LastFMApi.ScrobbleApi, request, Ioc.Default.GetRequiredService<Setting>().LastFMSession);

@@ -1,6 +1,10 @@
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.LastFM;
@@ -43,49 +47,40 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     }
 
     /// <inheritdoc />
-    public async Task OnTrackChangedAsync(HyPlayItem item, SingleSongBase? providerItem = null)
+    public async Task OnTrackChangedAsync(SingleSongBase providerItem)
     {
-        if (item == null) return;
-        providerItem ??= _state.NowPlayingProviderItem;
-        UpdateSmtcDisplayInfo(item, providerItem);
+        if (providerItem == null) return;
+        var item = _state.NowPlayingItem ?? HyPlayItem.FromProviderSong(providerItem);
+        UpdateSmtcDisplayInfo(providerItem);
 
         _state.SetNowPlaying(item, providerItem);
 
         // 1. 刷新封面
         if (!_setting.noImage)
-            await RefreshCoverAsync(item);
+            await RefreshCoverAsync(providerItem);
         await _tileService.UpdateTile(item, _state.CoverStream);
         if (!_setting.noImage)
             UpdateSmtcThumbnail();
         // 2. Last.FM now-playing
         if (_setting.UpdateLastFMNowPlaying)
         {
-            _taskRunner.Forget(LastFMManager.UpdateNowPlaying(item), "update Last.FM now playing");
+            _taskRunner.Forget(LastFMManager.UpdateNowPlaying(providerItem), "update Last.FM now playing");
         }
     }
 
     /// <inheritdoc />
-    public async Task RefreshCoverAsync(HyPlayItem item)
+    public async Task RefreshCoverAsync(SingleSongBase providerItem)
     {
         try
         {
-            IBuffer buffer;
-            if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
-            {
-                buffer = item.PlayItem.CoverBuffer;
-            }
-            else
-            {
-                var coverUrl = item.Album?.Cover;
-                if (string.IsNullOrEmpty(coverUrl)) return;
+            var coverUri = await GetCoverUriAsync(providerItem);
+            if (coverUri is null) return;
 
-                var url = coverUrl + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
-                using var response = await _http.GetAsync(new Uri(url));
-                if (!response.IsSuccessStatusCode) return;
+            using var response = await _http.GetAsync(coverUri);
+            if (!response.IsSuccessStatusCode) return;
 
-                var bytes = await response.Content.ReadAsByteArrayAsync();
-                buffer = bytes.AsBuffer();
-            }
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            IBuffer buffer = bytes.AsBuffer();
 
             // 替换封面流
             var newStream = new InMemoryRandomAccessStream();
@@ -106,27 +101,42 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
 
 
     /// <inheritdoc />
-    public async Task ScrobbleAsync(HyPlayItem item)
+    public async Task ScrobbleAsync(SingleSongBase providerItem)
     {
-        if (item == null) return;
-        await LastFMManager.Scrobble(item);
+        if (providerItem == null) return;
+        await LastFMManager.Scrobble(providerItem);
     }
 
-    private void UpdateSmtcDisplayInfo(HyPlayItem item, SingleSongBase? providerItem)
+    private void UpdateSmtcDisplayInfo(SingleSongBase providerItem)
     {
         if (_player is AudioGraphPlayer { SMTCManager: not null } graphPlayer)
         {
-            var title = providerItem?.Name ?? item.Name;
-            var artist = providerItem?.CreatorList is { Count: > 0 } creators
+            var title = providerItem.Name;
+            var artist = providerItem.CreatorList is { Count: > 0 } creators
                 ? string.Join(" / ", creators)
-                : item.ArtistString;
-            var album = providerItem?.Album?.Name ?? item.AlbumString;
+                : string.Empty;
+            var album = providerItem.Album?.Name ?? string.Empty;
 
             graphPlayer.SMTCManager.UpdateDisplayInfo(
                 title,
                 artist,
                 album);
         }
+    }
+
+    private static async Task<Uri?> GetCoverUriAsync(SingleSongBase providerItem)
+    {
+        if (providerItem is not IHasCover coverProvider) return null;
+
+        var coverResult = await coverProvider.GetCoverAsync(new NeteaseImageResourceQualityTag(1024, 1024));
+        if (coverResult is IResourceResultOf<Uri?> nullableUriResult)
+            return await nullableUriResult.GetResourceAsync();
+        if (coverResult is IResourceResultOf<Uri> uriResult)
+            return await uriResult.GetResourceAsync();
+        if (coverResult is NeteaseImageResourceResult { ResourceStatus: ResourceStatus.Success, Uri: { } uri })
+            return uri;
+
+        return null;
     }
 
     private void UpdateSmtcThumbnail()

@@ -256,7 +256,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             ct);
 
         _taskRunner.Forget(LoadLyricsSafeAsync(song, item, _lyricCts.Token), "load lyrics for PlayCore current song");
-        _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item, song), "update playback notification on PlayCore current song");
+        _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(song), "update playback notification on PlayCore current song");
     }
 
     private SingleSongBase? ResolveProviderSong(HyPlayItem item)
@@ -351,9 +351,9 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         var item = _state.NowPlayingItem;
         if (item is null) return;
 
-        if (_setting.LastFMScrobble)
+        if (_setting.LastFMScrobble && _state.NowPlayingProviderItem is not null)
         {
-            _taskRunner.Forget(LastFMManager.Scrobble(item), "update Last.FM now playing");
+            _taskRunner.Forget(LastFMManager.Scrobble(_state.NowPlayingProviderItem), "update Last.FM now playing");
         }
         _taskRunner.Forget(HandleTrackEndedSafeAsync(), "handle track ended");
     }
@@ -374,7 +374,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             _lyricCts = new CancellationTokenSource();
             _taskRunner.Forget(LoadLyricsSafeAsync(_state.NowPlayingProviderItem, item, _lyricCts.Token), "load lyrics for primary source");
 
-            _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(item, _state.NowPlayingProviderItem), "update playback notification on track changed");
+            if (_state.NowPlayingProviderItem is not null)
+                _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(_state.NowPlayingProviderItem), "update playback notification on track changed");
         }
     }
 
