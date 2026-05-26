@@ -434,7 +434,7 @@ public sealed partial class App : Application
             playlist.PlaySourceId = "local";
             playlist.NotifyAppendDone();
             if (playlist.Items.Count > 0)
-                await playlist.MoveToAsync(playlist.Items[0]);
+                await playlist.MoveToIndexAsync(0);
         }
 
 

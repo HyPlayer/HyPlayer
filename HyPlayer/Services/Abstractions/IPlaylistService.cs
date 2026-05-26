@@ -70,8 +70,8 @@ public interface IPlaylistService
     /// <summary>清空播放列表</summary>
     void Clear(bool clearAll = true);
 
-    /// <summary>跳转到指定曲目</summary>
-    Task MoveToAsync(HyPlayItem item);
+    /// <summary>跳转到指定位置</summary>
+    Task MoveToIndexAsync(int index);
 
     /// <summary>跳转到指定 Provider 曲目</summary>
     Task MoveToAsync(ProvidableItemBase item);

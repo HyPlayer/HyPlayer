@@ -80,20 +80,6 @@ public sealed partial class PlaylistService
     }
 
     /// <inheritdoc />
-    public async Task MoveToAsync(HyPlayItem item)
-    {
-        int index;
-        lock (_lock)
-        {
-            index = _items.IndexOf(item);
-        }
-        if (index < 0)
-            return;
-
-        await MoveToIndexAsync(index);
-    }
-
-    /// <inheritdoc />
     public Task MoveToAsync(ProvidableItemBase item)
     {
         int index;
@@ -108,7 +94,7 @@ public sealed partial class PlaylistService
         return index >= 0 ? MoveToIndexAsync(index) : Task.CompletedTask;
     }
 
-    private async Task MoveToIndexAsync(int index)
+    public async Task MoveToIndexAsync(int index)
     {
         // 中断正在进行的过渡
         await _activeTransition.OnManualSkipAsync(BuildTransitionContext());

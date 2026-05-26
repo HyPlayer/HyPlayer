@@ -44,9 +44,15 @@ internal sealed class SongListQueueBuilder(
 
         if (!shiftSong)
         {
-            var targetItem = playlist.Items.FirstOrDefault(song => song?.Id == clickedSong.SongId);
-            if (targetItem != null)
-                await playlist.MoveToAsync(targetItem);
+            if (clickedSong.ProviderSong is not null)
+            {
+                await playlist.MoveToAsync(clickedSong.ProviderSong);
+                return;
+            }
+
+            var targetIndex = playlist.Items.ToList().FindIndex(song => song?.Id == clickedSong.SongId);
+            if (targetIndex >= 0)
+                await playlist.MoveToIndexAsync(targetIndex);
             return;
         }
 

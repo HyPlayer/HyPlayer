@@ -45,9 +45,16 @@ public partial class GroupedSongsListViewModel(
                 playlist.AppendNcSong(ncsong);
         }
 
-        var targetPlayItem = playlist.Items.ToList().Find(t => t.Id == selectedSong.SongId);
-        if (targetPlayItem != null)
-            await playlist.MoveToAsync(targetPlayItem);
+        if (selectedSong.ProviderSong is not null)
+        {
+            await playlist.MoveToAsync(selectedSong.ProviderSong);
+        }
+        else
+        {
+            var targetIndex = playlist.Items.ToList().FindIndex(t => t.Id == selectedSong.SongId);
+            if (targetIndex >= 0)
+                await playlist.MoveToIndexAsync(targetIndex);
+        }
     }
 
     public void AddToNext(IReadOnlyList<NCSong> selectedSongs, NCSong selectedSong)

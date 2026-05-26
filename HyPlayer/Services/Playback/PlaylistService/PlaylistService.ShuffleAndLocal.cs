@@ -33,7 +33,7 @@ public sealed partial class PlaylistService
         HyPlayItem? lastItem;
         lock (_lock) { lastItem = _items.LastOrDefault(); }
         if (lastItem != null)
-            await MoveToAsync(lastItem);
+            await MoveToIndexAsync(_items.Count - 1);
     }
 
     /// <inheritdoc />

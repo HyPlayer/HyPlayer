@@ -263,9 +263,16 @@ public sealed partial class SongsList : UserControl
         }
         if (SongContainer.SelectedItem != null)
         {
-            var targetPlayItem =
-                _playlist.Items.ToList().Find(t => t.Id == selectedSong.SongId);
-            await _playlist.MoveToAsync(targetPlayItem);
+            if (selectedSong.ProviderSong is not null)
+            {
+                await _playlist.MoveToAsync(selectedSong.ProviderSong);
+            }
+            else
+            {
+                var targetIndex = _playlist.Items.ToList().FindIndex(t => t.Id == selectedSong.SongId);
+                if (targetIndex >= 0)
+                    await _playlist.MoveToIndexAsync(targetIndex);
+            }
         }
     }
 

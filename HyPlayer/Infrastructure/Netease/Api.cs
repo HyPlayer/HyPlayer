@@ -84,8 +84,8 @@ internal class Api
             }
 
             playlist.NotifyAppendDone();
-            if (playlist.Items.Count > 0)
-                await playlist.MoveToAsync(playlist.Items[0]);
+            if (playlist.ProviderItems.Count > 0)
+                await playlist.MoveToAsync(playlist.ProviderItems[0]);
         }
         catch (System.Exception ex)
         {

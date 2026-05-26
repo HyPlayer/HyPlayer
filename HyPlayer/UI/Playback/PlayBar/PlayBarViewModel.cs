@@ -210,8 +210,10 @@ public partial class PlayBarViewModel : ObservableObject
     [RelayCommand]
     private async Task MoveToItemAsync(HyPlayItem item)
     {
-        if (item != null && item != _playlist.NowPlayingItem)
-            await _playlist.MoveToAsync(item);
+        if (item == null || item == _playlist.NowPlayingItem) return;
+        var index = _playlist.Items.ToList().IndexOf(item);
+        if (index >= 0)
+            await _playlist.MoveToIndexAsync(index);
     }
 
     private void OnPlaybackStatePropertyChanged(string? propertyName)

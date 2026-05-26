@@ -191,7 +191,7 @@ public sealed partial class RadioPage : Page
         var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         await _navigator.AppendAsync(new MusicResource.Radio(Radio.Id));
         if (asc) playlist.ReverseList();
-        await playlist.MoveToAsync(playlist.Items.FirstOrDefault());
+        await playlist.MoveToIndexAsync(0);
     }
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)

@@ -573,7 +573,7 @@ public sealed class AppNavigator : IAppNavigator
     {
         var sourceKey = resource.ToPlaybackSourceKey();
         await _playlist.AppendNcSourceAsync(sourceKey);
-        var item = _playlist.Items.FirstOrDefault(t => "ns" + t.Id == sourceKey);
+        var item = _playlist.ProviderItems.FirstOrDefault(t => "ns" + t.ActualId == sourceKey);
         if (item is not null)
             await _playlist.MoveToAsync(item);
     }

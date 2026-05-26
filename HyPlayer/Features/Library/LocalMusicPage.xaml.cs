@@ -89,9 +89,8 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private async void Playall_Click(object sender, RoutedEventArgs e)
     {
         _playlist.AppendItems(localHyItems, true);
-        var firstItem = localHyItems.FirstOrDefault();
-        if (firstItem is not null)
-            await _playlist.MoveToAsync(firstItem);
+        if (localHyItems.Count > 0)
+            await _playlist.MoveToIndexAsync(0);
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -181,7 +180,11 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
         _playlist.AppendItems(localHyItems, true);
         if (ListBoxLocalMusicContainer.SelectedItem is HyPlayItem selectedItem)
-            await _playlist.MoveToAsync(selectedItem);
+        {
+            var index = localHyItems.IndexOf(selectedItem);
+            if (index >= 0)
+                await _playlist.MoveToIndexAsync(index);
+        }
     }
 
     private async void UploadCloud_Click(object sender, RoutedEventArgs e)

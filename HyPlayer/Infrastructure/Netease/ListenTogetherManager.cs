@@ -136,7 +136,9 @@ internal sealed class ListenTogetherManager
     /// </summary>
     internal async Task ServerMoveToAsync(HyPlayItem item)
     {
-        await _playlist.MoveToAsync(item);
+        var index = _playlist.Items.ToList().IndexOf(item);
+        if (index >= 0)
+            await _playlist.MoveToIndexAsync(index);
     }
 
     // ---------------------------------------------------------------

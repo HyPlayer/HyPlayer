@@ -129,7 +129,7 @@ namespace HyPlayer.Features.Album
             {
                 _playlist.Clear();
                 await _navigator.AppendAsync(new MusicResource.Album(Album.Id));
-                await _playlist.MoveToAsync(_playlist.Items.FirstOrDefault());
+                await _playlist.MoveToIndexAsync(0);
             }
             catch (Exception ex)
             {
