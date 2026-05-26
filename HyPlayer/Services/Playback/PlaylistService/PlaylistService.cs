@@ -234,7 +234,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             InsertQueueItem(item, position);
         }
 
-        NotifyAppendDone();
+        PublishPlaylistChanged();
     }
 
     /// <inheritdoc />
@@ -245,7 +245,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             InsertQueueItem(item, position);
         }
 
-        NotifyAppendDone();
+        PublishPlaylistChanged();
     }
 
     /// <inheritdoc />
@@ -276,7 +276,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             InsertQueueItems(playItems);
         }
 
-        NotifyAppendDone();
+        PublishPlaylistChanged();
     }
 
     /// <inheritdoc />
@@ -292,7 +292,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             InsertQueueItems(providerItems);
         }
 
-        NotifyAppendDone();
+        PublishPlaylistChanged();
     }
 
     /// <inheritdoc />
@@ -308,7 +308,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             InsertQueueItems(providerItems);
         }
 
-        NotifyAppendDone();
+        PublishPlaylistChanged();
     }
 
     /// <inheritdoc />
@@ -332,7 +332,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             }
         }
 
-        NotifyAppendDone();
+        PublishPlaylistChanged();
         return insertedIndexes;
     }
 
@@ -366,7 +366,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                     _nowPlayingIndex = _items.Count - 1;
             }
 
-            NotifyAppendDone();
+            PublishPlaylistChanged();
         }
     }
 
@@ -408,12 +408,12 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 _nowPlayingIndex = _items.Count > 0 ? 0 : -1;
             }
 
-            NotifyAppendDone();
+            PublishPlaylistChanged();
         }
     }
 
     /// <inheritdoc />
-    private void NotifyAppendDone()
+    private void PublishPlaylistChanged()
     {
         _activeStrategy.OnPlaylistChanged(BuildStrategyContext());
         if (ActiveStrategyId == "shn")

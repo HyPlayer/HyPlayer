@@ -98,7 +98,7 @@ public sealed partial class PlaylistService
             }
 
             if (hasChanges)
-                NotifyAppendDone();
+                PublishPlaylistChanged();
         }
         catch (Exception ex)
         {

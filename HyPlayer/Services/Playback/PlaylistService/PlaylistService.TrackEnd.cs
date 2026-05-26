@@ -52,7 +52,7 @@ public sealed partial class PlaylistService
                         {
                             InsertQueueItems(moreItems);
                         }
-                        NotifyAppendDone();
+                        PublishPlaylistChanged();
                         await _activeTransition.OnTrackEndedAsync(BuildTransitionContext());
                     }
                     break;

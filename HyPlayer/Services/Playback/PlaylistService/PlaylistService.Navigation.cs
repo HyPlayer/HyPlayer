@@ -31,7 +31,7 @@ public sealed partial class PlaylistService
                 {
                     InsertQueueItems(moreItems);
                 }
-                NotifyAppendDone();
+                PublishPlaylistChanged();
                 nextIndex = _activeStrategy.GetNext(BuildStrategyContext());
             }
         }
