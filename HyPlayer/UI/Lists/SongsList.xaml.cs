@@ -248,16 +248,16 @@ public sealed partial class SongsList : UserControl
 
     private async void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
     {
-        if (!TryGetSelectedSong(out var selectedSong)) return;
+        if (!TryGetSelectedRow(out var selectedSong)) return;
         if (!selectedSong.IsAvailable)
         {
             _notification.ShowMessage("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用");
             return;
         }
 
-        foreach (var ncsong in GetSelectedSongs())
+        foreach (var song in GetSelectedRows())
         {
-            _playlist.AppendItem(ncsong.ProviderSong ?? ncsong.ToProviderSong());
+            _playlist.AppendItem(song.ProviderSong ?? song.SourceSong.ToProviderSong());
         }
         if (SongContainer.SelectedItem != null)
         {
@@ -277,16 +277,16 @@ public sealed partial class SongsList : UserControl
 
     private void FlyoutItemAddToPlaylist_Click(object sender, RoutedEventArgs e)
     {
-        if (!TryGetSelectedSong(out var selectedSong)) return;
+        if (!TryGetSelectedRow(out var selectedSong)) return;
         if (!selectedSong.IsAvailable)
         {
             _notification.ShowMessage("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用");
             return;
         }
 
-        var selectedSongs = GetSelectedSongs().ToList();
+        var selectedSongs = GetSelectedRows().ToList();
         var playItemIndexes = _playlist.AppendItems(
-            selectedSongs.Select(song => song.ProviderSong ?? song.ToProviderSong()).ToList(),
+            selectedSongs.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList(),
             _playlist.NowPlayingIndex + 1);
         if (_state.ActiveStrategyId == "shn")
         {
@@ -313,7 +313,7 @@ public sealed partial class SongsList : UserControl
 
     private async void FlyoutItemSinger_Click(object sender, RoutedEventArgs e)
     {
-        if (!TryGetSelectedSong(out var selectedSong)) return;
+        if (!TryGetSelectedRow(out var selectedSong)) return;
         if (selectedSong.Artist.FirstOrDefault().Type == HyPlayItemType.Radio)
         {
             _navigation.Navigate(typeof(Me), selectedSong.Artist.FirstOrDefault().Id);
@@ -330,7 +330,7 @@ public sealed partial class SongsList : UserControl
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
-        if (!TryGetSelectedSong(out var selectedSong)) return;
+        if (!TryGetSelectedRow(out var selectedSong)) return;
         if (selectedSong.Album.Id == "0")
         {
             _notification.ShowMessage("此歌曲无专辑页面");
@@ -343,32 +343,32 @@ public sealed partial class SongsList : UserControl
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
-        if (!TryGetSelectedSong(out var selectedSong)) return;
+        if (!TryGetSelectedRow(out var selectedSong)) return;
         _navigation.Navigate(typeof(Comments), CommentTarget.Song(selectedSong.SongId));
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
     {
-        DownloadManager.AddDownload(GetSelectedSongs()
-            .Select(song => song.ProviderSong ?? song.ToProviderSong())
+        DownloadManager.AddDownload(GetSelectedRows()
+            .Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong())
             .ToList());
     }
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
-        if (!TryGetSelectedSong(out var selectedSong)) return;
-        _navigation.Navigate(typeof(MVPage), selectedSong);
+        if (!TryGetSelectedRow(out var selectedSong)) return;
+        _navigation.Navigate(typeof(MVPage), selectedSong.SourceSong);
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
     {
-        if (!TryGetSelectedSong(out var selectedSong)) return;
+        if (!TryGetSelectedRow(out var selectedSong)) return;
         await new SongListSelect(selectedSong.SongId).ShowAsync();
     }
 
     private async void Btn_Del_Click(object sender, RoutedEventArgs e)
     {
-        var selectedSongs = GetSelectedSongs().ToList();
+        var selectedSongs = GetSelectedRows().ToList();
         if (selectedSongs.Count == 0) return;
         var ids = selectedSongs.Select(t => t.SongId).ToList();
         if (!IsCloudStorageList)
@@ -433,19 +433,18 @@ public sealed partial class SongsList : UserControl
 
     private async void SongContainer_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (!TryUnwrapSong(e.ClickedItem, out var ncSong) || IsAddingSongToPlaylist) return;
+        if (!TryGetSongRow(e.ClickedItem, out var clickedRow) || IsAddingSongToPlaylist) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
 
-        if (!ncSong.IsAvailable)
+        if (!clickedRow.IsAvailable)
         {
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {ncSong.SongName} 当前不可用");
+            _notification.ShowMessage("歌曲不可用", $"歌曲 {clickedRow.SongName} 当前不可用");
             return;
         }
 
         IsAddingSongToPlaylist = true;
         try
         {
-            var clickedRow = e.ClickedItem is SongListItemViewModel row ? row : SongListItemViewModel.FromNCSong(ncSong);
             await _songListQueueBuilder.BuildAndPlayAsync(
                 clickedRow.ProviderSong ?? clickedRow.SourceSong.ToProviderSong(),
                 GetEffectiveQueueScope(),
@@ -510,30 +509,14 @@ public sealed partial class SongsList : UserControl
         }
     }
 
-    private IReadOnlyList<NCSong> GetSelectedSongs()
+    private IReadOnlyList<SongListItemViewModel> GetSelectedRows()
     {
-        return [.. SongContainer.SelectedItems.Select(item => TryUnwrapSong(item, out var song) ? song : null).Where(song => song != null)];
+        return [.. SongContainer.SelectedItems.Select(item => TryGetSongRow(item, out var row) ? row : null).Where(row => row != null)];
     }
 
-    private bool TryGetSelectedSong(out NCSong song)
+    private bool TryGetSelectedRow(out SongListItemViewModel song)
     {
-        return TryUnwrapSong(SongContainer.SelectedItem, out song);
-    }
-
-    private static bool TryUnwrapSong(object item, out NCSong song)
-    {
-        switch (item)
-        {
-            case SongListItemViewModel row:
-                song = row.SourceSong;
-                return true;
-            case NCSong ncSong:
-                song = ncSong;
-                return true;
-            default:
-                song = null;
-                return false;
-        }
+        return TryGetSongRow(SongContainer.SelectedItem, out song);
     }
 
     private static bool TryGetSongRow(object item, out SongListItemViewModel row)
