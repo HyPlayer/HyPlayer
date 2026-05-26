@@ -101,3 +101,8 @@ public sealed class SongListItemViewModel
 
     public static SongListItemViewModel FromNCSong(NCSong song) => new(song);
 }
+
+public sealed class SongListItemGroup(IEnumerable<SongListItemViewModel> items) : List<SongListItemViewModel>(items)
+{
+    public string Key { get; set; } = string.Empty;
+}

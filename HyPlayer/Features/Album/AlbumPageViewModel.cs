@@ -13,6 +13,7 @@ using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Downloads;
+using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -113,7 +114,7 @@ namespace HyPlayer.Features.Album
                     IsSourceGrouped = true,
                     Source = songs.Select(song => MapToNcAlbumSong(song, ++idx))
                     .GroupBy(t => t.DiscName).OrderBy(t => t.Key)
-                    .Select(t => new DiscSongs(t) { Key = t.Key }).ToList()
+                    .Select(t => new SongListItemGroup(t.Select(SongListItemViewModel.FromNCSong)) { Key = t.Key }).ToList()
                 };
             }
             catch (Exception ex)
@@ -144,7 +145,8 @@ namespace HyPlayer.Features.Album
             else
             {
                 var songs = new List<NCSong>();
-                foreach (var discSongs in (IEnumerable<DiscSongs>)AlbumSongsViewSource.Source) songs.AddRange(discSongs);
+                foreach (var discSongs in (IEnumerable<SongListItemGroup>)AlbumSongsViewSource.Source)
+                    songs.AddRange(discSongs.Select(song => song.SourceSong));
                 DownloadManager.AddDownload(songs);
             }
         }

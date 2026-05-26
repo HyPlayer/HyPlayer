@@ -119,7 +119,7 @@ public sealed partial class GroupedSongsList : UserControl
         {
             SongContainer.SelectedItem = null;
             if (playitem?.PlayItem == null || GroupedSongs?.Source == null) return;
-            foreach (var disc in GroupedSongs.Source as IEnumerable<DiscSongs>)
+            foreach (var disc in GroupedSongs.Source as IEnumerable<SongListItemGroup>)
             {
                 var nowPlayingItem = disc.FirstOrDefault(t => t.SongId == playitem.Id);
                 if (nowPlayingItem != null)
@@ -200,35 +200,50 @@ public sealed partial class GroupedSongsList : UserControl
 
     private async void SongContainer_OnItemClick(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem is not NCSong clickedSong) return;
+        if (!TryUnwrapSong(e.ClickedItem, out var clickedSong)) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
         await ViewModel.PlayClickedSongAsync(clickedSong, QueueScope, GetVisibleSongs());
     }
 
     private IReadOnlyList<NCSong> GetVisibleSongs()
     {
-        if (GroupedSongs?.Source is IEnumerable<DiscSongs> discs)
+        if (GroupedSongs?.Source is IEnumerable<SongListItemGroup> discs)
         {
-            return discs.SelectMany(t => t).ToList();
+            return discs.SelectMany(t => t.Select(song => song.SourceSong)).ToList();
         }
 
-        return SongContainer.Items.Cast<NCSong>().ToList();
+        return SongContainer.Items.Select(item => TryUnwrapSong(item, out var song) ? song : null).Where(song => song != null).ToList();
     }
 
     private IReadOnlyList<NCSong> GetSelectedSongs()
     {
-        return [.. SongContainer.SelectedItems.Cast<NCSong>()];
+        return [.. SongContainer.SelectedItems.Select(item => TryUnwrapSong(item, out var song) ? song : null).Where(song => song != null)];
     }
 
     private bool TryGetSelectedSong(out NCSong selectedSong)
     {
-        if (SongContainer.SelectedItem is NCSong song)
+        if (TryUnwrapSong(SongContainer.SelectedItem, out selectedSong))
         {
-            selectedSong = song;
             return true;
         }
 
         selectedSong = new NCSong();
         return false;
+    }
+
+    private static bool TryUnwrapSong(object item, out NCSong song)
+    {
+        switch (item)
+        {
+            case SongListItemViewModel row:
+                song = row.SourceSong;
+                return true;
+            case NCSong ncSong:
+                song = ncSong;
+                return true;
+            default:
+                song = null;
+                return false;
+        }
     }
 }
