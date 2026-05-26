@@ -1,11 +1,11 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.RollingCalculators;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
@@ -82,7 +82,7 @@ public sealed partial class WidgetPage : Page
         base.OnNavigatedTo(e);
 
         _widget = e.Parameter?.As<XboxGameBarWidget>();
-        if (_state.NowPlayingItem is null) return;
+        if (!HasCurrentPlayItem()) return;
         Initialize();
     }
 
@@ -93,7 +93,7 @@ public sealed partial class WidgetPage : Page
 
     private void FindLyricButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_state.NowPlayingItem is null) return;
+        if (!HasCurrentPlayItem()) return;
         Initialize();
     }
 
@@ -179,9 +179,11 @@ public sealed partial class WidgetPage : Page
     {
         switch (propertyName)
         {
-            case nameof(PlaybackStateService.NowPlayingItem):
             case nameof(PlaybackStateService.NowPlayingProviderItem):
-                HyPlayList_OnPlayItemChange(_state.NowPlayingItem);
+                HyPlayList_OnPlayItemChange(_state.NowPlayingProviderItem, _state.NowPlayingSnapshot);
+                break;
+            case nameof(PlaybackStateService.NowPlayingSnapshot):
+                HyPlayList_OnPlayItemChange(_state.NowPlayingProviderItem, _state.NowPlayingSnapshot);
                 break;
             case nameof(PlaybackStateService.Position):
                 HyPlayList_OnPlayPositionChange(_state.Position);
@@ -196,9 +198,9 @@ public sealed partial class WidgetPage : Page
     }
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        var durationMs = _state.NowPlayingProviderItem?.Duration
-                         ?? _state.NowPlayingItem?.LengthInMilliseconds
-                         ?? 0;
+        var providerItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+        var snapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(providerItem);
+        var durationMs = snapshot?.Duration ?? providerItem?.Duration ?? 0;
         if (durationMs <= 0) return;
 
         var progress = position.TotalMilliseconds / durationMs * 100;
@@ -219,13 +221,14 @@ public sealed partial class WidgetPage : Page
         }
     }
 
-    private void HyPlayList_OnPlayItemChange(HyPlayItem? playItem)
+    private void HyPlayList_OnPlayItemChange(SingleSongBase? providerItem, PlaybackCurrentItemSnapshot? snapshot)
     {
-        var providerItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
-        var playItemName = providerItem?.Name ?? playItem?.Name ?? string.Empty;
+        providerItem ??= _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+        snapshot ??= _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(providerItem);
+        var playItemName = providerItem?.Name ?? snapshot?.Name ?? string.Empty;
         var artistName = providerItem?.CreatorList is { Count: > 0 } creators
             ? string.Join(" / ", creators)
-            : playItem?.ArtistString ?? string.Empty;
+            : snapshot?.ArtistText ?? string.Empty;
         _ = Dispatcher.RunAsync(
            CoreDispatcherPriority.Normal,
            () =>
@@ -332,7 +335,7 @@ public sealed partial class WidgetPage : Page
 
     private void UpdateLyricSize()
     {
-        if (_state.NowPlayingItem == null) return;
+        if (!HasCurrentPlayItem()) return;
         var lyricSize = _gameBarSettings.LyricSize <= 0
             ? Math.Max(_widget.WindowBounds.Width / 20, 40)
             : _gameBarSettings.LyricSize;
@@ -371,7 +374,14 @@ public sealed partial class WidgetPage : Page
            () =>
            {
                LyricBox.Redesign((float)LyricView.ActualWidth, (float)LyricView.ActualHeight, LyricView.Dpi);
-           });
+        });
+    }
+
+    private bool HasCurrentPlayItem()
+    {
+        return _state.NowPlayingProviderItem is not null
+               || _state.NowPlayingSnapshot is not null
+               || _playlist.NowPlayingProviderItem is not null;
     }
 
     private SolidColorBrush GetAccentBrush()
