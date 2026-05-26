@@ -21,8 +21,6 @@ public static class HyPlayItemCompatibilityAdapter
 {
     private const string NeteaseProviderId = "ncm";
     private const string NeteaseSongTypeId = "sg";
-    private const string NeteaseAlbumTypeId = "al";
-    private const string NeteaseArtistTypeId = "ar";
     private const string NeteaseRadioTypeId = "dj";
     private const string LocalProviderId = "lcl";
     private const string LocalSongTypeId = "sg";
@@ -95,33 +93,6 @@ public static class HyPlayItemCompatibilityAdapter
         playItem.CDName = string.Empty;
         playItem.TrackId = 0;
         return playItem;
-    }
-
-    /// <summary>
-    /// Converts a legacy <see cref="HyPlayItem" /> back to a PlayCore single-song abstraction for provider-facing code.
-    /// </summary>
-    /// <param name="item">The legacy play item to adapt.</param>
-    /// <returns>A PlayCore single-song abstraction, or <see langword="null" /> when <paramref name="item" /> is <see langword="null" />.</returns>
-    public static SingleSongBase? ToSingleSong(this HyPlayItem? item)
-    {
-        if (item is null) return null;
-
-        var identity = item.GetItemIdentity();
-        ProviderMetadata.TryGetValue(item, out var metadata);
-
-        return new LegacySingleSongAdapter
-        {
-            Name = item.Name ?? string.Empty,
-            ActualId = identity.ActualId,
-            ProviderIdentity = identity,
-            Album = ToProviderAlbum(item.Album, metadata?.AlbumIdentity, identity.ProviderId),
-            CreatorList = item.Artist?.Select(artist => artist.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToList(),
-            Creators = ToProviderArtists(item.Artist, metadata?.CreatorIdentities, identity.ProviderId),
-            Duration = (long)item.LengthInMilliseconds,
-            Available = true,
-            Translation = item.Translation,
-            CoverIdentity = metadata?.CoverIdentity ?? item.Album?.Cover
-        };
     }
 
     /// <summary>
@@ -211,36 +182,6 @@ public static class HyPlayItemCompatibilityAdapter
         };
     }
 
-    private static AlbumBase? ToProviderAlbum(NCAlbum? album, (string ProviderId, string TypeId, string ActualId)? albumIdentity, string fallbackProviderId)
-    {
-        if (album is null) return null;
-
-        var identity = albumIdentity ?? (fallbackProviderId, NeteaseAlbumTypeId, album.Id ?? string.Empty);
-        return new LegacyAlbumAdapter
-        {
-            Name = album.Name ?? string.Empty,
-            ActualId = identity.ActualId,
-            ProviderIdentity = identity,
-            CoverIdentity = album.Cover
-        };
-    }
-
-    private static List<PersonBase>? ToProviderArtists(IReadOnlyList<NCArtist>? artists, IReadOnlyList<(string ProviderId, string TypeId, string ActualId)>? creatorIdentities, string fallbackProviderId)
-    {
-        if (artists is null) return null;
-
-        return artists.Select((artist, index) =>
-        {
-            var identity = creatorIdentities?.ElementAtOrDefault(index) ?? (fallbackProviderId, GetFallbackCreatorTypeId(artist), artist.Id ?? string.Empty);
-            return (PersonBase)new LegacyPersonAdapter
-            {
-                Name = artist.Name ?? string.Empty,
-                ActualId = identity.ActualId,
-                ProviderIdentity = identity
-            };
-        }).ToList();
-    }
-
     private static IReadOnlyList<PersonBase>? GetCompletedCreators(SingleSongBase song)
     {
         var creatorsTask = song.GetCreatorsAsync();
@@ -322,12 +263,6 @@ public static class HyPlayItemCompatibilityAdapter
                || string.Equals(Path.GetExtension(item.Url), ".ncm", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string GetFallbackCreatorTypeId(NCArtist artist)
-    {
-        return artist.Type == HyPlayItemType.Radio ? NeteaseRadioTypeId : NeteaseArtistTypeId;
-    }
-
-
     private static void AttachMetadata(HyPlayItem playItem, HyPlayItemProviderMetadata metadata)
     {
         ProviderMetadata.Remove(playItem);
@@ -339,41 +274,6 @@ public static class HyPlayItemCompatibilityAdapter
         (string ProviderId, string TypeId, string ActualId)? AlbumIdentity,
         IReadOnlyList<(string ProviderId, string TypeId, string ActualId)>? CreatorIdentities,
         string? CoverIdentity);
-
-    private sealed class LegacySingleSongAdapter : SingleSongBase, IHasCover, IHasTranslation
-    {
-        public required (string ProviderId, string TypeId, string ActualId) ProviderIdentity { get; init; }
-        public List<PersonBase>? Creators { get; init; }
-        public string? CoverIdentity { get; init; }
-        public string? Translation { get; set; }
-        public override string ProviderId => ProviderIdentity.ProviderId;
-        public override string TypeId => ProviderIdentity.TypeId;
-        public override Task<List<PersonBase>?> GetCreatorsAsync(CancellationToken ctk = default) => Task.FromResult(Creators);
-        public Task<ResourceResultBase> GetCoverAsync(ImageResourceQualityTag? qualityTag = null, CancellationToken ctk = default)
-        {
-            return Task.FromResult<ResourceResultBase>(new LegacyImageResourceResult(CoverIdentity is null ? null : new Uri(CoverIdentity, UriKind.RelativeOrAbsolute)) { ResourceStatus = CoverIdentity is null ? ResourceStatus.Fail : ResourceStatus.Success });
-        }
-    }
-
-    private sealed class LegacyAlbumAdapter : AlbumBase, IHasCover
-    {
-        public required (string ProviderId, string TypeId, string ActualId) ProviderIdentity { get; init; }
-        public string? CoverIdentity { get; init; }
-        public override string ProviderId => ProviderIdentity.ProviderId;
-        public override string TypeId => ProviderIdentity.TypeId;
-        public Task<ResourceResultBase> GetCoverAsync(ImageResourceQualityTag? qualityTag = null, CancellationToken ctk = default)
-        {
-            return Task.FromResult<ResourceResultBase>(new LegacyImageResourceResult(CoverIdentity is null ? null : new Uri(CoverIdentity, UriKind.RelativeOrAbsolute)) { ResourceStatus = CoverIdentity is null ? ResourceStatus.Fail : ResourceStatus.Success });
-        }
-    }
-
-    private sealed class LegacyPersonAdapter : PersonBase
-    {
-        public required (string ProviderId, string TypeId, string ActualId) ProviderIdentity { get; init; }
-        public override string ProviderId => ProviderIdentity.ProviderId;
-        public override string TypeId => ProviderIdentity.TypeId;
-        public override Task<List<ContainerBase>> GetSubContainerAsync(CancellationToken ctk = default) => Task.FromResult(new List<ContainerBase>());
-    }
 
     private sealed class LegacyImageResourceResult(Uri? uri) : ResourceResultBase, IResourceResultOf<Uri?>
     {

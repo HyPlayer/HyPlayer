@@ -148,20 +148,6 @@ namespace HyPlayer.Domain.Music
             return Id == other.Id;
         }
 
-        public NCSong ToNCSong()
-        {
-            return new NCSong
-            {
-                Type = ItemType,
-                Album = Album,
-                Artist = Artist,
-                LengthInMilliseconds = LengthInMilliseconds,
-                SongId = Id,
-                SongName = Name,
-                TrackId = TrackId
-            };
-        }
-
         public override bool Equals(object obj)
         {
             return Equals(obj as HyPlayItem);

@@ -148,9 +148,6 @@ public interface IPlaylistService
     /// <summary>当前随机播放位置</summary>
     int ShufflingIndex { get; set; }
 
-    /// <summary>当前正在播放的本地 StorageFile（可为 null）</summary>
-    StorageFile? NowPlayingStorageFile { get; }
-
     /// <summary>弹出文件选择器并追加本地文件</summary>
     Task PickLocalFileAsync();
 

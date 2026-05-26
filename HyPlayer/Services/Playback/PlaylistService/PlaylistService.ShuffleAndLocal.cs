@@ -19,9 +19,6 @@ public sealed partial class PlaylistService
     public int ShufflingIndex { get; set; } = -1;
 
     /// <inheritdoc />
-    public StorageFile? NowPlayingStorageFile { get; private set; }
-
-    /// <inheritdoc />
     public async Task PickLocalFileAsync()
     {
         var items = await _localFileImport.PickLocalFilesAsync();
