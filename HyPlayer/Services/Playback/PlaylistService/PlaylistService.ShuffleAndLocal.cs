@@ -1,10 +1,5 @@
-using HyPlayer.Domain.Music;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
-using Windows.Storage;
 
 namespace HyPlayer.Services.Playback.PlaylistService;
 
@@ -17,24 +12,6 @@ public sealed partial class PlaylistService
 
     /// <inheritdoc />
     public int ShufflingIndex { get; set; } = -1;
-
-    /// <inheritdoc />
-    public async Task PickLocalFileAsync()
-    {
-        var items = await _localFileImport.PickLocalFilesAsync();
-        if (items.Count == 0) return;
-
-        lock (_lock)
-        {
-            InsertQueueItems(items);
-        }
-
-        NotifyAppendDone();
-        HyPlayItem? lastItem;
-        lock (_lock) { lastItem = _items.LastOrDefault(); }
-        if (lastItem != null)
-            await MoveToIndexAsync(_items.Count - 1);
-    }
 
     /// <inheritdoc />
     public void CreateShufflePlayLists()

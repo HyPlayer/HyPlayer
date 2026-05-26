@@ -23,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
@@ -66,6 +67,7 @@ public sealed partial class PlayBar
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly ILocalFileImportService _localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
     private readonly NeteasePersonalFMContainer _personalFmContainer = Ioc.Default.GetRequiredService<NeteasePersonalFMContainer>();
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
@@ -414,7 +416,18 @@ DoubleAnimation verticalAnimation;
 
     private void ButtonAddLocal_OnClick(object sender, RoutedEventArgs e)
     {
-        _taskRunner.Forget(() => _playlist.PickLocalFileAsync(), "pick local file from play bar");
+        _taskRunner.Forget(PickAndAppendLocalFilesAsync, "pick local file from play bar");
+    }
+
+    private async Task PickAndAppendLocalFilesAsync()
+    {
+        var items = await _localFileImport.PickLocalFilesAsync();
+        if (items.Count == 0)
+            return;
+
+        _playlist.AppendLocalItems(items);
+        _playlist.NotifyAppendDone();
+        await _playlist.MoveToIndexAsync(_playlist.QueueCount - 1);
     }
 
     private void PlayListRemove_OnClick(object sender, RoutedEventArgs e)

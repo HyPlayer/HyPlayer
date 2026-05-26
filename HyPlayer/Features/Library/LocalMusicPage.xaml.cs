@@ -196,7 +196,18 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private void Add_Local(object sender, RoutedEventArgs e)
     {
-        _taskRunner.Forget(_playlist.PickLocalFileAsync, "pick local music from local music page");
+        _taskRunner.Forget(PickAndAppendLocalFilesAsync, "pick local music from local music page");
+    }
+
+    private async Task PickAndAppendLocalFilesAsync()
+    {
+        var items = await _localFileImport.PickLocalFilesAsync();
+        if (items.Count == 0)
+            return;
+
+        _playlist.AppendLocalItems(items);
+        _playlist.NotifyAppendDone();
+        await _playlist.MoveToIndexAsync(_playlist.QueueCount - 1);
     }
 
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)

@@ -147,9 +147,6 @@ public interface IPlaylistService
     /// <summary>当前随机播放位置</summary>
     int ShufflingIndex { get; set; }
 
-    /// <summary>弹出文件选择器并追加本地文件</summary>
-    Task PickLocalFileAsync();
-
     /// <summary>生成随机播放列表</summary>
     void CreateShufflePlayLists();
 
