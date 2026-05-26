@@ -1,5 +1,5 @@
 using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Playback;
 using System;
 
@@ -30,9 +30,9 @@ public sealed class LyricIndexChangedEventArgs(int index) : EventArgs
     public int Index { get; } = index;
 }
 
-public sealed class PlaybackTrackChangedEventArgs(HyPlayItem item) : EventArgs
+public sealed class PlaybackTrackChangedEventArgs(SingleSongBase item) : EventArgs
 {
-    public HyPlayItem Item { get; } = item;
+    public SingleSongBase Item { get; } = item;
 }
 
 public sealed class PlaybackThemeChangedEventArgs(PlaybackThemeSnapshot theme) : EventArgs
