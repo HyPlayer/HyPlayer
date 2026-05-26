@@ -16,6 +16,7 @@ using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
+using HyPlayer.UI.Lists;
 using HyPlayer.Services.Downloads;
 using HyPlayer.UI.Converters;
 using CommunityToolkit.WinUI.Helpers;
@@ -69,7 +70,7 @@ namespace HyPlayer.Features.Playlist
             QueueScope = SongListQueueScope.Visible;
         }
 
-        public ObservableCollection<NCSong> Songs { get; set; } = [];
+        public ObservableCollection<SongListItemViewModel> Songs { get; set; } = [];
         private readonly List<SingleSongBase> _dailyRecommendProviderSongs = [];
         [ObservableProperty]
         public partial NCPlayList PlayList { get; set; }
@@ -184,7 +185,7 @@ namespace HyPlayer.Features.Playlist
             foreach (var ncSong in items ?? [])
             {
                 ncSong.Order = idx++;
-                Songs.Add(ncSong);
+                Songs.Add(SongListItemViewModel.FromNCSong(ncSong));
             }
             HasMore = false;
         }
@@ -232,7 +233,7 @@ namespace HyPlayer.Features.Playlist
             {
                 var ncSong = MapToNCSong(song);
                 ncSong.Order = idx++;
-                Songs.Add(ncSong);
+                Songs.Add(SongListItemViewModel.FromNCSong(ncSong));
             }
             HasMore = rst.hasMore;
         }
@@ -273,7 +274,7 @@ namespace HyPlayer.Features.Playlist
                 if (HasCompleteDailyRecommendProviderSongs())
                     _playlist.AppendItems(_dailyRecommendProviderSongs);
                 else
-                    _playlist.AppendNcSongs(Songs.ToList(), clearFirst: false);
+                    _playlist.AppendNcSongs(Songs.Select(song => song.SourceSong).ToList(), clearFirst: false);
                 _playlist.NotifyAppendDone();
             }
         }
@@ -317,7 +318,7 @@ namespace HyPlayer.Features.Playlist
                 if (HasCompleteDailyRecommendProviderSongs())
                     _playlist.AppendItems(_dailyRecommendProviderSongs, true);
                 else
-                    _playlist.AppendNcSongs(Songs.ToList(), clearFirst: true);
+                    _playlist.AppendNcSongs(Songs.Select(song => song.SourceSong).ToList(), clearFirst: true);
                 _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.PlaylistId));
                 _playlist.NotifyAppendDone();
                 await _playlist.MoveNextAsync(userInitiated: true);
@@ -343,7 +344,7 @@ namespace HyPlayer.Features.Playlist
             if (PlayList.IsDailyRecommend && HasCompleteDailyRecommendProviderSongs())
                 DownloadManager.AddDownload(_dailyRecommendProviderSongs);
             else
-                DownloadManager.AddDownload(Songs.ToList());
+                DownloadManager.AddDownload(Songs.Select(song => song.SourceSong).ToList());
         }
 
         private bool HasCompleteDailyRecommendProviderSongs()
