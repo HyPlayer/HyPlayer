@@ -14,20 +14,19 @@ public sealed partial class PlaylistService
     // ────────────── NCSong 相关 ──────────────
 
     /// <inheritdoc />
-    public HyPlayItem AppendNcSong(NCSong ncSong, int position = -1)
+    public void AppendNcSong(NCSong ncSong, int position = -1)
     {
         var providerSong = ncSong.ToProviderSong();
         var hpi = ToLegacyQueueItem(providerSong);
         lock (_lock)
         {
             if (_items.Contains(hpi))
-                return hpi;
+                return;
 
             InsertQueueItem(hpi, providerSong, position);
         }
 
         NotifyAppendDone();
-        return hpi;
     }
 
     /// <inheritdoc />
