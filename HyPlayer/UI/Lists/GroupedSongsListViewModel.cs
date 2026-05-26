@@ -117,13 +117,9 @@ public partial class GroupedSongsListViewModel(
 
     public void DownloadSongs(IEnumerable<NCSong> selectedSongs)
     {
-        foreach (var ncsong in selectedSongs)
-        {
-            if (ncsong.ProviderSong != null)
-                DownloadManager.AddDownload(ncsong.ProviderSong);
-            else
-                DownloadManager.AddDownload(ncsong);
-        }
+        DownloadManager.AddDownload(selectedSongs
+            .Select(song => song.ProviderSong ?? song.ToProviderSong())
+            .ToList());
     }
 
     private List<int> AppendToNext(IReadOnlyList<NCSong> selectedSongs)

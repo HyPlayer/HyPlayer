@@ -336,7 +336,7 @@ namespace HyPlayer.Features.Playlist
             if (PlayList.IsDailyRecommend && HasCompleteDailyRecommendProviderSongs())
                 DownloadManager.AddDownload(_dailyRecommendProviderSongs);
             else
-                DownloadManager.AddDownload(Songs.Select(song => song.SourceSong).ToList());
+                DownloadManager.AddDownload(Songs.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList());
         }
 
         private bool HasCompleteDailyRecommendProviderSongs()

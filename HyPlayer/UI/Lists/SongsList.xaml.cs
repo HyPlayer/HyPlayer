@@ -349,13 +349,9 @@ public sealed partial class SongsList : UserControl
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
     {
-        foreach (var ncsong in GetSelectedSongs())
-        {
-            if (ncsong.ProviderSong != null)
-                DownloadManager.AddDownload(ncsong.ProviderSong);
-            else
-                DownloadManager.AddDownload(ncsong);
-        }
+        DownloadManager.AddDownload(GetSelectedSongs()
+            .Select(song => song.ProviderSong ?? song.ToProviderSong())
+            .ToList());
     }
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)

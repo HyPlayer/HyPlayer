@@ -199,7 +199,7 @@ public sealed partial class MusicCloudPage : Page
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        DownloadManager.AddDownload(Items.Select(song => song.SourceSong).ToList());
+        DownloadManager.AddDownload(Items.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList());
     }
 
     private async void BtnUpload_Click(object sender, RoutedEventArgs e)
