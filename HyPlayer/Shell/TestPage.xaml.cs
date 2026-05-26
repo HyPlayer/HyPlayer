@@ -161,7 +161,7 @@ public sealed partial class TestPage : Page
         var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         var info = JsonSerializer.Serialize(new DumpInfo
         {
-            CurrentSong = state.NowPlayingItem,
+            CurrentSong = state.NowPlayingSnapshot,
             CurrentPlaySource = playlist.PlaySourceId,
             CurrentUser = _auth.CurrentUser,
             DeviceId = new EasClientDeviceInformation().Id.ToString(),

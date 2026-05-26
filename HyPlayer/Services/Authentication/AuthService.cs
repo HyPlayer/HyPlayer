@@ -262,15 +262,21 @@ public class AuthService : IAuthService
     private async Task LikeSongCoreAsync()
     {
         var providerItem = _state.NowPlayingProviderItem;
-        var item = _state.NowPlayingItem;
-        var songId = providerItem?.ActualId ?? item?.Id;
+        var songId = providerItem?.ActualId;
         if (string.IsNullOrWhiteSpace(songId)) return;
         var isLiked = LikedSongs.Contains(songId);
         try
         {
             await RetryPolicies.ApiCallPolicy.ExecuteAsync(async () =>
             {
-                if (providerItem is not null)
+                if (providerItem is NeteaseRadioProgram)
+                {
+                    _notification.ShowMessage("暂不支持红心电台歌曲", "将在后续版本中支持");
+                    SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
+                    return;
+                }
+
+                if (providerItem is NeteaseSong || providerItem?.ProviderId is "ncm")
                 {
                     var providerSong = providerItem as NeteaseSong ?? new NeteaseSong { ActualId = songId, Name = providerItem.Name, Artists = [] };
                     if (isLiked)
@@ -283,23 +289,6 @@ public class AuthService : IAuthService
                     return;
                 }
 
-                switch (item?.ItemType)
-                {
-                    case HyPlayItemType.Netease:
-                        var legacySong = new NeteaseSong { ActualId = songId, Name = item.Name, Artists = [] };
-                        if (isLiked)
-                            await legacySong.UnlikeAsync();
-                        else
-                            await legacySong.LikeAsync();
-                        if (isLiked) LikedSongs.Remove(songId);
-                        else LikedSongs.Add(songId);
-                        SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
-                        break;
-                    case HyPlayItemType.Radio:
-                        _notification.ShowMessage("暂不支持红心电台歌曲", "将在后续版本中支持");
-                        SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
-                        break;
-                }
             });
         }
         catch (Exception ex)

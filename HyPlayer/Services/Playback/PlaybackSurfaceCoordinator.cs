@@ -79,6 +79,7 @@ public sealed class PlaybackSurfaceCoordinator : IPlaybackSurfaceCoordinator
     private bool CanExpand()
     {
         return _player.PlayerCreated &&
-               _playbackState.NowPlayingItem?.PlayItem?.AudioGraphPlaybackSource is not null;
+               _playbackState.NowPlayingProviderItem is not null &&
+               _player.PrimaryPlaybackSource is not null;
     }
 }

@@ -83,7 +83,7 @@ namespace HyPlayer.Domain.Settings
                 {
                     if (value)
                     {
-                        player.SetPlaybackSourceOutputVolume(state?.NowPlayingItem?.Volume ?? 1, player.PrimaryPlaybackSource);
+                        player.SetPlaybackSourceOutputVolume(1, player.PrimaryPlaybackSource);
                     }
                     else player.SetPlaybackSourceOutputVolume(1, player.PrimaryPlaybackSource);
                 }
