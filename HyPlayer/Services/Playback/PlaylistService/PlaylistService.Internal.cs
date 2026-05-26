@@ -20,7 +20,7 @@ public sealed partial class PlaylistService
 
     private void InsertQueueItem(ProvidableItemBase item, int position = -1)
     {
-        var playItem = FindLegacyQueueItem(item) ?? item.ToHyPlayItem();
+        var playItem = FindLegacyQueueItem(item) ?? HyPlayItem.FromProviderItem(item);
         InsertQueueItem(playItem, item as SingleSongBase, position);
     }
 

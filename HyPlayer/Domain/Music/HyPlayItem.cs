@@ -1,8 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TagLib;
 using Windows.Storage;
@@ -81,6 +86,17 @@ namespace HyPlayer.Domain.Music
         public int TrackId { get; set; }
         public string Url { get; set; }
 
+        private const string NeteaseProviderId = "ncm";
+        private const string NeteaseSongTypeId = "sg";
+        private const string NeteaseRadioTypeId = "dj";
+        private const string LocalProviderId = "lcl";
+        private const string LocalSongTypeId = "sg";
+        private const string LocalNcmSongTypeId = "ncm";
+
+        public string ProviderIdentityProviderId { get; set; }
+        public string ProviderIdentityTypeId { get; set; }
+        public string ProviderIdentityActualId { get; set; }
+
         /// <summary>
         /// 三字母媒体源提供者标识，用于兼容旧 UI 模型中的播放来源。
         /// <list type="bullet">
@@ -117,6 +133,42 @@ namespace HyPlayer.Domain.Music
             get { return string.Join("; ", Artist.Select(t => t.Name)); }
         }
         public string AlbumString => Album.Name ?? "未知专辑";
+
+        public static HyPlayItem FromProviderItem(ProvidableItemBase item)
+        {
+            ArgumentNullException.ThrowIfNull(item);
+
+            return item is SingleSongBase song ? FromProviderSong(song) : CreateProviderBackedItem(item);
+        }
+
+        public static HyPlayItem FromProviderSong(SingleSongBase song)
+        {
+            ArgumentNullException.ThrowIfNull(song);
+
+            var playItem = CreateProviderBackedItem(song);
+            var creators = GetCompletedCreators(song);
+            playItem.LengthInMilliseconds = song.Duration;
+            playItem.Album = ToLegacyAlbum(song.Album, GetCompletedCoverUri(song)?.ToString());
+            playItem.Artist = ToLegacyArtists(song, creators);
+            playItem.Translation = song is IHasTranslation translatedSong ? translatedSong.Translation ?? string.Empty : string.Empty;
+            playItem.CDName = string.Empty;
+            playItem.TrackId = 0;
+            return playItem;
+        }
+
+        public (string ProviderId, string TypeId, string ActualId) GetItemIdentity()
+        {
+            if (!string.IsNullOrWhiteSpace(ProviderIdentityProviderId) ||
+                !string.IsNullOrWhiteSpace(ProviderIdentityTypeId) ||
+                !string.IsNullOrWhiteSpace(ProviderIdentityActualId))
+            {
+                return (ProviderIdentityProviderId ?? string.Empty,
+                    ProviderIdentityTypeId ?? string.Empty,
+                    ProviderIdentityActualId ?? string.Empty);
+            }
+
+            return (GetFallbackProviderId(this), GetFallbackTypeId(this), GetFallbackActualId(this));
+        }
 
         public string GetQualityTagText(string fallbackLevel = null)
         {
@@ -156,6 +208,120 @@ namespace HyPlayer.Domain.Music
         public override int GetHashCode()
         {
             return Id.GetHashCode();
+        }
+
+        private static HyPlayItem CreateProviderBackedItem(ProvidableItemBase item)
+        {
+            return new HyPlayItem
+            {
+                ItemType = GetFallbackItemType(item.ProviderId, item.TypeId),
+                Id = item.ActualId ?? string.Empty,
+                Name = item.Name ?? string.Empty,
+                Album = new NCAlbum { AlbumType = GetFallbackItemType(item.ProviderId, item.TypeId), Id = string.Empty, Name = string.Empty, Cover = string.Empty },
+                Artist = [],
+                CDName = string.Empty,
+                Translation = string.Empty,
+                SubExt = string.Empty,
+                QualityTag = string.Empty,
+                InfoTag = string.Empty,
+                Url = string.Empty,
+                ProviderIdentityProviderId = item.ProviderId,
+                ProviderIdentityTypeId = item.TypeId,
+                ProviderIdentityActualId = item.ActualId ?? string.Empty
+            };
+        }
+
+        private static NCAlbum ToLegacyAlbum(AlbumBase album, string coverIdentity)
+        {
+            if (album is null)
+                return new NCAlbum { AlbumType = HyPlayItemType.Netease, Id = string.Empty, Name = string.Empty, Cover = coverIdentity ?? string.Empty };
+
+            return new NCAlbum
+            {
+                AlbumType = GetFallbackItemType(album.ProviderId, album.TypeId),
+                Id = album.ActualId ?? string.Empty,
+                Name = album.Name ?? string.Empty,
+                Cover = coverIdentity ?? string.Empty
+            };
+        }
+
+        private static List<NCArtist> ToLegacyArtists(SingleSongBase song, IReadOnlyList<PersonBase> creators)
+        {
+            if (creators is { Count: > 0 })
+            {
+                return creators.Select(creator => new NCArtist
+                {
+                    Id = creator.ActualId ?? string.Empty,
+                    Name = creator.Name ?? string.Empty,
+                    Type = GetFallbackItemType(creator.ProviderId, creator.TypeId)
+                }).ToList();
+            }
+
+            return song.CreatorList?.Select(creatorName => new NCArtist
+            {
+                Name = creatorName,
+                Id = string.Empty,
+                Type = HyPlayItemType.Netease
+            }).ToList() ?? [];
+        }
+
+        private static IReadOnlyList<PersonBase> GetCompletedCreators(SingleSongBase song)
+        {
+            var creatorsTask = song.GetCreatorsAsync();
+            return creatorsTask.IsCompletedSuccessfully ? creatorsTask.Result : null;
+        }
+
+        private static Uri GetCompletedCoverUri(SingleSongBase song)
+        {
+            if (song is not IHasCover coverProvider) return null;
+
+            var coverTask = coverProvider.GetCoverAsync();
+            if (!coverTask.IsCompletedSuccessfully || coverTask.Result is not IResourceResultOf<Uri> uriResult) return null;
+
+            var uriTask = uriResult.GetResourceAsync();
+            return uriTask.IsCompletedSuccessfully ? uriTask.Result : null;
+        }
+
+        private static HyPlayItemType GetFallbackItemType(string providerId, string typeId)
+        {
+            if (providerId == LocalProviderId) return HyPlayItemType.Local;
+            if (typeId is NeteaseRadioTypeId or "pr") return HyPlayItemType.Radio;
+            return HyPlayItemType.Netease;
+        }
+
+        private static string GetFallbackProviderId(HyPlayItem item)
+        {
+            if (item.IsLocalFile || item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+                return LocalProviderId;
+
+            return item.ItemType is HyPlayItemType.Netease or HyPlayItemType.Radio ? NeteaseProviderId : item.ProviderId;
+        }
+
+        private static string GetFallbackTypeId(HyPlayItem item)
+        {
+            if (item.IsLocalFile || item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+                return IsLocalNcmFile(item) ? LocalNcmSongTypeId : LocalSongTypeId;
+
+            return item.ItemType switch
+            {
+                HyPlayItemType.Radio => NeteaseRadioTypeId,
+                _ => NeteaseSongTypeId
+            };
+        }
+
+        private static string GetFallbackActualId(HyPlayItem item)
+        {
+            if (item.IsLocalFile || item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+                return item.LocalStorageFile?.Path ?? item.Url ?? item.Id ?? string.Empty;
+
+            return item.Id ?? string.Empty;
+        }
+
+        private static bool IsLocalNcmFile(HyPlayItem item)
+        {
+            return string.Equals(item.LocalStorageFile?.FileType, ".ncm", StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(item.SubExt, ".ncm", StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(Path.GetExtension(item.Url), ".ncm", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

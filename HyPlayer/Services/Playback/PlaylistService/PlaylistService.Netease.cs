@@ -186,6 +186,6 @@ public sealed partial class PlaylistService
 
     private HyPlayItem ToLegacyQueueItem(SingleSongBase song)
     {
-        return FindLegacyQueueItem(song) ?? song.ToHyPlayItem();
+        return FindLegacyQueueItem(song) ?? HyPlayItem.FromProviderSong(song);
     }
 }

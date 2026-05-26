@@ -296,7 +296,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
                 return item;
         }
 
-        return song.ToHyPlayItem();
+        return HyPlayItem.FromProviderSong(song);
     }
 
     private static bool Matches(HyPlayItem item, SingleSongBase song)
