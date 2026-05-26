@@ -49,7 +49,7 @@ namespace HyPlayer.UI.Playback.LyricControl
             LyricRenderComposer.RenderOnDrawingSession(args.DrawingSession,
                                                        lyric.CurrentLyricInfo.Lyrics[lyric.CurrentLyricIndex],
                                                        player.PrimaryAudioInputNode.Position, LyricRenderOption.GetValueOrDefault(),
-                                                       sender.Size, QuickRenderMode);
+                                                       sender.Size, _quickRenderMode);
         }
 
         private void CanvasControl_Update(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender,
