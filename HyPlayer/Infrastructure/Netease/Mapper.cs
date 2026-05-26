@@ -46,11 +46,6 @@ public static class Mapper
         return songs.Select(ToNCSong).ToList();
     }
 
-    public static NCSong ToLegacyUiSong(this SingleSongBase song)
-    {
-        return song.ToNCSong();
-    }
-
     public static SingleSongBase ToSingleSong(this NCSong song)
     {
         return new NeteaseSong
@@ -81,6 +76,11 @@ public static class Mapper
             CoverUrl = song.Album?.Cover,
             Translation = song.TranslatedName
         };
+    }
+
+    public static SingleSongBase ToProviderSong(this NCSong song)
+    {
+        return song.ProviderSong ?? song.ToSingleSong();
     }
 
     public static NCAlbum ToNCAlbum(this ContainerBase album)

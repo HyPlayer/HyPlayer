@@ -140,7 +140,7 @@ public sealed partial class HistoryPage : Page
 
     private static NCSong MapHistoryItemToNcSong(ProvidableItemBase item)
     {
-        return item is SingleSongBase song ? song.ToLegacyUiSong() : new NCSong
+        return item is SingleSongBase song ? song.ToNCSong() : new NCSong
         {
             SongId = item.ActualId,
             SongName = item.Name,

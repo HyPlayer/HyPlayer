@@ -356,7 +356,7 @@ internal sealed class ListenTogetherManager
         _playlist.PlaylistChanged += OnPlaylistChanged;
     }
 
-    private string CurrentProviderSongId => _state.NowPlayingProviderItem?.ActualId ?? _state.NowPlayingItem?.Id ?? string.Empty;
+    private string CurrentProviderSongId => _state.NowPlayingProviderItem?.ActualId ?? string.Empty;
 
     private static void CleanupInstance()
     {

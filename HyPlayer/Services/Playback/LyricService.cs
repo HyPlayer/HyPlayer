@@ -133,7 +133,8 @@ public sealed class LyricService : ILyricService
         // 2. 根据类型加载原始歌词
         var pureLyricInfo = item.ItemType switch
         {
-            HyPlayItemType.Netease => await LoadNcLyricAsync(item, providerItem, ct),
+            HyPlayItemType.Netease when providerItem is not null => await LoadNcLyricAsync(providerItem, ct),
+            HyPlayItemType.Netease => new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" },
             HyPlayItemType.Local => await LoadLocalLyricAsync(item),
             _ => new PureLyricInfo()
         };
@@ -208,34 +209,6 @@ public sealed class LyricService : ILyricService
     }
 
     #region Private helpers
-
-    private async Task<PureLyricInfo> LoadNcLyricAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct)
-    {
-        try
-        {
-            if (item.ItemType != HyPlayItemType.Netease || string.IsNullOrWhiteSpace(item.Id))
-                return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
-
-            var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(
-                CacheType.LyricApi, item.Id,
-                async () => await _lyricProvider.GetLyricInfoAsync(providerItem ?? item.ToSingleSong()!, ct),
-                cancellationToken: ct);
-
-            if (lyricResult is null)
-                return new PureLyricInfo { PureLyrics = "[00:00.000] 歌词获取失败" };
-
-            if (lyricResult.Count == 0)
-                return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
-
-            return ConvertProviderLyrics(lyricResult);
-        }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Lyric error: {ex.Message}");
-            return new PureLyricInfo();
-        }
-    }
 
     private async Task<PureLyricInfo> LoadNcLyricAsync(SingleSongBase providerItem, CancellationToken ct)
     {

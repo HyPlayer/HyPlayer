@@ -64,7 +64,7 @@ internal class Api
         }
 
         var randomSong = likedSongs[RandomNumberGenerator.GetInt32(likedSongs.Count)];
-        var seedSong = state.NowPlayingProviderItem?.ActualId ?? state.NowPlayingItem?.GetItemIdentity().ActualId ?? randomSong;
+        var seedSong = state.NowPlayingProviderItem?.ActualId ?? randomSong;
 
         try
         {

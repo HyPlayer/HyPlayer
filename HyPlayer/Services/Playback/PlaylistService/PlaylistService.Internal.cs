@@ -15,13 +15,24 @@ public sealed partial class PlaylistService
 
     private void InsertQueueItem(HyPlayItem item, int position = -1)
     {
-        InsertQueueItem(item, item.ToSingleSong(), position);
+        InsertQueueItem(item, null, position);
     }
 
     private void InsertQueueItem(ProvidableItemBase item, int position = -1)
     {
-        var playItem = item.ToHyPlayItem();
+        var playItem = FindLegacyQueueItem(item) ?? item.ToHyPlayItem();
         InsertQueueItem(playItem, item as SingleSongBase, position);
+    }
+
+    private HyPlayItem? FindLegacyQueueItem(ProvidableItemBase item)
+    {
+        return _items.FirstOrDefault(existing =>
+        {
+            var identity = existing.GetItemIdentity();
+            return identity.ProviderId == item.ProviderId
+                   && identity.TypeId == item.TypeId
+                   && identity.ActualId == item.ActualId;
+        });
     }
 
     private void InsertQueueItem(HyPlayItem item, SingleSongBase? providerItem, int position = -1)

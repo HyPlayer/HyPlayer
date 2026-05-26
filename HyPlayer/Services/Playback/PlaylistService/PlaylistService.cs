@@ -334,7 +334,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 _items.Clear();
                 _providerItems.Clear();
                 if (nowPlayingItem is not null)
-                    InsertQueueItem(nowPlayingItem, nowPlayingProviderItem ?? nowPlayingItem.ToSingleSong());
+                    InsertQueueItem(nowPlayingItem, nowPlayingProviderItem);
                 DisposePlayItems(itemsToDispose);
                 _nowPlayingIndex = _items.Count > 0 ? 0 : -1;
             }

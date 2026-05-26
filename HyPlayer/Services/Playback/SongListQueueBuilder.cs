@@ -15,7 +15,7 @@ internal sealed class SongListQueueBuilder(
     {
         if (visibleSongs.Count == 0) return;
 
-        var currentSongId = state.NowPlayingProviderItem?.ActualId ?? state.NowPlayingItem?.Id;
+        var currentSongId = state.NowPlayingProviderItem?.ActualId;
         var shiftSong = clickedSong.SongId == currentSongId && state.IsPlaying;
         var nowPlaying = state.NowPlayingItem;
 

@@ -275,7 +275,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         if (stateProviderItem is not null && Matches(item, stateProviderItem))
             return stateProviderItem;
 
-        return item.ToSingleSong();
+        return null;
     }
 
     private HyPlayItem ResolveLegacyItem(SingleSongBase song)
