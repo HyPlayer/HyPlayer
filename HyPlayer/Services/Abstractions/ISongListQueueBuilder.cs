@@ -8,6 +8,4 @@ namespace HyPlayer.Services.Abstractions;
 public interface ISongListQueueBuilder
 {
     Task BuildAndPlayAsync(SingleSongBase clickedSong, SongListQueueScope scope, IReadOnlyList<SingleSongBase> visibleSongs);
-
-    Task BuildAndPlayAsync(NCSong clickedSong, SongListQueueScope scope, IReadOnlyList<NCSong> visibleSongs);
 }

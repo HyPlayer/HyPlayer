@@ -139,11 +139,6 @@ public partial class GroupedSongsListViewModel(
         await new SongListSelect(selectedSong.SongId).ShowAsync();
     }
 
-    internal async Task PlayClickedSongAsync(NCSong clickedSong, SongListQueueScope scope, IReadOnlyList<NCSong> visibleSongs)
-    {
-        await queueBuilder.BuildAndPlayAsync(clickedSong, scope, visibleSongs);
-    }
-
     internal async Task PlayClickedSongAsync(SongListItemViewModel clickedSong, SongListQueueScope scope, IReadOnlyList<SongListItemViewModel> visibleSongs)
     {
         await queueBuilder.BuildAndPlayAsync(
