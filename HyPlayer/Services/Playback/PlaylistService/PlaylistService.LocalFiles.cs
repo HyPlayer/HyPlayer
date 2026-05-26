@@ -11,7 +11,7 @@ public sealed partial class PlaylistService
     /// <inheritdoc />
     public Task AppendStorageFilesAsync(IEnumerable<StorageFile> files)
     {
-        // Local file loading is handled by PickLocalFileAsync() or LoadStorageFileAsync().
+        // Local file loading is handled by PickLocalFileAsync() or ILocalFileImportService.
         // This legacy interface slot is kept for API symmetry with older append paths.
         return Task.CompletedTask;
     }

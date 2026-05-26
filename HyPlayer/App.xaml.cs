@@ -427,7 +427,7 @@ public sealed partial class App : Application
             {
                 var file = (StorageFile)storageItem;
                 await localFileImport.RegisterFutureAccessAsync(file);
-                var item = await playlist.LoadStorageFileAsync(file);
+                var item = await localFileImport.LoadStorageFileAsync(file);
                 playlist.AppendLocalItem(item);
             }
 

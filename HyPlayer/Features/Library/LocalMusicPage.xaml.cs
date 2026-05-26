@@ -34,6 +34,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly ILocalFileImportService _localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
@@ -120,7 +121,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                 _cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    var item = await _playlist.LoadStorageFileAsync(storageFile);
+                    var item = await _localFileImport.LoadStorageFileAsync(storageFile);
                     localHyItems.Add(item);
                 }
                 catch

@@ -37,12 +37,6 @@ public sealed partial class PlaylistService
     }
 
     /// <inheritdoc />
-    public async Task<HyPlayItem> LoadStorageFileAsync(StorageFile sf, bool nocheck163 = false)
-    {
-        return await _localFileImport.LoadStorageFileAsync(sf, nocheck163);
-    }
-
-    /// <inheritdoc />
     public void CreateShufflePlayLists()
     {
         ShuffleList.Clear();

@@ -154,9 +154,6 @@ public interface IPlaylistService
     /// <summary>弹出文件选择器并追加本地文件</summary>
     Task PickLocalFileAsync();
 
-    /// <summary>加载单个 StorageFile 为 HyPlayItem</summary>
-    Task<HyPlayItem> LoadStorageFileAsync(StorageFile file, bool nocheck163 = false);
-
     /// <summary>生成随机播放列表</summary>
     void CreateShufflePlayLists();
 
