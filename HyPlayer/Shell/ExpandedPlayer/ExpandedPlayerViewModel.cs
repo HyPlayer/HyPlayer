@@ -8,7 +8,6 @@ using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using CommunityToolkit.WinUI.Helpers;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
@@ -107,9 +106,6 @@ namespace HyPlayer.Shell.ExpandedPlayer
         public partial BitmapImage Cover { get; set; } = new BitmapImage(new Uri("ms-appx:///Assets/icon.png"));
 
         [ObservableProperty]
-        public partial IReadOnlyList<HyPlayItem> PlaylistItems { get; set; }
-
-        [ObservableProperty]
         public partial bool IsLiked { get; set; }
 
         [ObservableProperty]
@@ -205,8 +201,6 @@ namespace HyPlayer.Shell.ExpandedPlayer
             LyricIndex = _state.LyricIndex;
             IsInFm = _state.IsInFm;
             QualityTag = _state.QualityTag;
-            PlaylistItems = _playlist.LegacyItemsSnapshot;
-
             if (NowPlayingProviderItem != null)
             {
                 SongName = NowPlayingProviderItem.Name;
