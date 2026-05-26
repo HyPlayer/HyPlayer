@@ -86,7 +86,7 @@ public sealed partial class PlaylistService
             if (index < 0 || ReferenceEquals(item, NowPlayingItem))
                 return;
             _items[index] = item;
-            _providerItems[index] = item.ToSingleSong();
+            _providerItems[index] = NowPlayingProviderItem;
             _nowPlayingIndex = index;
             SyncIndex();
         }

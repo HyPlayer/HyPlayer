@@ -21,7 +21,7 @@ public sealed partial class PlaylistService
     private void InsertQueueItem(ProvidableItemBase item, int position = -1)
     {
         var playItem = item.ToHyPlayItem();
-        InsertQueueItem(playItem, item as SingleSongBase ?? playItem.ToSingleSong(), position);
+        InsertQueueItem(playItem, item as SingleSongBase, position);
     }
 
     private void InsertQueueItem(HyPlayItem item, SingleSongBase? providerItem, int position = -1)
