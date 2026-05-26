@@ -138,8 +138,10 @@ public sealed partial class PlaylistService
         RequestNextItemAsync = RequestNextItemAsync,
         RequestNextProviderItemAsync = RequestNextProviderItemAsync,
         CommitItemAsync = CommitItemAsync,
+        CommitProviderItemAsync = CommitProviderItemAsync,
         LoadMediaSourceAsync = LoadLegacyMediaSourceAsync,
         LoadProviderMediaSourceAsync = _control.LoadAndPlayAsync,
+        PreloadProviderPlaybackSourceAsync = song => _control.PreloadTransitionPlaybackSourceAsync(song),
         Player = _player,
         TaskRunner = _taskRunner
     };
@@ -237,6 +239,24 @@ public sealed partial class PlaylistService
             }
         }
 
+
+        return Task.CompletedTask;
+    }
+
+    private Task CommitProviderItemAsync(SingleSongBase item)
+    {
+        lock (_lock)
+        {
+            var index = _providerItems.FindIndex(providerItem => providerItem is not null
+                && providerItem.ProviderId == item.ProviderId
+                && providerItem.TypeId == item.TypeId
+                && providerItem.ActualId == item.ActualId);
+            if (index >= 0)
+            {
+                _nowPlayingIndex = index;
+                SyncIndex();
+            }
+        }
 
         return Task.CompletedTask;
     }

@@ -1,5 +1,6 @@
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HyPlayer.Services.Abstractions;
@@ -41,6 +42,11 @@ public interface IPlaybackControlService
     /// <param name="autoPlay">是否自动开始播放</param>
     /// <param name="removeCurrentSongs">是否移除当前播放的所有曲目</param>
     Task LoadAndPlayAsync(SingleSongBase song, bool autoPlay = true, bool removeCurrentSongs = true);
+
+    /// <summary>
+    /// 预加载 Provider 曲目的过渡播放源，不更新当前歌曲状态。
+    /// </summary>
+    Task<ITransitionPlaybackSource?> PreloadTransitionPlaybackSourceAsync(SingleSongBase song, CancellationToken ct = default);
 
     /// <summary>
     /// 初始化播放器（AudioGraph 等底层资源）

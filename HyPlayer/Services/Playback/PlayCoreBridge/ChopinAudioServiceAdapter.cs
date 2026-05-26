@@ -39,6 +39,15 @@ public sealed class ChopinAudioServiceAdapter :
 
     public override async Task<AudioTicketBase> GetAudioTicketAsync(MusicResourceBase musicResource, CancellationToken ctk = default)
     {
+        return await CreateAudioTicketAsync(musicResource, setAsPrimarySource: true, ctk: ctk);
+    }
+
+    public async Task<ChopinAudioTicket> CreateAudioTicketAsync(
+        MusicResourceBase musicResource,
+        bool setAsPrimarySource,
+        double? initialVolume = null,
+        CancellationToken ctk = default)
+    {
         ctk.ThrowIfCancellationRequested();
         if (musicResource is not IChopinPlaybackSourceResource && musicResource.Uri is null)
         {
@@ -48,7 +57,7 @@ public sealed class ChopinAudioServiceAdapter :
         AudioGraphPlaybackSource? source = null;
         try
         {
-            var targetVolume = 1d;
+            var targetVolume = initialVolume ?? 1d;
             if (musicResource is IChopinPlaybackSourceResource chopinResource)
             {
                 source = await chopinResource.CreatePlaybackSourceAsync(ctk);
@@ -57,7 +66,7 @@ public sealed class ChopinAudioServiceAdapter :
                     throw new ArgumentException("Music resource did not create a playback source.", nameof(musicResource));
                 }
 
-                targetVolume = chopinResource.SuggestedVolume ?? 1d;
+                targetVolume = initialVolume ?? chopinResource.SuggestedVolume ?? 1d;
             }
             else
             {
@@ -70,7 +79,7 @@ public sealed class ChopinAudioServiceAdapter :
             await _player.ConnectPlaybackSourceAsync(source, new PlaybackOptions
             {
                 AutoPlay = false,
-                SetAsPrimarySource = true,
+                SetAsPrimarySource = setAsPrimarySource,
                 Volume = targetVolume
             });
 

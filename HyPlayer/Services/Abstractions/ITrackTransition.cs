@@ -29,6 +29,9 @@ public class TrackTransitionContext
     /// <summary>请求获取下一首 Provider 曲目（由 PlaylistService 提供的回调）</summary>
     public Func<bool, Task<SingleSongBase?>>? RequestNextProviderItemAsync { get; init; }
 
+    /// <summary>提交预加载 Provider 曲目为当前曲目（由 PlaylistService 提供的回调）</summary>
+    public Func<SingleSongBase, Task>? CommitProviderItemAsync { get; init; }
+
     /// <summary>提交预加载曲目为当前曲目（由 PlaylistService 提供的回调）</summary>
     public required Func<HyPlayItem, Task> CommitItemAsync { get; init; }
 
@@ -37,6 +40,9 @@ public class TrackTransitionContext
 
     /// <summary>请求加载指定 Provider 曲目的媒体源</summary>
     public Func<SingleSongBase, bool, bool, Task>? LoadProviderMediaSourceAsync { get; init; }
+
+    /// <summary>预加载 Provider 曲目的过渡播放源，不改变当前播放状态。</summary>
+    public Func<SingleSongBase, Task<ITransitionPlaybackSource?>>? PreloadProviderPlaybackSourceAsync { get; init; }
 
     /// <summary>底层播放器</summary>
     public required IPlayer Player { get; init; }

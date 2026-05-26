@@ -1,6 +1,4 @@
-using HyPlayer.Domain.Music;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,8 +16,7 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
 {
     private readonly SemaphoreSlim _loaderSemaphore = new(1, 1);
 
-    private AudioGraphPlaybackSource? _nextPlaybackSource;
-    private HyPlayItem? _nextItem;
+    private ITransitionPlaybackSource? _nextPlaybackSource;
     private volatile bool _preloaded;
     private volatile bool _preloading;
     private bool _disposed;
@@ -44,33 +41,31 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
     {
         if (_preloaded && _nextPlaybackSource is not null)
         {
-            // 已预加载 — 直接播放下一首
-            if (_nextItem is not null)
-            {
-                await ctx.CommitItemAsync(_nextItem).ConfigureAwait(false);
-            }
+            var oldSource = ctx.Player.PrimaryPlaybackSource;
 
-            ctx.Player.PlayPlaybackSource(_nextPlaybackSource);
+            if (ctx.CommitProviderItemAsync is not null)
+                await ctx.CommitProviderItemAsync(_nextPlaybackSource.Item).ConfigureAwait(false);
 
-            // 断开旧源
-            if (ctx.CurrentItem?.PlayItem?.AudioGraphPlaybackSource is AudioGraphPlaybackSource oldSource)
+            await _nextPlaybackSource.SetAsPrimaryAsync().ConfigureAwait(false);
+            await _nextPlaybackSource.PlayAsync().ConfigureAwait(false);
+
+            if (oldSource is not null && !ReferenceEquals(oldSource, ctx.Player.PrimaryPlaybackSource))
             {
                 ctx.Player.DisconnectPlaybackSource(oldSource);
-                ctx.CurrentItem.PlayItem?.Dispose();
-                ctx.CurrentItem.PlayItem = null;
             }
 
-            ResetInternal();
+            ResetInternal(disposeNext: false);
         }
         else
         {
             // 未预加载 — 回退到直接切歌
             ResetInternal();
-            var nextItem = await ctx.RequestNextItemAsync(true).ConfigureAwait(false);
-            if (nextItem is not null)
-            {
-                await ctx.LoadMediaSourceAsync(nextItem, true, true, true).ConfigureAwait(false);
-            }
+            if (ctx.RequestNextProviderItemAsync is null || ctx.LoadProviderMediaSourceAsync is null)
+                return;
+
+            var nextProviderItem = await ctx.RequestNextProviderItemAsync(true).ConfigureAwait(false);
+            if (nextProviderItem is not null)
+                await ctx.LoadProviderMediaSourceAsync(nextProviderItem, true, true).ConfigureAwait(false);
         }
     }
 
@@ -83,15 +78,9 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
 
         if (_nextPlaybackSource is not null)
         {
-            ctx.Player.DisconnectPlaybackSource(_nextPlaybackSource);
-            _nextItem?.PlayItem?.Dispose();
-            if (_nextItem is not null)
-            {
-                _nextItem.PlayItem = null;
-            }
+            return ResetInternalAsync();
         }
 
-        ResetInternal();
         return Task.CompletedTask;
     }
 
@@ -109,6 +98,7 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
     private async Task TryPreloadAsync(TrackTransitionContext ctx)
     {
         if (_preloaded || _preloading) return;
+        if (ctx.RequestNextProviderItemAsync is null || ctx.PreloadProviderPlaybackSourceAsync is null) return;
 
         try
         {
@@ -125,26 +115,17 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
 
             _preloaded = true;
 
-            var nextItem = await ctx.RequestNextItemAsync(false).ConfigureAwait(false);
+            var nextItem = await ctx.RequestNextProviderItemAsync(false).ConfigureAwait(false);
             if (nextItem is null)
             {
                 _preloaded = false;
                 return;
             }
 
-            _nextItem = nextItem;
-
-            // 加载但不自动播放
-            await ctx.LoadMediaSourceAsync(nextItem, false, false, false).ConfigureAwait(false);
-
-            if (nextItem.PlayItem?.AudioGraphPlaybackSource is AudioGraphPlaybackSource nextSource)
-            {
-                _nextPlaybackSource = nextSource;
-            }
-            else
+            _nextPlaybackSource = await ctx.PreloadProviderPlaybackSourceAsync(nextItem).ConfigureAwait(false);
+            if (_nextPlaybackSource is null)
             {
                 _preloaded = false;
-                _nextItem = null;
             }
         }
         finally
@@ -157,16 +138,24 @@ public sealed partial class GaplessTransition : ITrackTransition, IDisposable
     /// <summary>
     /// 内部重置，清理所有引用和状态标志。
     /// </summary>
-    private void ResetInternal()
+    private void ResetInternal(bool disposeNext = true)
     {
-        _nextItem?.PlayItem?.Dispose();
-        if (_nextItem is not null)
-            _nextItem.PlayItem = null;
+        if (disposeNext && _nextPlaybackSource is not null)
+            _ = _nextPlaybackSource.DisposeAsync();
 
         _preloaded = false;
         _preloading = false;
         _nextPlaybackSource = null;
-        _nextItem = null;
+    }
+
+    private async Task ResetInternalAsync()
+    {
+        if (_nextPlaybackSource is not null)
+            await _nextPlaybackSource.DisposeAsync();
+
+        _preloaded = false;
+        _preloading = false;
+        _nextPlaybackSource = null;
     }
 
     /// <summary>
