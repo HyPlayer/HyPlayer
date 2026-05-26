@@ -2,8 +2,8 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.Media;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using CommunityToolkit.WinUI.Helpers;
@@ -107,12 +107,15 @@ public sealed partial class CompactPlayerPage : Page
             case nameof(PlaybackStateService.Position):
                 HyPlayList_OnPlayPositionChange(_state.Position);
                 break;
-            case nameof(PlaybackStateService.NowPlayingItem):
-                OnChangePlayItem(_state.NowPlayingItem);
-                HyPlayList_OnSongCoverChanged(_state.NowPlayingItem);
-                break;
             case nameof(PlaybackStateService.NowPlayingProviderItem):
-                OnChangePlayItem(_state.NowPlayingItem);
+                OnChangePlayItem(_state.NowPlayingProviderItem);
+                HyPlayList_OnSongCoverChanged(_state.NowPlayingProviderItem, _state.NowPlayingSnapshot);
+                break;
+            case nameof(PlaybackStateService.NowPlayingSnapshot):
+                OnChangePlayItem(_state.NowPlayingProviderItem);
+                break;
+            case nameof(PlaybackStateService.CoverStream):
+                HyPlayList_OnSongCoverChanged(_state.NowPlayingProviderItem, _state.NowPlayingSnapshot);
                 break;
             case nameof(PlaybackStateService.LyricIndex):
                 OnLyricChanged();
@@ -134,7 +137,7 @@ public sealed partial class CompactPlayerPage : Page
         });
     }
 
-    private async void HyPlayList_OnSongCoverChanged(HyPlayItem? playItem)
+    private async void HyPlayList_OnSongCoverChanged(SingleSongBase? providerItem, PlaybackCurrentItemSnapshot? snapshot)
     {
         if (_state.CoverStream == null) return;
         _taskRunner.Forget(_notification.InvokeOnUIThread(async () =>
@@ -143,7 +146,8 @@ public sealed partial class CompactPlayerPage : Page
             {
                 try
                 {
-                    if (playItem != _state.NowPlayingItem) return;
+                    if (!ReferenceEquals(providerItem, _state.NowPlayingProviderItem) ||
+                        !ReferenceEquals(snapshot, _state.NowPlayingSnapshot)) return;
                     using var stream = _state.CoverStream.CloneStream();
                     await AlbumImageBrushSource.SetSourceAsync(stream);
                 }
@@ -291,24 +295,25 @@ public sealed partial class CompactPlayerPage : Page
 
     }
 
-    private void OnChangePlayItem(HyPlayItem? item)
+    private void OnChangePlayItem(SingleSongBase? providerItem)
     {
-        var providerItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+        providerItem ??= _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+        var snapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(providerItem);
         RunOnUIThread(() =>
         {
-            NowPlayingName = providerItem?.Name ?? item?.Name;
-            NowPlayingArtists = providerItem?.CreatorList is { Count: > 0 } creators
+            NowPlayingName = snapshot?.Name ?? providerItem?.Name ?? string.Empty;
+            NowPlayingArtists = snapshot?.ArtistText ?? (providerItem?.CreatorList is { Count: > 0 } creators
                 ? string.Join("; ", creators)
-                : item?.ArtistString;
+                : string.Empty);
         });
-        if (item is null)
+        if (providerItem is null && snapshot is null)
             return;
 
-        if (item.ItemType is not (HyPlayItemType.Local or HyPlayItemType.LocalProgressive))
+        if (snapshot?.IsLocal != true)
         {
-            var songId = providerItem?.ActualId ?? item.Id;
+            var songId = providerItem?.ActualId;
             var isLiked = !string.IsNullOrEmpty(songId) && _auth.LikedSongs.Contains(songId);
-            var durationMs = providerItem?.Duration ?? item.LengthInMilliseconds;
+            var durationMs = snapshot?.Duration ?? providerItem?.Duration ?? 0;
             RunOnUIThread(() =>
             {
                 IconLiked.Foreground = isLiked
@@ -341,8 +346,8 @@ public sealed partial class CompactPlayerPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        OnChangePlayItem(_state.NowPlayingItem);
-        HyPlayList_OnSongCoverChanged(_state.NowPlayingItem);
+        OnChangePlayItem(_state.NowPlayingProviderItem);
+        HyPlayList_OnSongCoverChanged(_state.NowPlayingProviderItem, _state.NowPlayingSnapshot);
         PlayStateIcon.Glyph = _control.IsPlaying ? "\uEDB4" : "\uEDB5";
         (e.Parameter?.As<AppWindow>()).TitleBar.ExtendsContentIntoTitleBar = true;
         //Window.Current.SetTitleBar(MainGrid);
