@@ -9,6 +9,7 @@
     xmlns:controls="using:HyPlayer.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer.Infrastructure.Extensions"
+    xmlns:lists="using:HyPlayer.UI.Lists"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
@@ -180,7 +181,7 @@
                 </Grid>
             </ListViewItem>
         </DataTemplate>
-        <DataTemplate x:Key="RecommendedSongCardTemplate" x:DataType="classes:NCSong">
+        <DataTemplate x:Key="RecommendedSongCardTemplate" x:DataType="lists:SongListItemViewModel">
             <ListViewItem
                 x:Name="Card"
                 Width="256"
@@ -428,7 +429,7 @@
                                         HorizontalContentAlignment="Center"
                                         VerticalContentAlignment="Center"
                                         Command="{x:Bind ViewModel.PlayAllRecommendedSongsClickedCommand}"
-                                        CommandParameter="{x:Bind ViewModel.RecommendedSongs}"
+                                        CommandParameter="{x:Bind ViewModel.RecommendedSongItems}"
                                         CornerRadius="14"
                                         Style="{ThemeResource AccentButtonStyle}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
@@ -452,10 +453,10 @@
                                         Height="380"
                                         Background="Transparent"
                                         ItemTemplate="{StaticResource RecommendedSongCardTemplate}"
-                                        ItemsSource="{x:Bind ViewModel.RecommendedSongs, Mode=OneWay}" />
+                                        ItemsSource="{x:Bind ViewModel.RecommendedSongItems, Mode=OneWay}" />
                                     <muxc:PipsPager
                                         HorizontalAlignment="Center"
-                                        NumberOfPages="{x:Bind ViewModel.RecommendedSongs.Count, Mode=OneWay}"
+                                        NumberOfPages="{x:Bind ViewModel.RecommendedSongItems.Count, Mode=OneWay}"
                                         SelectedPageIndex="{x:Bind RecommendedSongsFlipView.SelectedIndex, Mode=OneWay}" />
 
                                 </StackPanel>

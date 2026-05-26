@@ -10,6 +10,7 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.UI.Lists;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,6 +31,8 @@ namespace HyPlayer.Features.Home
         public partial List<NCPlayList> ToplistPlaylist { get; set; }
         [ObservableProperty]
         public partial List<NCSong> RecommendedSongs { get; set; }
+        [ObservableProperty]
+        public partial List<SongListItemViewModel> RecommendedSongItems { get; set; }
         [ObservableProperty]
         public partial List<NCPlayList> OfficialPlaylists { get; set; }
 #nullable restore
@@ -61,6 +64,7 @@ namespace HyPlayer.Features.Home
                     .OfType<SingleSongBase>()
                     .ToList();
                 RecommendedSongs = _recommendedProviderSongs.ToNCSongs();
+                RecommendedSongItems = RecommendedSongs.Select(SongListItemViewModel.FromNCSong).ToList();
             }
         }
 
