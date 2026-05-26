@@ -1,5 +1,6 @@
-﻿using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.Constants;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
@@ -17,9 +18,16 @@ namespace HyPlayer.Services.Tiles
     {
         private Setting _setting;
         private readonly TileUpdater _tileUpdater = TileUpdateManager.CreateTileUpdaterForApplication();
-        public async Task UpdateTile(HyPlayItem item, IRandomAccessStream coverStream)
+
+        public async Task UpdateTile(SingleSongBase item, IRandomAccessStream coverStream)
         {
             if (!_setting.EnableTile) return;
+
+            var artistText = item.CreatorList is { Count: > 0 } creators
+                ? string.Join(" / ", creators)
+                : string.Empty;
+            var albumName = item.Album?.Name ?? string.Empty;
+
             var infoContent = new TileContent()
             {
                 Visual = new TileVisual()
@@ -41,14 +49,14 @@ namespace HyPlayer.Services.Tiles
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = item.ArtistString,
+                                    Text = artistText,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                     HintMaxLines = 1,
                                     HintWrap = true
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = item.AlbumString,
+                                    Text = albumName,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                     HintMaxLines = 1,
                                     HintWrap = true
@@ -66,20 +74,20 @@ namespace HyPlayer.Services.Tiles
                                 new AdaptiveText()
                                 {
                                     Text = item.Name,
-                                    HintStyle = AdaptiveTextStyle.Base,                     
+                                    HintStyle = AdaptiveTextStyle.Base,
                                     HintMaxLines = 2,
                                     HintWrap = true
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = item.ArtistString,
+                                    Text = artistText,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                     HintMaxLines = 2,
                                     HintWrap = true
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = item.AlbumString,
+                                    Text = albumName,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                     HintMaxLines = 1,
                                     HintWrap = true
@@ -103,14 +111,14 @@ namespace HyPlayer.Services.Tiles
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = item.ArtistString,
+                                    Text = artistText,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                     HintMaxLines = 1,
                                     HintWrap = true
                                 },
                                 new AdaptiveText()
                                 {
-                                    Text = item.AlbumString,
+                                    Text = albumName,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle,
                                     HintMaxLines = 1,
                                     HintWrap = true
@@ -160,16 +168,19 @@ namespace HyPlayer.Services.Tiles
                 _tileUpdater.Update(notificationCover);
             }
         }
-        public async Task<TileBackgroundImage?> GetTileBackgroundAsync(HyPlayItem item, IRandomAccessStream stream)
+
+        public async Task<TileBackgroundImage?> GetTileBackgroundAsync(SingleSongBase item, IRandomAccessStream stream)
         {
-            if (item.ItemType != HyPlayItemType.Netease || !_setting.EnableTileBackground || stream == null) return null;
+            if (item.ProviderId != "ncm" || item.TypeId != NeteaseTypeIds.SingleSong || !_setting.EnableTileBackground || stream == null) return null;
+
             using var coverStream = stream.CloneStream();
             StorageFolder storageFolder =
                 await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("TileImages", CreationCollisionOption.OpenIfExists);
-            var exists = await storageFolder.FileExistsAsync(item.Album.Id);
+            var albumId = item.Album?.ActualId ?? item.ActualId;
+            var exists = await storageFolder.FileExistsAsync(albumId);
             if (!exists)
             {
-                var file = await storageFolder.CreateFileAsync(item.Album.Id);
+                var file = await storageFolder.CreateFileAsync(albumId);
                 var decoder = await BitmapDecoder.CreateAsync(coverStream);
                 using var bitmap = await decoder.GetSoftwareBitmapAsync();
                 using var encoderStream = new InMemoryRandomAccessStream();
@@ -183,10 +194,11 @@ namespace HyPlayer.Services.Tiles
             }
             var cover = new TileBackgroundImage()
             {
-                Source = $"ms-appdata:///temp/TileImages/{item.Album.Id}"
+                Source = $"ms-appdata:///temp/TileImages/{albumId}"
             };
             return cover;
         }
+
         public async Task ClearAllTiles()
         {
             _tileUpdater.EnableNotificationQueue(false);
@@ -194,6 +206,7 @@ namespace HyPlayer.Services.Tiles
             var item = await ApplicationData.Current.TemporaryFolder.TryGetItemAsync("TileImages");
             await item?.DeleteAsync();
         }
+
         public TileService(Setting setting)
         {
             _setting = setting;

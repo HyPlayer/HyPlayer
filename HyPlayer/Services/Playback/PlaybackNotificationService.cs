@@ -58,7 +58,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         // 1. 刷新封面
         if (!_setting.noImage)
             await RefreshCoverAsync(providerItem);
-        await _tileService.UpdateTile(item, _state.CoverStream);
+        await _tileService.UpdateTile(providerItem, _state.CoverStream);
         if (!_setting.noImage)
             UpdateSmtcThumbnail();
         // 2. Last.FM now-playing
