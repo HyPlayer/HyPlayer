@@ -328,8 +328,8 @@ public partial class PlayBarViewModel : ObservableObject
     public string GetPlaylistTitle()
     {
         if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
-            return $"随机播放列表 (共{_playlist.Items.Count}首)";
-        return $"播放列表 (共{_playlist.Items.Count}首)";
+            return $"随机播放列表 (共{_playlist.QueueCount}首)";
+        return $"播放列表 (共{_playlist.QueueCount}首)";
     }
 
     /// <summary>

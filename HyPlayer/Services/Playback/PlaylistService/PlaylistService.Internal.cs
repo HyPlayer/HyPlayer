@@ -79,7 +79,7 @@ public sealed partial class PlaylistService
             return new PlayStrategyContext
             {
                 CurrentIndex = _nowPlayingIndex,
-                QueueCount = _items.Count,
+                QueueCount = QueueCount,
                 ProviderItems = providerItems,
                 ProviderQueueItems = providerQueueItems,
                 CurrentProviderItem = NowPlayingProviderItem,

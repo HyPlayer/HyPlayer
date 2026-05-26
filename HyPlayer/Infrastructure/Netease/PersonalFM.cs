@@ -72,10 +72,10 @@ internal sealed class PersonalFM
         _isLoadingNextTrack = true;
         try
         {
-            if (_playlistService.NowPlayingIndex + 1 >= _playlistService.Items.Count)
+            if (_playlistService.NowPlayingIndex + 1 >= _playlistService.QueueCount)
                 await AppendMoreTracksAsync();
 
-            if (!IsActiveSession || _playlistService.Items.Count == 0)
+            if (!IsActiveSession || _playlistService.QueueCount == 0)
                 return;
 
             await _playlistService.MoveNextAsync(userInitiated);
@@ -93,7 +93,7 @@ internal sealed class PersonalFM
         var moreItems = (await _personalFmStrategy.LoadMoreProviderItemsAsync(new PlayStrategyContext
         {
             CurrentIndex = _playlistService.NowPlayingIndex,
-            QueueCount = _playlistService.ProviderQueueSnapshot.Count,
+            QueueCount = _playlistService.QueueCount,
             ProviderItems = _playlistService.ProviderItems.ToArray(),
             ProviderQueueItems = _playlistService.ProviderQueueSnapshot.ToArray(),
             CurrentProviderItem = _playlistService.NowPlayingProviderItem

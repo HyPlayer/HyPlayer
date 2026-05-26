@@ -72,7 +72,7 @@ internal sealed class SongListQueueBuilder(
         var playSourceId = scope.ToPlaySourceId();
         if (playSourceId != null
             && playlist.PlaySourceId == playSourceId
-            && playlist.Items.Count == visibleSongs.Count(t => t.IsAvailable))
+            && playlist.QueueCount == visibleSongs.Count(t => t.IsAvailable))
             return;
 
         playlist.Clear(clearFirst);

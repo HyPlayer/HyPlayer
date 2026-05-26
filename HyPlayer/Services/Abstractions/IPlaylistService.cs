@@ -25,6 +25,9 @@ public interface IPlaylistService
     /// <summary>当前播放列表的 Provider 模型位置对齐视图（本地/旧项可为 null）</summary>
     IReadOnlyList<SingleSongBase?> ProviderQueueSnapshot { get; }
 
+    /// <summary>当前播放队列长度</summary>
+    int QueueCount { get; }
+
     /// <summary>当前播放索引</summary>
     int NowPlayingIndex { get; }
 

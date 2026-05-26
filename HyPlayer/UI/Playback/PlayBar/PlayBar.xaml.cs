@@ -787,8 +787,8 @@ DoubleAnimation verticalAnimation;
             {
                 _playlist.AppendNcSongs(state.Songs);
                 var restoreIndex = state.CurrentIndex;
-                if (restoreIndex < 0 || restoreIndex >= _playlist.Items.Count)
-                    restoreIndex = _playlist.Items.Count > 0 ? 0 : -1;
+                if (restoreIndex < 0 || restoreIndex >= _playlist.QueueCount)
+                    restoreIndex = _playlist.QueueCount > 0 ? 0 : -1;
 
                 if (restoreIndex >= 0)
                 {

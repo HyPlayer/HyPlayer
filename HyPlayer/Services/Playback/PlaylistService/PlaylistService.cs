@@ -134,6 +134,18 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
+    public int QueueCount
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _items.Count;
+            }
+        }
+    }
+
+    /// <inheritdoc />
     public int NowPlayingIndex => _nowPlayingIndex;
 
     /// <inheritdoc />
