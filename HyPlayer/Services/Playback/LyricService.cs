@@ -59,10 +59,6 @@ public sealed class LyricService : ILyricService
     public TimeSpan LyricOffset { get; set; }
 
     /// <inheritdoc />
-    public async Task LoadLyricsAsync(HyPlayItem item, CancellationToken ct = default)
-        => await LoadLyricsAsync(item, null, ct);
-
-    /// <inheritdoc />
     public async Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default)
     {
         var cacheId = providerItem.ActualId;
@@ -104,14 +100,8 @@ public sealed class LyricService : ILyricService
     }
 
     /// <inheritdoc />
-    public async Task LoadLyricsAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct = default)
+    public async Task LoadLyricsAsync(HyPlayItem item, CancellationToken ct = default)
     {
-        if (providerItem is not null && item.ItemType == HyPlayItemType.Netease)
-        {
-            await LoadLyricsAsync(providerItem, ct);
-            return;
-        }
-
         // 1. 尝试从缓存获取
         var canUseHyLyricInfoCache = item.ItemType == HyPlayItemType.Netease && !string.IsNullOrWhiteSpace(item.Id);
         if (canUseHyLyricInfoCache)
@@ -133,7 +123,6 @@ public sealed class LyricService : ILyricService
         // 2. 根据类型加载原始歌词
         var pureLyricInfo = item.ItemType switch
         {
-            HyPlayItemType.Netease when providerItem is not null => await LoadNcLyricAsync(providerItem, ct),
             HyPlayItemType.Netease => new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" },
             HyPlayItemType.Local => await LoadLocalLyricAsync(item),
             _ => new PureLyricInfo()

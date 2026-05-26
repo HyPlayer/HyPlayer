@@ -30,11 +30,6 @@ public interface ILyricService
     Task LoadLyricsAsync(HyPlayItem item, CancellationToken ct = default);
 
     /// <summary>
-    /// 为指定曲目加载歌词，优先使用 Provider 曲目模型。
-    /// </summary>
-    Task LoadLyricsAsync(HyPlayItem item, SingleSongBase? providerItem, CancellationToken ct = default);
-
-    /// <summary>
     /// 为指定 Provider 曲目加载歌词。
     /// </summary>
     Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default);
