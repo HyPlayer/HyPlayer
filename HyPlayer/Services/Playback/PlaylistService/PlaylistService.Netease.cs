@@ -14,36 +14,6 @@ public sealed partial class PlaylistService
     // ────────────── NCSong 相关 ──────────────
 
     /// <inheritdoc />
-    public void AppendNcSongs(IList<NCSong> ncSongs, bool clearFirst = true)
-    {
-        if (ncSongs == null) return;
-        try
-        {
-            if (clearFirst)
-            {
-                ExitPersonalFmForSourceChange();
-                lock (_lock)
-                {
-                    Clear(clearFirst);
-                }
-            }
-
-            foreach (var ncSong in ncSongs)
-            {
-                var providerSong = ncSong.ToProviderSong();
-                var hpi = ToLegacyQueueItem(providerSong);
-                lock (_lock) { InsertQueueItem(hpi, providerSong); }
-            }
-
-            NotifyAppendDone();
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("AppendNCSong时发生错误", ex.Message);
-        }
-    }
-
-    /// <inheritdoc />
     public List<int> AppendNcSongRange(List<NCSong> ncSongs, int position = -1)
     {
         lock (_lock)

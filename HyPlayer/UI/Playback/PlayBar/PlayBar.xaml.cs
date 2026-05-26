@@ -798,7 +798,8 @@ DoubleAnimation verticalAnimation;
             var state = await HistoryManagement.GetCurPlayingListHistoryStateAsync();
             if (state.Songs.Count > 0)
             {
-                _playlist.AppendNcSongs(state.Songs);
+                _playlist.AppendItems(state.Songs.Select(song => song.ToProviderSong()), true);
+                _playlist.NotifyAppendDone();
                 var restoreIndex = state.CurrentIndex;
                 if (restoreIndex < 0 || restoreIndex >= _playlist.QueueCount)
                     restoreIndex = _playlist.QueueCount > 0 ? 0 : -1;

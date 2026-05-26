@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Services.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,10 +33,8 @@ internal sealed class SongListQueueBuilder(
         else
         {
             playlist.Clear(!shiftSong);
-            if (visibleSongs.All(song => song.ProviderSong != null))
-                playlist.AppendItems(visibleSongs.Select(song => song.ProviderSong));
-            else
-                playlist.AppendNcSongs(visibleSongs.ToList());
+            playlist.AppendItems(visibleSongs.Select(song => song.ProviderSong ?? song.ToProviderSong()));
+            playlist.NotifyAppendDone();
         }
 
         var playSourceId = scope.ToPlaySourceId();

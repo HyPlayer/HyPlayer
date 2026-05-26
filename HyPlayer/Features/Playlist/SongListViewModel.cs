@@ -271,10 +271,7 @@ namespace HyPlayer.Features.Playlist
             }
             else
             {
-                if (HasCompleteDailyRecommendProviderSongs())
-                    _playlist.AppendItems(_dailyRecommendProviderSongs);
-                else
-                    _playlist.AppendNcSongs(Songs.Select(song => song.SourceSong).ToList(), clearFirst: false);
+                _playlist.AppendItems(GetDailyRecommendProviderSongs(), clearFirst: false);
                 _playlist.NotifyAppendDone();
             }
         }
@@ -315,10 +312,7 @@ namespace HyPlayer.Features.Playlist
             }
             else
             {
-                if (HasCompleteDailyRecommendProviderSongs())
-                    _playlist.AppendItems(_dailyRecommendProviderSongs, true);
-                else
-                    _playlist.AppendNcSongs(Songs.Select(song => song.SourceSong).ToList(), clearFirst: true);
+                _playlist.AppendItems(GetDailyRecommendProviderSongs(), clearFirst: true);
                 _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.PlaylistId));
                 _playlist.NotifyAppendDone();
                 await _playlist.MoveNextAsync(userInitiated: true);
@@ -350,6 +344,13 @@ namespace HyPlayer.Features.Playlist
         private bool HasCompleteDailyRecommendProviderSongs()
         {
             return _dailyRecommendProviderSongs.Count > 0 && _dailyRecommendProviderSongs.Count == Songs.Count;
+        }
+
+        private IEnumerable<SingleSongBase> GetDailyRecommendProviderSongs()
+        {
+            return HasCompleteDailyRecommendProviderSongs()
+                ? _dailyRecommendProviderSongs
+                : Songs.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong());
         }
 
         [RelayCommand]
