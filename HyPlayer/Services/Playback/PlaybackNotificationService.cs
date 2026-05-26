@@ -49,8 +49,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         providerItem ??= _state.NowPlayingProviderItem;
         UpdateSmtcDisplayInfo(item, providerItem);
 
-        _state.NowPlayingItem = item;
-        _state.NowPlayingProviderItem = providerItem;
+        _state.SetNowPlaying(item, providerItem);
 
         // 1. 刷新封面
         if (!_setting.noImage)

@@ -50,10 +50,7 @@ public sealed partial class PlaylistService
         }
         SchedulePlayCorePlaylistSync();
 
-        if (providerItem is not null)
-            await _control.LoadAndPlayAsync(providerItem, removeCurrentSongs: true);
-        else
-            await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
+        await LoadQueueEntryAsync(item, providerItem);
     }
 
     /// <inheritdoc />
@@ -79,10 +76,7 @@ public sealed partial class PlaylistService
         }
         SchedulePlayCorePlaylistSync();
 
-        if (providerItem is not null)
-            await _control.LoadAndPlayAsync(providerItem, removeCurrentSongs: true);
-        else
-            await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
+        await LoadQueueEntryAsync(item, providerItem);
     }
 
     /// <inheritdoc />
@@ -130,10 +124,14 @@ public sealed partial class PlaylistService
         }
         SchedulePlayCorePlaylistSync();
 
-        if (providerItem is not null)
-            await _control.LoadAndPlayAsync(providerItem, removeCurrentSongs: true);
-        else
-            await _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
+        await LoadQueueEntryAsync(item, providerItem);
+    }
+
+    private Task LoadQueueEntryAsync(HyPlayItem item, SingleSongBase? providerItem)
+    {
+        return providerItem is not null
+            ? _control.LoadAndPlayAsync(providerItem, removeCurrentSongs: true)
+            : _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
     }
 
     private void ExitPersonalFmForSourceChange()

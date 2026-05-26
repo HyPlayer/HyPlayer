@@ -74,4 +74,21 @@ public partial class PlaybackStateService : ObservableObject
 
     /// <summary>封面流引用（用于 SMTC 等服务层调用，不触发 UI 更新）。</summary>
     public RandomAccessStreamReference? CoverStreamReference { get; set; }
+
+    /// <summary>
+    /// Updates the mirrored now-playing state. Provider item is the canonical metadata path;
+    /// legacy item remains a temporary UI/local-file projection.
+    /// </summary>
+    public void SetNowPlaying(HyPlayItem? item, SingleSongBase? providerItem)
+    {
+        NowPlayingItem = item;
+        NowPlayingProviderItem = providerItem;
+    }
+
+    /// <summary>Clears mirrored now-playing state and resets the playlist index.</summary>
+    public void ClearNowPlaying()
+    {
+        SetNowPlaying(null, null);
+        NowPlayingIndex = -1;
+    }
 }

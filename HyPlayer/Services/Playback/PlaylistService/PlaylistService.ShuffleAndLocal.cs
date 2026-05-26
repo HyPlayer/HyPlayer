@@ -115,8 +115,7 @@ public sealed partial class PlaylistService
         DisposePlayItems(_items);
         _items.Clear();
         _providerItems.Clear();
-        _state.NowPlayingItem = null;
-        _state.NowPlayingProviderItem = null;
+        _state.ClearNowPlaying();
         _trackEndLock.Dispose();
     }
 }

@@ -317,8 +317,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 _items.Clear();
                 _providerItems.Clear();
                 _nowPlayingIndex = -1;
-                _state.NowPlayingItem = null;
-                _state.NowPlayingProviderItem = null;
+                _state.ClearNowPlaying();
             }
             else
             {

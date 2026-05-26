@@ -30,6 +30,11 @@ public sealed partial class PlaylistService
                 .Cast<SingleSongBase>()
                 .ToList();
 
+            // Temporary shadow sync: only provider-backed queue entries are mirrored to PlayCore.
+            // Local files still rely on the legacy HyPlayItem/PlayItem boundary.
+            if (converted.Count == 0)
+                return;
+
             if (_playCore.CurrentPlayList is null)
                 return;
 
