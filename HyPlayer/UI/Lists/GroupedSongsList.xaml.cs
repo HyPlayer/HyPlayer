@@ -202,7 +202,18 @@ public sealed partial class GroupedSongsList : UserControl
     {
         if (!TryUnwrapSong(e.ClickedItem, out var clickedSong)) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        await ViewModel.PlayClickedSongAsync(clickedSong, QueueScope, GetVisibleSongs());
+        var clickedRow = e.ClickedItem is SongListItemViewModel row ? row : SongListItemViewModel.FromNCSong(clickedSong);
+        await ViewModel.PlayClickedSongAsync(clickedRow, QueueScope, GetVisibleRows());
+    }
+
+    private IReadOnlyList<SongListItemViewModel> GetVisibleRows()
+    {
+        if (GroupedSongs?.Source is IEnumerable<SongListItemGroup> discs)
+        {
+            return discs.SelectMany(t => t).ToList();
+        }
+
+        return SongContainer.Items.Select(item => TryGetSongRow(item, out var row) ? row : null).Where(row => row != null).ToList();
     }
 
     private IReadOnlyList<NCSong> GetVisibleSongs()
@@ -243,6 +254,22 @@ public sealed partial class GroupedSongsList : UserControl
                 return true;
             default:
                 song = null;
+                return false;
+        }
+    }
+
+    private static bool TryGetSongRow(object item, out SongListItemViewModel row)
+    {
+        switch (item)
+        {
+            case SongListItemViewModel songRow:
+                row = songRow;
+                return true;
+            case NCSong ncSong:
+                row = SongListItemViewModel.FromNCSong(ncSong);
+                return true;
+            default:
+                row = null;
                 return false;
         }
     }

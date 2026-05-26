@@ -1,5 +1,6 @@
 using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,41 @@ internal sealed class SongListQueueBuilder(
     PlaybackStateService state,
     INotificationService notification) : ISongListQueueBuilder
 {
+    public async Task BuildAndPlayAsync(SingleSongBase clickedSong, SongListQueueScope scope, IReadOnlyList<SingleSongBase> visibleSongs)
+    {
+        if (visibleSongs.Count == 0) return;
+
+        var currentSongId = state.NowPlayingProviderItem?.ActualId;
+        var shiftSong = clickedSong.ActualId == currentSongId && state.IsPlaying;
+        var nowPlayingIndex = playlist.NowPlayingIndex;
+
+        if (scope.CanLoadCompleteSource)
+        {
+            await AppendCompleteSourceAsync(scope, visibleSongs.Count, !shiftSong);
+        }
+        else
+        {
+            playlist.Clear(!shiftSong);
+            playlist.AppendItems(visibleSongs);
+        }
+
+        var playSourceId = scope.ToPlaySourceId();
+        if (playSourceId != null)
+            playlist.PlaySourceId = playSourceId;
+
+        if (!shiftSong)
+        {
+            await playlist.MoveToAsync(clickedSong);
+            return;
+        }
+
+        notification.ShowMessage("无感歌单切换", "成功无感切换到歌单");
+        if (nowPlayingIndex >= 0)
+        {
+            playlist.RestoreNowPlayingIndex(nowPlayingIndex);
+        }
+    }
+
     public async Task BuildAndPlayAsync(NCSong clickedSong, SongListQueueScope scope, IReadOnlyList<NCSong> visibleSongs)
     {
         if (visibleSongs.Count == 0) return;
@@ -64,13 +100,18 @@ internal sealed class SongListQueueBuilder(
 
     private async Task AppendCompleteSourceAsync(SongListQueueScope scope, IReadOnlyList<NCSong> visibleSongs, bool clearFirst)
     {
+        await AppendCompleteSourceAsync(scope, visibleSongs.Count(t => t.IsAvailable), clearFirst);
+    }
+
+    private async Task AppendCompleteSourceAsync(SongListQueueScope scope, int availableVisibleCount, bool clearFirst)
+    {
         if (scope.Id == null) return;
 
         // Kind-based 路由 — 跳过 string 编码/解码，直接委托给 IQueueSourceProvider
         var playSourceId = scope.ToPlaySourceId();
         if (playSourceId != null
             && playlist.PlaySourceId == playSourceId
-            && playlist.QueueCount == visibleSongs.Count(t => t.IsAvailable))
+            && playlist.QueueCount == availableVisibleCount)
             return;
 
         playlist.Clear(clearFirst);

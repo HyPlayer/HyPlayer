@@ -148,4 +148,12 @@ public partial class GroupedSongsListViewModel(
         await queueBuilder.BuildAndPlayAsync(clickedSong, scope, visibleSongs);
     }
 
+    internal async Task PlayClickedSongAsync(SongListItemViewModel clickedSong, SongListQueueScope scope, IReadOnlyList<SongListItemViewModel> visibleSongs)
+    {
+        await queueBuilder.BuildAndPlayAsync(
+            clickedSong.ProviderSong ?? clickedSong.SourceSong.ToProviderSong(),
+            scope,
+            visibleSongs.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList());
+    }
+
 }

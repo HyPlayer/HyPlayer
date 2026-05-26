@@ -449,7 +449,11 @@ public sealed partial class SongsList : UserControl
         IsAddingSongToPlaylist = true;
         try
         {
-            await _songListQueueBuilder.BuildAndPlayAsync(ncSong, GetEffectiveQueueScope(), VisibleSongs.Select(song => song.SourceSong).ToList());
+            var clickedRow = e.ClickedItem is SongListItemViewModel row ? row : SongListItemViewModel.FromNCSong(ncSong);
+            await _songListQueueBuilder.BuildAndPlayAsync(
+                clickedRow.ProviderSong ?? clickedRow.SourceSong.ToProviderSong(),
+                GetEffectiveQueueScope(),
+                VisibleSongs.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList());
         }
         finally
         {
