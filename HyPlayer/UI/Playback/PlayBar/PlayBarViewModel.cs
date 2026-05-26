@@ -311,36 +311,33 @@ public partial class PlayBarViewModel : ObservableObject
     {
         PlaylistItems.Clear();
         CurrentPlaylistItem = null;
-        var providerSnapshot = _playlist.ProviderQueueSnapshot;
-        var legacySnapshot = _playlist.LegacyItemsSnapshot;
+        var queueSnapshot = _playlist.QueueItemsSnapshot;
 
         if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
         {
             foreach (var idx in _playlist.ShuffleList)
             {
-                AddPlaylistRow(idx, providerSnapshot, legacySnapshot);
+                AddPlaylistRow(idx, queueSnapshot);
             }
         }
         else
         {
             for (var idx = 0; idx < _playlist.QueueCount; idx++)
             {
-                AddPlaylistRow(idx, providerSnapshot, legacySnapshot);
+                AddPlaylistRow(idx, queueSnapshot);
             }
         }
     }
 
-    private void AddPlaylistRow(int queueIndex, IReadOnlyList<SingleSongBase?> providerSnapshot, IReadOnlyList<HyPlayItem> legacySnapshot)
+    private void AddPlaylistRow(int queueIndex, IReadOnlyList<PlaybackQueueItemSnapshot> queueSnapshot)
     {
         if (queueIndex < 0 || queueIndex >= _playlist.QueueCount)
             return;
 
-        var providerItem = queueIndex < providerSnapshot.Count ? providerSnapshot[queueIndex] : null;
-        var legacyItem = queueIndex < legacySnapshot.Count ? legacySnapshot[queueIndex] : null;
-        if (providerItem is null && legacyItem is null)
+        if (queueIndex >= queueSnapshot.Count)
             return;
 
-        var row = PlayBarQueueItem.FromQueueItem(queueIndex, providerItem, legacyItem, NowPlayingIndex);
+        var row = PlayBarQueueItem.FromSnapshot(queueSnapshot[queueIndex], NowPlayingIndex);
         PlaylistItems.Add(row);
         if (row.IsCurrent)
             CurrentPlaylistItem = row;

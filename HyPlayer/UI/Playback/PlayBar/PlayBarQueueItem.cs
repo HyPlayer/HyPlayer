@@ -1,6 +1,5 @@
-using HyPlayer.Domain.Music;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Services.Abstractions;
 
 namespace HyPlayer.UI.Playback.PlayBar;
 
@@ -29,29 +28,14 @@ public sealed class PlayBarQueueItem
     public SingleSongBase? ProviderItem { get; }
     public bool IsCurrent { get; }
 
-    public static PlayBarQueueItem FromQueueItem(
-        int queueIndex,
-        SingleSongBase? providerItem,
-        HyPlayItem? legacyItem,
-        int nowPlayingIndex)
+    public static PlayBarQueueItem FromSnapshot(PlaybackQueueItemSnapshot snapshot, int nowPlayingIndex)
     {
-        if (providerItem is not null)
-        {
-            return new PlayBarQueueItem(
-                queueIndex,
-                providerItem.Name ?? string.Empty,
-                providerItem is IHasTranslation translatedProvider ? translatedProvider.Translation ?? string.Empty : string.Empty,
-                providerItem.CreatorList is { Count: > 0 } creators ? string.Join("; ", creators) : string.Empty,
-                providerItem,
-                queueIndex == nowPlayingIndex);
-        }
-
         return new PlayBarQueueItem(
-            queueIndex,
-            legacyItem?.Name ?? string.Empty,
-            legacyItem?.Translation ?? string.Empty,
-            legacyItem?.ArtistString ?? string.Empty,
-            null,
-            queueIndex == nowPlayingIndex);
+            snapshot.QueueIndex,
+            snapshot.Name,
+            snapshot.Translation,
+            snapshot.ArtistText,
+            snapshot.ProviderItem,
+            snapshot.QueueIndex == nowPlayingIndex);
     }
 }

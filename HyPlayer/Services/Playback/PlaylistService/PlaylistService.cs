@@ -1,5 +1,6 @@
 using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Domain.Settings;
@@ -98,15 +99,37 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<HyPlayItem> LegacyItemsSnapshot
+    public IReadOnlyList<PlaybackQueueItemSnapshot> QueueItemsSnapshot
     {
         get
         {
             lock (_lock)
             {
-                return _items.ToArray();
+                return _items
+                    .Select((item, index) => CreateQueueItemSnapshot(index, item, index < _providerItems.Count ? _providerItems[index] : null))
+                    .ToArray();
             }
         }
+    }
+
+    private static PlaybackQueueItemSnapshot CreateQueueItemSnapshot(int index, HyPlayItem item, SingleSongBase? providerItem)
+    {
+        if (providerItem is not null)
+        {
+            return new PlaybackQueueItemSnapshot(
+                index,
+                providerItem.Name ?? string.Empty,
+                providerItem is IHasTranslation translatedProvider ? translatedProvider.Translation ?? string.Empty : string.Empty,
+                providerItem.CreatorList is { Count: > 0 } creators ? string.Join("; ", creators) : string.Empty,
+                providerItem);
+        }
+
+        return new PlaybackQueueItemSnapshot(
+            index,
+            item.Name ?? string.Empty,
+            item.Translation ?? string.Empty,
+            item.ArtistString ?? string.Empty,
+            null);
     }
 
     /// <inheritdoc />
