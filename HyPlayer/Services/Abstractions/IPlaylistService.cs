@@ -19,6 +19,9 @@ public interface IPlaylistService
     /// <summary>当前播放列表（只读视图）</summary>
     IReadOnlyList<HyPlayItem> Items { get; }
 
+    /// <summary>当前播放列表的旧 UI 投影视图（只读快照）</summary>
+    IReadOnlyList<HyPlayItem> LegacyItemsSnapshot { get; }
+
     /// <summary>当前播放列表的 Provider 模型视图（只读快照）</summary>
     IReadOnlyList<SingleSongBase> ProviderItems { get; }
 

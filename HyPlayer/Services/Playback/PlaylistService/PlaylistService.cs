@@ -110,6 +110,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
+    public IReadOnlyList<HyPlayItem> LegacyItemsSnapshot => Items;
+
+    /// <inheritdoc />
     public IReadOnlyList<SingleSongBase> ProviderItems
     {
         get

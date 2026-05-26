@@ -305,7 +305,7 @@ public partial class PlayBarViewModel : ObservableObject
     public void RefreshPlaylistItems()
     {
         PlaylistItems.Clear();
-        var snapshot = _playlist.Items;
+        var snapshot = _playlist.LegacyItemsSnapshot;
 
         if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
         {

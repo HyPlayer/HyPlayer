@@ -279,7 +279,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         if (stateItem is not null && Matches(stateItem, song))
             return stateItem;
 
-        var snapshot = playlist?.Items;
+        var snapshot = playlist?.LegacyItemsSnapshot;
         if (snapshot is not null)
         {
             var item = snapshot.FirstOrDefault(item => Matches(item, song));

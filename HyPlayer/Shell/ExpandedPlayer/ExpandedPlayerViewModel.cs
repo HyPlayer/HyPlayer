@@ -205,7 +205,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
             LyricIndex = _state.LyricIndex;
             IsInFm = _state.IsInFm;
             QualityTag = _state.QualityTag;
-            PlaylistItems = _playlist.Items;
+            PlaylistItems = _playlist.LegacyItemsSnapshot;
 
             if (NowPlayingProviderItem != null)
             {
