@@ -17,7 +17,7 @@ internal sealed class SongListQueueBuilder(
 
         var currentSongId = state.NowPlayingProviderItem?.ActualId;
         var shiftSong = clickedSong.SongId == currentSongId && state.IsPlaying;
-        var nowPlaying = state.NowPlayingItem;
+        var nowPlayingIndex = playlist.NowPlayingIndex;
 
         if (!clickedSong.IsAvailable)
         {
@@ -51,9 +51,9 @@ internal sealed class SongListQueueBuilder(
         }
 
         notification.ShowMessage("无感歌单切换", "成功无感切换到歌单");
-        if (nowPlaying != null)
+        if (nowPlayingIndex >= 0)
         {
-            playlist.RestoreNowPlayingItem(nowPlaying);
+            playlist.RestoreNowPlayingIndex(nowPlayingIndex);
             playlist.NotifyAppendDone();
         }
     }

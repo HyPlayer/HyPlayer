@@ -75,15 +75,12 @@ public sealed partial class PlaylistService
     }
 
     /// <inheritdoc />
-    public void RestoreNowPlayingItem(HyPlayItem item)
+    public void RestoreNowPlayingIndex(int index)
     {
         lock (_lock)
         {
-            var index = _items.IndexOf(item);
-            if (index < 0 || ReferenceEquals(item, NowPlayingItem))
+            if (index < 0 || index >= _items.Count || index == _nowPlayingIndex)
                 return;
-            _items[index] = item;
-            _providerItems[index] = NowPlayingProviderItem;
             _nowPlayingIndex = index;
             SyncIndex();
         }

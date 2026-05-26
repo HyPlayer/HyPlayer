@@ -158,7 +158,7 @@ public interface IPlaylistService
     void CreateShufflePlayLists();
 
     /// <summary>恢复当前播放索引而不触发播放</summary>
-    void RestoreNowPlayingItem(HyPlayItem index);
+    void RestoreNowPlayingIndex(int index);
 
     /// <summary>反转播放列表</summary>
     void ReverseList();

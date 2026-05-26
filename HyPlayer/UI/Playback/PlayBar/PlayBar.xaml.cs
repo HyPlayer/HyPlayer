@@ -796,7 +796,7 @@ DoubleAnimation verticalAnimation;
                     if (providerItem is null) return;
 
                     await _control.LoadAndPlayAsync(providerItem, autoPlay: false, removeCurrentSongs: true);
-                    _playlist.RestoreNowPlayingItem(_playlist.Items[restoreIndex]);
+                    _playlist.RestoreNowPlayingIndex(restoreIndex);
                     RunOnUIThread(() =>
                     {
                         var targetingIndex = ViewModel.GetTargetingIndex();
