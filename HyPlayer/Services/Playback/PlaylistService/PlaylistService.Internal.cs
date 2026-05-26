@@ -142,7 +142,7 @@ public sealed partial class PlaylistService
     private void SyncIndex()
     {
         _state.NowPlayingIndex = _nowPlayingIndex;
-        _state.SetNowPlaying(NowPlayingItem, NowPlayingProviderItem);
+        _state.SetNowPlaying(NowPlayingProviderItem);
         ShufflingIndex = ShuffleList.IndexOf(_nowPlayingIndex);
     }
 

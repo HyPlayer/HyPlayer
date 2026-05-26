@@ -82,34 +82,19 @@ public partial class PlaybackStateService : ObservableObject
 
     /// <summary>
     /// Updates the mirrored now-playing state. Provider item is the canonical metadata path;
-    /// legacy item remains a temporary UI/local-file projection.
+    /// legacy item remains a temporary UI projection.
     /// </summary>
-    public void SetNowPlaying(HyPlayItem? item, SingleSongBase? providerItem)
+    public void SetNowPlaying(SingleSongBase? providerItem)
     {
-        NowPlayingItem = item;
+        NowPlayingItem = providerItem is null ? null : HyPlayItem.FromProviderSong(providerItem);
         NowPlayingProviderItem = providerItem;
-        NowPlayingSnapshot = PlaybackCurrentItemSnapshot.FromProvider(providerItem) ?? CreateLegacySnapshot(item);
+        NowPlayingSnapshot = PlaybackCurrentItemSnapshot.FromProvider(providerItem);
     }
 
     /// <summary>Clears mirrored now-playing state and resets the playlist index.</summary>
     public void ClearNowPlaying()
     {
-        SetNowPlaying(null, null);
+        SetNowPlaying(null);
         NowPlayingIndex = -1;
-    }
-
-    private static PlaybackCurrentItemSnapshot? CreateLegacySnapshot(HyPlayItem? item)
-    {
-        if (item is null)
-            return null;
-
-        return new PlaybackCurrentItemSnapshot(
-            item.Name ?? string.Empty,
-            item.Translation ?? string.Empty,
-            item.ArtistString ?? string.Empty,
-            item.AlbumString ?? string.Empty,
-            (long)Math.Max(0, item.LengthInMilliseconds),
-            item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive,
-            null);
     }
 }

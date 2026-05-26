@@ -50,10 +50,9 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     public async Task OnTrackChangedAsync(SingleSongBase providerItem)
     {
         if (providerItem == null) return;
-        var item = _state.NowPlayingItem ?? HyPlayItem.FromProviderSong(providerItem);
         UpdateSmtcDisplayInfo(providerItem);
 
-        _state.SetNowPlaying(item, providerItem);
+        _state.SetNowPlaying(providerItem);
 
         // 1. 刷新封面
         if (!_setting.noImage)
