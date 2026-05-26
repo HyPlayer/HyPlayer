@@ -14,22 +14,6 @@ public sealed partial class PlaylistService
     // ────────────── NCSong 相关 ──────────────
 
     /// <inheritdoc />
-    public void AppendNcSong(NCSong ncSong, int position = -1)
-    {
-        var providerSong = ncSong.ToProviderSong();
-        var hpi = ToLegacyQueueItem(providerSong);
-        lock (_lock)
-        {
-            if (_items.Contains(hpi))
-                return;
-
-            InsertQueueItem(hpi, providerSong, position);
-        }
-
-        NotifyAppendDone();
-    }
-
-    /// <inheritdoc />
     public void AppendNcSongs(IList<NCSong> ncSongs, bool clearFirst = true)
     {
         if (ncSongs == null) return;

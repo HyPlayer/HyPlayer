@@ -5,6 +5,7 @@ using HyPlayer.Features.Artist;
 using HyPlayer.Features.Comments;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
@@ -39,11 +40,10 @@ public partial class GroupedSongsListViewModel(
 
         foreach (var ncsong in selectedSongs)
         {
-            if (ncsong.ProviderSong != null)
-                playlist.AppendItem(ncsong.ProviderSong);
-            else
-                playlist.AppendNcSong(ncsong);
+            playlist.AppendItem(ncsong.ProviderSong ?? ncsong.ToProviderSong());
         }
+
+        playlist.NotifyAppendDone();
 
         if (selectedSong.ProviderSong is not null)
         {

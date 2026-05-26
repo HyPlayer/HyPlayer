@@ -10,6 +10,7 @@ using HyPlayer.Features.Comments;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -256,11 +257,10 @@ public sealed partial class SongsList : UserControl
 
         foreach (var ncsong in GetSelectedSongs())
         {
-            if (ncsong.ProviderSong != null)
-                _playlist.AppendItem(ncsong.ProviderSong);
-            else
-                _playlist.AppendNcSong(ncsong);
+            _playlist.AppendItem(ncsong.ProviderSong ?? ncsong.ToProviderSong());
         }
+
+        _playlist.NotifyAppendDone();
         if (SongContainer.SelectedItem != null)
         {
             if (selectedSong.ProviderSong is not null)
