@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
@@ -17,10 +16,6 @@ namespace HyPlayer.Services.Playback;
 /// </summary>
 public partial class PlaybackStateService : ObservableObject
 {
-    /// <summary>当前播放曲目</summary>
-    [ObservableProperty]
-    public partial HyPlayItem? NowPlayingItem { get; set; }
-
     /// <summary>当前播放曲目的 Provider 模型视图。</summary>
     [ObservableProperty]
     public partial SingleSongBase? NowPlayingProviderItem { get; set; }
@@ -81,12 +76,10 @@ public partial class PlaybackStateService : ObservableObject
     public RandomAccessStreamReference? CoverStreamReference { get; set; }
 
     /// <summary>
-    /// Updates the mirrored now-playing state. Provider item is the canonical metadata path;
-    /// legacy item remains a temporary UI projection.
+    /// Updates the mirrored now-playing state. Provider item is the canonical metadata path.
     /// </summary>
     public void SetNowPlaying(SingleSongBase? providerItem)
     {
-        NowPlayingItem = providerItem is null ? null : HyPlayItem.FromProviderSong(providerItem);
         NowPlayingProviderItem = providerItem;
         NowPlayingSnapshot = PlaybackCurrentItemSnapshot.FromProvider(providerItem);
     }
