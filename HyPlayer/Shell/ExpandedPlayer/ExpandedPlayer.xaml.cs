@@ -1009,7 +1009,8 @@ public sealed partial class ExpandedPlayer : Page
         try
         {
             ViewModel.SyncFromState();
-            OnSongChange(_playlist.Items[_playlist.NowPlayingIndex]);
+            if (_state.NowPlayingItem is { } nowPlayingItem)
+                OnSongChange(nowPlayingItem);
             RefreshAlbumCover(_state.NowPlayingItem);
             ChangeWindowMode();
             _needsRedesign = true;
