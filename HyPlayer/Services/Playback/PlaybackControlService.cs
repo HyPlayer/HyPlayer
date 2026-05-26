@@ -271,7 +271,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private HyPlayItem ResolveLegacyItem(SingleSongBase song)
     {
         var playlist = GetPlaylistService();
-        var nowPlayingItem = playlist?.NowPlayingItem;
+        var nowPlayingItem = _state.NowPlayingItem;
         if (nowPlayingItem is not null && Matches(nowPlayingItem, song))
             return nowPlayingItem;
 

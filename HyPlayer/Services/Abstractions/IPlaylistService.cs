@@ -31,9 +31,6 @@ public interface IPlaylistService
     /// <summary>当前播放索引</summary>
     int NowPlayingIndex { get; }
 
-    /// <summary>当前播放曲目</summary>
-    HyPlayItem? NowPlayingItem { get; }
-
     /// <summary>当前播放曲目的 Provider 模型视图</summary>
     SingleSongBase? NowPlayingProviderItem { get; }
 

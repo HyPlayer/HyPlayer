@@ -210,7 +210,7 @@ public partial class PlayBarViewModel : ObservableObject
     [RelayCommand]
     private async Task MoveToItemAsync(HyPlayItem item)
     {
-        if (item == null || item == _playlist.NowPlayingItem) return;
+        if (item == null || item == NowPlayingItem) return;
         var index = _playlist.IndexOfItem(item);
         if (index >= 0)
             await _playlist.MoveToIndexAsync(index);

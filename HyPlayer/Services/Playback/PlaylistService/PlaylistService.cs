@@ -148,8 +148,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     /// <inheritdoc />
     public int NowPlayingIndex => _nowPlayingIndex;
 
-    /// <inheritdoc />
-    public HyPlayItem? NowPlayingItem
+    private HyPlayItem? NowPlayingItem
     {
         get
         {
