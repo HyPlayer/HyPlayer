@@ -131,7 +131,7 @@ public sealed partial class PlaylistService
     {
         return providerItem is not null
             ? _control.LoadAndPlayAsync(providerItem, removeCurrentSongs: true)
-            : _control.LoadAndPlayAsync(item, removeCurrentSongs: true);
+            : Task.CompletedTask;
     }
 
     private void ExitPersonalFmForSourceChange()

@@ -106,11 +106,27 @@ public sealed partial class PlaylistService
         RequestNextItemAsync = RequestNextItemAsync,
         RequestNextProviderItemAsync = RequestNextProviderItemAsync,
         CommitItemAsync = CommitItemAsync,
-        LoadMediaSourceAsync = _control.LoadAndPlayAsync,
+        LoadMediaSourceAsync = LoadLegacyMediaSourceAsync,
         LoadProviderMediaSourceAsync = _control.LoadAndPlayAsync,
         Player = _player,
         TaskRunner = _taskRunner
     };
+
+    private Task LoadLegacyMediaSourceAsync(HyPlayItem item, bool setAsPrimary, bool autoPlay, bool removeCurrentSongs)
+    {
+        SingleSongBase? providerItem;
+        lock (_lock)
+        {
+            var index = _items.IndexOf(item);
+            providerItem = index >= 0 && index < _providerItems.Count
+                ? _providerItems[index]
+                : null;
+        }
+
+        return providerItem is not null
+            ? _control.LoadAndPlayAsync(providerItem, autoPlay, removeCurrentSongs)
+            : Task.CompletedTask;
+    }
 
     /// <summary>
     /// 供过渡策略回调：获取下一首曲目但不改变播放索引

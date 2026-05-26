@@ -329,8 +329,6 @@ DoubleAnimation verticalAnimation;
         {
             if (ViewModel.NowPlayingProviderItem != null)
                 await _control.LoadAndPlayAsync(ViewModel.NowPlayingProviderItem, autoPlay: true, removeCurrentSongs: true);
-            else if (ViewModel.NowPlayingItem != null)
-                await _control.LoadAndPlayAsync(ViewModel.NowPlayingItem, setAsPrimary: true, autoPlay: true, removeCurrentSongs: true);
             return;
         }
 
@@ -794,9 +792,11 @@ DoubleAnimation verticalAnimation;
 
                 if (restoreIndex >= 0)
                 {
-                    var nowItem = _playlist.Items[restoreIndex];
-                    await _control.LoadAndPlayAsync(nowItem, setAsPrimary: true, autoPlay: false, removeCurrentSongs: true);
-                    _playlist.RestoreNowPlayingItem(nowItem);
+                    var providerItem = _playlist.ProviderQueueSnapshot[restoreIndex];
+                    if (providerItem is null) return;
+
+                    await _control.LoadAndPlayAsync(providerItem, autoPlay: false, removeCurrentSongs: true);
+                    _playlist.RestoreNowPlayingItem(_playlist.Items[restoreIndex]);
                     RunOnUIThread(() =>
                     {
                         var targetingIndex = ViewModel.GetTargetingIndex();

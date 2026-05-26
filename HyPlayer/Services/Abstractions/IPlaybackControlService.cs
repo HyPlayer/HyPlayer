@@ -1,4 +1,3 @@
-using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Threading.Tasks;
@@ -34,15 +33,6 @@ public interface IPlaybackControlService
 
     /// <summary>切换播放/暂停</summary>
     void TogglePlayPause();
-
-    /// <summary>
-    /// 加载曲目媒体源并播放
-    /// </summary>
-    /// <param name="item">要播放的曲目</param>
-    /// <param name="setAsPrimary">是否设为主播放源</param>
-    /// <param name="autoPlay">是否自动开始播放</param>
-    /// <param name="removeCurrentSongs">是否移除当前播放的所有曲目</param>
-    Task LoadAndPlayAsync(HyPlayItem item, bool setAsPrimary = true, bool autoPlay = true, bool removeCurrentSongs = true);
 
     /// <summary>
     /// 加载 Provider 曲目媒体源并播放
