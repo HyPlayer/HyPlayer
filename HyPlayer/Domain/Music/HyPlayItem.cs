@@ -57,13 +57,6 @@ namespace HyPlayer.Domain.Music
             GC.SuppressFinalize(this);
         }
     }
-    public enum HyPlayItemType
-    {
-        Local,
-        LocalProgressive,
-        Netease,
-        Radio
-    }
     public class HyPlayItem : IEquatable<HyPlayItem>
     {
         public PlayItem PlayItem { get; set; }
