@@ -61,7 +61,7 @@ public sealed partial class PlaylistService
     }
 
     /// <inheritdoc />
-    public List<HyPlayItem> AppendNcSongRange(List<NCSong> ncSongs, int position = -1)
+    public List<int> AppendNcSongRange(List<NCSong> ncSongs, int position = -1)
     {
         lock (_lock)
         {
@@ -74,7 +74,9 @@ public sealed partial class PlaylistService
                 .ToList();
 
             if (insertList.Count <= 0)
-                return insertList;
+                return [];
+
+            var insertedIndexes = new List<int>();
 
             foreach (var (providerSong, index) in providerSongs.Zip(Enumerable.Range(0, providerSongs.Count)))
             {
@@ -82,10 +84,12 @@ public sealed partial class PlaylistService
                 if (_items.Contains(item))
                     continue;
 
-                InsertQueueItem(item, providerSong, position + index);
+                var targetIndex = position + index;
+                InsertQueueItem(item, providerSong, targetIndex);
+                insertedIndexes.Add(targetIndex);
             }
             NotifyAppendDone();
-            return insertList;
+            return insertedIndexes;
         }
     }
 

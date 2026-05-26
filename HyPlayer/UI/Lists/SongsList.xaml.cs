@@ -286,18 +286,11 @@ public sealed partial class SongsList : UserControl
         }
 
         var selectedSongs = GetSelectedSongs().ToList();
-        var playItems = selectedSongs.All(song => song.ProviderSong != null)
+        var playItemIndexes = selectedSongs.All(song => song.ProviderSong != null)
             ? AppendProviderSongs(selectedSongs.Select(song => song.ProviderSong!).ToList(), _playlist.NowPlayingIndex + 1)
             : _playlist.AppendNcSongRange(selectedSongs, _playlist.NowPlayingIndex + 1);
         if (_state.ActiveStrategyId == "shn")
         {
-            List<int> playItemIndexes = [];
-            foreach (var item in playItems)
-            {
-                var index = _playlist.Items.ToList().IndexOf(item);
-                playItemIndexes.Add(index);
-            }
-
             for (int i = 0; i < playItemIndexes.Count; i++)
             {
                 var item = playItemIndexes[i];
@@ -475,16 +468,17 @@ public sealed partial class SongsList : UserControl
         return IsShowingCompleteSource() ? QueueScope : SongListQueueScope.Visible;
     }
 
-    private List<HyPlayItem> AppendProviderSongs(IReadOnlyList<SingleSongBase> providerSongs, int position)
+    private List<int> AppendProviderSongs(IReadOnlyList<SingleSongBase> providerSongs, int position)
     {
-        var insertedItems = new List<HyPlayItem>();
+        var insertedIndexes = new List<int>();
         for (var offset = 0; offset < providerSongs.Count; offset++)
         {
-            _playlist.AppendItem(providerSongs[offset], position + offset);
-            insertedItems.Add(_playlist.Items[position + offset]);
+            var targetIndex = position + offset;
+            _playlist.AppendItem(providerSongs[offset], targetIndex);
+            insertedIndexes.Add(targetIndex);
         }
 
-        return insertedItems;
+        return insertedIndexes;
     }
 
     private bool IsShowingCompleteSource()
