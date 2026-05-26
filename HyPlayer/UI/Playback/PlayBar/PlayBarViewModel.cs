@@ -105,7 +105,10 @@ public partial class PlayBarViewModel : ObservableObject
     /// <summary>
     /// Observable playlist items for the ListBox binding.
     /// </summary>
-    public ObservableCollection<HyPlayItem> PlaylistItems { get; } = [];
+    public ObservableCollection<PlayBarQueueItem> PlaylistItems { get; } = [];
+
+    [ObservableProperty]
+    public partial PlayBarQueueItem? CurrentPlaylistItem { get; set; }
 
     // ── Playlist service pass-through ──
 
@@ -199,21 +202,19 @@ public partial class PlayBarViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void RemoveItem(HyPlayItem item)
+    private void RemoveItem(PlayBarQueueItem item)
     {
         if (item == null) return;
-        var index = IndexOfPlaylistItem(item);
-        if (index >= 0)
-            _playlist.RemoveAt(index);
+        if (item.QueueIndex >= 0 && item.QueueIndex < _playlist.QueueCount)
+            _playlist.RemoveAt(item.QueueIndex);
     }
 
     [RelayCommand]
-    private async Task MoveToItemAsync(HyPlayItem item)
+    private async Task MoveToItemAsync(PlayBarQueueItem item)
     {
-        if (item == null || item == NowPlayingItem) return;
-        var index = IndexOfPlaylistItem(item);
-        if (index >= 0)
-            await _playlist.MoveToIndexAsync(index);
+        if (item == null || item.QueueIndex == NowPlayingIndex) return;
+        if (item.QueueIndex >= 0 && item.QueueIndex < _playlist.QueueCount)
+            await _playlist.MoveToIndexAsync(item.QueueIndex);
     }
 
     private void OnPlaybackStatePropertyChanged(string? propertyName)
@@ -257,7 +258,11 @@ public partial class PlayBarViewModel : ObservableObject
         });
     }
 
-    partial void OnNowPlayingItemChanged(HyPlayItem? value) => NotifyPlayBarProperties();
+    partial void OnNowPlayingItemChanged(HyPlayItem? value)
+    {
+        NotifyPlayBarProperties();
+        RefreshPlaylistItems();
+    }
     partial void OnNowPlayingProviderItemChanged(SingleSongBase? value) => NotifyPlayBarProperties();
     partial void OnIsPlayingChanged(bool value) => OnPropertyChanged(nameof(PlayStateGlyph));
     partial void OnPositionChanged(TimeSpan value)
@@ -305,33 +310,40 @@ public partial class PlayBarViewModel : ObservableObject
     public void RefreshPlaylistItems()
     {
         PlaylistItems.Clear();
-        var snapshot = _playlist.LegacyItemsSnapshot;
+        CurrentPlaylistItem = null;
+        var providerSnapshot = _playlist.ProviderQueueSnapshot;
+        var legacySnapshot = _playlist.LegacyItemsSnapshot;
 
         if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
         {
             foreach (var idx in _playlist.ShuffleList)
             {
-                if (idx >= 0 && idx < snapshot.Count)
-                    PlaylistItems.Add(snapshot[idx]);
+                AddPlaylistRow(idx, providerSnapshot, legacySnapshot);
             }
         }
         else
         {
-            foreach (var item in snapshot)
-                PlaylistItems.Add(item);
+            for (var idx = 0; idx < _playlist.QueueCount; idx++)
+            {
+                AddPlaylistRow(idx, providerSnapshot, legacySnapshot);
+            }
         }
     }
 
-    private int IndexOfPlaylistItem(HyPlayItem item)
+    private void AddPlaylistRow(int queueIndex, IReadOnlyList<SingleSongBase?> providerSnapshot, IReadOnlyList<HyPlayItem> legacySnapshot)
     {
-        var snapshot = _playlist.LegacyItemsSnapshot;
-        for (var i = 0; i < snapshot.Count; i++)
-        {
-            if (ReferenceEquals(snapshot[i], item))
-                return i;
-        }
+        if (queueIndex < 0 || queueIndex >= _playlist.QueueCount)
+            return;
 
-        return -1;
+        var providerItem = queueIndex < providerSnapshot.Count ? providerSnapshot[queueIndex] : null;
+        var legacyItem = queueIndex < legacySnapshot.Count ? legacySnapshot[queueIndex] : null;
+        if (providerItem is null && legacyItem is null)
+            return;
+
+        var row = PlayBarQueueItem.FromQueueItem(queueIndex, providerItem, legacyItem, NowPlayingIndex);
+        PlaylistItems.Add(row);
+        if (row.IsCurrent)
+            CurrentPlaylistItem = row;
     }
 
     /// <summary>

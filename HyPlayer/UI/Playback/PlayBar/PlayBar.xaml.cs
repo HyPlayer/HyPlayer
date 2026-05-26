@@ -82,7 +82,7 @@ public sealed partial class PlayBar
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding = false;
     private TimeSpan StartingTimeSpan = TimeSpan.Zero;
-    public ObservableCollection<HyPlayItem> PlayItems => ViewModel.PlaylistItems;
+    public ObservableCollection<PlayBarQueueItem> PlayItems => ViewModel.PlaylistItems;
 
     public SolidColorBrush PlaybackAccentBrush
     {
@@ -363,9 +363,9 @@ DoubleAnimation verticalAnimation;
 
     private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ListBoxPlayList.SelectedItem != null && ListBoxPlayList.SelectedItem != ViewModel.NowPlayingItem)
+        if (ListBoxPlayList.SelectedItem is PlayBarQueueItem item && !item.IsCurrent)
         {
-            ViewModel.MoveToItemCommand.Execute(ListBoxPlayList.SelectedItem as HyPlayItem);
+            ViewModel.MoveToItemCommand.Execute(item);
         }
     }
 
@@ -433,7 +433,7 @@ DoubleAnimation verticalAnimation;
     {
         if (sender is Button btn)
         {
-            var item = btn.DataContext as HyPlayItem;
+            var item = btn.DataContext as PlayBarQueueItem;
             ViewModel.RemoveItemCommand.Execute(item);
         }
     }
@@ -629,9 +629,10 @@ DoubleAnimation verticalAnimation;
 
     private void ButtonPlayList_OnClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.NowPlayingIndex >= 0 && ViewModel.NowPlayingIndex < PlayItems.Count)
+        var targetingIndex = ViewModel.GetTargetingIndex();
+        if (targetingIndex >= 0 && targetingIndex < PlayItems.Count)
         {
-            ListBoxPlayList.ScrollIntoView(PlayItems[ViewModel.GetTargetingIndex()]);
+            ListBoxPlayList.ScrollIntoView(PlayItems[targetingIndex]);
         }
     }
 

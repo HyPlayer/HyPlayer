@@ -2,7 +2,6 @@
     x:Class="HyPlayer.UI.Playback.PlayBar.PlayBar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:classes="using:HyPlayer.Domain.Music"
     xmlns:converters="using:HyPlayer.UI.Converters"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -10,6 +9,7 @@
     xmlns:hy="using:HyPlayer.Infrastructure.Extensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
+    xmlns:playBar="using:HyPlayer.UI.Playback.PlayBar"
     d:DesignHeight="102.667"
     d:DesignWidth="1289"
     CornerRadius="20"
@@ -1061,23 +1061,23 @@
                                     Height="500"
                                     ItemContainerStyle="{ThemeResource ListViewItemStyle}"
                                     ItemsSource="{x:Bind PlayItems, Mode=OneWay}"
-                                    SelectedItem="{x:Bind ViewModel.NowPlayingItem, Mode=OneWay}"
+                                    SelectedItem="{x:Bind ViewModel.CurrentPlaylistItem, Mode=OneWay}"
                                     SelectionChanged="ListBoxPlayList_OnSelectionChanged"
                                     SelectionMode="Single">
                                     <ListView.ItemTemplate>
-                                        <DataTemplate x:DataType="classes:HyPlayItem">
+                                        <DataTemplate x:DataType="playBar:PlayBarQueueItem">
                                             <Border>
                                                 <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
                                                     <StackPanel Width="345" Orientation="Vertical">
                                                         <StackPanel Orientation="Horizontal">
-                                                            <TextBlock FontWeight="Bold" Text="{x:Bind Path=Name}" />
+                                                            <TextBlock FontWeight="Bold" Text="{x:Bind Name}" />
                                                             <TextBlock Foreground="Gray" Visibility="{x:Bind Translation, Converter={StaticResource EmptyStringToVisibilityConverter}}">
                                                                 <Run Text=" (" />
                                                                 <Run Text="{x:Bind Translation}" />
                                                                 <Run Text=")" />
                                                             </TextBlock>
                                                         </StackPanel>
-                                                        <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Path=ArtistString}" />
+                                                        <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind ArtistText}" />
                                                     </StackPanel>
                                                     <Button
                                                         Width="24"
