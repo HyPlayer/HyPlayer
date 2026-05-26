@@ -153,40 +153,6 @@ internal static class The163KeyHelper
         }
     }
 
-    /// <summary>
-    ///     尝试设置163音乐信息到文件
-    /// </summary>
-    /// <param Name="tag"></param>
-    /// <param Name="trackId"></param>
-    /// <returns></returns>
-    public static bool TrySetMusicInfo(Tag tag, HyPlayItem pi)
-    {
-        if (tag is null)
-            throw new ArgumentNullException(nameof(tag));
-
-        try
-        {
-            var key = new The163KeyClass
-            {
-                album = pi.Album.Name,
-                albumId = ulong.Parse(pi.Album.Id),
-                albumPic = pi.Album.Cover,
-                bitrate = pi.Bitrate,
-                artist = null,
-                duration = pi.LengthInMilliseconds,
-                musicId = long.Parse(pi.Id),
-                musicName = pi.Name,
-                format = pi.SubExt.ToLower()
-            };
-            key.artist = pi.Artist.Select(t => new List<object> { t.Name, int.Parse(t.Id) }).ToList();
-            return TrySetMusicInfo(tag, key);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     public static bool TrySetMusicInfo(Tag tag, SingleSongBase song, int bitrate, string format)
     {
         if (tag is null)
