@@ -131,7 +131,7 @@ public partial class GroupedSongsListViewModel(
 
     public void OpenMv(SongListItemViewModel selectedSong)
     {
-        navigation.Navigate(typeof(MVPage), selectedSong.SourceSong);
+        navigation.Navigate(typeof(MVPage), selectedSong);
     }
 
     public async Task CollectAsync(SongListItemViewModel selectedSong)

@@ -9,7 +9,9 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -52,7 +54,25 @@ public sealed partial class MVPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (e.Parameter is NCSong input)
+        if (e.Parameter is SongListItemViewModel row)
+        {
+            MVId = row.MVId;
+            songid = row.SongId;
+            _relateiveLoaderTask = LoadRelateive();
+        }
+        else if (e.Parameter is NeteaseSong song)
+        {
+            MVId = song.MvId ?? string.Empty;
+            songid = song.ActualId;
+            _relateiveLoaderTask = LoadRelateive();
+        }
+        else if (e.Parameter is SingleSongBase providerSong)
+        {
+            MVId = e.Parameter.ToString();
+            songid = providerSong.ActualId;
+            LoadThings();
+        }
+        else if (e.Parameter is NCSong input)
         {
             MVId = input.MVId.ToString();
             songid = input.SongId;

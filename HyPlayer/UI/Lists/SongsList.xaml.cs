@@ -357,7 +357,7 @@ public sealed partial class SongsList : UserControl
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
         if (!TryGetSelectedRow(out var selectedSong)) return;
-        _navigation.Navigate(typeof(MVPage), selectedSong.SourceSong);
+        _navigation.Navigate(typeof(MVPage), selectedSong);
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
