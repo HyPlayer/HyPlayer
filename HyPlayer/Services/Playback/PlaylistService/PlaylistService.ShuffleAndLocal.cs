@@ -20,12 +20,12 @@ public sealed partial class PlaylistService
         var currentSongId = NowPlayingItem?.Id ?? "-1";
         lock (_lock)
         {
-            if (_items.Count != 0)
+            if (_providerItems.Count != 0)
             {
                 HashSet<int> shuffledNumbers = [];
                 if (currentSongId != "-1")
                 {
-                    int playItemIndex = _items.FindIndex(s => s.GetItemIdentity().ActualId == currentSongId);
+                    int playItemIndex = _providerItems.FindIndex(s => s?.ActualId == currentSongId);
                     if (playItemIndex != -1)
                     {
                         shuffledNumbers.Add(playItemIndex);
@@ -33,9 +33,9 @@ public sealed partial class PlaylistService
                     }
                 }
 
-                while (shuffledNumbers.Count < _items.Count)
+                while (shuffledNumbers.Count < _providerItems.Count)
                 {
-                    var indexShuffled = RandomNumberGenerator.GetInt32(_items.Count);
+                    var indexShuffled = RandomNumberGenerator.GetInt32(_providerItems.Count);
                     if (shuffledNumbers.Add(indexShuffled))
                         ShuffleList.Add(indexShuffled);
                 }
@@ -50,7 +50,7 @@ public sealed partial class PlaylistService
     {
         lock (_lock)
         {
-            if (index < 0 || index >= _items.Count || index == _nowPlayingIndex)
+            if (index < 0 || index >= _providerItems.Count || index == _nowPlayingIndex)
                 return;
             _nowPlayingIndex = index;
             SyncIndex();
@@ -63,10 +63,9 @@ public sealed partial class PlaylistService
     {
         lock (_lock)
         {
-            _items.Reverse();
             _providerItems.Reverse();
-            if (_nowPlayingIndex >= 0 && _nowPlayingIndex < _items.Count)
-                _nowPlayingIndex = _items.Count - _nowPlayingIndex - 1;
+            if (_nowPlayingIndex >= 0 && _nowPlayingIndex < _providerItems.Count)
+                _nowPlayingIndex = _providerItems.Count - _nowPlayingIndex - 1;
             SyncIndex();
         }
         PublishPlaylistChanged();
@@ -80,8 +79,6 @@ public sealed partial class PlaylistService
         _trackEndCts?.Cancel();
         _trackEndCts?.Dispose();
         _trackEndCts = null;
-        DisposePlayItems(_items);
-        _items.Clear();
         _providerItems.Clear();
         _state.ClearNowPlaying();
         _trackEndLock.Dispose();

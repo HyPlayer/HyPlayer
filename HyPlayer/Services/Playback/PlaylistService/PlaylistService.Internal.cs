@@ -1,8 +1,6 @@
-using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback.LocalProvider;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,77 +12,19 @@ public sealed partial class PlaylistService
 {
     // ────────────── 内部辅助 ──────────────
 
-    private void InsertQueueItem(HyPlayItem item, int position = -1)
-    {
-        InsertQueueItem(item, null, position);
-    }
-
     private void InsertQueueItem(ProvidableItemBase item, int position = -1)
     {
-        var playItem = FindLegacyQueueItem(item) ?? (item is LocalSong localSong ? ToLegacyQueueItem(localSong) : HyPlayItem.FromProviderItem(item));
-        InsertQueueItem(playItem, item as SingleSongBase, position);
+        InsertQueueItem(item as SingleSongBase, position);
     }
 
-    private static HyPlayItem ToLegacyQueueItem(LocalSong song)
+    private void InsertQueueItem(SingleSongBase? providerItem, int position = -1)
     {
-        return new HyPlayItem
+        if (position < 0 || position >= _providerItems.Count)
         {
-            ItemType = song.IsNcm ? HyPlayItemType.Netease : HyPlayItemType.Local,
-            Album = new NCAlbum
-            {
-                AlbumType = HyPlayItemType.Local,
-                Id = song.Album?.ActualId ?? string.Empty,
-                Name = song.Album?.Name ?? string.Empty,
-                Cover = string.Empty
-            },
-            Artist = song.Artists?.Select(artist => new NCArtist
-            {
-                Id = artist.ActualId ?? string.Empty,
-                Name = artist.Name ?? string.Empty,
-                Type = HyPlayItemType.Local
-            }).ToList() ?? [],
-            Bitrate = song.Bitrate,
-            CDName = song.CdName ?? "01",
-            Translation = song.Translation ?? string.Empty,
-            LocalStorageFile = song.StorageFile,
-            LocalFileTag = song.FileTag,
-            Id = song.LegacyNeteaseId,
-            IsLocalFile = true,
-            LengthInMilliseconds = song.Duration,
-            Name = song.Name ?? string.Empty,
-            Size = 0,
-            SubExt = song.ExtensionName ?? string.Empty,
-            QualityTag = string.Empty,
-            InfoTag = song.InfoTag ?? string.Empty,
-            TrackId = song.TrackNumber,
-            Url = song.ActualId ?? string.Empty,
-            ProviderIdentityProviderId = song.ProviderId,
-            ProviderIdentityTypeId = song.TypeId,
-            ProviderIdentityActualId = song.ActualId ?? string.Empty
-        };
-    }
-
-    private HyPlayItem? FindLegacyQueueItem(ProvidableItemBase item)
-    {
-        return _items.FirstOrDefault(existing =>
-        {
-            var identity = existing.GetItemIdentity();
-            return identity.ProviderId == item.ProviderId
-                   && identity.TypeId == item.TypeId
-                   && identity.ActualId == item.ActualId;
-        });
-    }
-
-    private void InsertQueueItem(HyPlayItem item, SingleSongBase? providerItem, int position = -1)
-    {
-        if (position < 0 || position >= _items.Count)
-        {
-            _items.Add(item);
             _providerItems.Add(providerItem);
         }
         else
         {
-            _items.Insert(position, item);
             _providerItems.Insert(position, providerItem);
         }
     }
@@ -174,7 +114,7 @@ public sealed partial class PlaylistService
     {
         lock (_lock)
         {
-            return _items.Count == 1 && _nowPlayingIndex == 0;
+            return _providerItems.Count == 1 && _nowPlayingIndex == 0;
         }
     }
 
@@ -217,16 +157,4 @@ public sealed partial class PlaylistService
             "publish playlist changed");
     }
 
-    private static void DisposePlayItems(IEnumerable<HyPlayItem> items)
-    {
-        foreach (var item in items)
-            DisposePlayItem(item);
-    }
-
-    private static void DisposePlayItem(HyPlayItem? item)
-    {
-        item?.PlayItem?.Dispose();
-        if (item is not null)
-            item.PlayItem = null;
-    }
 }

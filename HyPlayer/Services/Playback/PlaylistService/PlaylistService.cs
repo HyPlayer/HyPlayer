@@ -35,7 +35,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly PlayCoreBase _playCore;
 
-    private readonly List<HyPlayItem> _items = new();
     private readonly List<SingleSongBase?> _providerItems = new();
     private readonly Lock _lock = new();
 
@@ -106,14 +105,14 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         {
             lock (_lock)
             {
-                return _items
-                    .Select((item, index) => CreateQueueItemSnapshot(index, item, index < _providerItems.Count ? _providerItems[index] : null))
+                return _providerItems
+                    .Select(CreateQueueItemSnapshot)
                     .ToArray();
             }
         }
     }
 
-    private static PlaybackQueueItemSnapshot CreateQueueItemSnapshot(int index, HyPlayItem item, SingleSongBase? providerItem)
+    private static PlaybackQueueItemSnapshot CreateQueueItemSnapshot(SingleSongBase? providerItem, int index)
     {
         if (providerItem is not null)
         {
@@ -127,9 +126,9 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
 
         return new PlaybackQueueItemSnapshot(
             index,
-            item.Name ?? string.Empty,
-            item.Translation ?? string.Empty,
-            item.ArtistString ?? string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
             null);
     }
 
@@ -164,7 +163,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         {
             lock (_lock)
             {
-                return _items.Count;
+                return _providerItems.Count;
             }
         }
     }
@@ -178,8 +177,8 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         {
             lock (_lock)
             {
-                return _nowPlayingIndex >= 0 && _nowPlayingIndex < _items.Count
-                    ? _items[_nowPlayingIndex]
+                return _nowPlayingIndex >= 0 && _nowPlayingIndex < _providerItems.Count && _providerItems[_nowPlayingIndex] is { } providerItem
+                    ? HyPlayItem.FromProviderSong(providerItem)
                     : null;
             }
         }
@@ -258,8 +257,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 && providerItem.TypeId == item.TypeId
                 && providerItem.ActualId == item.ActualId);
 
-            if (index >= 0 && index < _items.Count)
-                _items[index].InfoTag = infoTag;
+            // Queue display rows are provider-backed; keep this API as a no-op until InfoTag is modeled on provider snapshots.
         }
     }
 
@@ -322,7 +320,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         lock (_lock)
         {
             if (position < 0)
-                position = _items.Count;
+                position = _providerItems.Count;
 
             for (var offset = 0; offset < providerItems.Count; offset++)
             {
@@ -341,17 +339,15 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     {
         lock (_lock)
         {
-            if (index < 0 || index >= _items.Count)
+            if (index < 0 || index >= _providerItems.Count)
                 return;
 
-            if (_items.Count == 1)
+            if (_providerItems.Count == 1)
             {
                 Clear();
                 return;
             }
 
-            DisposePlayItem(_items[index]);
-            _items.RemoveAt(index);
             _providerItems.RemoveAt(index);
 
             // 调整当前播放索引
@@ -362,8 +358,8 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             else if (index == _nowPlayingIndex)
             {
                 // 当前曲目被移除，索引不变但指向了新曲目
-                if (_nowPlayingIndex >= _items.Count)
-                    _nowPlayingIndex = _items.Count - 1;
+                if (_nowPlayingIndex >= _providerItems.Count)
+                    _nowPlayingIndex = _providerItems.Count - 1;
             }
 
             PublishPlaylistChanged();
@@ -377,35 +373,26 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
 
         lock (_lock)
         {
-            if (_items.Count == 0)
+            if (_providerItems.Count == 0)
                 return;
 
             if (clearAll)
             {
                 _taskRunner.Forget(_playCore.StopAsync(), "stop PlayCore before clearing playlist");
-                DisposePlayItems(_items);
-                _items.Clear();
                 _providerItems.Clear();
                 _nowPlayingIndex = -1;
                 _state.ClearNowPlaying();
             }
             else
             {
-                HyPlayItem? nowPlayingItem = null;
-                if (_nowPlayingIndex >= 0 && _nowPlayingIndex < _items.Count)
-                    nowPlayingItem = _items[_nowPlayingIndex];
-
-                var itemsToDispose = _items.Where(t => t != nowPlayingItem).ToList();
                 var nowPlayingProviderItem = _nowPlayingIndex >= 0 && _nowPlayingIndex < _providerItems.Count
                     ? _providerItems[_nowPlayingIndex]
                     : null;
 
-                _items.Clear();
                 _providerItems.Clear();
-                if (nowPlayingItem is not null)
-                    InsertQueueItem(nowPlayingItem, nowPlayingProviderItem);
-                DisposePlayItems(itemsToDispose);
-                _nowPlayingIndex = _items.Count > 0 ? 0 : -1;
+                if (nowPlayingProviderItem is not null)
+                    InsertQueueItem(nowPlayingProviderItem);
+                _nowPlayingIndex = _providerItems.Count > 0 ? 0 : -1;
             }
 
             PublishPlaylistChanged();

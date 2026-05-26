@@ -1,4 +1,3 @@
-using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -15,7 +14,7 @@ public sealed partial class PlaylistService
     /// <inheritdoc />
     public async Task MoveNextAsync(bool userInitiated = false)
     {
-        if (_items.Count == 0)
+        if (_providerItems.Count == 0)
             return;
 
         if (userInitiated)
@@ -39,24 +38,22 @@ public sealed partial class PlaylistService
         if (nextIndex is null)
             return;
 
-        HyPlayItem item;
         SingleSongBase? providerItem;
         lock (_lock)
         {
             _nowPlayingIndex = nextIndex.Value;
-            item = _items[_nowPlayingIndex];
             providerItem = _providerItems[_nowPlayingIndex];
             SyncIndex();
         }
         SchedulePlayCorePlaylistSync();
 
-        await LoadQueueEntryAsync(item, providerItem);
+        await LoadQueueEntryAsync(providerItem);
     }
 
     /// <inheritdoc />
     public async Task MovePreviousAsync()
     {
-        if (_items.Count == 0)
+        if (_providerItems.Count == 0)
             return;
 
         await _activeTransition.OnManualSkipAsync(BuildTransitionContext());
@@ -65,18 +62,16 @@ public sealed partial class PlaylistService
         if (prevIndex is null)
             return;
 
-        HyPlayItem item;
         SingleSongBase? providerItem;
         lock (_lock)
         {
             _nowPlayingIndex = prevIndex.Value;
-            item = _items[_nowPlayingIndex];
             providerItem = _providerItems[_nowPlayingIndex];
             SyncIndex();
         }
         SchedulePlayCorePlaylistSync();
 
-        await LoadQueueEntryAsync(item, providerItem);
+        await LoadQueueEntryAsync(providerItem);
     }
 
     /// <inheritdoc />
@@ -99,21 +94,19 @@ public sealed partial class PlaylistService
         // 中断正在进行的过渡
         await _activeTransition.OnManualSkipAsync(BuildTransitionContext());
 
-        HyPlayItem item;
         SingleSongBase? providerItem;
         lock (_lock)
         {
             _nowPlayingIndex = index;
-            item = _items[_nowPlayingIndex];
             providerItem = _providerItems[_nowPlayingIndex];
             SyncIndex();
         }
         SchedulePlayCorePlaylistSync();
 
-        await LoadQueueEntryAsync(item, providerItem);
+        await LoadQueueEntryAsync(providerItem);
     }
 
-    private Task LoadQueueEntryAsync(HyPlayItem item, SingleSongBase? providerItem)
+    private Task LoadQueueEntryAsync(SingleSongBase? providerItem)
     {
         return providerItem is not null
             ? _control.LoadAndPlayAsync(providerItem, removeCurrentSongs: true)

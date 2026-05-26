@@ -1,5 +1,4 @@
 using HyPlayer.Domain.Music;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
@@ -81,15 +80,14 @@ public sealed partial class PlaylistService
                     {
                         if (result.Batches.Count == 1 && batch.Count == 1)
                         {
-                            var singleItem = ToLegacyQueueItem(providerSong);
-                            if (_items.Contains(singleItem))
+                            if (ContainsProviderItem(providerSong))
                                 continue;
 
-                            InsertQueueItem(singleItem, providerSong);
+                            InsertQueueItem(providerSong);
                         }
                         else
                         {
-                            InsertQueueItem(ToLegacyQueueItem(providerSong), providerSong);
+                            InsertQueueItem(providerSong);
                         }
 
                         hasChanges = true;
@@ -106,8 +104,11 @@ public sealed partial class PlaylistService
         }
     }
 
-    private HyPlayItem ToLegacyQueueItem(SingleSongBase song)
+    private bool ContainsProviderItem(SingleSongBase song)
     {
-        return FindLegacyQueueItem(song) ?? HyPlayItem.FromProviderSong(song);
+        return _providerItems.Any(providerItem => providerItem is not null
+            && providerItem.ProviderId == song.ProviderId
+            && providerItem.TypeId == song.TypeId
+            && providerItem.ActualId == song.ActualId);
     }
 }
