@@ -543,7 +543,8 @@ public sealed partial class ExpandedPlayer : Page
 
     public void OnSongChange(HyPlayItem mpi)
     {
-        _lyricHasBeenLoaded = _lastSong == _state.NowPlayingItem;
+        var lyricIsReady = _lastSong == _state.NowPlayingItem;
+        _lyricHasBeenLoaded = lyricIsReady;
         _ = _notification.InvokeOnUIThread(() =>
         {
             var artistText = mpi?.ArtistString;

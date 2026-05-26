@@ -195,7 +195,7 @@ public sealed partial class MainPage : Page
             }
             else
             {
-                CollapseBar().SafeFireAndForget();
+                CollapseBar();
             }
         });
     }
