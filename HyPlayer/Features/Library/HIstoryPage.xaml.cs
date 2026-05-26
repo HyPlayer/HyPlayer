@@ -142,15 +142,6 @@ public sealed partial class HistoryPage : Page
         if (item is SingleSongBase song)
             return await SongListItemViewModel.FromProviderSongAsync(song, order);
 
-        return SongListItemViewModel.FromNCSong(new NCSong
-        {
-            Order = order,
-            SongId = item.ActualId,
-            SongName = item.Name,
-            Artist = [],
-            Album = new NCAlbum { Id = string.Empty, Name = string.Empty, Cover = string.Empty, AlbumType = HyPlayItemType.Netease },
-            Type = HyPlayItemType.Netease,
-            IsAvailable = true
-        });
+        return SongListItemViewModel.FromFallback(item.ActualId, item.Name, order);
     }
 }

@@ -238,16 +238,6 @@ public sealed partial class MusicCloudPage : Page
             return await SongListItemViewModel.FromProviderSongAsync(song, order, isCloud: true);
         }
 
-        return SongListItemViewModel.FromNCSong(new NCSong
-        {
-            Order = order,
-            SongId = item.ActualId,
-            SongName = item.Name,
-            IsAvailable = true,
-            IsCloud = true,
-            Artist = [],
-            Album = new NCAlbum { Id = string.Empty, Name = string.Empty, Cover = string.Empty, AlbumType = HyPlayItemType.Netease },
-            Type = HyPlayItemType.Netease
-        });
+        return SongListItemViewModel.FromFallback(item.ActualId, item.Name, order, isCloud: true);
     }
 }

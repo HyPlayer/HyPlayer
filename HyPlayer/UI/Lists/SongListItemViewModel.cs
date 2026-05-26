@@ -20,6 +20,10 @@ public sealed class SongListItemViewModel
     private const string DefaultCoverUrl = "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg";
     private readonly NCSong? _sourceSong;
 
+    private SongListItemViewModel()
+    {
+    }
+
     public SongListItemViewModel(NCSong song)
     {
         ArgumentNullException.ThrowIfNull(song);
@@ -45,22 +49,22 @@ public sealed class SongListItemViewModel
 
     public NCSong SourceSong => _sourceSong ?? ToNCSong();
 
-    public NCAlbum Album { get; }
-    public string Alias { get; }
-    public List<NCArtist> Artist { get; }
-    public string CDName { get; }
-    public bool IsAvailable { get; }
-    public bool IsCloud { get; }
-    public bool IsVip { get; }
-    public double LengthInMilliseconds { get; }
-    public string MVId { get; }
-    public int Order { get; }
-    public string SongId { get; }
-    public string SongName { get; }
-    public SingleSongBase? ProviderSong { get; }
-    public int TrackId { get; }
-    public string TranslatedName { get; }
-    public HyPlayItemType Type { get; }
+    public NCAlbum Album { get; private init; }
+    public string Alias { get; private init; }
+    public List<NCArtist> Artist { get; private init; }
+    public string CDName { get; private init; }
+    public bool IsAvailable { get; private init; }
+    public bool IsCloud { get; private init; }
+    public bool IsVip { get; private init; }
+    public double LengthInMilliseconds { get; private init; }
+    public string MVId { get; private init; }
+    public int Order { get; private init; }
+    public string SongId { get; private init; }
+    public string SongName { get; private init; }
+    public SingleSongBase? ProviderSong { get; private init; }
+    public int TrackId { get; private init; }
+    public string TranslatedName { get; private init; }
+    public HyPlayItemType Type { get; private init; }
     public int DisplayOrder => Order + 1;
 
     public Uri? Cover => Ioc.Default.GetRequiredService<Setting>().noImage
@@ -109,7 +113,7 @@ public sealed class SongListItemViewModel
 
         var creators = await song.GetCreatorsAsync();
         var neteaseSong = song as NeteaseSong;
-        return new SongListItemViewModel(new NCSong
+        return new SongListItemViewModel
         {
             Album = new NCAlbum
             {
@@ -138,7 +142,30 @@ public sealed class SongListItemViewModel
             TranslatedName = neteaseSong?.Translation,
             IsAvailable = song.Available,
             Type = HyPlayItemType.Netease,
-        });
+        };
+    }
+
+    public static SongListItemViewModel FromFallback(string? id, string? name, int order, bool isCloud = false)
+    {
+        return new SongListItemViewModel
+        {
+            Album = new NCAlbum { Id = string.Empty, Name = string.Empty, Cover = string.Empty, AlbumType = HyPlayItemType.Netease },
+            Alias = string.Empty,
+            Artist = [],
+            CDName = string.Empty,
+            IsAvailable = true,
+            IsCloud = isCloud,
+            IsVip = false,
+            LengthInMilliseconds = 0,
+            MVId = string.Empty,
+            Order = order,
+            SongId = id ?? string.Empty,
+            SongName = name ?? string.Empty,
+            ProviderSong = null,
+            TrackId = 0,
+            TranslatedName = string.Empty,
+            Type = HyPlayItemType.Netease,
+        };
     }
 }
 
