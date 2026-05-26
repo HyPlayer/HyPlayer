@@ -41,48 +41,6 @@ public static class Mapper
         };
     }
 
-    public static List<NCSong> ToNCSongs(this IEnumerable<SingleSongBase> songs)
-    {
-        return songs.Select(ToNCSong).ToList();
-    }
-
-    public static SingleSongBase ToSingleSong(this NCSong song)
-    {
-        return new NeteaseSong
-        {
-            ActualId = song.SongId,
-            Name = song.SongName,
-            Album = song.Album is null
-                ? null
-                : new NeteaseAlbum
-                {
-                    ActualId = song.Album.Id,
-                    Name = song.Album.Name,
-                    PictureUrl = song.Album.Cover,
-                    Alias = string.IsNullOrWhiteSpace(song.Album.Alias) ? null : [song.Album.Alias]
-                },
-            Artists = song.Artist?.Select(artist => new NeteaseArtist
-            {
-                ActualId = artist.Id,
-                Name = artist.Name
-            }).Cast<PersonBase>().ToList(),
-            CreatorList = song.Artist?.Select(artist => artist.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToList(),
-            Duration = (long)song.LengthInMilliseconds,
-            Available = song.IsAvailable,
-            Alias = string.IsNullOrWhiteSpace(song.Alias) ? null : song.Alias.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-            MvId = song.MVId,
-            CdName = song.CDName,
-            TrackNumber = song.TrackId,
-            CoverUrl = song.Album?.Cover,
-            Translation = song.TranslatedName
-        };
-    }
-
-    public static SingleSongBase ToProviderSong(this NCSong song)
-    {
-        return song.ProviderSong ?? song.ToSingleSong();
-    }
-
     public static NCAlbum ToNCAlbum(this ContainerBase album)
     {
         return new NCAlbum

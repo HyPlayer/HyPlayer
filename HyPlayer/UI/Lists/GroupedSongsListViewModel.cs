@@ -40,7 +40,7 @@ public partial class GroupedSongsListViewModel(
 
         foreach (var song in selectedSongs)
         {
-            playlist.AppendItem(song.ProviderSong ?? song.SourceSong.ToProviderSong());
+            playlist.AppendItem(song.ToProviderSong());
         }
 
         if (selectedSong.ProviderSong is not null)
@@ -118,14 +118,14 @@ public partial class GroupedSongsListViewModel(
     public void DownloadSongs(IEnumerable<SongListItemViewModel> selectedSongs)
     {
         DownloadManager.AddDownload(selectedSongs
-            .Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong())
+            .Select(song => song.ToProviderSong())
             .ToList());
     }
 
     private List<int> AppendToNext(IReadOnlyList<SongListItemViewModel> selectedSongs)
     {
         return playlist.AppendItems(
-            selectedSongs.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList(),
+            selectedSongs.Select(song => song.ToProviderSong()).ToList(),
             playlist.NowPlayingIndex + 1);
     }
 
@@ -142,9 +142,9 @@ public partial class GroupedSongsListViewModel(
     internal async Task PlayClickedSongAsync(SongListItemViewModel clickedSong, SongListQueueScope scope, IReadOnlyList<SongListItemViewModel> visibleSongs)
     {
         await queueBuilder.BuildAndPlayAsync(
-            clickedSong.ProviderSong ?? clickedSong.SourceSong.ToProviderSong(),
+            clickedSong.ToProviderSong(),
             scope,
-            visibleSongs.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList());
+            visibleSongs.Select(song => song.ToProviderSong()).ToList());
     }
 
 }

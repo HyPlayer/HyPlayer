@@ -146,7 +146,7 @@ namespace HyPlayer.Features.Album
             {
                 var songs = new List<SingleSongBase>();
                 foreach (var discSongs in (IEnumerable<SongListItemGroup>)AlbumSongsViewSource.Source)
-                    songs.AddRange(discSongs.Select(song => song.ProviderSong ?? HyPlayer.Infrastructure.Netease.Mapper.ToProviderSong(song.SourceSong)));
+                    songs.AddRange(discSongs.Select(song => song.ToProviderSong()));
                 DownloadManager.AddDownload(songs);
             }
         }

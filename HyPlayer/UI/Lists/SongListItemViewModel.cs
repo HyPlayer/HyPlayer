@@ -3,6 +3,7 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
@@ -102,6 +103,41 @@ public sealed class SongListItemViewModel
             TrackId = TrackId,
             TranslatedName = TranslatedName,
             Type = Type
+        };
+    }
+
+    public SingleSongBase ToProviderSong()
+    {
+        if (ProviderSong != null)
+            return ProviderSong;
+
+        return new NeteaseSong
+        {
+            ActualId = SongId,
+            Name = SongName,
+            Album = string.IsNullOrWhiteSpace(Album.Id) && string.IsNullOrWhiteSpace(Album.Name)
+                ? null
+                : new NeteaseAlbum
+                {
+                    ActualId = Album.Id,
+                    Name = Album.Name,
+                    PictureUrl = Album.Cover,
+                    Alias = string.IsNullOrWhiteSpace(Album.Alias) ? null : [Album.Alias]
+                },
+            Artists = Artist.Select(artist => new NeteaseArtist
+            {
+                ActualId = artist.Id,
+                Name = artist.Name
+            }).Cast<PersonBase>().ToList(),
+            CreatorList = Artist.Select(artist => artist.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToList(),
+            Duration = (long)LengthInMilliseconds,
+            Available = IsAvailable,
+            Alias = string.IsNullOrWhiteSpace(Alias) ? null : Alias.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            MvId = MVId,
+            CdName = CDName,
+            TrackNumber = TrackId,
+            CoverUrl = Album.Cover,
+            Translation = TranslatedName
         };
     }
 

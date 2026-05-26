@@ -185,7 +185,7 @@ public sealed partial class MusicCloudPage : Page
         var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         if (_setting.AutoAddGreedilyLoadedSongsToPlayList && playlist.PlaySourceId == "Content")
         {
-            playlist.AppendItems(Items.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()));
+            playlist.AppendItems(Items.Select(song => song.ToProviderSong()));
         }
     }
 
@@ -197,7 +197,7 @@ public sealed partial class MusicCloudPage : Page
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        DownloadManager.AddDownload(Items.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList());
+        DownloadManager.AddDownload(Items.Select(song => song.ToProviderSong()).ToList());
     }
 
     private async void BtnUpload_Click(object sender, RoutedEventArgs e)

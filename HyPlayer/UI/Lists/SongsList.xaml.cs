@@ -257,7 +257,7 @@ public sealed partial class SongsList : UserControl
 
         foreach (var song in GetSelectedRows())
         {
-            _playlist.AppendItem(song.ProviderSong ?? song.SourceSong.ToProviderSong());
+            _playlist.AppendItem(song.ToProviderSong());
         }
         if (SongContainer.SelectedItem != null)
         {
@@ -286,7 +286,7 @@ public sealed partial class SongsList : UserControl
 
         var selectedSongs = GetSelectedRows().ToList();
         var playItemIndexes = _playlist.AppendItems(
-            selectedSongs.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList(),
+            selectedSongs.Select(song => song.ToProviderSong()).ToList(),
             _playlist.NowPlayingIndex + 1);
         if (_state.ActiveStrategyId == "shn")
         {
@@ -350,7 +350,7 @@ public sealed partial class SongsList : UserControl
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
     {
         DownloadManager.AddDownload(GetSelectedRows()
-            .Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong())
+            .Select(song => song.ToProviderSong())
             .ToList());
     }
 
@@ -446,9 +446,9 @@ public sealed partial class SongsList : UserControl
         try
         {
             await _songListQueueBuilder.BuildAndPlayAsync(
-                clickedRow.ProviderSong ?? clickedRow.SourceSong.ToProviderSong(),
+                clickedRow.ToProviderSong(),
                 GetEffectiveQueueScope(),
-                VisibleSongs.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()).ToList());
+                VisibleSongs.Select(song => song.ToProviderSong()).ToList());
         }
         finally
         {
