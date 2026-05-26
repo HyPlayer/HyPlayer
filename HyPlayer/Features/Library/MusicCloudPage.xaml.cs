@@ -94,9 +94,7 @@ public sealed partial class MusicCloudPage : Page
             _cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                var ret = MapCloudLibraryItemToNcSong(jToken);
-                ret.Order = idx++;
-                Items.Add(SongListItemViewModel.FromNCSong(ret));
+                Items.Add(await MapCloudLibraryItemToRowAsync(jToken, idx++));
             }
             catch
             {
@@ -233,18 +231,16 @@ public sealed partial class MusicCloudPage : Page
         _loadResultTask = LoadMusicCloudItem();
     }
 
-    private static NCSong MapCloudLibraryItemToNcSong(HyPlayer.PlayCore.Abstraction.Models.Containers.CloudLibraryItemBase item)
+    private static async Task<SongListItemViewModel> MapCloudLibraryItemToRowAsync(HyPlayer.PlayCore.Abstraction.Models.Containers.CloudLibraryItemBase item, int order)
     {
         if (item is NeteaseCloudLibraryItem { Song: SingleSongBase song })
         {
-            var ncSong = song.ToNCSong();
-            ncSong.IsCloud = true;
-            ncSong.ProviderSong = song;
-            return ncSong;
+            return await SongListItemViewModel.FromProviderSongAsync(song, order, isCloud: true);
         }
 
-        return new NCSong
+        return SongListItemViewModel.FromNCSong(new NCSong
         {
+            Order = order,
             SongId = item.ActualId,
             SongName = item.Name,
             IsAvailable = true,
@@ -252,6 +248,6 @@ public sealed partial class MusicCloudPage : Page
             Artist = [],
             Album = new NCAlbum { Id = string.Empty, Name = string.Empty, Cover = string.Empty, AlbumType = HyPlayItemType.Netease },
             Type = HyPlayItemType.Netease
-        };
+        });
     }
 }

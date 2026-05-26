@@ -103,7 +103,7 @@ public sealed class SongListItemViewModel
 
     public static SongListItemViewModel FromNCSong(NCSong song) => new(song);
 
-    public static async Task<SongListItemViewModel> FromProviderSongAsync(SingleSongBase song, int order)
+    public static async Task<SongListItemViewModel> FromProviderSongAsync(SingleSongBase song, int order, bool isCloud = false)
     {
         ArgumentNullException.ThrowIfNull(song);
 
@@ -126,7 +126,7 @@ public sealed class SongListItemViewModel
                          Type = HyPlayItemType.Netease
                      }).ToList() ?? [],
             CDName = neteaseSong?.CdName,
-            IsCloud = false,
+            IsCloud = isCloud,
             IsVip = false,
             LengthInMilliseconds = song.Duration,
             MVId = neteaseSong?.MvId,

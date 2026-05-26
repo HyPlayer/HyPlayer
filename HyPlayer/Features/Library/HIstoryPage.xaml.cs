@@ -128,9 +128,7 @@ public sealed partial class HistoryPage : Page
             for (var i = 0; i < rankData.Count; i++)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
-                var song = MapHistoryItemToNcSong(rankData[i]);
-                song.Order = i;
-                Songs.Add(SongListItemViewModel.FromNCSong(song));
+                Songs.Add(await MapHistoryItemToRowAsync(rankData[i], i));
             }
         }
         catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
@@ -139,16 +137,20 @@ public sealed partial class HistoryPage : Page
         }
     }
 
-    private static NCSong MapHistoryItemToNcSong(ProvidableItemBase item)
+    private static async Task<SongListItemViewModel> MapHistoryItemToRowAsync(ProvidableItemBase item, int order)
     {
-        return item is SingleSongBase song ? song.ToNCSong() : new NCSong
+        if (item is SingleSongBase song)
+            return await SongListItemViewModel.FromProviderSongAsync(song, order);
+
+        return SongListItemViewModel.FromNCSong(new NCSong
         {
+            Order = order,
             SongId = item.ActualId,
             SongName = item.Name,
             Artist = [],
             Album = new NCAlbum { Id = string.Empty, Name = string.Empty, Cover = string.Empty, AlbumType = HyPlayItemType.Netease },
             Type = HyPlayItemType.Netease,
             IsAvailable = true
-        };
+        });
     }
 }

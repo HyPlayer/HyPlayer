@@ -168,11 +168,9 @@ namespace HyPlayer.Features.Playlist
             {
                 try
                 {
-                    _dailyRecommendProviderSongs.Clear();
-                    _dailyRecommendProviderSongs.AddRange((await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
+                    return (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
                         .OfType<SingleSongBase>()
-                        .ToList());
-                    return _dailyRecommendProviderSongs.Select(MapToNCSong).ToList();
+                        .ToList();
                 }
                 catch (Exception ex)
                 {
@@ -181,11 +179,12 @@ namespace HyPlayer.Features.Playlist
                 }
             }, TimeSpan.FromDays(1));
 
+            _dailyRecommendProviderSongs.Clear();
+            _dailyRecommendProviderSongs.AddRange(items ?? []);
             var idx = 0;
-            foreach (var ncSong in items ?? [])
+            foreach (var song in _dailyRecommendProviderSongs)
             {
-                ncSong.Order = idx++;
-                Songs.Add(SongListItemViewModel.FromNCSong(ncSong));
+                Songs.Add(await SongListItemViewModel.FromProviderSongAsync(song, idx++));
             }
             HasMore = false;
         }
@@ -231,9 +230,7 @@ namespace HyPlayer.Features.Playlist
             var idx = CurrentPage * 500;
             foreach (var song in rst.items.OfType<SingleSongBase>())
             {
-                var ncSong = MapToNCSong(song);
-                ncSong.Order = idx++;
-                Songs.Add(SongListItemViewModel.FromNCSong(ncSong));
+                Songs.Add(await SongListItemViewModel.FromProviderSongAsync(song, idx++));
             }
             HasMore = rst.hasMore;
         }
@@ -407,13 +404,6 @@ namespace HyPlayer.Features.Playlist
                 BookCount = playlist.SubscribedCount,
                 UpdateTime = playlist.UpdateTime > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(playlist.UpdateTime).LocalDateTime : DateTime.MinValue
             };
-        }
-
-        private static NCSong MapToNCSong(SingleSongBase song)
-        {
-            var ncSong = song.ToNCSong();
-            ncSong.IsAvailable = song.Available;
-            return ncSong;
         }
 
         [RelayCommand]
