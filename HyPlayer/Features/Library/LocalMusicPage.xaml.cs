@@ -88,7 +88,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private async void Playall_Click(object sender, RoutedEventArgs e)
     {
-        _playlist.AppendItems(localHyItems, true);
+        _playlist.AppendLocalItems(localHyItems, true);
         if (localHyItems.Count > 0)
             await _playlist.MoveToIndexAsync(0);
     }
@@ -178,7 +178,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private async void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
-        _playlist.AppendItems(localHyItems, true);
+        _playlist.AppendLocalItems(localHyItems, true);
         if (ListBoxLocalMusicContainer.SelectedItem is HyPlayItem selectedItem)
         {
             var index = localHyItems.IndexOf(selectedItem);

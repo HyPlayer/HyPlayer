@@ -58,8 +58,8 @@ public interface IPlaylistService
     /// <summary>设置 Provider 曲目在旧播放列表投影视图中的显示标签</summary>
     void SetItemInfoTag(ProvidableItemBase item, string infoTag);
 
-    /// <summary>批量追加</summary>
-    void AppendItems(IEnumerable<HyPlayItem> items, bool clearFirst = false);
+    /// <summary>批量加载本地文件旧队列投影</summary>
+    void AppendLocalItems(IEnumerable<HyPlayItem> items, bool clearFirst = false);
 
     /// <summary>批量追加 Provider 曲目</summary>
     void AppendItems(IEnumerable<ProvidableItemBase> items, bool clearFirst = false);

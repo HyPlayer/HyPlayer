@@ -245,7 +245,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
-    public void AppendItems(IEnumerable<HyPlayItem> items, bool clearFirst = false)
+    public void AppendLocalItems(IEnumerable<HyPlayItem> items, bool clearFirst = false)
     {
         if (clearFirst)
             ExitPersonalFmForSourceChange();
