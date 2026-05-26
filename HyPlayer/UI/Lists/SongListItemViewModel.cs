@@ -2,10 +2,12 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace HyPlayer.UI.Lists;
 
@@ -100,6 +102,44 @@ public sealed class SongListItemViewModel
     }
 
     public static SongListItemViewModel FromNCSong(NCSong song) => new(song);
+
+    public static async Task<SongListItemViewModel> FromProviderSongAsync(SingleSongBase song, int order)
+    {
+        ArgumentNullException.ThrowIfNull(song);
+
+        var creators = await song.GetCreatorsAsync();
+        var neteaseSong = song as NeteaseSong;
+        return new SongListItemViewModel(new NCSong
+        {
+            Album = new NCAlbum
+            {
+                AlbumType = HyPlayItemType.Netease,
+                Cover = neteaseSong?.CoverUrl,
+                Id = song.Album?.ActualId,
+                Name = song.Album?.Name
+            },
+            Alias = neteaseSong?.Alias is not null ? string.Join(",", neteaseSong.Alias) : null,
+            Artist = creators?.Select(artist => new NCArtist
+                     {
+                         Id = artist.ActualId,
+                         Name = artist.Name,
+                         Type = HyPlayItemType.Netease
+                     }).ToList() ?? [],
+            CDName = neteaseSong?.CdName,
+            IsCloud = false,
+            IsVip = false,
+            LengthInMilliseconds = song.Duration,
+            MVId = neteaseSong?.MvId,
+            Order = order,
+            SongId = song.ActualId,
+            SongName = song.Name,
+            ProviderSong = song,
+            TrackId = neteaseSong?.TrackNumber ?? 0,
+            TranslatedName = neteaseSong?.Translation,
+            IsAvailable = song.Available,
+            Type = HyPlayItemType.Netease,
+        });
+    }
 }
 
 public sealed class SongListItemGroup(IEnumerable<SongListItemViewModel> items) : List<SongListItemViewModel>(items)

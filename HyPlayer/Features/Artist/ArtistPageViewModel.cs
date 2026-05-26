@@ -113,8 +113,7 @@ namespace HyPlayer.Features.Artist
 
             foreach (var item in songs.OfType<SingleSongBase>())
             {
-                var ncSong = await MapToNcSongAsync(item, idx++);
-                HotSongs.Add(SongListItemViewModel.FromNCSong(ncSong));
+                HotSongs.Add(await SongListItemViewModel.FromProviderSongAsync(item, idx++));
             }
         }
 
@@ -129,9 +128,7 @@ namespace HyPlayer.Features.Artist
             var idx = 0;
             foreach (var item in page?.Items ?? [])
             {
-                var ncSong = await MapToNcSongAsync(item, CurrentPage * 50 + idx);
-                ncSong.Order = CurrentPage * 50 + idx++;
-                AllSongs.Add(SongListItemViewModel.FromNCSong(ncSong));
+                AllSongs.Add(await SongListItemViewModel.FromProviderSongAsync(item, CurrentPage * 50 + idx++));
             }
             HasNextPage = page?.HasMore ?? false;
             HasPreviousPage = CurrentPage > 0;
@@ -236,41 +233,6 @@ namespace HyPlayer.Features.Artist
                 Id = artist.ActualId,
                 Name = artist.Name,
                 Type = HyPlayItemType.Netease
-            };
-        }
-
-        private static async Task<NCSong> MapToNcSongAsync(SingleSongBase song, int order)
-        {
-            var creators = await song.GetCreatorsAsync();
-            var neteaseSong = song as NeteaseSong;
-            return new NCSong
-            {
-                Album = new NCAlbum
-                {
-                    AlbumType = HyPlayItemType.Netease,
-                    Cover = neteaseSong?.CoverUrl,
-                    Id = song.Album?.ActualId,
-                    Name = song.Album?.Name
-                },
-                Alias = neteaseSong?.Alias is not null ? string.Join(",", neteaseSong.Alias) : null,
-                Artist = creators?.Select(artist => new NCArtist
-                         {
-                             Id = artist.ActualId,
-                             Name = artist.Name,
-                             Type = HyPlayItemType.Netease
-                         }).ToList() ?? [],
-                CDName = neteaseSong?.CdName,
-                IsCloud = false,
-                IsVip = false,
-                LengthInMilliseconds = song.Duration,
-                MVId = neteaseSong?.MvId,
-                Order = order,
-                SongId = song.ActualId,
-                SongName = song.Name,
-                TrackId = neteaseSong?.TrackNumber ?? 0,
-                TranslatedName = neteaseSong?.Translation,
-                IsAvailable = song.Available,
-                Type = HyPlayItemType.Netease,
             };
         }
 

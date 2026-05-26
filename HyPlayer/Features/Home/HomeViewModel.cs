@@ -30,8 +30,6 @@ namespace HyPlayer.Features.Home
         [ObservableProperty]
         public partial List<NCPlayList> ToplistPlaylist { get; set; }
         [ObservableProperty]
-        public partial List<NCSong> RecommendedSongs { get; set; }
-        [ObservableProperty]
         public partial List<SongListItemViewModel> RecommendedSongItems { get; set; }
         [ObservableProperty]
         public partial List<NCPlayList> OfficialPlaylists { get; set; }
@@ -63,8 +61,7 @@ namespace HyPlayer.Features.Home
                 _recommendedProviderSongs = (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
                     .OfType<SingleSongBase>()
                     .ToList();
-                RecommendedSongs = _recommendedProviderSongs.ToNCSongs();
-                RecommendedSongItems = RecommendedSongs.Select(SongListItemViewModel.FromNCSong).ToList();
+                RecommendedSongItems = (await Task.WhenAll(_recommendedProviderSongs.Select((song, index) => SongListItemViewModel.FromProviderSongAsync(song, index)))).ToList();
             }
         }
 

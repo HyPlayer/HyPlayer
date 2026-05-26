@@ -170,7 +170,7 @@ public sealed partial class Search : Page
         foreach (var song in items.OfType<NeteaseSong>())
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            SongResults.Add(SongListItemViewModel.FromNCSong(MapNcSong(song, page * 30 + i)));
+            SongResults.Add(await SongListItemViewModel.FromProviderSongAsync(song, page * 30 + i));
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
@@ -438,39 +438,6 @@ public sealed partial class Search : Page
     {
         HasNextPage = hasMore;
         HasPreviousPage = page > 0;
-    }
-
-    private static NCSong MapNcSong(NeteaseSong song, int order)
-    {
-        return new NCSong
-        {
-            Album = new NCAlbum
-            {
-                AlbumType = HyPlayItemType.Netease,
-                Cover = song.CoverUrl,
-                Id = song.Album?.ActualId,
-                Name = song.Album?.Name
-            },
-            Alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
-            Artist = song.Artists?.Select(artist => new NCArtist
-                     {
-                         Id = artist.ActualId,
-                         Name = artist.Name,
-                         Type = HyPlayItemType.Netease
-                     }).ToList() ?? [],
-            CDName = song.CdName,
-            IsCloud = false,
-            IsVip = false,
-            LengthInMilliseconds = song.Duration,
-            MVId = song.MvId,
-            Order = order,
-            SongId = song.ActualId,
-            SongName = song.Name,
-            TrackId = song.TrackNumber,
-            TranslatedName = song.Translation,
-            IsAvailable = song.Available,
-            Type = HyPlayItemType.Netease,
-        };
     }
 
     private void PrevPage_OnClick(object sender, RoutedEventArgs e)
