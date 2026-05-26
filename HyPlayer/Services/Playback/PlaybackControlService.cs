@@ -270,7 +270,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
     private HyPlayItem ResolveLegacyItem(SingleSongBase song)
     {
-        var playlist = GetPlaylistService();
         var nowPlayingItem = _state.NowPlayingItem;
         if (nowPlayingItem is not null && Matches(nowPlayingItem, song))
             return nowPlayingItem;
@@ -278,14 +277,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         var stateItem = _state.NowPlayingItem;
         if (stateItem is not null && Matches(stateItem, song))
             return stateItem;
-
-        var snapshot = playlist?.LegacyItemsSnapshot;
-        if (snapshot is not null)
-        {
-            var item = snapshot.FirstOrDefault(item => Matches(item, song));
-            if (item is not null)
-                return item;
-        }
 
         return HyPlayItem.FromProviderSong(song);
     }
