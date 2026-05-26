@@ -1,5 +1,4 @@
 using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Threading;
@@ -23,11 +22,6 @@ public interface ILyricService
 
     /// <summary>歌词偏移量（手动调节）</summary>
     TimeSpan LyricOffset { get; set; }
-
-    /// <summary>
-    /// 为指定曲目加载歌词
-    /// </summary>
-    Task LoadLyricsAsync(HyPlayItem item, CancellationToken ct = default);
 
     /// <summary>
     /// 为指定 Provider 曲目加载歌词。
