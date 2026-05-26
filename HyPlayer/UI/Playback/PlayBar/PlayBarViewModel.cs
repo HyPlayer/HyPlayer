@@ -123,7 +123,9 @@ public partial class PlayBarViewModel : ObservableObject
         ? string.Join("; ", creators)
         : NowPlayingItem?.ArtistString ?? string.Empty;
     public string AlbumName => NowPlayingProviderItem?.Album?.Name ?? NowPlayingItem?.AlbumString ?? string.Empty;
-    public string QualityTagText => NowPlayingItem?.GetQualityTagText(_setting.audioRate) ?? "无歌曲";
+    public string QualityTagText => NowPlayingProviderItem != null && !string.IsNullOrWhiteSpace(QualityTag)
+        ? HyPlayItem.FormatAudioLevel(QualityTag)
+        : NowPlayingItem?.GetQualityTagText(_setting.audioRate) ?? "无歌曲";
     public string TotalTimeText => FormatTime(Duration != TimeSpan.Zero ? Duration : TimeSpan.FromMilliseconds(NowPlayingProviderItem?.Duration ?? NowPlayingItem?.LengthInMilliseconds ?? 0));
     public string NowTimeText => FormatTime(Position);
     public double ProgressMilliseconds => Position.TotalMilliseconds;

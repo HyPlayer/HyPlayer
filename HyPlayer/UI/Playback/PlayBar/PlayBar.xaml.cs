@@ -229,7 +229,7 @@ DoubleAnimation verticalAnimation;
     {
         if (mpi == null) return;
         RunOnUIThread(() => ApplicationView.GetForCurrentView().Title =
-            $"{mpi.Name} - {mpi.ArtistString}");
+            $"{ViewModel.SongName} - {ViewModel.ArtistName}");
 
         //SliderAudioRate.Value = ViewModel.Volume * 100;
 
@@ -256,7 +256,8 @@ DoubleAnimation verticalAnimation;
             // Maximum/value/current time are provided by PlayBarViewModel x:Bind.
 
         });
-        var isLiked = _auth.LikedSongs.Contains(mpi.Id);
+        var songId = ViewModel.NowPlayingProviderItem?.ActualId ?? mpi.Id;
+        var isLiked = !string.IsNullOrEmpty(songId) && _auth.LikedSongs.Contains(songId);
         if (mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive)
         {
             RunOnUIThread(() =>
@@ -271,7 +272,8 @@ DoubleAnimation verticalAnimation;
                     ? "\uE00B"
                     : "\uE006";
             });
-            HistoryManagement.AddNCSongHistory(mpi.Id);
+            if (!string.IsNullOrEmpty(songId))
+                HistoryManagement.AddNCSongHistory(songId);
         }
 
         /*
@@ -528,6 +530,19 @@ DoubleAnimation verticalAnimation;
         if (ViewModel.NowPlayingProviderItem != null)
         {
             DownloadManager.AddDownload(ViewModel.NowPlayingProviderItem);
+        }
+        else if (ViewModel.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
+        {
+            DownloadManager.AddDownload(new NCSong
+            {
+                Type = ViewModel.NowPlayingItem.ItemType,
+                Album = ViewModel.NowPlayingItem.Album,
+                Artist = ViewModel.NowPlayingItem.Artist,
+                LengthInMilliseconds = ViewModel.NowPlayingItem.LengthInMilliseconds,
+                SongId = ViewModel.NowPlayingItem.Id,
+                SongName = ViewModel.NowPlayingItem.Name,
+                TrackId = ViewModel.NowPlayingItem.TrackId
+            });
         }
     }
 

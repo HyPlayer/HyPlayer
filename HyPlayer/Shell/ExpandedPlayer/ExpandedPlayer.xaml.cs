@@ -550,13 +550,7 @@ public sealed partial class ExpandedPlayer : Page
         _lyricHasBeenLoaded = lyricIsReady;
         _ = _notification.InvokeOnUIThread(() =>
         {
-            var providerItem = ViewModel.NowPlayingProviderItem;
-            var artistText = providerItem?.CreatorList is { Count: > 0 } creators
-                ? string.Join("; ", creators)
-                : mpi?.ArtistString;
-            ViewModel.Artist = artistText;
-            ViewModel.SongName = providerItem?.Name ?? mpi?.Name;
-            ViewModel.Album = providerItem?.Album?.Name ?? mpi?.AlbumString;
+            ViewModel.SyncFromState();
             if (mpi?.PlayItem == null)
             {
                 _lyricList.Clear();

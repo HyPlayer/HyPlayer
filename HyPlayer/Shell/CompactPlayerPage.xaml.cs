@@ -293,9 +293,9 @@ public sealed partial class CompactPlayerPage : Page
 
     private void OnChangePlayItem(HyPlayItem? item)
     {
+        var providerItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
         RunOnUIThread(() =>
         {
-            var providerItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
             NowPlayingName = providerItem?.Name ?? item?.Name;
             NowPlayingArtists = providerItem?.CreatorList is { Count: > 0 } creators
                 ? string.Join("; ", creators)
@@ -306,8 +306,8 @@ public sealed partial class CompactPlayerPage : Page
 
         if (item.ItemType is not (HyPlayItemType.Local or HyPlayItemType.LocalProgressive))
         {
-            var providerItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
-            var isLiked = _auth.LikedSongs.Contains(providerItem?.ActualId ?? item.Id);
+            var songId = providerItem?.ActualId ?? item.Id;
+            var isLiked = !string.IsNullOrEmpty(songId) && _auth.LikedSongs.Contains(songId);
             var durationMs = providerItem?.Duration ?? item.LengthInMilliseconds;
             RunOnUIThread(() =>
             {
