@@ -8,8 +8,7 @@ namespace HyPlayer.Services.Playback.Strategies;
 /// <para>
 /// 曲目自然结束时停止播放，等待服务器指令。
 /// GetNext/GetPrevious 返回 null，因为切歌由服务器控制。
-/// 当服务器发送 "next song" 指令时，<see cref="ListenTogetherManager"/> 调用
-/// <c>_playlist.MoveToAsync(item)</c> 直接跳转。
+/// 当服务器发送 "next song" 指令时，<see cref="ListenTogetherManager"/> 调用索引跳转。
 /// </para>
 /// </summary>
 public sealed class ListenTogetherStrategy : IPlayStrategy

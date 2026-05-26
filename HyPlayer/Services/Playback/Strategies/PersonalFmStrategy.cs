@@ -1,4 +1,3 @@
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;

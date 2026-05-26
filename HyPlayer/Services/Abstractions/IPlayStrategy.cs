@@ -1,4 +1,3 @@
-using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
@@ -12,14 +11,8 @@ namespace HyPlayer.Services.Abstractions;
 /// </summary>
 public class PlayStrategyContext
 {
-    /// <summary>当前播放列表</summary>
-    public required IReadOnlyList<HyPlayItem> Items { get; init; }
-
     /// <summary>当前播放索引</summary>
     public required int CurrentIndex { get; init; }
-
-    /// <summary>当前播放曲目</summary>
-    public HyPlayItem? CurrentItem { get; init; }
 
     /// <summary>当前播放列表的 Provider 单曲视图</summary>
     public IReadOnlyList<SingleSongBase>? ProviderItems { get; init; }
@@ -27,8 +20,8 @@ public class PlayStrategyContext
     /// <summary>当前播放列表的 Provider 单曲位置对齐视图（本地/旧项可为 null）</summary>
     public IReadOnlyList<SingleSongBase?>? ProviderQueueItems { get; init; }
 
-    /// <summary>当前播放队列长度，优先使用位置对齐的 Provider 视图</summary>
-    public int QueueCount => ProviderQueueItems?.Count ?? Items.Count;
+    /// <summary>当前播放队列长度</summary>
+    public required int QueueCount { get; init; }
 
     /// <summary>当前播放曲目的 Provider 单曲视图</summary>
     public SingleSongBase? CurrentProviderItem { get; init; }

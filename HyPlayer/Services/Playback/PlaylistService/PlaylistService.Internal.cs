@@ -74,14 +74,12 @@ public sealed partial class PlaylistService
     {
         lock (_lock)
         {
-            var items = _items.ToArray();
             var providerQueueItems = _providerItems.ToArray();
             var providerItems = providerQueueItems.OfType<SingleSongBase>().ToArray();
             return new PlayStrategyContext
             {
-                Items = items,
                 CurrentIndex = _nowPlayingIndex,
-                CurrentItem = NowPlayingItem,
+                QueueCount = _items.Count,
                 ProviderItems = providerItems,
                 ProviderQueueItems = providerQueueItems,
                 CurrentProviderItem = NowPlayingProviderItem,
