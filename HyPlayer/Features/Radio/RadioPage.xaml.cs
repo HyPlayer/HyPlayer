@@ -9,6 +9,7 @@ using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
+using HyPlayer.UI.Lists;
 using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
@@ -46,7 +47,7 @@ public sealed partial class RadioPage : Page
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
 
-    public ObservableCollection<NCSong> Songs = new();
+    public ObservableCollection<SongListItemViewModel> Songs = new();
 
     public RadioPage()
     {
@@ -93,7 +94,7 @@ public sealed partial class RadioPage : Page
             var song = MapToNCFmItem(program);
             song.Order = i++;
             song.TrackId = i;
-            Songs.Add(song);
+            Songs.Add(SongListItemViewModel.FromNCSong(song));
         }
     }
 
@@ -172,7 +173,7 @@ public sealed partial class RadioPage : Page
                 NextPage_OnClickPage_OnClick(null, null);
                 treashold = 3;
             }
-            else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
+            else if (Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
                 DetachSecondTick();
             }

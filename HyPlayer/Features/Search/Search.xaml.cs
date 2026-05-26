@@ -12,6 +12,7 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
+using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -45,7 +46,7 @@ public sealed partial class Search : Page
     public static readonly DependencyProperty HasPreviousPageProperty = DependencyProperty.Register(
         "HasPreviousPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
 
-    private readonly ObservableCollection<NCSong> SongResults = new ObservableCollection<NCSong>();
+    private readonly ObservableCollection<SongListItemViewModel> SongResults = [];
     private int page;
     private string searchText = "";
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -169,7 +170,7 @@ public sealed partial class Search : Page
         foreach (var song in items.OfType<NeteaseSong>())
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            SongResults.Add(MapNcSong(song, page * 30 + i));
+            SongResults.Add(SongListItemViewModel.FromNCSong(MapNcSong(song, page * 30 + i)));
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
