@@ -212,7 +212,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     // ────────────── 列表操作 ──────────────
 
     /// <inheritdoc />
-    public void AppendItem(HyPlayItem item, int position = -1)
+    public void AppendLocalItem(HyPlayItem item, int position = -1)
     {
         lock (_lock)
         {

@@ -49,8 +49,8 @@ public interface IPlaylistService
     /// <summary>播放来源标识（用于历史记录等）</summary>
     string PlaySourceId { get; set; }
 
-    /// <summary>追加单曲</summary>
-    void AppendItem(HyPlayItem item, int position = -1);
+    /// <summary>追加本地文件旧队列投影</summary>
+    void AppendLocalItem(HyPlayItem item, int position = -1);
 
     /// <summary>追加 Provider 曲目</summary>
     void AppendItem(ProvidableItemBase item, int position = -1);
