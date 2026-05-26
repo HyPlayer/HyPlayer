@@ -200,9 +200,8 @@ public sealed partial class GroupedSongsList : UserControl
 
     private async void SongContainer_OnItemClick(object sender, ItemClickEventArgs e)
     {
-        if (!TryUnwrapSong(e.ClickedItem, out var clickedSong)) return;
+        if (!TryGetSongRow(e.ClickedItem, out var clickedRow)) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        var clickedRow = e.ClickedItem is SongListItemViewModel row ? row : SongListItemViewModel.FromNCSong(clickedSong);
         await ViewModel.PlayClickedSongAsync(clickedRow, QueueScope, GetVisibleRows());
     }
 
@@ -230,22 +229,6 @@ public sealed partial class GroupedSongsList : UserControl
 
         selectedSong = null;
         return false;
-    }
-
-    private static bool TryUnwrapSong(object item, out NCSong song)
-    {
-        switch (item)
-        {
-            case SongListItemViewModel row:
-                song = row.SourceSong;
-                return true;
-            case NCSong ncSong:
-                song = ncSong;
-                return true;
-            default:
-                song = null;
-                return false;
-        }
     }
 
     private static bool TryGetSongRow(object item, out SongListItemViewModel row)
