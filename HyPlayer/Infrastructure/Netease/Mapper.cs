@@ -46,6 +46,11 @@ public static class Mapper
         return songs.Select(ToNCSong).ToList();
     }
 
+    public static NCSong ToLegacyUiSong(this SingleSongBase song)
+    {
+        return song.ToNCSong();
+    }
+
     public static SingleSongBase ToSingleSong(this NCSong song)
     {
         return new NeteaseSong
