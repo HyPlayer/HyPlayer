@@ -133,60 +133,14 @@ public sealed partial class PlaylistService
     {
         Position = position,
         Duration = duration,
-        CurrentItem = NowPlayingItem,
         CurrentProviderItem = NowPlayingProviderItem,
-        RequestNextItemAsync = RequestNextItemAsync,
         RequestNextProviderItemAsync = RequestNextProviderItemAsync,
-        CommitItemAsync = CommitItemAsync,
         CommitProviderItemAsync = CommitProviderItemAsync,
-        LoadMediaSourceAsync = LoadLegacyMediaSourceAsync,
         LoadProviderMediaSourceAsync = _control.LoadAndPlayAsync,
         PreloadProviderPlaybackSourceAsync = song => _control.PreloadTransitionPlaybackSourceAsync(song),
         Player = _player,
         TaskRunner = _taskRunner
     };
-
-    private Task LoadLegacyMediaSourceAsync(HyPlayItem item, bool setAsPrimary, bool autoPlay, bool removeCurrentSongs)
-    {
-        SingleSongBase? providerItem;
-        lock (_lock)
-        {
-            var index = _items.IndexOf(item);
-            providerItem = index >= 0 && index < _providerItems.Count
-                ? _providerItems[index]
-                : null;
-        }
-
-        return providerItem is not null
-            ? _control.LoadAndPlayAsync(providerItem, autoPlay, removeCurrentSongs)
-            : Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// 供过渡策略回调：获取下一首曲目但不改变播放索引
-    /// </summary>
-    private Task<HyPlayItem?> RequestNextItemAsync(bool advance)
-    {
-        var nextIndex = _activeStrategy.GetNext(BuildStrategyContext());
-        if (nextIndex is null)
-            return Task.FromResult<HyPlayItem?>(null);
-
-        HyPlayItem item;
-        lock (_lock)
-        {
-            if (!advance && nextIndex.Value == _nowPlayingIndex)
-                return Task.FromResult<HyPlayItem?>(null);
-
-            item = _items[nextIndex.Value];
-            if (advance)
-            {
-                _nowPlayingIndex = nextIndex.Value;
-                SyncIndex();
-            }
-        }
-
-        return Task.FromResult<HyPlayItem?>(item);
-    }
 
     /// <summary>
     /// 供过渡策略回调：获取下一首 Provider 曲目并保持和旧队列索引同步。
@@ -222,25 +176,6 @@ public sealed partial class PlaylistService
         {
             return _items.Count == 1 && _nowPlayingIndex == 0;
         }
-    }
-
-    /// <summary>
-    /// 供过渡策略回调：将预加载曲目提交为当前播放曲目。
-    /// </summary>
-    private Task CommitItemAsync(HyPlayItem item)
-    {
-        lock (_lock)
-        {
-            var index = _items.IndexOf(item);
-            if (index >= 0)
-            {
-                _nowPlayingIndex = index;
-                SyncIndex();
-            }
-        }
-
-
-        return Task.CompletedTask;
     }
 
     private Task CommitProviderItemAsync(SingleSongBase item)

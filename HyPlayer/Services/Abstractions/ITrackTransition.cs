@@ -1,4 +1,3 @@
-using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using System;
@@ -17,26 +16,14 @@ public class TrackTransitionContext
     /// <summary>当前曲目总时长</summary>
     public TimeSpan Duration { get; init; }
 
-    /// <summary>当前曲目</summary>
-    public HyPlayItem? CurrentItem { get; init; }
-
     /// <summary>当前曲目的 Provider 模型视图</summary>
     public SingleSongBase? CurrentProviderItem { get; init; }
-
-    /// <summary>请求获取下一首曲目（由 PlaylistService 提供的回调）</summary>
-    public required Func<bool, Task<HyPlayItem?>> RequestNextItemAsync { get; init; }
 
     /// <summary>请求获取下一首 Provider 曲目（由 PlaylistService 提供的回调）</summary>
     public Func<bool, Task<SingleSongBase?>>? RequestNextProviderItemAsync { get; init; }
 
     /// <summary>提交预加载 Provider 曲目为当前曲目（由 PlaylistService 提供的回调）</summary>
     public Func<SingleSongBase, Task>? CommitProviderItemAsync { get; init; }
-
-    /// <summary>提交预加载曲目为当前曲目（由 PlaylistService 提供的回调）</summary>
-    public required Func<HyPlayItem, Task> CommitItemAsync { get; init; }
-
-    /// <summary>请求加载指定曲目的媒体源</summary>
-    public required Func<HyPlayItem, bool, bool, bool, Task> LoadMediaSourceAsync { get; init; }
 
     /// <summary>请求加载指定 Provider 曲目的媒体源</summary>
     public Func<SingleSongBase, bool, bool, Task>? LoadProviderMediaSourceAsync { get; init; }
