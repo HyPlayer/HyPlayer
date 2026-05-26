@@ -78,12 +78,11 @@ public sealed partial class HistoryPage : Page
         {
             case "SongHis":
                 Songs.Clear();
-                var Songsl = await HistoryManagement.GetNCSongHistory();
+                var Songsl = await HistoryManagement.GetSongHistory();
                 var songorder = 0;
                 foreach (var song in Songsl)
                 {
-                    song.Order = songorder++;
-                    Songs.Add(SongListItemViewModel.FromNCSong(song));
+                    Songs.Add(await SongListItemViewModel.FromProviderSongAsync(song, songorder++));
                 }
                 Songsl.Clear();
                 break;

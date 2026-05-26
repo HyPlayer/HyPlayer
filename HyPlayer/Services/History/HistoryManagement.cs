@@ -1,7 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Infrastructure.Serialization;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -118,14 +116,13 @@ namespace HyPlayer.Services.History
                 CreationCollisionOption.OpenIfExists)).DeleteAsync();
         }
 
-        public static async Task<List<NCSong>> GetNCSongHistory()
+        public static async Task<List<SingleSongBase>> GetSongHistory()
         {
             try
             {
                 var songIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                     .Values["songHistory"].ToString(), JsonDefaults.Options);
-                var songs = await LoadNeteaseSongsAsync(songIds);
-                return songs.ToNCSongs();
+                return await LoadNeteaseSongsAsync(songIds);
             }
             catch (Exception e)
             {
@@ -141,14 +138,14 @@ namespace HyPlayer.Services.History
                 .Values["searchHistory"].ToString(), JsonDefaults.Options);
         }
 
-        public static async Task<List<NCSong>> GetcurPlayingListHistory()
+        public static async Task<List<SingleSongBase>> GetcurPlayingListHistory()
         {
             return (await GetCurPlayingListHistoryStateAsync()).Songs;
         }
 
         public static async Task<CurPlayingListHistoryResult> GetCurPlayingListHistoryStateAsync()
         {
-            var retsongs = new List<NCSong>();
+            var retsongs = new List<SingleSongBase>();
             var historyState = await ReadCurPlayingListHistoryStateAsync();
             var trackIds = historyState.SongIds;
 
@@ -161,8 +158,7 @@ namespace HyPlayer.Services.History
                     Math.Min(500, trackIds.Count - nowIndex * 500));
                 var songs = await LoadNeteaseSongsAsync(nowIds);
                 nowIndex++;
-                var ncSongs = songs.ToNCSongs();
-                retsongs.AddRange(ncSongs);
+                retsongs.AddRange(songs);
             }
 
             var currentIndex = historyState.CurrentIndex;
@@ -222,5 +218,5 @@ namespace HyPlayer.Services.History
         }
     }
 
-    public sealed record CurPlayingListHistoryResult(List<NCSong> Songs, int CurrentIndex);
+    public sealed record CurPlayingListHistoryResult(List<SingleSongBase> Songs, int CurrentIndex);
 }
