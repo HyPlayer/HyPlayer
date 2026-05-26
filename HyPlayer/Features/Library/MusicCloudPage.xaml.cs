@@ -188,7 +188,6 @@ public sealed partial class MusicCloudPage : Page
         if (_setting.AutoAddGreedilyLoadedSongsToPlayList && playlist.PlaySourceId == "Content")
         {
             playlist.AppendItems(Items.Select(song => song.ProviderSong ?? song.SourceSong.ToProviderSong()));
-            playlist.NotifyAppendDone();
         }
     }
 

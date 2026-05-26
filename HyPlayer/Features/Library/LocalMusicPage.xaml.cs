@@ -206,7 +206,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
             return;
 
         _playlist.AppendLocalItems(items);
-        _playlist.NotifyAppendDone();
         await _playlist.MoveToIndexAsync(_playlist.QueueCount - 1);
     }
 

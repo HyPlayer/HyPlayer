@@ -55,7 +55,7 @@ public sealed partial class PlaylistService
             _nowPlayingIndex = index;
             SyncIndex();
         }
-        SchedulePlayCorePlaylistSync();
+        NotifyAppendDone();
     }
 
     /// <inheritdoc />
@@ -69,7 +69,7 @@ public sealed partial class PlaylistService
                 _nowPlayingIndex = _items.Count - _nowPlayingIndex - 1;
             SyncIndex();
         }
-        SchedulePlayCorePlaylistSync();
+        NotifyAppendDone();
     }
 
     /// <summary>

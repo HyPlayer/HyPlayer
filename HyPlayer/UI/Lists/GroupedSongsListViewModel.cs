@@ -43,8 +43,6 @@ public partial class GroupedSongsListViewModel(
             playlist.AppendItem(ncsong.ProviderSong ?? ncsong.ToProviderSong());
         }
 
-        playlist.NotifyAppendDone();
-
         if (selectedSong.ProviderSong is not null)
         {
             await playlist.MoveToAsync(selectedSong.ProviderSong);
@@ -130,24 +128,9 @@ public partial class GroupedSongsListViewModel(
 
     private List<int> AppendToNext(IReadOnlyList<NCSong> selectedSongs)
     {
-        return AppendProviderSongs(
+        return playlist.AppendItems(
             selectedSongs.Select(song => song.ProviderSong ?? song.ToProviderSong()).ToList(),
             playlist.NowPlayingIndex + 1);
-    }
-
-    private List<int> AppendProviderSongs(IReadOnlyList<SingleSongBase> providerSongs, int position)
-    {
-        var insertedIndexes = new List<int>();
-        for (var offset = 0; offset < providerSongs.Count; offset++)
-        {
-            var targetIndex = position + offset;
-            playlist.AppendItem(providerSongs[offset], targetIndex);
-            insertedIndexes.Add(targetIndex);
-        }
-
-        playlist.NotifyAppendDone();
-
-        return insertedIndexes;
     }
 
     public void OpenMv(NCSong selectedSong)

@@ -272,7 +272,6 @@ namespace HyPlayer.Features.Playlist
             else
             {
                 _playlist.AppendItems(GetDailyRecommendProviderSongs(), clearFirst: false);
-                _playlist.NotifyAppendDone();
             }
         }
         [RelayCommand]
@@ -314,7 +313,6 @@ namespace HyPlayer.Features.Playlist
             {
                 _playlist.AppendItems(GetDailyRecommendProviderSongs(), clearFirst: true);
                 _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.PlaylistId));
-                _playlist.NotifyAppendDone();
                 await _playlist.MoveNextAsync(userInitiated: true);
             }
         }

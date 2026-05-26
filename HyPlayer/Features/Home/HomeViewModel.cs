@@ -126,7 +126,6 @@ namespace HyPlayer.Features.Home
         private async Task OnPlayAllRecommendedSongsClickedAsync()
         {
             _playlist.AppendItems(_recommendedProviderSongs, true);
-            _playlist.NotifyAppendDone();
             await _playlist.MoveNextAsync(userInitiated: true);
         }
     }

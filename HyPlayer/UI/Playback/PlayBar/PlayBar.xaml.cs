@@ -426,7 +426,6 @@ DoubleAnimation verticalAnimation;
             return;
 
         _playlist.AppendLocalItems(items);
-        _playlist.NotifyAppendDone();
         await _playlist.MoveToIndexAsync(_playlist.QueueCount - 1);
     }
 
@@ -799,7 +798,6 @@ DoubleAnimation verticalAnimation;
             if (state.Songs.Count > 0)
             {
                 _playlist.AppendItems(state.Songs.Select(song => song.ToProviderSong()), true);
-                _playlist.NotifyAppendDone();
                 var restoreIndex = state.CurrentIndex;
                 if (restoreIndex < 0 || restoreIndex >= _playlist.QueueCount)
                     restoreIndex = _playlist.QueueCount > 0 ? 0 : -1;
@@ -895,7 +893,6 @@ DoubleAnimation verticalAnimation;
     private void BtnReverse_Click(object sender, RoutedEventArgs e)
     {
         _playlist.ReverseList();
-        ViewModel.NotifyAppendDone();
     }
 
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)

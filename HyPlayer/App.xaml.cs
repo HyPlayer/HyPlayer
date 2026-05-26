@@ -432,7 +432,6 @@ public sealed partial class App : Application
             }
 
             playlist.PlaySourceId = "local";
-            playlist.NotifyAppendDone();
             if (playlist.QueueCount > 0)
                 await playlist.MoveToIndexAsync(0);
         }

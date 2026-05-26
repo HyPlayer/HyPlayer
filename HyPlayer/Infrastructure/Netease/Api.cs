@@ -82,8 +82,6 @@ internal class Api
                 playlist.AppendItem(song);
                 playlist.SetItemInfoTag(song, likedSongs.Contains(song.ActualId ?? string.Empty) ? "我的喜欢" : "为你推荐");
             }
-
-            playlist.NotifyAppendDone();
             if (playlist.ProviderItems.Count > 0)
                 await playlist.MoveToAsync(playlist.ProviderItems[0]);
         }

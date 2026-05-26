@@ -259,8 +259,6 @@ public sealed partial class SongsList : UserControl
         {
             _playlist.AppendItem(ncsong.ProviderSong ?? ncsong.ToProviderSong());
         }
-
-        _playlist.NotifyAppendDone();
         if (SongContainer.SelectedItem != null)
         {
             if (selectedSong.ProviderSong is not null)
@@ -287,7 +285,7 @@ public sealed partial class SongsList : UserControl
         }
 
         var selectedSongs = GetSelectedSongs().ToList();
-        var playItemIndexes = AppendProviderSongs(
+        var playItemIndexes = _playlist.AppendItems(
             selectedSongs.Select(song => song.ProviderSong ?? song.ToProviderSong()).ToList(),
             _playlist.NowPlayingIndex + 1);
         if (_state.ActiveStrategyId == "shn")
@@ -467,21 +465,6 @@ public sealed partial class SongsList : UserControl
     private SongListQueueScope GetEffectiveQueueScope()
     {
         return IsShowingCompleteSource() ? QueueScope : SongListQueueScope.Visible;
-    }
-
-    private List<int> AppendProviderSongs(IReadOnlyList<SingleSongBase> providerSongs, int position)
-    {
-        var insertedIndexes = new List<int>();
-        for (var offset = 0; offset < providerSongs.Count; offset++)
-        {
-            var targetIndex = position + offset;
-            _playlist.AppendItem(providerSongs[offset], targetIndex);
-            insertedIndexes.Add(targetIndex);
-        }
-
-        _playlist.NotifyAppendDone();
-
-        return insertedIndexes;
     }
 
     private bool IsShowingCompleteSource()

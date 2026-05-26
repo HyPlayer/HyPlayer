@@ -34,7 +34,6 @@ internal sealed class SongListQueueBuilder(
         {
             playlist.Clear(!shiftSong);
             playlist.AppendItems(visibleSongs.Select(song => song.ProviderSong ?? song.ToProviderSong()));
-            playlist.NotifyAppendDone();
         }
 
         var playSourceId = scope.ToPlaySourceId();
@@ -60,7 +59,6 @@ internal sealed class SongListQueueBuilder(
         if (nowPlayingIndex >= 0)
         {
             playlist.RestoreNowPlayingIndex(nowPlayingIndex);
-            playlist.NotifyAppendDone();
         }
     }
 

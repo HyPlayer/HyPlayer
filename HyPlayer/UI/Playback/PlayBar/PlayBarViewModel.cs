@@ -368,12 +368,4 @@ public partial class PlayBarViewModel : ObservableObject
         IsInFm = _state.IsInFm;
         QualityTag = _state.QualityTag;
     }
-
-    /// <summary>
-    /// Notifies that playlist append is done (triggers PlaylistChanged message).
-    /// </summary>
-    public void NotifyAppendDone()
-    {
-        _playlist.NotifyAppendDone();
-    }
 }

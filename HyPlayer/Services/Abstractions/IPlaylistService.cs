@@ -63,6 +63,9 @@ public interface IPlaylistService
     /// <summary>批量追加 Provider 单曲</summary>
     void AppendItems(IEnumerable<SingleSongBase> items, bool clearFirst = false);
 
+    /// <summary>批量插入 Provider 单曲并返回实际插入位置</summary>
+    List<int> AppendItems(IEnumerable<SingleSongBase> items, int position);
+
     /// <summary>移除指定位置的曲目</summary>
     void RemoveAt(int index);
 
@@ -103,11 +106,6 @@ public interface IPlaylistService
     /// 播放位置更新时由 PlaybackControlService 调用（用于过渡策略的预加载等）
     /// </summary>
     void OnPositionTick(TimeSpan position, TimeSpan duration);
-
-    /// <summary>
-    /// 通知列表追加完成（触发 PlaylistChanged 消息）
-    /// </summary>
-    void NotifyAppendDone();
 
     /// <summary>
     /// 根据来源 ID 追加歌曲（pl=歌单, ns=单曲, al=专辑, sh/sa=歌手, rd=电台）

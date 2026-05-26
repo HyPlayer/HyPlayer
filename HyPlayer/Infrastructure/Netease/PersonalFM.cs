@@ -104,8 +104,6 @@ internal sealed class PersonalFM
 
         _playlistService.AppendItems(moreItems);
 
-        if (IsActiveSession)
-            _playlistService.NotifyAppendDone();
     }
 
     private bool IsActiveSession => ReferenceEquals(_instance, this) && _playbackState.IsInFm;
