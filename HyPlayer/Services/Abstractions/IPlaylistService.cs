@@ -4,7 +4,6 @@ using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Windows.Storage;
 
 namespace HyPlayer.Services.Abstractions;
 
@@ -84,9 +83,6 @@ public interface IPlaylistService
 
     /// <summary>上一首</summary>
     Task MovePreviousAsync();
-
-    /// <summary>追加本地文件</summary>
-    Task AppendStorageFilesAsync(IEnumerable<StorageFile> files);
 
     /// <summary>
     /// 切换播放策略
