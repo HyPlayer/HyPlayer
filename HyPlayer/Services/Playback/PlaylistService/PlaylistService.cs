@@ -176,15 +176,6 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     }
 
     /// <inheritdoc />
-    public int IndexOfItem(HyPlayItem item)
-    {
-        lock (_lock)
-        {
-            return _items.IndexOf(item);
-        }
-    }
-
-    /// <inheritdoc />
     public string ActiveStrategyId => _activeStrategy.Id;
 
     /// <inheritdoc />

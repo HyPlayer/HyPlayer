@@ -202,7 +202,7 @@ public partial class PlayBarViewModel : ObservableObject
     private void RemoveItem(HyPlayItem item)
     {
         if (item == null) return;
-        var index = _playlist.IndexOfItem(item);
+        var index = IndexOfPlaylistItem(item);
         if (index >= 0)
             _playlist.RemoveAt(index);
     }
@@ -211,7 +211,7 @@ public partial class PlayBarViewModel : ObservableObject
     private async Task MoveToItemAsync(HyPlayItem item)
     {
         if (item == null || item == NowPlayingItem) return;
-        var index = _playlist.IndexOfItem(item);
+        var index = IndexOfPlaylistItem(item);
         if (index >= 0)
             await _playlist.MoveToIndexAsync(index);
     }
@@ -320,6 +320,18 @@ public partial class PlayBarViewModel : ObservableObject
             foreach (var item in snapshot)
                 PlaylistItems.Add(item);
         }
+    }
+
+    private int IndexOfPlaylistItem(HyPlayItem item)
+    {
+        var snapshot = _playlist.LegacyItemsSnapshot;
+        for (var i = 0; i < snapshot.Count; i++)
+        {
+            if (ReferenceEquals(snapshot[i], item))
+                return i;
+        }
+
+        return -1;
     }
 
     /// <summary>
