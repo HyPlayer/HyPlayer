@@ -2,7 +2,6 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Comments;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Album;
 using HyPlayer.Features.Artist;
@@ -11,6 +10,7 @@ using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
 using HyPlayer.Services.History;
@@ -123,11 +123,12 @@ DoubleAnimation verticalAnimation;
     {
         switch (propertyName)
         {
-            case nameof(PlaybackStateService.NowPlayingItem):
-                RunOnUIThread(() => LoadPlayingFile(_state.NowPlayingItem));
+            case nameof(PlaybackStateService.NowPlayingProviderItem):
+            case nameof(PlaybackStateService.NowPlayingSnapshot):
+                RunOnUIThread(LoadPlayingFile);
                 break;
             case nameof(PlaybackStateService.CoverStream):
-                RefreshPlayBarCover(_state.NowPlayingItem);
+                RefreshPlayBarCover(_state.NowPlayingProviderItem);
                 break;
         }
     }
@@ -176,7 +177,7 @@ DoubleAnimation verticalAnimation;
                 StartPreparedCollapseAnimations();
 
             if (!isExpanded)
-                RefreshPlayBarCover(ViewModel.NowPlayingItem);
+                RefreshPlayBarCover(ViewModel.NowPlayingProviderItem);
         });
     }
 
@@ -227,9 +228,12 @@ DoubleAnimation verticalAnimation;
         BackgroundElayBrush = new SolidColorBrush(color);
     }
 
-    public void LoadPlayingFile(HyPlayItem mpi)
+    public void LoadPlayingFile()
     {
-        if (mpi == null) return;
+        var providerItem = ViewModel.NowPlayingProviderItem;
+        var snapshot = ViewModel.NowPlayingSnapshot;
+        if (providerItem == null) return;
+
         RunOnUIThread(() => ApplicationView.GetForCurrentView().Title =
             $"{ViewModel.SongName} - {ViewModel.ArtistName}");
 
@@ -240,13 +244,11 @@ DoubleAnimation verticalAnimation;
             RefreshPlayModeDisplay();
 
             // 恢复播放音量
-            if (ViewModel.NowPlayingItem == null)
+            if (ViewModel.NowPlayingProviderItem == null)
             {
                 ApplicationView.GetForCurrentView().Title = "";
                 return;
             }
-
-            if (ViewModel.NowPlayingItem?.PlayItem == null) return;
 
             if (_isSliding)
             {
@@ -258,9 +260,9 @@ DoubleAnimation verticalAnimation;
             // Maximum/value/current time are provided by PlayBarViewModel x:Bind.
 
         });
-        var songId = ViewModel.NowPlayingProviderItem?.ActualId ?? mpi.Id;
+        var songId = providerItem.ActualId;
         var isLiked = !string.IsNullOrEmpty(songId) && _auth.LikedSongs.Contains(songId);
-        if (mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive)
+        if (snapshot?.IsLocal != true)
         {
             RunOnUIThread(() =>
             {
@@ -325,7 +327,7 @@ DoubleAnimation verticalAnimation;
 
     private async void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
-        if (!_player.PlayerCreated || (ViewModel.NowPlayingProviderItem == null && ViewModel.NowPlayingItem == null)) return;
+        if (!_player.PlayerCreated || ViewModel.NowPlayingProviderItem == null) return;
 
         if (_player.PrimaryPlaybackSource == null)
         {
@@ -371,7 +373,7 @@ DoubleAnimation verticalAnimation;
 
     private void RequestExpandedPlayer()
     {
-        if (!_player.PlayerCreated || ViewModel.NowPlayingItem?.PlayItem?.AudioGraphPlaybackSource == null) return;
+        if (!_player.PlayerCreated || _player.PrimaryPlaybackSource == null) return;
 
         // Prepare ConnectedAnimations from PlayBar elements before coordinator animates ExpandedPlayer
         if (_setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
@@ -448,7 +450,7 @@ DoubleAnimation verticalAnimation;
         }
         else
         {
-            var songId = ViewModel.NowPlayingProviderItem?.ActualId ?? ViewModel.NowPlayingItem?.Id;
+            var songId = ViewModel.NowPlayingProviderItem?.ActualId;
             if (!string.IsNullOrEmpty(songId))
                 _taskRunner.Forget(_personalFmContainer.MoveItemToTrashAsync(songId), "trash personal FM item");
             PersonalFM.LoadNextFMStatic();
@@ -472,22 +474,9 @@ DoubleAnimation verticalAnimation;
                 else if (providerSong.Artists.Count == 1)
                     _navigation.Navigate(typeof(ArtistPage), providerSong.Artists[0].ActualId);
             }
-            else if (ViewModel.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
+            else if (ViewModel.NowPlayingProviderItem is NeteaseRadioProgram { Host: not null } radioProgram)
             {
-                if (ViewModel.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
-                {
-                    _navigation.Navigate(typeof(Me), ViewModel.NowPlayingItem.Artist[0].Id);
-                }
-                else
-                {
-                    if (ViewModel.NowPlayingItem.Artist.Count > 1)
-                        await new ArtistSelectDialog(ViewModel.NowPlayingItem.Artist).ShowAsync();
-                    else
-                        _navigation.Navigate(typeof(ArtistPage),
-                            ViewModel.NowPlayingItem.Artist[0].Id);
-                }
-
-                //RequestCompactPlayer();
+                _navigation.Navigate(typeof(Me), radioProgram.Host.ActualId);
             }
         }
         catch
@@ -505,18 +494,9 @@ DoubleAnimation verticalAnimation;
                 if (!string.IsNullOrEmpty(albumId) && albumId != "0")
                     _navigation.Navigate(typeof(AlbumPage), albumId);
             }
-            else if (ViewModel.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
+            else if (ViewModel.NowPlayingProviderItem is NeteaseRadioProgram { Host: not null } radioProgram)
             {
-                if (ViewModel.NowPlayingItem.Artist[0].Type == HyPlayItemType.Radio)
-                {
-                    _navigation.Navigate(typeof(Me), ViewModel.NowPlayingItem.Artist[0].Id);
-                }
-                else
-                {
-                    if (ViewModel.NowPlayingItem.Album.Id != "0")
-                        _navigation.Navigate(typeof(AlbumPage),
-                            ViewModel.NowPlayingItem.Album.Id);
-                }
+                _navigation.Navigate(typeof(Me), radioProgram.Host.ActualId);
             }
         }
         catch
@@ -528,9 +508,7 @@ DoubleAnimation verticalAnimation;
     {
         var songId = ViewModel.NowPlayingProviderItem is NeteaseSong providerSong
             ? providerSong.ActualId
-            : ViewModel.NowPlayingItem?.ItemType == HyPlayItemType.Netease
-                ? ViewModel.NowPlayingItem.Id
-                : null;
+            : null;
         if (!string.IsNullOrEmpty(songId))
             await new SongListSelect(songId).ShowAsync();
     }
@@ -547,17 +525,15 @@ DoubleAnimation verticalAnimation;
     {
         if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
             _navigation.Navigate(typeof(Comments), CommentTarget.Song(providerSong.ActualId));
-        else if (ViewModel.NowPlayingItem?.ItemType == HyPlayItemType.Netease)
-            _navigation.Navigate(typeof(Comments), CommentTarget.Song(ViewModel.NowPlayingItem.Id));
-        else if (ViewModel.NowPlayingItem != null)
-            _navigation.Navigate(typeof(Comments), CommentTarget.RadioProgram(ViewModel.NowPlayingItem.Album.Alias));
+        else if (ViewModel.NowPlayingProviderItem is NeteaseRadioProgram radioProgram)
+            _navigation.Navigate(typeof(Comments), CommentTarget.RadioProgram(radioProgram.ActualId));
         RequestCompactPlayer();
     }
 
     private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
     {
         // NOTE: 分享电台节目功能尚未实现
-        if (ViewModel.NowPlayingProviderItem is not NeteaseSong && ViewModel.NowPlayingItem?.ItemType != HyPlayItemType.Netease) return;
+        if (ViewModel.NowPlayingProviderItem is not NeteaseSong) return;
 
         //展示系统的共享ui
         DataTransferManager.ShowShareUI();
@@ -647,8 +623,8 @@ DoubleAnimation verticalAnimation;
     internal void OnEnteringForeground()
     {
         ViewModel.SyncFromState();
-        LoadPlayingFile(ViewModel.NowPlayingItem);
-        RefreshPlayBarCover(ViewModel.NowPlayingItem);
+        LoadPlayingFile();
+        RefreshPlayBarCover(ViewModel.NowPlayingProviderItem);
     }
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
@@ -731,19 +707,20 @@ DoubleAnimation verticalAnimation;
     private void DataTransferManager_DataRequested(DataTransferManager sender, DataRequestedEventArgs args)
     {
         var dataPackage = new DataPackage();
-        var songId = ViewModel.NowPlayingProviderItem?.ActualId ?? ViewModel.NowPlayingItem?.Id;
+        var providerItem = ViewModel.NowPlayingProviderItem;
+        var songId = providerItem?.ActualId;
         if (string.IsNullOrEmpty(songId)) return;
         dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" + songId));
-        dataPackage.Properties.Title = ViewModel.NowPlayingProviderItem?.Name ?? ViewModel.NowPlayingItem.Name;
+        dataPackage.Properties.Title = providerItem?.Name ?? string.Empty;
         dataPackage.Properties.Description =
-            "歌手: " + (ViewModel.NowPlayingProviderItem?.CreatorList is { Count: > 0 } creators
+            "歌手: " + (providerItem?.CreatorList is { Count: > 0 } creators
                 ? string.Join(';', creators)
-                : string.Join(';', ViewModel.NowPlayingItem.Artist.Select(t => t.Name)));
+                : ViewModel.NowPlayingSnapshot?.ArtistText ?? string.Empty);
         var request = args.Request;
         request.Data = dataPackage;
     }
 
-    public async void RefreshPlayBarCover(HyPlayItem? playItem)
+    public async void RefreshPlayBarCover(SingleSongBase? providerItem)
     {
         if (ViewModel.CoverStream == null) return;
         _taskRunner.Forget(_notification.InvokeOnUIThread(async () =>
@@ -752,7 +729,7 @@ DoubleAnimation verticalAnimation;
             {
                 try
                 {
-                    if (playItem != ViewModel.NowPlayingItem) return;
+                    if (providerItem != ViewModel.NowPlayingProviderItem) return;
                     using var stream = ViewModel.CoverStream.CloneStream();
                     await AlbumImageSource.SetSourceAsync(stream);
                 }

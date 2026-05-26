@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
@@ -70,9 +69,6 @@ public partial class PlayBarViewModel : ObservableObject
     // ── Observable Properties (partial property pattern for AOT) ──
 
     [ObservableProperty]
-    public partial HyPlayItem? NowPlayingItem { get; set; }
-
-    [ObservableProperty]
     public partial SingleSongBase? NowPlayingProviderItem { get; set; }
 
     [ObservableProperty]
@@ -127,16 +123,14 @@ public partial class PlayBarViewModel : ObservableObject
     public string SongName => NowPlayingSnapshot?.Name ?? string.Empty;
     public string ArtistName => NowPlayingSnapshot?.ArtistText ?? string.Empty;
     public string AlbumName => NowPlayingSnapshot?.AlbumName ?? string.Empty;
-    public string QualityTagText => NowPlayingProviderItem != null && !string.IsNullOrWhiteSpace(QualityTag)
-        ? HyPlayItem.FormatAudioLevel(QualityTag)
-        : NowPlayingItem?.GetQualityTagText(_setting.audioRate) ?? "无歌曲";
+    public string QualityTagText => GetQualityTagText(NowPlayingSnapshot, QualityTag, _setting.audioRate);
     public string TotalTimeText => FormatTime(Duration != TimeSpan.Zero ? Duration : TimeSpan.FromMilliseconds(NowPlayingSnapshot?.Duration ?? 0));
     public string NowTimeText => FormatTime(Position);
     public double ProgressMilliseconds => Position.TotalMilliseconds;
     public double DurationMilliseconds => Duration != TimeSpan.Zero ? Duration.TotalMilliseconds : NowPlayingSnapshot?.Duration ?? 0;
     public string PlayStateGlyph => IsPlaying ? "\uF8AE" : "\uF5B0";
     public bool CanShareCurrentSong => NowPlayingProviderItem is NeteaseSong
-                                       || NowPlayingItem is { ItemType: not HyPlayItemType.Local and not HyPlayItemType.LocalProgressive };
+                                       || NowPlayingSnapshot is { IsLocal: false };
     public DataTransferManager DataTransferManager => _dataTransferManager;
 
     // ── Relay Commands ──
@@ -224,7 +218,6 @@ public partial class PlayBarViewModel : ObservableObject
         {
             switch (propertyName)
             {
-                case nameof(PlaybackStateService.NowPlayingItem):
                 case nameof(PlaybackStateService.NowPlayingSnapshot):
                     SyncFromState();
                     break;
@@ -260,13 +253,17 @@ public partial class PlayBarViewModel : ObservableObject
         });
     }
 
-    partial void OnNowPlayingItemChanged(HyPlayItem? value)
+    partial void OnNowPlayingProviderItemChanged(SingleSongBase? value)
     {
         NotifyPlayBarProperties();
         RefreshPlaylistItems();
     }
-    partial void OnNowPlayingProviderItemChanged(SingleSongBase? value) => NotifyPlayBarProperties();
-    partial void OnNowPlayingSnapshotChanged(PlaybackCurrentItemSnapshot? value) => NotifyPlayBarProperties();
+
+    partial void OnNowPlayingSnapshotChanged(PlaybackCurrentItemSnapshot? value)
+    {
+        NotifyPlayBarProperties();
+        RefreshPlaylistItems();
+    }
     partial void OnIsPlayingChanged(bool value) => OnPropertyChanged(nameof(PlayStateGlyph));
     partial void OnPositionChanged(TimeSpan value)
     {
@@ -303,6 +300,30 @@ public partial class PlayBarViewModel : ObservableObject
         if (time.Hours == 0)
             return time.Minutes < 10 ? time.ToString(@"m\:ss") : time.ToString(@"mm\:ss");
         return time.ToString(@"hh\:mm\:ss");
+    }
+
+    private static string GetQualityTagText(PlaybackCurrentItemSnapshot? snapshot, string qualityTag, string fallbackLevel)
+    {
+        if (!string.IsNullOrWhiteSpace(qualityTag)) return FormatAudioLevel(qualityTag);
+        if (snapshot is null) return "无歌曲";
+        if (snapshot.IsLocal) return "本地歌曲";
+        return FormatAudioLevel(fallbackLevel);
+    }
+
+    private static string FormatAudioLevel(string level)
+    {
+        return level switch
+        {
+            "standard" => "标准",
+            "higher" => "较高",
+            "exhigh" => "极高",
+            "lossless" => "无损",
+            "hires" => "Hi-Res",
+            "jyeffect" => "高清环绕声",
+            "sky" => "沉浸环绕声",
+            "jymaster" => "超清母带",
+            _ => string.Empty
+        };
     }
 
     // ── Helpers ──
@@ -368,7 +389,6 @@ public partial class PlayBarViewModel : ObservableObject
 
     public void SyncFromState()
     {
-        NowPlayingItem = _state.NowPlayingItem;
         NowPlayingProviderItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
         NowPlayingSnapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(NowPlayingProviderItem);
         IsPlaying = _state.IsPlaying;
