@@ -10,7 +10,7 @@ using System.Text.Json;
 
 #endregion
 
-namespace HyPlayer.Domain.Music;
+namespace HyPlayer.Infrastructure.Netease;
 
 internal static class NCMFile
 {

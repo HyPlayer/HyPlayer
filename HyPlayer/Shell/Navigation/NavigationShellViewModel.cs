@@ -1,13 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -154,12 +154,12 @@ public partial class NavigationShellViewModel : ObservableObject
     {
         if (_auth.IsLoggedIn && _auth.CurrentUser is { } user)
         {
-            AccountAvatarSource = string.IsNullOrEmpty(user.Avatar)
+            AccountAvatarSource = string.IsNullOrEmpty(user.AvatarUrl)
                 ? null
-                : new BitmapImage(new Uri(user.Avatar + "?param=" + StaticSource.PICSIZE_NAVITEM_USERAVATAR));
+                : new BitmapImage(new Uri(user.AvatarUrl + "?param=" + StaticSource.PICSIZE_NAVITEM_USERAVATAR));
             AccountInitials = GetUserInitials(user.Name);
             AccountName = string.IsNullOrEmpty(user.Name) ? "已登录" : user.Name;
-            AccountSubtitle = string.IsNullOrEmpty(user.Signature) ? "查看个人主页" : user.Signature;
+            AccountSubtitle = string.IsNullOrEmpty(user.Description) ? "查看个人主页" : user.Description;
             AccountProfileButtonText = "个人资料";
             AccountSignOutVisibility = Visibility.Visible;
             return;
@@ -187,7 +187,7 @@ public partial class NavigationShellViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var user = await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + _auth.CurrentUser.Id);
+            var user = await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + _auth.CurrentUser.ActualId);
             var containers = user is ContainersContainer containersContainer
                 ? await containersContainer.GetSubContainerAsync()
                 : [];
@@ -196,12 +196,8 @@ public partial class NavigationShellViewModel : ObservableObject
             _subscribedContainer?.Children.Clear();
             _auth.MySongLists.Clear();
 
-            var playlists = new System.Collections.Generic.List<NeteasePlaylist>();
-            foreach (var container in containers.OfType<NeteaseUserPlaylistSubContainer>())
-            {
-                var items = await container.GetAllItemsAsync();
-                playlists.AddRange(items.OfType<NeteasePlaylist>());
-            }
+            var playlists = containers.OfType<NeteasePlaylist>().ToList();
+
             if (playlists.Count == 0)
             {
                 if (_likedSongsNode is not null)
@@ -209,8 +205,8 @@ public partial class NavigationShellViewModel : ObservableObject
                 return;
             }
 
-            _auth.MySongLists.Add(MapToNCPlayList(playlists[0]));
-
+            // 第一个歌单是"我喜欢的音乐"
+            _auth.MySongLists.Add(playlists[0]);
 
             for (int i = 1; i < playlists.Count; i++)
             {
@@ -229,7 +225,7 @@ public partial class NavigationShellViewModel : ObservableObject
                 }
                 else
                 {
-                    _auth.MySongLists.Add(MapToNCPlayList(pl));
+                    _auth.MySongLists.Add(pl);
                     _createdContainer?.Children.Add(new NavigationNode
                     {
                         Title = pl.Name,
@@ -254,30 +250,5 @@ public partial class NavigationShellViewModel : ObservableObject
         {
             IsLoading = false;
         }
-    }
-
-    private static NCPlayList MapToNCPlayList(NeteasePlaylist playlist)
-    {
-        return new NCPlayList
-        {
-            PlaylistId = playlist.ActualId ?? string.Empty,
-            Name = playlist.Name,
-            Description = playlist.Description,
-            Cover = playlist.CoverUrl,
-            Creator = playlist.Creator is null
-                ? null
-                : new NCUser
-                {
-                    Id = playlist.Creator.ActualId ?? string.Empty,
-                    Name = playlist.Creator.Name,
-                    Avatar = string.Empty,
-                    Signature = string.Empty
-                },
-            HasSubscribed = playlist.Subscribed,
-            TrackCount = playlist.TrackCount,
-            PlayCount = playlist.PlayCount,
-            BookCount = playlist.SubscribedCount,
-            UpdateTime = playlist.UpdateTime > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(playlist.UpdateTime).LocalDateTime : DateTime.MinValue
-        };
     }
 }

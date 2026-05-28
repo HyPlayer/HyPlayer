@@ -1,4 +1,4 @@
-using HyPlayer.Domain.Music;
+using HyPlayer.NeteaseProvider.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,13 +17,13 @@ public interface IAuthService
     bool IsLoggedIn { get; set; }
 
     /// <summary>当前登录用户</summary>
-    NCUser? CurrentUser { get; set; }
+    NeteaseUser? CurrentUser { get; set; }
 
     /// <summary>喜欢的歌曲 ID 列表</summary>
     List<string> LikedSongs { get; }
 
     /// <summary>用户歌单列表</summary>
-    List<NCPlayList> MySongLists { get; }
+    List<NeteasePlaylist> MySongLists { get; }
 
     /// <summary>清理运行时 Cookie。</summary>
     void ClearRuntimeCookies();

@@ -2,10 +2,8 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain;
-using HyPlayer.Domain.Comments;
 using HyPlayer.Features.User;
-using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseApi.Models;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -25,7 +23,7 @@ using Windows.UI.Xaml.Media.Imaging;
 
 #endregion
 
-//https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
+//https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了"用户控件"项模板
 
 namespace HyPlayer.UI.Controls;
 
@@ -36,7 +34,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             new PropertyMetadata(null));
 
     public static readonly DependencyProperty MainCommentProperty =
-        DependencyProperty.Register("MainComment", typeof(Comment), typeof(SingleComment),
+        DependencyProperty.Register("MainComment", typeof(NeteaseComment), typeof(SingleComment),
             new PropertyMetadata(null)); //主评论
 
     public event PropertyChangedEventHandler PropertyChanged;
@@ -48,7 +46,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     }
 
 
-    private ObservableCollection<Comment> floorComments = new ObservableCollection<Comment>();
+    private ObservableCollection<NeteaseComment> floorComments = new ObservableCollection<NeteaseComment>();
     public UserDisplay CommentUserDisplay;
     private string time = "0";
 
@@ -70,9 +68,9 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         set => SetValue(AvatarSourceProperty, value);
     }
 
-    public Comment MainComment
+    public NeteaseComment MainComment
     {
-        get => (Comment)GetValue(MainCommentProperty);
+        get => (NeteaseComment)GetValue(MainCommentProperty);
         set
         {
             SetValue(MainCommentProperty, value);
@@ -84,13 +82,13 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     private async Task LoadFloorComments(bool IsLoadMoreComments)
     {
         if (!IsLoadMoreComments) floorComments.Clear();
-        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ResourceType}_{MainComment.ResourceId}_{MainComment.CommentId}", async () =>
+        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ResourceTypeId}_{MainComment.ResourceId}_{MainComment.ActualId}", async () =>
         {
             return await Ioc.Default.GetRequiredService<ICommentProvidable>()
                 .GetThreadedCommentsAsync(
                     MainComment.ResourceId,
-                    MapCommentTypeId(MainComment.ResourceType),
-                    MainComment.CommentId,
+                    MainComment.ResourceTypeId,
+                    MainComment.ActualId,
                     !IsLoadMoreComments ? 0 : int.Parse(time ?? "0"),
                     20);
         }, TimeSpan.FromMinutes(5));
@@ -100,9 +98,9 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         }
         foreach (var floorcomment in result.Items)
         {
-            var floorComment = MapProviderComment(floorcomment);
+            var floorComment = (NeteaseComment)floorcomment;
             floorComment.ResourceId = MainComment.ResourceId;
-            floorComment.ResourceType = MainComment.ResourceType;
+            floorComment.ResourceTypeId = MainComment.ResourceTypeId;
             floorComment.IsMainComment = false;
             floorComments.Add(floorComment);
         }
@@ -117,8 +115,8 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         {
             await Ioc.Default.GetRequiredService<ICommentProvidable>().SetCommentLikeStateAsync(
                 MainComment.ResourceId,
-                MapCommentTypeId(MainComment.ResourceType),
-                MainComment.CommentId,
+                MainComment.ResourceTypeId,
+                MainComment.ActualId,
                 !MainComment.HasLiked);
         }
         catch (Exception ex)
@@ -132,37 +130,6 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         LikeCountTB.Text = MainComment.LikedCount.ToString();
     }
 
-    private static string MapCommentTypeId(NeteaseResourceType resourceType)
-    {
-        return resourceType switch
-        {
-            NeteaseResourceType.Song => "sg",
-            NeteaseResourceType.Album => "al",
-            NeteaseResourceType.Playlist => "pl",
-            NeteaseResourceType.MV => "mv",
-            NeteaseResourceType.Video => "vd",
-            NeteaseResourceType.RadioChannel => "dj",
-            _ => "sg"
-        };
-    }
-
-    private static Comment MapProviderComment(CommentBase comment)
-    {
-        return new Comment
-        {
-            CommentId = comment.ActualId ?? string.Empty,
-            Content = comment.Content ?? comment.Name,
-            LikedCount = comment.LikedCount,
-            SendTime = comment.SendDate > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(comment.SendDate).LocalDateTime : DateTime.MinValue,
-            CommentUser = new Domain.Music.NCUser
-            {
-                Id = comment.Sender?.ActualId ?? string.Empty,
-                Name = comment.Sender?.Name ?? string.Empty,
-                Avatar = string.Empty,
-            }
-        };
-    }
-
     private void Delete_Click(object sender, RoutedEventArgs e)
     {
         throw new NotImplementedException();
@@ -171,7 +138,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private void NavToUser_Click(object sender, RoutedEventArgs e)
     {
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me), MainComment.CommentUser.Id);
+        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me), MainComment.Sender?.ActualId);
     }
 
     private async void SendReply_Click(object sender, RoutedEventArgs e)
@@ -211,7 +178,12 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        CommentUserDisplay = new(MainComment.CommentUser);
+        CommentUserDisplay = new UserDisplay(new CommentUserInfo
+        {
+            ActualId = MainComment.Sender?.ActualId ?? string.Empty,
+            Name = MainComment.Sender?.Name ?? string.Empty,
+            AvatarUrl = MainComment.AvatarUrl,
+        });
         ReplyBtn.Visibility = Visibility.Visible;
         FloorCommentsExpander.Visibility = MainComment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
         Bindings.Update();

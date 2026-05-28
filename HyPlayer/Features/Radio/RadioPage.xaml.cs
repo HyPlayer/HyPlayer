@@ -5,7 +5,6 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
@@ -41,7 +40,6 @@ public sealed partial class RadioPage : Page
     private bool asc;
     private int i;
     private int page;
-    private NCRadio Radio;
     private NeteaseRadioChannel RadioChannel;
     private List<NeteaseRadioProgram> _ascendingPrograms;
     private Task _programLoaderTask;
@@ -107,19 +105,16 @@ public sealed partial class RadioPage : Page
                 _notification.ShowMessage("获取电台信息失败", "未知错误");
                 return;
             }
-
-            Radio = MapToNCRadio(RadioChannel);
         }
 
-        if (e.Parameter is NCRadio radio)
+        if (e.Parameter is NeteaseRadioChannel radio)
         {
-            Radio = radio;
-            RadioChannel = MapToNeteaseRadioChannel(radio);
+            RadioChannel = radio;
         }
 
-        TextBoxRadioName.Text = Radio.Name;
-        TextBoxDJ.Content = Radio.DJ.Name;
-        TextBlockDesc.Text = Radio.Description;
+        TextBoxRadioName.Text = RadioChannel.Name;
+        TextBoxDJ.Content = RadioChannel.Host?.Name;
+        TextBlockDesc.Text = RadioChannel.Description;
         if (_setting.noImage)
         {
             ImageRect.ImageSource = null;
@@ -128,12 +123,12 @@ public sealed partial class RadioPage : Page
         {
             var img = new BitmapImage();
             ImageRect.ImageSource = img;
-            img.UriSource = new Uri(Radio.Cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
+            img.UriSource = new Uri(RadioChannel.CoverUrl + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
         }
 
         Songs.Clear();
         _ascendingPrograms = null;
-        SongContainer.QueueScope = SongListQueueScope.Radio(Radio.Id);
+        SongContainer.QueueScope = SongListQueueScope.Radio(RadioChannel.ActualId);
         _programLoaderTask = LoadProgram();
         if (_setting.greedlyLoadPlayContainerItems)
             AttachSecondTick();
@@ -187,14 +182,14 @@ public sealed partial class RadioPage : Page
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
         var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        await _navigator.AppendAsync(new MusicResource.Radio(Radio.Id));
+        await _navigator.AppendAsync(new MusicResource.Radio(RadioChannel.ActualId));
         if (asc) playlist.ReverseList();
         await playlist.MoveToIndexAsync(0);
     }
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        _navigation.Navigate(typeof(Me), Radio.DJ.Id);
+        _navigation.Navigate(typeof(Me), RadioChannel.Host?.ActualId);
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)
@@ -210,7 +205,7 @@ public sealed partial class RadioPage : Page
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
         var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        await playlist.AppendRadioListAsync(Radio.Id, asc);
+        await playlist.AppendRadioListAsync(RadioChannel.ActualId, asc);
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
@@ -254,52 +249,6 @@ public sealed partial class RadioPage : Page
     {
         var programs = await RadioChannel.GetAllItemsAsync(_cancellationToken);
         return programs.OfType<NeteaseRadioProgram>().ToList();
-    }
-
-    private static NCRadio MapToNCRadio(NeteaseRadioChannel channel)
-    {
-        return new NCRadio
-        {
-            Cover = channel.CoverUrl,
-            Description = channel.Description,
-            DJ = MapToNCUser(channel.Host),
-            Id = channel.ActualId,
-            LastProgramName = channel.LastProgramName,
-            Name = channel.Name,
-            HasSubscribed = channel.Subscribed,
-        };
-    }
-
-    private static NeteaseRadioChannel MapToNeteaseRadioChannel(NCRadio radio)
-    {
-        return new NeteaseRadioChannel
-        {
-            ActualId = radio.Id,
-            Name = radio.Name,
-            CoverUrl = radio.Cover,
-            Description = radio.Description,
-            Host = radio.DJ is null ? null : new NeteaseUser
-            {
-                ActualId = radio.DJ.Id,
-                Name = radio.DJ.Name,
-                AvatarUrl = radio.DJ.Avatar,
-                Description = radio.DJ.Signature
-            },
-            LastProgramName = radio.LastProgramName,
-            Subscribed = radio.HasSubscribed,
-            CreatorList = radio.DJ is null ? [] : [radio.DJ.Name]
-        };
-    }
-
-    private static NCUser MapToNCUser(NeteaseUser? user)
-    {
-        return new NCUser
-        {
-            Id = user?.ActualId,
-            Name = user?.Name,
-            Avatar = user?.AvatarUrl,
-            Signature = user?.Description
-        };
     }
 
 }

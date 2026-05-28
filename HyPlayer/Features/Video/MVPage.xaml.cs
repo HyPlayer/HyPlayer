@@ -2,8 +2,7 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Comments;
-using HyPlayer.Domain.Music;
-using HyPlayer.Infrastructure.Netease;
+using HyPlayer.NeteaseProvider.Constants;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -35,7 +34,7 @@ public sealed partial class MVPage : Page
     private readonly IRichMediaProvidable _richMediaProvider = Ioc.Default.GetRequiredService<IRichMediaProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
 
-    private readonly List<NCMlog> sources = new();
+    private readonly List<NeteaseMv> sources = new();
     private string MVId;
     private string mvquality = "1080";
     private string songid;
@@ -234,22 +233,20 @@ public sealed partial class MVPage : Page
 
     private void RelativeList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        MVId = (RelativeList.SelectedItem is NCMlog ? (NCMlog)RelativeList.SelectedItem : default).Id;
+        MVId = (RelativeList.SelectedItem is NeteaseMv mv ? mv : default)?.ActualId ?? string.Empty;
         LoadThings();
     }
 
     [GeneratedRegex("^[0-9]*$")]
     private static partial Regex MvIdRegex();
 
-    private static NCMlog MapRichMediaToNcMlog(RichMediaBase item)
+    private static NeteaseMv MapRichMediaToNcMlog(RichMediaBase item)
     {
-        return new NCMlog
+        return new NeteaseMv
         {
-            Id = item.ActualId ?? string.Empty,
-            Title = item.Name,
-            Description = item.Description,
-            Duration = (int)item.Duration,
-            Cover = item is NeteaseMlog mlog ? mlog.CoverUrl : string.Empty
+            ActualId = item.ActualId ?? string.Empty,
+            Name = item.Name,
+            CoverUrl = item is NeteaseMv mv ? mv.CoverUrl : string.Empty
         };
     }
 }

@@ -2,7 +2,7 @@
 
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Music;
+using HyPlayer.NeteaseProvider.Models;
 using System;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.UI.Xaml;
@@ -11,7 +11,7 @@ using Windows.UI.Xaml.Navigation;
 
 #endregion
 
-// https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
+// https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了"空白页"项模板
 
 namespace HyPlayer.Features.Playlist;
 
@@ -20,6 +20,7 @@ namespace HyPlayer.Features.Playlist;
 /// </summary>
 public sealed partial class SongListDetail : Page
 {
+    private const string DailyRecommendPlaylistId = "daily_recommend";
     private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
     public SongListViewModel ViewModel => (SongListViewModel)DataContext;
 
@@ -33,8 +34,8 @@ public sealed partial class SongListDetail : Page
     private void DataTransferManagerOnDataRequested(DataTransferManager sender, DataRequestedEventArgs args)
     {
         var dp = new DataPackage();
-        dp.Properties.Title = ViewModel.PlayList.Name;
-        dp.SetWebLink(new Uri("https://music.163.com/#/playlist?id=" + ViewModel.PlayList.PlaylistId));
+        dp.Properties.Title = ViewModel.PlayList?.Name;
+        dp.SetWebLink(new Uri("https://music.163.com/#/playlist?id=" + ViewModel.PlayList?.ActualId));
         var request = args.Request;
         request.Data = dp;
     }
@@ -53,14 +54,25 @@ public sealed partial class SongListDetail : Page
 
         if (e.Parameter != null)
         {
-            if (e.Parameter is NCPlayList playList)
+            if (e.Parameter is NeteasePlaylist playList)
             {
-                ViewModel.PlayList = playList;
-                ViewModel.LoadPageData(playList.PlaylistId, false).SafeFireAndForget();
+                var isDailyRecommend = playList.ActualId == DailyRecommendPlaylistId;
+                ViewModel.IsDailyRecommend = isDailyRecommend;
+                if (isDailyRecommend)
+                {
+                    ViewModel.DescriptionBoxContent = playList.Description;
+                    ViewModel.CoverUri = new Uri(playList.CoverUrl);
+                    ViewModel.LoadSongListItem().SafeFireAndForget();
+                }
+                else
+                {
+                    ViewModel.LoadPageData(playList.ActualId, true).SafeFireAndForget();
+                }
             }
             else
             {
                 var pid = e.Parameter.ToString();
+                ViewModel.IsDailyRecommend = false;
                 ViewModel.LoadPageData(pid, true).SafeFireAndForget();
             }
         }

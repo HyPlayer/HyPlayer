@@ -2,7 +2,6 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -115,12 +114,12 @@ public sealed partial class HistoryPage : Page
         {
             var container = new NeteaseUserLibrarySubContainer
             {
-                ActualId = $"history-{rangeId}{_auth.CurrentUser.Id}",
+                ActualId = $"history-{rangeId}{_auth.CurrentUser.ActualId}",
                 Name = "听歌排行",
                 Kind = rangeId.Equals("recent", StringComparison.OrdinalIgnoreCase)
                     ? NeteaseUserLibrarySubContainer.ListeningHistoryRecentKind
                     : NeteaseUserLibrarySubContainer.ListeningHistoryAllKind,
-                UserId = _auth.CurrentUser.Id,
+                UserId = _auth.CurrentUser.ActualId,
                 MaxProgressiveCount = 120
             };
             var rankData = await container.GetAllItemsAsync(_cancellationToken);

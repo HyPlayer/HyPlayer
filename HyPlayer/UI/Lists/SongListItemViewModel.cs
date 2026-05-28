@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
@@ -22,9 +22,9 @@ public sealed class SongListItemViewModel
     {
     }
 
-    public NCAlbum Album { get; private init; }
+    public NeteaseAlbum Album { get; private init; }
     public string Alias { get; private init; }
-    public List<NCArtist> Artist { get; private init; }
+    public List<PersonBase> Artist { get; private init; }
     public string CDName { get; private init; }
     public bool IsAvailable { get; private init; }
     public bool IsCloud { get; private init; }
@@ -37,17 +37,17 @@ public sealed class SongListItemViewModel
     public SingleSongBase? ProviderSong { get; private init; }
     public int TrackId { get; private init; }
     public string TranslatedName { get; private init; }
-    public HyPlayItemType Type { get; private init; }
+    public string ProviderId { get; private init; }
     public bool IsRadio { get; private init; }
     public int DisplayOrder => Order + 1;
 
     public Uri? Cover => Ioc.Default.GetRequiredService<Setting>().noImage
         ? null
-        : new Uri((string.IsNullOrEmpty(Album.Cover) ? DefaultCoverUrl : Album.Cover) + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER);
+        : new Uri((string.IsNullOrEmpty(Album?.PictureUrl) ? DefaultCoverUrl : Album.PictureUrl) + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER);
 
     public string? CoverString => Ioc.Default.GetRequiredService<Setting>().noImage
         ? null
-        : new Uri((string.IsNullOrEmpty(Album.Cover) ? DefaultCoverUrl : Album.Cover) + "?param=" + StaticSource.PICSIZE_HOME_CARD_COVER).ToString();
+        : new Uri((string.IsNullOrEmpty(Album?.PictureUrl) ? DefaultCoverUrl : Album.PictureUrl) + "?param=" + StaticSource.PICSIZE_HOME_CARD_COVER).ToString();
 
     public string ArtistString => Artist.Count == 0 ? string.Empty : string.Join(" / ", Artist.Select(t => t.Name));
 
@@ -62,18 +62,18 @@ public sealed class SongListItemViewModel
         {
             ActualId = SongId,
             Name = SongName,
-            Album = string.IsNullOrWhiteSpace(Album.Id) && string.IsNullOrWhiteSpace(Album.Name)
+            Album = string.IsNullOrWhiteSpace(Album?.ActualId) && string.IsNullOrWhiteSpace(Album?.Name)
                 ? null
                 : new NeteaseAlbum
                 {
-                    ActualId = Album.Id,
+                    ActualId = Album.ActualId,
                     Name = Album.Name,
-                    PictureUrl = Album.Cover,
-                    Alias = string.IsNullOrWhiteSpace(Album.Alias) ? null : [Album.Alias]
+                    PictureUrl = Album.PictureUrl,
+                    Alias = Album.Alias
                 },
             Artists = Artist.Select(artist => new NeteaseArtist
             {
-                ActualId = artist.Id,
+                ActualId = artist.ActualId,
                 Name = artist.Name
             }).Cast<PersonBase>().ToList(),
             CreatorList = Artist.Select(artist => artist.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToList(),
@@ -83,7 +83,7 @@ public sealed class SongListItemViewModel
             MvId = MVId,
             CdName = CDName,
             TrackNumber = TrackId,
-            CoverUrl = Album.Cover,
+            CoverUrl = Album?.PictureUrl,
             Translation = TranslatedName
         };
     }
@@ -99,20 +99,18 @@ public sealed class SongListItemViewModel
         var neteaseSong = song as NeteaseSong;
         return new SongListItemViewModel
         {
-            Album = new NCAlbum
+            Album = new NeteaseAlbum
             {
-                AlbumType = HyPlayItemType.Netease,
-                Cover = neteaseSong?.CoverUrl,
-                Id = song.Album?.ActualId,
+                PictureUrl = neteaseSong?.CoverUrl,
+                ActualId = song.Album?.ActualId,
                 Name = song.Album?.Name
             },
             Alias = neteaseSong?.Alias is not null ? string.Join(",", neteaseSong.Alias) : null,
-            Artist = creators?.Select(artist => new NCArtist
+            Artist = creators?.Select(artist => new NeteaseArtist
                      {
-                         Id = artist.ActualId,
+                         ActualId = artist.ActualId,
                          Name = artist.Name,
-                         Type = HyPlayItemType.Netease
-                     }).ToList() ?? [],
+                     }).Cast<PersonBase>().ToList() ?? [],
             CDName = neteaseSong?.CdName,
             IsCloud = isCloud,
             IsVip = false,
@@ -125,7 +123,7 @@ public sealed class SongListItemViewModel
             TrackId = neteaseSong?.TrackNumber ?? 0,
             TranslatedName = neteaseSong?.Translation,
             IsAvailable = song.Available,
-            Type = HyPlayItemType.Netease,
+            ProviderId = song.ProviderId,
             IsRadio = false,
         };
     }
@@ -136,13 +134,12 @@ public sealed class SongListItemViewModel
 
         return new SongListItemViewModel
         {
-            Album = new NCAlbum
+            Album = new NeteaseAlbum
             {
-                AlbumType = HyPlayItemType.Radio,
-                Id = program.RadioChannel?.ActualId,
+                ActualId = program.RadioChannel?.ActualId,
                 Name = program.RadioChannel?.Name,
-                Cover = program.RadioChannel?.CoverUrl,
-                Alias = program.RadioChannel?.ActualId,
+                PictureUrl = program.RadioChannel?.CoverUrl,
+                Alias = program.RadioChannel?.ActualId is not null ? [program.RadioChannel.ActualId] : null,
                 Description = program.RadioChannel?.Description
             },
             Alias = string.Empty,
@@ -159,40 +156,38 @@ public sealed class SongListItemViewModel
             TrackId = order + 1,
             TranslatedName = string.Empty,
             IsAvailable = program.Available,
-            Type = HyPlayItemType.Radio,
+            ProviderId = program.ProviderId,
             IsRadio = true,
         };
     }
 
-    private static List<NCArtist> GetRadioArtists(NeteaseRadioProgram program)
+    private static List<PersonBase> GetRadioArtists(NeteaseRadioProgram program)
     {
         if (program.Host is not null)
         {
             return
             [
-                new NCArtist
+                new NeteaseUser
                 {
-                    Type = HyPlayItemType.Radio,
-                    Id = program.Host.ActualId,
+                    ActualId = program.Host.ActualId,
                     Name = program.Host.Name,
-                    Avatar = program.Host.AvatarUrl
+                    AvatarUrl = program.Host.AvatarUrl
                 }
             ];
         }
 
-        return program.MainSong?.Artists?.Select(artist => new NCArtist
+        return program.MainSong?.Artists?.Select(artist => new NeteaseArtist
         {
-            Type = HyPlayItemType.Radio,
-            Id = artist.ActualId,
+            ActualId = artist.ActualId,
             Name = artist.Name
-        }).ToList() ?? [];
+        }).Cast<PersonBase>().ToList() ?? [];
     }
 
     public static SongListItemViewModel FromFallback(string? id, string? name, int order, bool isCloud = false)
     {
         return new SongListItemViewModel
         {
-            Album = new NCAlbum { Id = string.Empty, Name = string.Empty, Cover = string.Empty, AlbumType = HyPlayItemType.Netease },
+            Album = new NeteaseAlbum { ActualId = string.Empty, Name = string.Empty, PictureUrl = string.Empty },
             Alias = string.Empty,
             Artist = [],
             CDName = string.Empty,
@@ -207,7 +202,7 @@ public sealed class SongListItemViewModel
             ProviderSong = null,
             TrackId = 0,
             TranslatedName = string.Empty,
-            Type = HyPlayItemType.Netease,
+            ProviderId = "ncm",
             IsRadio = false,
         };
     }

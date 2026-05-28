@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
-using HyPlayer.Domain.Music;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
@@ -26,13 +25,13 @@ namespace HyPlayer.Features.Home
         private List<SingleSongBase> _recommendedProviderSongs = [];
 
         [ObservableProperty]
-        public partial List<NCPlayList> RecommendedPlaylist { get; set; }
+        public partial List<NeteasePlaylist> RecommendedPlaylist { get; set; }
         [ObservableProperty]
-        public partial List<NCPlayList> ToplistPlaylist { get; set; }
+        public partial List<NeteasePlaylist> ToplistPlaylist { get; set; }
         [ObservableProperty]
         public partial List<SongListItemViewModel> RecommendedSongItems { get; set; }
         [ObservableProperty]
-        public partial List<NCPlayList> OfficialPlaylists { get; set; }
+        public partial List<NeteasePlaylist> OfficialPlaylists { get; set; }
 #nullable restore
         public HomeViewModel(global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider, IPlaylistService playlist, INavigationService navigation)
         {
@@ -45,18 +44,15 @@ namespace HyPlayer.Features.Home
         {
             ToplistPlaylist = (await LoadContainerItemsAsync(new NeteaseToplistContainer { ActualId = "chart", Name = "排行榜" }))
                 .OfType<NeteasePlaylist>()
-                .Select(MapToNCPlayList)
                 .ToList();
             OfficialPlaylists = (await LoadContainerItemsAsync(new NeteasePlaylistCategoryContainer { ActualId = "官方", Category = "官方", Name = "官方推荐歌单" }))
                 .OfType<NeteasePlaylist>()
-                .Select(MapToNCPlayList)
                 .ToList();
             // 登录内容
             if (Ioc.Default.GetRequiredService<IAuthService>().IsLoggedIn)
             {
                 RecommendedPlaylist = (await LoadContainerItemsAsync(new NeteaseRecommendPlaylistContainer { ActualId = "rcpl", Name = "推荐歌单" }))
                     .OfType<NeteasePlaylist>()
-                    .Select(MapToNCPlayList)
                     .ToList();
                 _recommendedProviderSongs = (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
                     .OfType<SingleSongBase>()
@@ -76,35 +72,10 @@ namespace HyPlayer.Features.Home
             };
         }
 
-        private static NCPlayList MapToNCPlayList(NeteasePlaylist playlist)
-        {
-            return new NCPlayList
-            {
-                PlaylistId = playlist.ActualId ?? string.Empty,
-                Name = playlist.Name,
-                Description = playlist.Description,
-                Cover = playlist.CoverUrl,
-                Creator = playlist.Creator is null
-                    ? null
-                    : new NCUser
-                    {
-                        Id = playlist.Creator.ActualId ?? string.Empty,
-                        Name = playlist.Creator.Name,
-                        Avatar = string.Empty,
-                        Signature = string.Empty
-                    },
-                HasSubscribed = playlist.Subscribed,
-                TrackCount = playlist.TrackCount,
-                PlayCount = playlist.PlayCount,
-                BookCount = playlist.SubscribedCount,
-                UpdateTime = playlist.UpdateTime > 0 ? System.DateTimeOffset.FromUnixTimeMilliseconds(playlist.UpdateTime).LocalDateTime : System.DateTime.MinValue
-            };
-        }
-
         [RelayCommand]
         private void OnLikedClicked()
         {
-            _navigation.Navigate(typeof(SongListDetail), Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].PlaylistId);
+            _navigation.Navigate(typeof(SongListDetail), Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].ActualId);
         }
 
         [RelayCommand]

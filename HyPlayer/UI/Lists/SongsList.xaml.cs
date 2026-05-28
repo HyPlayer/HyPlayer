@@ -10,9 +10,9 @@ using HyPlayer.Features.Comments;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
@@ -316,7 +316,7 @@ public sealed partial class SongsList : UserControl
         if (!TryGetSelectedRow(out var selectedSong)) return;
         if (selectedSong.IsRadio)
         {
-            _navigation.Navigate(typeof(Me), selectedSong.Artist.FirstOrDefault().Id);
+            _navigation.Navigate(typeof(Me), selectedSong.Artist.FirstOrDefault().ActualId);
         }
         else
         {
@@ -324,14 +324,14 @@ public sealed partial class SongsList : UserControl
                 await new ArtistSelectDialog(selectedSong.Artist).ShowAsync();
             else
                 _navigation.Navigate(typeof(ArtistPage),
-                    selectedSong.Artist.FirstOrDefault().Id);
+                    selectedSong.Artist.FirstOrDefault().ActualId);
         }
     }
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
         if (!TryGetSelectedRow(out var selectedSong)) return;
-        if (selectedSong.Album.Id == "0")
+        if (selectedSong.Album.ActualId == "0")
         {
             _notification.ShowMessage("此歌曲无专辑页面");
         }
@@ -486,7 +486,7 @@ public sealed partial class SongsList : UserControl
                 break;
             case "Comments":
                 var page = (SongListDetail)((Grid)Parent).Parent;
-                _navigation.Navigate(typeof(Comments), CommentTarget.Playlist(page.ViewModel.PlayList.PlaylistId));
+                _navigation.Navigate(typeof(Comments), CommentTarget.Playlist(page.ViewModel.PlayList.ActualId));
                 break;
             default:
                 break;

@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Infrastructure.Network;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;

@@ -2,8 +2,8 @@
 
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Music;
 using HyPlayer.Features.Artist;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.UI.Dialogs;
 using System;
@@ -13,7 +13,7 @@ using Windows.UI.Xaml.Navigation;
 
 #endregion
 
-// https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
+// https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了"空白页"项模板
 
 namespace HyPlayer.Features.Album;
 
@@ -37,8 +37,8 @@ public sealed partial class AlbumPage : Page
         var albumId = string.Empty;
         switch (e.Parameter)
         {
-            case NCAlbum album:
-                albumId = album.Id;
+            case NeteaseAlbum album:
+                albumId = album.ActualId;
                 break;
             case string:
                 albumId = e.Parameter.ToString();
@@ -50,8 +50,8 @@ public sealed partial class AlbumPage : Page
     private async void TextBoxAuthor_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
         if (ViewModel.Artists.Count > 1)
-            await new ArtistSelectDialog(ViewModel.Artists).ShowAsync();
+            await new ArtistSelectDialog(ViewModel.Artists.ConvertAll(a => (HyPlayer.PlayCore.Abstraction.Models.Containers.PersonBase)a)).ShowAsync();
         else
-            _navigation.Navigate(typeof(ArtistPage), ViewModel.Artists[0].Id);
+            _navigation.Navigate(typeof(ArtistPage), ViewModel.Artists[0].ActualId);
     }
 }

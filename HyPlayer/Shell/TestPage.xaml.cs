@@ -163,7 +163,13 @@ public sealed partial class TestPage : Page
         {
             CurrentSong = state.NowPlayingSnapshot,
             CurrentPlaySource = playlist.PlaySourceId,
-            CurrentUser = _auth.CurrentUser,
+            CurrentUser = _auth.CurrentUser is not null ? new HyPlayer.Domain.CommentUserInfo
+            {
+                ActualId = _auth.CurrentUser.ActualId,
+                Name = _auth.CurrentUser.Name,
+                AvatarUrl = _auth.CurrentUser.AvatarUrl,
+                Description = _auth.CurrentUser.Description
+            } : null,
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
             IsInBackground = Ioc.Default.GetRequiredService<IAppLifecycleStateService>().IsInBackground,
             ErrorMessageList = [.. Ioc.Default.GetRequiredService<IDiagnosticsStateService>().ErrorMessages.TakeLast(15)]

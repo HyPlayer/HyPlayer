@@ -1,11 +1,11 @@
-﻿using HyPlayer.Domain.Comments;
+﻿using HyPlayer.NeteaseProvider.Models;
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using WinRT;
 
-//https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
+//https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了"用户控件"项模板
 
 namespace HyPlayer.UI.Lists
 {
@@ -17,13 +17,13 @@ namespace HyPlayer.UI.Lists
         }
         public static readonly DependencyProperty CommentsProperty = DependencyProperty.Register
             (
-            "Comment", typeof(ObservableCollection<Comment>),
+            "Comment", typeof(ObservableCollection<NeteaseComment>),
             typeof(CommentsList),
             new PropertyMetadata(null)
         );
-        public ObservableCollection<Comment> Comments//列表下评论
+        public ObservableCollection<NeteaseComment> Comments//列表下评论
         {
-            get => (ObservableCollection<Comment>)GetValue(CommentsProperty);
+            get => (ObservableCollection<NeteaseComment>)GetValue(CommentsProperty);
             set
             {
                 SetValue(CommentsProperty, value);

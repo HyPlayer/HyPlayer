@@ -173,7 +173,7 @@ public sealed partial class MainPage : Page
                 Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me));
                 break;
             case "likedsongs":
-                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(SongListDetail), Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].PlaylistId);
+                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(SongListDetail), Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].ActualId);
                 break;
             case "local":
                 Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(LocalMusicPage));

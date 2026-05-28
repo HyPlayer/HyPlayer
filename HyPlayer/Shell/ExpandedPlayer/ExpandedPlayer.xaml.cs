@@ -15,7 +15,6 @@ using HyPlayer.Features.Artist;
 using HyPlayer.Features.Radio;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Imaging;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.LyricRenderer;
@@ -692,7 +691,7 @@ public sealed partial class ExpandedPlayer : Page
             {
                 if (providerSong.Artists.Count > 1)
                 {
-                    await new ArtistSelectDialog(providerSong.Artists.Select(t => t.ToNCArtist()).ToList()).ShowAsync();
+                    await new ArtistSelectDialog(providerSong.Artists.Select(t => (HyPlayer.PlayCore.Abstraction.Models.Containers.PersonBase)t).ToList()).ShowAsync();
                     return;
                 }
 

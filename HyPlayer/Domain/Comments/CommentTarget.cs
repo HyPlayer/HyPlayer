@@ -1,20 +1,18 @@
-using HyPlayer.NeteaseApi.Models;
-
 namespace HyPlayer.Domain.Comments;
 
-public sealed record CommentTarget(NeteaseResourceType ResourceType, string ResourceId)
+public sealed record CommentTarget(string TypeId, string ResourceId)
 {
-    public static CommentTarget Album(string id) => new(NeteaseResourceType.Album, id);
+    public static CommentTarget Album(string id) => new("al", id);
 
-    public static CommentTarget MLog(string id) => new(NeteaseResourceType.MLog, id);
+    public static CommentTarget MLog(string id) => new("mb", id);
 
-    public static CommentTarget MV(string id) => new(NeteaseResourceType.MV, id);
+    public static CommentTarget MV(string id) => new("mv", id);
 
-    public static CommentTarget Playlist(string id) => new(NeteaseResourceType.Playlist, id);
+    public static CommentTarget Playlist(string id) => new("pl", id);
 
-    public static CommentTarget RadioProgram(string id) => new(NeteaseResourceType.RadioProgram, id);
+    public static CommentTarget RadioProgram(string id) => new("pr", id);
 
-    public static CommentTarget Song(string id) => new(NeteaseResourceType.Song, id);
+    public static CommentTarget Song(string id) => new("sg", id);
 
     public static bool TryParseExternalResource(string value, out CommentTarget target)
     {

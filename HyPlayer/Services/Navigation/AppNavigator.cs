@@ -10,6 +10,7 @@ using HyPlayer.Features.Settings;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
 using HyPlayer.Infrastructure.Netease;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Shell.Navigation;
 using HyPlayer.UI.Dialogs;
@@ -44,6 +45,8 @@ public sealed class AppNavigator : IAppNavigator
     private readonly Dictionary<NavigationNode, NavigationNodeSubscription> _nodeSubscriptions = [];
     private readonly Dictionary<NavigationNode, object> _navigationObjects = [];
     private readonly Dictionary<object, NavigationNode> _navigationNodes = [];
+
+    private const string DailyRecommendPlaylistId = "daily_recommend";
 
     public AppNavigator(INavigationService navigation,
                         IPlaylistService playlist,
@@ -507,7 +510,7 @@ public sealed class AppNavigator : IAppNavigator
     private Task LikedSongsPage()
     {
         if (_auth.MySongLists.Count > 0)
-            _navigation.Navigate(typeof(SongListDetail), _auth.MySongLists[0].PlaylistId);
+            _navigation.Navigate(typeof(SongListDetail), _auth.MySongLists[0].ActualId);
         return Task.CompletedTask;
     }
 
@@ -534,19 +537,18 @@ public sealed class AppNavigator : IAppNavigator
             var playlistId = parameter switch
             {
                 string id => id,
-                NCPlayList pl => pl.PlaylistId,
+                NeteasePlaylist pl => pl.ActualId,
                 _ => null
             };
 
             if (!string.IsNullOrEmpty(playlistId))
             {
-                if (_auth.MySongLists.Count > 0 && playlistId == _auth.MySongLists[0].PlaylistId?.ToString())
+                if (playlistId == DailyRecommendPlaylistId)
+                    return new AppRoute.DailyRecommend();
+                if (_auth.MySongLists.Count > 0 && playlistId == _auth.MySongLists[0].ActualId)
                     return new AppRoute.LikedSongs();
                 return new AppRoute.Playlist(playlistId);
             }
-
-            if (parameter is NCPlayList { IsDailyRecommend: true })
-                return new AppRoute.DailyRecommend();
         }
         return null;
     }
@@ -578,18 +580,17 @@ public sealed class AppNavigator : IAppNavigator
             await _playlist.MoveToAsync(item);
     }
 
-    private static NCPlayList CreateDailyRecommendPlaylist() => new()
+    private static NeteasePlaylist CreateDailyRecommendPlaylist() => new()
     {
-        Cover = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-        Creator = new NCUser
+        ActualId = DailyRecommendPlaylistId,
+        CoverUrl = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
+        Creator = new NeteaseUser
         {
-            Avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-            Id = "1",
+            ActualId = "1",
             Name = "网易云音乐",
-            Signature = "网易云音乐官方账号 "
+            Description = "网易云音乐官方账号 "
         },
-        IsDailyRecommend = true,
-        HasSubscribed = false,
+        Subscribed = false,
         Name = "每日歌曲推荐",
         Description = "根据你的口味生成，每天6:00更新"
     };

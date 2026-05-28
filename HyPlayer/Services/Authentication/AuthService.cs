@@ -1,11 +1,8 @@
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Infrastructure.Network;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Playback;
@@ -61,13 +58,13 @@ public class AuthService : IAuthService
     public bool IsLoggedIn { get; set; }
 
     /// <inheritdoc />
-    public NCUser? CurrentUser { get; set; }
+    public NeteaseUser? CurrentUser { get; set; }
 
     /// <inheritdoc />
     public List<string> LikedSongs { get; } = [];
 
     /// <inheritdoc />
-    public List<NCPlayList> MySongLists { get; } = [];
+    public List<NeteasePlaylist> MySongLists { get; } = [];
 
     /// <inheritdoc />
     public void ClearRuntimeCookies()
@@ -191,13 +188,13 @@ public class AuthService : IAuthService
 
         var providerUser = await TryGetCurrentProviderUserAsync();
         CurrentUser = providerUser is not null
-            ? await MapProviderUserAsync(providerUser)
-            : new NCUser
+            ? providerUser
+            : new NeteaseUser
             {
-                Avatar = "ms-appx:///Assets/icon.png",
-                Id = result.UserId ?? string.Empty,
+                ActualId = result.UserId ?? string.Empty,
                 Name = result.DisplayName ?? "已登录",
-                Signature = string.Empty
+                AvatarUrl = "ms-appx:///Assets/icon.png",
+                Description = string.Empty
             };
 
         IsLoggedIn = true;
@@ -316,25 +313,6 @@ public class AuthService : IAuthService
         return string.IsNullOrWhiteSpace(session.UserId)
             ? null
             : await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + session.UserId) as NeteaseUser;
-    }
-
-    private static async Task<NCUser> MapProviderUserAsync(NeteaseUser user)
-    {
-        return new NCUser
-        {
-            Id = user.ActualId ?? string.Empty,
-            Name = user.Name,
-            Signature = user.Description ?? string.Empty,
-            Avatar = await GetProviderUserAvatarAsync(user) ?? string.Empty
-        };
-    }
-
-    private static async Task<string?> GetProviderUserAvatarAsync(NeteaseUser user)
-    {
-        var resource = await user.GetCoverAsync();
-        if (resource is IResourceResultOf<Uri?> uriResource)
-            return (await uriResource.GetResourceAsync())?.ToString();
-        return user.AvatarUrl;
     }
 
     private static int MapQrStatusCode(ProviderQrLoginStatus status)

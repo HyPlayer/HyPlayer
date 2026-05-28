@@ -470,7 +470,7 @@ DoubleAnimation verticalAnimation;
             if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
             {
                 if (providerSong.Artists.Count > 1)
-                    await new ArtistSelectDialog(providerSong.Artists.Select(t => t.ToNCArtist()).ToList()).ShowAsync();
+                    await new ArtistSelectDialog(providerSong.Artists.Select(t => (HyPlayer.PlayCore.Abstraction.Models.Containers.PersonBase)t).ToList()).ShowAsync();
                 else if (providerSong.Artists.Count == 1)
                     _navigation.Navigate(typeof(ArtistPage), providerSong.Artists[0].ActualId);
             }

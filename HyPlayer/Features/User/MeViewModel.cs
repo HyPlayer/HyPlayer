@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -23,7 +22,7 @@ namespace HyPlayer.Features.User
         [ObservableProperty]
         public partial List<SimpleListItem> MyPlaylist { get; set; }
         [ObservableProperty]
-        public partial NCUser User { get; set; }
+        public partial NeteaseUser User { get; set; }
 
         private IProvidableItemProvidable _itemProvider;
         private Setting _settings;
@@ -40,17 +39,17 @@ namespace HyPlayer.Features.User
             {
                 return await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + uid);
             });
-            User = MapUser(resp);
-            if (_settings.noImage) User.Avatar = null;
+            User = (NeteaseUser)resp;
+            if (_settings.noImage) User.AvatarUrl = null;
             LoadPlayList().SafeFireAndForget();
         }
         public async Task LoadPlayList()
         {
             try
             {
-                var val = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserPlaylist, User.Id, async () =>
+                var val = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserPlaylist, User.ActualId, async () =>
                 {
-                    var userItem = await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + User.Id);
+                    var userItem = await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + User.ActualId);
                     return userItem is ContainersContainer containersContainer
                         ? await containersContainer.GetSubContainerAsync()
                         : [];
@@ -68,20 +67,19 @@ namespace HyPlayer.Features.User
 
                 foreach (var valuePlaylist in playlists)
                 {
-                    var playList = MapPlaylist(valuePlaylist);
-                    if (playList.Creator.Id != User.Id)
+                    if (valuePlaylist.Creator?.ActualId != User.ActualId)
                     {
                         likedList.Add(
                             new SimpleListItem
                             {
-                                CoverLink = _settings.noImage ? null : playList.Cover,
-                                LineOne = playList.Creator.Name,
-                                LineThree = $"播放量: {playList.PlayCount} | 歌曲数: {playList.TrackCount}",
-                                LineTwo = playList.Description,
+                                CoverLink = _settings.noImage ? null : valuePlaylist.CoverUrl,
+                                LineOne = valuePlaylist.Creator?.Name,
+                                LineThree = $"播放量: {valuePlaylist.PlayCount} | 歌曲数: {valuePlaylist.TrackCount}",
+                                LineTwo = valuePlaylist.Description,
                                 Order = subListIdx++,
-                                Route = new AppRoute.Playlist($"{playList.PlaylistId}"),
-                                PlayResource = new MusicResource.Playlist($"{playList.PlaylistId}"),
-                                Title = playList.Name,
+                                Route = new AppRoute.Playlist($"{valuePlaylist.ActualId}"),
+                                PlayResource = new MusicResource.Playlist($"{valuePlaylist.ActualId}"),
+                                Title = valuePlaylist.Name,
                                 CanPlay = true
                             }
                         );
@@ -91,14 +89,14 @@ namespace HyPlayer.Features.User
                         myList.Add(
                             new SimpleListItem
                             {
-                                CoverLink = _settings.noImage ? null : playList.Cover,
-                                LineOne = playList.Creator.Name,
-                                LineThree = $"播放量: {playList.PlayCount} | 歌曲数: {playList.TrackCount}",
-                                LineTwo = playList.Description,
+                                CoverLink = _settings.noImage ? null : valuePlaylist.CoverUrl,
+                                LineOne = valuePlaylist.Creator?.Name,
+                                LineThree = $"播放量: {valuePlaylist.PlayCount} | 歌曲数: {valuePlaylist.TrackCount}",
+                                LineTwo = valuePlaylist.Description,
                                 Order = subListIdx++,
-                                Route = new AppRoute.Playlist($"{playList.PlaylistId}"),
-                                PlayResource = new MusicResource.Playlist($"{playList.PlaylistId}"),
-                                Title = playList.Name,
+                                Route = new AppRoute.Playlist($"{valuePlaylist.ActualId}"),
+                                PlayResource = new MusicResource.Playlist($"{valuePlaylist.ActualId}"),
+                                Title = valuePlaylist.Name,
                                 CanPlay = true
                             }
                         );
@@ -113,43 +111,5 @@ namespace HyPlayer.Features.User
             }
         }
 
-        private static NCUser MapUser(HyPlayer.PlayCore.Abstraction.Models.ProvidableItemBase? item)
-        {
-            if (item is NeteaseUser user)
-            {
-                return new NCUser
-                {
-                    Avatar = user.AvatarUrl,
-                    Id = user.ActualId,
-                    Name = user.Name,
-                    Signature = user.Description
-                };
-            }
-
-            return new NCUser { Id = item?.ActualId ?? string.Empty, Name = item?.Name ?? string.Empty };
-        }
-
-        private static NCPlayList MapPlaylist(NeteasePlaylist playlist)
-        {
-            return new NCPlayList
-            {
-                Cover = playlist.CoverUrl,
-                Creator = new NCUser
-                {
-                    Avatar = playlist.Creator?.AvatarUrl,
-                    Id = playlist.Creator?.ActualId,
-                    Name = playlist.Creator?.Name,
-                    Signature = playlist.Creator?.Description
-                },
-                Description = playlist.Description,
-                Name = playlist.Name,
-                PlaylistId = playlist.ActualId,
-                HasSubscribed = playlist.Subscribed,
-                PlayCount = playlist.PlayCount,
-                TrackCount = playlist.TrackCount,
-                BookCount = playlist.SubscribedCount,
-                UpdateTime = HyPlayer.UI.Converters.DateConverter.GetDateTimeFromTimeStamp(playlist.UpdateTime)
-            };
-        }
     }
 }

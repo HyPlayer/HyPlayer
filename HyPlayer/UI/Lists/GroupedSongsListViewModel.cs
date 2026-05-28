@@ -5,7 +5,6 @@ using HyPlayer.Features.Artist;
 using HyPlayer.Features.Comments;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
@@ -92,20 +91,20 @@ public partial class GroupedSongsListViewModel(
 
         if (selectedSong.IsRadio)
         {
-            navigation.Navigate(typeof(Me), selectedSong.Artist[0].Id ?? "");
+            navigation.Navigate(typeof(Me), selectedSong.Artist[0].ActualId ?? "");
         }
         else
         {
             if (selectedSong is { Artist.Count: > 1 })
                 await new ArtistSelectDialog(selectedSong.Artist).ShowAsync();
             else
-                navigation.Navigate(typeof(ArtistPage), selectedSong.Artist[0].Id ?? "");
+                navigation.Navigate(typeof(ArtistPage), selectedSong.Artist[0].ActualId ?? "");
         }
     }
 
     public void OpenAlbum(SongListItemViewModel selectedSong)
     {
-        navigation.Navigate(typeof(AlbumPage), selectedSong.Album.Id ?? "");
+        navigation.Navigate(typeof(AlbumPage), selectedSong.Album.ActualId ?? "");
     }
 
     public void OpenComments(SongListItemViewModel selectedSong)

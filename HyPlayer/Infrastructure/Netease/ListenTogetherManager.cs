@@ -261,7 +261,7 @@ internal sealed class ListenTogetherManager
             {
                 Queue = _playlist.ProviderItems.ToList(),
                 PlayModeId = _state.ActiveStrategyId,
-                UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.Id,
+                UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.ActualId,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 AnchorPosition = _state.NowPlayingIndex,
                 AnchorItemId = CurrentProviderSongId

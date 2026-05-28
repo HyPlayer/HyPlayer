@@ -88,17 +88,6 @@
                         Style="{StaticResource TitleTextBlockStyle}"
                         Text="{x:Bind ViewModel.Artist.Name, Mode=OneWay}"
                         TextWrapping="Wrap" />
-                    <TextBlock
-                        x:Name="TextboxArtistNameTranslated"
-                        Margin="0,2,0,0"
-                        Style="{StaticResource SubtitleTextBlockStyle}"
-                        Text="{x:Bind ViewModel.Artist.TranslatedName, Mode=OneWay}" />
-                    <TextBlock
-                        x:Name="TextBlockInfo"
-                        Margin="0,10,5,0"
-                        FontSize="15"
-                        MaxLines="7"
-                        Text="{x:Bind ViewModel.Artist.Information, Mode=OneWay}" />
 
                     <StackPanel.RenderTransform>
                         <ScaleTransform x:Name="UserInfoScale" CenterY="125" />
@@ -114,7 +103,7 @@
                 Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                 MaxLines="7"
                 Selectable="True"
-                Text="{x:Bind ViewModel.Artist.Description}"
+                Text=""
                 TextWrapping="WrapWholeWords">
                 <uiControls:ExpandableTextBox.RenderTransform>
                     <ScaleTransform x:Name="DescScale" CenterX="125" CenterY="0" />

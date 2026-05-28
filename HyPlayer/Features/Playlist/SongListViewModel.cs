@@ -73,7 +73,9 @@ namespace HyPlayer.Features.Playlist
         public ObservableCollection<SongListItemViewModel> Songs { get; set; } = [];
         private readonly List<SingleSongBase> _dailyRecommendProviderSongs = [];
         [ObservableProperty]
-        public partial NCPlayList PlayList { get; set; }
+        public partial NeteasePlaylist PlayList { get; set; }
+        [ObservableProperty]
+        public partial bool IsDailyRecommend { get; set; }
         [ObservableProperty]
         public partial int CurrentPage { get; set; }
         [ObservableProperty]
@@ -112,7 +114,7 @@ namespace HyPlayer.Features.Playlist
                     return;
                 }
 
-                PlayList = MapToNCPlayList(_neteasePlaylist);
+                PlayList = _neteasePlaylist;
             }
 
             DescriptionBoxContent = PlayList.Description;
@@ -122,17 +124,17 @@ namespace HyPlayer.Features.Playlist
             }
             else
             {
-                CoverUri = PlayList.IsDailyRecommend ? new Uri(PlayList.Cover) : new Uri(PlayList.Cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
+                CoverUri = IsDailyRecommend ? new Uri(PlayList.CoverUrl) : new Uri(PlayList.CoverUrl + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
             }
             LoadAlbumImage().SafeFireAndForget();
-            UpdateTime = PlayList.UpdateTime == DateTime.MinValue ? string.Empty : $"{DateConverter.FriendFormat(PlayList.UpdateTime)}更新";
+            UpdateTime = PlayList.UpdateTime == 0 ? string.Empty : $"{DateConverter.FriendFormat(DateTimeOffset.FromUnixTimeMilliseconds(PlayList.UpdateTime).LocalDateTime)}更新";
             LoadSongListItem().SafeFireAndForget();
         }
 
         public async Task LoadSongListItem()
         {
             IsLoading = true;
-            if (!PlayList.IsDailyRecommend)
+            if (!IsDailyRecommend)
             {
                 await LoadPlayListItems();
                 await LoadCurrentPage();
@@ -191,16 +193,16 @@ namespace HyPlayer.Features.Playlist
 
         public async Task LoadPlayListItems()
         {
-            _neteasePlaylist ??= await _neteaseProvider.GetPlaylistById(PlayList.PlaylistId);
+            _neteasePlaylist ??= await _neteaseProvider.GetPlaylistById(PlayList.ActualId);
             if (_neteasePlaylist is null)
             {
                 _notification.ShowMessage("加载歌单出错", "未找到歌单信息");
                 return;
             }
 
-            PlayList = MapToNCPlayList(_neteasePlaylist);
+            PlayList = _neteasePlaylist;
             if (_neteasePlaylist.IsNewImported &&
-                _neteasePlaylist.Creator?.ActualId == Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.Id)
+                _neteasePlaylist.Creator?.ActualId == Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.ActualId)
             {
                 IntelligenceModeVisible = true;
                 IsMySongList = true;
@@ -209,7 +211,7 @@ namespace HyPlayer.Features.Playlist
 
         public async Task LoadCurrentPage()
         {
-            _neteasePlaylist ??= await _neteaseProvider.GetPlaylistById(PlayList.PlaylistId);
+            _neteasePlaylist ??= await _neteaseProvider.GetPlaylistById(PlayList.ActualId);
             if (_neteasePlaylist is null)
             {
                 _notification.ShowMessage("加载歌单歌曲出错", "未找到歌单信息");
@@ -237,7 +239,7 @@ namespace HyPlayer.Features.Playlist
 
         public async Task LoadAlbumImage()
         {
-            using var result = await _httpClient.GetAsync(new Uri(PlayList.Cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            using var result = await _httpClient.GetAsync(new Uri(PlayList.CoverUrl + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
             if (result.IsSuccessStatusCode)
             {
                 using var stream = await result.Content.ReadAsStreamAsync();
@@ -262,9 +264,9 @@ namespace HyPlayer.Features.Playlist
         [RelayCommand]
         private void LoadAllSongs()
         {
-            if (!PlayList.IsDailyRecommend)
+            if (!IsDailyRecommend)
             {
-                _playlist.AppendPlayListAsync(PlayList.PlaylistId).SafeFireAndForget();
+                _playlist.AppendPlayListAsync(PlayList.ActualId).SafeFireAndForget();
             }
             else
             {
@@ -274,16 +276,16 @@ namespace HyPlayer.Features.Playlist
         [RelayCommand]
         private void NavigateToComments()
         {
-            _navigation.Navigate(typeof(Comments.Comments), CommentTarget.Playlist(PlayList.PlaylistId));
+            _navigation.Navigate(typeof(Comments.Comments), CommentTarget.Playlist(PlayList.ActualId));
         }
         [RelayCommand]
         private async Task ResetCacheAsync()
         {
             try
             {
-                await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, PlayList.PlaylistId);
-                await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, PlayList.PlaylistId, true);
-                await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, PlayList.PlaylistId);
+                await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, PlayList.ActualId);
+                await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, PlayList.ActualId, true);
+                await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, PlayList.ActualId);
                 _notification.ShowMessage("清除缓存成功", "已清除当前歌单的缓存");
                 Songs.Clear();
                 CurrentPage = 0;
@@ -300,16 +302,16 @@ namespace HyPlayer.Features.Playlist
         [RelayCommand]
         private async Task PlayAllAsync()
         {
-            if (!PlayList.IsDailyRecommend)
+            if (!IsDailyRecommend)
             {
                 _playlist.Clear();
-                await _navigator.AppendAsync(new MusicResource.Playlist(PlayList.PlaylistId));
+                await _navigator.AppendAsync(new MusicResource.Playlist(PlayList.ActualId));
                 await _playlist.MoveNextAsync(userInitiated: true);
             }
             else
             {
                 _playlist.AppendItems(GetDailyRecommendProviderSongs(), clearFirst: true);
-                _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.PlaylistId));
+                _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.ActualId));
                 await _playlist.MoveNextAsync(userInitiated: true);
             }
         }
@@ -330,7 +332,7 @@ namespace HyPlayer.Features.Playlist
         [RelayCommand]
         private void DownloadAll()
         {
-            if (PlayList.IsDailyRecommend && HasCompleteDailyRecommendProviderSongs())
+            if (IsDailyRecommend && HasCompleteDailyRecommendProviderSongs())
                 DownloadManager.AddDownload(_dailyRecommendProviderSongs);
             else
                 DownloadManager.AddDownload(Songs.Select(song => song.ToProviderSong()).ToList());
@@ -353,8 +355,8 @@ namespace HyPlayer.Features.Playlist
         {
             try
             {
-                var playlist = new NeteasePlaylist { ActualId = PlayList.PlaylistId, Name = PlayList.Name };
-                if (PlayList.HasSubscribed)
+                var playlist = new NeteasePlaylist { ActualId = PlayList.ActualId, Name = PlayList.Name };
+                if (PlayList.Subscribed)
                 {
                     await playlist.UnsubscribeAsync();
                 }
@@ -362,7 +364,7 @@ namespace HyPlayer.Features.Playlist
                 {
                     await playlist.SubscribeAsync();
                 }
-                PlayList.HasSubscribed = !PlayList.HasSubscribed;
+                PlayList.Subscribed = !PlayList.Subscribed;
             }
             catch (Exception ex)
             {
@@ -381,35 +383,10 @@ namespace HyPlayer.Features.Playlist
             };
         }
 
-        private static NCPlayList MapToNCPlayList(NeteasePlaylist playlist)
-        {
-            return new NCPlayList
-            {
-                PlaylistId = playlist.ActualId ?? string.Empty,
-                Name = playlist.Name,
-                Description = playlist.Description,
-                Cover = playlist.CoverUrl,
-                Creator = playlist.Creator is null
-                    ? new NCUser()
-                    : new NCUser
-                    {
-                        Id = playlist.Creator.ActualId ?? string.Empty,
-                        Name = playlist.Creator.Name,
-                        Avatar = string.Empty,
-                        Signature = string.Empty
-                    },
-                HasSubscribed = playlist.Subscribed,
-                TrackCount = playlist.TrackCount,
-                PlayCount = playlist.PlayCount,
-                BookCount = playlist.SubscribedCount,
-                UpdateTime = playlist.UpdateTime > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(playlist.UpdateTime).LocalDateTime : DateTime.MinValue
-            };
-        }
-
         [RelayCommand]
         private void NavigateToAuthor()
         {
-            _navigation.Navigate(typeof(Me), PlayList.Creator.Id);
+            _navigation.Navigate(typeof(Me), PlayList.Creator?.ActualId);
         }
     }
 }

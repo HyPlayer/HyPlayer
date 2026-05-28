@@ -2,6 +2,7 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.Features.Playlist;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
 using System;
@@ -44,18 +45,18 @@ namespace HyPlayer.Features.Home
 
         private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
-            var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
+            var playList = (NeteasePlaylist)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
             //播放全部歌曲
             await Ioc.Default.GetRequiredService<IAppNavigator>()
-                .PlayAsync(new MusicResource.Playlist(playList.PlaylistId));
+                .PlayAsync(new MusicResource.Playlist(playList.ActualId));
         }
 
         private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
         {
-            var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
+            var playList = (NeteasePlaylist)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
             try
             {
-                await _containerManager.SetContainerPrivacyAsync(playList.PlaylistId, true);
+                await _containerManager.SetContainerPrivacyAsync(playList.ActualId, true);
                 _notification.ShowMessage("成功公开歌单");
                 _playlistCollectionChangeNotifier.NotifyChanged();
             }
@@ -67,10 +68,10 @@ namespace HyPlayer.Features.Home
 
         private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
         {
-            var playList = (NCPlayList)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
+            var playList = (NeteasePlaylist)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
             try
             {
-                await _containerManager.DeleteContainerAsync(playList.PlaylistId);
+                await _containerManager.DeleteContainerAsync(playList.ActualId);
                 _notification.ShowMessage("成功删除");
                 _playlistCollectionChangeNotifier.NotifyChanged();
                 _navigation.NavigateRefresh();
@@ -85,7 +86,7 @@ namespace HyPlayer.Features.Home
         {
             var button = sender?.As<ListViewItem>();
             if (button == null) return;
-            var playlist = button.Tag as NCPlayList;
+            var playlist = button.Tag as NeteasePlaylist;
             _navigation.Navigate(typeof(SongListDetail), playlist);
         }
     }

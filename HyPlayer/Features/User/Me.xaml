@@ -146,7 +146,7 @@
                             <Border.Background>
                                 <ImageBrush Stretch="UniformToFill">
                                     <ImageBrush.ImageSource>
-                                        <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}" />
+                                        <BitmapImage UriSource="{x:Bind ViewModel.User.AvatarUrl, Mode=OneWay}" />
                                     </ImageBrush.ImageSource>
                                 </ImageBrush>
                             </Border.Background>
@@ -164,7 +164,7 @@
                             Height="120"
                             Margin="20"
                             controls:DockPanel.Dock="Left"
-                            ProfilePicture="{x:Bind ViewModel.User.Avatar, Mode=OneWay}">
+                            ProfilePicture="{x:Bind ViewModel.User.AvatarUrl, Mode=OneWay}">
                             <ui:Effects.Shadow>
                                 <media:AttachedCardShadow
                                     CornerRadius="60"
@@ -189,7 +189,7 @@
                                 FontSize="16"
                                 Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
                                 IsTextSelectionEnabled="True"
-                                Text="{x:Bind ViewModel.User.Signature, Mode=OneWay}" />
+                                Text="{x:Bind ViewModel.User.Description, Mode=OneWay}" />
                         </StackPanel>
                     </controls:DockPanel>
                 </Grid>

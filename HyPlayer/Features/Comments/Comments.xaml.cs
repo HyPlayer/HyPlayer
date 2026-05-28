@@ -2,9 +2,7 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Comments;
-using HyPlayer.Domain.Music;
-using HyPlayer.NeteaseApi.Models;
-using HyPlayer.NeteaseProvider.Constants;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
@@ -40,11 +38,11 @@ public sealed partial class Comments : Page
     private string cursor;
     private int page = 1;
     private string resourceid;
-    private NeteaseResourceType resourcetype;
+    private string resourcetype;
     private int sortType = 1;
     private bool IsShiftingPage = false;
-    private ObservableCollection<Comment> hotComments = new ObservableCollection<Comment>();
-    private ObservableCollection<Comment> normalComments = new ObservableCollection<Comment>();
+    private ObservableCollection<NeteaseComment> hotComments = new ObservableCollection<NeteaseComment>();
+    private ObservableCollection<NeteaseComment> normalComments = new ObservableCollection<NeteaseComment>();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _commentLoaderTask;
@@ -62,12 +60,12 @@ public sealed partial class Comments : Page
         if (e.Parameter is CommentTarget target)
         {
             resourceid = target.ResourceId;
-            resourcetype = target.ResourceType;
+            resourcetype = target.TypeId;
         }
         else if (e.Parameter is string resstr && CommentTarget.TryParseExternalResource(resstr, out target))
         {
             resourceid = target.ResourceId;
-            resourcetype = target.ResourceType;
+            resourcetype = target.TypeId;
         }
 
         LoadHotComments();
@@ -127,8 +125,8 @@ public sealed partial class Comments : Page
         foreach (var comment in result.Items)
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var cmt = MapProviderComment(comment);
-            cmt.ResourceType = resourcetype;
+            var cmt = (NeteaseComment)comment;
+            cmt.ResourceTypeId = resourcetype;
             cmt.ResourceId = resourceid;
             if (type == 2 && isHotCommentsPage)
                 hotComments.Add(cmt);
@@ -148,7 +146,7 @@ public sealed partial class Comments : Page
         {
             return await _commentProvider.GetCommentsAsync(
                 resourceid,
-                MapCommentTypeId(resourcetype),
+                resourcetype,
                 offset,
                 20,
                 _cancellationToken);
@@ -166,39 +164,6 @@ public sealed partial class Comments : Page
                 HasMore = false
             };
         }
-    }
-
-    private static string MapCommentTypeId(NeteaseResourceType resourceType)
-    {
-        return resourceType switch
-        {
-            NeteaseResourceType.Song => "sg",
-            NeteaseResourceType.Album => NeteaseTypeIds.Album,
-            NeteaseResourceType.Playlist => NeteaseTypeIds.Playlist,
-            NeteaseResourceType.MV => "mv",
-            NeteaseResourceType.Video => "vd",
-            NeteaseResourceType.RadioProgram => NeteaseTypeIds.RadioProgram,
-            NeteaseResourceType.RadioChannel => NeteaseTypeIds.RadioChannel,
-            NeteaseResourceType.MLog => NeteaseTypeIds.MBlog,
-            _ => NeteaseTypeIds.SingleSong
-        };
-    }
-
-    private static Comment MapProviderComment(CommentBase comment)
-    {
-        return new Comment
-        {
-            CommentId = comment.ActualId ?? string.Empty,
-            Content = comment.Content ?? comment.Name,
-            LikedCount = comment.LikedCount,
-            SendTime = comment.SendDate > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(comment.SendDate).LocalDateTime : DateTime.MinValue,
-            CommentUser = new NCUser
-            {
-                Id = comment.Sender?.ActualId ?? string.Empty,
-                Name = comment.Sender?.Name ?? string.Empty,
-                Avatar = string.Empty,
-            }
-        };
     }
 
 

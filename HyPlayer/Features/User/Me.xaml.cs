@@ -43,7 +43,7 @@ public sealed partial class Me : Page
         }
         else
         {
-            ViewModel.InitializeUserInfo(_auth.CurrentUser.Id).SafeFireAndForget();
+            ViewModel.InitializeUserInfo(_auth.CurrentUser.ActualId).SafeFireAndForget();
         }
     }
 

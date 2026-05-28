@@ -1,5 +1,3 @@
-using HyPlayer.Domain.Music;
-using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Linq;

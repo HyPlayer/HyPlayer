@@ -26,7 +26,7 @@ public sealed partial class SongListSelect : ContentDialog
     {
         await new NeteasePlaylist
         {
-            ActualId = Ioc.Default.GetRequiredService<IAuthService>().MySongLists[ListViewSongList.SelectedIndex].PlaylistId,
+            ActualId = Ioc.Default.GetRequiredService<IAuthService>().MySongLists[ListViewSongList.SelectedIndex].ActualId,
             Name = string.Empty
         }.AddSongAsync(SongId);
         Hide();

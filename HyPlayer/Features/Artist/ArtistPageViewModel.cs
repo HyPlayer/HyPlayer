@@ -44,7 +44,7 @@ namespace HyPlayer.Features.Artist
         public ObservableCollection<SongListItemViewModel> HotSongs { get; set; } = [];
         public ObservableCollection<SimpleListItem> Albums { get; set; } = [];
         [ObservableProperty]
-        public partial NCArtist Artist { get; set; }
+        public partial NeteaseArtist Artist { get; set; }
         [ObservableProperty]
         public partial int CurrentPage { get; set; } = 0;
         [ObservableProperty]
@@ -81,17 +81,7 @@ namespace HyPlayer.Features.Artist
                 return;
             }
 
-            Artist = MapToNcArtist(_providerArtist);
-            if (Artist.Avatar?.StartsWith("http") is true)
-            {
-                if (_setting.noImage)
-                {
-                    Image = null;
-                }
-
-                BitmapImage image = new(new Uri(Artist.Avatar + "?param=" + StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
-                Image = image;
-            }
+            Artist = _providerArtist;
             LoadHotSongs().SafeFireAndForget();
             LoadSongs().SafeFireAndForget();
             LoadAlbum().SafeFireAndForget();
@@ -100,7 +90,7 @@ namespace HyPlayer.Features.Artist
         {
 
             HotSongs.Clear();
-            var songs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, Artist.Id, async () =>
+            var songs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, Artist.ActualId, async () =>
             {
                 var container = await GetArtistSubContainerAsync("hot");
                 return await LoadProgressiveItemsAsync(container, 0, 50);
@@ -119,7 +109,7 @@ namespace HyPlayer.Features.Artist
 
         private async Task LoadSongs()
         {
-            var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial, Artist.Id + "_" + CurrentPage,
+            var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial, Artist.ActualId + "_" + CurrentPage,
                     async () =>
                     {
                         var container = await GetArtistSubContainerAsync("tim");
@@ -138,7 +128,7 @@ namespace HyPlayer.Features.Artist
             try
             {
                 Albums.Clear();
-                var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList, Artist.Id + "_" + CurrentPage,
+                var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList, Artist.ActualId + "_" + CurrentPage,
                     async () =>
                     {
                         var container = await GetArtistSubContainerAsync("alb");
@@ -205,7 +195,7 @@ namespace HyPlayer.Features.Artist
                        .FirstOrDefault(container => container.ActualId?.StartsWith(prefix) is true)
                    ?? new NeteaseArtistSubContainer
                    {
-                       ActualId = prefix + Artist.Id,
+                       ActualId = prefix + Artist.ActualId,
                        Name = Artist.Name
                    };
         }
@@ -223,16 +213,6 @@ namespace HyPlayer.Features.Artist
             {
                 HasMore = hasMore,
                 Items = items.OfType<T>().ToList()
-            };
-        }
-
-        private static NCArtist MapToNcArtist(NeteaseArtist artist)
-        {
-            return new NCArtist
-            {
-                Id = artist.ActualId,
-                Name = artist.Name,
-                Type = HyPlayItemType.Netease
             };
         }
 

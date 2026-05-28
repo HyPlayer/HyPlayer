@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:animations="using:CommunityToolkit.WinUI.Animations"
-    xmlns:classes="using:HyPlayer.Domain.Music"
+    xmlns:classes="using:HyPlayer.NeteaseProvider.Models"
     xmlns:communityBehaviors="using:CommunityToolkit.WinUI.Behaviors"
     xmlns:controls="using:HyPlayer.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -17,7 +17,7 @@
     xmlns:ui="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
     <Page.Resources>
-        <DataTemplate x:Key="RecommendedCardTemplate" x:DataType="classes:NCPlayList">
+        <DataTemplate x:Key="RecommendedCardTemplate" x:DataType="classes:NeteasePlaylist">
             <ListViewItem
                 x:Name="Card"
                 Width="256"
@@ -46,7 +46,7 @@
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="6">
-                        <Image Source="{x:Bind Cover}" Stretch="Uniform" />
+                        <Image Source="{x:Bind CoverUrl}" Stretch="Uniform" />
                     </Border>
                     <Grid
                         Grid.Column="1"
@@ -100,7 +100,7 @@
             </ListViewItem>
         </DataTemplate>
 
-        <DataTemplate x:Key="ToplistCardTemplate" x:DataType="classes:NCPlayList">
+        <DataTemplate x:Key="ToplistCardTemplate" x:DataType="classes:NeteasePlaylist">
             <ListViewItem
                 x:Name="Card"
                 Width="256"
@@ -129,7 +129,7 @@
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="6">
-                        <Image Source="{x:Bind Cover}" Stretch="Uniform" />
+                        <Image Source="{x:Bind CoverUrl}" Stretch="Uniform" />
                     </Border>
                     <Grid
                         Grid.Column="1"
