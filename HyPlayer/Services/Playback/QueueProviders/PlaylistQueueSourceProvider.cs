@@ -21,12 +21,12 @@ namespace HyPlayer.Services.Playback.QueueProviders;
 internal sealed class PlaylistQueueSourceProvider : IQueueSourceProvider
 {
     private readonly NeteaseCloudMusicApiHandler _api;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
 
-    public PlaylistQueueSourceProvider(NeteaseCloudMusicApiHandler api, INotificationService notification)
+    public PlaylistQueueSourceProvider(NeteaseCloudMusicApiHandler api, ITeachingTipService teachingTipService)
     {
         _api = api;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
     }
 
     public SongListQueueScopeKind Kind => SongListQueueScopeKind.Playlist;
@@ -43,7 +43,7 @@ internal sealed class PlaylistQueueSourceProvider : IQueueSourceProvider
                     new PlaylistTracksGetRequest { Id = id });
                 if (detailResponse.IsError)
                 {
-                    _notification.ShowMessage("获取歌单失败", detailResponse.Error.Message);
+                    _teachingTipService.Items.Enqueue(new("获取歌单失败", detailResponse.Error.Message));
                     return null;
                 }
 
@@ -63,7 +63,7 @@ internal sealed class PlaylistQueueSourceProvider : IQueueSourceProvider
                         var songResponse = await _api.RequestAsync(NeteaseApis.SongDetailApi,
                             new SongDetailRequest { IdList = nowIds });
                         if (songResponse.IsError)
-                            _notification.ShowMessage("获取歌曲失败", songResponse.Error?.Message);
+                            _teachingTipService.Items.Enqueue(new("获取歌曲失败", songResponse.Error?.Message));
                         return songResponse.Value;
                     }, cancellationToken: cancellationToken);
 
@@ -74,7 +74,7 @@ internal sealed class PlaylistQueueSourceProvider : IQueueSourceProvider
 
             if (trackIds.Count > 0 && batches.Count == 0)
             {
-                _notification.ShowMessage("获取歌单失败", "歌曲详情为空或全部获取失败");
+                _teachingTipService.Items.Enqueue(new("获取歌单失败", "歌曲详情为空或全部获取失败"));
                 return NeteaseQueueSourceLoadResult.Failed;
             }
 
@@ -82,7 +82,7 @@ internal sealed class PlaylistQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("AppendPlayList时发生错误", ex.Message);
+            _teachingTipService.Items.Enqueue(new("AppendPlayList时发生错误", ex.Message));
         }
 
         return NeteaseQueueSourceLoadResult.Failed;

@@ -20,20 +20,20 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Features.Artist
 {
-    public partial class ArtistPageViewModel : ObservableRecipient
+    public partial class ArtistPageViewModel : ObservableObject
     {
         private readonly NeteaseCloudMusicApiHandler _api;
         private readonly Setting _setting;
-        private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
 
         public ArtistPageViewModel(
             NeteaseCloudMusicApiHandler api,
             Setting setting,
-            INotificationService notification)
+            ITeachingTipService teachingTipService)
         {
             _api = api;
             _setting = setting;
-            _notification = notification;
+            _teachingTipService = teachingTipService;
         }
 
         public ObservableCollection<NCSong> AllSongs { get; set; } = [];
@@ -56,7 +56,7 @@ namespace HyPlayer.Features.Artist
         {
             if (artistId is null)
             {
-                _notification.ShowMessage("艺人ID为空", "请检查传入的参数是否正确");
+                _teachingTipService.Items.Enqueue(new("艺人ID为空", "请检查传入的参数是否正确"));
                 return;
             }
             var res = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
@@ -65,12 +65,12 @@ namespace HyPlayer.Features.Artist
                     new ArtistDetailRequest() { ArtistId = artistId });
                 if (resp.IsError && resp.Error?.ErrorCode.ToString() == "404")
                 {
-                    _notification.ShowMessage("艺人不存在", null);
+                    _teachingTipService.Items.Enqueue(new("艺人不存在", null));
                     return null;
                 }
                 if (resp.IsError)
                 {
-                    _notification.ShowMessage("获取艺人信息失败", resp.Error?.Message);
+                    _teachingTipService.Items.Enqueue(new("获取艺人信息失败", resp.Error?.Message));
                     return null;
                 }
 
@@ -107,7 +107,7 @@ namespace HyPlayer.Features.Artist
                     new ArtistTopSongRequest() { ArtistId = Artist.Id });
                 if (j1res.IsError)
                 {
-                    _notification.ShowMessage("获取歌手热门歌曲失败", j1res.Error?.Message);
+                    _teachingTipService.Items.Enqueue(new("获取歌手热门歌曲失败", j1res.Error?.Message));
                     return null;
                 }
 
@@ -120,7 +120,7 @@ namespace HyPlayer.Features.Artist
                     new SongDetailRequest() { IdList = j1?.Select(t => t.Id).ToList() });
                 if (json.IsError)
                 {
-                    _notification.ShowMessage("获取歌手歌曲信息失败", json.Error.Message);
+                    _teachingTipService.Items.Enqueue(new("获取歌手歌曲信息失败", json.Error.Message));
                     return null;
                 }
 
@@ -148,7 +148,7 @@ namespace HyPlayer.Features.Artist
                             new ArtistSongsRequest() { ArtistId = Artist.Id, Limit = 50, Offset = CurrentPage * 50 });
                         if (resp.IsError)
                         {
-                            _notification.ShowMessage("获取歌手歌曲失败", resp.Error?.Message);
+                            _teachingTipService.Items.Enqueue(new("获取歌手歌曲失败", resp.Error?.Message));
                             return null;
                         }
 
@@ -176,7 +176,7 @@ namespace HyPlayer.Features.Artist
                             new ArtistAlbumsRequest() { ArtistId = Artist.Id, Limit = 50, Start = CurrentPage * 50 });
                         if (resp.IsError)
                         {
-                            _notification.ShowMessage("获取歌手专辑失败", resp.Error?.Message);
+                            _teachingTipService.Items.Enqueue(new("获取歌手专辑失败", resp.Error?.Message));
                             return null;
                         }
 
@@ -206,7 +206,7 @@ namespace HyPlayer.Features.Artist
             }
             catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
             {
-                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _teachingTipService.Items.Enqueue(new("获取歌手专辑失败", (ex.InnerException ?? new Exception()).Message));
             }
         }
         [RelayCommand]

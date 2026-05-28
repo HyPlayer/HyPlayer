@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml;
+using Windows.ApplicationModel.Core;
 
 namespace HyPlayer.Shell.ExpandedPlayer
 {
@@ -21,18 +23,18 @@ namespace HyPlayer.Shell.ExpandedPlayer
         private readonly IPlaybackControlService _control;
         private readonly PlaybackStateService _state;
         private readonly ILyricService _lyricService;
-        private readonly INotificationService _notification;
         private readonly Setting _settings;
         private readonly IAuthService _authService;
         private readonly WeakEventListener<ExpandedPlayerViewModel, object?, PropertyChangedEventArgs> _stateChangedListener;
         private readonly WeakEventListener<ExpandedPlayerViewModel, object?, SongLikeStatusChangedEventArgs> _songLikeStatusChangedListener;
+        private readonly IBackgroundTaskRunner _taskRunner;
 
         public ExpandedPlayerViewModel(
             IPlaylistService playlist,
             IPlaybackControlService control,
             PlaybackStateService state,
             ILyricService lyricService,
-            INotificationService notification,
+            IBackgroundTaskRunner taskRunner,
             Setting settings,
             IAuthService authService)
         {
@@ -40,19 +42,22 @@ namespace HyPlayer.Shell.ExpandedPlayer
             _control = control;
             _state = state;
             _lyricService = lyricService;
-            _notification = notification;
             _settings = settings;
             _authService = authService;
+            _taskRunner = taskRunner;
             SyncFromState();
             _stateChangedListener = new WeakEventListener<ExpandedPlayerViewModel, object?, PropertyChangedEventArgs>(this)
             {
-                OnEventAction = static (instance, _, args) => instance.OnPlaybackStatePropertyChanged(args.PropertyName),
+                OnEventAction = static (instance, _, args) => instance.RunOnUIThread(() => 
+                {
+                    instance.OnPlaybackStatePropertyChanged(args.PropertyName);
+                }),
                 OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
             };
             _state.PropertyChanged += _stateChangedListener.OnEvent;
             _songLikeStatusChangedListener = new WeakEventListener<ExpandedPlayerViewModel, object?, SongLikeStatusChangedEventArgs>(this)
             {
-                OnEventAction = static (instance, _, args) => instance.RunOnUIThread(() => instance.IsLiked = args.IsLiked),
+                OnEventAction = static (instance, _, args) => { instance.RunOnUIThread(() => { instance.IsLiked = args.IsLiked; }); },
                 OnDetachAction = weakEventListener => { _authService.SongLikeStatusChanged -= weakEventListener.OnEvent; }
             };
             _authService.SongLikeStatusChanged += _songLikeStatusChangedListener.OnEvent;
@@ -158,27 +163,24 @@ namespace HyPlayer.Shell.ExpandedPlayer
 
         private void OnPlaybackStatePropertyChanged(string? propertyName)
         {
-            RunOnUIThread(() =>
+            switch (propertyName)
             {
-                switch (propertyName)
-                {
-                    case nameof(PlaybackStateService.NowPlayingItem):
-                        SyncFromState();
-                        break;
-                    case nameof(PlaybackStateService.IsPlaying):
-                        IsPlaying = _state.IsPlaying;
-                        break;
-                    case nameof(PlaybackStateService.LyricInfo):
-                        LyricInfo = _state.LyricInfo;
-                        break;
-                    case nameof(PlaybackStateService.Position):
-                        Position = _state.Position;
-                        break;
-                    case nameof(PlaybackStateService.LyricIndex):
-                        LyricIndex = _state.LyricIndex;
-                        break;
-                }
-            });
+                case nameof(PlaybackStateService.NowPlayingItem):
+                    SyncFromState();
+                    break;
+                case nameof(PlaybackStateService.IsPlaying):
+                    RunOnUIThread(() => { IsPlaying = _state.IsPlaying; });
+                    break;
+                case nameof(PlaybackStateService.LyricInfo):
+                    RunOnUIThread(() => { LyricInfo = _state.LyricInfo; });
+                    break;
+                case nameof(PlaybackStateService.Position):
+                    RunOnUIThread(() => { Position = _state.Position; });
+                    break;
+                case nameof(PlaybackStateService.LyricIndex):
+                    RunOnUIThread(() => { LyricIndex = _state.LyricIndex; });
+                    break;
+            }
         }
 
         /// <summary>
@@ -187,35 +189,28 @@ namespace HyPlayer.Shell.ExpandedPlayer
         /// </summary>
         public void SyncFromState()
         {
-            NowPlayingItem = _state.NowPlayingItem;
-            IsPlaying = _state.IsPlaying;
-            Volume = _state.Volume;
-            Position = _state.Position;
-            Duration = _state.Duration;
-            ActiveStrategyId = _state.ActiveStrategyId;
-            LyricInfo = _state.LyricInfo;
-            LyricIndex = _state.LyricIndex;
-            IsInFm = _state.IsInFm;
-            QualityTag = _state.QualityTag;
-            PlaylistItems = _playlist.Items;
-
-            if (NowPlayingItem != null)
+            RunOnUIThread(() =>
             {
-                SongName = NowPlayingItem.Name;
-                Album = NowPlayingItem.AlbumString;
-                Artist = NowPlayingItem.ArtistString;
-            }
-            else
-            {
-                SongName = string.Empty;
-                Album = string.Empty;
-                Artist = string.Empty;
-            }
+                NowPlayingItem = _state.NowPlayingItem;
+                IsPlaying = _state.IsPlaying;
+                Volume = _state.Volume;
+                Position = _state.Position;
+                Duration = _state.Duration;
+                ActiveStrategyId = _state.ActiveStrategyId;
+                LyricInfo = _state.LyricInfo;
+                LyricIndex = _state.LyricIndex;
+                IsInFm = _state.IsInFm;
+                QualityTag = _state.QualityTag;
+                PlaylistItems = _playlist.Items;
+                SongName = NowPlayingItem?.Name;
+                Album = NowPlayingItem?.AlbumString;
+                Artist = NowPlayingItem?.ArtistString;
+            });
         }
 
         private void RunOnUIThread(Action action)
         {
-            _ = _notification.InvokeOnUIThread(action);
+            _taskRunner.Forget(CoreApplication.MainView.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { action(); }), "ExpandedPlayer ViewModel update");
         }
     }
 }

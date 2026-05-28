@@ -1,18 +1,18 @@
-using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Features.Album;
 using HyPlayer.Features.Artist;
-using HyPlayer.Features.Comments;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
 using HyPlayer.Services.Playback;
 using HyPlayer.UI.Dialogs;
+using HyPlayer.UI.TeachingTips;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.UI.Xaml;
 
 namespace HyPlayer.UI.Lists;
 
@@ -20,7 +20,7 @@ public partial class GroupedSongsListViewModel(
     IPlaylistService playlist,
     ISongListQueueBuilder queueBuilder,
     PlaybackStateService state,
-    INotificationService notification,
+    ITeachingTipService teachingTipService,
     INavigationService navigation)
 {
     public HyPlayItem NowPlayingItem => state.NowPlayingItem;
@@ -30,7 +30,7 @@ public partial class GroupedSongsListViewModel(
         if (selectedSongs.Count == 0) return;
         if (!selectedSong.IsAvailable)
         {
-            notification.ShowMessage("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用");
+            teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用"));
             return;
         }
 
@@ -49,7 +49,7 @@ public partial class GroupedSongsListViewModel(
         if (selectedSongs.Count == 0) return;
         if (!selectedSong.IsAvailable)
         {
-            notification.ShowMessage("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用");
+            teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用"));
             return;
         }
 
@@ -79,7 +79,7 @@ public partial class GroupedSongsListViewModel(
         var unAvailableSongNames = selectedSongs.Where(t => !t.IsAvailable).Select(t => t.SongName).ToArray();
         if (unAvailableSongNames.Length > 0)
         {
-            notification.ShowMessage("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
+            teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除"));
         }
     }
 
@@ -103,11 +103,6 @@ public partial class GroupedSongsListViewModel(
     public void OpenAlbum(NCSong selectedSong)
     {
         navigation.Navigate(typeof(AlbumPage), selectedSong.Album.Id ?? "");
-    }
-
-    public void OpenComments(NCSong selectedSong)
-    {
-        navigation.Navigate(typeof(Comments), CommentTarget.Song(selectedSong.SongId));
     }
 
     public void DownloadSongs(IEnumerable<NCSong> selectedSongs)

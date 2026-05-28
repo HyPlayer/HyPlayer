@@ -50,7 +50,7 @@ public sealed partial class Settings : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
 

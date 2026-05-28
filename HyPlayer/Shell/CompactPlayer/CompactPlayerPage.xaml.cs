@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using WinRT;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Shell;
 
@@ -26,9 +27,6 @@ public sealed partial class CompactPlayerPage : Page
 
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
-    private readonly WeakEventListener<CompactPlayerPage, object?, PropertyChangedEventArgs> _stateChangedListener;
     private readonly SolidColorBrush _transparentBrush = new(Colors.Transparent);
 
     public CompactPlayerViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<CompactPlayerViewModel>();
@@ -36,13 +34,6 @@ public sealed partial class CompactPlayerPage : Page
     public CompactPlayerPage()
     {
         InitializeComponent();
-        _stateChangedListener = new WeakEventListener<CompactPlayerPage, object?, PropertyChangedEventArgs>(this)
-        {
-            OnEventAction = static (instance, _, args) => instance.OnPlaybackStatePropertyChanged(args.PropertyName),
-            OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
-        };
-        _state.PropertyChanged += _stateChangedListener.OnEvent;
-        Unloaded += CompactPlayerPage_Unloaded;
     }
 
     public Brush ControlHover
@@ -53,31 +44,7 @@ public sealed partial class CompactPlayerPage : Page
 
     private void CompactPlayerPage_Unloaded(object sender, RoutedEventArgs e)
     {
-        _stateChangedListener.Detach();
         ViewModel.Detach();
-    }
-
-    private void OnPlaybackStatePropertyChanged(string? propertyName)
-    {
-        if (propertyName == nameof(PlaybackStateService.NowPlayingItem))
-            OnSongCoverChanged();
-    }
-
-    private void OnSongCoverChanged()
-    {
-        if (_state.CoverStream == null) return;
-        _taskRunner.Forget(_notification.InvokeOnUIThread(async () =>
-        {
-            if (_setting.noImage) return;
-            try
-            {
-                using var stream = _state.CoverStream.CloneStream();
-                await AlbumImageBrushSource.SetSourceAsync(stream);
-            }
-            catch
-            {
-            }
-        }), "refresh compact player cover");
     }
 
     internal void OnPlaybarVisibilityChanged(bool isActivated)
@@ -101,7 +68,6 @@ public sealed partial class CompactPlayerPage : Page
     {
         base.OnNavigatedTo(e);
         ViewModel.SyncFromState();
-        OnSongCoverChanged();
         (e.Parameter?.As<AppWindow>()).TitleBar.ExtendsContentIntoTitleBar = true;
     }
 
@@ -119,5 +85,9 @@ public sealed partial class CompactPlayerPage : Page
     private void Grid_PointerExited(object sender, PointerRoutedEventArgs e)
     {
         OnPlaybarVisibilityChanged(false);
+    }
+    private void RunOnUIThread(Action action)
+    {
+        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { action(); });
     }
 }

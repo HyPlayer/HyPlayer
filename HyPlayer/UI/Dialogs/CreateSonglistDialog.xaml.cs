@@ -35,10 +35,10 @@ public sealed partial class CreateSonglistDialog : ContentDialog
                 });
         if (result.IsError)
         {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建失败", result.Error.Message);
+            Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("创建失败", result.Error.Message));
         }
 
-        Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建成功");
+        Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("创建成功", null));
         Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>().NotifyChanged();
         Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>().Option.XRealIP = realIpBackup;// Restore user setting
     }

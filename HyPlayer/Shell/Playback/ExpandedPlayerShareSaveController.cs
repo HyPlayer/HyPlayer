@@ -30,20 +30,20 @@ public sealed class ExpandedPlayerShareSaveController
     private readonly PlaybackStateService _state;
     private readonly HttpClient _httpClient;
     private readonly IPlaylistService _playlist;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
     private readonly Func<string> _getSongTitle;
 
     public ExpandedPlayerShareSaveController(
         PlaybackStateService state,
         HttpClient httpClient,
         IPlaylistService playlist,
-        INotificationService notification,
+        ITeachingTipService teachingTipService,
         Func<string> getSongTitle)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _playlist = playlist ?? throw new ArgumentNullException(nameof(playlist));
-        _notification = notification ?? throw new ArgumentNullException(nameof(notification));
+        _teachingTipService = teachingTipService ?? throw new ArgumentNullException(nameof(teachingTipService));
         _getSongTitle = getSongTitle ?? throw new ArgumentNullException(nameof(getSongTitle));
     }
 
@@ -73,7 +73,7 @@ public sealed class ExpandedPlayerShareSaveController
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("专辑封面保存失败", ex.Message);
+            _teachingTipService.Items.Enqueue(new("专辑封面保存失败", ex.Message));
         }
     }
 

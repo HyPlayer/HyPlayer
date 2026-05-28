@@ -22,7 +22,7 @@ namespace HyPlayer.Services.LastFM
             }
             else
             {
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("Last.FM 登录失败", response.Error.Message);
+                Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("Last.FM 登录失败", response.Error.Message));
             }
         }
         public static async Task UpdateNowPlaying(HyPlayItem item)
@@ -37,7 +37,7 @@ namespace HyPlayer.Services.LastFM
             var response = await Ioc.Default.GetRequiredService<LastFMClient>().RequestAsync(LastFMApi.UpdateNowPlayingApi, request, Ioc.Default.GetRequiredService<Setting>().LastFMSession);
             if (!response.IsSuccess)
             {
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("Last.FM 上传正在播放失败", response.Error.Message);
+                Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("Last.FM 上传正在播放失败", response.Error.Message));
             }
         }
         public static async Task Scrobble(HyPlayItem item)
@@ -54,7 +54,7 @@ namespace HyPlayer.Services.LastFM
             var response = await Ioc.Default.GetRequiredService<LastFMClient>().RequestAsync(LastFMApi.ScrobbleApi, request, Ioc.Default.GetRequiredService<Setting>().LastFMSession);
             if (!response.IsSuccess)
             {
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("Last.FM 上传播放记录失败", response.Error.Message);
+                Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("Last.FM 上传播放记录失败", response.Error.Message));
             }
         }
     }

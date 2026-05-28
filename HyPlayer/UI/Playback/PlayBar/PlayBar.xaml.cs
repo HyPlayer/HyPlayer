@@ -1,12 +1,10 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Album;
 using HyPlayer.Features.Artist;
-using HyPlayer.Features.Comments;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
@@ -62,7 +60,7 @@ public sealed partial class PlayBar
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+        private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
     private readonly IDiagnosticsStateService _diagnostics = Ioc.Default.GetRequiredService<IDiagnosticsStateService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
@@ -123,7 +121,7 @@ DoubleAnimation verticalAnimation;
         switch (propertyName)
         {
             case nameof(PlaybackStateService.NowPlayingItem):
-                RunOnUIThread(() => LoadPlayingFile(_state.NowPlayingItem));
+                LoadPlayingFile(_state.NowPlayingItem);
                 break;
             case nameof(PlaybackStateService.CoverStream):
                 RefreshPlayBarCover(_state.NowPlayingItem);
@@ -229,34 +227,16 @@ DoubleAnimation verticalAnimation;
     public void LoadPlayingFile(HyPlayItem mpi)
     {
         if (mpi == null) return;
-        RunOnUIThread(() => ApplicationView.GetForCurrentView().Title =
-            $"{mpi.Name} - {mpi.ArtistString}");
-
-        //SliderAudioRate.Value = ViewModel.Volume * 100;
-
         RunOnUIThread(() =>
         {
-            RefreshPlayModeDisplay();
-
-            // 恢复播放音量
-            if (ViewModel.NowPlayingItem == null)
-            {
-                ApplicationView.GetForCurrentView().Title = "";
-                return;
-            }
-
-            if (ViewModel.NowPlayingItem?.PlayItem == null) return;
-
-            if (_isSliding)
-            {
-                _slidingEventArgs?.Complete();
-                _isSliding = false;
-            }
-
-            SliderProgress.Minimum = 0;
-            // Maximum/value/current time are provided by PlayBarViewModel x:Bind.
-
+            ApplicationView.GetForCurrentView().Title = $"{mpi.Name} - {mpi.ArtistString}";
         });
+        if (_isSliding)
+        {
+            _slidingEventArgs?.Complete();
+            _isSliding = false;
+        }
+        RefreshPlayModeDisplay();
         var isLiked = _auth.LikedSongs.Contains(mpi.Id);
         if (mpi.ItemType != HyPlayItemType.Local && mpi.ItemType != HyPlayItemType.LocalProgressive)
         {
@@ -274,50 +254,37 @@ DoubleAnimation verticalAnimation;
             });
             HistoryManagement.AddNCSongHistory(mpi.Id);
         }
-
-        /*
-        verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;
-        verticalAnimation.SpeedRatio = 0.1;
-        TbSongNameScrollStoryBoard.Stop();
-        TbSongNameScrollStoryBoard.Children.Clear();
-        TbSongNameScrollStoryBoard.Children.Add(verticalAnimation);
-        TbSongNameScrollStoryBoard.Begin();
-        */
-        RunOnUIThread(TryExpandPendingSurface);
-    }
-
-    private void TryExpandPendingSurface()
-    {
-        if (_surfaceStore.HasPendingExpandedIntent)
-            _surfaceCoordinator.Expand();
     }
 
     private void RefreshPlayModeDisplay()
     {
-        if (_state.IsInFm)
+        RunOnUIThread(() =>
         {
-            IconPrevious.Glyph = "\uE7E8";
-            IconPlayType.Glyph = "\uE107";
-            FlyoutPlayRollType.Text = "我不喜欢";
-            return;
-        }
+            if (_state.IsInFm)
+            {
+                IconPrevious.Glyph = "\uE7E8";
+                IconPlayType.Glyph = "\uE107";
+                FlyoutPlayRollType.Text = "我不喜欢";
+                return;
+            }
 
-        IconPrevious.Glyph = "\uF8AC";
-        switch (ViewModel.ActiveStrategyId)
-        {
-            case "shn":
-                IconPlayType.Glyph = "\uE14B";
-                FlyoutPlayRollType.Text = "随机播放";
-                break;
-            case "sgl":
-                IconPlayType.Glyph = "\uE1CC";
-                FlyoutPlayRollType.Text = "单曲循环";
-                break;
-            default:
-                IconPlayType.Glyph = "\uE169";
-                FlyoutPlayRollType.Text = "顺序播放";
-                break;
-        }
+            IconPrevious.Glyph = "\uF8AC";
+            switch (ViewModel.ActiveStrategyId)
+            {
+                case "shn":
+                    IconPlayType.Glyph = "\uE14B";
+                    FlyoutPlayRollType.Text = "随机播放";
+                    break;
+                case "sgl":
+                    IconPlayType.Glyph = "\uE1CC";
+                    FlyoutPlayRollType.Text = "单曲循环";
+                    break;
+                default:
+                    IconPlayType.Glyph = "\uE169";
+                    FlyoutPlayRollType.Text = "顺序播放";
+                    break;
+            }
+        });
     }
 
     private async void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
@@ -513,15 +480,6 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            _navigation.Navigate(typeof(Comments), CommentTarget.Song(ViewModel.NowPlayingItem.Id));
-        else
-            _navigation.Navigate(typeof(Comments), CommentTarget.RadioProgram(ViewModel.NowPlayingItem.Album.Alias));
-        RequestCompactPlayer();
-    }
-
     private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
     {
         // NOTE: 分享电台节目功能尚未实现
@@ -667,9 +625,7 @@ DoubleAnimation verticalAnimation;
             OnDetachAction = weakEventListener => { _auth.LoginCompleted -= weakEventListener.OnEvent; }
         };
         _auth.LoginCompleted += _loginCompletedListener.OnEvent;
-        if (_surfaceStore.HasPendingExpandedIntent)
-            TryExpandPendingSurface();
-        else if (_surfaceCoordinator.IsExpanded)
+        if (_surfaceCoordinator.IsExpanded)
             OnPlaybackSurfaceModeChanged(PlaybackSurfaceMode.Expanded);
 
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
@@ -712,7 +668,7 @@ DoubleAnimation verticalAnimation;
     public async void RefreshPlayBarCover(HyPlayItem? playItem)
     {
         if (ViewModel.CoverStream == null) return;
-        _taskRunner.Forget(_notification.InvokeOnUIThread(async () =>
+        RunOnUIThread(async () =>
         {
             if (GridSongInfo.Visibility == Visibility.Visible && Opacity != 0)
             {
@@ -727,7 +683,7 @@ DoubleAnimation verticalAnimation;
                     //Ignore
                 }
             }
-        }), "refresh play bar cover");
+        });
     }
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
@@ -846,6 +802,6 @@ DoubleAnimation verticalAnimation;
 
     private void RunOnUIThread(Action action)
     {
-        _taskRunner.Forget(_notification.InvokeOnUIThread(action), "PlayBar UI update");
+        _taskRunner.Forget(Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { action(); }), "PlayBar UI Update");
     }
 }

@@ -1,7 +1,9 @@
+using AsyncAwaitBestPractices;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Media;
 
 namespace HyPlayer.Services.Playback.PlaylistService;
 
@@ -10,7 +12,7 @@ public sealed partial class PlaylistService
     // ────────────── 曲目结束处理 ──────────────
 
     /// <inheritdoc />
-    public async Task OnTrackEndedAsync()
+    public async void OnTrackEndedAsync()
     {
         if (!await _trackEndLock.WaitAsync(0)) return;
 
@@ -70,17 +72,30 @@ public sealed partial class PlaylistService
     }
 
     /// <inheritdoc />
-    public void OnPositionTick(TimeSpan position, TimeSpan duration)
+    public void OnPositionTick(object? source, TimeSpan position)
     {
         if (!ShouldRunTransitionOnPositionTick())
             return;
 
-        _activeTransition.OnPositionTick(BuildTransitionContext(position, duration));
+        _activeTransition.OnPositionTick(BuildTransitionContext(position, _state.Duration));
     }
 
     private bool ShouldRunTransitionOnPositionTick()
     {
         var action = _activeStrategy.OnTrackEnded(BuildStrategyContext());
         return action is PlayStrategyAction.MoveNext or PlayStrategyAction.LoadMore;
+    }
+    private void SMTC_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args)
+    {
+        switch (args.Button)
+        {
+            case SystemMediaTransportControlsButton.Next:
+                MoveNextAsync().SafeFireAndForget();
+                break;
+
+            case SystemMediaTransportControlsButton.Previous:
+                MovePreviousAsync().SafeFireAndForget();
+                break;
+        }
     }
 }

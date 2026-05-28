@@ -12,15 +12,15 @@ public sealed class ShellSearchViewModel
 {
     private readonly NeteaseCloudMusicApiHandler _api;
     private readonly INavigationService _navigation;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
 
     public ShellSearchViewModel(NeteaseCloudMusicApiHandler api,
                                 INavigationService navigation,
-                                INotificationService notification)
+                                ITeachingTipService teachingTipService)
     {
         _api = api;
         _navigation = navigation;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
     }
 
     public async Task<IReadOnlyList<string>?> GetSuggestionsAsync(string keyword)
@@ -31,7 +31,7 @@ public sealed class ShellSearchViewModel
                                            new SearchSuggestionRequest { Keyword = keyword });
         if (json.IsError)
         {
-            _notification.ShowMessage("获取推荐词失败", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("获取推荐词失败", json.Error.Message));
             return null;
         }
 

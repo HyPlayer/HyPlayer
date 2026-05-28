@@ -19,8 +19,8 @@ namespace HyPlayer.Features.Home
     public sealed partial class HomePage : Page
     {
         private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-        private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
         private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+        private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
         private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier = Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>();
 
         private HomeViewModel ViewModel => (HomeViewModel)DataContext;
@@ -61,11 +61,11 @@ namespace HyPlayer.Features.Home
                });
             if (result.IsError)
             {
-                _notification.ShowMessage("公开歌单失败", result.Error?.Message ?? "未知错误");
+                _teachingTipService.Items.Enqueue(new("公开歌单失败", result.Error?.Message ?? "未知错误"));
             }
             else
             {
-                _notification.ShowMessage("成功公开歌单");
+                _teachingTipService.Items.Enqueue(new("成功公开歌单", null));
                 _playlistCollectionChangeNotifier.NotifyChanged();
             }
         }
@@ -80,11 +80,11 @@ namespace HyPlayer.Features.Home
             });
             if (result.IsError)
             {
-                _notification.ShowMessage("删除歌单失败", result.Error?.Message ?? "未知错误");
+                _teachingTipService.Items.Enqueue(new("删除歌单失败", result.Error?.Message));
             }
             else
             {
-                _notification.ShowMessage("成功删除");
+                _teachingTipService.Items.Enqueue(new("成功删除", null));
                 _playlistCollectionChangeNotifier.NotifyChanged();
                 _navigation.NavigateRefresh();
             }

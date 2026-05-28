@@ -609,20 +609,6 @@
                         <FontIcon Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}" Glyph="&#xE118;" />
                     </Button>
                     <Button
-                        x:Name="Btn_Comment"
-                        Width="40"
-                        Height="40"
-                        Padding="-5"
-                        Background="Transparent"
-                        BorderBrush="Transparent"
-                        Click="Btn_Comment_OnClick"
-                        CornerRadius="20"
-                        IsEnabled="{x:Bind Btn_Share.IsEnabled, Mode=OneWay}"
-                        ToolTipService.ToolTip="查看评论"
-                        Visibility="{x:Bind Mode=OneWay, Path=hy:XamlHelpers.Setting.notClearMode}">
-                        <FontIcon Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}" Glyph="&#xE8F2;" />
-                    </Button>
-                    <Button
                         x:Name="Btn_Share"
                         Width="40"
                         Height="40"
@@ -1215,15 +1201,6 @@
                             Visibility="{x:Bind Btn_Share.IsEnabled, Mode=OneWay}">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE118;" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem
-                            Click="Btn_Comment_OnClick"
-                            IsEnabled="{x:Bind Btn_Share.IsEnabled, Mode=OneWay}"
-                            Text="查看评论"
-                            Visibility="{x:Bind hy:XamlHelpers.Setting.notClearMode, Mode=OneWay}">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xE8F2;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                         <MenuFlyoutItem

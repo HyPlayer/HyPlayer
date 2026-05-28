@@ -19,12 +19,12 @@ namespace HyPlayer.Services.Playback.QueueProviders;
 internal sealed class AlbumQueueSourceProvider : IQueueSourceProvider
 {
     private readonly NeteaseCloudMusicApiHandler _api;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
 
-    public AlbumQueueSourceProvider(NeteaseCloudMusicApiHandler api, INotificationService notification)
+    public AlbumQueueSourceProvider(NeteaseCloudMusicApiHandler api, ITeachingTipService teachingTipService)
     {
         _api = api;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
     }
 
     public SongListQueueScopeKind Kind => SongListQueueScopeKind.Album;
@@ -41,7 +41,7 @@ internal sealed class AlbumQueueSourceProvider : IQueueSourceProvider
                     new AlbumRequest { Id = id });
                 if (json.IsError)
                 {
-                    _notification.ShowMessage("获取专辑信息失败", json.Error?.Message);
+                    _teachingTipService.Items.Enqueue(new("获取专辑信息失败", json.Error?.Message));
                     return null;
                 }
 
@@ -55,7 +55,7 @@ internal sealed class AlbumQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("AppendAlbum时发生错误", ex.Message);
+            _teachingTipService.Items.Enqueue(new("AppendAlbum时发生错误", ex.Message));
         }
 
         return NeteaseQueueSourceLoadResult.Failed;

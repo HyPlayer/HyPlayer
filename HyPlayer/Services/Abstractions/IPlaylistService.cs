@@ -75,12 +75,12 @@ public interface IPlaylistService
     /// <summary>
     /// 曲目自然播放结束时由 PlaybackControlService 调用
     /// </summary>
-    Task OnTrackEndedAsync();
+    void OnTrackEndedAsync();
 
     /// <summary>
     /// 播放位置更新时由 PlaybackControlService 调用（用于过渡策略的预加载等）
     /// </summary>
-    void OnPositionTick(TimeSpan position, TimeSpan duration);
+    void OnPositionTick(object? source, TimeSpan position);
 
     /// <summary>
     /// 通知列表追加完成（触发 PlaylistChanged 消息）

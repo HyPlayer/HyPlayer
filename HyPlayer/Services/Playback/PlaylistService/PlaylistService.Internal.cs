@@ -115,9 +115,7 @@ public sealed partial class PlaylistService
     private void SendPlaylistChanged(bool isShuffleTrigger = false)
     {
         SyncIndex();
-        _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
-            PlaylistChanged?.Invoke(this, new PlaylistChangedEventArgs(isShuffleTrigger))),
-            "publish playlist changed");
+        PlaylistChanged?.Invoke(this, new PlaylistChangedEventArgs(isShuffleTrigger));
     }
 
     private static void DisposePlayItems(IEnumerable<HyPlayItem> items)

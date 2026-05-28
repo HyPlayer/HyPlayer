@@ -1,5 +1,6 @@
 #region
 
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
@@ -34,11 +35,11 @@ using UwpStorageFileAbstraction = HyPlayer.Infrastructure.Audio.UwpStorageFileAb
 
 namespace HyPlayer.Services.Downloads;
 
-internal sealed partial class DownloadObject : INotifyPropertyChanged
+internal sealed partial class DownloadObject : ObservableObject
 {
     public HyPlayItem PlayItem;
     private DownloadOperation _downloadOperation;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
     private readonly Setting _setting;
     private readonly HttpClient _httpClient;
     private readonly NeteaseCloudMusicApiHandler _api;
@@ -54,32 +55,25 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
             _resultFileBackingField = value;
         }
     }
-
-    public string FileName
-    {
-        get => _fileName;
-        set => SetField(ref _fileName, value);
-    }
+    [ObservableProperty]
+    public partial string FileName { get; set; }
 
     public string FullPath { get; set; }
+    [ObservableProperty]
 
-    public ulong HadSize
-    {
-        get => _hadSize;
-        set => SetField(ref _hadSize, value);
-    }
+    public partial ulong HadSize { get; set; }
 
     public NCSong ncsong;
 
     public DownloadObject(
         NCSong song,
-        INotificationService notification,
+        ITeachingTipService teachingTipService,
         Setting setting,
         HttpClient httpClient,
         NeteaseCloudMusicApiHandler api,
         IDiagnosticsStateService diagnostics)
     {
-        _notification = notification;
+        _teachingTipService = teachingTipService;
         _setting = setting;
         _httpClient = httpClient;
         _api = api;
@@ -88,11 +82,8 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         ncsong = song;
     }
 
-    public int Progress
-    {
-        get => _progress;
-        set => SetField(ref _progress, value);
-    }
+    [ObservableProperty]
+    public partial int Progress { get; set; }
 
     public enum DownloadStatus
     {
@@ -105,62 +96,31 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
 
     // 0 - 排队 1 - 下载中 2 - 下载完成  3 - 暂停
     public DownloadStatus Status { get; set; }
-
-    public bool HasError
-    {
-        get => _hasError;
-        set => SetField(ref _hasError, value);
-    }
-
-    public bool HasPaused
-    {
-        get => _hasPaused;
-        set => SetField(ref _hasPaused, value);
-    }
-
-    public string Message
-    {
-        get => _message;
-        set => SetField(ref _message, value);
-    }
-
-
-    private ulong _totalSize;
-    private int _progress;
-    private ulong _hadSize;
-    private string _fileName;
-    private string _message;
-    private bool _hasError;
-    private bool _hasPaused;
-
-    public ulong TotalSize
-    {
-        get => _totalSize;
-        set => SetField(ref _totalSize, value);
-    }
+    [ObservableProperty]
+    public partial bool HasError { get; set; }
+    [ObservableProperty]
+    public partial bool HasPaused { get; set; }
+    [ObservableProperty]
+    public partial string Message { get; set; }
+    [ObservableProperty]
+    public partial ulong TotalSize { get;set; }
 
     public void Pause()
     {
         if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
             _downloadOperation?.Pause();
         Status = DownloadStatus.Paused;
-        _ = _notification.InvokeOnUIThread(() =>
-        {
-            Message = "暂停中";
-            HasPaused = true;
-            HasError = false;
-        });
+        Message = "暂停中";
+        HasPaused = true;
+        HasError = false;
     }
 
     public void Resume()
     {
         _downloadOperation?.Resume();
         Status = DownloadStatus.Downloading;
-        _ = _notification.InvokeOnUIThread(() =>
-        {
-            Message = "下载中";
-            HasPaused = false;
-        });
+        Message = "下载中";
+        HasPaused = false;
     }
 
     public void Remove()
@@ -168,11 +128,8 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
             _downloadOperation?.Pause();
         Status = DownloadStatus.Finished;
-        _ = _notification.InvokeOnUIThread(() =>
-        {
-            Message = "已移除";
-            HasPaused = false;
-        });
+        Message = "已移除";
+        HasPaused = false;
     }
 
     private void Wc_DownloadFileCompleted()
@@ -186,12 +143,12 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
             DownloadManager.WritingTasks.RemoveAll(t => t.IsCompleted);
             Status = DownloadStatus.Finished;
         }));
-        _ = _notification.InvokeOnUIThread(() => Message = "下载完成");
+        Message = "下载完成";
     }
 
     private Task WriteInfoToFile()
     {
-        _ = _notification.InvokeOnUIThread(() => Message = "正在写文件信息");
+        Message = "正在写文件信息";
         return Task.Run(async () =>
         {
             using var streamAbstraction = new UwpStorageFileAbstraction(ResultFile);
@@ -246,22 +203,18 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
             catch (Exception ex)
             {
                 Status = DownloadStatus.Error;
-                _ = _notification.InvokeOnUIThread(() =>
-                {
-                    HasError = true;
-                    HasPaused = true;
-                    Progress = 100;
-                    Message = "写入音乐信息时出现错误" + ex.Message;
-                });
+                HasError = true;
+                HasPaused = true;
+                Progress = 100;
+                Message = "写入音乐信息时出现错误" + ex.Message;
                 _diagnostics.ErrorMessages.Add("写入音乐信息时出现错误" + ex.Message);
-                _notification.ShowMessage("写入信息错误: " + ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         });
     }
 
     private Task DownloadLyric()
     {
-        _ = _notification.InvokeOnUIThread(() => Message = "下载歌词中");
+        Message = "下载歌词中";
         //下载歌词
         return Task.Run(async () =>
         {
@@ -294,14 +247,10 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
             else
             {
                 Status = DownloadStatus.Error;
-                _ = _notification.InvokeOnUIThread(() =>
-                {
-                    Message = "下载歌词错误: " + lyricResult.Error.Message;
-                    HasError = true;
-                    HasPaused = true;
-                    Progress = 100;
-                });
-                _notification.ShowMessage("下载歌词错误: " + lyricResult.Error.Message);
+                Message = "下载歌词错误: " + lyricResult.Error.Message;
+                HasError = true;
+                HasPaused = true;
+                Progress = 100;
             }
         });
     }
@@ -324,33 +273,19 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
     {
         if (obj.Progress.TotalBytesToReceive == 0) return;
         if (Status != DownloadStatus.Downloading) return;
-
-        _ = _notification.InvokeOnUIThread((() =>
-        {
-            TotalSize = obj.Progress.TotalBytesToReceive;
-            HadSize = obj.Progress.BytesReceived;
-            Progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
-            Message = $"下载中: {GetSize(obj.Progress.BytesReceived)} / {GetSize(obj.Progress.TotalBytesToReceive)}";
-        }));
-
+        TotalSize = obj.Progress.TotalBytesToReceive;
+        HadSize = obj.Progress.BytesReceived;
+        Progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
+        Message = $"下载中: {GetSize(obj.Progress.BytesReceived)} / {GetSize(obj.Progress.TotalBytesToReceive)}";
         if (HadSize == TotalSize && Status == DownloadStatus.Finished) return;
     }
-
-    public void DownloadStartToast(string SongName)
-    {
-        _notification.ShowMessage("下载开始", "歌曲" + SongName + "下载开始");
-    }
-
     public async Task StartDownload()
     {
         if (_downloadOperation != null) { Resume(); return; }
         Status = DownloadStatus.Downloading;
-        _ = _notification.InvokeOnUIThread(() =>
-        {
-            HasError = false;
-            HasPaused = false;
-            Message = "正在预加载";
-        });
+        HasError = false;
+        HasPaused = false;
+        Message = "正在预加载";
         try
         {
             FileName = _setting.downloadFileName
@@ -377,7 +312,7 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                 {
                     case OccupySolution.Skip:
                         Status = DownloadStatus.Paused;
-                        _ = _notification.InvokeOnUIThread(() => { Message = "歌曲已存在, 跳过"; });
+                        Message = "歌曲已存在, 跳过";
                         return;
                     case OccupySolution.ReWrite:
                         await (await nowFolder.GetFileAsync(Path.GetFileName(FileName))).DeleteAsync();
@@ -398,37 +333,28 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                         Wc_DownloadFileCompleted();
                         return;
                 }
-            _ = _notification.InvokeOnUIThread(() =>
-            {
-                HasError = false;
-                HasPaused = false;
-                Message = "正在获取下载链接";
-            });
+            HasError = false;
+            HasPaused = false;
+            Message = "正在获取下载链接";
             var urlRequest = new SongUrlRequest() { Id = ncsong.SongId, Level = _setting.downloadAudioRate };
             var urlResult = await _api.RequestAsync(NeteaseApis.SongUrlApi, urlRequest);
 
             if (urlResult.IsError || urlResult.Value?.SongUrls?[0] is null)
             {
                 Status = DownloadStatus.Error;
-                _ = _notification.InvokeOnUIThread(() =>
-                {
-                    Message = "获取下载链接错误";
-                    HasError = true;
-                    HasPaused = true;
-                    Progress = 100;
-                });
+                Message = "获取下载链接错误";
+                HasError = true;
+                HasPaused = true;
+                Progress = 100;
                 return;
             }
 
             if (urlResult.Value.SongUrls[0].FreeTrialInfo is not null && _setting.jumpVipSongDownloading)
             {
                 Status = DownloadStatus.Paused;
-                _ = _notification.InvokeOnUIThread(() =>
-                {
-                    HasPaused = true;
-                    Progress = 100;
-                    Message = "VIP 试听歌曲, 跳过";
-                });
+                HasPaused = true;
+                Progress = 100;
+                Message = "VIP 试听歌曲, 跳过";
                 return;
             }
 
@@ -455,24 +381,9 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         catch (Exception ex)
         {
             Status = DownloadStatus.Error;
-            _ = _notification.InvokeOnUIThread(() => { Message = "下载错误: " + ex.Message; });
+            Message = "下载错误: " + ex.Message;
             _diagnostics.ErrorMessages.Add("无法下载歌曲 " + ncsong.SongName + "\n已自动将其从下载列表中移除" + ex.Message);
         }
-    }
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
     }
 
     [GeneratedRegex("[0-9]+")]
@@ -483,7 +394,7 @@ internal static class DownloadManager
 {
     private static bool Timered;
     private static IGlobalTimerService GlobalTimer => Ioc.Default.GetRequiredService<IGlobalTimerService>();
-    private static INotificationService Notification => Ioc.Default.GetRequiredService<INotificationService>();
+    private static ITeachingTipService teachingTipService => Ioc.Default.GetRequiredService<ITeachingTipService>();
     private static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
     private static HttpClient HttpClient => Ioc.Default.GetRequiredService<HttpClient>();
     private static NeteaseCloudMusicApiHandler Api => Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
@@ -495,7 +406,7 @@ internal static class DownloadManager
 
     public static bool CheckDownloadAbilityAndToast()
     {
-        Notification.ShowMessage("开始下载");
+        teachingTipService.Items.Enqueue(new ("开始下载", null));
         return true;
     }
 
@@ -554,12 +465,9 @@ internal static class DownloadManager
                     return;
                 case DownloadObject.DownloadStatus.Finished:
                     var i1 = i;
-                    _ = Notification.InvokeOnUIThread(() =>
-                    {
-                        DownloadLists.RemoveAt(i1);
-                        if (DownloadLists.Count == 0)
-                            StopTimer();
-                    });
+                    DownloadLists.RemoveAt(i1);
+                    if (DownloadLists.Count == 0)
+                        StopTimer();
                     break;
                 case DownloadObject.DownloadStatus.Paused:
                 case DownloadObject.DownloadStatus.Error:
@@ -578,7 +486,7 @@ internal static class DownloadManager
 
     private static DownloadObject CreateDownloadObject(NCSong song)
     {
-        return new DownloadObject(song, Notification, Setting, HttpClient, Api, Diagnostics);
+        return new DownloadObject(song, teachingTipService, Setting, HttpClient, Api, Diagnostics);
     }
 }
 

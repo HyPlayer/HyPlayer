@@ -187,17 +187,14 @@ public sealed partial class MainPage : Page
     internal void OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (!_setting.AutoHidePlaybar) return;
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        if (isActivated)
         {
-            if (isActivated)
-            {
-                ShowBar();
-            }
-            else
-            {
-                CollapseBar();
-            }
-        });
+            _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, ShowBar);
+        }
+        else
+        {
+            _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, CollapseBar);
+        }
     }
 
     private void ShowBar()

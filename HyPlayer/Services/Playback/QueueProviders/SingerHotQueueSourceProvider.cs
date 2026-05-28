@@ -19,12 +19,12 @@ namespace HyPlayer.Services.Playback.QueueProviders;
 internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
 {
     private readonly NeteaseCloudMusicApiHandler _api;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
 
-    public SingerHotQueueSourceProvider(NeteaseCloudMusicApiHandler api, INotificationService notification)
+    public SingerHotQueueSourceProvider(NeteaseCloudMusicApiHandler api, ITeachingTipService teachingTipService)
     {
         _api = api;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
     }
 
     public SongListQueueScopeKind Kind => SongListQueueScopeKind.Artist;
@@ -41,7 +41,7 @@ internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
                     new ArtistTopSongRequest { ArtistId = id });
                 if (j1.IsError)
                 {
-                    _notification.ShowMessage("获取歌手热门歌曲失败", j1.Error?.Message);
+                    _teachingTipService.Items.Enqueue(new("获取歌手热门歌曲失败", j1.Error?.Message));
                     return null;
                 }
 
@@ -54,7 +54,7 @@ internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("AppendNCSource时发生错误", ex.Message);
+            _teachingTipService.Items.Enqueue(new("AppendNCSource时发生错误", ex.Message));
         }
 
         return NeteaseQueueSourceLoadResult.Failed;

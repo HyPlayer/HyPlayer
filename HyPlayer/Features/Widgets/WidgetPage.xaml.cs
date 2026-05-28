@@ -124,7 +124,7 @@ public sealed partial class WidgetPage : Page
 
     private void HyPlayList_OnPlaybackStatusChanged()
     {
-        _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+        RunOnUIThread(() =>
         {
             PlayStateIcon.Glyph = _player.GlobalPlaybackStatus == PlaybackStatus.Playing ? "\uF8AE" : "\uF5B0";
             LyricBox.Context.IsPlaying = _player.GlobalPlaybackStatus == PlaybackStatus.Playing;
@@ -133,7 +133,7 @@ public sealed partial class WidgetPage : Page
 
     private void RequestedThemeChanged(XboxGameBarWidget sender, object args)
     {
-        _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+        RunOnUIThread(() =>
         {
             RequestedTheme = _widget.RequestedTheme;
             LyricBox.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color, Colors.Black);
@@ -172,7 +172,7 @@ public sealed partial class WidgetPage : Page
         }
         if (ReferenceEquals(Instance, this))
             Instance = null;
-        _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, LyricView.RemoveFromVisualTree);
+        RunOnUIThread(LyricView.RemoveFromVisualTree);
     }
 
     private void OnPlaybackStatePropertyChanged(string? propertyName)
@@ -200,8 +200,7 @@ public sealed partial class WidgetPage : Page
         var text = $"{position:mm\\:ss}/{TimeSpan.FromMilliseconds(_state.NowPlayingItem.LengthInMilliseconds):mm\\:ss}";
         try
         {
-            _ = Dispatcher.RunAsync(
-            CoreDispatcherPriority.Normal,
+            RunOnUIThread(
             () =>
             {
                 PositionProgressBar.Value = progress;
@@ -218,8 +217,7 @@ public sealed partial class WidgetPage : Page
     {
         var playItemName = _state.NowPlayingItem.Name;
         var artistName = _state.NowPlayingItem.ArtistString;
-        _ = Dispatcher.RunAsync(
-           CoreDispatcherPriority.Normal,
+        RunOnUIThread(
            () =>
            {
                SongNameText.Text = playItemName;
@@ -358,12 +356,10 @@ public sealed partial class WidgetPage : Page
             LyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.ALRC, alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata));
         }
         LyricBox.ReflowTime(0);
-        _ = Dispatcher.RunAsync(
-           CoreDispatcherPriority.Normal,
-           () =>
-           {
-               LyricBox.Redesign((float)LyricView.ActualWidth, (float)LyricView.ActualHeight, LyricView.Dpi);
-           });
+        RunOnUIThread(() =>
+        {
+            LyricBox.Redesign((float)LyricView.ActualWidth, (float)LyricView.ActualHeight, LyricView.Dpi);
+        });
     }
 
     private SolidColorBrush GetAccentBrush()
@@ -425,5 +421,9 @@ public sealed partial class WidgetPage : Page
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
         UnregisterEvents();
+    }
+    private void RunOnUIThread(Action action)
+    {
+        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { action(); });
     }
 }

@@ -9,7 +9,7 @@ namespace HyPlayer.Services.Playback;
 internal sealed class SongListQueueBuilder(
     IPlaylistService playlist,
     PlaybackStateService state,
-    INotificationService notification) : ISongListQueueBuilder
+    ITeachingTipService teachingTipService) : ISongListQueueBuilder
 {
     public async Task BuildAndPlayAsync(NCSong clickedSong, SongListQueueScope scope, IReadOnlyList<NCSong> visibleSongs)
     {
@@ -20,7 +20,7 @@ internal sealed class SongListQueueBuilder(
 
         if (!clickedSong.IsAvailable)
         {
-            notification.ShowMessage("歌曲不可用", $"歌曲 {clickedSong.SongName} 当前不可用");
+            teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {clickedSong.SongName} 当前不可用"));
             return;
         }
 
@@ -46,7 +46,7 @@ internal sealed class SongListQueueBuilder(
             return;
         }
 
-        notification.ShowMessage("无感歌单切换", "成功无感切换到歌单");
+        teachingTipService.Items.Enqueue(new("无感歌单切换", "成功无感切换到歌单"));
         if (nowPlaying != null)
         {
             playlist.RestoreNowPlayingItem(nowPlaying);

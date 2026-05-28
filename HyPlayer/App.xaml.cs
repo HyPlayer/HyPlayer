@@ -162,10 +162,10 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<IQueueSourceProvider, SingleSongQueueSourceProvider>();
 
         // ── 播放核心：服务 ──
+        serviceCollection.AddSingleton<IPlaylistService, PlaylistService>();
         serviceCollection.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
         serviceCollection.AddSingleton<ILocalFileImportService, LocalFileImportService>();
         serviceCollection.AddSingleton<IPlaybackControlService, PlaybackControlService>();
-        serviceCollection.AddSingleton<IPlaylistService, PlaylistService>();
         serviceCollection.AddSingleton<ISongListQueueBuilder, SongListQueueBuilder>();
         serviceCollection.AddSingleton<ILyricService, LyricService>();
         serviceCollection.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
@@ -176,7 +176,6 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<INavigationService, NavigationService>();
         serviceCollection.AddSingleton<IAppNavigator, AppNavigator>();
         serviceCollection.AddSingleton<NavigationShellViewModel>();
-        serviceCollection.AddSingleton<INotificationService, NotificationService>();
         serviceCollection.AddSingleton<IAppLifecycleStateService, AppLifecycleStateService>();
         serviceCollection.AddSingleton<IDisplayKeepAwakeService, DisplayKeepAwakeService>();
         serviceCollection.AddSingleton<IKawazuStateService, KawazuStateService>();
@@ -220,14 +219,6 @@ public sealed partial class App : Application
         {
             // ignored
         }
-
-        if (Ioc.Default.GetRequiredService<PlaybackSurfaceStore>().IsExpanded)
-            Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(
-                Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
-                {
-                    Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().RestoreExpandedSurface();
-                }),
-                "navigate expanded player during app initialization");
     }
 
     private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)

@@ -14,6 +14,7 @@
     Background="{x:Bind AlbumImageBrush}"
     IsRightTapEnabled="True"
     RightTapped="OnRightTapped"
+    Unloaded="CompactPlayerPage_Unloaded"
     mc:Ignorable="d">
     <Page.Resources>
         <!--
@@ -441,9 +442,9 @@
                     x:Name="LyricControl"
                     Height="500"
                     HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
                     Lyric="{x:Bind ViewModel.CurrentLyric, Mode=OneWay}"
                     QuickRenderMode="{x:Bind ViewModel.LyricQuickRenderMode, Mode=OneWay}"
-                    VerticalAlignment="Stretch"
                     WordWrapping="NoWrap" />
 
                 <Viewbox
@@ -590,11 +591,10 @@
             HorizontalAlignment="Stretch"
             Canvas.ZIndex="1">
             <Rectangle.Fill>
-                <ImageBrush x:Name="AlbumImageBrush" Stretch="UniformToFill">
-                    <ImageBrush.ImageSource>
-                        <BitmapImage x:Name="AlbumImageBrushSource" />
-                    </ImageBrush.ImageSource>
-                </ImageBrush>
+                <ImageBrush
+                    x:Name="AlbumImageBrush"
+                    ImageSource="{x:Bind ViewModel.AlbumImage, Mode=OneWay}"
+                    Stretch="UniformToFill" />
             </Rectangle.Fill>
         </Rectangle>
         <VisualStateManager.VisualStateGroups>

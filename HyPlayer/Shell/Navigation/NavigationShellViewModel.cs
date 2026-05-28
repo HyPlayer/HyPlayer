@@ -26,7 +26,7 @@ public partial class NavigationShellViewModel : ObservableObject
 {
     private readonly NeteaseCloudMusicApiHandler _api;
     private readonly IAuthService _auth;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
 
     public ObservableCollection<NavigationNode> MenuItems { get; } = [];
 
@@ -59,12 +59,12 @@ public partial class NavigationShellViewModel : ObservableObject
     public NavigationShellViewModel(
         NeteaseCloudMusicApiHandler api,
         IAuthService auth,
-        INotificationService notification,
+        ITeachingTipService teachingTipService,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
         _api = api;
         _auth = auth;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
 
         BuildMenuItems();
         UpdateAccountStatus();
@@ -195,7 +195,7 @@ public partial class NavigationShellViewModel : ObservableObject
                         new UserPlaylistRequest { Uid = _auth.CurrentUser.Id });
                     if (json.IsError)
                     {
-                        _notification.ShowMessage("获取歌单失败", json.Error?.Message);
+                        _teachingTipService.Items.Enqueue(new("获取歌单失败", json.Error?.Message));
                         return null;
                     }
                     return json.Value;

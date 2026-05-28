@@ -17,17 +17,16 @@ using Windows.UI.Xaml.Controls;
 
 namespace HyPlayer.Features.Library
 {
-    public partial class FavoriteViewModel : ObservableRecipient
+    public partial class FavoriteViewModel : ObservableObject
     {
         private readonly NeteaseCloudMusicApiHandler _api;
-        private readonly INotificationService _notification;
-
+    private readonly ITeachingTipService _teachingTipService;
         public FavoriteViewModel(
             NeteaseCloudMusicApiHandler api,
-            INotificationService notification)
+            ITeachingTipService teachingTipService)
         {
             _api = api;
-            _notification = notification;
+            _teachingTipService = teachingTipService;
         }
 
         public ObservableCollection<SimpleListItem> Content { get; set; } = new();
@@ -61,7 +60,7 @@ namespace HyPlayer.Features.Library
                         var json = await _api.RequestAsync(NeteaseApis.DjChannelSubscribedApi);
                         if (json.IsError)
                         {
-                            _notification.ShowMessage("加载订阅播客列表错误", json.Error.Message);
+                            _teachingTipService.Items.Enqueue(new("加载订阅播客列表错误", json.Error.Message));
                             return null;
                         }
 
@@ -102,7 +101,7 @@ namespace HyPlayer.Features.Library
                             });
                         if (json.IsError)
                         {
-                            _notification.ShowMessage("加载关注歌手列表错误", json.Error.Message);
+                            _teachingTipService.Items.Enqueue(new("加载关注歌手列表错误", json.Error.Message));
                             return null;
                         }
 
@@ -140,7 +139,7 @@ namespace HyPlayer.Features.Library
                             });
                         if (jv.IsError)
                         {
-                            _notification.ShowMessage("加载收藏专辑列表错误", jv.Error?.Message);
+                            _teachingTipService.Items.Enqueue(new("加载收藏专辑列表错误", jv.Error?.Message));
                             return null;
                         }
 

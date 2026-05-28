@@ -18,12 +18,12 @@ namespace HyPlayer.Services.Playback;
 /// <inheritdoc />
 public sealed class LocalFileImportService : ILocalFileImportService
 {
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
     private readonly Setting _setting;
 
-    public LocalFileImportService(INotificationService notification, Setting setting)
+    public LocalFileImportService(ITeachingTipService teachingTipService, Setting setting)
     {
-        _notification = notification;
+        _teachingTipService = teachingTipService;
         _setting = setting;
     }
 
@@ -52,7 +52,7 @@ public sealed class LocalFileImportService : ILocalFileImportService
             }
             catch (Exception ex)
             {
-                _notification.ShowMessage($"加载文件 {file.Name} 失败", ex.Message);
+                _teachingTipService.Items.Enqueue(new($"加载文件 {file.Name} 失败", ex.Message));
             }
         }
 

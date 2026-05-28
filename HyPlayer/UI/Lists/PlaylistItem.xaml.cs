@@ -25,7 +25,7 @@ public sealed partial class PlaylistItem : UserControl
     private readonly NCPlayList playList;
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
     private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
     private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier = Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
@@ -71,11 +71,11 @@ public sealed partial class PlaylistItem : UserControl
             });
         if (result.IsError)
         {
-            _notification.ShowMessage("公开歌单失败", result.Error?.Message ?? "未知错误");
+            _teachingTipService.Items.Enqueue(new("公开歌单失败", result.Error?.Message));
         }
         else
         {
-            _notification.ShowMessage("成功公开歌单");
+            _teachingTipService.Items.Enqueue(new("成功公开歌单", null));
             _playlistCollectionChangeNotifier.NotifyChanged();
         }
     }
@@ -89,11 +89,11 @@ public sealed partial class PlaylistItem : UserControl
             });
         if (result.IsError)
         {
-            _notification.ShowMessage("删除歌单失败", result.Error?.Message ?? "未知错误");
+            _teachingTipService.Items.Enqueue(new("删除歌单失败", result.Error?.Message));
         }
         else
         {
-            _notification.ShowMessage("成功删除");
+            _teachingTipService.Items.Enqueue(new("成功删除", null));
             _playlistCollectionChangeNotifier.NotifyChanged();
             _navigation.NavigateRefresh();
         }

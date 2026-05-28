@@ -2,8 +2,8 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Domain;
-using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
@@ -17,7 +17,7 @@ using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Downloads;
 using HyPlayer.UI.Converters;
-using CommunityToolkit.WinUI.Helpers;
+using HyPlayer.UI.TeachingTips;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -34,7 +34,7 @@ namespace HyPlayer.Features.Playlist
         private readonly IPlaylistService _playlist;
         private readonly NeteaseCloudMusicApiHandler _api;
         private readonly Setting _setting;
-        private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
         private readonly INavigationService _navigation;
         private readonly IAppNavigator _navigator;
         private readonly HttpClient _httpClient;
@@ -46,7 +46,7 @@ namespace HyPlayer.Features.Playlist
             IPlaylistService playlist,
             NeteaseCloudMusicApiHandler api,
             Setting setting,
-            INotificationService notification,
+            ITeachingTipService teachingTipService,
             INavigationService navigation,
             IAppNavigator navigator,
             HttpClient httpClient,
@@ -55,7 +55,7 @@ namespace HyPlayer.Features.Playlist
             _playlist = playlist;
             _api = api;
             _setting = setting;
-            _notification = notification;
+            _teachingTipService = teachingTipService;
             _navigation = navigation;
             _navigator = navigator;
             _httpClient = httpClient;
@@ -113,7 +113,7 @@ namespace HyPlayer.Features.Playlist
                         });
                     if (json.IsError)
                     {
-                        _notification.ShowMessage("加载歌单出错", json.Error?.Message ?? "未知错误");
+                        _teachingTipService.Items.Enqueue(new("加载歌单出错", json.Error?.Message));
                         return null;
                     }
 
@@ -177,7 +177,7 @@ namespace HyPlayer.Features.Playlist
                 var json = await _api.RequestAsync(NeteaseApis.RecommendSongsApi);
                 if (json.IsError)
                 {
-                    _notification.ShowMessage("加载日推出错", json.Error?.Message);
+                    _teachingTipService.Items.Enqueue(new("加载日推出错", json.Error?.Message));
                     return null;
                 }
                 return json.Value;
@@ -212,7 +212,7 @@ namespace HyPlayer.Features.Playlist
                     });
                 if (rst.IsError)
                 {
-                    _notification.ShowMessage("加载歌单出错", rst.Error?.Message ?? "未知错误");
+                    _teachingTipService.Items.Enqueue(new("加载歌单出错", rst.Error?.Message));
                     return null;
                 }
                 return rst.Value;
@@ -221,7 +221,7 @@ namespace HyPlayer.Features.Playlist
             var playlistDetail = json?.Playlist?.TrackIds;
             if (playlistDetail is null)
             {
-                _notification.ShowMessage("加载歌单出错", "未找到歌单信息");
+                _teachingTipService.Items.Enqueue(new("加载歌单出错", "未找到歌单信息"));
                 return;
             }
             if (json.Playlist.SpecialType == 5 &&
@@ -249,12 +249,12 @@ namespace HyPlayer.Features.Playlist
                 {
                     _greedyLoadTreashold = ++_greedyLoadCooldownTime * 10;
                     CurrentPage--;
-                    _notification.ShowMessage("贪婪加载被风控", $"渐进加载速度过于快, 将在 {_greedyLoadCooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+                    _teachingTipService.Items.Enqueue(new("贪婪加载被风控", $"渐进加载速度过于快, 将在 {_greedyLoadCooldownTime * 10} 秒后尝试继续加载, 正在清洗请求"));
                     return null;
                 }
                 if (json.IsError)
                 {
-                    _notification.ShowMessage("加载歌单歌曲出错", json.Error?.Message ?? "未知错误");
+                    _teachingTipService.Items.Enqueue(new("加载歌单歌曲出错", json.Error?.Message ?? "未知错误"));
                     return null;
                 }
                 return json.Value;
@@ -318,11 +318,6 @@ namespace HyPlayer.Features.Playlist
             }
         }
         [RelayCommand]
-        private void NavigateToComments()
-        {
-            _navigation.Navigate(typeof(Comments.Comments), CommentTarget.Playlist(PlayList.PlaylistId));
-        }
-        [RelayCommand]
         private async Task ResetCacheAsync()
         {
             try
@@ -330,7 +325,7 @@ namespace HyPlayer.Features.Playlist
                 await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, PlayList.PlaylistId);
                 await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, PlayList.PlaylistId, true);
                 await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, PlayList.PlaylistId);
-                _notification.ShowMessage("清除缓存成功", "已清除当前歌单的缓存");
+                _teachingTipService.Items.Enqueue(new("清除缓存成功", "已清除当前歌单的缓存"));
                 Songs.Clear();
                 CurrentPage = 0;
                 LoadSongListItem().SafeFireAndForget();
@@ -391,7 +386,7 @@ namespace HyPlayer.Features.Playlist
                 });
             if (result.IsError)
             {
-                _notification.ShowMessage("操作失败", result.Error.Message);
+                _teachingTipService.Items.Enqueue(new("操作失败", result.Error.Message));
                 return;
             }
             PlayList.HasSubscribed = !PlayList.HasSubscribed;

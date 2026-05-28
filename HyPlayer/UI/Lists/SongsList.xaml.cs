@@ -1,12 +1,10 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Album;
 using HyPlayer.Features.Artist;
-using HyPlayer.Features.Comments;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
@@ -46,7 +44,7 @@ public sealed partial class SongsList : UserControl
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+        private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly ISongListQueueBuilder _songListQueueBuilder = Ioc.Default.GetRequiredService<ISongListQueueBuilder>();
@@ -258,7 +256,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
+            _teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用"));
             return;
         }
 
@@ -277,7 +275,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用");
+            _teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用"));
             return;
         }
 
@@ -309,7 +307,7 @@ public sealed partial class SongsList : UserControl
         {
             var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable)
                 .Select(t => t.SongName).ToArray();
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
+            _teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除"));
         }
     }
 
@@ -335,18 +333,12 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if ((SongContainer.SelectedItem as NCSong).Album.Id == "0")
         {
-            _notification.ShowMessage("此歌曲无专辑页面");
+            _teachingTipService.Items.Enqueue(new("此歌曲无专辑页面", null));
         }
         else
         {
             _navigation.Navigate(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong).Album);
         }
-    }
-
-    private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
-    {
-        if (SongContainer.SelectedItems.Count == 0) return;
-        _navigation.Navigate(typeof(Comments), CommentTarget.Song((SongContainer.SelectedItem as NCSong).SongId));
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
@@ -438,7 +430,7 @@ public sealed partial class SongsList : UserControl
 
         if (!ncSong.IsAvailable)
         {
-            _notification.ShowMessage("歌曲不可用", $"歌曲 {ncSong.SongName} 当前不可用");
+            _teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {ncSong.SongName} 当前不可用"));
             return;
         }
 
@@ -494,16 +486,12 @@ public sealed partial class SongsList : UserControl
                 if (idx == -1) return;
                 SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
                 break;
-            case "Comments":
-                var page = (SongListDetail)((Grid)Parent).Parent;
-                _navigation.Navigate(typeof(Comments), CommentTarget.Playlist(page.ViewModel.PlayList.PlaylistId));
-                break;
             default:
                 break;
         }
     }
     private void RunOnUIThread(Action action)
     {
-        _taskRunner.Forget(_notification.InvokeOnUIThread(action), "SongsList UI update");
+        _taskRunner.Forget(Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { action(); }), "SongsList UI Update");
     }
 }

@@ -17,7 +17,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces
         void PausePlaybackSource(IPlaybackSource playbackSource);
         void PlayPlaybackSource(IPlaybackSource playbackSource);
         void SetPlaybackSourceSpeed(double speed, IPlaybackSource playbackSource);
-        double GetPlaybackSourceSpeed(IPlaybackSource playbackSource);
+        double? GetPlaybackSourceSpeed(IPlaybackSource playbackSource);
         void SetOutputVolume(double volume);
         void SetPlaybackSourceOutputVolume(double volume, IPlaybackSource playbackSource);
         Task ChangePlayerServiceImplementation(IAudioSettings settings);
@@ -25,5 +25,11 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces
         int ConnectedPlaybackSourceCount { get; }
         PlaybackStatus GlobalPlaybackStatus { get; }
         IPlaybackSource PrimaryPlaybackSource { get; }
+
+        event EventHandler<TimeSpan> OnPositionChanged;
+        event EventHandler<IPlaybackSource> OnTrackReachesEnd;
+        event EventHandler<(IPlaybackSource source, PlaybackStatus status)> OnPlaybackSourceStatusChanged;
+        event EventHandler<PlaybackStatus> OnGlobalPlaybackStatusChanged;
+        event EventHandler<IPlaybackSource> OnPrimaryPlaybackSourceChanged;
     }
 }

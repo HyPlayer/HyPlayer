@@ -56,7 +56,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 var source = value as AudioGraphPlaybackSource;
                 if (ReferenceEquals(source, _primaryPlaybackSource)) return;
                 _primaryPlaybackSource = source;
-                OnPrimaryPlaybackSourceChanged?.Invoke(source);
+                OnPrimaryPlaybackSourceChanged?.Invoke(this, source);
             }
         }
 
@@ -79,20 +79,15 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         #endregion
 
         #region Events
-        public delegate void PositionChangeHandler(TimeSpan position);
-        public event PositionChangeHandler OnPositionChanged;
+        public event EventHandler<TimeSpan> OnPositionChanged;
 
-        public delegate void TrackReachesEndHandler(IPlaybackSource source);
-        public event TrackReachesEndHandler OnTrackReachesEnd;
+        public event EventHandler<IPlaybackSource> OnTrackReachesEnd;
 
-        public delegate void PlaybackSourceStatusChangeHandler(IPlaybackSource source, PlaybackStatus status);
-        public event PlaybackSourceStatusChangeHandler OnPlaybackSourceStatusChanged;
+        public event EventHandler<(IPlaybackSource source, PlaybackStatus status)> OnPlaybackSourceStatusChanged;
 
-        public delegate void GlobalPlaybackStatusChangeHandler(PlaybackStatus status);
-        public event GlobalPlaybackStatusChangeHandler OnGlobalPlaybackStatusChanged;
+        public event EventHandler<PlaybackStatus> OnGlobalPlaybackStatusChanged;
 
-        public delegate void PrimaryPlaybackSourceChangeHandler(IPlaybackSource source);
-        public event PrimaryPlaybackSourceChangeHandler OnPrimaryPlaybackSourceChanged;
+        public event EventHandler<IPlaybackSource> OnPrimaryPlaybackSourceChanged;
         #endregion
 
         #region Initialization and Cleanup
@@ -290,7 +285,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
             _defaultPlayer.Start();
             GlobalPlaybackStatus = PlaybackStatus.Playing;
-            OnGlobalPlaybackStatusChanged?.Invoke(PlaybackStatus.Playing);
+            OnGlobalPlaybackStatusChanged?.Invoke(this, PlaybackStatus.Playing);
             SMTCManager?.OnPlayAll();
         }
 
@@ -302,7 +297,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             _defaultPlayer.Stop();
             GlobalPlaybackStatus = PlaybackStatus.Paused;
             SMTCManager?.OnPauseAll();
-            OnGlobalPlaybackStatusChanged?.Invoke(PlaybackStatus.Paused);
+            OnGlobalPlaybackStatusChanged?.Invoke(this, PlaybackStatus.Paused);
         }
 
         public void PlayPlaybackSource(IPlaybackSource playbackSource)
@@ -314,7 +309,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (playbackSource is AudioGraphPlaybackSource source)
             {
                 source.PlaybackStatus = PlaybackStatus.Playing;
-                OnPlaybackSourceStatusChanged?.Invoke(playbackSource, PlaybackStatus.Playing);
+                OnPlaybackSourceStatusChanged?.Invoke(this, (playbackSource, PlaybackStatus.Paused));
             }
         }
 
@@ -327,7 +322,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (playbackSource is AudioGraphPlaybackSource source)
             {
                 source.PlaybackStatus = PlaybackStatus.Paused;
-                OnPlaybackSourceStatusChanged?.Invoke(playbackSource, PlaybackStatus.Paused);
+                OnPlaybackSourceStatusChanged?.Invoke(this, (playbackSource, PlaybackStatus.Paused));
             }
         }
 
@@ -374,11 +369,11 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             node.PlaybackSpeedFactor = speed;
         }
 
-        public double GetPlaybackSourceSpeed(IPlaybackSource playbackSource)
+        public double? GetPlaybackSourceSpeed(IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
-            var node = GetAudioInputNodeOrThrow(playbackSource);
-            return node.PlaybackSpeedFactor;
+            var node = TryGetAudioInputNode(playbackSource);
+            return node?.PlaybackSpeedFactor;
         }
         #endregion
 
@@ -516,7 +511,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (position == null || position == _lastPosition) return;
 
             _lastPosition = position.Value;
-            OnPositionChanged?.Invoke(position.Value);
+            OnPositionChanged?.Invoke(this, position.Value);
 
             // 更新系统媒体传输控制
             var positionProperties = new SystemMediaTransportControlsTimelineProperties
@@ -534,7 +529,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         {
             if (_audioInputNodesReverseDictionary.TryGetValue(sender, out var playbackSource))
             {
-                OnTrackReachesEnd?.Invoke(playbackSource);
+                OnTrackReachesEnd?.Invoke(this, playbackSource);
             }
         }
         #endregion
@@ -550,7 +545,16 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
             return node;
         }
+        private MediaSourceAudioInputNode TryGetAudioInputNode(IPlaybackSource playbackSource)
+        {
+            if (playbackSource is not AudioGraphPlaybackSource source)
+                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
 
+            if (!_audioInputNodes.TryGetValue(source, out var node))
+                return null;
+
+            return node;
+        }
         private void ThrowExceptionIfDisposed()
         {
             ObjectDisposedException.ThrowIf(_disposedValue, this);

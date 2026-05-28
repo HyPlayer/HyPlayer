@@ -2,11 +2,11 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Windows.Media;
 
 namespace HyPlayer.Services.Playback.PlaylistService;
 
@@ -23,7 +23,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     private readonly PlaybackStateService _state;
     private readonly IPlaybackControlService _control;
     private readonly IPlayer _player;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
     private readonly Setting _setting;
     private readonly ILocalFileImportService _localFileImport;
     private readonly IReadOnlyDictionary<SongListQueueScopeKind, IQueueSourceProvider> _providersByKind;
@@ -38,6 +38,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
     private int _nowPlayingIndex = -1;
     private CancellationTokenSource? _trackEndCts;
     private readonly SemaphoreSlim _trackEndLock = new(1, 1);
+    private SystemMediaTransportControls _smtc;
 
     /// <summary>
     /// 初始化 <see cref="PlaylistService"/>。
@@ -54,7 +55,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         PlaybackStateService state,
         IPlaybackControlService control,
         IPlayer player,
-        INotificationService notification,
+        ITeachingTipService teachingTipService,
         Setting setting,
         ILocalFileImportService localFileImport,
         IEnumerable<IQueueSourceProvider> queueSourceProviders,
@@ -63,11 +64,11 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         _strategies = strategies.ToDictionary(s => s.Id, StringComparer.Ordinal);
         _transitions = transitions.ToDictionary(t => t.Id, StringComparer.Ordinal);
         _state = state;
-        _control = control;
         _player = player;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
         _setting = setting;
         _localFileImport = localFileImport;
+        _control = control;
 
         var providerList = queueSourceProviders.ToList();
         _providersByKind = providerList.GroupBy(p => p.Kind).ToDictionary(g => g.Key, g => g.First());
@@ -90,6 +91,11 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         _state.ActiveStrategyId = _activeStrategy.Id;
         _setting.ActiveStrategyId = _activeStrategy.Id;
         _state.ActiveTransitionId = _activeTransition.Id;
+        _smtc = SystemMediaTransportControls.GetForCurrentView();
+        _smtc.IsNextEnabled = true;
+        _smtc.IsPreviousEnabled = true;
+        _smtc.ButtonPressed += SMTC_ButtonPressed;
+        _player.OnPositionChanged += OnPositionTick;
     }
 
     /// <inheritdoc />

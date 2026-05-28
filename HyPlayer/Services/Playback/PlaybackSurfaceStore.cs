@@ -33,9 +33,6 @@ public partial class PlaybackSurfaceStore : ObservableObject
     /// <summary>Convenience: true when the surface is in Expanded mode.</summary>
     public bool IsExpanded => SurfaceMode == PlaybackSurfaceMode.Expanded;
 
-    /// <summary>True when launch/activation requested expansion before a playback surface host was ready.</summary>
-    public bool HasPendingExpandedIntent { get; private set; }
-
     /// <summary>Projection of playback surface state relevant to the compact PlayBar.</summary>
     public PlayBarSurfaceProjection PlayBarProjection { get; } = new();
 
@@ -45,7 +42,6 @@ public partial class PlaybackSurfaceStore : ObservableObject
     partial void OnSurfaceModeChanged(PlaybackSurfaceMode value)
     {
         var expanded = value == PlaybackSurfaceMode.Expanded;
-        HasPendingExpandedIntent = false;
         OnPropertyChanged(nameof(IsExpanded));
 
         PlayBarProjection.IsExpanded = expanded;
@@ -58,16 +54,7 @@ public partial class PlaybackSurfaceStore : ObservableObject
     /// </summary>
     public void ResetToCompact()
     {
-        HasPendingExpandedIntent = false;
         SurfaceMode = PlaybackSurfaceMode.Compact;
-    }
-
-    /// <summary>
-    /// Remember that activation wants the expanded surface once a host and playable item are ready.
-    /// </summary>
-    public void RestoreExpandedIntent()
-    {
-        HasPendingExpandedIntent = true;
     }
 
     public void RequestTransition(ExpandedPlayerTransition transition)
@@ -100,7 +87,7 @@ public enum PlaybackSurfaceMode
 /// <summary>
 /// Projection of PlayBar-specific visibility booleans derived from <see cref="PlaybackSurfaceStore"/>.
 /// </summary>
-public sealed class PlayBarSurfaceProjection : ObservableObject
+public sealed partial class PlayBarSurfaceProjection : ObservableObject
 {
     private bool _isExpanded;
 

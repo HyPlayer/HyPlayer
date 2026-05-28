@@ -15,6 +15,7 @@ using HyPlayer.Services.History;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.System;
@@ -35,7 +36,7 @@ namespace HyPlayer.Features.Search;
 public sealed partial class Search : Page
 {
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
 
     public static readonly DependencyProperty HasNextPageProperty = DependencyProperty.Register(
         "HasNextPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
@@ -150,7 +151,7 @@ public sealed partial class Search : Page
         catch (Exception ex)
         {
             if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _teachingTipService.Items.Enqueue(new("搜索错误", ex.Message));
         }
     }
 
@@ -169,7 +170,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _notification.ShowMessage("搜索歌曲时出错", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("搜索歌曲时出错", json.Error.Message));
             return;
         }
 
@@ -221,7 +222,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _notification.ShowMessage("搜索专辑时出错", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("搜索专辑时出错", json.Error.Message));
             return;
         }
 
@@ -274,7 +275,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _notification.ShowMessage("搜索歌手时出错", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("搜索歌手时出错", json.Error.Message));
             return;
         }
 
@@ -327,7 +328,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _notification.ShowMessage("搜索歌单时出错", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("搜索歌单时出错", json.Error.Message));
             return;
         }
 
@@ -380,7 +381,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _notification.ShowMessage("搜索用户时出错", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("搜索用户时出错", json.Error.Message));
             return;
         }
 
@@ -430,7 +431,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _notification.ShowMessage("搜索电台时出错", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("搜索电台时出错", json.Error.Message));
             return;
         }
 
@@ -485,7 +486,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _notification.ShowMessage("搜索 MV 时出错", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("搜索 MV 时出错", json.Error.Message));
             return;
         }
 
@@ -534,7 +535,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _notification.ShowMessage("搜索 Mlog 时出错", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("搜索 Mlog 时出错", json.Error.Message));
             return;
         }
 
@@ -584,7 +585,7 @@ public sealed partial class Search : Page
             }, _cancellationToken);
         if (json.IsError)
         {
-            _notification.ShowMessage("搜索歌词时出错", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("搜索歌词时出错", json.Error.Message));
             return;
         }
 
@@ -679,7 +680,7 @@ public sealed partial class Search : Page
 
             if (json.IsError)
             {
-                _notification.ShowMessage("搜索建议时出错", json.Error.Message);
+                _teachingTipService.Items.Enqueue(new("搜索建议时出错", json.Error.Message));
                 return;
             }
 
@@ -687,7 +688,7 @@ public sealed partial class Search : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            _teachingTipService.Items.Enqueue(new(ex.Message, ex.InnerException?.Message));
         }
     }
 

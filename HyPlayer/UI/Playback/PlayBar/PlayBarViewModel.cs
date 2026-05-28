@@ -14,6 +14,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.UI.Xaml;
+using Windows.ApplicationModel.Core;
 
 namespace HyPlayer.UI.Playback.PlayBar;
 
@@ -24,7 +26,6 @@ public partial class PlayBarViewModel : ObservableObject
     private readonly PlaybackStateService _state;
     private readonly ILyricService _lyricService;
     private readonly Setting _setting;
-    private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IAuthService _authService;
     private readonly DataTransferManager _dataTransferManager;
@@ -37,7 +38,6 @@ public partial class PlayBarViewModel : ObservableObject
         PlaybackStateService state,
         ILyricService lyricService,
         Setting setting,
-        INotificationService notification,
         IBackgroundTaskRunner taskRunner,
         IAuthService authService)
     {
@@ -46,7 +46,6 @@ public partial class PlayBarViewModel : ObservableObject
         _state = state;
         _lyricService = lyricService;
         _setting = setting;
-        _notification = notification;
         _taskRunner = taskRunner;
         _authService = authService;
         _dataTransferManager = DataTransferManager.GetForCurrentView();
@@ -206,40 +205,33 @@ public partial class PlayBarViewModel : ObservableObject
 
     private void OnPlaybackStatePropertyChanged(string? propertyName)
     {
-        RunOnUIThread(() =>
+        switch (propertyName)
         {
-            switch (propertyName)
-            {
-                case nameof(PlaybackStateService.NowPlayingItem):
-                    SyncFromState();
-                    break;
-                case nameof(PlaybackStateService.IsPlaying):
-                    IsPlaying = _state.IsPlaying;
-                    break;
-                case nameof(PlaybackStateService.QualityTag):
-                    QualityTag = _state.QualityTag;
-                    break;
-                case nameof(PlaybackStateService.LyricInfo):
-                    LyricInfo = _state.LyricInfo;
-                    break;
-                case nameof(PlaybackStateService.Position):
-                    Position = _state.Position;
-                    Duration = _state.Duration;
-                    break;
-                case nameof(PlaybackStateService.LyricIndex):
-                    LyricIndex = _state.LyricIndex;
-                    break;
-            }
-        });
+            case nameof(PlaybackStateService.NowPlayingItem):
+                SyncFromState();
+                break;
+            case nameof(PlaybackStateService.IsPlaying):
+                RunOnUIThread(() => { IsPlaying = _state.IsPlaying; });
+                break;
+            case nameof(PlaybackStateService.QualityTag):
+                RunOnUIThread(() =>{ QualityTag = _state.QualityTag; });
+                break;
+            case nameof(PlaybackStateService.LyricInfo):
+                RunOnUIThread(() => { LyricInfo = _state.LyricInfo; ; });
+                break;
+            case nameof(PlaybackStateService.Position):
+                RunOnUIThread(() => { Position = _state.Position; });
+                break;
+            case nameof(PlaybackStateService.LyricIndex):
+                RunOnUIThread(() => { LyricIndex = _state.LyricIndex; });
+                break;
+        }
     }
 
     private void OnPlaylistChanged()
     {
-        RunOnUIThread(() =>
-        {
-            ActiveStrategyId = _state.ActiveStrategyId;
-            RefreshPlaylistItems();
-        });
+        ActiveStrategyId = _state.ActiveStrategyId;
+        RefreshPlaylistItems();
     }
 
     partial void OnNowPlayingItemChanged(HyPlayItem? value) => NotifyPlayBarProperties();
@@ -268,11 +260,6 @@ public partial class PlayBarViewModel : ObservableObject
         OnPropertyChanged(nameof(CanShareCurrentSong));
     }
 
-    private void RunOnUIThread(Action action)
-    {
-        _taskRunner.Forget(_notification.InvokeOnUIThread(action), $"{nameof(PlayBarViewModel)} UI update");
-    }
-
     private static string FormatTime(TimeSpan time)
     {
         if (time < TimeSpan.Zero) time = TimeSpan.Zero;
@@ -288,22 +275,25 @@ public partial class PlayBarViewModel : ObservableObject
     /// </summary>
     public void RefreshPlaylistItems()
     {
-        PlaylistItems.Clear();
-        var snapshot = _playlist.Items;
+        RunOnUIThread(() =>
+        {
+            PlaylistItems.Clear();
+            var snapshot = _playlist.Items;
 
-        if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
-        {
-            foreach (var idx in _playlist.ShuffleList)
+            if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
             {
-                if (idx >= 0 && idx < snapshot.Count)
-                    PlaylistItems.Add(snapshot[idx]);
+                foreach (var idx in _playlist.ShuffleList)
+                {
+                    if (idx >= 0 && idx < snapshot.Count)
+                        PlaylistItems.Add(snapshot[idx]);
+                }
             }
-        }
-        else
-        {
-            foreach (var item in snapshot)
-                PlaylistItems.Add(item);
-        }
+            else
+            {
+                foreach (var item in snapshot)
+                    PlaylistItems.Add(item);
+            }
+        });
     }
 
     /// <summary>
@@ -328,16 +318,19 @@ public partial class PlayBarViewModel : ObservableObject
 
     public void SyncFromState()
     {
-        NowPlayingItem = _state.NowPlayingItem;
-        IsPlaying = _state.IsPlaying;
-        Position = _state.Position;
-        Duration = _state.Duration;
-        Volume = _state.Volume;
-        ActiveStrategyId = _state.ActiveStrategyId;
-        LyricIndex = _state.LyricIndex;
-        LyricInfo = _state.LyricInfo;
-        IsInFm = _state.IsInFm;
-        QualityTag = _state.QualityTag;
+        RunOnUIThread(() =>
+        {
+            NowPlayingItem = _state.NowPlayingItem;
+            IsPlaying = _state.IsPlaying;
+            Position = _state.Position;
+            Duration = _state.Duration;
+            Volume = _state.Volume;
+            ActiveStrategyId = _state.ActiveStrategyId;
+            LyricIndex = _state.LyricIndex;
+            LyricInfo = _state.LyricInfo;
+            IsInFm = _state.IsInFm;
+            QualityTag = _state.QualityTag;
+        });
     }
 
     /// <summary>
@@ -346,5 +339,9 @@ public partial class PlayBarViewModel : ObservableObject
     public void NotifyAppendDone()
     {
         _playlist.NotifyAppendDone();
+    }
+    private void RunOnUIThread(Action action)
+    {
+        _taskRunner.Forget(CoreApplication.MainView.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { action(); }), "PlayBar ViewModel Update");
     }
 }

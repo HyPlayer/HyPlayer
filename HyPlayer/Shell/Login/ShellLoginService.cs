@@ -21,7 +21,7 @@ namespace HyPlayer.Shell.Login;
 public sealed class ShellLoginService
 {
     private readonly IAuthService _auth;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
     private readonly INavigationService _navigation;
     private readonly IAppNavigator _navigator;
     private readonly NavigationShellViewModel _navigationShell;
@@ -34,14 +34,14 @@ public sealed class ShellLoginService
 
     public ShellLoginService(
         IAuthService auth,
-        INotificationService notification,
+        ITeachingTipService teachingTipService,
         INavigationService navigation,
         IAppNavigator navigator,
         NavigationShellViewModel navigationShell,
         Setting setting)
     {
         _auth = auth;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
         _navigation = navigation;
         _navigator = navigator;
         _navigationShell = navigationShell;
@@ -60,7 +60,7 @@ public sealed class ShellLoginService
         if (!result.IsSuccess)
         {
             if (!string.IsNullOrEmpty(result.ErrorMessage))
-                _notification.ShowMessage("自动登录失败", result.ErrorMessage);
+                _teachingTipService.Items.Enqueue(new ("自动登录失败", result.ErrorMessage));
             _navigation.Navigate(typeof(Welcome));
             return;
         }
@@ -72,7 +72,7 @@ public sealed class ShellLoginService
     {
         var result = await _auth.LogoutAsync();
         if (!result.IsSuccess && !string.IsNullOrEmpty(result.ErrorMessage))
-            _notification.ShowMessage("清除登录缓存失败", result.ErrorMessage);
+            _teachingTipService.Items.Enqueue(new ("清除登录缓存失败", result.ErrorMessage));
 
         _navigationShell.UpdateAfterLogout();
         _navigation.Navigate(typeof(Welcome));
@@ -230,11 +230,11 @@ public sealed class ShellLoginService
         var result = await _auth.RegisterCurrentDeviceAsync();
         if (!result.IsSuccess)
         {
-            _notification.ShowMessage("设备ID注册失败, 请尝试其他方案", "获取失败: " + result.ErrorMessage);
+            _teachingTipService.Items.Enqueue(new ("设备ID注册失败, 请尝试其他方案", "获取失败: " + result.ErrorMessage));
             return;
         }
 
-        _notification.ShowMessage("设备ID注册成功", "临时用户 ID: " + result.TemporaryUserId);
+        _teachingTipService.Items.Enqueue(new("设备ID注册成功", "临时用户 ID: " + result.TemporaryUserId));
         dialog.Hide();
         await ShowLoginDialogAsync();
     }
@@ -244,7 +244,7 @@ public sealed class ShellLoginService
         var result = await _auth.CompleteLoginAsync(true);
         if (!result.IsSuccess)
         {
-            _notification.ShowMessage("登录失败", result.ErrorMessage);
+            _teachingTipService.Items.Enqueue(new("登录失败", result.ErrorMessage));
             return;
         }
 

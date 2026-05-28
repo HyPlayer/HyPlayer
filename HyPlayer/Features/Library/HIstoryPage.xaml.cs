@@ -29,7 +29,7 @@ namespace HyPlayer.Features.Library;
 public sealed partial class HistoryPage : Page
 {
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
     private readonly ObservableCollection<NCSong> Songs = new();
@@ -128,7 +128,7 @@ public sealed partial class HistoryPage : Page
             var result = await requestRank(_cancellationToken);
             if (result.IsError)
             {
-                _notification.ShowMessage("获取播放记录失败", result.ErrorMessage);
+                _teachingTipService.Items.Enqueue(new("获取播放记录失败", result.ErrorMessage));
                 return;
             }
             var rankData = result.Records ?? [];
@@ -142,7 +142,7 @@ public sealed partial class HistoryPage : Page
         }
         catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
         {
-            _notification.ShowMessage("获取播放记录失败", ex.Message);
+            _teachingTipService.Items.Enqueue(new("获取播放记录失败", ex.Message));
         }
     }
 }

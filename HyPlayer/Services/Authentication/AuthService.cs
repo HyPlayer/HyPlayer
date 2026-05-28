@@ -30,7 +30,7 @@ public class AuthService : IAuthService
 
     private readonly PlaybackStateService _state;
     private readonly NeteaseCloudMusicApiHandler _api;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier;
     private readonly SemaphoreSlim _likeSongGate = new(1, 1);
@@ -38,13 +38,13 @@ public class AuthService : IAuthService
     public AuthService(
         PlaybackStateService state,
         NeteaseCloudMusicApiHandler api,
-        INotificationService notification,
+        ITeachingTipService teachingTipService,
         IBackgroundTaskRunner taskRunner,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
         _state = state;
         _api = api;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
         _taskRunner = taskRunner;
         _playlistCollectionChangeNotifier = playlistCollectionChangeNotifier;
     }
@@ -188,7 +188,7 @@ public class AuthService : IAuthService
             var statusResult = await _api.RequestAsync(NeteaseApis.LoginStatusApi);
             if (statusResult.IsError)
             {
-                _notification.ShowMessage("登录失败", statusResult.Error?.Message);
+                _teachingTipService.Items.Enqueue(new("登录失败", statusResult.Error?.Message));
                 return null;
             }
             return statusResult.Value;
@@ -290,7 +290,7 @@ public class AuthService : IAuthService
                         else throw new Exception("红心操作失败");
                         break;
                     case HyPlayItemType.Radio:
-                        _notification.ShowMessage("暂不支持红心电台歌曲", "将在后续版本中支持");
+                        _teachingTipService.Items.Enqueue(new("暂不支持红心电台歌曲", "将在后续版本中支持"));
                         SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
                         break;
                 }
@@ -298,7 +298,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("红心操作失败", ex.Message);
+            _teachingTipService.Items.Enqueue(new("红心操作失败", ex.Message));
         }
     }
 
@@ -310,7 +310,7 @@ public class AuthService : IAuthService
                 new LikelistRequest { Uid = CurrentUser!.Id });
             if (js.IsError)
             {
-                _notification.ShowMessage("获取喜欢列表失败", js.Error?.Message);
+                _teachingTipService.Items.Enqueue(new("获取喜欢列表失败", js.Error?.Message));
                 return null;
             }
             return js.Value;

@@ -19,12 +19,12 @@ namespace HyPlayer.Services.Playback.QueueProviders;
 internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
 {
     private readonly NeteaseCloudMusicApiHandler _api;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
 
-    public RadioQueueSourceProvider(NeteaseCloudMusicApiHandler api, INotificationService notification)
+    public RadioQueueSourceProvider(NeteaseCloudMusicApiHandler api, ITeachingTipService teachingTipService)
     {
         _api = api;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
     }
 
     public SongListQueueScopeKind Kind => SongListQueueScopeKind.Radio;
@@ -54,7 +54,7 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
                     });
                 if (json.IsError)
                 {
-                    _notification.ShowMessage("获取电台节目失败", json.Error.Message);
+                    _teachingTipService.Items.Enqueue(new("获取电台节目失败", json.Error.Message));
                     return NeteaseQueueSourceLoadResult.Failed;
                 }
 
@@ -69,7 +69,7 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("AppendRadioList时发生错误", ex.Message);
+            _teachingTipService.Items.Enqueue(new("AppendRadioList时发生错误", ex.Message));
         }
 
         return NeteaseQueueSourceLoadResult.Failed;

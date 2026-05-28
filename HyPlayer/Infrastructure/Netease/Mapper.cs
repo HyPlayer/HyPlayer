@@ -1,4 +1,3 @@
-using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
@@ -82,20 +81,6 @@ public static class Mapper
             Id = mlog.Id,
             Title = mlog.Title,
             Duration = (int)mlog.Duration,
-        };
-    }
-
-    public static Comment MapToComment(this CommentDto comment)
-    {
-        return new Comment
-        {
-            CommentId = comment.CommentId,
-            Content = comment.Content,
-            HasLiked = comment.Liked,
-            LikedCount = comment.LikedCount,
-            ReplyCount = comment.ReplyCount,
-            SendTime = DateConverter.GetDateTimeFromTimeStamp(comment.Time),
-            CommentUser = comment.User.MapToNcUser(),
         };
     }
 

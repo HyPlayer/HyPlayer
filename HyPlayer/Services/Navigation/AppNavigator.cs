@@ -37,7 +37,7 @@ public sealed class AppNavigator : IAppNavigator
     private readonly INavigationService _navigation;
     private readonly IPlaylistService _playlist;
     private readonly IAuthService _auth;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
     private NavigationView? _navigationView;
     private NavigationShellViewModel? _shellViewModel;
     private Frame? _rootFrame;
@@ -48,12 +48,12 @@ public sealed class AppNavigator : IAppNavigator
     public AppNavigator(INavigationService navigation,
                         IPlaylistService playlist,
                         IAuthService auth,
-                        INotificationService notification)
+                        ITeachingTipService teachingTipService)
     {
         _navigation = navigation;
         _playlist = playlist;
         _auth = auth;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
     }
 
     public void AttachNavigationView(NavigationView navigationView,
@@ -457,7 +457,7 @@ public sealed class AppNavigator : IAppNavigator
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("导航失败", ex.Message);
+            _teachingTipService.Items.Enqueue(new("导航失败", ex.Message));
         }
     }
 

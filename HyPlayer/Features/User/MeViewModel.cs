@@ -26,12 +26,12 @@ namespace HyPlayer.Features.User
 
         private NeteaseCloudMusicApiHandler _neteaseApi;
         private Setting _settings;
-        private readonly INotificationService _notification;
-        public MeViewModel(NeteaseCloudMusicApiHandler api, Setting settings, INotificationService notification)
+        private readonly ITeachingTipService _teachingTipService;
+        public MeViewModel(NeteaseCloudMusicApiHandler api, Setting settings, ITeachingTipService teachingTipService)
         {
             _neteaseApi = api;
             _settings = settings;
-            _notification = notification;
+            _teachingTipService = teachingTipService;
         }
         public async Task InitializeUserInfo(string uid)
         {
@@ -44,7 +44,7 @@ namespace HyPlayer.Features.User
                     });
                 if (json.IsError)
                 {
-                    _notification.ShowMessage("用户信息获取失败", json.Error?.Message);
+                    _teachingTipService.Items.Enqueue(new("用户信息获取失败", json.Error?.Message));
                     return null;
                 }
 
@@ -68,7 +68,7 @@ namespace HyPlayer.Features.User
                         });
                     if (json.IsError)
                     {
-                        _notification.ShowMessage("用户歌单获取失败", json.Error?.Message);
+                        _teachingTipService.Items.Enqueue(new("用户歌单获取失败", json.Error?.Message));
                         return null;
                     }
 
@@ -121,7 +121,7 @@ namespace HyPlayer.Features.User
             }
             catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
             {
-                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _teachingTipService.Items.Enqueue(new(ex.Message, ex.InnerException?.Message));
             }
         }
     }

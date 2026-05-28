@@ -1,7 +1,6 @@
 ﻿#region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseApi;
@@ -29,7 +28,7 @@ namespace HyPlayer.Features.Video;
 public sealed partial class MVPage : Page
 {
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+        private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
 
     private readonly List<NCMlog> sources = new();
     private string MVId;
@@ -68,7 +67,6 @@ public sealed partial class MVPage : Page
         Ioc.Default.GetRequiredService<IPlaybackControlService>().Pause();
         _videoLoaderTask = LoadVideo();
         _videoInfoLoaderTask = LoadVideoInfo();
-        LoadComment();
     }
 
     private async Task LoadRelateive()
@@ -83,7 +81,7 @@ public sealed partial class MVPage : Page
                 });
         if (json.IsError)
         {
-            _notification.ShowMessage("加载相关视频时出错", json.Error.Message);
+            _teachingTipService.Items.Enqueue(new("加载相关视频时出错", json.Error.Message));
             return;
         }
 
@@ -93,14 +91,6 @@ public sealed partial class MVPage : Page
         RelativeList.ItemsSource = sources;
 
         RelativeList.SelectedIndex = 0;
-    }
-
-    private void LoadComment()
-    {
-        if (Regex.IsMatch(MVId, "^[0-9]*$"))
-            CommentFrame.Navigate(typeof(Comments.Comments), CommentTarget.MV(MVId));
-        else
-            CommentFrame.Navigate(typeof(Comments.Comments), CommentTarget.MLog(MVId));
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -154,7 +144,7 @@ public sealed partial class MVPage : Page
         _cancellationToken.ThrowIfCancellationRequested();
         LoadingControl.IsLoading = true;
         string url;
-        if (Regex.IsMatch(MVId, "^[0-9]*$"))
+        if (VideoRegex().IsMatch(MVId))
         {
             var json = await _api.RequestAsync(NeteaseApis.VideoUrlApi,
                 new VideoUrlRequest()
@@ -164,7 +154,7 @@ public sealed partial class MVPage : Page
                 }, _cancellationToken);
             if (json.IsError)
             {
-                _notification.ShowMessage("加载视频时出错", json.Error.Message);
+                _teachingTipService.Items.Enqueue(new("加载视频时出错", json.Error.Message));
                 return;
             }
 
@@ -180,7 +170,7 @@ public sealed partial class MVPage : Page
                 }, _cancellationToken);
             if (json.IsError)
             {
-                _notification.ShowMessage("加载视频时出错", json.Error.Message);
+                _teachingTipService.Items.Enqueue(new("加载视频时出错", json.Error.Message));
                 return;
             }
 
@@ -205,7 +195,7 @@ public sealed partial class MVPage : Page
                    }, _cancellationToken);
             if (json.IsError)
             {
-                _notification.ShowMessage("加载视频信息时出错", json.Error.Message);
+                _teachingTipService.Items.Enqueue(new("加载视频信息时出错", json.Error.Message));
                 return;
             }
 
@@ -230,7 +220,7 @@ public sealed partial class MVPage : Page
                     }, _cancellationToken);
             if (json.IsError)
             {
-                _notification.ShowMessage("加载视频信息时出错", json.Error.Message);
+                _teachingTipService.Items.Enqueue(new("加载视频信息时出错", json.Error.Message));
                 return;
             }
 
@@ -257,4 +247,6 @@ public sealed partial class MVPage : Page
 
     [GeneratedRegex("^[0-9]*$")]
     private static partial Regex MvIdRegex();
+    [GeneratedRegex("^[0-9]*$")]
+    private static partial Regex VideoRegex();
 }

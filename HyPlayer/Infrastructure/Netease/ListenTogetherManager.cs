@@ -73,7 +73,7 @@ internal sealed class ListenTogetherManager
             new ListenTogetherRoomCreateRequest());
         if (res.IsError)
         {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建一起听房间失败", res.Error?.Message);
+            Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("创建一起听房间失败", res.Error?.Message));
             _instance = null;
             return;
         }
@@ -81,7 +81,7 @@ internal sealed class ListenTogetherManager
         var roomId = res.Value?.Data?.RoomInfo?.RoomId;
         if (roomId == null)
         {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建一起听房间失败", "房间ID为空");
+            Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("创建一起听房间失败", "房间ID为空"));
             _instance = null;
             return;
         }
@@ -133,7 +133,7 @@ internal sealed class ListenTogetherManager
         var res = await api.RequestAsync(NeteaseApis.ListenTogetherRoomCheckApi,
             new ListenTogetherRoomCheckRequest { RoomId = roomId });
         if (!res.IsError) return res.Value?.Data?.Joinable is true;
-        Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取一起听房间信息失败", res.Error?.Message);
+        Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("获取一起听房间信息失败", res.Error?.Message));
         return false;
     }
 
@@ -316,7 +316,7 @@ internal sealed class ListenTogetherManager
 
             if (res.IsError)
             {
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取一起听房间信息失败", res.Error?.Message);
+                Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("获取一起听房间信息失败", res.Error?.Message));
                 return;
             }
 
@@ -341,7 +341,7 @@ internal sealed class ListenTogetherManager
                 {
                     if (roomInfo.RoomId != CurrentRoomInfo.RoomId)
                     {
-                        Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("一起听状态异常", "房间信息不匹配");
+                        Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("一起听状态异常", "房间信息不匹配"));
                         return;
                     }
 
@@ -359,7 +359,7 @@ internal sealed class ListenTogetherManager
             }
             else
             {
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取一起听房间信息失败", "房间信息为空");
+                Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("获取一起听房间信息失败", "房间信息为空"));
             }
         }
         catch (Exception e)

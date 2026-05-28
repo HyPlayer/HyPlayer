@@ -22,7 +22,7 @@ internal class Api
     public static async Task<bool> LikeSong(string songid, bool like)
     {
         var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-        var notification = Ioc.Default.GetRequiredService<INotificationService>();
+        var teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
         var requestResult = await api.RequestAsync(NeteaseApis.LikeApi,
             new LikeRequest() { TrackId = songid, Like = like, UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser.Id });
         if (requestResult.IsSuccess)
@@ -31,7 +31,7 @@ internal class Api
         }
         else
         {
-            notification.ShowMessage(requestResult.Error.Message);
+            teachingTipService.Items.Enqueue(new("红心歌曲时发生错误", requestResult.Error.Message));
             return false;
         }
     }
@@ -39,7 +39,7 @@ internal class Api
     public static async Task EnterIntelligencePlay(CancellationToken cancellationToken = default)
     {
         var api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-        var notification = Ioc.Default.GetRequiredService<INotificationService>();
+        var teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
         var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
         var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         playlist.Clear();
@@ -57,7 +57,7 @@ internal class Api
 
         if (jsoon.IsError)
         {
-            notification.ShowMessage("加载心动模式列表出错", jsoon.Error.Message);
+            teachingTipService.Items.Enqueue(new("加载心动模式列表出错", jsoon.Error.Message));
             return;
         }
 

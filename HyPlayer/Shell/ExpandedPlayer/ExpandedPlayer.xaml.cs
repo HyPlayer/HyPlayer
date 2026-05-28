@@ -75,7 +75,7 @@ public sealed partial class ExpandedPlayer : Page
         new PropertyMetadata("x1"));
 
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
@@ -96,7 +96,6 @@ public sealed partial class ExpandedPlayer : Page
     private IPlaylistService _playlist => ViewModel.Playlist;
     private IPlaybackControlService _control => ViewModel.Control;
     private PlaybackStateService _state => ViewModel.State;
-    private ILyricService _lyricService => ViewModel.LyricService;
 
     public bool jumpedLyrics;
     public double lastChangedLyricWidth;
@@ -229,7 +228,7 @@ public sealed partial class ExpandedPlayer : Page
 
         // ── Stage 8: Share/save controller ────────────────────────────
         _shareSave = new ExpandedPlayerShareSaveController(
-            _state, _httpClient, _playlist, _notification,
+            _state, _httpClient, _playlist, _teachingTipService,
             () => TextBlockSongTitle.Text);
     }
 
@@ -329,7 +328,7 @@ public sealed partial class ExpandedPlayer : Page
     }
     private void HyPlayList_OnPlay()
     {
-        _ = _notification.InvokeOnUIThread(() =>
+        RunOnUIThread(() =>
         {
             if (_settings.albumRotate)
                 //网易云音乐圆形唱片
@@ -347,7 +346,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void HyPlayList_OnPause()
     {
-        _ = _notification.InvokeOnUIThread(() =>
+        RunOnUIThread(() =>
         {
             if (_settings.albumRotate)
                 RotateAnimationSet.Stop();
@@ -496,11 +495,6 @@ public sealed partial class ExpandedPlayer : Page
         BgScale.CenterY = e.NewSize.Height / 2;
     }
 
-    private void RunOnUIThread(Action action)
-    {
-        _taskRunner.Forget(_notification.InvokeOnUIThread(action), "ExpandedPlayer UI update");
-    }
-
     private readonly Storyboard luminousColorsRotateStoryBoard = new();
     private DoubleAnimation luminousColorsRotateAnimation = new();
 
@@ -509,29 +503,26 @@ public sealed partial class ExpandedPlayer : Page
 
     public void LoadLyricsBox()
     {
-        _ = _notification.InvokeOnUIThread(() =>
+        if (_lyricIsCleaning) return;
+        if (_state.LyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
         {
-            if (_lyricIsCleaning) return;
-            if (_state.LyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
-            {
-                _lyricBox.SetLyricLines(LrcConverter.Convert(Utils.ConvertToALRC(_state.LyricInfo.Lyrics, _player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0), _state.LyricInfo.LyricMetadata, _state.LyricInfo.SongMetadata));
-            }
-            else
-            {
-                _lyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.ALRC, alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata));
-            }
-            _lyricBox.ChangeAlignment(_settings.lyricAlignment switch
-            {
-                LyricAlignment.Center => TextAlignment.Center,
-                LyricAlignment.Right => TextAlignment.Right,
-                _ => TextAlignment.Left
-            });
-            _lyricBox.ReflowTime(0);
-            if (_state.NowPlayingItem == null) return;
-            RefreshUIColor();
-            Redesign();
-            _lyricHasBeenLoaded = true;
+            _lyricBox.SetLyricLines(LrcConverter.Convert(Utils.ConvertToALRC(_state.LyricInfo.Lyrics, _player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0), _state.LyricInfo.LyricMetadata, _state.LyricInfo.SongMetadata));
+        }
+        else
+        {
+            _lyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.ALRC, alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata));
+        }
+        _lyricBox.ChangeAlignment(_settings.lyricAlignment switch
+        {
+            LyricAlignment.Center => TextAlignment.Center,
+            LyricAlignment.Right => TextAlignment.Right,
+            _ => TextAlignment.Left
         });
+        _lyricBox.ReflowTime(0);
+        if (_state.NowPlayingItem == null) return;
+        RefreshLyricrColor();
+        _needsRedesign = true;
+        _lyricHasBeenLoaded = true;
     }
 
     internal void OnEnteringForeground()
@@ -545,44 +536,41 @@ public sealed partial class ExpandedPlayer : Page
     {
         var lyricIsReady = _lastSong == _state.NowPlayingItem;
         _lyricHasBeenLoaded = lyricIsReady;
-        _ = _notification.InvokeOnUIThread(() =>
+        var artistText = mpi?.ArtistString;
+        ViewModel.Artist = artistText;
+        ViewModel.SongName = mpi?.Name;
+        ViewModel.Album = mpi?.AlbumString;
+        if (mpi?.PlayItem == null)
         {
-            var artistText = mpi?.ArtistString;
-            ViewModel.Artist = artistText;
-            ViewModel.SongName = mpi?.Name;
-            ViewModel.Album = mpi?.AlbumString;
-            if (mpi?.PlayItem == null)
-            {
-                _lyricList.Clear();
-            }
+            _lyricList.Clear();
+        }
 
-            if (mpi?.PlayItem == null) return;
+        if (mpi?.PlayItem == null) return;
 
-            if (!lyricIsReady)
+        if (!lyricIsReady)
+        {
+            if (!_lyricHasBeenLoaded)
             {
-                if (!_lyricHasBeenLoaded)
+                //歌词加载中提示
+                _lyricIsCleaning = true;
+                lock (_lyricList)
                 {
-                    //歌词加载中提示
-                    _lyricIsCleaning = true;
-                    lock (_lyricList)
-                    {
-                        _lyricList.Clear();
-                        _lyricList.Add(SongLyric.LoadingLyric);
-                    }
-                    _lyricIsCleaning = false;
-                    if (_lyricHasBeenLoaded)
-                    {
-                        LoadLyricsBox();
-                    }
+                    _lyricList.Clear();
+                    _lyricList.Add(SongLyric.LoadingLyric);
+                }
+                _lyricIsCleaning = false;
+                if (_lyricHasBeenLoaded)
+                {
+                    LoadLyricsBox();
                 }
             }
+        }
 
-            _needsRedesign = true;
-            NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
-        });
+        _needsRedesign = true;
+        NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
     }
 
-    public void RefreshUIColor()
+    public void RefreshLyricrColor()
     {
         _lyricBox.ChangeRenderColor(_playbackTheme.IdleBrush.Color, _playbackTheme.AccentBrush.Color);
     }
@@ -591,8 +579,8 @@ public sealed partial class ExpandedPlayer : Page
     {
         _playbackTheme = theme;
         _canvasState.IsBrightTheme = theme.IsBright;
-        Bindings.Update();
         _surfaceStore.Theme = theme;
+        Bindings.Update();
     }
 
     public void StartExpandAnimation()
@@ -902,7 +890,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (_state.NowPlayingItem == null) return;
         var playbackSource = _state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource;
-        var currentSpeed = _player.GetPlaybackSourceSpeed(playbackSource);
+        var currentSpeed = _player.GetPlaybackSourceSpeed(playbackSource).Value;
         var newSpeed = Math.Max(0.5, currentSpeed - 0.1);
         _player.SetPlaybackSourceSpeed(newSpeed, playbackSource);
         NowPlaybackSpeed = "x" + newSpeed;
@@ -912,7 +900,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (_state.NowPlayingItem == null) return;
         var playbackSource = _state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource;
-        var currentSpeed = _player.GetPlaybackSourceSpeed(playbackSource);
+        var currentSpeed = _player.GetPlaybackSourceSpeed(playbackSource).Value;
         var newSpeed = Math.Min(2.0, currentSpeed + 0.1);
         _player.SetPlaybackSourceSpeed(newSpeed, playbackSource);
         NowPlaybackSpeed = "x" + newSpeed;
@@ -1146,7 +1134,7 @@ public sealed partial class ExpandedPlayer : Page
         if (_state.CoverStream == null || _lifecycle.IsInBackground) return;
         using var stream = _state.CoverStream.CloneStream();
         var isBright = await IsBrightAsync(stream);
-        _ = _notification.InvokeOnUIThread(async () =>
+        RunOnUIThread(async () =>
         {
             if (!_settings.noImage)
             {
@@ -1176,7 +1164,7 @@ public sealed partial class ExpandedPlayer : Page
                     ApplyPlaybackTheme(ExpandedPlayerThemeFactory.Create(_settings, albumMainColor, isBright));
 
                     //LoadLyricsBox();
-                    RefreshUIColor();
+                    RefreshLyricrColor();
                     if (_settings.expandedPlayerBackgroundType == BackgroundType.Animated)
                     {
                         BgRect00.Fill = new SolidColorBrush(_albumColors[0]);
@@ -1197,6 +1185,7 @@ public sealed partial class ExpandedPlayer : Page
                 }
                 catch
                 {
+                    //Ignore
                 }
             }
         });
@@ -1209,7 +1198,7 @@ public sealed partial class ExpandedPlayer : Page
         LuminousBackground = null;
         _backgroundShaderLayer.DisposeShader();
     }
-    public Task Show()
+    public void Show()
     {
         MainGrid.Margin = new Thickness(0, 0, 0, 80);
 
@@ -1224,27 +1213,24 @@ public sealed partial class ExpandedPlayer : Page
         Storyboard.SetTargetProperty(BtnAni, "Opacity");
         storyboard.Children.Add(BtnAni);
         storyboard.Begin();
-        return Task.CompletedTask;
+
     }
 
     public void Collapse()
     {
-        _ = _notification.InvokeOnUIThread(() =>
-        {
-            MainGrid.Margin = new Thickness(0);
+        MainGrid.Margin = new Thickness(0);
 
-            var BtnAni = new DoubleAnimation
-            {
-                To = 0,
-                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                EnableDependentAnimation = true
-            };
-            var storyboard = new Storyboard();
-            Storyboard.SetTarget(BtnAni, MoreBtn);
-            Storyboard.SetTargetProperty(BtnAni, "Opacity");
-            storyboard.Children.Add(BtnAni);
-            storyboard.Begin();
-        });
+        var BtnAni = new DoubleAnimation
+        {
+            To = 0,
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
+        var storyboard = new Storyboard();
+        Storyboard.SetTarget(BtnAni, MoreBtn);
+        Storyboard.SetTargetProperty(BtnAni, "Opacity");
+        storyboard.Children.Add(BtnAni);
+        storyboard.Begin();
     }
 
     internal void OnPlaybarVisibilityChanged(bool isActivated)
@@ -1252,11 +1238,11 @@ public sealed partial class ExpandedPlayer : Page
         if (!_settings.AutoHidePlaybar) return;
         if (isActivated)
         {
-            Show();
+            RunOnUIThread(Show);
         }
         else
         {
-            Collapse();
+            RunOnUIThread(Collapse);
         }
     }
     public static double Map(double value, double fromSource, double toSource, double fromTarget, double toTarget)
@@ -1373,5 +1359,9 @@ public sealed partial class ExpandedPlayer : Page
             expandedPlayerWindow.Closed -= ExpandedPlayerClosed;
             expandedPlayerWindow = null;
         }
+    }
+    private void RunOnUIThread(Action action)
+    {
+        _taskRunner.Forget(Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { action(); }), "ExpandedPlayer UI Update");
     }
 }

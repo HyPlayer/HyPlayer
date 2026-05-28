@@ -9,6 +9,7 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using System;
 using System.IO;
 using System.Linq;
@@ -33,19 +34,23 @@ public sealed class LyricService : ILyricService
     private readonly Setting _setting;
     private readonly HttpClient _httpClient;
     private readonly IBackgroundTaskRunner _taskRunner;
+    private IPlayer _player;
 
     public LyricService(
         NeteaseCloudMusicApiHandler api,
         PlaybackStateService state,
         Setting setting,
         HttpClient httpClient,
-        IBackgroundTaskRunner taskRunner)
+        IBackgroundTaskRunner taskRunner,
+        IPlayer player)
     {
         _api = api;
         _state = state;
         _setting = setting;
         _httpClient = httpClient;
         _taskRunner = taskRunner;
+        _player = player;
+        
     }
 
     /// <inheritdoc />

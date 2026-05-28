@@ -18,12 +18,12 @@ namespace HyPlayer.Services.Playback.QueueProviders;
 internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
 {
     private readonly NeteaseCloudMusicApiHandler _api;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
 
-    public SingleSongQueueSourceProvider(NeteaseCloudMusicApiHandler api, INotificationService notification)
+    public SingleSongQueueSourceProvider(NeteaseCloudMusicApiHandler api, ITeachingTipService teachingTipService)
     {
         _api = api;
-        _notification = notification;
+        _teachingTipService = teachingTipService;
     }
 
     public SongListQueueScopeKind Kind => SongListQueueScopeKind.SingleSong;
@@ -42,13 +42,13 @@ internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
                         new SongDetailRequest { Id = id });
                     if (result.IsError)
                     {
-                        _notification.ShowMessage("获取歌曲信息失败", result.Error?.Message);
+                        _teachingTipService.Items.Enqueue(new("获取歌曲信息失败", result.Error?.Message));
                         return null;
                     }
 
                     if (result.Value?.Songs is not { Length: > 0 })
                     {
-                        _notification.ShowMessage("获取歌曲信息失败", "歌曲信息为空");
+                        _teachingTipService.Items.Enqueue(new("获取歌曲信息失败", "歌曲信息为空"));
                         return null;
                     }
 
@@ -61,7 +61,7 @@ internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("获取歌曲信息失败", ex.Message);
+            _teachingTipService.Items.Enqueue(new("获取歌曲信息失败", ex.Message));
         }
 
         return NeteaseQueueSourceLoadResult.Failed;

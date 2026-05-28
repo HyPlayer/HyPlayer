@@ -29,12 +29,9 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
     private readonly ILyricService _lyricService;
-    private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
     private readonly IPlaybackNotificationService _playbackNotification;
     private readonly IBackgroundTaskRunner _taskRunner;
-    private readonly IServiceProvider _serviceProvider;
-    private bool _resolvingPlaylistService;
-    private IPlaylistService? _playlistService;
     private SystemMediaTransportControls? _smtc;
 
     private readonly SemaphoreSlim _seekerLock = new(1, 1);
@@ -56,20 +53,18 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         PlaybackStateService state,
         Setting setting,
         ILyricService lyricService,
-        INotificationService notification,
+        ITeachingTipService teachingTipService,
         IPlaybackNotificationService playbackNotification,
-        IBackgroundTaskRunner taskRunner,
-        IServiceProvider serviceProvider)
+        IBackgroundTaskRunner taskRunner)
     {
         _player = player ?? throw new ArgumentNullException(nameof(player));
         _mediaSourceService = mediaSourceService ?? throw new ArgumentNullException(nameof(mediaSourceService));
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _setting = setting ?? throw new ArgumentNullException(nameof(setting));
         _lyricService = lyricService ?? throw new ArgumentNullException(nameof(lyricService));
-        _notification = notification ?? throw new ArgumentNullException(nameof(notification));
+        _teachingTipService = teachingTipService ?? throw new ArgumentNullException(nameof(teachingTipService));
         _playbackNotification = playbackNotification ?? throw new ArgumentNullException(nameof(playbackNotification));
         _taskRunner = taskRunner ?? throw new ArgumentNullException(nameof(taskRunner));
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     }
 
     #region IPlaybackControlService
@@ -113,14 +108,14 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         // SMTC 需要在 UI 线程获取，由调用方保证
         if (_player is AudioGraphPlayer graphPlayer)
         {
-            var smtc = Windows.Media.SystemMediaTransportControls.GetForCurrentView();
+            var smtc = SystemMediaTransportControls.GetForCurrentView();
             smtc.IsPlayEnabled = true;
             smtc.IsPauseEnabled = true;
             smtc.IsNextEnabled = true;
             smtc.IsPreviousEnabled = true;
             smtc.IsEnabled = true;
-            smtc.DisplayUpdater.Type = Windows.Media.MediaPlaybackType.Music;
-            smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Closed;
+            smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
+            smtc.PlaybackStatus = MediaPlaybackStatus.Closed;
             graphPlayer.SMTCManager = new UWP.Chopin.SMTCManager(smtc);
             _smtc = smtc;
 
@@ -151,14 +146,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
             case SystemMediaTransportControlsButton.Pause:
                 Pause();
-                break;
-
-            case SystemMediaTransportControlsButton.Next:
-                _playlistService.MoveNextAsync();
-                break;
-
-            case SystemMediaTransportControlsButton.Previous:
-                _playlistService.MovePreviousAsync();
                 break;
         }
     }
@@ -268,29 +255,25 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     /// <summary>
     /// 播放位置更新回调
     /// </summary>
-    private void OnPositionChanged(TimeSpan position)
+    private void OnPositionChanged(object sender, TimeSpan position)
     {
         _state.Position = position;
         _lyricService.Tick(position);
-        GetPlaylistService()?.OnPositionTick(position, _state.Duration);
     }
 
     /// <summary>
     /// 全局播放状态变化回调
     /// </summary>
-    private void OnGlobalPlaybackStatusChanged(PlaybackStatus status)
+    private void OnGlobalPlaybackStatusChanged(object sender, PlaybackStatus status)
     {
         var playing = status == PlaybackStatus.Playing;
-        _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
-        {
-            _state.IsPlaying = playing;
-        }), "publish playback status changed");
+        _state.IsPlaying = playing;
     }
 
     /// <summary>
     /// 曲目自然播放结束回调
     /// </summary>
-    private void OnTrackReachesEnd(IPlaybackSource source)
+    private void OnTrackReachesEnd(object sender, IPlaybackSource source)
     {
         if (!ReferenceEquals(source, _player.PrimaryPlaybackSource)) return;
 
@@ -302,13 +285,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         {
             _taskRunner.Forget(LastFMManager.Scrobble(item), "update Last.FM now playing");
         }
-        _taskRunner.Forget(HandleTrackEndedSafeAsync(), "handle track ended");
     }
 
     /// <summary>
     /// 主播放源切换回调
     /// </summary>
-    private void OnPrimaryPlaybackSourceChanged(IPlaybackSource source)
+    private void OnPrimaryPlaybackSourceChanged(object sender, IPlaybackSource source)
     {
         if (source is AudioGraphPlaybackSource agSource
             && agSource.PlaybackSource?.CustomProperties.TryGetValue("nowPlayingItem", out var obj) == true
@@ -336,41 +318,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         }
     }
 
-    private async Task HandleTrackEndedSafeAsync()
-    {
-        try
-        {
-            var playlistService = GetPlaylistService();
-            if (playlistService is not null)
-                await playlistService.OnTrackEndedAsync();
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            System.Diagnostics.Debug.WriteLine($"Track end handling failed: {ex.Message}");
-        }
-    }
-
     #endregion
-
-    private IPlaylistService? GetPlaylistService()
-    {
-        if (_playlistService is not null)
-            return _playlistService;
-
-        if (_resolvingPlaylistService)
-            return null;
-
-        try
-        {
-            _resolvingPlaylistService = true;
-            _playlistService = _serviceProvider.GetRequiredService<IPlaylistService>();
-            return _playlistService;
-        }
-        finally
-        {
-            _resolvingPlaylistService = false;
-        }
-    }
 
     #region IDisposable
 

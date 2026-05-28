@@ -1,13 +1,15 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Domain.Music;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using CommunityToolkit.WinUI.Helpers;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -24,7 +26,7 @@ namespace HyPlayer.UI.Lists;
 
 public sealed partial class GroupedSongsList : UserControl
 {
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+        private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly WeakEventListener<GroupedSongsList, object?, PropertyChangedEventArgs> _stateChangedListener;
     public GroupedSongsListViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<GroupedSongsListViewModel>();
@@ -80,7 +82,6 @@ public sealed partial class GroupedSongsList : UserControl
         {
             SetValue(GroupedSongsProperty, value);
             SongContainer.SelectedIndex = -1;
-            HyPlayListOnOnPlayItemChange(ViewModel.NowPlayingItem);
         }
     }
 
@@ -115,7 +116,7 @@ public sealed partial class GroupedSongsList : UserControl
 
     private void HyPlayListOnOnPlayItemChange(HyPlayItem? playitem)
     {
-        _ = _notification.InvokeOnUIThread(() =>
+        RunOnUIThread(() =>
         {
             SongContainer.SelectedItem = null;
             if (playitem?.PlayItem == null || GroupedSongs?.Source == null) return;
@@ -158,12 +159,6 @@ public sealed partial class GroupedSongsList : UserControl
     {
         if (TryGetSelectedSong(out var selectedSong))
             ViewModel.OpenAlbum(selectedSong);
-    }
-
-    private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
-    {
-        if (TryGetSelectedSong(out var selectedSong))
-            ViewModel.OpenComments(selectedSong);
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
@@ -230,5 +225,9 @@ public sealed partial class GroupedSongsList : UserControl
 
         selectedSong = new NCSong();
         return false;
+    }
+    private void RunOnUIThread(Action action)
+    {
+        _ = CoreApplication.MainView.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { action(); });
     }
 }

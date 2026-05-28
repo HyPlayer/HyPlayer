@@ -17,9 +17,6 @@ namespace HyPlayer.Features.Artist;
 /// </summary>
 public sealed partial class ArtistPage : Page
 {
-
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-
     public ArtistPage()
     {
         InitializeComponent();
@@ -30,11 +27,6 @@ public sealed partial class ArtistPage : Page
     {
         base.OnNavigatedTo(e);
         var artistId = e.Parameter as string;
-        if (artistId is null)
-        {
-            _notification.ShowMessage("艺人ID为空", "请检查传入的参数是否正确");
-            return;
-        }
         ViewModel.InitializeArtistInfo(artistId).SafeFireAndForget();
     }
 

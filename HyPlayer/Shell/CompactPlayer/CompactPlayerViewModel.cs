@@ -1,19 +1,21 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Shell.CompactPlayer;
 
@@ -25,7 +27,6 @@ public partial class CompactPlayerViewModel : ObservableObject
     private readonly IPlaybackControlService _control;
     private readonly PlaybackStateService _state;
     private readonly ILyricService _lyricService;
-    private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly WeakEventListener<CompactPlayerViewModel, object?, PropertyChangedEventArgs> _stateChangedListener;
     private readonly WeakEventListener<CompactPlayerViewModel, object?, SongLikeStatusChangedEventArgs> _songLikeStatusChangedListener;
@@ -37,7 +38,6 @@ public partial class CompactPlayerViewModel : ObservableObject
         IPlaybackControlService control,
         PlaybackStateService state,
         ILyricService lyricService,
-        INotificationService notification,
         IBackgroundTaskRunner taskRunner)
     {
         _setting = setting;
@@ -46,10 +46,8 @@ public partial class CompactPlayerViewModel : ObservableObject
         _control = control;
         _state = state;
         _lyricService = lyricService;
-        _notification = notification;
         _taskRunner = taskRunner;
 
-        SyncFromState();
         _stateChangedListener = new WeakEventListener<CompactPlayerViewModel, object?, PropertyChangedEventArgs>(this)
         {
             OnEventAction = static (instance, _, args) => instance.OnPlaybackStatePropertyChanged(args.PropertyName),
@@ -58,7 +56,7 @@ public partial class CompactPlayerViewModel : ObservableObject
         _state.PropertyChanged += _stateChangedListener.OnEvent;
         _songLikeStatusChangedListener = new WeakEventListener<CompactPlayerViewModel, object?, SongLikeStatusChangedEventArgs>(this)
         {
-            OnEventAction = static (instance, _, args) => instance.RunOnUIThread(() => instance.IsLiked = args.IsLiked),
+            OnEventAction = static (instance, _, args) => { instance.IsLiked = args.IsLiked; },
             OnDetachAction = weakEventListener => { _authService.SongLikeStatusChanged -= weakEventListener.OnEvent; }
         };
         _authService.SongLikeStatusChanged += _songLikeStatusChangedListener.OnEvent;
@@ -96,6 +94,8 @@ public partial class CompactPlayerViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool LyricQuickRenderMode { get; set; }
+    [ObservableProperty]
+    public partial BitmapImage AlbumImage { get; set; }
 
     public string PlayStateGlyph => IsPlaying ? "\uF8AE" : "\uF5B0";
     public string LikeIconGlyph => IsLiked ? "\uE00B" : "\uE006";
@@ -156,10 +156,23 @@ public partial class CompactPlayerViewModel : ObservableObject
 
     public void SyncFromState()
     {
-        IsPlaying = _state.IsPlaying;
+        RunOnUIThread(() => { IsPlaying = _state.IsPlaying; });
         OnChangePlayItem(_state.NowPlayingItem);
         OnPlayPositionChanged(_state.Position);
         OnLyricChanged();
+        OnSongCoverChanged();
+    }
+
+    private async void OnSongCoverChanged()
+    {
+        if (_state.CoverStream == null) return;
+        RunOnUIThread(async () =>
+        {
+            using var stream = _state.CoverStream.CloneStream();
+            var bitmap = new BitmapImage();
+            await bitmap.SetSourceAsync(stream);
+            AlbumImage = bitmap;
+        });
     }
 
     private void OnPlaybackStatePropertyChanged(string? propertyName)
@@ -178,6 +191,9 @@ public partial class CompactPlayerViewModel : ObservableObject
             case nameof(PlaybackStateService.IsPlaying):
                 RunOnUIThread(() => IsPlaying = _state.IsPlaying);
                 break;
+            case nameof(PlaybackStateService.CoverStream):
+                OnSongCoverChanged();
+                break;
         }
     }
 
@@ -188,25 +204,25 @@ public partial class CompactPlayerViewModel : ObservableObject
 
     private void OnChangePlayItem(HyPlayItem? item)
     {
-        RunOnUIThread(() =>
+        RunOnUIThread(() => 
         {
-            NowPlayingName = item?.Name ?? string.Empty;
-            NowPlayingArtists = item?.ArtistString ?? string.Empty;
+            NowPlayingName = item?.Name;
+            NowPlayingArtists = item?.ArtistString;
             TotalProgress = item?.LengthInMilliseconds ?? 0;
+
+            if (item is null)
+                return;
+
+            if (item.ItemType is not (HyPlayItemType.Local or HyPlayItemType.LocalProgressive))
+            {
+                var liked = _authService.LikedSongs.Contains(_state.NowPlayingItem?.Id);
+                IsLiked = liked;
+            }
+            else
+            {
+                IsLiked = false;
+            }
         });
-
-        if (item is null)
-            return;
-
-        if (item.ItemType is not (HyPlayItemType.Local or HyPlayItemType.LocalProgressive))
-        {
-            var liked = _authService.LikedSongs.Contains(_state.NowPlayingItem?.Id);
-            RunOnUIThread(() => { IsLiked = liked; });
-        }
-        else
-        {
-            RunOnUIThread(() => { IsLiked = false; });
-        }
     }
 
     private void OnLyricChanged()
@@ -214,29 +230,34 @@ public partial class CompactPlayerViewModel : ObservableObject
         if (_lyricService.CurrentLyricIndex == -1) return;
         if (_lyricService.CurrentLyricInfo.Lyrics.Count <= _lyricService.CurrentLyricIndex) return;
 
-        if (_lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].LyricLine is KaraokeLyricsLine kara)
+        try
         {
-            RunOnUIThread(() => { LyricQuickRenderMode = false; });
-            if (kara.Duration.TotalSeconds > 1)
-            {
-                RunOnUIThread(ChangeLyric);
-                return;
-            }
+            RunOnUIThread(() => {
+                if (_lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].LyricLine is KaraokeLyricsLine kara)
+                {
+                    LyricQuickRenderMode = false;
+                    if (kara.Duration.TotalSeconds > 1)
+                    {
+                        return;
+                    }
+                }
+                else if (_lyricService.CurrentLyricIndex < _lyricService.CurrentLyricInfo.Lyrics.Count - 1 &&
+                         _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex + 1].LyricLine is LrcLyricsLine lrcLine)
+                {
+                    if (lrcLine.StartTime.TotalSeconds -
+                        _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].LyricLine.StartTime.TotalSeconds > 1)
+                    {
+                        LyricQuickRenderMode = false;
+                        return;
+                    }
+                    LyricQuickRenderMode = true;
+                }
+            });
         }
-        else if (_lyricService.CurrentLyricIndex < _lyricService.CurrentLyricInfo.Lyrics.Count - 1 &&
-                 _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex + 1].LyricLine is LrcLyricsLine lrcLine)
+        finally
         {
-            if (lrcLine.StartTime.TotalSeconds -
-                _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].LyricLine.StartTime.TotalSeconds > 1)
-            {
-                RunOnUIThread(() => { LyricQuickRenderMode = false; });
-                RunOnUIThread(ChangeLyric);
-                return;
-            }
-            RunOnUIThread(() => { LyricQuickRenderMode = true; });
+            ChangeLyric();
         }
-
-        ChangeLyric();
     }
 
     private void ChangeLyric()
@@ -249,9 +270,8 @@ public partial class CompactPlayerViewModel : ObservableObject
             LyricSound = CurrentLyric.Romaji;
         });
     }
-
     private void RunOnUIThread(Action action)
     {
-        _taskRunner.Forget(_notification.InvokeOnUIThread(action), "CompactPlayerViewModel UI update");
+        _taskRunner.Forget(CoreApplication.MainView.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { action(); }), "PlayBar UI update");
     }
 }

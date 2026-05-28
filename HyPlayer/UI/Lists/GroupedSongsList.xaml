@@ -88,16 +88,6 @@
                     </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem
-                        x:Name="FlyoutItemComments"
-                        Click="FlyoutItemComments_Click"
-                        Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                        Text="评论"
-                        Visibility="{x:Bind local:XamlHelpers.Setting.notClearMode, Mode=OneWay}">
-                        <MenuFlyoutItem.Icon>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
-                        </MenuFlyoutItem.Icon>
-                    </MenuFlyoutItem>
-                    <MenuFlyoutItem
                         x:Name="FlyoutItemDownload"
                         Click="FlyoutItemDownload_Click"
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"

@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain;
-using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
@@ -26,7 +25,7 @@ namespace HyPlayer.Features.Album
         private readonly IPlaylistService _playlist;
         private readonly NeteaseCloudMusicApiHandler _api;
         private readonly Setting _setting;
-        private readonly INotificationService _notification;
+    private readonly ITeachingTipService _teachingTipService;
         private readonly INavigationService _navigation;
         private readonly IAppNavigator _navigator;
         private readonly IBackgroundTaskRunner _taskRunner;
@@ -35,7 +34,7 @@ namespace HyPlayer.Features.Album
             IPlaylistService playlist,
             NeteaseCloudMusicApiHandler api,
             Setting setting,
-            INotificationService notification,
+            ITeachingTipService teachingTip,
             INavigationService navigation,
             IAppNavigator navigator,
             IBackgroundTaskRunner taskRunner)
@@ -43,7 +42,7 @@ namespace HyPlayer.Features.Album
             _playlist = playlist;
             _api = api;
             _setting = setting;
-            _notification = notification;
+            _teachingTipService = teachingTip;
             _navigation = navigation;
             _navigator = navigator;
             _taskRunner = taskRunner;
@@ -76,7 +75,7 @@ namespace HyPlayer.Features.Album
                     new AlbumDetailDynamicRequest() { Id = albumId });
                 if (json.IsError)
                 {
-                    _notification.ShowMessage("获取专辑动态失败", json.Error?.Message);
+                    _teachingTipService.Items.Enqueue(new("获取专辑动态失败", json.Error?.Message));
                     return null;
                 }
 
@@ -95,7 +94,7 @@ namespace HyPlayer.Features.Album
                         new AlbumRequest() { Id = albumId });
                     if (json.IsError)
                     {
-                        _notification.ShowMessage("获取专辑信息失败", json.Error?.Message);
+                        _teachingTipService.Items.Enqueue(new("获取专辑信息失败", json.Error?.Message));
                         return null;
                     }
 
@@ -148,7 +147,7 @@ namespace HyPlayer.Features.Album
             }
             catch (Exception ex)
             {
-                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _teachingTipService.Items.Enqueue(new(ex.Message, ex.InnerException.Message));
             }
         }
         [RelayCommand]
@@ -162,7 +161,7 @@ namespace HyPlayer.Features.Album
             }
             catch (Exception ex)
             {
-                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                _teachingTipService.Items.Enqueue(new("获取专辑信息失败", (ex.InnerException ?? new Exception()).Message));
             }
         }
 
@@ -173,12 +172,6 @@ namespace HyPlayer.Features.Album
             foreach (var discSongs in (IEnumerable<DiscSongs>)AlbumSongsViewSource.Source) songs.AddRange(discSongs);
 
             DownloadManager.AddDownload(songs);
-        }
-
-        [RelayCommand]
-        private void NavigateComment()
-        {
-            _navigation.Navigate(typeof(Comments.Comments), CommentTarget.Album(Album.Id));
         }
 
         [RelayCommand]

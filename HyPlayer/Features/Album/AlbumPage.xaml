@@ -89,7 +89,6 @@
                                 x:Name="BtnSub"
                                 Command="{x:Bind ViewModel.SubscribeCommand}"
                                 Content="收藏" />
-                            <Button Command="{x:Bind ViewModel.NavigateCommentCommand}" Content="评论" />
                         </StackPanel>
                         <uiControls:ExpandableTextBox
                             x:Name="TextBlockDesc"

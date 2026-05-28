@@ -4,7 +4,6 @@ using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Album;
 using HyPlayer.Features.Artist;
-using HyPlayer.Features.Comments;
 using HyPlayer.Features.Downloads;
 using HyPlayer.Features.Home;
 using HyPlayer.Features.Library;
@@ -25,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using TagLib.Ape;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
 using Windows.System;
@@ -44,7 +44,7 @@ public sealed partial class TestPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+        private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
     public static readonly DependencyProperty ResourceIdProperty =
@@ -58,7 +58,6 @@ public sealed partial class TestPage : Page
     {
         [typeof(AlbumPage)] = "97767168",
         [typeof(ArtistPage)] = "159692",
-        [typeof(Comments)] = "sg211277",
         // [typeof(CompactPlayerPage)] = null, // need new app window
         [typeof(DownloadPage)] = null,
         [typeof(ExpandedPlayer.ExpandedPlayer)] = null,
@@ -95,7 +94,7 @@ public sealed partial class TestPage : Page
 
     private void TestTeachingTip_OnClick(object sender, RoutedEventArgs e)
     {
-        _notification.ShowMessage("TestTeachingTip", _teachingTipIndex++.ToString());
+        _teachingTipService.Items.Enqueue(new("TestTeachingTip", _teachingTipIndex++.ToString()));
     }
 
     private async void TestGCLeak_Click(object sender, RoutedEventArgs e)
@@ -117,7 +116,7 @@ public sealed partial class TestPage : Page
             await Task.Delay(5000);
         }
         MainStackPanel.Children.Remove(leakCheckFrame);
-        _notification.ShowMessage("正在生成报告", "等待 GC 处理中");
+        _teachingTipService.Items.Enqueue(new("正在生成报告", "等待 GC 处理中"));
         GC.Collect();
         await Task.Delay(5000);
         GC.Collect();
@@ -195,7 +194,7 @@ public sealed partial class TestPage : Page
                 _api.Option.AdditionalParameters = result;
                 var authService = Ioc.Default.GetRequiredService<IAuthService>();
                 authService.NotifyLoginCompleted();
-                _notification.ShowMessage("成功设置API附加参数", "请重启应用以使更改生效");
+                _teachingTipService.Items.Enqueue(new("成功设置API附加参数", "请重启应用以使更改生效"));
             }
             else
             {

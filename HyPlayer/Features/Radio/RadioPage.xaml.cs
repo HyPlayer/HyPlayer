@@ -35,7 +35,7 @@ public sealed partial class RadioPage : Page
     private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private readonly WeakEventListener<RadioPage, object?, EventArgs> _secondTickListener;
     private bool _isSecondTickSubscribed;
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
 
@@ -99,12 +99,12 @@ public sealed partial class RadioPage : Page
                     {
                         treashold = ++cooldownTime * 10;
                         page--;
-                        _notification.ShowMessage("贪婪加载冷却", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+                        _teachingTipService.Items.Enqueue(new("贪婪加载冷却", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求"));
                         return null;
                     }
                     else if (rest.IsError)
                     {
-                        _notification.ShowMessage("加载电台节目错误", rest.Error?.Message ?? "未知错误");
+                        _teachingTipService.Items.Enqueue(new("加载电台节目错误", rest.Error?.Message));
                         return null;
                     }
 
@@ -134,7 +134,7 @@ public sealed partial class RadioPage : Page
                     new DjChannelDetailRequest() { Id = rid }, _cancellationToken);
                 if (json.IsError)
                 {
-                    _notification.ShowMessage("获取电台信息失败", json.Error?.Message ?? "未知错误");
+                    _teachingTipService.Items.Enqueue(new("获取电台信息失败", json.Error?.Message ?? "未知错误"));
                     return null;
                 }
 
@@ -186,7 +186,8 @@ public sealed partial class RadioPage : Page
 
     private void GreedlyLoad()
     {
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = Dispatcher.RunAsync( Windows.UI.Core.CoreDispatcherPriority.Normal,
+        () =>
         {
             if (treashold > 10)
             {
@@ -260,7 +261,7 @@ public sealed partial class RadioPage : Page
                                 }, _cancellationToken);
                             if (rest.IsError)
                             {
-                                _notification.ShowMessage("加载电台节目错误", rest.Error?.Message ?? "未知错误");
+                                _teachingTipService.Items.Enqueue(new("加载电台节目错误", rest.Error?.Message ?? "未知错误"));
                                 return null;
                             }
 
