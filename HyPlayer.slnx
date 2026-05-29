@@ -21,9 +21,7 @@
     <Platform Solution="*|arm64" Project="arm64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="Impressionist/Impressionist/Impressionist.csproj">
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
+  <Project Path="Impressionist/src/Impressionist/Impressionist.csproj" />
   <Project Path="Kawazu/Kawazu/Kawazu.csproj">
     <Platform Solution="*|arm64" Project="arm64" />
     <Platform Solution="*|x64" Project="x64" />

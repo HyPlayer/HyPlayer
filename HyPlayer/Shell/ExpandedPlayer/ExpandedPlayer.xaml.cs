@@ -27,8 +27,6 @@ using HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 using HyPlayer.Shell.Playback;
 using HyPlayer.UI.Dialogs;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
-using Impressionist.Abstractions;
-using Impressionist.Implementations;
 using Microsoft.Graphics.Canvas;
 using CommunityToolkit.WinUI.Helpers;
 using System;
@@ -829,41 +827,27 @@ public sealed partial class ExpandedPlayer : Page
         if (_state.NowPlayingItem == null) return false;
         try
         {
-            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
-            var colors = await ImageDecoder.GetPixelColor(decoder);
-            ThemeColorResult themeColor;
-            PaletteResult palette;
-            if (_settings.expandedPlayerBackgroundType != BackgroundType.Animated && _settings.expandedPlayerBackgroundType != BackgroundType.Isolation)
+            var theme = await ColorExtractor.ExtractThemeColorFromStream(stream);
+            albumMainColor = theme;
+            if (_settings.expandedPlayerBackgroundType == BackgroundType.Animated || _settings.expandedPlayerBackgroundType == BackgroundType.Isolation)
             {
-                themeColor = KMeansPaletteGenerator.CreateThemeColor(colors, true, true);
-                albumMainColor = Color.FromArgb(255, (byte)themeColor.Color.X, (byte)themeColor.Color.Y, (byte)themeColor.Color.Z);
-            }
-            else
-            {
-                palette = _settings.ColorGeneratorType switch
+               var palette = await ColorExtractor.ExtractPaletteFromStream(stream, _settings.expandedPlayerBackgroundType == BackgroundType.Isolation ? 4 : 9);
+                if(_settings.expandedPlayerBackgroundType == BackgroundType.Animated)
                 {
-                    ColorGeneratorType.KMeans => await KMeansPaletteGenerator.CreatePalette(
-                                                colors,
-                                                _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                true,
-                                                true,
-                                                true),
-                    ColorGeneratorType.OctTree => palette = await OctTreePaletteGenerator.CreatePalette(
-                                                colors,
-                                                _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                true),
-                    _ => await AutoPaletteGenerator.CreatePalette(
-                                                colors,
-                                                _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                true,
-                                                true,
-                                                true),
-                };
-                themeColor = palette.ThemeColor;
-                _albumColors = [.. palette.Palette.Select(quantizedColor => Color.FromArgb(255, (byte)quantizedColor.X, (byte)quantizedColor.Y, (byte)quantizedColor.Z))];
-                albumMainColor = Color.FromArgb(255, (byte)themeColor.Color.X, (byte)themeColor.Color.Y, (byte)themeColor.Color.Z);
-                _albumColorVectors = [.. palette.Palette.Select(t => t / 255)];
-                _canvasState.AlbumColorVectors = _albumColorVectors;
+                    _albumColors = [.. palette.Select(quantizedColor => Color.FromArgb(255, (byte)quantizedColor.X, (byte)quantizedColor.Y, (byte)quantizedColor.Z))];
+                }
+                else
+                {
+                    _albumColorVectors = [.. palette.Select(t => t / 255)];
+                    _canvasState.AlbumColorVectors = _albumColorVectors;
+                }
+                var themeVector = Vector3.Zero;
+                foreach(var item in palette)
+                {
+                    themeVector += item;
+                }
+                themeVector /= palette.Count;
+                theme = Color.FromArgb(255, (byte)themeVector.X, (byte)themeVector.Y, (byte)themeVector.Z);
             }
             if (_settings.expandedPlayerBackgroundType is BackgroundType.CoverTheme)
             {
@@ -872,7 +856,7 @@ public sealed partial class ExpandedPlayer : Page
             }
             if (!resultGenerated)
             {
-                finalResult = !themeColor.ColorIsDark;
+                finalResult = !new Vector3(theme.R, theme.G, theme.B).RGBVectorLStarIsDark();
                 resultGenerated = true;
             }
         }

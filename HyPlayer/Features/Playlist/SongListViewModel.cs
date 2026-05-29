@@ -286,7 +286,7 @@ namespace HyPlayer.Features.Playlist
             {
                 using var stream = await result.Content.ReadAsStreamAsync();
                 using var inputStream = stream.AsRandomAccessStream();
-                Color imageMainColor = await ColorExtractor.ExtractColorFromStream(inputStream);
+                Color imageMainColor = await ColorExtractor.ExtractThemeColorFromStream(inputStream);
                 AlbumColor = imageMainColor;
             }
         }

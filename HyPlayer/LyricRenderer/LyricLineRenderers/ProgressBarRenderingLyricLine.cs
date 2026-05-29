@@ -8,6 +8,7 @@ using Microsoft.Graphics.Canvas.Geometry;
 using System;
 using System.Numerics;
 using Windows.Foundation;
+using Windows.UI;
 using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
@@ -61,7 +62,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         // 画进度
         CanvasGeometry geometryFill;
         double progress;
-        var focusingColor = context.PreferTypography.FocusingColor!.Value;
+        var focusingColor = context.PreferTypography.FocusingColor ?? Colors.Transparent;
 
         if (remain < LeaveAnimationDuration)// 结束动画
         {
@@ -110,7 +111,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         RenderingWidth = context.ItemWidth;
         _baseGradientBrush?.Dispose();
 
-        var baseColor = context.PreferTypography.IdleColor!.Value;
+        var baseColor = context.PreferTypography.IdleColor ?? Colors.Transparent;
         var canvasGradientStop = new CanvasGradientStop[2];
         canvasGradientStop[0] = new CanvasGradientStop
         {

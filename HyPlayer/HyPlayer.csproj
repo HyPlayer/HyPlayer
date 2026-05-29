@@ -89,7 +89,7 @@
     <ProjectReference Include="..\HyPlayer.Frieren\HyPlayer.Frieren.csproj" />
     <ProjectReference Include="..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\HyPlayer.NeteaseApi.csproj" />
     <ProjectReference Include="..\HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj" />
-    <ProjectReference Include="..\Impressionist\Impressionist\Impressionist.csproj" />
+    <ProjectReference Include="..\Impressionist\src\Impressionist\Impressionist.csproj" />
     <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj" />
     <ProjectReference Include="..\Microsoft.Gaming.XboxGameBar.Projection\Microsoft.Gaming.XboxGameBar.Projection.csproj" />
   </ItemGroup>

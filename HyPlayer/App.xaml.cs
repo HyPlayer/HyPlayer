@@ -64,6 +64,7 @@ using PlayBarViewModel = HyPlayer.UI.Playback.PlayBar.PlayBarViewModel;
 using SongListViewModel = HyPlayer.Features.Playlist.SongListViewModel;
 using WidgetPage = HyPlayer.Features.Widgets.WidgetPage;
 using WidgetSettingsPage = HyPlayer.Features.Widgets.WidgetSettingsPage;
+using Impressionist.Quantizers;
 
 #endregion
 
@@ -193,6 +194,7 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton<IPlaybackSurfaceCoordinator, PlaybackSurfaceCoordinator>();
         serviceCollection.AddTransient<ShellSearchViewModel>();
         serviceCollection.AddSingleton<ShellLoginService>();
+        serviceCollection.AddSingleton<CelebiQuantizer>();
 
         // ── ViewModels ──
         serviceCollection.AddTransient<HomeViewModel>();
