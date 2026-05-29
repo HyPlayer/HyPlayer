@@ -180,6 +180,9 @@ namespace HyPlayer.Shell.ExpandedPlayer
                 case nameof(PlaybackStateService.LyricIndex):
                     RunOnUIThread(() => { LyricIndex = _state.LyricIndex; });
                     break;
+                case nameof(PlaybackStateService.Duration):
+                    RunOnUIThread(() => { Duration = _state.Duration; });
+                    break;
             }
         }
 
@@ -192,13 +195,8 @@ namespace HyPlayer.Shell.ExpandedPlayer
             RunOnUIThread(() =>
             {
                 NowPlayingItem = _state.NowPlayingItem;
-                IsPlaying = _state.IsPlaying;
                 Volume = _state.Volume;
-                Position = _state.Position;
-                Duration = _state.Duration;
                 ActiveStrategyId = _state.ActiveStrategyId;
-                LyricInfo = _state.LyricInfo;
-                LyricIndex = _state.LyricIndex;
                 IsInFm = _state.IsInFm;
                 QualityTag = _state.QualityTag;
                 PlaylistItems = _playlist.Items;

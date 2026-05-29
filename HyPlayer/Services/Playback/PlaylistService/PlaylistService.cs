@@ -96,6 +96,7 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
         _smtc.IsPreviousEnabled = true;
         _smtc.ButtonPressed += SMTC_ButtonPressed;
         _player.OnPositionChanged += OnPositionTick;
+        _player.OnTrackReachesEnd += OnTrackEndedAsync;
     }
 
     /// <inheritdoc />

@@ -1,4 +1,5 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -75,7 +76,7 @@ public interface IPlaylistService
     /// <summary>
     /// 曲目自然播放结束时由 PlaybackControlService 调用
     /// </summary>
-    void OnTrackEndedAsync();
+    void OnTrackEndedAsync(object? source, IPlaybackSource playbackSource);
 
     /// <summary>
     /// 播放位置更新时由 PlaybackControlService 调用（用于过渡策略的预加载等）

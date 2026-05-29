@@ -1,5 +1,6 @@
 using AsyncAwaitBestPractices;
 using HyPlayer.Services.Abstractions;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ public sealed partial class PlaylistService
     // ────────────── 曲目结束处理 ──────────────
 
     /// <inheritdoc />
-    public async void OnTrackEndedAsync()
+    public async void OnTrackEndedAsync(object? source, IPlaybackSource playbackSource)
     {
         if (!await _trackEndLock.WaitAsync(0)) return;
 

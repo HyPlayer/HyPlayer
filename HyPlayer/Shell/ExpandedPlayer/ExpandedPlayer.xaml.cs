@@ -536,10 +536,6 @@ public sealed partial class ExpandedPlayer : Page
     {
         var lyricIsReady = _lastSong == _state.NowPlayingItem;
         _lyricHasBeenLoaded = lyricIsReady;
-        var artistText = mpi?.ArtistString;
-        ViewModel.Artist = artistText;
-        ViewModel.SongName = mpi?.Name;
-        ViewModel.Album = mpi?.AlbumString;
         if (mpi?.PlayItem == null)
         {
             _lyricList.Clear();

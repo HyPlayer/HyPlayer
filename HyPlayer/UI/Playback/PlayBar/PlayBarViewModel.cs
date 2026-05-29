@@ -225,6 +225,9 @@ public partial class PlayBarViewModel : ObservableObject
             case nameof(PlaybackStateService.LyricIndex):
                 RunOnUIThread(() => { LyricIndex = _state.LyricIndex; });
                 break;
+            case nameof(PlaybackStateService.Duration):
+                RunOnUIThread(() => { Duration = _state.Duration; });
+                break;
         }
     }
 
@@ -321,15 +324,9 @@ public partial class PlayBarViewModel : ObservableObject
         RunOnUIThread(() =>
         {
             NowPlayingItem = _state.NowPlayingItem;
-            IsPlaying = _state.IsPlaying;
-            Position = _state.Position;
-            Duration = _state.Duration;
             Volume = _state.Volume;
             ActiveStrategyId = _state.ActiveStrategyId;
-            LyricIndex = _state.LyricIndex;
-            LyricInfo = _state.LyricInfo;
             IsInFm = _state.IsInFm;
-            QualityTag = _state.QualityTag;
         });
     }
 
