@@ -188,7 +188,7 @@ public class AuthService : IAuthService
             var statusResult = await _api.RequestAsync(NeteaseApis.LoginStatusApi);
             if (statusResult.IsError)
             {
-                _teachingTipService.Items.Enqueue(new("登录失败", statusResult.Error?.Message));
+                _teachingTipService.Enqueue(new("登录失败", statusResult.Error?.Message));
                 return null;
             }
             return statusResult.Value;
@@ -290,7 +290,7 @@ public class AuthService : IAuthService
                         else throw new Exception("红心操作失败");
                         break;
                     case HyPlayItemType.Radio:
-                        _teachingTipService.Items.Enqueue(new("暂不支持红心电台歌曲", "将在后续版本中支持"));
+                        _teachingTipService.Enqueue(new("暂不支持红心电台歌曲", "将在后续版本中支持"));
                         SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
                         break;
                 }
@@ -298,7 +298,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _teachingTipService.Items.Enqueue(new("红心操作失败", ex.Message));
+            _teachingTipService.Enqueue(new("红心操作失败", ex.Message));
         }
     }
 
@@ -310,7 +310,7 @@ public class AuthService : IAuthService
                 new LikelistRequest { Uid = CurrentUser!.Id });
             if (js.IsError)
             {
-                _teachingTipService.Items.Enqueue(new("获取喜欢列表失败", js.Error?.Message));
+                _teachingTipService.Enqueue(new("获取喜欢列表失败", js.Error?.Message));
                 return null;
             }
             return js.Value;

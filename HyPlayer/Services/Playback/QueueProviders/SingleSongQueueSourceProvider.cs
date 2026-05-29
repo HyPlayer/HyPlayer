@@ -42,13 +42,13 @@ internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
                         new SongDetailRequest { Id = id });
                     if (result.IsError)
                     {
-                        _teachingTipService.Items.Enqueue(new("获取歌曲信息失败", result.Error?.Message));
+                        _teachingTipService.Enqueue(new("获取歌曲信息失败", result.Error?.Message));
                         return null;
                     }
 
                     if (result.Value?.Songs is not { Length: > 0 })
                     {
-                        _teachingTipService.Items.Enqueue(new("获取歌曲信息失败", "歌曲信息为空"));
+                        _teachingTipService.Enqueue(new("获取歌曲信息失败", "歌曲信息为空"));
                         return null;
                     }
 
@@ -61,7 +61,7 @@ internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _teachingTipService.Items.Enqueue(new("获取歌曲信息失败", ex.Message));
+            _teachingTipService.Enqueue(new("获取歌曲信息失败", ex.Message));
         }
 
         return NeteaseQueueSourceLoadResult.Failed;

@@ -52,7 +52,7 @@ public sealed class LocalFileImportService : ILocalFileImportService
             }
             catch (Exception ex)
             {
-                _teachingTipService.Items.Enqueue(new($"加载文件 {file.Name} 失败", ex.Message));
+                _teachingTipService.Enqueue(new($"加载文件 {file.Name} 失败", ex.Message));
             }
         }
 

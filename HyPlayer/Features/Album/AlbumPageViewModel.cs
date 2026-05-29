@@ -75,7 +75,7 @@ namespace HyPlayer.Features.Album
                     new AlbumDetailDynamicRequest() { Id = albumId });
                 if (json.IsError)
                 {
-                    _teachingTipService.Items.Enqueue(new("获取专辑动态失败", json.Error?.Message));
+                    _teachingTipService.Enqueue(new("获取专辑动态失败", json.Error?.Message));
                     return null;
                 }
 
@@ -94,7 +94,7 @@ namespace HyPlayer.Features.Album
                         new AlbumRequest() { Id = albumId });
                     if (json.IsError)
                     {
-                        _teachingTipService.Items.Enqueue(new("获取专辑信息失败", json.Error?.Message));
+                        _teachingTipService.Enqueue(new("获取专辑信息失败", json.Error?.Message));
                         return null;
                     }
 
@@ -147,7 +147,7 @@ namespace HyPlayer.Features.Album
             }
             catch (Exception ex)
             {
-                _teachingTipService.Items.Enqueue(new(ex.Message, ex.InnerException.Message));
+                _teachingTipService.Enqueue(new(ex.Message, ex.InnerException.Message));
             }
         }
         [RelayCommand]
@@ -161,7 +161,7 @@ namespace HyPlayer.Features.Album
             }
             catch (Exception ex)
             {
-                _teachingTipService.Items.Enqueue(new("获取专辑信息失败", (ex.InnerException ?? new Exception()).Message));
+                _teachingTipService.Enqueue(new("获取专辑信息失败", (ex.InnerException ?? new Exception()).Message));
             }
         }
 

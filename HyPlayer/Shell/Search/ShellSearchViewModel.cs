@@ -31,7 +31,7 @@ public sealed class ShellSearchViewModel
                                            new SearchSuggestionRequest { Keyword = keyword });
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("获取推荐词失败", json.Error.Message));
+            _teachingTipService.Enqueue(new("获取推荐词失败", json.Error.Message));
             return null;
         }
 

@@ -35,6 +35,7 @@ public sealed partial class MusicCloudPage : Page
     private readonly NeteaseCloudMusicApiHandler _api = Ioc.Default.GetRequiredService<NeteaseCloudMusicApiHandler>();
     private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
     private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
+    private readonly IBackgroundTaskRunner taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly WeakEventListener<MusicCloudPage, object?, EventArgs> _secondTickListener;
     private bool _isSecondTickSubscribed;
 
@@ -70,7 +71,7 @@ public sealed partial class MusicCloudPage : Page
             {
                 treashold = ++cooldownTime * 10;
                 page--;
-                _teachingTipService.Items.Enqueue(new ("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求"));
+                _teachingTipService.Enqueue(new ("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求"));
             }
 
             return json.Value;
@@ -146,7 +147,7 @@ public sealed partial class MusicCloudPage : Page
 
     private void GreedlyLoad()
     {
-         _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+         taskRunner.Forget(Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
             if (treashold > 10)
             {
@@ -164,7 +165,8 @@ public sealed partial class MusicCloudPage : Page
                 DetachSecondTick();
                 OnLoadedAllSongs();
             }
-        });
+        }),
+        "MusicCloudPage Greedly Load");
     }
 
     public void OnLoadedAllSongs()
@@ -201,14 +203,14 @@ public sealed partial class MusicCloudPage : Page
         var files =
             await fop.PickMultipleFilesAsync();
         if (files == null) return;
-        _teachingTipService.Items.Enqueue(new("请稍等", "正在上传 " + files.Count + " 个音乐文件"));
+        _teachingTipService.Enqueue(new("请稍等", "正在上传 " + files.Count + " 个音乐文件"));
         for (var i = 0; i < files.Count; i++)
         {
-            _teachingTipService.Items.Enqueue(new("正在上传共 " + files.Count + " 个音乐文件", "正在上传 第" + i + " 个音乐文件"));
+            _teachingTipService.Enqueue(new("正在上传共 " + files.Count + " 个音乐文件", "正在上传 第" + i + " 个音乐文件"));
             await CloudUpload.UploadMusic(files[i]);
         }
 
-        _teachingTipService.Items.Enqueue(new("上传完成", "请重新加载云盘页面"));
+        _teachingTipService.Enqueue(new("上传完成", "请重新加载云盘页面"));
     }
     private async void BtnRefresh_OnClick(object sender, RoutedEventArgs e)
     {

@@ -128,7 +128,7 @@ public sealed partial class HistoryPage : Page
             var result = await requestRank(_cancellationToken);
             if (result.IsError)
             {
-                _teachingTipService.Items.Enqueue(new("获取播放记录失败", result.ErrorMessage));
+                _teachingTipService.Enqueue(new("获取播放记录失败", result.ErrorMessage));
                 return;
             }
             var rankData = result.Records ?? [];
@@ -142,7 +142,7 @@ public sealed partial class HistoryPage : Page
         }
         catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
         {
-            _teachingTipService.Items.Enqueue(new("获取播放记录失败", ex.Message));
+            _teachingTipService.Enqueue(new("获取播放记录失败", ex.Message));
         }
     }
 }

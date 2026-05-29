@@ -520,7 +520,6 @@ public sealed partial class ExpandedPlayer : Page
         });
         _lyricBox.ReflowTime(0);
         if (_state.NowPlayingItem == null) return;
-        RefreshLyricrColor();
         _needsRedesign = true;
         _lyricHasBeenLoaded = true;
     }
@@ -563,12 +562,17 @@ public sealed partial class ExpandedPlayer : Page
         }
 
         _needsRedesign = true;
-        NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
+        RunOnUIThread(() =>
+        {
+            NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_state.NowPlayingItem.PlayItem?.AudioGraphPlaybackSource);
+        });
     }
 
     public void RefreshLyricrColor()
     {
-        _lyricBox.ChangeRenderColor(_playbackTheme.IdleBrush.Color, _playbackTheme.AccentBrush.Color);
+        var idle = _playbackTheme.IdleBrush.Color;
+        var accent = _playbackTheme.AccentBrush.Color;
+        _lyricBox.ChangeRenderColor(idle, accent);
     }
 
     private void ApplyPlaybackTheme(PlaybackThemeSnapshot theme)

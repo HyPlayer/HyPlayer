@@ -62,7 +62,7 @@ public sealed partial class PlaylistService
         }
         catch (Exception ex)
         {
-            _teachingTipService.Items.Enqueue(new("AppendNCSong时发生错误", ex.Message));
+            _teachingTipService.Enqueue(new("AppendNCSong时发生错误", ex.Message));
         }
     }
 
@@ -178,7 +178,7 @@ public sealed partial class PlaylistService
         }
         catch (Exception ex)
         {
-            _teachingTipService.Items.Enqueue(new("AppendNCSong时发生错误", ex.Message));
+            _teachingTipService.Enqueue(new("AppendNCSong时发生错误", ex.Message));
         }
     }
 }

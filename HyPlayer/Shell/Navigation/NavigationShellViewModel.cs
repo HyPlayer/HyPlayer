@@ -195,7 +195,7 @@ public partial class NavigationShellViewModel : ObservableObject
                         new UserPlaylistRequest { Uid = _auth.CurrentUser.Id });
                     if (json.IsError)
                     {
-                        _teachingTipService.Items.Enqueue(new("获取歌单失败", json.Error?.Message));
+                        _teachingTipService.Enqueue(new("获取歌单失败", json.Error?.Message));
                         return null;
                     }
                     return json.Value;

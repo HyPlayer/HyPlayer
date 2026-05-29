@@ -41,7 +41,7 @@ internal sealed class AlbumQueueSourceProvider : IQueueSourceProvider
                     new AlbumRequest { Id = id });
                 if (json.IsError)
                 {
-                    _teachingTipService.Items.Enqueue(new("获取专辑信息失败", json.Error?.Message));
+                    _teachingTipService.Enqueue(new("获取专辑信息失败", json.Error?.Message));
                     return null;
                 }
 
@@ -55,7 +55,7 @@ internal sealed class AlbumQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _teachingTipService.Items.Enqueue(new("AppendAlbum时发生错误", ex.Message));
+            _teachingTipService.Enqueue(new("AppendAlbum时发生错误", ex.Message));
         }
 
         return NeteaseQueueSourceLoadResult.Failed;

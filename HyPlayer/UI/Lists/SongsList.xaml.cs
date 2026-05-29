@@ -256,7 +256,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
-            _teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用"));
+            _teachingTipService.Enqueue(new("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用"));
             return;
         }
 
@@ -275,7 +275,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
-            _teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用"));
+            _teachingTipService.Enqueue(new("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).SongName} 当前不可用"));
             return;
         }
 
@@ -307,7 +307,7 @@ public sealed partial class SongsList : UserControl
         {
             var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable)
                 .Select(t => t.SongName).ToArray();
-            _teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除"));
+            _teachingTipService.Enqueue(new("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除"));
         }
     }
 
@@ -333,7 +333,7 @@ public sealed partial class SongsList : UserControl
         if (SongContainer.SelectedItems.Count == 0) return;
         if ((SongContainer.SelectedItem as NCSong).Album.Id == "0")
         {
-            _teachingTipService.Items.Enqueue(new("此歌曲无专辑页面", null));
+            _teachingTipService.Enqueue(new("此歌曲无专辑页面", null));
         }
         else
         {
@@ -430,7 +430,7 @@ public sealed partial class SongsList : UserControl
 
         if (!ncSong.IsAvailable)
         {
-            _teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {ncSong.SongName} 当前不可用"));
+            _teachingTipService.Enqueue(new("歌曲不可用", $"歌曲 {ncSong.SongName} 当前不可用"));
             return;
         }
 

@@ -26,7 +26,7 @@ namespace HyPlayer.UI.Lists;
 
 public sealed partial class GroupedSongsList : UserControl
 {
-        private readonly ITeachingTipService _teachingTipService = Ioc.Default.GetRequiredService<ITeachingTipService>();
+    private readonly IBackgroundTaskRunner taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly WeakEventListener<GroupedSongsList, object?, PropertyChangedEventArgs> _stateChangedListener;
     public GroupedSongsListViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<GroupedSongsListViewModel>();
@@ -228,6 +228,8 @@ public sealed partial class GroupedSongsList : UserControl
     }
     private void RunOnUIThread(Action action)
     {
-        _ = CoreApplication.MainView.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { action(); });
+        taskRunner.Forget(
+            CoreApplication.MainView.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { action(); }),
+            "GroupedSongList Update");
     }
 }

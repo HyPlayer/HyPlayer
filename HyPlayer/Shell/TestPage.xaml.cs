@@ -94,7 +94,7 @@ public sealed partial class TestPage : Page
 
     private void TestTeachingTip_OnClick(object sender, RoutedEventArgs e)
     {
-        _teachingTipService.Items.Enqueue(new("TestTeachingTip", _teachingTipIndex++.ToString()));
+        _teachingTipService.Enqueue(new("TestTeachingTip", _teachingTipIndex++.ToString()));
     }
 
     private async void TestGCLeak_Click(object sender, RoutedEventArgs e)
@@ -116,7 +116,7 @@ public sealed partial class TestPage : Page
             await Task.Delay(5000);
         }
         MainStackPanel.Children.Remove(leakCheckFrame);
-        _teachingTipService.Items.Enqueue(new("正在生成报告", "等待 GC 处理中"));
+        _teachingTipService.Enqueue(new("正在生成报告", "等待 GC 处理中"));
         GC.Collect();
         await Task.Delay(5000);
         GC.Collect();
@@ -194,7 +194,7 @@ public sealed partial class TestPage : Page
                 _api.Option.AdditionalParameters = result;
                 var authService = Ioc.Default.GetRequiredService<IAuthService>();
                 authService.NotifyLoginCompleted();
-                _teachingTipService.Items.Enqueue(new("成功设置API附加参数", "请重启应用以使更改生效"));
+                _teachingTipService.Enqueue(new("成功设置API附加参数", "请重启应用以使更改生效"));
             }
             else
             {

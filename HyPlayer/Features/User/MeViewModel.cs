@@ -44,7 +44,7 @@ namespace HyPlayer.Features.User
                     });
                 if (json.IsError)
                 {
-                    _teachingTipService.Items.Enqueue(new("用户信息获取失败", json.Error?.Message));
+                    _teachingTipService.Enqueue(new("用户信息获取失败", json.Error?.Message));
                     return null;
                 }
 
@@ -68,7 +68,7 @@ namespace HyPlayer.Features.User
                         });
                     if (json.IsError)
                     {
-                        _teachingTipService.Items.Enqueue(new("用户歌单获取失败", json.Error?.Message));
+                        _teachingTipService.Enqueue(new("用户歌单获取失败", json.Error?.Message));
                         return null;
                     }
 
@@ -121,7 +121,7 @@ namespace HyPlayer.Features.User
             }
             catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
             {
-                _teachingTipService.Items.Enqueue(new(ex.Message, ex.InnerException?.Message));
+                _teachingTipService.Enqueue(new(ex.Message, ex.InnerException?.Message));
             }
         }
     }

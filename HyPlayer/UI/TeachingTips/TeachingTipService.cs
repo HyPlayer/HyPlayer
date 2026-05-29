@@ -13,11 +13,23 @@ namespace HyPlayer.UI.TeachingTips;
 public sealed class TeachingTipService : ITeachingTipService
 {
     private int _secondCounter = 3;
+    private IBackgroundTaskRunner _taskRunner;
+    public TeachingTipService(IBackgroundTaskRunner taskRunner)
+    {
+        _taskRunner = taskRunner;
+    }
 
     public Queue<KeyValuePair<string, string?>> Items { get; } = new();
     public TeachingTip? Tip { get; set; }
 
     public void Clear() => Items.Clear();
+
+    public void Enqueue(KeyValuePair<string,string?> item)
+    {
+        Items.Enqueue(item);
+        if (Tip != null && !Tip.IsOpen)
+            Roll(false);
+    }
 
     public void Roll(bool passiveRoll = true)
     {
@@ -53,6 +65,8 @@ public sealed class TeachingTipService : ITeachingTipService
 
     private void RunOnUIThread(Action action)
     {
-        _ = CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { action(); });
+        _taskRunner.Forget(
+            CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { action(); }),
+            "TeachingTip Service Update");
     }
 }

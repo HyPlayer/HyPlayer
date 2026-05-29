@@ -81,7 +81,7 @@ public sealed partial class MVPage : Page
                 });
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("加载相关视频时出错", json.Error.Message));
+            _teachingTipService.Enqueue(new("加载相关视频时出错", json.Error.Message));
             return;
         }
 
@@ -154,7 +154,7 @@ public sealed partial class MVPage : Page
                 }, _cancellationToken);
             if (json.IsError)
             {
-                _teachingTipService.Items.Enqueue(new("加载视频时出错", json.Error.Message));
+                _teachingTipService.Enqueue(new("加载视频时出错", json.Error.Message));
                 return;
             }
 
@@ -170,7 +170,7 @@ public sealed partial class MVPage : Page
                 }, _cancellationToken);
             if (json.IsError)
             {
-                _teachingTipService.Items.Enqueue(new("加载视频时出错", json.Error.Message));
+                _teachingTipService.Enqueue(new("加载视频时出错", json.Error.Message));
                 return;
             }
 
@@ -195,7 +195,7 @@ public sealed partial class MVPage : Page
                    }, _cancellationToken);
             if (json.IsError)
             {
-                _teachingTipService.Items.Enqueue(new("加载视频信息时出错", json.Error.Message));
+                _teachingTipService.Enqueue(new("加载视频信息时出错", json.Error.Message));
                 return;
             }
 
@@ -220,7 +220,7 @@ public sealed partial class MVPage : Page
                     }, _cancellationToken);
             if (json.IsError)
             {
-                _teachingTipService.Items.Enqueue(new("加载视频信息时出错", json.Error.Message));
+                _teachingTipService.Enqueue(new("加载视频信息时出错", json.Error.Message));
                 return;
             }
 

@@ -137,7 +137,7 @@ namespace HyPlayer.Services.History
             }
             catch (Exception e)
             {
-                Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("储存歌曲记录时发生错误", e.Message));
+                Ioc.Default.GetRequiredService<ITeachingTipService>().Enqueue(new("储存歌曲记录时发生错误", e.Message));
             }
 
             return [];
@@ -175,7 +175,7 @@ namespace HyPlayer.Services.History
                 nowIndex++;
                 if (json.IsError)
                 {
-                    Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("加载当前播放失败", json.Error.Message));
+                    Ioc.Default.GetRequiredService<ITeachingTipService>().Enqueue(new("加载当前播放失败", json.Error.Message));
                     continue;
                 }
 

@@ -60,7 +60,7 @@ public sealed class ShellLoginService
         if (!result.IsSuccess)
         {
             if (!string.IsNullOrEmpty(result.ErrorMessage))
-                _teachingTipService.Items.Enqueue(new ("自动登录失败", result.ErrorMessage));
+                _teachingTipService.Enqueue(new ("自动登录失败", result.ErrorMessage));
             _navigation.Navigate(typeof(Welcome));
             return;
         }
@@ -72,7 +72,7 @@ public sealed class ShellLoginService
     {
         var result = await _auth.LogoutAsync();
         if (!result.IsSuccess && !string.IsNullOrEmpty(result.ErrorMessage))
-            _teachingTipService.Items.Enqueue(new ("清除登录缓存失败", result.ErrorMessage));
+            _teachingTipService.Enqueue(new ("清除登录缓存失败", result.ErrorMessage));
 
         _navigationShell.UpdateAfterLogout();
         _navigation.Navigate(typeof(Welcome));
@@ -230,11 +230,11 @@ public sealed class ShellLoginService
         var result = await _auth.RegisterCurrentDeviceAsync();
         if (!result.IsSuccess)
         {
-            _teachingTipService.Items.Enqueue(new ("设备ID注册失败, 请尝试其他方案", "获取失败: " + result.ErrorMessage));
+            _teachingTipService.Enqueue(new ("设备ID注册失败, 请尝试其他方案", "获取失败: " + result.ErrorMessage));
             return;
         }
 
-        _teachingTipService.Items.Enqueue(new("设备ID注册成功", "临时用户 ID: " + result.TemporaryUserId));
+        _teachingTipService.Enqueue(new("设备ID注册成功", "临时用户 ID: " + result.TemporaryUserId));
         dialog.Hide();
         await ShowLoginDialogAsync();
     }
@@ -244,7 +244,7 @@ public sealed class ShellLoginService
         var result = await _auth.CompleteLoginAsync(true);
         if (!result.IsSuccess)
         {
-            _teachingTipService.Items.Enqueue(new("登录失败", result.ErrorMessage));
+            _teachingTipService.Enqueue(new("登录失败", result.ErrorMessage));
             return;
         }
 

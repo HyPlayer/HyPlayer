@@ -60,7 +60,7 @@ namespace HyPlayer.Features.Library
                         var json = await _api.RequestAsync(NeteaseApis.DjChannelSubscribedApi);
                         if (json.IsError)
                         {
-                            _teachingTipService.Items.Enqueue(new("加载订阅播客列表错误", json.Error.Message));
+                            _teachingTipService.Enqueue(new("加载订阅播客列表错误", json.Error.Message));
                             return null;
                         }
 
@@ -101,7 +101,7 @@ namespace HyPlayer.Features.Library
                             });
                         if (json.IsError)
                         {
-                            _teachingTipService.Items.Enqueue(new("加载关注歌手列表错误", json.Error.Message));
+                            _teachingTipService.Enqueue(new("加载关注歌手列表错误", json.Error.Message));
                             return null;
                         }
 
@@ -139,7 +139,7 @@ namespace HyPlayer.Features.Library
                             });
                         if (jv.IsError)
                         {
-                            _teachingTipService.Items.Enqueue(new("加载收藏专辑列表错误", jv.Error?.Message));
+                            _teachingTipService.Enqueue(new("加载收藏专辑列表错误", jv.Error?.Message));
                             return null;
                         }
 

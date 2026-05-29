@@ -30,7 +30,7 @@ public partial class GroupedSongsListViewModel(
         if (selectedSongs.Count == 0) return;
         if (!selectedSong.IsAvailable)
         {
-            teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用"));
+            teachingTipService.Enqueue(new("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用"));
             return;
         }
 
@@ -49,7 +49,7 @@ public partial class GroupedSongsListViewModel(
         if (selectedSongs.Count == 0) return;
         if (!selectedSong.IsAvailable)
         {
-            teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用"));
+            teachingTipService.Enqueue(new("歌曲不可用", $"歌曲 {selectedSong.SongName} 当前不可用"));
             return;
         }
 
@@ -79,7 +79,7 @@ public partial class GroupedSongsListViewModel(
         var unAvailableSongNames = selectedSongs.Where(t => !t.IsAvailable).Select(t => t.SongName).ToArray();
         if (unAvailableSongNames.Length > 0)
         {
-            teachingTipService.Items.Enqueue(new("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除"));
+            teachingTipService.Enqueue(new("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除"));
         }
     }
 

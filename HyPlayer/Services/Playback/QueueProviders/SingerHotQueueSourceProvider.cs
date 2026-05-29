@@ -41,7 +41,7 @@ internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
                     new ArtistTopSongRequest { ArtistId = id });
                 if (j1.IsError)
                 {
-                    _teachingTipService.Items.Enqueue(new("获取歌手热门歌曲失败", j1.Error?.Message));
+                    _teachingTipService.Enqueue(new("获取歌手热门歌曲失败", j1.Error?.Message));
                     return null;
                 }
 
@@ -54,7 +54,7 @@ internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _teachingTipService.Items.Enqueue(new("AppendNCSource时发生错误", ex.Message));
+            _teachingTipService.Enqueue(new("AppendNCSource时发生错误", ex.Message));
         }
 
         return NeteaseQueueSourceLoadResult.Failed;

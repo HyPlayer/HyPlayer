@@ -71,11 +71,11 @@ public sealed partial class PlaylistItem : UserControl
             });
         if (result.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("公开歌单失败", result.Error?.Message));
+            _teachingTipService.Enqueue(new("公开歌单失败", result.Error?.Message));
         }
         else
         {
-            _teachingTipService.Items.Enqueue(new("成功公开歌单", null));
+            _teachingTipService.Enqueue(new("成功公开歌单", null));
             _playlistCollectionChangeNotifier.NotifyChanged();
         }
     }
@@ -89,11 +89,11 @@ public sealed partial class PlaylistItem : UserControl
             });
         if (result.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("删除歌单失败", result.Error?.Message));
+            _teachingTipService.Enqueue(new("删除歌单失败", result.Error?.Message));
         }
         else
         {
-            _teachingTipService.Items.Enqueue(new("成功删除", null));
+            _teachingTipService.Enqueue(new("成功删除", null));
             _playlistCollectionChangeNotifier.NotifyChanged();
             _navigation.NavigateRefresh();
         }

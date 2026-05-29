@@ -89,7 +89,7 @@ public static class UpdateManager
         using var versionsResponse = await Ioc.Default.GetRequiredService<HttpClient>().SendAsync(message);
         if (!versionsResponse.IsSuccessStatusCode)
         {
-            Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}"));
+            Ioc.Default.GetRequiredService<ITeachingTipService>().Enqueue(new("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}"));
         }
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
@@ -117,7 +117,7 @@ public static class UpdateManager
             })}/latest"));
         if (!versionsResponse.IsSuccessStatusCode)
         {
-            Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}"));
+            Ioc.Default.GetRequiredService<ITeachingTipService>().Enqueue(new("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}"));
         }
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
@@ -165,7 +165,7 @@ public static class UpdateManager
                           (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
             if (isStartup)
             {
-                Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new(title, message));
+                Ioc.Default.GetRequiredService<ITeachingTipService>().Enqueue(new(title, message));
             }
             else
             {
@@ -190,13 +190,13 @@ public static class UpdateManager
         var userResp = await Ioc.Default.GetRequiredService<HttpClient>().GetAsync(new Uri($"https://hyplayer.kengwang.com.cn/user/email/{userEmail}"));
         if (userResp.IsSuccessStatusCode)
         {
-            Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("Canary版本已解锁", "感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新"));
+            Ioc.Default.GetRequiredService<ITeachingTipService>().Enqueue(new("Canary版本已解锁", "感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新"));
             Ioc.Default.GetRequiredService<Setting>().canaryChannelAvailability = true;
         }
         else
         {
             Ioc.Default.GetRequiredService<Setting>().canaryChannelAvailability = false;
-            Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁"));
+            Ioc.Default.GetRequiredService<ITeachingTipService>().Enqueue(new("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁"));
             if (Ioc.Default.GetRequiredService<Setting>().UpdateSource == UpdateSource.Canary) Ioc.Default.GetRequiredService<Setting>().UpdateSource = UpdateSource.Release;
         }
     }

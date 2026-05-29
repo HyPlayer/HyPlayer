@@ -151,7 +151,7 @@ public sealed partial class Search : Page
         catch (Exception ex)
         {
             if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                _teachingTipService.Items.Enqueue(new("搜索错误", ex.Message));
+                _teachingTipService.Enqueue(new("搜索错误", ex.Message));
         }
     }
 
@@ -170,7 +170,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("搜索歌曲时出错", json.Error.Message));
+            _teachingTipService.Enqueue(new("搜索歌曲时出错", json.Error.Message));
             return;
         }
 
@@ -222,7 +222,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("搜索专辑时出错", json.Error.Message));
+            _teachingTipService.Enqueue(new("搜索专辑时出错", json.Error.Message));
             return;
         }
 
@@ -275,7 +275,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("搜索歌手时出错", json.Error.Message));
+            _teachingTipService.Enqueue(new("搜索歌手时出错", json.Error.Message));
             return;
         }
 
@@ -328,7 +328,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("搜索歌单时出错", json.Error.Message));
+            _teachingTipService.Enqueue(new("搜索歌单时出错", json.Error.Message));
             return;
         }
 
@@ -381,7 +381,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("搜索用户时出错", json.Error.Message));
+            _teachingTipService.Enqueue(new("搜索用户时出错", json.Error.Message));
             return;
         }
 
@@ -431,7 +431,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("搜索电台时出错", json.Error.Message));
+            _teachingTipService.Enqueue(new("搜索电台时出错", json.Error.Message));
             return;
         }
 
@@ -486,7 +486,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("搜索 MV 时出错", json.Error.Message));
+            _teachingTipService.Enqueue(new("搜索 MV 时出错", json.Error.Message));
             return;
         }
 
@@ -535,7 +535,7 @@ public sealed partial class Search : Page
         var i = 0;
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("搜索 Mlog 时出错", json.Error.Message));
+            _teachingTipService.Enqueue(new("搜索 Mlog 时出错", json.Error.Message));
             return;
         }
 
@@ -585,7 +585,7 @@ public sealed partial class Search : Page
             }, _cancellationToken);
         if (json.IsError)
         {
-            _teachingTipService.Items.Enqueue(new("搜索歌词时出错", json.Error.Message));
+            _teachingTipService.Enqueue(new("搜索歌词时出错", json.Error.Message));
             return;
         }
 
@@ -680,7 +680,7 @@ public sealed partial class Search : Page
 
             if (json.IsError)
             {
-                _teachingTipService.Items.Enqueue(new("搜索建议时出错", json.Error.Message));
+                _teachingTipService.Enqueue(new("搜索建议时出错", json.Error.Message));
                 return;
             }
 
@@ -688,7 +688,7 @@ public sealed partial class Search : Page
         }
         catch (Exception ex)
         {
-            _teachingTipService.Items.Enqueue(new(ex.Message, ex.InnerException?.Message));
+            _teachingTipService.Enqueue(new(ex.Message, ex.InnerException?.Message));
         }
     }
 

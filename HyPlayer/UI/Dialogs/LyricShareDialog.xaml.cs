@@ -76,7 +76,7 @@ public sealed partial class LyricShareDialog : ContentDialog
         var dp = new DataPackage();
         dp.SetText(output);
         Clipboard.SetContent(dp);
-        Ioc.Default.GetRequiredService<ITeachingTipService>().Items.Enqueue(new("成功复制", null));
+        Ioc.Default.GetRequiredService<ITeachingTipService>().Enqueue(new("成功复制", null));
     }
 
     private string LoadSelectedText()

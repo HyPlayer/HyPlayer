@@ -548,7 +548,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private MediaSourceAudioInputNode TryGetAudioInputNode(IPlaybackSource playbackSource)
         {
             if (playbackSource is not AudioGraphPlaybackSource source)
-                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
+                return null;
 
             if (!_audioInputNodes.TryGetValue(source, out var node))
                 return null;

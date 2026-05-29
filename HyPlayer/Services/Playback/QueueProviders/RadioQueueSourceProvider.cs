@@ -54,7 +54,7 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
                     });
                 if (json.IsError)
                 {
-                    _teachingTipService.Items.Enqueue(new("获取电台节目失败", json.Error.Message));
+                    _teachingTipService.Enqueue(new("获取电台节目失败", json.Error.Message));
                     return NeteaseQueueSourceLoadResult.Failed;
                 }
 
@@ -69,7 +69,7 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _teachingTipService.Items.Enqueue(new("AppendRadioList时发生错误", ex.Message));
+            _teachingTipService.Enqueue(new("AppendRadioList时发生错误", ex.Message));
         }
 
         return NeteaseQueueSourceLoadResult.Failed;

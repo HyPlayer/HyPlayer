@@ -31,7 +31,7 @@ internal class Api
         }
         else
         {
-            teachingTipService.Items.Enqueue(new("红心歌曲时发生错误", requestResult.Error.Message));
+            teachingTipService.Enqueue(new("红心歌曲时发生错误", requestResult.Error.Message));
             return false;
         }
     }
@@ -57,7 +57,7 @@ internal class Api
 
         if (jsoon.IsError)
         {
-            teachingTipService.Items.Enqueue(new("加载心动模式列表出错", jsoon.Error.Message));
+            teachingTipService.Enqueue(new("加载心动模式列表出错", jsoon.Error.Message));
             return;
         }
 

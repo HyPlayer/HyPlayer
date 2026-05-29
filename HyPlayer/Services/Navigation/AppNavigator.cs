@@ -457,7 +457,7 @@ public sealed class AppNavigator : IAppNavigator
         }
         catch (Exception ex)
         {
-            _teachingTipService.Items.Enqueue(new("导航失败", ex.Message));
+            _teachingTipService.Enqueue(new("导航失败", ex.Message));
         }
     }
 
