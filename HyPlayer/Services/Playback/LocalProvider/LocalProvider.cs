@@ -6,7 +6,7 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Services.Playback.PlayCoreBridge;
+using HyPlayer.Services.Playback.AudioServices;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;

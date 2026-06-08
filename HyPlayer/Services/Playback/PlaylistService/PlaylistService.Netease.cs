@@ -68,35 +68,23 @@ public sealed partial class PlaylistService
 
         try
         {
-            var hasChanges = false;
-            lock (_lock)
+            var songs = new List<SingleSongBase>();
+            foreach (var batch in result.Batches)
             {
-                foreach (var batch in result.Batches)
+                if (batch is not { Count: > 0 })
+                    continue;
+
+                foreach (var providerSong in batch)
                 {
-                    if (batch is not { Count: > 0 })
+                    if (result.Batches.Count == 1 && batch.Count == 1 && ContainsProviderItem(providerSong))
                         continue;
 
-                    foreach (var providerSong in batch)
-                    {
-                        if (result.Batches.Count == 1 && batch.Count == 1)
-                        {
-                            if (ContainsProviderItem(providerSong))
-                                continue;
-
-                            InsertQueueItem(providerSong);
-                        }
-                        else
-                        {
-                            InsertQueueItem(providerSong);
-                        }
-
-                        hasChanges = true;
-                    }
+                    songs.Add(providerSong);
                 }
             }
 
-            if (hasChanges)
-                PublishPlaylistChanged();
+            if (songs.Count > 0)
+                AppendItems(songs);
         }
         catch (Exception ex)
         {
@@ -106,7 +94,7 @@ public sealed partial class PlaylistService
 
     private bool ContainsProviderItem(SingleSongBase song)
     {
-        return _providerItems.Any(providerItem => providerItem is not null
+        return ProviderQueueSnapshot.Any(providerItem => providerItem is not null
             && providerItem.ProviderId == song.ProviderId
             && providerItem.TypeId == song.TypeId
             && providerItem.ActualId == song.ActualId);

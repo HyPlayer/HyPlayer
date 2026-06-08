@@ -4,8 +4,7 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using System.Collections.Generic;
-using System.Linq;
+using HyPlayer.Services.Playback.PlaylistService;
 using System.Threading.Tasks;
 
 #endregion
@@ -16,7 +15,7 @@ namespace HyPlayer.Infrastructure.Netease;
 /// 私人 FM 控制器。
 /// <para>
 /// 保留静态入口 <see cref="InitPersonalFM"/> / <see cref="ExitFm"/> 以兼容现有调用方，
-/// 具体的 FM 内容加载与曲目转换由 <see cref="IAsyncPlayStrategy"/> 的 pfm 策略负责。
+/// 具体的 FM 内容加载与曲目转换由 PlayCore-backed playlist facade 负责。
 /// </para>
 /// </summary>
 internal sealed class PersonalFM
@@ -25,7 +24,6 @@ internal sealed class PersonalFM
 
     private readonly IPlaylistService _playlistService;
     private readonly PlaybackStateService _playbackState;
-    private readonly IAsyncPlayStrategy _personalFmStrategy;
     private string _previousStrategyId = string.Empty;
     private bool _isLoadingNextTrack;
 
@@ -33,9 +31,6 @@ internal sealed class PersonalFM
     {
         _playlistService = Ioc.Default.GetRequiredService<IPlaylistService>();
         _playbackState = Ioc.Default.GetRequiredService<PlaybackStateService>();
-        _personalFmStrategy = Ioc.Default.GetRequiredService<IEnumerable<IPlayStrategy>>()
-            .OfType<IAsyncPlayStrategy>()
-            .First(strategy => strategy.Id == "pfm");
     }
 
     public static void InitPersonalFM()
@@ -90,20 +85,10 @@ internal sealed class PersonalFM
 
     private async Task AppendMoreTracksAsync()
     {
-        var moreItems = (await _personalFmStrategy.LoadMoreProviderItemsAsync(new PlayStrategyContext
-        {
-            CurrentIndex = _playlistService.NowPlayingIndex,
-            QueueCount = _playlistService.QueueCount,
-            ProviderItems = _playlistService.ProviderItems.ToArray(),
-            ProviderQueueItems = _playlistService.ProviderQueueSnapshot.ToArray(),
-            CurrentProviderItem = _playlistService.NowPlayingProviderItem
-        })).ToList();
-
-        if (!IsActiveSession || moreItems.Count == 0)
+        if (_playlistService is not PlaylistService playlist)
             return;
 
-        _playlistService.AppendItems(moreItems);
-
+        await playlist.AppendMorePersonalFmTracksAsync().ConfigureAwait(false);
     }
 
     private bool IsActiveSession => ReferenceEquals(_instance, this) && _playbackState.IsInFm;

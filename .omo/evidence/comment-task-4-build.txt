@@ -1,0 +1,29 @@
+Build Evidence - CommentTarget TypeId Refactoring
+===================================================
+Date: 2026-05-28
+Command: msbuild HyPlayer.slnx /p:Configuration=Release /p:RuntimeIdentifier=win-x64 /p:Platform=x64 /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false /m
+Result: BUILD SUCCEEDED
+Errors: 0
+Warnings: 16 (all pre-existing: CS8601 in NeteaseItemActions.cs, CS0414 in RadioPage.xaml.cs, IL2104/IL2067 in external libs)
+
+Files Changed:
+- HyPlayer/Domain/Comments/CommentTarget.cs: record CommentTarget(NeteaseResourceType, string) -> record CommentTarget(string TypeId, string ResourceId)
+- HyPlayer/Domain/Comments/Comment.cs: NeteaseResourceType ResourceType -> string TypeId
+- HyPlayer/Features/Comments/Comments.xaml.cs: Updated to use target.TypeId, removed MapCommentTypeId method
+- HyPlayer/UI/Controls/SingleComment.xaml.cs: Updated to use MainComment.TypeId, removed MapCommentTypeId method
+
+TypeId Mapping:
+- Song -> "sg"
+- Album -> "al"
+- Playlist -> "pl"
+- MV -> "mv"
+- RadioProgram -> "pr"
+- MLog -> "mb"
+
+6 Caller Files (unchanged - use factory methods):
+- HyPlayer/UI/Playback/PlayBar/PlayBar.xaml.cs (CommentTarget.Song, CommentTarget.RadioProgram)
+- HyPlayer/UI/Lists/SongsList.xaml.cs (CommentTarget.Song, CommentTarget.Playlist)
+- HyPlayer/UI/Lists/GroupedSongsListViewModel.cs (CommentTarget.Song)
+- HyPlayer/Features/Video/MVPage.xaml.cs (CommentTarget.MV, CommentTarget.MLog)
+- HyPlayer/Features/Playlist/SongListViewModel.cs (CommentTarget.Playlist)
+- HyPlayer/Features/Album/AlbumPageViewModel.cs (CommentTarget.Album)

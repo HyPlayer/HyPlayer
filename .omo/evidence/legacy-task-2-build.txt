@@ -1,0 +1,25 @@
+Legacy Task 2: Delete NeteaseTypeIds.cs and migrate Api.cs
+============================================================
+
+Date: 2026-05-28
+
+Changes Made:
+1. Added `using HyPlayer.NeteaseProvider.Constants;` to HyPlayer/Infrastructure/Netease/Api.cs
+2. Deleted HyPlayer/Infrastructure/Netease/NeteaseTypeIds.cs
+
+Verification:
+- Solution: HyPlayer.slnx
+- Platform: x64
+- Configuration: Release
+- RuntimeIdentifier: win-x64
+- Build result: 0 errors, 3 warnings (all pre-existing trim/IL warnings)
+- Build time: ~2 minutes
+
+Build command:
+msbuild HyPlayer.slnx /p:Configuration=Release /p:RuntimeIdentifier=win-x64 /p:Platform=x64 /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false
+
+Notes:
+- MapCommentTypeId method was in the deleted file but had 0 callers anywhere in the codebase
+- Only Api.cs used NeteaseTypeIds.SingleSong from the old namespace
+- NeteaseProvider.Constants.NeteaseTypeIds has all 16 shared constants with identical values
+- No other files referenced HyPlayer.Infrastructure.Netease.NeteaseTypeIds

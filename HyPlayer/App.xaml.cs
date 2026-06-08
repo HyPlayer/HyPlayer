@@ -31,12 +31,10 @@ using HyPlayer.Services.Lyrics;
 using HyPlayer.Services.Navigation;
 using HyPlayer.Services.Notifications;
 using HyPlayer.Services.Playback;
+using HyPlayer.Services.Playback.AudioServices;
 using HyPlayer.Services.Playback.LocalProvider;
-using HyPlayer.Services.Playback.PlayCoreBridge;
 using HyPlayer.Services.Playback.PlaylistService;
 using HyPlayer.Services.Playback.QueueProviders;
-using HyPlayer.Services.Playback.Strategies;
-using HyPlayer.Services.Playback.Transitions;
 using HyPlayer.Services.Runtime;
 using HyPlayer.Services.Tiles;
 using HyPlayer.Shell.Login;
@@ -158,7 +156,7 @@ public sealed partial class App : Application
         depository.AddSingleton<AudioGraphPlayer>();
         depository.Add(typeof(IPlayer), typeof(AudioGraphPlayer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<AudioGraphPlayer>());
 
-        // ── PlayCore foundation (side-by-side; existing playback remains active) ──
+        // ── PlayCore playback foundation ──
         depository.AddSingleton<INotificationHub, PlayCoreNotificationHub>();
         depository.AddSingleton<DefaultPlayListManager>();
         depository.Add(typeof(PlayListManagerBase), typeof(DefaultPlayListManager), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<DefaultPlayListManager>());
@@ -168,31 +166,19 @@ public sealed partial class App : Application
         depository.AddSingleton<Chopin>();
         depository.Add(typeof(PlayCoreBase), typeof(Chopin), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<Chopin>());
         depository.Add(typeof(INotificationSubscriber<CurrentSongChangedNotification>), typeof(Chopin), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<Chopin>());
-        depository.AddSingleton<ChopinAudioServiceAdapter>();
-        depository.Add(typeof(AudioServiceBase), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
-        depository.Add(typeof(IPlayAudioTicketService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
-        depository.Add(typeof(IPauseAudioTicketService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
-        depository.Add(typeof(IStopAudioTicketService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
-        depository.Add(typeof(IAudioTicketSeekableService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
-        depository.Add(typeof(IOutgoingVolumeChangeable), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
-        depository.Add(typeof(IAudioTicketVolumeChangeable), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
-        depository.Add(typeof(IPlaybackSpeedChangeable.IPlaybackRateChangeableService), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
-        depository.Add(typeof(IAudioTicketListProvidable), typeof(ChopinAudioServiceAdapter), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioServiceAdapter>());
+        depository.AddSingleton<ChopinAudioService>();
+        depository.Add(typeof(AudioServiceBase), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
+        depository.Add(typeof(IPlayAudioTicketService), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
+        depository.Add(typeof(IPauseAudioTicketService), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
+        depository.Add(typeof(IStopAudioTicketService), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
+        depository.Add(typeof(IAudioTicketSeekableService), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
+        depository.Add(typeof(IOutgoingVolumeChangeable), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
+        depository.Add(typeof(IAudioTicketVolumeChangeable), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
+        depository.Add(typeof(IPlaybackSpeedChangeable.IPlaybackRateChangeableService), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
+        depository.Add(typeof(IAudioTicketListProvidable), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
 
         // ── 播放核心：状态中心 ──
         depository.AddSingleton<PlaybackStateService>();
-
-        // ── 播放核心：播放策略 ──
-        depository.AddSingleton<IPlayStrategy, SequentialStrategy>();       // seq — 列表循环
-        depository.AddSingleton<IPlayStrategy, SingleRepeatStrategy>();     // sgl — 单曲循环
-        depository.AddSingleton<IPlayStrategy, ShuffleNoRepeatStrategy>();  // shn — 随机不重复
-        depository.AddSingleton<IPlayStrategy, PersonalFmStrategy>();       // pfm — 私人 FM
-        depository.AddSingleton<IPlayStrategy, ListenTogetherStrategy>();   // ltg — 一起听
-
-        // ── 播放核心：曲目过渡策略 ──
-        depository.AddSingleton<ITrackTransition, DirectTransition>();      // dir — 直接切歌
-        depository.AddSingleton<ITrackTransition, CrossFadeTransition>();   // xfd — 交叉淡入淡出
-        depository.AddSingleton<ITrackTransition, GaplessTransition>();     // gap — 无缝衔接
 
         // ── 播放核心：队列源 Provider ──
         depository.AddSingleton<IQueueSourceProvider, PlaylistQueueSourceProvider>();

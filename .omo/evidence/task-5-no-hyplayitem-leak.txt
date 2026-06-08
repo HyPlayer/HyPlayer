@@ -1,0 +1,8 @@
+Task 5 HyPlayItem leakage check - 2026-05-23
+
+Commands:
+- grep HyPlayItem in E:\HyPlayer\HyPlayer.PlayCore: no matches
+- grep HyPlayItem in E:\HyPlayer\HyPlayer.NeteaseProvider: no matches
+
+Conclusion:
+PlayCore and NeteaseProvider do not reference HyPlayItem after adding the app-side compatibility adapter.

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 
 namespace HyPlayer.Services.Playback.PlaylistService;
@@ -17,28 +18,26 @@ public sealed partial class PlaylistService
     public void CreateShufflePlayLists()
     {
         ShuffleList.Clear();
+        var snapshot = ProviderQueueSnapshot;
         var currentSongId = NowPlayingProviderItem?.ActualId ?? "-1";
-        lock (_lock)
+        if (snapshot.Count != 0)
         {
-            if (_providerItems.Count != 0)
+            HashSet<int> shuffledNumbers = [];
+            if (currentSongId != "-1")
             {
-                HashSet<int> shuffledNumbers = [];
-                if (currentSongId != "-1")
+                int playItemIndex = snapshot.ToList().FindIndex(s => s?.ActualId == currentSongId);
+                if (playItemIndex != -1)
                 {
-                    int playItemIndex = _providerItems.FindIndex(s => s?.ActualId == currentSongId);
-                    if (playItemIndex != -1)
-                    {
-                        shuffledNumbers.Add(playItemIndex);
-                        ShuffleList.Add(playItemIndex);
-                    }
+                    shuffledNumbers.Add(playItemIndex);
+                    ShuffleList.Add(playItemIndex);
                 }
+            }
 
-                while (shuffledNumbers.Count < _providerItems.Count)
-                {
-                    var indexShuffled = RandomNumberGenerator.GetInt32(_providerItems.Count);
-                    if (shuffledNumbers.Add(indexShuffled))
-                        ShuffleList.Add(indexShuffled);
-                }
+            while (shuffledNumbers.Count < snapshot.Count)
+            {
+                var indexShuffled = RandomNumberGenerator.GetInt32(snapshot.Count);
+                if (shuffledNumbers.Add(indexShuffled))
+                    ShuffleList.Add(indexShuffled);
             }
         }
 
@@ -48,39 +47,26 @@ public sealed partial class PlaylistService
     /// <inheritdoc />
     public void RestoreNowPlayingIndex(int index)
     {
-        lock (_lock)
-        {
-            if (index < 0 || index >= _providerItems.Count || index == _nowPlayingIndex)
-                return;
-            _nowPlayingIndex = index;
-            SyncIndex();
-        }
-        PublishPlaylistChanged();
+        RunSynchronously(MoveToIndexAsync(index));
     }
 
     /// <inheritdoc />
     public void ReverseList()
     {
-        lock (_lock)
-        {
-            _providerItems.Reverse();
-            if (_nowPlayingIndex >= 0 && _nowPlayingIndex < _providerItems.Count)
-                _nowPlayingIndex = _providerItems.Count - _nowPlayingIndex - 1;
-            SyncIndex();
-        }
-        PublishPlaylistChanged();
+        RunSynchronously(ReverseListAsync());
     }
 
-    /// <summary>
-    /// Disposes the internal <see cref="CancellationTokenSource"/> used for track-end handling.
-    /// </summary>
-    public void Dispose()
+    private async System.Threading.Tasks.Task ReverseListAsync()
     {
-        _trackEndCts?.Cancel();
-        _trackEndCts?.Dispose();
-        _trackEndCts = null;
-        _providerItems.Clear();
-        _state.ClearNowPlaying();
-        _trackEndLock.Dispose();
+        var snapshot = ProviderItems.Reverse().ToList();
+        var current = NowPlayingProviderItem;
+
+        await _playCore.RemoveAllSongAsync().ConfigureAwait(false);
+        await _playCore.InsertSongRangeAsync(snapshot).ConfigureAwait(false);
+
+        if (current is not null)
+            await _playCore.MovePointerToAsync(current).ConfigureAwait(false);
+
+        await RefreshAfterPlaylistChangedAsync().ConfigureAwait(false);
     }
 }

@@ -1,0 +1,35 @@
+=============================================================================
+TASK 19 - GREP EVIDENCE: Old Model Reference Search
+Date: 2026-05-27
+=============================================================================
+
+SEARCH COMMAND: grep -r "NCPlayList|NCArtist|NCAlbum|NCUser|NCRadio|HyPlayItemType" --include="*.cs" HyPlayer/
+
+=============================================================================
+RESULTS SUMMARY
+=============================================================================
+
+1. \bNCPlayList\b: 0 matches ✅
+2. \bNCArtist\b:    0 matches ✅
+3. \bNCAlbum\b:     0 matches ✅
+4. \bNCUser\b:      1 match   ✅ (comment only, not a code reference)
+5. \bNCRadio\b:     0 matches ✅
+6. \bHyPlayItemType\b: 0 matches ✅
+
+=============================================================================
+DETAIL: NCUser match
+=============================================================================
+
+File: HyPlayer/Domain/CommentUserInfo.cs
+Line 5: /// Replaces NCUser usage in Comment and UserDisplay without required-member constraints.
+
+Classification: DOCUMENTATION COMMENT ONLY
+This is a code comment explaining what the new type replaces, NOT an actual
+reference to the NCUser type. No code dependency exists.
+
+=============================================================================
+CONCLUSION: NO OLD MODEL CODE REFERENCES REMAIN
+=============================================================================
+All old NC* model types and HyPlayItemType have been fully removed from
+the HyPlayer main app source code. Only one documentation comment mentions
+NCUser for context.

@@ -1,0 +1,44 @@
+Task 14: Verify PlaybackCurrentItemSnapshot.cs and PlaybackStateService.cs have no old model references
+Date: 2026-05-27
+
+## File Review
+
+### PlaybackCurrentItemSnapshot.cs
+- Uses: SingleSongBase (from HyPlayer.PlayCore.Abstraction.Models.SingleItems)
+- Uses: IHasTranslation (from HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem)
+- No references to NCPlayList, NCPlayItem, HyPlayItem, or NCMusic
+- All properties use SingleSongBase or base abstractions
+- Status: CLEAN
+
+### PlaybackStateService.cs
+- Uses: SingleSongBase (from HyPlayer.PlayCore.Abstraction.Models.SingleItems)
+- Uses: PlaybackCurrentItemSnapshot (from HyPlayer.Services.Abstractions)
+- No references to NCPlayList, NCPlayItem, HyPlayItem, or NCMusic
+- Status: CLEAN
+
+## Grep Verification
+Pattern: NCPlayList|NCPlayItem|HyPlayItem|NCMusic
+- PlaybackCurrentItemSnapshot.cs: No matches found
+- PlaybackStateService.cs: No matches found
+
+## Build Status
+msbuild HyPlayer.slnx /p:Configuration=Release /p:RuntimeIdentifier=win-x64 /p:Platform=x64 /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false
+
+38 errors total - ALL in OTHER files (not in our target files):
+- NavigationShellViewModel.cs (CS1061, CS1503 - NeteaseUser/NeteasePlaylist missing properties)
+- Comment.cs (CS1061 - NeteaseUser missing Id)
+- MainPage.xaml.cs (CS1061 - NeteasePlaylist missing PlaylistId)
+- TestPage.xaml.cs (CS0029 - NeteaseUser cannot convert to NCUser)
+- HomeViewModel.cs (CS1061 - NeteasePlaylist missing PlaylistId)
+- SongListSelectDialog.xaml.cs (CS1061 - NeteasePlaylist missing PlaylistId)
+- SongListViewModel.cs (CS1061 - NeteaseUser missing Id)
+- Me.xaml.cs (CS1061 - NeteaseUser missing Id)
+- HIstoryPage.xaml.cs (CS1061 - NeteaseUser missing Id)
+- ListenTogetherManager.cs (CS1061 - NeteaseUser missing Id)
+- AppNavigator.cs (CS1061 - NeteasePlaylist missing PlaylistId)
+
+Zero errors in PlaybackCurrentItemSnapshot.cs or PlaybackStateService.cs.
+These are pre-existing build errors from other migration work, not related to this task.
+
+## Conclusion
+Both files are already clean - no old model references found. No changes needed.

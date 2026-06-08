@@ -10,7 +10,7 @@ namespace HyPlayer.Services.Abstractions;
 
 /// <summary>
 /// 播放列表服务，管理播放列表内容和播放顺序。
-/// 内部组合 <see cref="IPlayStrategy"/>（决定下一首）和 <see cref="ITrackTransition"/>（决定怎么过渡）。
+/// HyPlayer UI-facing facade for the PlayCore-backed playlist and playback order.
 /// </summary>
 public interface IPlaylistService
 {

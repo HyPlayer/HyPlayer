@@ -9,7 +9,7 @@ using HyPlayer.PlayCore.Abstraction.Models.Notifications;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.LastFM;
-using HyPlayer.Services.Playback.PlayCoreBridge;
+using HyPlayer.Services.Playback.AudioServices;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
@@ -41,7 +41,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private readonly IPlaybackNotificationService _playbackNotification;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
-    private readonly ChopinAudioServiceAdapter _audioServiceAdapter;
+    private readonly ChopinAudioService _audioService;
     private bool _resolvingPlaylistService;
     private IPlaylistService? _playlistService;
     private SystemMediaTransportControls? _smtc;
@@ -70,7 +70,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         IPlaybackNotificationService playbackNotification,
         IBackgroundTaskRunner taskRunner,
         IEnumerable<IMusicResourceProvidable> musicResourceProviders,
-        ChopinAudioServiceAdapter audioServiceAdapter)
+        ChopinAudioService audioService)
     {
         _player = player ?? throw new ArgumentNullException(nameof(player));
         _playCore = playCore ?? throw new ArgumentNullException(nameof(playCore));
@@ -82,7 +82,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         _playbackNotification = playbackNotification ?? throw new ArgumentNullException(nameof(playbackNotification));
         _taskRunner = taskRunner ?? throw new ArgumentNullException(nameof(taskRunner));
         _musicResourceProviders = musicResourceProviders?.ToList() ?? throw new ArgumentNullException(nameof(musicResourceProviders));
-        _audioServiceAdapter = audioServiceAdapter ?? throw new ArgumentNullException(nameof(audioServiceAdapter));
+        _audioService = audioService ?? throw new ArgumentNullException(nameof(audioService));
     }
 
     #region IPlaybackControlService
@@ -167,11 +167,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
                 break;
 
             case SystemMediaTransportControlsButton.Next:
-                _playlistService.MoveNextAsync();
+                _taskRunner.Forget(GetPlaylistService()?.MoveNextAsync(true) ?? Task.CompletedTask, "SMTC next");
                 break;
 
             case SystemMediaTransportControlsButton.Previous:
-                _playlistService.MovePreviousAsync();
+                _taskRunner.Forget(GetPlaylistService()?.MovePreviousAsync() ?? Task.CompletedTask, "SMTC previous");
                 break;
         }
     }
@@ -241,25 +241,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         }
     }
 
-    public async Task<ITransitionPlaybackSource?> PreloadTransitionPlaybackSourceAsync(SingleSongBase song, CancellationToken ct = default)
-    {
-        ArgumentNullException.ThrowIfNull(song);
-        await InitializeAsync();
-
-        var provider = _musicResourceProviders.FirstOrDefault(provider => provider.Id == song.ProviderId);
-        if (provider is null)
-            return null;
-
-        var resource = await provider.GetMusicResourceAsync(song, ctk: ct);
-        if (resource is null)
-            return null;
-
-        var ticket = await _audioServiceAdapter.CreateAudioTicketAsync(resource, setAsPrimarySource: false, ctk: ct);
-        return _player is AudioGraphPlayer audioGraphPlayer
-            ? new TransitionPlaybackSource(song, _audioServiceAdapter, audioGraphPlayer, ticket)
-            : null;
-    }
-
     private async Task SetCurrentSongAsync(SingleSongBase song, CancellationToken ct)
     {
         _state.SetNowPlaying(song);
@@ -268,9 +249,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         _lyricCts?.Dispose();
         _lyricCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
-        await _playCoreNotificationHub.PublishNotificationAsync(
-            new CurrentSongChangedNotification { CurrentPlayingSong = song },
-            ct);
+        if (!ReferenceEquals(_playCore.CurrentSong, song))
+        {
+            await _playCoreNotificationHub.PublishNotificationAsync(
+                new CurrentSongChangedNotification { CurrentPlayingSong = song },
+                ct);
+        }
 
         _taskRunner.Forget(LoadLyricsSafeAsync(song, _lyricCts.Token), "load lyrics for PlayCore current song");
         _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(song), "update playback notification on PlayCore current song");

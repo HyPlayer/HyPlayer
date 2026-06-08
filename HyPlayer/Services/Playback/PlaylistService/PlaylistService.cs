@@ -1,78 +1,58 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListController;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.LocalProvider;
-using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace HyPlayer.Services.Playback.PlaylistService;
 
 /// <summary>
-/// 播放列表服务 — 编排播放策略 (<see cref="IPlayStrategy"/>) 与过渡策略 (<see cref="ITrackTransition"/>)，
-/// 管理播放列表内容和播放顺序。
+/// UI-facing playlist facade backed by PlayCore.
 /// </summary>
 public sealed partial class PlaylistService : IPlaylistService, IDisposable
 {
     public event EventHandler<PlaylistChangedEventArgs>? PlaylistChanged;
 
-    private readonly Dictionary<string, IPlayStrategy> _strategies;
-    private readonly Dictionary<string, ITrackTransition> _transitions;
     private readonly PlaybackStateService _state;
     private readonly IPlaybackControlService _control;
-    private readonly IPlayer _player;
     private readonly INotificationService _notification;
     private readonly Setting _setting;
-    private readonly ILocalFileImportService _localFileImport;
     private readonly IReadOnlyDictionary<SongListQueueScopeKind, IQueueSourceProvider> _providersByKind;
     private readonly IReadOnlyDictionary<string, IQueueSourceProvider> _providersByPrefix;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly PlayCoreBase _playCore;
-
-    private readonly List<SingleSongBase?> _providerItems = new();
     private readonly Lock _lock = new();
-
-    private IPlayStrategy _activeStrategy;
-    private ITrackTransition _activeTransition;
-    private int _nowPlayingIndex = -1;
-    private CancellationTokenSource? _trackEndCts;
     private readonly SemaphoreSlim _trackEndLock = new(1, 1);
 
-    /// <summary>
-    /// 初始化 <see cref="PlaylistService"/>。
-    /// </summary>
-    /// <param name="strategies">所有已注册的播放策略</param>
-    /// <param name="transitions">所有已注册的过渡策略</param>
-    /// <param name="state">播放状态中心</param>
-    /// <param name="control">播放控制服务</param>
-    /// <param name="api">网易云 API 处理器</param>
+    private string _activeStrategyId;
+    private string _activeTransitionId;
+    private string _playSourceId = string.Empty;
+    private bool _disposed;
+
     public PlaylistService(
-        IEnumerable<IPlayStrategy> strategies,
-        IEnumerable<ITrackTransition> transitions,
         PlaybackStateService state,
         IPlaybackControlService control,
-        IPlayer player,
         INotificationService notification,
         Setting setting,
-        ILocalFileImportService localFileImport,
         IEnumerable<IQueueSourceProvider> queueSourceProviders,
         IBackgroundTaskRunner taskRunner,
         PlayCoreBase playCore)
     {
-        _strategies = strategies.ToDictionary(s => s.Id, StringComparer.Ordinal);
-        _transitions = transitions.ToDictionary(t => t.Id, StringComparer.Ordinal);
         _state = state;
         _control = control;
-        _player = player;
         _notification = notification;
         _setting = setting;
-        _localFileImport = localFileImport;
+        _taskRunner = taskRunner;
+        _playCore = playCore;
 
         var providerList = queueSourceProviders.ToList();
         _providersByKind = providerList.GroupBy(p => p.Kind).ToDictionary(g => g.Key, g => g.First());
@@ -81,35 +61,104 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
             byPrefix[QueueSourcePrefixes.SingerAlias] = singerProvider;
         _providersByPrefix = byPrefix;
 
-        _taskRunner = taskRunner;
-        _playCore = playCore;
-
-        var strategyId = _setting.ActiveStrategyId;
-        _activeStrategy = _strategies.GetValueOrDefault(strategyId)
-                          ?? _strategies.GetValueOrDefault("seq")
-                          ?? _strategies.Values.First();
-        var transitionId = _setting.CrossFade ? "xfd" : "dir";
-        _activeTransition = _transitions.GetValueOrDefault(transitionId)
-                            ?? _transitions.GetValueOrDefault("dir")
-                            ?? _transitions.Values.First();
-
-        _state.ActiveStrategyId = _activeStrategy.Id;
-        _setting.ActiveStrategyId = _activeStrategy.Id;
-        _state.ActiveTransitionId = _activeTransition.Id;
+        _activeStrategyId = string.IsNullOrWhiteSpace(_setting.ActiveStrategyId) ? "seq" : _setting.ActiveStrategyId;
+        _activeTransitionId = _setting.CrossFade ? "xfd" : "dir";
+        _state.ActiveStrategyId = _activeStrategyId;
+        _state.ActiveTransitionId = _activeTransitionId;
     }
 
-    /// <inheritdoc />
     public IReadOnlyList<PlaybackQueueItemSnapshot> QueueItemsSnapshot
+        => ProviderQueueSnapshot.Select(CreateQueueItemSnapshot).ToArray();
+
+    public IReadOnlyList<SingleSongBase> ProviderItems
+        => ProviderQueueSnapshot.Where(item => item is not null).Select(item => item!).ToArray();
+
+    public IReadOnlyList<SingleSongBase?> ProviderQueueSnapshot
+        => GetPlayCorePlaylist().Select<SingleSongBase, SingleSongBase?>(item => item).ToArray();
+
+    public int QueueCount => ProviderQueueSnapshot.Count;
+
+    public int NowPlayingIndex => _state.NowPlayingIndex;
+
+    public SingleSongBase? NowPlayingProviderItem => _state.NowPlayingProviderItem;
+
+    public string ActiveStrategyId => _activeStrategyId;
+
+    public string ActiveTransitionId => _activeTransitionId;
+
+    public bool IsInFm => _state.IsInFm;
+
+    public string PlaySourceId
     {
-        get
+        get => _playSourceId;
+        set
         {
-            lock (_lock)
-            {
-                return _providerItems
-                    .Select(CreateQueueItemSnapshot)
-                    .ToArray();
-            }
+            if (_playSourceId == value)
+                return;
+
+            ExitPersonalFmForSourceChange();
+            _playSourceId = value;
         }
+    }
+
+    public void AppendLocalItem(LocalSong item, int position = -1) => AppendItem(item, position);
+
+    public void AppendItem(ProvidableItemBase item, int position = -1)
+    {
+        if (item is not SingleSongBase song)
+            return;
+
+        RunSynchronously(InsertSongAsync(song, position));
+    }
+
+    public void SetItemInfoTag(ProvidableItemBase item, string infoTag)
+    {
+        // Provider-backed queue rows do not currently model InfoTag.
+    }
+
+    public void AppendLocalItems(IEnumerable<LocalSong> items, bool clearFirst = false)
+        => AppendItems(items.Cast<SingleSongBase>(), clearFirst);
+
+    public void AppendItems(IEnumerable<ProvidableItemBase> items, bool clearFirst = false)
+        => AppendItems(items.OfType<SingleSongBase>(), clearFirst);
+
+    public void AppendItems(IEnumerable<SingleSongBase> items, bool clearFirst = false)
+    {
+        var songs = items.ToList();
+        if (songs.Count == 0)
+            return;
+
+        if (clearFirst)
+            ExitPersonalFmForSourceChange();
+
+        RunSynchronously(AppendSongsAsync(songs, clearFirst));
+    }
+
+    public List<int> AppendItems(IEnumerable<SingleSongBase> items, int position)
+    {
+        var songs = items.ToList();
+        if (songs.Count == 0)
+            return [];
+
+        var queueCount = QueueCount;
+        var insertAt = position < 0 ? queueCount : Math.Min(position, queueCount);
+        RunSynchronously(AppendSongsAsync(songs, clearFirst: false, insertAt));
+        return Enumerable.Range(insertAt, songs.Count).ToList();
+    }
+
+    public void RemoveAt(int index)
+    {
+        var snapshot = ProviderQueueSnapshot;
+        if (index < 0 || index >= snapshot.Count || snapshot[index] is not { } song)
+            return;
+
+        RunSynchronously(RemoveAtAsync(index, song));
+    }
+
+    public void Clear(bool clearAll = true)
+    {
+        ExitPersonalFmForSourceChange();
+        RunSynchronously(ClearAsync(clearAll));
     }
 
     private static PlaybackQueueItemSnapshot CreateQueueItemSnapshot(SingleSongBase? providerItem, int index)
@@ -124,277 +173,111 @@ public sealed partial class PlaylistService : IPlaylistService, IDisposable
                 providerItem);
         }
 
-        return new PlaybackQueueItemSnapshot(
-            index,
-            string.Empty,
-            string.Empty,
-            string.Empty,
-            null);
+        return new PlaybackQueueItemSnapshot(index, string.Empty, string.Empty, string.Empty, null);
     }
 
-    /// <inheritdoc />
-    public IReadOnlyList<SingleSongBase> ProviderItems
+    private async Task InsertSongAsync(SingleSongBase song, int position)
     {
-        get
-        {
-            lock (_lock)
-            {
-                return _providerItems.Where(item => item is not null).Select(item => item!).ToArray();
-            }
-        }
+        await _playCore.InsertSongAsync(song, position).ConfigureAwait(false);
+        await RefreshAfterPlaylistChangedAsync().ConfigureAwait(false);
     }
 
-    /// <inheritdoc />
-    public IReadOnlyList<SingleSongBase?> ProviderQueueSnapshot
+    private static void RunSynchronously(Task task)
     {
-        get
-        {
-            lock (_lock)
-            {
-                return _providerItems.ToArray();
-            }
-        }
+        task.GetAwaiter().GetResult();
     }
 
-    /// <inheritdoc />
-    public int QueueCount
-    {
-        get
-        {
-            lock (_lock)
-            {
-                return _providerItems.Count;
-            }
-        }
-    }
-
-    /// <inheritdoc />
-    public int NowPlayingIndex => _nowPlayingIndex;
-
-    /// <inheritdoc />
-    public SingleSongBase? NowPlayingProviderItem
-    {
-        get
-        {
-            lock (_lock)
-            {
-                return _nowPlayingIndex >= 0 && _nowPlayingIndex < _providerItems.Count
-                    ? _providerItems[_nowPlayingIndex]
-                    : null;
-            }
-        }
-    }
-
-    /// <inheritdoc />
-    public string ActiveStrategyId => _activeStrategy.Id;
-
-    /// <inheritdoc />
-    public string ActiveTransitionId => _activeTransition.Id;
-
-    /// <inheritdoc />
-    public bool IsInFm => _state.IsInFm;
-
-    private string _playSourceId = string.Empty;
-
-    /// <inheritdoc />
-    public string PlaySourceId
-    {
-        get => _playSourceId;
-        set
-        {
-            if (_playSourceId == value)
-                return;
-
-            ExitPersonalFmForSourceChange();
-            _playSourceId = value;
-        }
-    }
-
-    // ────────────── 列表操作 ──────────────
-
-    /// <inheritdoc />
-    public void AppendLocalItem(LocalSong item, int position = -1)
-    {
-        lock (_lock)
-        {
-            InsertQueueItem(item, position);
-        }
-
-        PublishPlaylistChanged();
-    }
-
-    /// <inheritdoc />
-    public void AppendItem(ProvidableItemBase item, int position = -1)
-    {
-        lock (_lock)
-        {
-            InsertQueueItem(item, position);
-        }
-
-        PublishPlaylistChanged();
-    }
-
-    /// <inheritdoc />
-    public void SetItemInfoTag(ProvidableItemBase item, string infoTag)
-    {
-        lock (_lock)
-        {
-            var index = _providerItems.FindIndex(providerItem => providerItem is not null
-                && providerItem.ProviderId == item.ProviderId
-                && providerItem.TypeId == item.TypeId
-                && providerItem.ActualId == item.ActualId);
-
-            // Queue display rows are provider-backed; keep this API as a no-op until InfoTag is modeled on provider snapshots.
-        }
-    }
-
-    /// <inheritdoc />
-    public void AppendLocalItems(IEnumerable<LocalSong> items, bool clearFirst = false)
+    private async Task AppendSongsAsync(List<SingleSongBase> songs, bool clearFirst, int insertAt = -1)
     {
         if (clearFirst)
-            ExitPersonalFmForSourceChange();
-
-        lock (_lock)
         {
-            Clear(clearFirst);
-            var playItems = items.ToList();
-            InsertQueueItems(playItems);
+            await _playCore.StopAsync().ConfigureAwait(false);
+            await _playCore.RemoveAllSongAsync().ConfigureAwait(false);
+            _state.ClearNowPlaying();
         }
 
-        PublishPlaylistChanged();
+        await _playCore.InsertSongRangeAsync(songs, insertAt).ConfigureAwait(false);
+        await RefreshAfterPlaylistChangedAsync().ConfigureAwait(false);
     }
 
-    /// <inheritdoc />
-    public void AppendItems(IEnumerable<ProvidableItemBase> items, bool clearFirst = false)
+    private async Task RemoveAtAsync(int index, SingleSongBase song)
     {
-        var providerItems = items.ToList();
-        if (clearFirst)
-            ExitPersonalFmForSourceChange();
+        await _playCore.RemoveSongAsync(song).ConfigureAwait(false);
 
-        lock (_lock)
+        if (index == _state.NowPlayingIndex)
         {
-            Clear(clearFirst);
-            InsertQueueItems(providerItems);
-        }
-
-        PublishPlaylistChanged();
-    }
-
-    /// <inheritdoc />
-    public void AppendItems(IEnumerable<SingleSongBase> items, bool clearFirst = false)
-    {
-        var providerItems = items.ToList();
-        if (clearFirst)
-            ExitPersonalFmForSourceChange();
-
-        lock (_lock)
-        {
-            Clear(clearFirst);
-            InsertQueueItems(providerItems);
-        }
-
-        PublishPlaylistChanged();
-    }
-
-    /// <inheritdoc />
-    public List<int> AppendItems(IEnumerable<SingleSongBase> items, int position)
-    {
-        var providerItems = items.ToList();
-        if (providerItems.Count == 0)
-            return [];
-
-        var insertedIndexes = new List<int>();
-        lock (_lock)
-        {
-            if (position < 0)
-                position = _providerItems.Count;
-
-            for (var offset = 0; offset < providerItems.Count; offset++)
-            {
-                var targetIndex = position + offset;
-                InsertQueueItem(providerItems[offset], targetIndex);
-                insertedIndexes.Add(targetIndex);
-            }
-        }
-
-        PublishPlaylistChanged();
-        return insertedIndexes;
-    }
-
-    /// <inheritdoc />
-    public void RemoveAt(int index)
-    {
-        lock (_lock)
-        {
-            if (index < 0 || index >= _providerItems.Count)
-                return;
-
-            if (_providerItems.Count == 1)
-            {
-                Clear();
-                return;
-            }
-
-            _providerItems.RemoveAt(index);
-
-            // 调整当前播放索引
-            if (index < _nowPlayingIndex)
-            {
-                _nowPlayingIndex--;
-            }
-            else if (index == _nowPlayingIndex)
-            {
-                // 当前曲目被移除，索引不变但指向了新曲目
-                if (_nowPlayingIndex >= _providerItems.Count)
-                    _nowPlayingIndex = _providerItems.Count - 1;
-            }
-
-            PublishPlaylistChanged();
-        }
-    }
-
-    /// <inheritdoc />
-    public void Clear(bool clearAll = true)
-    {
-        ExitPersonalFmForSourceChange();
-
-        lock (_lock)
-        {
-            if (_providerItems.Count == 0)
-                return;
-
-            if (clearAll)
-            {
-                _taskRunner.Forget(_playCore.StopAsync(), "stop PlayCore before clearing playlist");
-                _providerItems.Clear();
-                _nowPlayingIndex = -1;
-                _state.ClearNowPlaying();
-            }
+            var nextIndex = Math.Min(index, Math.Max(QueueCount - 1, -1));
+            if (nextIndex >= 0)
+                await MoveToIndexAsync(nextIndex).ConfigureAwait(false);
             else
-            {
-                var nowPlayingProviderItem = _nowPlayingIndex >= 0 && _nowPlayingIndex < _providerItems.Count
-                    ? _providerItems[_nowPlayingIndex]
-                    : null;
+                _state.ClearNowPlaying();
+        }
+        else if (index < _state.NowPlayingIndex)
+        {
+            _state.NowPlayingIndex--;
+        }
 
-                _providerItems.Clear();
-                if (nowPlayingProviderItem is not null)
-                    InsertQueueItem(nowPlayingProviderItem);
-                _nowPlayingIndex = _providerItems.Count > 0 ? 0 : -1;
-            }
+        await RefreshAfterPlaylistChangedAsync().ConfigureAwait(false);
+    }
 
-            PublishPlaylistChanged();
+    private async Task ClearAsync(bool clearAll)
+    {
+        if (clearAll)
+        {
+            await _playCore.StopAsync().ConfigureAwait(false);
+            await _playCore.RemoveAllSongAsync().ConfigureAwait(false);
+            _state.ClearNowPlaying();
+        }
+        else if (NowPlayingProviderItem is { } current)
+        {
+            await _playCore.RemoveAllSongAsync().ConfigureAwait(false);
+            await _playCore.InsertSongAsync(current).ConfigureAwait(false);
+            await MoveToIndexAsync(0).ConfigureAwait(false);
+        }
+
+        await RefreshAfterPlaylistChangedAsync().ConfigureAwait(false);
+    }
+
+    private List<SingleSongBase> GetPlayCorePlaylist()
+    {
+        try
+        {
+            return _playCore.CurrentPlayList?.GetPlayListAsync().GetAwaiter().GetResult() ?? [];
+        }
+        catch
+        {
+            return [];
         }
     }
 
-    /// <inheritdoc />
-    private void PublishPlaylistChanged()
+    private async Task RefreshAfterPlaylistChangedAsync(bool isShuffleTrigger = false)
     {
-        _activeStrategy.OnPlaylistChanged(BuildStrategyContext());
-        if (ActiveStrategyId == "shn")
-            CreateShufflePlayLists();
-        else
-            SendPlaylistChanged();
+        await SyncIndexFromPlayCoreAsync().ConfigureAwait(false);
+        SendPlaylistChanged(isShuffleTrigger);
+    }
 
-        SchedulePlayCorePlaylistSync();
+    private async Task SyncIndexFromPlayCoreAsync()
+    {
+        if (_playCore.CurrentPlayListController is IIndexedPlayListController indexed)
+            _state.NowPlayingIndex = await indexed.GetCurrentIndexAsync().ConfigureAwait(false);
+
+        _state.SetNowPlaying(_playCore.CurrentSong);
+        ShufflingIndex = ShuffleList.IndexOf(_state.NowPlayingIndex);
+    }
+
+    private void SendPlaylistChanged(bool isShuffleTrigger = false)
+    {
+        _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
+            PlaylistChanged?.Invoke(this, new PlaylistChangedEventArgs(isShuffleTrigger))),
+            "publish playlist changed");
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _trackEndLock.Dispose();
     }
 }

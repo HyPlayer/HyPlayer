@@ -44,11 +44,6 @@ public interface IPlaybackControlService
     Task LoadAndPlayAsync(SingleSongBase song, bool autoPlay = true, bool removeCurrentSongs = true);
 
     /// <summary>
-    /// 预加载 Provider 曲目的过渡播放源，不更新当前歌曲状态。
-    /// </summary>
-    Task<ITransitionPlaybackSource?> PreloadTransitionPlaybackSourceAsync(SingleSongBase song, CancellationToken ct = default);
-
-    /// <summary>
     /// 初始化播放器（AudioGraph 等底层资源）
     /// </summary>
     Task InitializeAsync();

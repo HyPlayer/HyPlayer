@@ -1,0 +1,21 @@
+=== Task 9 Build Evidence ===
+Date: 2026-05-27
+File: HyPlayer/Shell/Navigation/NavigationShellViewModel.cs
+
+Changes Made:
+- Removed MapToNCPlayList method (NCPlayList/NCUser mapping)
+- Updated LoadPlaylistsAsync to use NeteasePlaylist directly
+- Updated _auth.MySongLists to add NeteasePlaylist objects directly
+- Updated UpdateAccountStatus: user.Avatar -> user.AvatarUrl, user.Signature -> user.Description
+- Updated _auth.CurrentUser.Id -> _auth.CurrentUser.ActualId
+- Removed using HyPlayer.Domain.Music (NCPlayList, NCUser namespace)
+- Simplified playlist loading: containers.OfType<NeteasePlaylist>().ToList()
+
+Build Result: NavigationShellViewModel.cs has ZERO errors
+
+Pre-existing errors in other files (not from this task):
+- SongListViewModel.cs: 23 errors (NCPlayList/NCUser references, pending migration)
+- AppNavigator.cs: 2 errors (PlaylistId reference, pending migration)
+- ArtistSelectDialog.xaml.cs: 4 errors (syntax, pre-existing)
+
+Total solution errors: 86 (all pre-existing, none from NavigationShellViewModel.cs)

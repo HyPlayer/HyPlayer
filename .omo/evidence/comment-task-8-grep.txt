@@ -1,0 +1,27 @@
+=== NeteaseResourceType Reference Check ===
+Date: 2026-05-28 01:29:49
+
+=== Search 1: Comment System Files ===
+Scope: HyPlayer/Classes/Models/Comment/*, HyPlayer/Services/Comment/*, HyPlayer/Features/SongComment/*
+Pattern: NeteaseResourceType
+Result: NO MATCHES FOUND ✅
+
+=== Search 2: Full HyPlayer Project ===
+Scope: HyPlayer/ (entire project)
+Pattern: NeteaseResourceType
+Result: Found in ONE file only:
+
+HyPlayer/Infrastructure/Netease/NeteaseTypeIds.cs (10 matches):
+  - Line 91: /// 将 NeteaseResourceType 映射为评论接口所需的 typeId 字符串
+  - Line 93: public static string MapCommentTypeId(NeteaseResourceType resourceType)
+  - Lines 97-104: switch expression mapping each NeteaseResourceType enum value to string
+
+=== Analysis ===
+The NeteaseTypeIds.cs file is the BRIDGE utility that maps Netease-specific enum values to 
+generic string typeId values for the CommentTarget system. This is the CORRECT architectural 
+pattern — it isolates NeteaseResourceType from the Comment system while providing a translation layer.
+
+=== Conclusion ===
+✅ Comment system files have ZERO references to NeteaseResourceType
+✅ NeteaseResourceType is properly isolated in Infrastructure/Netease/NeteaseTypeIds.cs
+✅ The MapCommentTypeId bridge method correctly translates enum → string for CommentTarget

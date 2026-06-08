@@ -7,14 +7,13 @@ public sealed partial class PlaylistService
     /// <inheritdoc />
     public void SetStrategy(string strategyId, bool persist = true)
     {
-        if (!_strategies.TryGetValue(strategyId, out var strategy))
+        if (strategyId is not ("seq" or "sgl" or "shn" or "pfm" or "ltg"))
             return;
 
-        _activeStrategy = strategy;
+        _activeStrategyId = strategyId;
         _state.ActiveStrategyId = strategyId;
         if (persist)
             _setting.ActiveStrategyId = strategyId;
-        _activeStrategy.OnPlaylistChanged(BuildStrategyContext());
 
         if (strategyId == "shn")
             CreateShufflePlayLists();
@@ -25,11 +24,10 @@ public sealed partial class PlaylistService
     /// <inheritdoc />
     public void SetTransition(string transitionId)
     {
-        if (!_transitions.TryGetValue(transitionId, out var transition))
+        if (transitionId is not ("dir" or "xfd" or "gap"))
             return;
 
-        _activeTransition.Reset();
-        _activeTransition = transition;
+        _activeTransitionId = transitionId;
         _state.ActiveTransitionId = transitionId;
     }
 }

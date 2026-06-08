@@ -1,0 +1,55 @@
+=== Task 15: Delete Infrastructure/Netease Directory ===
+Timestamp: 2026-05-27 21:45:21
+
+## Build Evidence
+Build command: msbuild HyPlayer.slnx /p:Configuration=Release /p:RuntimeIdentifier=win-x64 /p:Platform=x64 /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false
+
+## Result
+Build FAILED with 8 errors - ALL pre-existing NCMlog errors (from previous task deleting NCMlog.cs).
+NO new errors introduced by Infrastructure/Netease deletion.
+
+## Errors (all pre-existing):
+- MVPage.xaml.cs(244,20): error CS0246: NCMlog type not found
+- MVPage.xaml.cs(38,27): error CS0246: NCMlog type not found
+- MVPage.g.cs(56,51): error CS0234: NCMlog not in HyPlayer.Domain.Music
+- MVPage.g.cs(183,64): error CS0234: NCMlog not in HyPlayer.Domain.Music
+
+## Changes Made:
+### Files moved from Infrastructure/Netease/ to Infrastructure/ (namespace unchanged):
+- Api.cs
+- CloudUpload.cs
+- ListenTogetherManager.cs
+- PersonalFM.cs
+- The163KeyHelper.cs
+
+### Files deleted (duplicates/unused):
+- Infrastructure/Netease/Mapper.cs (MapToNeteaseUser duplicate of NeteaseProvider version)
+- Infrastructure/Netease/NeteaseTypeIds.cs (duplicate of NeteaseProvider.Constants.NeteaseTypeIds)
+
+### Using directives updated:
+- Removed unused 'using HyPlayer.Infrastructure.Netease;' from 8 files
+- MVPage.xaml.cs: replaced with 'using HyPlayer.NeteaseProvider.Constants;'
+
+### Files with using directive removed (unused):
+- SongsList.xaml.cs
+- GroupedSongsListViewModel.cs
+- SingleComment.xaml.cs
+- ExpandedPlayer.xaml.cs
+- PersonalFmStrategy.cs
+- PlaylistService.TrackEnd.cs
+- AuthService.cs
+- HIstoryPage.xaml.cs
+
+### Files retaining 'using HyPlayer.Infrastructure.Netease;' (use moved types):
+- PlayBarViewModel.cs (PersonalFM)
+- PlayBar.xaml.cs (PersonalFM)
+- ListenTogetherStrategy.cs (ListenTogetherManager, RoomInfo)
+- DownloadManager.cs (The163KeyHelper)
+- PlaylistService.Navigation.cs (PersonalFM)
+- AppNavigator.cs (Api, PersonalFM)
+- SongListViewModel.cs (Api)
+- MusicCloudPage.xaml.cs (CloudUpload)
+- LocalMusicPage.xaml.cs (CloudUpload)
+- HomeViewModel.cs (Api, PersonalFM)
+- LocalFileImportService.cs (The163KeyHelper)
+- JsonDefaultContext.cs (The163KeyClass)

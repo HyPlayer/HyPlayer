@@ -1,0 +1,65 @@
+=== Task 11 Build Evidence ===
+Date: 2026-05-27 20:32:29
+File: HyPlayer/Features/Library/FavoriteViewModel.cs
+
+=== Result ===
+FavoriteViewModel.cs: NO build errors (no old model references found)
+
+=== Model References in FavoriteViewModel.cs ===
+Uses HyPlayer.NeteaseProvider.Models (NeteaseRadioChannel, NeteaseArtist, NeteaseAlbum)
+Uses HyPlayer.PlayCore.Abstraction.Models (ProvidableItemBase)
+Uses HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer (NeteaseUserLibrarySubContainer)
+Uses HyPlayer.Domain.Music (SimpleListItem)
+No NCPlayList, NCSong, NCAlbum, NCArtist references found.
+
+=== Full Build Output (last 50 lines) ===
+E:\HyPlayer\HyPlayer\HyPlayer\MainPage.xaml.cs(176,165): error CS1061: 鈥淣eteasePlaylist鈥濇湭鍖呭惈鈥淧laylistId鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteasePlaylist鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淧laylistId鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Infrastructure\Netease\ListenTogetherManager.cs(264,85): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(157,61): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淎vatar鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淎vatar鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(159,48): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淎vatar鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淎vatar鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(162,57): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淪ignature鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淪ignature鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(162,86): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淪ignature鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淪ignature鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\User\Me.xaml.cs(46,60): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\User\MeViewModel.cs(50,97): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\User\MeViewModel.cs(52,145): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\User\MeViewModel.cs(71,53): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(190,146): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(212,35): error CS1503: 鍙傛暟 1: 鏃犳硶浠庘€淗yPlayer.Domain.Music.NCPlayList鈥濊浆鎹负鈥淗yPlayer.NeteaseProvider.Models.NeteasePlaylist鈥?[E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(232,43): error CS1503: 鍙傛暟 1: 鏃犳硶浠庘€淗yPlayer.Domain.Music.NCPlayList鈥濊浆鎹负鈥淗yPlayer.NeteaseProvider.Models.NeteasePlaylist鈥?[E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\Playlist\SongListViewModel.cs(203,114): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Services\Navigation\AppNavigator.cs(510,79): error CS1061: 鈥淣eteasePlaylist鈥濇湭鍖呭惈鈥淧laylistId鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteasePlaylist鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淧laylistId鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Services\Navigation\AppNavigator.cs(543,87): error CS1061: 鈥淣eteasePlaylist鈥濇湭鍖呭惈鈥淧laylistId鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteasePlaylist鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淧laylistId鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+  HyPlayer.UWP.Chopin -> E:\HyPlayer\HyPlayer\HyPlayer.UWP.Chopin\bin\x64\Release\net10.0-windows10.0.26100.0\win-x64\HyPlayer.UWP.Chopin.dll
+  Impressionist -> E:\HyPlayer\HyPlayer\Impressionist\Impressionist\bin\x64\Release\netstandard2.0\Impressionist.dll
+  Kawazu -> E:\HyPlayer\HyPlayer\Kawazu\Kawazu\bin\x64\Release\net10.0-windows10.0.26100.0\win-x64\Kawazu.dll
+  0 IID calculations/fetches patched
+  Microsoft.Gaming.XboxGameBar.Projection -> E:\HyPlayer\HyPlayer\Microsoft.Gaming.XboxGameBar.Projection\bin\x64\Release\net10.0-windows10.0.26100.0\win-x64\Microsoft.Gaming.XboxGameBar.Projection.dll
+  HyPlayer.PlayCore.Abstraction -> E:\HyPlayer\HyPlayer.PlayCore\HyPlayer.PlayCore.Abstraction\bin\Debug\netstandard2.0\HyPlayer.PlayCore.Abstraction.dll
+  HyPlayer.PlayCore -> E:\HyPlayer\HyPlayer.PlayCore\HyPlayer.PlayCore\bin\Debug\netstandard2.0\HyPlayer.PlayCore.dll
+  Templates transformed for HyPlayer.NeteaseApi (in 0.556 sec).
+  HyPlayer.NeteaseApi -> E:\HyPlayer\HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\bin\Debug\net10.0\HyPlayer.NeteaseApi.dll
+  HyPlayer.NeteaseProvider -> E:\HyPlayer\HyPlayer.NeteaseProvider\HyPlayer.NeteaseProvider\bin\Debug\net10.0\HyPlayer.NeteaseProvider.dll
+E:\HyPlayer\HyPlayer\HyPlayer\Domain\Comments\Comment.cs(22,112): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\MainPage.xaml.cs(176,165): error CS1061: 鈥淣eteasePlaylist鈥濇湭鍖呭惈鈥淧laylistId鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteasePlaylist鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淧laylistId鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\UI\Dialogs\SongListSelectDialog.xaml.cs(29,115): error CS1061: 鈥淣eteasePlaylist鈥濇湭鍖呭惈鈥淧laylistId鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteasePlaylist鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淧laylistId鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\TestPage.xaml.cs(166,27): error CS0029: 鏃犳硶灏嗙被鍨嬧€淗yPlayer.NeteaseProvider.Models.NeteaseUser鈥濋殣寮忚浆鎹负鈥淗yPlayer.Domain.Music.NCUser鈥?[E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Infrastructure\Netease\ListenTogetherManager.cs(264,85): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\Home\HomeViewModel.cs(107,120): error CS1061: 鈥淣eteasePlaylist鈥濇湭鍖呭惈鈥淧laylistId鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteasePlaylist鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淧laylistId鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(157,61): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淎vatar鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淎vatar鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(159,48): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淎vatar鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淎vatar鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(162,57): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淪ignature鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淪ignature鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(162,86): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淪ignature鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淪ignature鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(190,146): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(212,35): error CS1503: 鍙傛暟 1: 鏃犳硶浠庘€淗yPlayer.Domain.Music.NCPlayList鈥濊浆鎹负鈥淗yPlayer.NeteaseProvider.Models.NeteasePlaylist鈥?[E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Shell\Navigation\NavigationShellViewModel.cs(232,43): error CS1503: 鍙傛暟 1: 鏃犳硶浠庘€淗yPlayer.Domain.Music.NCPlayList鈥濊浆鎹负鈥淗yPlayer.NeteaseProvider.Models.NeteasePlaylist鈥?[E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\User\MeViewModel.cs(50,97): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\User\MeViewModel.cs(52,145): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\User\MeViewModel.cs(71,53): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\Library\HIstoryPage.xaml.cs(118,66): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\Library\HIstoryPage.xaml.cs(123,44): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\Playlist\SongListViewModel.cs(203,114): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Features\User\Me.xaml.cs(46,60): error CS1061: 鈥淣eteaseUser鈥濇湭鍖呭惈鈥淚d鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteaseUser鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淚d鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Services\Navigation\AppNavigator.cs(510,79): error CS1061: 鈥淣eteasePlaylist鈥濇湭鍖呭惈鈥淧laylistId鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteasePlaylist鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淧laylistId鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+E:\HyPlayer\HyPlayer\HyPlayer\Services\Navigation\AppNavigator.cs(543,87): error CS1061: 鈥淣eteasePlaylist鈥濇湭鍖呭惈鈥淧laylistId鈥濈殑瀹氫箟锛屽苟涓旀壘涓嶅埌鍙帴鍙楃涓€涓€淣eteasePlaylist鈥濈被鍨嬪弬鏁扮殑鍙闂墿灞曟柟娉曗€淧laylistId鈥?鏄惁缂哄皯 using 鎸囦护鎴栫▼搴忛泦寮曠敤?) [E:\HyPlayer\HyPlayer\HyPlayer\HyPlayer.csproj]
+  Impressionist -> E:\HyPlayer\HyPlayer\Impressionist\Impressionist\bin\x64\Release\netstandard2.0\win-x64\Impressionist.dll
+
