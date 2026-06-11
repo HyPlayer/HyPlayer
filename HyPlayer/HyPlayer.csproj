@@ -66,7 +66,7 @@
     <PackageReference Include="HyPlayer.PlayCore.Abstraction">
       <Version>0.1.4</Version>
     </PackageReference>
-    <PackageReference Include="LiteFM" Version="1.0.2" />
+    <PackageReference Include="LiteFM" Version="1.0.3" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection">
       <Version>10.0.8</Version>
     </PackageReference>
