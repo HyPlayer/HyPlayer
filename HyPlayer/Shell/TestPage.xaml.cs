@@ -158,11 +158,11 @@ public sealed partial class TestPage : Page
     private async void DumpDebugInfo_Click(object sender, RoutedEventArgs e)
     {
         var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        var playCore = Ioc.Default.GetRequiredService<HyPlayer.PlayCore.Abstraction.PlayCoreBase>();
         var info = JsonSerializer.Serialize(new DumpInfo
         {
             CurrentSong = state.NowPlayingSnapshot,
-            CurrentPlaySource = playlist.PlaySourceId,
+            CurrentPlaySource = playCore.PlaySourceId,
             CurrentUser = _auth.CurrentUser is not null ? new HyPlayer.Domain.CommentUserInfo
             {
                 ActualId = _auth.CurrentUser.ActualId,

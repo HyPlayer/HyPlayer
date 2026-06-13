@@ -1,5 +1,6 @@
 using Depository.Abstraction.Interfaces;
 using Depository.Abstraction.Interfaces.NotificationHub;
+using Depository.Abstraction.Exceptions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -15,10 +16,7 @@ public sealed class PlayCoreNotificationHub(IDepository depository) : INotificat
     {
         ctk.ThrowIfCancellationRequested();
 
-        var subscribers = depository
-            .ResolveDependencies(typeof(IEnumerable<INotificationSubscriber<TNotification>>))
-            .OfType<INotificationSubscriber<TNotification>>()
-            .ToList();
+        var subscribers = ResolveSubscribers<TNotification>();
 
         foreach (var subscriber in subscribers)
         {
@@ -33,5 +31,20 @@ public sealed class PlayCoreNotificationHub(IDepository depository) : INotificat
     {
         ctk.ThrowIfCancellationRequested();
         return Task.FromResult(new List<TResult>());
+    }
+
+    private List<INotificationSubscriber<TNotification>> ResolveSubscribers<TNotification>()
+    {
+        try
+        {
+            return depository
+                .ResolveDependencies(typeof(INotificationSubscriber<TNotification>))
+                .OfType<INotificationSubscriber<TNotification>>()
+                .ToList();
+        }
+        catch (DependencyNotFoundException)
+        {
+            return [];
+        }
     }
 }

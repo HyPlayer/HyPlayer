@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.NeteaseProvider.Constants;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -52,10 +53,12 @@ internal class Api
     {
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
         var neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
-        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        var playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+        var control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
         var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         var auth = Ioc.Default.GetRequiredService<IAuthService>();
-        playlist.Clear();
+        await playCore.StopAsync(cancellationToken);
+        await playCore.RemoveAllSongAsync(cancellationToken);
 
         var likedSongs = auth.LikedSongs;
         if (likedSongs.Count == 0)
@@ -78,13 +81,12 @@ internal class Api
             };
 
             var songs = await GetContainerSongsAsync(recommendationContainer, likedSongs.Count, cancellationToken);
-            foreach (var song in songs)
+            if (songs.Count > 0)
             {
-                playlist.AppendItem(song);
-                playlist.SetItemInfoTag(song, likedSongs.Contains(song.ActualId ?? string.Empty) ? "我的喜欢" : "为你推荐");
+                await playCore.InsertSongRangeAsync(songs, ctk: cancellationToken);
+                await playCore.MovePointerToAsync(songs[0], cancellationToken);
+                await control.LoadAndPlayAsync(songs[0], removeCurrentSongs: false);
             }
-            if (playlist.ProviderItems.Count > 0)
-                await playlist.MoveToAsync(playlist.ProviderItems[0]);
         }
         catch (System.Exception ex)
         {

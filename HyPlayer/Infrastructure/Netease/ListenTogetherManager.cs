@@ -1,5 +1,6 @@
 #nullable enable
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.Services.Abstractions;
@@ -22,7 +23,7 @@ internal sealed class ListenTogetherManager
 {
     private static ListenTogetherManager? _instance;
 
-    private readonly IPlaylistService _playlist;
+    private readonly PlayCoreBase _playCore;
     private readonly PlaybackStateService _state;
     private readonly IListenTogetherProvidable _listenTogetherProvider;
     private readonly IGlobalTimerService _globalTimer;
@@ -40,7 +41,7 @@ internal sealed class ListenTogetherManager
 
     private ListenTogetherManager()
     {
-        _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
         _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         _listenTogetherProvider = Ioc.Default.GetRequiredService<IListenTogetherProvidable>();
         _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
@@ -67,7 +68,7 @@ internal sealed class ListenTogetherManager
         _instance = mgr;
 
         var roomId = await mgr._listenTogetherProvider.CreateListenTogetherRoomAsync(
-            mgr._playlist.ProviderItems.ToList());
+            await mgr._playCore.GetPlaylistAsync());
         if (string.IsNullOrWhiteSpace(roomId))
         {
             Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建一起听房间失败", "房间ID为空");
@@ -147,6 +148,8 @@ internal sealed class ListenTogetherManager
             OnPlay();
         else if (e.PropertyName == nameof(PlaybackStateService.IsPlaying))
             OnPause();
+        else if (e.PropertyName == nameof(PlaybackStateService.QueueRevision))
+            OnPlaylistChanged();
     }
 
     private void OnSeekRequested(object? sender, SeekRequestedEventArgs message)
@@ -154,9 +157,9 @@ internal sealed class ListenTogetherManager
         OnManualSeek(message.Position);
     }
 
-    private void OnPlaylistChanged(object? sender, PlaylistChangedEventArgs message)
+    private void OnPlaylistChanged()
     {
-        OnPlayListChanged(message.IsShuffleTrigger);
+        OnPlayListChanged(_state.LastQueueChangeIsShuffleTrigger);
     }
 
     // ---------------------------------------------------------------
@@ -251,7 +254,7 @@ internal sealed class ListenTogetherManager
         }
     }
 
-    private void OnPlayListChanged(bool isShuffle = false)
+    private async void OnPlayListChanged(bool isShuffle = false)
     {
         if (!IsInRoom || CurrentRoomInfo is null) return;
         if (isShuffle) return;
@@ -259,7 +262,7 @@ internal sealed class ListenTogetherManager
         {
             var report = new ProviderListenTogetherQueueReport
             {
-                Queue = _playlist.ProviderItems.ToList(),
+                Queue = (await _playCore.GetPlaylistAsync()).ToList(),
                 PlayModeId = _state.ActiveStrategyId,
                 UserId = Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.ActualId,
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
@@ -344,7 +347,6 @@ internal sealed class ListenTogetherManager
         _globalTimer.SecondTick += OnSecondTick;
         _state.PropertyChanged += OnPlaybackStatePropertyChanged;
         Ioc.Default.GetRequiredService<IPlaybackControlService>().SeekRequested += OnSeekRequested;
-        _playlist.PlaylistChanged += OnPlaylistChanged;
     }
 
     private string CurrentProviderSongId => _state.NowPlayingProviderItem?.ActualId ?? string.Empty;
@@ -356,7 +358,6 @@ internal sealed class ListenTogetherManager
             _instance._globalTimer.SecondTick -= _instance.OnSecondTick;
             _instance._state.PropertyChanged -= _instance.OnPlaybackStatePropertyChanged;
             Ioc.Default.GetRequiredService<IPlaybackControlService>().SeekRequested -= _instance.OnSeekRequested;
-            _instance._playlist.PlaylistChanged -= _instance.OnPlaylistChanged;
             _instance.IsInRoom = false;
             _instance = null;
         }

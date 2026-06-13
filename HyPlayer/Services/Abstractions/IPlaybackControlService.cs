@@ -43,6 +43,10 @@ public interface IPlaybackControlService
     /// <param name="removeCurrentSongs">是否移除当前播放的所有曲目</param>
     Task LoadAndPlayAsync(SingleSongBase song, bool autoPlay = true, bool removeCurrentSongs = true);
 
+    Task MoveNextAndPlayAsync(bool userInitiated);
+
+    Task MovePreviousAndPlayAsync();
+
     /// <summary>
     /// 初始化播放器（AudioGraph 等底层资源）
     /// </summary>

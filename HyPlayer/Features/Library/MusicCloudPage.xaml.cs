@@ -6,6 +6,7 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
@@ -34,6 +35,7 @@ public sealed partial class MusicCloudPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private readonly WeakEventListener<MusicCloudPage, object?, EventArgs> _secondTickListener;
     private bool _isSecondTickSubscribed;
@@ -182,10 +184,9 @@ public sealed partial class MusicCloudPage : Page
 
     public void OnLoadedAllSongs()
     {
-        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        if (_setting.AutoAddGreedilyLoadedSongsToPlayList && playlist.PlaySourceId == "Content")
+        if (_setting.AutoAddGreedilyLoadedSongsToPlayList && _playCore.PlaySourceId == "Content")
         {
-            playlist.AppendItems(Items.Select(song => song.ToProviderSong()));
+            _ = _playCore.InsertSongRangeAsync(Items.Select(song => song.ToProviderSong()).ToList());
         }
     }
 

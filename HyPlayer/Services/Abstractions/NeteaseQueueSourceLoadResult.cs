@@ -6,7 +6,7 @@ namespace HyPlayer.Services.Abstractions;
 
 /// <summary>
 /// 队列源加载结果 — 包含提供者歌曲批次列表。
-/// 由 <see cref="IQueueSourceProvider"/> 产生，由 <see cref="IPlaylistService"/> 消费。
+/// 由 <see cref="IQueueSourceProvider"/> 产生，由 PlayCore 队列加载服务消费。
 /// </summary>
 public sealed class NeteaseQueueSourceLoadResult
 {

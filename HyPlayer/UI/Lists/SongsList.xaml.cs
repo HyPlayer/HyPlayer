@@ -11,6 +11,7 @@ using HyPlayer.Features.Playlist;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -43,7 +44,8 @@ namespace HyPlayer.UI.Lists;
 
 public sealed partial class SongsList : UserControl
 {
-    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+    private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
@@ -257,20 +259,26 @@ public sealed partial class SongsList : UserControl
 
         foreach (var song in GetSelectedRows())
         {
-            _playlist.AppendItem(song.ToProviderSong());
+            await _playCore.InsertSongAsync(song.ToProviderSong());
         }
         if (SongContainer.SelectedItem != null)
         {
             if (selectedSong.ProviderSong is not null)
             {
-                await _playlist.MoveToAsync(selectedSong.ProviderSong);
+                await _playCore.MovePointerToAsync(selectedSong.ProviderSong);
+                if (_playCore.CurrentSong is { } song)
+                    await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
             }
             else
             {
-                var targetIndex = _playlist.ProviderQueueSnapshot.ToList()
-                    .FindIndex(t => t?.ActualId == selectedSong.SongId);
+                var targetIndex = (await _playCore.GetPlaylistAsync())
+                    .FindIndex(t => t.ActualId == selectedSong.SongId);
                 if (targetIndex >= 0)
-                    await _playlist.MoveToIndexAsync(targetIndex);
+                {
+                    await _playCore.MovePointerToIndexAsync(targetIndex);
+                    if (_playCore.CurrentSong is { } song)
+                        await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
+                }
             }
         }
     }
@@ -285,22 +293,13 @@ public sealed partial class SongsList : UserControl
         }
 
         var selectedSongs = GetSelectedRows().ToList();
-        var playItemIndexes = _playlist.AppendItems(
+        var insertAt = _state.NowPlayingIndex + 1;
+        _ = _playCore.InsertSongRangeAsync(
             selectedSongs.Select(song => song.ToProviderSong()).ToList(),
-            _playlist.NowPlayingIndex + 1);
+            insertAt);
         if (_state.ActiveStrategyId == "shn")
         {
-            for (int i = 0; i < playItemIndexes.Count; i++)
-            {
-                var item = playItemIndexes[i];
-                var currentIndex = _playlist.ShuffleList.IndexOf(_playlist.NowPlayingIndex);
-                if (currentIndex + playItemIndexes.Count >= _playlist.ShuffleList.Count) break; // 如果调不了顺序（歌单剩余空位不足）就算了
-                var nextIndex = currentIndex + i + 1;
-                var targetIndex = _playlist.ShuffleList.IndexOf(item);
-                var t = _playlist.ShuffleList[nextIndex];
-                _playlist.ShuffleList[targetIndex] = t;
-                _playlist.ShuffleList[nextIndex] = item;
-            }
+            _ = _playCore.ReRandomAsync();
         }
 
         if (selectedSongs.Any(t => !t.IsAvailable))

@@ -254,6 +254,7 @@ public sealed class ShellLoginService
     private async Task FinishSuccessfulLoginAsync()
     {
         _navigationShell.UpdateAfterLogin();
+        await _navigationShell.RefreshPlaylistsAsync();
         _currentLoginDialog?.Hide();
         _currentPreLoginDialog?.Hide();
 

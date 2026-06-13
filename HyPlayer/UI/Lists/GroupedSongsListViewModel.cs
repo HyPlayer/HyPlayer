@@ -1,3 +1,4 @@
+using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Features.Album;
@@ -5,6 +6,7 @@ using HyPlayer.Features.Artist;
 using HyPlayer.Features.Comments;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
@@ -18,7 +20,8 @@ using System.Threading.Tasks;
 namespace HyPlayer.UI.Lists;
 
 public partial class GroupedSongsListViewModel(
-    IPlaylistService playlist,
+    PlayCoreBase playCore,
+    IPlaybackControlService control,
     ISongListQueueBuilder queueBuilder,
     PlaybackStateService state,
     INotificationService notification,
@@ -37,19 +40,25 @@ public partial class GroupedSongsListViewModel(
 
         foreach (var song in selectedSongs)
         {
-            playlist.AppendItem(song.ToProviderSong());
+            await playCore.InsertSongAsync(song.ToProviderSong());
         }
 
         if (selectedSong.ProviderSong is not null)
         {
-            await playlist.MoveToAsync(selectedSong.ProviderSong);
+            await playCore.MovePointerToAsync(selectedSong.ProviderSong);
+            if (playCore.CurrentSong is { } song)
+                await control.LoadAndPlayAsync(song, removeCurrentSongs: false);
         }
         else
         {
-            var targetIndex = playlist.ProviderQueueSnapshot.ToList()
-                .FindIndex(t => t?.ActualId == selectedSong.SongId);
+            var targetIndex = (await playCore.GetPlaylistAsync())
+                .FindIndex(t => t.ActualId == selectedSong.SongId);
             if (targetIndex >= 0)
-                await playlist.MoveToIndexAsync(targetIndex);
+            {
+                await playCore.MovePointerToIndexAsync(targetIndex);
+                if (playCore.CurrentSong is { } song)
+                    await control.LoadAndPlayAsync(song, removeCurrentSongs: false);
+            }
         }
     }
 
@@ -62,21 +71,9 @@ public partial class GroupedSongsListViewModel(
             return;
         }
 
-        var playItemIndexes = AppendToNext(selectedSongs);
+        AppendToNext(selectedSongs);
         if (state.ActiveStrategyId == "shn")
-        {
-            for (int i = 0; i < playItemIndexes.Count; i++)
-            {
-                var item = playItemIndexes[i];
-                var currentIndex = playlist.ShuffleList.IndexOf(playlist.NowPlayingIndex);
-                var nextIndex = currentIndex + i + 1;
-                if (nextIndex >= playlist.ShuffleList.Count) break;
-                var targetIndex = playlist.ShuffleList.IndexOf(item);
-                var targetItem = playlist.ShuffleList[nextIndex];
-                playlist.ShuffleList[targetIndex] = targetItem;
-                playlist.ShuffleList[nextIndex] = item;
-            }
-        }
+            _ = playCore.ReRandomAsync();
 
         var unAvailableSongNames = selectedSongs.Where(t => !t.IsAvailable).Select(t => t.SongName).ToArray();
         if (unAvailableSongNames.Length > 0)
@@ -119,11 +116,11 @@ public partial class GroupedSongsListViewModel(
             .ToList());
     }
 
-    private List<int> AppendToNext(IReadOnlyList<SongListItemViewModel> selectedSongs)
+    private void AppendToNext(IReadOnlyList<SongListItemViewModel> selectedSongs)
     {
-        return playlist.AppendItems(
+        _ = playCore.InsertSongRangeAsync(
             selectedSongs.Select(song => song.ToProviderSong()).ToList(),
-            playlist.NowPlayingIndex + 1);
+            state.NowPlayingIndex + 1);
     }
 
     public void OpenMv(SongListItemViewModel selectedSong)

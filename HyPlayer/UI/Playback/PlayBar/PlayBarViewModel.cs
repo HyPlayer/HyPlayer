@@ -4,6 +4,7 @@ using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
@@ -20,7 +21,7 @@ namespace HyPlayer.UI.Playback.PlayBar;
 
 public partial class PlayBarViewModel : ObservableObject
 {
-    private readonly IPlaylistService _playlist;
+    private readonly PlayCoreBase _playCore;
     private readonly IPlaybackControlService _control;
     private readonly PlaybackStateService _state;
     private readonly ILyricService _lyricService;
@@ -30,10 +31,9 @@ public partial class PlayBarViewModel : ObservableObject
     private readonly IAuthService _authService;
     private readonly DataTransferManager _dataTransferManager;
     private readonly WeakEventListener<PlayBarViewModel, object?, PropertyChangedEventArgs> _stateChangedListener;
-    private readonly WeakEventListener<PlayBarViewModel, object?, PlaylistChangedEventArgs> _playlistChangedListener;
 
     public PlayBarViewModel(
-        IPlaylistService playlist,
+        PlayCoreBase playCore,
         IPlaybackControlService control,
         PlaybackStateService state,
         ILyricService lyricService,
@@ -42,7 +42,7 @@ public partial class PlayBarViewModel : ObservableObject
         IBackgroundTaskRunner taskRunner,
         IAuthService authService)
     {
-        _playlist = playlist;
+        _playCore = playCore;
         _control = control;
         _state = state;
         _lyricService = lyricService;
@@ -58,12 +58,6 @@ public partial class PlayBarViewModel : ObservableObject
             OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
         };
         _state.PropertyChanged += _stateChangedListener.OnEvent;
-        _playlistChangedListener = new WeakEventListener<PlayBarViewModel, object?, PlaylistChangedEventArgs>(this)
-        {
-            OnEventAction = static (instance, _, _) => instance.OnPlaylistChanged(),
-            OnDetachAction = weakEventListener => { _playlist.PlaylistChanged -= weakEventListener.OnEvent; }
-        };
-        _playlist.PlaylistChanged += _playlistChangedListener.OnEvent;
     }
 
     // ── Observable Properties (partial property pattern for AOT) ──
@@ -111,9 +105,9 @@ public partial class PlayBarViewModel : ObservableObject
 
     // ── Playlist service pass-through ──
 
-    public int QueueCount => _playlist.QueueCount;
-    public int NowPlayingIndex => _playlist.NowPlayingIndex;
-    public string PlaySourceId => _playlist.PlaySourceId;
+    public int QueueCount => PlayCoreQueueSnapshot.GetPlaylist(_playCore).Count;
+    public int NowPlayingIndex => _state.NowPlayingIndex;
+    public string PlaySourceId => _playCore.PlaySourceId;
 
     /// <summary>
     /// Pass-through to PlaybackStateService.CoverStream for UI cover loading.
@@ -144,7 +138,7 @@ public partial class PlayBarViewModel : ObservableObject
     [RelayCommand]
     private async Task MoveNextAsync()
     {
-        await _playlist.MoveNextAsync(true);
+        await _control.MoveNextAndPlayAsync(true);
     }
 
     [RelayCommand]
@@ -153,11 +147,11 @@ public partial class PlayBarViewModel : ObservableObject
         if (_state.IsInFm)
             PersonalFM.ExitFm();
         else
-            await _playlist.MovePreviousAsync();
+            await _control.MovePreviousAndPlayAsync();
     }
 
     [RelayCommand]
-    private void ChangePlayMode()
+    private async Task ChangePlayModeAsync()
     {
         if (_state.IsInFm) return;
 
@@ -168,7 +162,8 @@ public partial class PlayBarViewModel : ObservableObject
             "sgl" => "seq",
             _ => "seq"
         };
-        _playlist.SetStrategy(nextStrategy);
+        await _playCore.SetPlayModeAsync(nextStrategy);
+        _state.ActiveStrategyId = nextStrategy;
         ActiveStrategyId = nextStrategy;
     }
 
@@ -187,7 +182,9 @@ public partial class PlayBarViewModel : ObservableObject
     [RelayCommand]
     private void RemoveAll()
     {
-        _playlist.Clear();
+        _taskRunner.Forget(_playCore.StopAsync(), "stop before clearing PlayCore queue");
+        _taskRunner.Forget(_playCore.RemoveAllSongAsync(), "clear PlayCore queue");
+        _state.ClearNowPlaying();
     }
 
     [RelayCommand]
@@ -200,16 +197,21 @@ public partial class PlayBarViewModel : ObservableObject
     private void RemoveItem(PlayBarQueueItem item)
     {
         if (item == null) return;
-        if (item.QueueIndex >= 0 && item.QueueIndex < _playlist.QueueCount)
-            _playlist.RemoveAt(item.QueueIndex);
+        var queue = PlayCoreQueueSnapshot.GetPlaylist(_playCore);
+        if (item.QueueIndex >= 0 && item.QueueIndex < queue.Count)
+            _taskRunner.Forget(_playCore.RemoveSongAsync(queue[item.QueueIndex]), "remove PlayCore queue item");
     }
 
     [RelayCommand]
     private async Task MoveToItemAsync(PlayBarQueueItem item)
     {
         if (item == null || item.QueueIndex == NowPlayingIndex) return;
-        if (item.QueueIndex >= 0 && item.QueueIndex < _playlist.QueueCount)
-            await _playlist.MoveToIndexAsync(item.QueueIndex);
+        if (item.QueueIndex >= 0 && item.QueueIndex < QueueCount)
+        {
+            await _playCore.MovePointerToIndexAsync(item.QueueIndex);
+            if (_playCore.CurrentSong is { } song)
+                await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
+        }
     }
 
     private void OnPlaybackStatePropertyChanged(string? propertyName)
@@ -239,6 +241,9 @@ public partial class PlayBarViewModel : ObservableObject
                     break;
                 case nameof(PlaybackStateService.LyricIndex):
                     LyricIndex = _state.LyricIndex;
+                    break;
+                case nameof(PlaybackStateService.QueueRevision):
+                    OnPlaylistChanged();
                     break;
             }
         });
@@ -335,18 +340,20 @@ public partial class PlayBarViewModel : ObservableObject
     {
         PlaylistItems.Clear();
         CurrentPlaylistItem = null;
-        var queueSnapshot = _playlist.QueueItemsSnapshot;
+        var queueSnapshot = PlayCoreQueueSnapshot.GetQueueItems(_playCore);
+        var orderedQueue = PlayCoreQueueSnapshot.GetOrderedPlaylist(_playCore);
 
         if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
         {
-            foreach (var idx in _playlist.ShuffleList)
+            foreach (var orderedSong in orderedQueue)
             {
+                var idx = PlayCoreQueueSnapshot.GetPlaylist(_playCore).ToList().IndexOf(orderedSong);
                 AddPlaylistRow(idx, queueSnapshot);
             }
         }
         else
         {
-            for (var idx = 0; idx < _playlist.QueueCount; idx++)
+            for (var idx = 0; idx < queueSnapshot.Count; idx++)
             {
                 AddPlaylistRow(idx, queueSnapshot);
             }
@@ -355,7 +362,7 @@ public partial class PlayBarViewModel : ObservableObject
 
     private void AddPlaylistRow(int queueIndex, IReadOnlyList<PlaybackQueueItemSnapshot> queueSnapshot)
     {
-        if (queueIndex < 0 || queueIndex >= _playlist.QueueCount)
+        if (queueIndex < 0 || queueIndex >= queueSnapshot.Count)
             return;
 
         if (queueIndex >= queueSnapshot.Count)
@@ -373,8 +380,8 @@ public partial class PlayBarViewModel : ObservableObject
     public string GetPlaylistTitle()
     {
         if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
-            return $"随机播放列表 (共{_playlist.QueueCount}首)";
-        return $"播放列表 (共{_playlist.QueueCount}首)";
+            return $"随机播放列表 (共{QueueCount}首)";
+        return $"播放列表 (共{QueueCount}首)";
     }
 
     /// <summary>
@@ -383,13 +390,13 @@ public partial class PlayBarViewModel : ObservableObject
     public int GetTargetingIndex()
     {
         if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
-            return _playlist.ShufflingIndex;
-        return _playlist.NowPlayingIndex;
+            return PlayCoreQueueSnapshot.GetOrderedPlaylist(_playCore).ToList().IndexOf(_state.NowPlayingProviderItem);
+        return _state.NowPlayingIndex;
     }
 
     public void SyncFromState()
     {
-        NowPlayingProviderItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+        NowPlayingProviderItem = _state.NowPlayingProviderItem ?? _playCore.CurrentSong;
         NowPlayingSnapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(NowPlayingProviderItem);
         IsPlaying = _state.IsPlaying;
         Position = _state.Position;

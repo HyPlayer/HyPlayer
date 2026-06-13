@@ -3,6 +3,7 @@ using CommunityToolkit.WinUI.Media;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Settings;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
@@ -62,7 +63,7 @@ public sealed partial class CompactPlayerPage : Page
 
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
-    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
@@ -116,6 +117,9 @@ public sealed partial class CompactPlayerPage : Page
                 break;
             case nameof(PlaybackStateService.CoverStream):
                 HyPlayList_OnSongCoverChanged(_state.NowPlayingProviderItem, _state.NowPlayingSnapshot);
+                break;
+            case nameof(PlaybackStateService.LyricInfo):
+                OnLyricChanged();
                 break;
             case nameof(PlaybackStateService.LyricIndex):
                 OnLyricChanged();
@@ -297,7 +301,7 @@ public sealed partial class CompactPlayerPage : Page
 
     private void OnChangePlayItem(SingleSongBase? providerItem)
     {
-        providerItem ??= _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+        providerItem ??= _state.NowPlayingProviderItem ?? _playCore.CurrentSong;
         var snapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(providerItem);
         RunOnUIThread(() =>
         {
@@ -329,12 +333,12 @@ public sealed partial class CompactPlayerPage : Page
 
     private async void MovePrevious(object sender, RoutedEventArgs e)
     {
-        await _playlist.MovePreviousAsync();
+        await _control.MovePreviousAndPlayAsync();
     }
 
     private async void MoveNext(object sender, RoutedEventArgs e)
     {
-        await _playlist.MoveNextAsync(true);
+        await _control.MoveNextAndPlayAsync(true);
     }
 
     private void ChangePlayState(object sender, RoutedEventArgs e)

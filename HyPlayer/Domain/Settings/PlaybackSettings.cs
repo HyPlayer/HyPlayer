@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
@@ -52,7 +53,7 @@ namespace HyPlayer.Domain.Settings
             set
             {
                 ApplicationData.Current.LocalSettings.Values["CrossFade"] = value;
-                Ioc.Default.GetService<IPlaylistService>()?.SetTransition(value ? "xfd" : "dir");
+                Ioc.Default.GetService<PlayCoreBase>()?.SetTransitionAsync(value ? "xfd" : "dir");
             }
         }
 

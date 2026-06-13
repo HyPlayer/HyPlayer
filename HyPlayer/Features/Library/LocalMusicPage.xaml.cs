@@ -5,6 +5,8 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Downloads;
 using HyPlayer.Infrastructure.Netease;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback.LocalProvider;
 using System;
@@ -34,7 +36,8 @@ namespace HyPlayer.Features.Library;
 public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+    private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly ILocalFileImportService _localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
@@ -90,9 +93,15 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private async void Playall_Click(object sender, RoutedEventArgs e)
     {
-        _playlist.AppendLocalItems(localHyItems, true);
+        await _playCore.StopAsync();
+        await _playCore.RemoveAllSongAsync();
+        await _playCore.InsertSongRangeAsync(localHyItems.Cast<SingleSongBase>().ToList());
         if (localHyItems.Count > 0)
-            await _playlist.MoveToIndexAsync(0);
+        {
+            await _playCore.MovePointerToIndexAsync(0);
+            if (_playCore.CurrentSong is { } song)
+                await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
+        }
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -168,12 +177,18 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private async void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
-        _playlist.AppendLocalItems(localHyItems, true);
+        await _playCore.StopAsync();
+        await _playCore.RemoveAllSongAsync();
+        await _playCore.InsertSongRangeAsync(localHyItems.Cast<SingleSongBase>().ToList());
         if (ListBoxLocalMusicContainer.SelectedItem is LocalSong selectedItem)
         {
             var index = localHyItems.IndexOf(selectedItem);
             if (index >= 0)
-                await _playlist.MoveToIndexAsync(index);
+            {
+                await _playCore.MovePointerToIndexAsync(index);
+                if (_playCore.CurrentSong is { } song)
+                    await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
+            }
         }
     }
 
@@ -194,8 +209,11 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         if (items.Count == 0)
             return;
 
-        _playlist.AppendLocalItems(items);
-        await _playlist.MoveToIndexAsync(_playlist.QueueCount - 1);
+        await _playCore.InsertSongRangeAsync(items.Cast<SingleSongBase>().ToList());
+        var queueCount = (await _playCore.GetPlaylistAsync()).Count;
+        await _playCore.MovePointerToIndexAsync(queueCount - 1);
+        if (_playCore.CurrentSong is { } song)
+            await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
     }
 
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)

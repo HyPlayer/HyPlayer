@@ -131,7 +131,11 @@ public partial class NavigationShellViewModel : ObservableObject
         if (_auth.CurrentUser is null) return;
 
         UpdateAccountStatus();
-        _ = LoadPlaylistsAsync();
+    }
+
+    public Task RefreshPlaylistsAsync()
+    {
+        return LoadPlaylistsAsync();
     }
 
     public void UpdateAfterLogout()
@@ -196,7 +200,24 @@ public partial class NavigationShellViewModel : ObservableObject
             _subscribedContainer?.Children.Clear();
             _auth.MySongLists.Clear();
 
-            var playlists = containers.OfType<NeteasePlaylist>().ToList();
+            var playlistContainers = containers.OfType<NeteaseUserPlaylistSubContainer>().ToList();
+            var createdPlaylists = playlistContainers
+                .Where(container => container.Name.Contains("创建", StringComparison.Ordinal))
+                .SelectMany(container => container.Playlists)
+                .ToList();
+            var subscribedPlaylists = playlistContainers
+                .Where(container => container.Name.Contains("收藏", StringComparison.Ordinal))
+                .SelectMany(container => container.Playlists)
+                .ToList();
+
+            // 兼容旧 Provider 直接返回歌单的形态。
+            if (createdPlaylists.Count == 0 && subscribedPlaylists.Count == 0)
+            {
+                createdPlaylists = containers.OfType<NeteasePlaylist>().Where(playlist => !playlist.Subscribed).ToList();
+                subscribedPlaylists = containers.OfType<NeteasePlaylist>().Where(playlist => playlist.Subscribed).ToList();
+            }
+
+            var playlists = createdPlaylists.Concat(subscribedPlaylists).ToList();
 
             if (playlists.Count == 0)
             {
@@ -206,33 +227,34 @@ public partial class NavigationShellViewModel : ObservableObject
             }
 
             // 第一个歌单是"我喜欢的音乐"
-            _auth.MySongLists.Add(playlists[0]);
+            if (createdPlaylists.Count > 0)
+                _auth.MySongLists.Add(createdPlaylists[0]);
 
-            for (int i = 1; i < playlists.Count; i++)
+            foreach (var pl in createdPlaylists.Skip(1))
             {
-                var pl = playlists[i];
                 if (string.IsNullOrEmpty(pl.ActualId) || string.IsNullOrEmpty(pl.Name))
                     continue;
 
-                if (pl.Subscribed)
+                _auth.MySongLists.Add(pl);
+                _createdContainer?.Children.Add(new NavigationNode
                 {
-                    _subscribedContainer?.Children.Add(new NavigationNode
-                    {
-                        Title = pl.Name,
-                        Route = new AppRoute.Playlist(pl.ActualId),
-                        Icon = new FontIcon { Glyph = "\uE142" }
-                    });
-                }
-                else
+                    Title = pl.Name,
+                    Route = new AppRoute.Playlist(pl.ActualId),
+                    Icon = new FontIcon { Glyph = "\uE142" }
+                });
+            }
+
+            foreach (var pl in subscribedPlaylists)
+            {
+                if (string.IsNullOrEmpty(pl.ActualId) || string.IsNullOrEmpty(pl.Name))
+                    continue;
+
+                _subscribedContainer?.Children.Add(new NavigationNode
                 {
-                    _auth.MySongLists.Add(pl);
-                    _createdContainer?.Children.Add(new NavigationNode
-                    {
-                        Title = pl.Name,
-                        Route = new AppRoute.Playlist(pl.ActualId),
-                        Icon = new FontIcon { Glyph = "\uE142" }
-                    });
-                }
+                    Title = pl.Name,
+                    Route = new AppRoute.Playlist(pl.ActualId),
+                    Icon = new FontIcon { Glyph = "\uE142" }
+                });
             }
 
             if (_createdContainer is not null)

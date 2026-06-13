@@ -16,6 +16,9 @@ public static class Utils
 {
     public static List<SongLyric> ConvertPureLyric(string lyricAllText)
     {
+        if (string.IsNullOrWhiteSpace(lyricAllText))
+            return [];
+
         var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
         return [.. parsedlyrics.Lines.OrderBy(t => t.StartTime).Select(lyricsLine => new SongLyric
         { LyricLine = lyricsLine, Translation = null })];
@@ -23,6 +26,9 @@ public static class Utils
 
     public static void ConvertTranslation(string lyricAllText, List<SongLyric> lyrics)
     {
+        if (string.IsNullOrWhiteSpace(lyricAllText) || lyrics.Count == 0)
+            return;
+
         var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
         foreach (var lyricsLine in parsedlyrics.Lines)
             foreach (var songLyric in lyrics.Where(songLyric =>
@@ -35,8 +41,17 @@ public static class Utils
 
     public static void ConvertYrcTranslation(KaraokLyricInfo lyricInfo, List<SongLyric> lyrics)
     {
+        if (lyrics.Count == 0)
+            return;
+
+        if (string.IsNullOrWhiteSpace(lyricInfo.YrTrLyrics))
+        {
+            ConvertTranslation(lyricInfo.TrLyrics, lyrics);
+            return;
+        }
+
         var targetLyrics = LrcParser.ParseLrc(lyricInfo.YrTrLyrics.AsSpan());
-        if (Ioc.Default.GetRequiredService<Setting>().MigrateLyrics)
+        if (Ioc.Default.GetRequiredService<Setting>().MigrateLyrics && !string.IsNullOrWhiteSpace(lyricInfo.TrLyrics))
         {
             var sourceLyrics = LrcParser.ParseLrc(lyricInfo.TrLyrics.AsSpan());
             var migrated = MigrationTool.Migrate(targetLyrics, sourceLyrics);
@@ -82,9 +97,17 @@ public static class Utils
 
     public static void ConvertYrcNeteaseRomaji(KaraokLyricInfo lyricInfo, List<SongLyric> lyrics)
     {
-        if (string.IsNullOrEmpty(lyricInfo.NeteaseRomaji) && string.IsNullOrEmpty(lyricInfo.YrNeteaseRomaji)) return;
+        if (lyrics.Count == 0)
+            return;
+
+        if (string.IsNullOrWhiteSpace(lyricInfo.YrNeteaseRomaji))
+        {
+            ConvertNeteaseRomaji(lyricInfo.NeteaseRomaji, lyrics);
+            return;
+        }
+
         var targetLyrics = LrcParser.ParseLrc(lyricInfo.YrNeteaseRomaji.AsSpan());
-        if (Ioc.Default.GetRequiredService<Setting>().MigrateLyrics)
+        if (Ioc.Default.GetRequiredService<Setting>().MigrateLyrics && !string.IsNullOrWhiteSpace(lyricInfo.NeteaseRomaji))
         {
             var sourceLyrics = LrcParser.ParseLrc(lyricInfo.NeteaseRomaji.AsSpan());
             var migrated = MigrationTool.Migrate(targetLyrics, sourceLyrics);
@@ -210,20 +233,31 @@ public static class Utils
 
     public static List<SongLyric> ConvertKaraok(PureLyricInfo pureLyricInfo)
     {
-        if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo && !string.IsNullOrEmpty(karaokLyricInfo.KaraokLyric))
+        if (pureLyricInfo is not KaraokLyricInfo karaokLyricInfo ||
+            string.IsNullOrWhiteSpace(karaokLyricInfo.KaraokLyric))
+            return ConvertPureLyric(pureLyricInfo?.PureLyrics);
+
+        try
         {
-            var parsedLyrics = KaraokeParser.ParseKaraoke(((KaraokLyricInfo)pureLyricInfo).KaraokLyric.AsSpan());
-            if (Ioc.Default.GetRequiredService<Setting>().MigrateLyrics)
+            var parsedLyrics = KaraokeParser.ParseKaraoke(karaokLyricInfo.KaraokLyric.AsSpan());
+            if (Ioc.Default.GetRequiredService<Setting>().MigrateLyrics &&
+                !string.IsNullOrWhiteSpace(pureLyricInfo.PureLyrics))
             {
                 var pureLyrics = LrcParser.ParseLrc(pureLyricInfo.PureLyrics.AsSpan());
                 var migrated = MigrationTool.Migrate(parsedLyrics, pureLyrics);
-                return [.. migrated.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t })];
+                if (migrated.Lines.Count != 0)
+                    return [.. migrated.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t })];
             }
 
-            return [.. parsedLyrics.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t })];
+            if (parsedLyrics.Lines.Count != 0)
+                return [.. parsedLyrics.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t })];
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Karaoke lyric conversion failed: {ex.Message}");
         }
 
-        throw new ArgumentException("HyLyricInfo is not KaraokeLyricInfo");
+        return ConvertPureLyric(pureLyricInfo.PureLyrics);
     }
     public static ALRCFile ConvertToALRC(List<SongLyric> lyric, double durationMs = 0)
     {

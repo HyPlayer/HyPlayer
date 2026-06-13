@@ -118,7 +118,6 @@ public sealed partial class BasePage : Page
             _ = dialog.ShowAsync();
         }
 
-        // 不要阻塞页面加载
         _ = UpdateManager.PopupVersionCheck(true);
         _ = _loginService.TryLoadSavedLoginAsync();
     }

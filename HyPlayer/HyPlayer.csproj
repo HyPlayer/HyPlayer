@@ -86,6 +86,9 @@
     <PackageReference Include="Depository">
       <Version>4.0.1</Version>
     </PackageReference>
+    <PackageReference Include="Depository.Extensions.DependencyInjection">
+      <Version>4.0.1</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HyPlayer.Frieren\HyPlayer.Frieren.csproj" />

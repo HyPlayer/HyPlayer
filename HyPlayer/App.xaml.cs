@@ -3,7 +3,9 @@
 using Depository.Abstraction.Enums;
 using Depository.Abstraction.Interfaces;
 using Depository.Abstraction.Interfaces.NotificationHub;
+using Depository.Extensions.DependencyInjection;
 using Depository.Extensions;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
@@ -33,7 +35,6 @@ using HyPlayer.Services.Notifications;
 using HyPlayer.Services.Playback;
 using HyPlayer.Services.Playback.AudioServices;
 using HyPlayer.Services.Playback.LocalProvider;
-using HyPlayer.Services.Playback.PlaylistService;
 using HyPlayer.Services.Playback.QueueProviders;
 using HyPlayer.Services.Runtime;
 using HyPlayer.Services.Tiles;
@@ -107,6 +108,7 @@ public sealed partial class App : Application
     {
         AppDepository.Initialize();
         InitializeServices(AppDepository.Root);
+        Ioc.Default.ConfigureServices(new DepositoryServiceProvider(AppDepository.Root));
     }
 
     private static void InitializeCommonServices()
@@ -191,7 +193,11 @@ public sealed partial class App : Application
         depository.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
         depository.AddSingleton<ILocalFileImportService, LocalFileImportService>();
         depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
-        depository.AddSingleton<IPlaylistService, PlaylistService>();
+        depository.AddSingleton<IPlaybackQueueLoader, PlaybackQueueLoader>();
+        depository.AddSingleton<PlayCoreStateSynchronizer>();
+        depository.Add(typeof(INotificationSubscriber<CurrentSongChangedNotification>), typeof(PlayCoreStateSynchronizer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<PlayCoreStateSynchronizer>());
+        depository.Add(typeof(INotificationSubscriber<OrderedPlaylistChangedNotification>), typeof(PlayCoreStateSynchronizer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<PlayCoreStateSynchronizer>());
+        depository.Add(typeof(INotificationSubscriber<InnerPlayListChangedNotification>), typeof(PlayCoreStateSynchronizer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<PlayCoreStateSynchronizer>());
         depository.AddSingleton<ISongListQueueBuilder, SongListQueueBuilder>();
         depository.AddSingleton<ILyricService, LyricService>();
         depository.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
@@ -396,9 +402,9 @@ public sealed partial class App : Application
         // 本地播放
         else if (args is FileActivatedEventArgs)
         {
-            var playlist = AppDepository.Resolve<IPlaylistService>();
+            var playCore = AppDepository.Resolve<PlayCoreBase>();
             var localFileImport = AppDepository.Resolve<ILocalFileImportService>();
-            playlist.PlaySourceId = "local";
+            playCore.PlaySourceId = "local";
             ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
 
             NavigateToRootPage();
@@ -414,12 +420,16 @@ public sealed partial class App : Application
                 var file = (StorageFile)storageItem;
                 await localFileImport.RegisterFutureAccessAsync(file);
                 var item = await localFileImport.LoadStorageFileAsync(file);
-                playlist.AppendLocalItem(item);
+                await playCore.InsertSongAsync(item);
             }
 
-            playlist.PlaySourceId = "local";
-            if (playlist.QueueCount > 0)
-                await playlist.MoveToIndexAsync(0);
+            playCore.PlaySourceId = "local";
+            if ((await playCore.GetPlaylistAsync()).Count > 0)
+            {
+                await playCore.MovePointerToIndexAsync(0);
+                if (playCore.CurrentSong is { } song)
+                    await control.LoadAndPlayAsync(song, removeCurrentSongs: false);
+            }
         }
 
 
@@ -450,12 +460,11 @@ public sealed partial class App : Application
     private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
-        var playlist = AppDepository.Resolve<IPlaylistService>();
-        var neteaseItems = playlist.ProviderQueueSnapshot
-            .Where(t => t is not null && t.ProviderId == "ncm")
-            .Select(t => t!)
+        var playCore = AppDepository.Resolve<PlayCoreBase>();
+        var neteaseItems = (await playCore.GetPlaylistAsync())
+            .Where(t => t.ProviderId == "ncm")
             .ToList();
-        var currentItem = playlist.NowPlayingProviderItem;
+        var currentItem = playCore.CurrentSong;
         var currentIndex = currentItem?.ProviderId == "ncm"
             ? neteaseItems.FindIndex(item => item.TypeId == currentItem.TypeId && item.ActualId == currentItem.ActualId)
             : -1;

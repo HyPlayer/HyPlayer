@@ -16,6 +16,7 @@ using HyPlayer.Features.Radio;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Imaging;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction.Render;
@@ -94,7 +95,7 @@ public sealed partial class ExpandedPlayer : Page
     private readonly WeakEventListener<ExpandedPlayer, object?, SeekRequestedEventArgs> _seekRequestedListener;
 
     // Services accessed via ViewModel; shortcuts for code-behind convenience
-    private IPlaylistService _playlist => ViewModel.Playlist;
+    private PlayCoreBase _playCore => ViewModel.PlayCore;
     private IPlaybackControlService _control => ViewModel.Control;
     private PlaybackStateService _state => ViewModel.State;
     private ILyricService _lyricService => ViewModel.LyricService;
@@ -232,7 +233,7 @@ public sealed partial class ExpandedPlayer : Page
 
         // ── Stage 8: Share/save controller ────────────────────────────
         _shareSave = new ExpandedPlayerShareSaveController(
-            _state, _httpClient, _playlist, _notification,
+            _state, _httpClient, _playCore, _notification,
             () => TextBlockSongTitle.Text);
     }
 
@@ -1140,7 +1141,7 @@ public sealed partial class ExpandedPlayer : Page
                     sb2.Children.Add(ani2);
                     await sb1.BeginAsync();
                     sb2.Begin();
-                    _ = _playlist.MovePreviousAsync();
+                    _ = _control.MovePreviousAndPlayAsync();
                     return;
                 }
                 else if (e.Cumulative.Translation.X < -150)
@@ -1155,7 +1156,7 @@ public sealed partial class ExpandedPlayer : Page
                     sb2.Children.Add(ani2);
                     await sb1.BeginAsync();
                     sb2.Begin();
-                    _ = _playlist.MoveNextAsync(true);
+                    _ = _control.MoveNextAndPlayAsync(true);
                     return;
                 }
             }

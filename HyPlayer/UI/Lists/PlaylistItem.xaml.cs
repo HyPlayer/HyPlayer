@@ -25,7 +25,6 @@ public sealed partial class PlaylistItem : UserControl
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly IContainerManagementProvidable _containerManagement = Ioc.Default.GetRequiredService<IContainerManagementProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
     private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier = Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();

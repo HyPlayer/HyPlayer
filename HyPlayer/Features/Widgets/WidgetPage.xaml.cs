@@ -5,6 +5,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.RollingCalculators;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
@@ -37,7 +38,7 @@ public sealed partial class WidgetPage : Page
     private readonly LyricRenderView LyricBox = new();
 
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
@@ -198,7 +199,7 @@ public sealed partial class WidgetPage : Page
     }
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        var providerItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+        var providerItem = _state.NowPlayingProviderItem ?? _playCore.CurrentSong;
         var snapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(providerItem);
         var durationMs = snapshot?.Duration ?? providerItem?.Duration ?? 0;
         if (durationMs <= 0) return;
@@ -223,7 +224,7 @@ public sealed partial class WidgetPage : Page
 
     private void HyPlayList_OnPlayItemChange(SingleSongBase? providerItem, PlaybackCurrentItemSnapshot? snapshot)
     {
-        providerItem ??= _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+        providerItem ??= _state.NowPlayingProviderItem ?? _playCore.CurrentSong;
         snapshot ??= _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(providerItem);
         var playItemName = providerItem?.Name ?? snapshot?.Name ?? string.Empty;
         var artistName = providerItem?.CreatorList is { Count: > 0 } creators
@@ -240,12 +241,12 @@ public sealed partial class WidgetPage : Page
 
     private async void MovePreviousButton_Click(object sender, RoutedEventArgs e)
     {
-        await _playlist.MovePreviousAsync();
+        await _control.MovePreviousAndPlayAsync();
     }
 
     private async void MoveNextButton_Click(object sender, RoutedEventArgs e)
     {
-        await _playlist.MoveNextAsync(true);
+        await _control.MoveNextAndPlayAsync(true);
     }
 
     private void ChangePlayStateButton_Click(object sender, RoutedEventArgs e)
@@ -381,7 +382,7 @@ public sealed partial class WidgetPage : Page
     {
         return _state.NowPlayingProviderItem is not null
                || _state.NowPlayingSnapshot is not null
-               || _playlist.NowPlayingProviderItem is not null;
+               || _playCore.CurrentSong is not null;
     }
 
     private SolidColorBrush GetAccentBrush()

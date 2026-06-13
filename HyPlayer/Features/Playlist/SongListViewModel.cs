@@ -10,6 +10,7 @@ using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Imaging;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -33,7 +34,9 @@ namespace HyPlayer.Features.Playlist
 {
     public partial class SongListViewModel : ObservableRecipient
     {
-        private readonly IPlaylistService _playlist;
+        private readonly PlayCoreBase _playCore;
+        private readonly IPlaybackQueueLoader _queueLoader;
+        private readonly IPlaybackControlService _control;
         private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
         private readonly Setting _setting;
         private readonly INotificationService _notification;
@@ -45,7 +48,9 @@ namespace HyPlayer.Features.Playlist
         private bool _isSecondTickSubscribed;
 
         public SongListViewModel(
-            IPlaylistService playlist,
+            PlayCoreBase playCore,
+            IPlaybackQueueLoader queueLoader,
+            IPlaybackControlService control,
             global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
             Setting setting,
             INotificationService notification,
@@ -54,7 +59,9 @@ namespace HyPlayer.Features.Playlist
             HttpClient httpClient,
             IGlobalTimerService globalTimer)
         {
-            _playlist = playlist;
+            _playCore = playCore;
+            _queueLoader = queueLoader;
+            _control = control;
             _neteaseProvider = neteaseProvider;
             _setting = setting;
             _notification = notification;
@@ -266,11 +273,11 @@ namespace HyPlayer.Features.Playlist
         {
             if (!IsDailyRecommend)
             {
-                _playlist.AppendPlayListAsync(PlayList.ActualId).SafeFireAndForget();
+                _queueLoader.AppendSourceByKindAsync(SongListQueueScopeKind.Playlist, PlayList.ActualId).SafeFireAndForget();
             }
             else
             {
-                _playlist.AppendItems(GetDailyRecommendProviderSongs(), clearFirst: false);
+                _playCore.InsertSongRangeAsync(GetDailyRecommendProviderSongs().ToList()).SafeFireAndForget();
             }
         }
         [RelayCommand]
@@ -304,15 +311,18 @@ namespace HyPlayer.Features.Playlist
         {
             if (!IsDailyRecommend)
             {
-                _playlist.Clear();
+                await _playCore.StopAsync();
+                await _playCore.RemoveAllSongAsync();
                 await _navigator.AppendAsync(new MusicResource.Playlist(PlayList.ActualId));
-                await _playlist.MoveNextAsync(userInitiated: true);
+                await _control.MoveNextAndPlayAsync(userInitiated: true);
             }
             else
             {
-                _playlist.AppendItems(GetDailyRecommendProviderSongs(), clearFirst: true);
+                await _playCore.StopAsync();
+                await _playCore.RemoveAllSongAsync();
+                await _playCore.InsertSongRangeAsync(GetDailyRecommendProviderSongs().ToList());
                 _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.ActualId));
-                await _playlist.MoveNextAsync(userInitiated: true);
+                await _control.MoveNextAndPlayAsync(userInitiated: true);
             }
         }
 

@@ -2,9 +2,15 @@
 
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.PlaylistService;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 #endregion
@@ -14,23 +20,27 @@ namespace HyPlayer.Infrastructure.Netease;
 /// <summary>
 /// 私人 FM 控制器。
 /// <para>
-/// 保留静态入口 <see cref="InitPersonalFM"/> / <see cref="ExitFm"/> 以兼容现有调用方，
-/// 具体的 FM 内容加载与曲目转换由 PlayCore-backed playlist facade 负责。
+/// 保留静态入口 <see cref="InitPersonalFM"/> / <see cref="ExitFm"/> 以兼容现有调用方。
+/// 播放队列和指针直接由 PlayCore 管理。
 /// </para>
 /// </summary>
 internal sealed class PersonalFM
 {
     private static PersonalFM? _instance;
 
-    private readonly IPlaylistService _playlistService;
+    private readonly PlayCoreBase _playCore;
+    private readonly IPlaybackControlService _control;
     private readonly PlaybackStateService _playbackState;
+    private readonly Setting _setting;
     private string _previousStrategyId = string.Empty;
     private bool _isLoadingNextTrack;
 
     private PersonalFM()
     {
-        _playlistService = Ioc.Default.GetRequiredService<IPlaylistService>();
+        _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+        _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
         _playbackState = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        _setting = Ioc.Default.GetRequiredService<Setting>();
     }
 
     public static void InitPersonalFM()
@@ -40,8 +50,9 @@ internal sealed class PersonalFM
         var fm = new PersonalFM();
         _instance = fm;
         fm._previousStrategyId = fm._playbackState.ActiveStrategyId;
-        fm._playlistService.Clear();
-        fm._playlistService.SetStrategy("pfm", persist: false);
+        fm._playCore.RemoveAllSongAsync().SafeFireAndForget();
+        fm._playCore.SetPlayModeAsync("pfm").SafeFireAndForget();
+        fm._playbackState.ActiveStrategyId = "pfm";
         fm._playbackState.IsInFm = true;
         fm.LoadNextTrackAsync().SafeFireAndForget();
     }
@@ -59,6 +70,12 @@ internal sealed class PersonalFM
         _instance?.LoadNextTrackAsync().SafeFireAndForget();
     }
 
+    public static async Task AppendMoreTracksAsync()
+    {
+        if (_instance is { } instance)
+            await instance.AppendMoreTracksCoreAsync().ConfigureAwait(false);
+    }
+
     private async Task LoadNextTrackAsync(bool userInitiated = false)
     {
         if (_isLoadingNextTrack)
@@ -67,13 +84,14 @@ internal sealed class PersonalFM
         _isLoadingNextTrack = true;
         try
         {
-            if (_playlistService.NowPlayingIndex + 1 >= _playlistService.QueueCount)
-                await AppendMoreTracksAsync();
+            var queueCount = (await _playCore.GetPlaylistAsync().ConfigureAwait(false)).Count;
+            if (await _playCore.GetCurrentIndexAsync().ConfigureAwait(false) + 1 >= queueCount)
+                await AppendMoreTracksCoreAsync().ConfigureAwait(false);
 
-            if (!IsActiveSession || _playlistService.QueueCount == 0)
+            if (!IsActiveSession || (await _playCore.GetPlaylistAsync().ConfigureAwait(false)).Count == 0)
                 return;
 
-            await _playlistService.MoveNextAsync(userInitiated);
+            await _control.MoveNextAndPlayAsync(userInitiated).ConfigureAwait(false);
             if (IsActiveSession)
                 _playbackState.IsInFm = true;
         }
@@ -83,12 +101,15 @@ internal sealed class PersonalFM
         }
     }
 
-    private async Task AppendMoreTracksAsync()
+    private async Task AppendMoreTracksCoreAsync()
     {
-        if (_playlistService is not PlaylistService playlist)
-            return;
+        var currentSong = _playbackState.NowPlayingProviderItem;
+        var songs = _setting.useAiDj && currentSong is not null
+            ? await LoadAiDjAsync(currentSong).ConfigureAwait(false)
+            : await LoadPersonalFmAsync().ConfigureAwait(false);
 
-        await playlist.AppendMorePersonalFmTracksAsync().ConfigureAwait(false);
+        if (songs.Count > 0)
+            await _playCore.InsertSongRangeAsync(songs).ConfigureAwait(false);
     }
 
     private bool IsActiveSession => ReferenceEquals(_instance, this) && _playbackState.IsInFm;
@@ -100,8 +121,37 @@ internal sealed class PersonalFM
 
         _instance._playbackState.IsInFm = false;
         if (clearPlaylist)
-            _instance._playlistService.Clear();
-        _instance._playlistService.SetStrategy(_instance._previousStrategyId);
+            _instance._playCore.RemoveAllSongAsync().SafeFireAndForget();
+
+        _instance._playCore.SetPlayModeAsync(_instance._previousStrategyId).SafeFireAndForget();
+        _instance._playbackState.ActiveStrategyId = _instance._previousStrategyId;
         _instance = null;
+    }
+
+    private static async Task<List<SingleSongBase>> LoadPersonalFmAsync()
+    {
+        return (await new NeteasePersonalFMContainer { ActualId = "default", Name = "私人 FM" }
+                .GetNextItemsRangeAsync()
+                .ConfigureAwait(false))
+            .OfType<SingleSongBase>()
+            .ToList();
+    }
+
+    private static async Task<List<SingleSongBase>> LoadAiDjAsync(SingleSongBase currentSong)
+    {
+        var itemId = currentSong.ActualId ?? currentSong.Name;
+        var container = new NeteaseContextRecommendationContainer
+        {
+            ActualId = itemId,
+            SeedItemId = itemId,
+            Name = "相关推荐",
+            Count = 10
+        };
+
+        var songs = (await container.GetAllItemsAsync().ConfigureAwait(false))
+            .OfType<SingleSongBase>()
+            .ToList();
+
+        return songs.Count > 0 ? songs : await LoadPersonalFmAsync().ConfigureAwait(false);
     }
 }

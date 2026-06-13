@@ -11,6 +11,7 @@ using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Shell.Navigation;
 using HyPlayer.UI.Dialogs;
@@ -36,7 +37,9 @@ namespace HyPlayer.Services.Navigation;
 public sealed class AppNavigator : IAppNavigator
 {
     private readonly INavigationService _navigation;
-    private readonly IPlaylistService _playlist;
+    private readonly PlayCoreBase _playCore;
+    private readonly IPlaybackQueueLoader _queueLoader;
+    private readonly IPlaybackControlService _control;
     private readonly IAuthService _auth;
     private readonly INotificationService _notification;
     private NavigationView? _navigationView;
@@ -49,12 +52,16 @@ public sealed class AppNavigator : IAppNavigator
     private const string DailyRecommendPlaylistId = "daily_recommend";
 
     public AppNavigator(INavigationService navigation,
-                        IPlaylistService playlist,
+                        PlayCoreBase playCore,
+                        IPlaybackQueueLoader queueLoader,
+                        IPlaybackControlService control,
                         IAuthService auth,
                         INotificationService notification)
     {
         _navigation = navigation;
-        _playlist = playlist;
+        _playCore = playCore;
+        _queueLoader = queueLoader;
+        _control = control;
         _auth = auth;
         _notification = notification;
     }
@@ -555,29 +562,33 @@ public sealed class AppNavigator : IAppNavigator
 
     public async Task PlayAsync(MusicResource resource)
     {
-        _playlist.Clear();
+        await _playCore.StopAsync();
+        await _playCore.RemoveAllSongAsync();
         await AppendAsync(resource);
-        await _playlist.MoveNextAsync(true);
+        await _control.MoveNextAndPlayAsync(true);
     }
 
     public async Task AppendAsync(MusicResource resource)
     {
         SetPlaybackSource(resource);
-        await _playlist.AppendNcSourceAsync(_playlist.PlaySourceId);
+        await _queueLoader.AppendNcSourceAsync(_playCore.PlaySourceId);
     }
 
     public void SetPlaybackSource(MusicResource resource)
     {
-        _playlist.PlaySourceId = resource.ToPlaybackSourceKey();
+        _playCore.PlaySourceId = resource.ToPlaybackSourceKey();
     }
 
     private async Task AppendAndMoveToAsync(MusicResource resource)
     {
         var sourceKey = resource.ToPlaybackSourceKey();
-        await _playlist.AppendNcSourceAsync(sourceKey);
-        var item = _playlist.ProviderItems.FirstOrDefault(t => "ns" + t.ActualId == sourceKey);
+        await _queueLoader.AppendNcSourceAsync(sourceKey);
+        var item = (await _playCore.GetPlaylistAsync()).FirstOrDefault(t => "ns" + t.ActualId == sourceKey);
         if (item is not null)
-            await _playlist.MoveToAsync(item);
+        {
+            await _playCore.MovePointerToAsync(item);
+            await _control.LoadAndPlayAsync(item, removeCurrentSongs: false);
+        }
     }
 
     private static NeteasePlaylist CreateDailyRecommendPlaylist() => new()

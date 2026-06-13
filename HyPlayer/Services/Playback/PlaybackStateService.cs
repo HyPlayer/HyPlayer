@@ -68,6 +68,14 @@ public partial class PlaybackStateService : ObservableObject
     [ObservableProperty]
     public partial string QualityTag { get; set; } = string.Empty;
 
+    /// <summary>PlayCore 队列变化版本号，供 UI 刷新队列投影。</summary>
+    [ObservableProperty]
+    public partial int QueueRevision { get; set; }
+
+    /// <summary>最近一次队列变化是否由随机顺序变更触发。</summary>
+    [ObservableProperty]
+    public partial bool LastQueueChangeIsShuffleTrigger { get; set; }
+
     /// <summary>封面流（异步加载，供 UI 观察刷新）。</summary>
     [ObservableProperty]
     public partial InMemoryRandomAccessStream? CoverStream { get; set; }
@@ -89,5 +97,11 @@ public partial class PlaybackStateService : ObservableObject
     {
         SetNowPlaying(null);
         NowPlayingIndex = -1;
+    }
+
+    public void PublishQueueChanged(bool isShuffleTrigger = false)
+    {
+        LastQueueChangeIsShuffleTrigger = isShuffleTrigger;
+        QueueRevision++;
     }
 }

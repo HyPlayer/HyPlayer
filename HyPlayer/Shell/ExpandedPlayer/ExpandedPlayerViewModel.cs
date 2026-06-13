@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Settings;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
@@ -16,7 +17,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
     public partial class ExpandedPlayerViewModel : ObservableObject
     {
         // ── Services ──────────────────────────────────────────────
-        private readonly IPlaylistService _playlist;
+        private readonly PlayCoreBase _playCore;
         private readonly IPlaybackControlService _control;
         private readonly PlaybackStateService _state;
         private readonly ILyricService _lyricService;
@@ -27,7 +28,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
         private readonly WeakEventListener<ExpandedPlayerViewModel, object?, SongLikeStatusChangedEventArgs> _songLikeStatusChangedListener;
 
         public ExpandedPlayerViewModel(
-            IPlaylistService playlist,
+            PlayCoreBase playCore,
             IPlaybackControlService control,
             PlaybackStateService state,
             ILyricService lyricService,
@@ -35,7 +36,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
             Setting settings,
             IAuthService authService)
         {
-            _playlist = playlist;
+            _playCore = playCore;
             _control = control;
             _state = state;
             _lyricService = lyricService;
@@ -111,7 +112,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
         public partial bool IsPlaylistVisible { get; set; }
 
         // ── Expose services for code-behind that still needs them ─
-        public IPlaylistService Playlist => _playlist;
+        public PlayCoreBase PlayCore => _playCore;
         public IPlaybackControlService Control => _control;
         public PlaybackStateService State => _state;
         public ILyricService LyricService => _lyricService;
@@ -123,10 +124,10 @@ namespace HyPlayer.Shell.ExpandedPlayer
         private void TogglePlayPause() => _control.TogglePlayPause();
 
         [RelayCommand]
-        private async Task MoveNextAsync() => await _playlist.MoveNextAsync(userInitiated: true);
+        private async Task MoveNextAsync() => await _control.MoveNextAndPlayAsync(userInitiated: true);
 
         [RelayCommand]
-        private async Task MovePreviousAsync() => await _playlist.MovePreviousAsync();
+        private async Task MovePreviousAsync() => await _control.MovePreviousAndPlayAsync();
 
         [RelayCommand]
         private void ChangePlayMode()
@@ -138,7 +139,8 @@ namespace HyPlayer.Shell.ExpandedPlayer
                 "sgl" => "shn",
                 _ => "seq"
             };
-            _playlist.SetStrategy(next);
+            _ = _playCore.SetPlayModeAsync(next);
+            _state.ActiveStrategyId = next;
             ActiveStrategyId = next;
         }
 
@@ -187,7 +189,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
         /// </summary>
         public void SyncFromState()
         {
-            NowPlayingProviderItem = _state.NowPlayingProviderItem ?? _playlist.NowPlayingProviderItem;
+            NowPlayingProviderItem = _state.NowPlayingProviderItem ?? _playCore.CurrentSong;
             NowPlayingSnapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(NowPlayingProviderItem);
             IsPlaying = _state.IsPlaying;
             Volume = _state.Volume;

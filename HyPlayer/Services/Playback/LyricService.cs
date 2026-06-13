@@ -161,10 +161,7 @@ public sealed class LyricService : ILyricService
             if (providerItem is not NeteaseSong || string.IsNullOrWhiteSpace(providerItem.ActualId))
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
 
-            var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(
-                CacheType.LyricApi, providerItem.ActualId,
-                async () => await _lyricProvider.GetLyricInfoAsync(providerItem, ct),
-                cancellationToken: ct);
+            var lyricResult = await _lyricProvider.GetLyricInfoAsync(providerItem, ct);
 
             if (lyricResult is null)
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 歌词获取失败" };
@@ -185,8 +182,10 @@ public sealed class LyricService : ILyricService
     private async Task<HyLyricInfo> ConvertPureLyricInfoAsync(PureLyricInfo pureLyricInfo, string artistText)
     {
         var lyricInfo = new HyLyricInfo();
+        var karaokeLyricInfo = pureLyricInfo as KaraokLyricInfo;
+        var hasKaraokeLyrics = !string.IsNullOrWhiteSpace(karaokeLyricInfo?.KaraokLyric);
 
-        if (pureLyricInfo is KaraokLyricInfo)
+        if (hasKaraokeLyrics)
         {
             lyricInfo.Lyrics = Utils.ConvertKaraok(pureLyricInfo);
         }
@@ -207,10 +206,10 @@ public sealed class LyricService : ILyricService
         }
         else
         {
-            if (pureLyricInfo is not KaraokLyricInfo)
+            if (karaokeLyricInfo is null)
                 Utils.ConvertTranslation(pureLyricInfo.TrLyrics, lyricInfo.Lyrics);
             else
-                Utils.ConvertYrcTranslation((KaraokLyricInfo)pureLyricInfo, lyricInfo.Lyrics);
+                Utils.ConvertYrcTranslation(karaokeLyricInfo, lyricInfo.Lyrics);
 
             await Utils.ConvertRomaji(pureLyricInfo, lyricInfo.Lyrics);
 
@@ -236,37 +235,49 @@ public sealed class LyricService : ILyricService
 
     private static PureLyricInfo ConvertProviderLyrics(System.Collections.Generic.IEnumerable<RawLyricInfo> lyrics)
     {
-        static string CleanLrc(string? text) =>
-            string.IsNullOrEmpty(text)
+        static string CleanLyric(string? text) =>
+            string.IsNullOrWhiteSpace(text)
                 ? string.Empty
-                : string.Join('\n', text.Split("\n").Where(t => !t.StartsWith('{')).ToArray());
+                : string.Join('\n',
+                    text.Replace("\r\n", "\n")
+                        .Split('\n')
+                        .Select(line => line.TrimEnd('\r'))
+                        .Where(line => !string.IsNullOrWhiteSpace(line))
+                        .Where(line => !line.TrimStart().StartsWith('{')));
 
-        var providerLyrics = lyrics.OfType<NeteaseRawLyricInfo>().ToList();
+        static NeteaseRawLyricInfo? FirstNonEmpty(
+            System.Collections.Generic.IEnumerable<NeteaseRawLyricInfo> items,
+            LyricType type) =>
+            items.FirstOrDefault(lyric => lyric.LyricType == type && !string.IsNullOrWhiteSpace(lyric.LyricText));
+
+        var providerLyrics = lyrics.OfType<NeteaseRawLyricInfo>()
+            .Where(lyric => !string.IsNullOrWhiteSpace(lyric.LyricText))
+            .ToList();
         var wordLyrics = providerLyrics.Where(lyric => lyric.IsWord).ToList();
         var normalLyrics = providerLyrics.Where(lyric => !lyric.IsWord).ToList();
 
-        var original = normalLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Original);
-        var translation = normalLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Translation);
-        var romaji = normalLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Romaji);
-        var wordOriginal = wordLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Original);
-        var wordTranslation = wordLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Translation);
-        var wordRomaji = wordLyrics.FirstOrDefault(lyric => lyric.LyricType == LyricType.Romaji);
+        var original = FirstNonEmpty(normalLyrics, LyricType.Original);
+        var translation = FirstNonEmpty(normalLyrics, LyricType.Translation);
+        var romaji = FirstNonEmpty(normalLyrics, LyricType.Romaji);
+        var wordOriginal = FirstNonEmpty(wordLyrics, LyricType.Original);
+        var wordTranslation = FirstNonEmpty(wordLyrics, LyricType.Translation);
+        var wordRomaji = FirstNonEmpty(wordLyrics, LyricType.Romaji);
 
         PureLyricInfo result = wordOriginal is null
             ? new PureLyricInfo
             {
-                PureLyrics = CleanLrc(original?.LyricText),
-                TrLyrics = translation?.LyricText,
-                NeteaseRomaji = romaji?.LyricText,
+                PureLyrics = CleanLyric(original?.LyricText),
+                TrLyrics = CleanLyric(translation?.LyricText),
+                NeteaseRomaji = CleanLyric(romaji?.LyricText),
             }
             : new KaraokLyricInfo
             {
-                PureLyrics = CleanLrc(original?.LyricText),
-                TrLyrics = translation?.LyricText,
-                NeteaseRomaji = romaji?.LyricText,
-                KaraokLyric = CleanLrc(wordOriginal.LyricText),
-                YrTrLyrics = wordTranslation?.LyricText,
-                YrNeteaseRomaji = wordRomaji?.LyricText,
+                PureLyrics = CleanLyric(original?.LyricText),
+                TrLyrics = CleanLyric(translation?.LyricText),
+                NeteaseRomaji = CleanLyric(romaji?.LyricText),
+                KaraokLyric = CleanLyric(wordOriginal.LyricText),
+                YrTrLyrics = CleanLyric(wordTranslation?.LyricText),
+                YrNeteaseRomaji = CleanLyric(wordRomaji?.LyricText),
             };
 
         AddLyricMetadata(result, original, "lyric_user", "歌词贡献者");

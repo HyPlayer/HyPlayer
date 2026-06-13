@@ -1,5 +1,6 @@
 #region
 
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using HyPlayer.UI.Dialogs;
@@ -28,20 +29,20 @@ public sealed class ExpandedPlayerShareSaveController
 {
     private readonly PlaybackStateService _state;
     private readonly HttpClient _httpClient;
-    private readonly IPlaylistService _playlist;
+    private readonly PlayCoreBase _playCore;
     private readonly INotificationService _notification;
     private readonly Func<string> _getSongTitle;
 
     public ExpandedPlayerShareSaveController(
         PlaybackStateService state,
         HttpClient httpClient,
-        IPlaylistService playlist,
+        PlayCoreBase playCore,
         INotificationService notification,
         Func<string> getSongTitle)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _playlist = playlist ?? throw new ArgumentNullException(nameof(playlist));
+        _playCore = playCore ?? throw new ArgumentNullException(nameof(playCore));
         _notification = notification ?? throw new ArgumentNullException(nameof(notification));
         _getSongTitle = getSongTitle ?? throw new ArgumentNullException(nameof(getSongTitle));
     }
@@ -62,7 +63,7 @@ public sealed class ExpandedPlayerShareSaveController
             using var coverStream = _state.CoverStream.CloneStream();
             var filepicker = new FileSavePicker
             {
-                SuggestedFileName = (_playlist.NowPlayingProviderItem?.Name ?? _state.NowPlayingSnapshot?.Name ?? "Cover") + "-Cover.jpg"
+                SuggestedFileName = (_playCore.CurrentSong?.Name ?? _state.NowPlayingSnapshot?.Name ?? "Cover") + "-Cover.jpg"
             };
             filepicker.FileTypeChoices.Add("图片文件", [".png", ".jpg"]);
             var file = await filepicker.PickSaveFileAsync();

@@ -7,6 +7,7 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.Constants;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -25,7 +26,8 @@ namespace HyPlayer.Features.Album
 {
     public partial class AlbumPageViewModel : ObservableRecipient
     {
-        private readonly IPlaylistService _playlist;
+        private readonly PlayCoreBase _playCore;
+        private readonly IPlaybackControlService _control;
         private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
         private readonly Setting _setting;
         private readonly INotificationService _notification;
@@ -34,7 +36,8 @@ namespace HyPlayer.Features.Album
         private readonly IBackgroundTaskRunner _taskRunner;
 
         public AlbumPageViewModel(
-            IPlaylistService playlist,
+            PlayCoreBase playCore,
+            IPlaybackControlService control,
             global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
             Setting setting,
             INotificationService notification,
@@ -42,7 +45,8 @@ namespace HyPlayer.Features.Album
             IAppNavigator navigator,
             IBackgroundTaskRunner taskRunner)
         {
-            _playlist = playlist;
+            _playCore = playCore;
+            _control = control;
             _neteaseProvider = neteaseProvider;
             _setting = setting;
             _notification = notification;
@@ -127,9 +131,12 @@ namespace HyPlayer.Features.Album
         {
             try
             {
-                _playlist.Clear();
+                await _playCore.StopAsync();
+                await _playCore.RemoveAllSongAsync();
                 await _navigator.AppendAsync(new MusicResource.Album(Album.ActualId));
-                await _playlist.MoveToIndexAsync(0);
+                await _playCore.MovePointerToIndexAsync(0);
+                if (_playCore.CurrentSong is { } song)
+                    await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
             }
             catch (Exception ex)
             {

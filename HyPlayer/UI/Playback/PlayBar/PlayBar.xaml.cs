@@ -9,6 +9,7 @@ using HyPlayer.Features.Comments;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
@@ -59,7 +60,7 @@ public sealed partial class PlayBar
     // ---------------------------------------------------------------
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IPlaylistService _playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IDiagnosticsStateService _diagnostics = Ioc.Default.GetRequiredService<IDiagnosticsStateService>();
@@ -75,7 +76,6 @@ public sealed partial class PlayBar
     private WeakEventListener<PlayBar, object?, EventArgs>? _enteredForegroundListener;
     private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _stateChangedListener;
     private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
-    private WeakEventListener<PlayBar, object?, PlaylistChangedEventArgs>? _playlistChangedListener;
     private WeakEventListener<PlayBar, object?, SongLikeStatusChangedEventArgs>? _songLikeStatusChangedListener;
     private WeakEventListener<PlayBar, object?, EventArgs>? _loginCompletedListener;
 
@@ -427,8 +427,11 @@ DoubleAnimation verticalAnimation;
         if (items.Count == 0)
             return;
 
-        _playlist.AppendLocalItems(items);
-        await _playlist.MoveToIndexAsync(_playlist.QueueCount - 1);
+        await _playCore.InsertSongRangeAsync(items.Cast<SingleSongBase>().ToList());
+        var queueCount = (await _playCore.GetPlaylistAsync()).Count;
+        await _playCore.MovePointerToIndexAsync(queueCount - 1);
+        if (_playCore.CurrentSong is { } song)
+            await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
     }
 
     private void PlayListRemove_OnClick(object sender, RoutedEventArgs e)
@@ -637,7 +640,6 @@ DoubleAnimation verticalAnimation;
         _enteredForegroundListener?.Detach();
         _stateChangedListener?.Detach();
         _surfaceStoreChangedListener?.Detach();
-        _playlistChangedListener?.Detach();
         _songLikeStatusChangedListener?.Detach();
         _loginCompletedListener?.Detach();
         _enteredForegroundListener = new WeakEventListener<PlayBar, object?, EventArgs>(this)
@@ -658,12 +660,6 @@ DoubleAnimation verticalAnimation;
             OnDetachAction = weakEventListener => { _surfaceStore.PropertyChanged -= weakEventListener.OnEvent; }
         };
         _surfaceStore.PropertyChanged += _surfaceStoreChangedListener.OnEvent;
-        _playlistChangedListener = new WeakEventListener<PlayBar, object?, PlaylistChangedEventArgs>(this)
-        {
-            OnEventAction = static (instance, _, _) => instance.OnPlaylistChanged(),
-            OnDetachAction = weakEventListener => { _playlist.PlaylistChanged -= weakEventListener.OnEvent; }
-        };
-        _playlist.PlaylistChanged += _playlistChangedListener.OnEvent;
         _songLikeStatusChangedListener = new WeakEventListener<PlayBar, object?, SongLikeStatusChangedEventArgs>(this)
         {
             OnEventAction = static (instance, _, args) => instance.HyPlayList_OnSongLikeStatusChange(args.IsLiked),
@@ -762,18 +758,19 @@ DoubleAnimation verticalAnimation;
             var state = await HistoryManagement.GetCurPlayingListHistoryStateAsync();
             if (state.Songs.Count > 0)
             {
-                _playlist.AppendItems(state.Songs, true);
+                await _playCore.RemoveAllSongAsync();
+                await _playCore.InsertSongRangeAsync(state.Songs);
                 var restoreIndex = state.CurrentIndex;
-                if (restoreIndex < 0 || restoreIndex >= _playlist.QueueCount)
-                    restoreIndex = _playlist.QueueCount > 0 ? 0 : -1;
+                var queue = await _playCore.GetPlaylistAsync();
+                if (restoreIndex < 0 || restoreIndex >= queue.Count)
+                    restoreIndex = queue.Count > 0 ? 0 : -1;
 
                 if (restoreIndex >= 0)
                 {
-                    var providerItem = _playlist.ProviderQueueSnapshot[restoreIndex];
-                    if (providerItem is null) return;
+                    var providerItem = queue[restoreIndex];
 
                     await _control.LoadAndPlayAsync(providerItem, autoPlay: false, removeCurrentSongs: true);
-                    _playlist.RestoreNowPlayingIndex(restoreIndex);
+                    await _playCore.MovePointerToIndexAsync(restoreIndex);
                     RunOnUIThread(() =>
                     {
                         var targetingIndex = ViewModel.GetTargetingIndex();
@@ -857,7 +854,7 @@ DoubleAnimation verticalAnimation;
 
     private void BtnReverse_Click(object sender, RoutedEventArgs e)
     {
-        _playlist.ReverseList();
+        _taskRunner.Forget(_playCore.ReversePlaylistAsync(), "reverse PlayCore queue");
     }
 
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)
@@ -865,7 +862,6 @@ DoubleAnimation verticalAnimation;
         _enteredForegroundListener?.Detach();
         _stateChangedListener?.Detach();
         _surfaceStoreChangedListener?.Detach();
-        _playlistChangedListener?.Detach();
         _songLikeStatusChangedListener?.Detach();
         _loginCompletedListener?.Detach();
         ViewModel.DataTransferManager.DataRequested -= DataTransferManager_DataRequested;

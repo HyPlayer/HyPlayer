@@ -7,6 +7,7 @@ using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Notifications;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.LastFM;
 using HyPlayer.Services.Playback.AudioServices;
@@ -42,8 +43,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
     private readonly ChopinAudioService _audioService;
-    private bool _resolvingPlaylistService;
-    private IPlaylistService? _playlistService;
     private SystemMediaTransportControls? _smtc;
 
     private readonly SemaphoreSlim _seekerLock = new(1, 1);
@@ -167,11 +166,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
                 break;
 
             case SystemMediaTransportControlsButton.Next:
-                _taskRunner.Forget(GetPlaylistService()?.MoveNextAsync(true) ?? Task.CompletedTask, "SMTC next");
+                _taskRunner.Forget(MoveNextAndPlayAsync(userInitiated: true), "SMTC next");
                 break;
 
             case SystemMediaTransportControlsButton.Previous:
-                _taskRunner.Forget(GetPlaylistService()?.MovePreviousAsync() ?? Task.CompletedTask, "SMTC previous");
+                _taskRunner.Forget(MovePreviousAndPlayAsync(), "SMTC previous");
                 break;
         }
     }
@@ -179,8 +178,14 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     /// <inheritdoc />
     public void Play()
     {
-        _taskRunner.Forget(_playCore.PlayAsync(), "play via PlayCore");
+        _taskRunner.Forget(PlayCoreAfterInitializationAsync(), "play via PlayCore");
         _state.IsPlaying = true;
+    }
+
+    private async Task PlayCoreAfterInitializationAsync()
+    {
+        await InitializeAsync().ConfigureAwait(false);
+        await _playCore.PlayAsync().ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -229,6 +234,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
         try
         {
+            await InitializeAsync().ConfigureAwait(false);
+
             if (removeCurrentSongs)
                 await _playCore.StopAsync(ct);
 
@@ -249,15 +256,9 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         _lyricCts?.Dispose();
         _lyricCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
-        if (!ReferenceEquals(_playCore.CurrentSong, song))
-        {
-            await _playCoreNotificationHub.PublishNotificationAsync(
-                new CurrentSongChangedNotification { CurrentPlayingSong = song },
-                ct);
-        }
-
-        _taskRunner.Forget(LoadLyricsSafeAsync(song, _lyricCts.Token), "load lyrics for PlayCore current song");
-        _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(song), "update playback notification on PlayCore current song");
+        await _playCoreNotificationHub.PublishNotificationAsync(
+            new CurrentSongChangedNotification { CurrentPlayingSong = song },
+            ct);
     }
 
     /// <inheritdoc />
@@ -279,7 +280,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     {
         _state.Position = position;
         _lyricService.Tick(position);
-        GetPlaylistService()?.OnPositionTick(position, _state.Duration);
+        CheckABTimeRemaining(position);
     }
 
     /// <summary>
@@ -347,9 +348,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     {
         try
         {
-            var playlistService = GetPlaylistService();
-            if (playlistService is not null)
-                await playlistService.OnTrackEndedAsync();
+            if (_playCore.ActivePlayModeId == "ltg")
+                return;
+
+            await MoveNextAndPlayAsync(userInitiated: false).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -359,24 +361,43 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
     #endregion
 
-    private IPlaylistService? GetPlaylistService()
+    public async Task MoveNextAndPlayAsync(bool userInitiated)
     {
-        if (_playlistService is not null)
-            return _playlistService;
+        var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
+        if (queue.Count == 0)
+            return;
 
-        if (_resolvingPlaylistService)
-            return null;
+        if (_playCore.ActivePlayModeId == "pfm" && await _playCore.GetCurrentIndexAsync().ConfigureAwait(false) + 1 >= queue.Count)
+            await PersonalFM.AppendMoreTracksAsync().ConfigureAwait(false);
 
-        try
+        if (_playCore.ActivePlayModeId == "ltg" && ListenTogetherManager.Instance?.ServerNextIndex is { } serverIndex)
         {
-            _resolvingPlaylistService = true;
-            _playlistService = AppDepository.Resolve<IPlaylistService>();
-            return _playlistService;
+            ListenTogetherManager.Instance.ServerNextIndex = null;
+            await _playCore.MovePointerToIndexAsync(serverIndex).ConfigureAwait(false);
         }
-        finally
+        else if (_playCore.ActivePlayModeId == "sgl" && _state.NowPlayingProviderItem is not null && !userInitiated)
         {
-            _resolvingPlaylistService = false;
+            await SeekAsync(TimeSpan.Zero).ConfigureAwait(false);
+            Play();
+            return;
         }
+        else
+        {
+            await _playCore.MoveNextAsync().ConfigureAwait(false);
+        }
+
+        if (_playCore.CurrentSong is { } song)
+            await LoadAndPlayAsync(song, removeCurrentSongs: false).ConfigureAwait(false);
+    }
+
+    public async Task MovePreviousAndPlayAsync()
+    {
+        if ((await _playCore.GetPlaylistAsync().ConfigureAwait(false)).Count == 0)
+            return;
+
+        await _playCore.MovePreviousAsync().ConfigureAwait(false);
+        if (_playCore.CurrentSong is { } song)
+            await LoadAndPlayAsync(song, removeCurrentSongs: false).ConfigureAwait(false);
     }
 
     #region IDisposable

@@ -4,6 +4,7 @@ using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
+using HyPlayer.Domain.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,12 +26,15 @@ public sealed class ChopinAudioService :
     IAudioTicketListProvidable
 {
     private readonly IPlayer _player;
+    private readonly Setting _setting;
     private readonly List<ChopinAudioTicket> _tickets = [];
     private readonly object _ticketSyncRoot = new();
+    private readonly SemaphoreSlim _initializeLock = new(1, 1);
 
-    public ChopinAudioService(IPlayer player)
+    public ChopinAudioService(IPlayer player, Setting setting)
     {
         _player = player;
+        _setting = setting;
     }
 
     public override string Id => "hyplayer.chopin";
@@ -49,6 +53,7 @@ public sealed class ChopinAudioService :
         CancellationToken ctk = default)
     {
         ctk.ThrowIfCancellationRequested();
+        await EnsurePlayerInitializedAsync(ctk).ConfigureAwait(false);
         if (musicResource is not IChopinPlaybackSourceResource && musicResource.Uri is null)
         {
             throw new ArgumentException("Music resource must have a Uri.", nameof(musicResource));
@@ -148,6 +153,7 @@ public sealed class ChopinAudioService :
         if (ticket is ChopinAudioTicket chopinTicket)
         {
             _player.PlayPlaybackSource(chopinTicket.PlaybackSource);
+            _player.PlayAll();
             chopinTicket.Status = AudioTicketStatus.Playing;
         }
 
@@ -217,5 +223,30 @@ public sealed class ChopinAudioService :
         }
 
         return Task.CompletedTask;
+    }
+
+    private async Task EnsurePlayerInitializedAsync(CancellationToken ctk)
+    {
+        if (_player is AudioGraphPlayer { PlayerCreated: true })
+            return;
+
+        await _initializeLock.WaitAsync(ctk).ConfigureAwait(false);
+        try
+        {
+            if (_player is AudioGraphPlayer { PlayerCreated: true })
+                return;
+
+            await _player.InitializePlayer(new AudioGraphAudioSetting
+            {
+                DefaultDeviceId = _setting.AudioRenderDevice,
+                OutputVolume = _setting.Volume / 100d,
+                AutoFallback = true,
+                EnableFFTProcessing = _setting.EnableFFT
+            }).ConfigureAwait(false);
+        }
+        finally
+        {
+            _initializeLock.Release();
+        }
     }
 }

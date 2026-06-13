@@ -6,6 +6,7 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
@@ -36,6 +37,9 @@ public sealed partial class RadioPage : Page
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
+    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+    private readonly IPlaybackQueueLoader _queueLoader = Ioc.Default.GetRequiredService<IPlaybackQueueLoader>();
+    private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
 
     private bool asc;
     private int i;
@@ -181,10 +185,13 @@ public sealed partial class RadioPage : Page
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
+        await _playCore.StopAsync();
+        await _playCore.RemoveAllSongAsync();
         await _navigator.AppendAsync(new MusicResource.Radio(RadioChannel.ActualId));
-        if (asc) playlist.ReverseList();
-        await playlist.MoveToIndexAsync(0);
+        if (asc) await _playCore.ReversePlaylistAsync();
+        await _playCore.MovePointerToIndexAsync(0);
+        if (_playCore.CurrentSong is { } song)
+            await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
     }
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
@@ -204,8 +211,7 @@ public sealed partial class RadioPage : Page
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        var playlist = Ioc.Default.GetRequiredService<IPlaylistService>();
-        await playlist.AppendRadioListAsync(RadioChannel.ActualId, asc);
+        await _queueLoader.AppendRadioListAsync(RadioChannel.ActualId, asc);
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)

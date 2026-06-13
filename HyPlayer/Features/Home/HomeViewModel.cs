@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -20,7 +21,8 @@ namespace HyPlayer.Features.Home
     {
 #nullable enable
         private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
-        private readonly IPlaylistService _playlist;
+        private readonly PlayCoreBase _playCore;
+        private readonly IPlaybackControlService _control;
         private readonly INavigationService _navigation;
         private List<SingleSongBase> _recommendedProviderSongs = [];
 
@@ -33,10 +35,15 @@ namespace HyPlayer.Features.Home
         [ObservableProperty]
         public partial List<NeteasePlaylist> OfficialPlaylists { get; set; }
 #nullable restore
-        public HomeViewModel(global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider, IPlaylistService playlist, INavigationService navigation)
+        public HomeViewModel(
+            global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
+            PlayCoreBase playCore,
+            IPlaybackControlService control,
+            INavigationService navigation)
         {
             _neteaseProvider = neteaseProvider;
-            _playlist = playlist;
+            _playCore = playCore;
+            _control = control;
             _navigation = navigation;
         }
 
@@ -93,8 +100,10 @@ namespace HyPlayer.Features.Home
         [RelayCommand]
         private async Task OnPlayAllRecommendedSongsClickedAsync()
         {
-            _playlist.AppendItems(_recommendedProviderSongs, true);
-            await _playlist.MoveNextAsync(userInitiated: true);
+            await _playCore.StopAsync();
+            await _playCore.RemoveAllSongAsync();
+            await _playCore.InsertSongRangeAsync(_recommendedProviderSongs);
+            await _control.MoveNextAndPlayAsync(userInitiated: true);
         }
     }
 }
