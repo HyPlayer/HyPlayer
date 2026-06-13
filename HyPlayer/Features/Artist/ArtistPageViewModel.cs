@@ -29,6 +29,8 @@ namespace HyPlayer.Features.Artist
         private readonly Setting _setting;
         private readonly INotificationService _notification;
         private NeteaseArtist _providerArtist;
+        private Task<List<ContainerBase>> _artistSubContainersTask;
+        private string _loadedArtistId = string.Empty;
 
         public ArtistPageViewModel(
             global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
@@ -63,6 +65,10 @@ namespace HyPlayer.Features.Artist
                 _notification.ShowMessage("艺人ID为空", "请检查传入的参数是否正确");
                 return;
             }
+
+            if (_loadedArtistId == artistId && Artist is not null)
+                return;
+
             _providerArtist = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
             {
                 try
@@ -82,6 +88,8 @@ namespace HyPlayer.Features.Artist
             }
 
             Artist = _providerArtist;
+            _loadedArtistId = artistId;
+            _artistSubContainersTask = null;
             LoadHotSongs().SafeFireAndForget();
             LoadSongs().SafeFireAndForget();
             LoadAlbum().SafeFireAndForget();
@@ -109,6 +117,7 @@ namespace HyPlayer.Features.Artist
 
         private async Task LoadSongs()
         {
+            if (CurrentPage == 0) AllSongs.Clear();
             var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial, Artist.ActualId + "_" + CurrentPage,
                     async () =>
                     {
@@ -153,6 +162,10 @@ namespace HyPlayer.Features.Artist
         {
             CurrentPage++;
             if (CurrentPivotIndex == 1)
+                AllSongs.Clear();
+            else if (CurrentPivotIndex == 2)
+                Albums.Clear();
+            if (CurrentPivotIndex == 1)
                 LoadSongs().SafeFireAndForget();
             else if (CurrentPivotIndex == 2)
                 LoadAlbum().SafeFireAndForget();
@@ -161,6 +174,10 @@ namespace HyPlayer.Features.Artist
         private void PreviousPage()
         {
             CurrentPage--;
+            if (CurrentPivotIndex == 1)
+                AllSongs.Clear();
+            else if (CurrentPivotIndex == 2)
+                Albums.Clear();
             if (CurrentPivotIndex == 1)
                 LoadSongs().SafeFireAndForget();
             else if (CurrentPivotIndex == 2)
@@ -190,7 +207,9 @@ namespace HyPlayer.Features.Artist
 
         private async Task<IProgressiveLoadingContainer> GetArtistSubContainerAsync(string prefix)
         {
-            var subContainers = _providerArtist is null ? [] : await _providerArtist.GetSubContainerAsync();
+            var subContainers = _providerArtist is null
+                ? []
+                : await (_artistSubContainersTask ??= _providerArtist.GetSubContainerAsync());
             return subContainers.OfType<NeteaseArtistSubContainer>()
                        .FirstOrDefault(container => container.ActualId?.StartsWith(prefix) is true)
                    ?? new NeteaseArtistSubContainer

@@ -75,14 +75,15 @@ public static class LyricRenderComposer
         {
             // 获取已高亮字符数
             var currentWordInfo = GetCurrentWordInfo(currentTimeInLine, karaokeLyricsLine);
-            var currentWordIndex = karaokeLyricsLine.WordInfos.ToList().IndexOf(currentWordInfo);
+            var wordInfos = karaokeLyricsLine.WordInfos;
+            var currentWordIndex = wordInfos.IndexOf(currentWordInfo);
             var letterPosition = GetLetterPosition(currentWordInfo, karaokeLyricsLine);
             var highlightedGeometry =
                 CreateHighlightedWordsGeometry(textLayout.GetCharacterRegions(0, letterPosition), drawingSession);
             var startTime =
-                TimeSpan.FromMilliseconds(karaokeLyricsLine.WordInfos.ToList().GetRange(0, currentWordIndex)
-                                                           .Sum(p => p.Duration.TotalMilliseconds));
-            var shouldEase = (currentWordIndex == karaokeLyricsLine.WordInfos.Count - 1 ||
+                TimeSpan.FromMilliseconds(wordInfos.Take(currentWordIndex)
+                                                   .Sum(p => p.Duration.TotalMilliseconds));
+            var shouldEase = (currentWordIndex == wordInfos.Count - 1 ||
                               currentWordInfo.Duration.TotalSeconds > 1);
             var currentPercentage =
                 GetCurrentWordPercentage(startTime.TotalMilliseconds, currentTimeInLine.TotalMilliseconds,
@@ -182,10 +183,9 @@ public static class LyricRenderComposer
 
     private static int GetLetterPosition(KaraokeWordInfo currentLyric, KaraokeLyricsLine karaokeLyricsLine)
     {
-        var wordInfos = karaokeLyricsLine.WordInfos.ToList();
+        var wordInfos = karaokeLyricsLine.WordInfos;
         var index = wordInfos.IndexOf(currentLyric);
-        var letterPosition = wordInfos.GetRange(0, index).Sum(p => p.CurrentWords.Length);
-        return letterPosition;
+        return wordInfos.Take(index).Sum(p => p.CurrentWords.Length);
     }
 
     private static CanvasGeometry? CreateCurrentWordGeometry(double currentPercentage,

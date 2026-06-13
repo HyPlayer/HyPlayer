@@ -21,13 +21,15 @@ public sealed partial class LyricShareDialog : ContentDialog
 
     public static readonly DependencyProperty ShareLyricItemProperty = DependencyProperty.Register(
         "ShareLyricItem", typeof(ObservableCollection<LyricShareItem>), typeof(LyricShareDialog),
-        new PropertyMetadata(new ObservableCollection<LyricShareItem>()));
+        new PropertyMetadata(null));
 
     public Dictionary<SongLyric, string> OutputLines = new();
 
     public LyricShareDialog()
     {
         InitializeComponent();
+        ShareLyricItem = new ObservableCollection<LyricShareItem>();
+        Closed += LyricShareDialog_Closed;
     }
 
     public List<SongLyric> Lyrics
@@ -119,6 +121,13 @@ public sealed partial class LyricShareDialog : ContentDialog
     private void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         Hide();
+    }
+
+    private void LyricShareDialog_Closed(ContentDialog sender, ContentDialogClosedEventArgs args)
+    {
+        Closed -= LyricShareDialog_Closed;
+        ShareLyricItem.Clear();
+        OutputLines.Clear();
     }
 
     private void SelectOriginal(object sender, RoutedEventArgs e)

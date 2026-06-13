@@ -51,12 +51,21 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
                 var result = await container.GetProgressiveItemsListAsync(offset, count, cancellationToken);
                 hasMore = result.Item1;
                 var songs = result.Item2.OfType<SingleSongBase>().ToList();
-                if (asc)
-                    songs.Reverse();
                 if (songs.Count > 0)
                     batches.Add(songs);
 
                 offset += count;
+            }
+
+            if (asc)
+            {
+                foreach (var batch in batches)
+                {
+                    if (batch is List<SingleSongBase> songs)
+                        songs.Reverse();
+                }
+
+                batches.Reverse();
             }
 
             return NeteaseQueueSourceLoadResult.FromBatches(batches);

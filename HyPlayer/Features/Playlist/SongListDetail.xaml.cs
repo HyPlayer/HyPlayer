@@ -22,13 +22,33 @@ public sealed partial class SongListDetail : Page
 {
     private const string DailyRecommendPlaylistId = "daily_recommend";
     private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
+    private bool _dataRequestedSubscribed;
     public SongListViewModel ViewModel => (SongListViewModel)DataContext;
 
     public SongListDetail()
     {
         InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<SongListViewModel>();
+        Unloaded += SongListDetail_Unloaded;
+        AttachDataRequested();
+    }
+
+    private void AttachDataRequested()
+    {
+        if (_dataRequestedSubscribed)
+            return;
+
         _dataTransferManager.DataRequested += DataTransferManagerOnDataRequested;
+        _dataRequestedSubscribed = true;
+    }
+
+    private void DetachDataRequested()
+    {
+        if (!_dataRequestedSubscribed)
+            return;
+
+        _dataTransferManager.DataRequested -= DataTransferManagerOnDataRequested;
+        _dataRequestedSubscribed = false;
     }
 
     private void DataTransferManagerOnDataRequested(DataTransferManager sender, DataRequestedEventArgs args)
@@ -43,7 +63,13 @@ public sealed partial class SongListDetail : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        _dataTransferManager.DataRequested -= DataTransferManagerOnDataRequested;
+        DetachDataRequested();
+    }
+
+    private void SongListDetail_Unloaded(object sender, RoutedEventArgs e)
+    {
+        DetachDataRequested();
+        Unloaded -= SongListDetail_Unloaded;
     }
 
 

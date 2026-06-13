@@ -82,15 +82,17 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     private async Task LoadFloorComments(bool IsLoadMoreComments)
     {
         if (!IsLoadMoreComments) floorComments.Clear();
-        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ResourceTypeId}_{MainComment.ResourceId}_{MainComment.ActualId}", async () =>
+        var offset = !IsLoadMoreComments ? 0 : int.Parse(time ?? "0");
+        const int count = 20;
+        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ResourceTypeId}_{MainComment.ResourceId}_{MainComment.ActualId}_{offset}_{count}", async () =>
         {
             return await Ioc.Default.GetRequiredService<ICommentProvidable>()
                 .GetThreadedCommentsAsync(
                     MainComment.ResourceId,
                     MainComment.ResourceTypeId,
                     MainComment.ActualId,
-                    !IsLoadMoreComments ? 0 : int.Parse(time ?? "0"),
-                    20);
+                    offset,
+                    count);
         }, TimeSpan.FromMinutes(5));
         if (result == null)
         {

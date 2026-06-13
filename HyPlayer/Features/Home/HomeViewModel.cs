@@ -25,6 +25,9 @@ namespace HyPlayer.Features.Home
         private readonly IPlaybackControlService _control;
         private readonly INavigationService _navigation;
         private List<SingleSongBase> _recommendedProviderSongs = [];
+        private Task? _loadDataTask;
+        private bool _hasLoaded;
+        private string _loadedUserId = string.Empty;
 
         [ObservableProperty]
         public partial List<NeteasePlaylist> RecommendedPlaylist { get; set; }
@@ -47,7 +50,21 @@ namespace HyPlayer.Features.Home
             _navigation = navigation;
         }
 
-        public async Task GetDataAsync()
+        public Task GetDataAsync(bool forceRefresh = false)
+        {
+            var auth = Ioc.Default.GetRequiredService<IAuthService>();
+            var userId = auth.IsLoggedIn ? auth.CurrentUser?.ActualId ?? string.Empty : string.Empty;
+            if (!forceRefresh && _hasLoaded && _loadedUserId == userId)
+                return Task.CompletedTask;
+
+            if (!forceRefresh && _loadDataTask is not null && !_loadDataTask.IsCompleted)
+                return _loadDataTask;
+
+            _loadDataTask = LoadDataCoreAsync(auth, userId);
+            return _loadDataTask;
+        }
+
+        private async Task LoadDataCoreAsync(IAuthService auth, string userId)
         {
             ToplistPlaylist = (await LoadContainerItemsAsync(new NeteaseToplistContainer { ActualId = "chart", Name = "排行榜" }))
                 .OfType<NeteasePlaylist>()
@@ -56,7 +73,7 @@ namespace HyPlayer.Features.Home
                 .OfType<NeteasePlaylist>()
                 .ToList();
             // 登录内容
-            if (Ioc.Default.GetRequiredService<IAuthService>().IsLoggedIn)
+            if (auth.IsLoggedIn)
             {
                 RecommendedPlaylist = (await LoadContainerItemsAsync(new NeteaseRecommendPlaylistContainer { ActualId = "rcpl", Name = "推荐歌单" }))
                     .OfType<NeteasePlaylist>()
@@ -66,6 +83,15 @@ namespace HyPlayer.Features.Home
                     .ToList();
                 RecommendedSongItems = (await Task.WhenAll(_recommendedProviderSongs.Select((song, index) => SongListItemViewModel.FromProviderSongAsync(song, index)))).ToList();
             }
+            else
+            {
+                RecommendedPlaylist = [];
+                _recommendedProviderSongs = [];
+                RecommendedSongItems = [];
+            }
+
+            _loadedUserId = userId;
+            _hasLoaded = true;
         }
 
         private static async Task<List<ProvidableItemBase>> LoadContainerItemsAsync(ContainerBase container)
@@ -88,7 +114,7 @@ namespace HyPlayer.Features.Home
         [RelayCommand]
         private void OnHeartBeatModeClicked()
         {
-            _ = Api.EnterIntelligencePlay(new System.Threading.CancellationToken());
+            _ = Api.EnterIntelligencePlay();
         }
 
         [RelayCommand]

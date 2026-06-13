@@ -52,8 +52,6 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         if (providerItem == null) return;
         UpdateSmtcDisplayInfo(providerItem);
 
-        _state.SetNowPlaying(providerItem);
-
         // 1. 刷新封面
         if (!_setting.noImage)
             await RefreshCoverAsync(providerItem);

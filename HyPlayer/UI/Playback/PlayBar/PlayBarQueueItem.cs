@@ -1,10 +1,13 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 
 namespace HyPlayer.UI.Playback.PlayBar;
 
-public sealed class PlayBarQueueItem
+public sealed class PlayBarQueueItem : ObservableObject
 {
+    private bool _isCurrent;
+
     public PlayBarQueueItem(
         int queueIndex,
         string name,
@@ -18,7 +21,7 @@ public sealed class PlayBarQueueItem
         Translation = translation;
         ArtistText = artistText;
         ProviderItem = providerItem;
-        IsCurrent = isCurrent;
+        _isCurrent = isCurrent;
     }
 
     public int QueueIndex { get; }
@@ -26,7 +29,11 @@ public sealed class PlayBarQueueItem
     public string Translation { get; }
     public string ArtistText { get; }
     public SingleSongBase? ProviderItem { get; }
-    public bool IsCurrent { get; }
+    public bool IsCurrent
+    {
+        get => _isCurrent;
+        set => SetProperty(ref _isCurrent, value);
+    }
 
     public static PlayBarQueueItem FromSnapshot(PlaybackQueueItemSnapshot snapshot, int nowPlayingIndex)
     {

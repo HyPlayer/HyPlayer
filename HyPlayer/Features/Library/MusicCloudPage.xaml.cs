@@ -45,6 +45,7 @@ public sealed partial class MusicCloudPage : Page
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _loadResultTask;
+    private readonly HashSet<int> _loadedPages = [];
 
     public MusicCloudPage()
     {
@@ -59,8 +60,15 @@ public sealed partial class MusicCloudPage : Page
 
     public async Task LoadMusicCloudItem()
     {
+        var currentPage = page;
+        if (!_loadedPages.Add(currentPage))
+            return;
+
+        if (_loadResultTask is { IsCompleted: false })
+            await _loadResultTask;
+
         _cancellationToken.ThrowIfCancellationRequested();
-        var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userCloud_" + page, async () =>
+        var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userCloud_" + currentPage, async () =>
         {
             try
             {
@@ -71,7 +79,7 @@ public sealed partial class MusicCloudPage : Page
                     Kind = NeteaseUserLibrarySubContainer.CloudKind,
                     MaxProgressiveCount = 749
                 };
-                var (hasMore, items) = await container.GetProgressiveItemsListAsync(page * 749, 749, _cancellationToken);
+                var (hasMore, items) = await container.GetProgressiveItemsListAsync(currentPage * 749, 749, _cancellationToken);
                 return new CloudLibraryPage
                 {
                     HasMore = hasMore,
@@ -82,6 +90,7 @@ public sealed partial class MusicCloudPage : Page
             {
                 treashold = ++cooldownTime * 10;
                 page--;
+                _loadedPages.Remove(currentPage);
                 _notification.ShowMessage("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求: {ex.Message}");
                 return null;
             }
@@ -90,7 +99,7 @@ public sealed partial class MusicCloudPage : Page
 
 
 
-        var idx = page * 200;
+        var idx = currentPage * 749;
         foreach (var jToken in jv?.Items ?? [])
         {
             _cancellationToken.ThrowIfCancellationRequested();
@@ -137,7 +146,7 @@ public sealed partial class MusicCloudPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        _loadResultTask = LoadMusicCloudItem();
+        StartLoadCurrentPage();
         if (_setting.greedlyLoadPlayContainerItems)
             AttachSecondTick();
     }
@@ -192,8 +201,11 @@ public sealed partial class MusicCloudPage : Page
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
+        if (_loadResultTask is { IsCompleted: false })
+            return;
+
         page++;
-        _loadResultTask = LoadMusicCloudItem();
+        StartLoadCurrentPage();
     }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
@@ -228,7 +240,13 @@ public sealed partial class MusicCloudPage : Page
     {
         await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
         Items.Clear();
+        _loadedPages.Clear();
         page = 0;
+        StartLoadCurrentPage();
+    }
+
+    private void StartLoadCurrentPage()
+    {
         _loadResultTask = LoadMusicCloudItem();
     }
 

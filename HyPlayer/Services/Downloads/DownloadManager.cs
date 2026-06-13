@@ -251,21 +251,30 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                 Picture pic;
                 if (!string.IsNullOrWhiteSpace(_downloadAlbumCover))
                 {
-                    using var responseMessage = await _httpClient.GetAsync(new Uri(_downloadAlbumCover + "?param=" +
-                                                                            StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
-                    using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
-                    using var stream = await responseMessage.Content.ReadAsStreamAsync();
-                    using var inputStream = stream.AsRandomAccessStream();
-                    SoftwareBitmap softwareBitmap;
-                    BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
-                    softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-                    BitmapEncoder encoder =
-                        await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
-                    encoder.SetSoftwareBitmap(softwareBitmap);
-                    await encoder.FlushAsync();
-                    pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
+                    if (!string.IsNullOrWhiteSpace(_downloadAlbumId)
+                        && DownloadManager.AlbumPicturesCache.TryGetValue(_downloadAlbumId, out var cachedPic))
+                    {
+                        pic = cachedPic;
+                    }
+                    else
+                    {
+                        using var responseMessage = await _httpClient.GetAsync(new Uri(_downloadAlbumCover + "?param=" +
+                                                                                StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
+                        using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
+                        using var stream = await responseMessage.Content.ReadAsStreamAsync();
+                        using var inputStream = stream.AsRandomAccessStream();
+                        SoftwareBitmap softwareBitmap;
+                        BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
+                        softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+                        BitmapEncoder encoder =
+                            await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                        encoder.SetSoftwareBitmap(softwareBitmap);
+                        await encoder.FlushAsync();
+                        pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
+                    }
+
                     if (!string.IsNullOrWhiteSpace(_downloadAlbumId))
-                        DownloadManager.AlbumPicturesCache[_downloadAlbumId] = pic;
+                        DownloadManager.CacheAlbumPicture(_downloadAlbumId, pic);
 
                     file.Tag.Pictures =
                     [
@@ -532,6 +541,7 @@ internal static class DownloadManager
     public static BackgroundDownloader Downloader = new();
     public static List<Task> WritingTasks = [];
     public static Dictionary<string, Picture> AlbumPicturesCache = [];
+    private const int MaxAlbumPicturesCacheSize = 64;
 
     public static bool CheckDownloadAbilityAndToast()
     {
@@ -558,11 +568,13 @@ internal static class DownloadManager
         WritingTasks.RemoveAll(t => t.IsCompleted);
         if (DownloadLists.Count == 0)
             AlbumPicturesCache.Clear();
+        TrimAlbumPicturesCache();
     }
 
     public static void AddDownload(SingleSongBase song)
     {
         if (!CheckDownloadAbilityAndToast()) return;
+        CleanupCompletedWritingTasks();
         EnsureTimerStarted();
 
         DownloadLists.Add(CreateDownloadObject(song));
@@ -571,6 +583,7 @@ internal static class DownloadManager
     public static void AddDownload(List<SingleSongBase> songs)
     {
         if (!CheckDownloadAbilityAndToast()) return;
+        CleanupCompletedWritingTasks();
         EnsureTimerStarted();
 
         songs.ForEach(t => { DownloadLists.Add(CreateDownloadObject(t)); });
@@ -619,5 +632,25 @@ internal static class DownloadManager
     private static DownloadObject CreateDownloadObject(SingleSongBase song)
     {
         return new DownloadObject(song, Notification, Setting, HttpClient, LyricProvider, MusicResourceProvider, Diagnostics);
+    }
+
+    public static void CacheAlbumPicture(string albumId, Picture picture)
+    {
+        if (string.IsNullOrWhiteSpace(albumId))
+            return;
+
+        AlbumPicturesCache[albumId] = picture;
+        TrimAlbumPicturesCache();
+    }
+
+    private static void CleanupCompletedWritingTasks()
+    {
+        WritingTasks.RemoveAll(t => t.IsCompleted);
+    }
+
+    private static void TrimAlbumPicturesCache()
+    {
+        while (AlbumPicturesCache.Count > MaxAlbumPicturesCacheSize)
+            AlbumPicturesCache.Remove(AlbumPicturesCache.Keys.First());
     }
 }

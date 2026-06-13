@@ -3,8 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.NeteaseProvider.Models;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -24,9 +22,9 @@ namespace HyPlayer.Shell.Navigation;
 /// </summary>
 public partial class NavigationShellViewModel : ObservableObject
 {
-    private readonly IProvidableItemProvidable _itemProvider;
     private readonly IAuthService _auth;
     private readonly INotificationService _notification;
+    private Task? _loadPlaylistsTask;
 
     public ObservableCollection<NavigationNode> MenuItems { get; } = [];
 
@@ -57,12 +55,10 @@ public partial class NavigationShellViewModel : ObservableObject
     private NavigationNode? _likedSongsNode;
 
     public NavigationShellViewModel(
-        IProvidableItemProvidable itemProvider,
         IAuthService auth,
         INotificationService notification,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
-        _itemProvider = itemProvider;
         _auth = auth;
         _notification = notification;
 
@@ -184,17 +180,23 @@ public partial class NavigationShellViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task LoadPlaylistsAsync()
+    private Task LoadPlaylistsAsync()
+    {
+        if (_loadPlaylistsTask is not null && !_loadPlaylistsTask.IsCompleted)
+            return _loadPlaylistsTask;
+
+        _loadPlaylistsTask = LoadPlaylistsCoreAsync();
+        return _loadPlaylistsTask;
+    }
+
+    private async Task LoadPlaylistsCoreAsync()
     {
         if (_auth.CurrentUser is null) return;
 
         IsLoading = true;
         try
         {
-            var user = await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + _auth.CurrentUser.ActualId);
-            var containers = user is ContainersContainer containersContainer
-                ? await containersContainer.GetSubContainerAsync()
-                : [];
+            var containers = await _auth.CurrentUser.GetSubContainerAsync();
 
             _createdContainer?.Children.Clear();
             _subscribedContainer?.Children.Clear();

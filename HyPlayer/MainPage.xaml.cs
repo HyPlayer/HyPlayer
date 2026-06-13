@@ -45,7 +45,10 @@ public sealed partial class MainPage : Page
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private readonly IShellHostStateService _shellHost = Ioc.Default.GetRequiredService<IShellHostStateService>();
+    private readonly IPlayBarAutoHideService _playBarAutoHide = Ioc.Default.GetRequiredService<IPlayBarAutoHideService>();
     private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
+    private bool _playBarAutoHideSubscribed;
+
     public MainPage()
     {
         var neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
@@ -59,7 +62,7 @@ public sealed partial class MainPage : Page
 
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
-        Ioc.Default.GetRequiredService<IPlayBarAutoHideService>().VisibilityChanged += (_, e) => OnPlaybarVisibilityChanged(e.IsActivated);
+        AttachPlayBarAutoHideListener();
         AttachSurfaceStoreListener();
         UIElement PlayBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
@@ -80,6 +83,24 @@ public sealed partial class MainPage : Page
         };
         _surfaceStore.PropertyChanged += _surfaceStoreChangedListener.OnEvent;
         ApplySurfaceMode(_surfaceStore.SurfaceMode);
+    }
+
+    private void AttachPlayBarAutoHideListener()
+    {
+        if (_playBarAutoHideSubscribed)
+            return;
+
+        _playBarAutoHide.VisibilityChanged += PlayBarAutoHide_VisibilityChanged;
+        _playBarAutoHideSubscribed = true;
+    }
+
+    private void DetachPlayBarAutoHideListener()
+    {
+        if (!_playBarAutoHideSubscribed)
+            return;
+
+        _playBarAutoHide.VisibilityChanged -= PlayBarAutoHide_VisibilityChanged;
+        _playBarAutoHideSubscribed = false;
     }
 
     private void OnSurfaceStorePropertyChanged(string? propertyName)
@@ -153,6 +174,7 @@ public sealed partial class MainPage : Page
         base.OnNavigatedFrom(e);
         _surfaceStoreChangedListener?.Detach();
         _surfaceStoreChangedListener = null;
+        DetachPlayBarAutoHideListener();
         ActualThemeChanged -= MainPage_ActualThemeChanged;
     }
 
@@ -164,19 +186,21 @@ public sealed partial class MainPage : Page
         {
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
         }
+        var navigation = Ioc.Default.GetRequiredService<INavigationService>();
         switch (e.Parameter)
         {
             case "search":
-                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Search));
+                navigation.Navigate(typeof(Search));
                 break;
             case "account":
-                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me));
+                navigation.Navigate(typeof(Me));
                 break;
             case "likedsongs":
-                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(SongListDetail), Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].ActualId);
+                var auth = Ioc.Default.GetRequiredService<IAuthService>();
+                navigation.Navigate(typeof(SongListDetail), auth.MySongLists[0].ActualId);
                 break;
             case "local":
-                Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(LocalMusicPage));
+                navigation.Navigate(typeof(LocalMusicPage));
                 break;
         }
     }
@@ -194,6 +218,11 @@ public sealed partial class MainPage : Page
                 CollapseBar().SafeFireAndForget();
             }
         });
+    }
+
+    private void PlayBarAutoHide_VisibilityChanged(object? sender, PlayBarVisibilityChangedEventArgs e)
+    {
+        OnPlaybarVisibilityChanged(e.IsActivated);
     }
 
     private void ShowBar()

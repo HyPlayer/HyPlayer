@@ -36,7 +36,6 @@ public sealed partial class RadioPage : Page
     private bool _isSecondTickSubscribed;
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
-    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly IPlaybackQueueLoader _queueLoader = Ioc.Default.GetRequiredService<IPlaybackQueueLoader>();
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
@@ -46,6 +45,7 @@ public sealed partial class RadioPage : Page
     private int page;
     private NeteaseRadioChannel RadioChannel;
     private List<NeteaseRadioProgram> _ascendingPrograms;
+    private List<NeteaseRadioProgram> _allPrograms;
     private Task _programLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -132,6 +132,7 @@ public sealed partial class RadioPage : Page
 
         Songs.Clear();
         _ascendingPrograms = null;
+        _allPrograms = null;
         SongContainer.QueueScope = SongListQueueScope.Radio(RadioChannel.ActualId);
         _programLoaderTask = LoadProgram();
         if (_setting.greedlyLoadPlayContainerItems)
@@ -187,8 +188,10 @@ public sealed partial class RadioPage : Page
     {
         await _playCore.StopAsync();
         await _playCore.RemoveAllSongAsync();
-        await _navigator.AppendAsync(new MusicResource.Radio(RadioChannel.ActualId));
-        if (asc) await _playCore.ReversePlaylistAsync();
+        var programs = asc
+            ? await LoadAscendingProgramsAsync()
+            : await LoadAllProgramsAsync();
+        await _playCore.InsertSongRangeAsync(programs.Cast<SingleSongBase>().ToList());
         await _playCore.MovePointerToIndexAsync(0);
         if (_playCore.CurrentSong is { } song)
             await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
@@ -211,7 +214,10 @@ public sealed partial class RadioPage : Page
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        await _queueLoader.AppendRadioListAsync(RadioChannel.ActualId, asc);
+        var programs = asc
+            ? await LoadAscendingProgramsAsync()
+            : await LoadAllProgramsAsync();
+        await _queueLoader.AppendSongsAsync(programs.Cast<SingleSongBase>());
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
@@ -253,8 +259,11 @@ public sealed partial class RadioPage : Page
 
     private async Task<List<NeteaseRadioProgram>> LoadAllProgramsAsync()
     {
+        if (_allPrograms is not null) return _allPrograms;
+
         var programs = await RadioChannel.GetAllItemsAsync(_cancellationToken);
-        return programs.OfType<NeteaseRadioProgram>().ToList();
+        _allPrograms = programs.OfType<NeteaseRadioProgram>().ToList();
+        return _allPrograms;
     }
 
 }

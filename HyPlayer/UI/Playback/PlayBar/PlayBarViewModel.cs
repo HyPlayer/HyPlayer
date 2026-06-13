@@ -31,6 +31,7 @@ public partial class PlayBarViewModel : ObservableObject
     private readonly IAuthService _authService;
     private readonly DataTransferManager _dataTransferManager;
     private readonly WeakEventListener<PlayBarViewModel, object?, PropertyChangedEventArgs> _stateChangedListener;
+    private int _queueCount;
 
     public PlayBarViewModel(
         PlayCoreBase playCore,
@@ -105,7 +106,7 @@ public partial class PlayBarViewModel : ObservableObject
 
     // ── Playlist service pass-through ──
 
-    public int QueueCount => PlayCoreQueueSnapshot.GetPlaylist(_playCore).Count;
+    public int QueueCount => _queueCount;
     public int NowPlayingIndex => _state.NowPlayingIndex;
     public string PlaySourceId => _playCore.PlaySourceId;
 
@@ -206,7 +207,8 @@ public partial class PlayBarViewModel : ObservableObject
     private async Task MoveToItemAsync(PlayBarQueueItem item)
     {
         if (item == null || item.QueueIndex == NowPlayingIndex) return;
-        if (item.QueueIndex >= 0 && item.QueueIndex < QueueCount)
+        var queue = PlayCoreQueueSnapshot.GetPlaylist(_playCore);
+        if (item.QueueIndex >= 0 && item.QueueIndex < queue.Count)
         {
             await _playCore.MovePointerToIndexAsync(item.QueueIndex);
             if (_playCore.CurrentSong is { } song)
@@ -225,6 +227,10 @@ public partial class PlayBarViewModel : ObservableObject
                     break;
                 case nameof(PlaybackStateService.NowPlayingProviderItem):
                     NowPlayingProviderItem = _state.NowPlayingProviderItem;
+                    break;
+                case nameof(PlaybackStateService.NowPlayingIndex):
+                    OnPropertyChanged(nameof(NowPlayingIndex));
+                    UpdateCurrentPlaylistItem();
                     break;
                 case nameof(PlaybackStateService.IsPlaying):
                     IsPlaying = _state.IsPlaying;
@@ -261,13 +267,13 @@ public partial class PlayBarViewModel : ObservableObject
     partial void OnNowPlayingProviderItemChanged(SingleSongBase? value)
     {
         NotifyPlayBarProperties();
-        RefreshPlaylistItems();
+        UpdateCurrentPlaylistItem();
     }
 
     partial void OnNowPlayingSnapshotChanged(PlaybackCurrentItemSnapshot? value)
     {
         NotifyPlayBarProperties();
-        RefreshPlaylistItems();
+        UpdateCurrentPlaylistItem();
     }
     partial void OnIsPlayingChanged(bool value) => OnPropertyChanged(nameof(PlayStateGlyph));
     partial void OnPositionChanged(TimeSpan value)
@@ -342,12 +348,15 @@ public partial class PlayBarViewModel : ObservableObject
         CurrentPlaylistItem = null;
         var queueSnapshot = PlayCoreQueueSnapshot.GetQueueItems(_playCore);
         var orderedQueue = PlayCoreQueueSnapshot.GetOrderedPlaylist(_playCore);
+        var queue = PlayCoreQueueSnapshot.GetPlaylist(_playCore);
+        _queueCount = queueSnapshot.Count;
+        OnPropertyChanged(nameof(QueueCount));
 
         if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
         {
             foreach (var orderedSong in orderedQueue)
             {
-                var idx = PlayCoreQueueSnapshot.GetPlaylist(_playCore).ToList().IndexOf(orderedSong);
+                var idx = IndexOfQueueItem(queue, orderedSong);
                 AddPlaylistRow(idx, queueSnapshot);
             }
         }
@@ -360,18 +369,42 @@ public partial class PlayBarViewModel : ObservableObject
         }
     }
 
+    private void UpdateCurrentPlaylistItem()
+    {
+        var currentIndex = NowPlayingIndex;
+        PlayBarQueueItem? currentItem = null;
+        foreach (var item in PlaylistItems)
+        {
+            var isCurrent = item.QueueIndex == currentIndex;
+            if (item.IsCurrent != isCurrent)
+                item.IsCurrent = isCurrent;
+            if (isCurrent)
+                currentItem = item;
+        }
+
+        CurrentPlaylistItem = currentItem;
+    }
+
     private void AddPlaylistRow(int queueIndex, IReadOnlyList<PlaybackQueueItemSnapshot> queueSnapshot)
     {
         if (queueIndex < 0 || queueIndex >= queueSnapshot.Count)
-            return;
-
-        if (queueIndex >= queueSnapshot.Count)
             return;
 
         var row = PlayBarQueueItem.FromSnapshot(queueSnapshot[queueIndex], NowPlayingIndex);
         PlaylistItems.Add(row);
         if (row.IsCurrent)
             CurrentPlaylistItem = row;
+    }
+
+    private static int IndexOfQueueItem(IReadOnlyList<SingleSongBase> queue, SingleSongBase item)
+    {
+        for (var i = 0; i < queue.Count; i++)
+        {
+            if (Equals(queue[i], item))
+                return i;
+        }
+
+        return -1;
     }
 
     /// <summary>
@@ -390,7 +423,9 @@ public partial class PlayBarViewModel : ObservableObject
     public int GetTargetingIndex()
     {
         if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
-            return PlayCoreQueueSnapshot.GetOrderedPlaylist(_playCore).ToList().IndexOf(_state.NowPlayingProviderItem);
+            return _state.NowPlayingProviderItem is { } providerItem
+                ? IndexOfQueueItem(PlayCoreQueueSnapshot.GetOrderedPlaylist(_playCore), providerItem)
+                : -1;
         return _state.NowPlayingIndex;
     }
 

@@ -38,28 +38,31 @@ namespace HyPlayer.Features.Library
         public partial bool HasMore { get; set; }
         private int _currentIndex = 1;
         private string _currentTag;
-        public async Task LoadPageContent(string tag)
+        private Task _loadPageTask;
+        private readonly HashSet<string> _loadedPages = [];
+
+        public async Task LoadPageContent(string tag, int page)
         {
             switch (tag)
             {
                 case "Album":
-                    await LoadAlbumResult();
+                    await LoadAlbumResult(page);
                     break;
                 case "Artist":
-                    await LoadArtistResult();
+                    await LoadArtistResult(page);
                     break;
                 case "Radio":
-                    await LoadRadioResult();
+                    await LoadRadioResult(page);
                     break;
             }
         }
 
-        private async Task LoadRadioResult()
+        private async Task LoadRadioResult(int page)
         {
-            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"djchannel_subscribed_{CurrentPage}",
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"djchannel_subscribed_{page}",
                     async () =>
                     {
-                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.RadioChannel, CurrentPage * 200, 200);
+                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.RadioChannel, page * 200, 200);
                     });
 
 
@@ -83,12 +86,12 @@ namespace HyPlayer.Features.Library
             }
         }
 
-        private async Task LoadArtistResult()
+        private async Task LoadArtistResult(int page)
         {
-            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"artist_sublist_{CurrentPage}",
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"artist_sublist_{page}",
                     async () =>
                     {
-                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.Artist, CurrentPage * 25, 25);
+                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.Artist, page * 25, 25);
                     });
 
             HasMore = jv.HasMore;
@@ -109,12 +112,12 @@ namespace HyPlayer.Features.Library
             }
         }
 
-        private async Task LoadAlbumResult()
+        private async Task LoadAlbumResult(int page)
         {
-            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"album_sublist_{CurrentPage}",
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"album_sublist_{page}",
                     async () =>
                     {
-                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.Album, CurrentPage * 25, 25);
+                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.Album, page * 25, 25);
                     });
 
             HasMore = json.HasMore;
@@ -161,18 +164,41 @@ namespace HyPlayer.Features.Library
         public void OnSelectionChanged(NavigationViewItem item)
         {
             var tag = item.Tag as string;
+            if (string.IsNullOrEmpty(tag))
+                return;
+
+            if (string.Equals(_currentTag, tag, System.StringComparison.Ordinal) && Content.Count > 0)
+                return;
+
             CurrentPage = 0;
             _currentIndex = 1;
             _currentTag = tag;
+            _loadedPages.Clear();
+            _loadPageTask = null;
             Content.Clear();
-            LoadPageContent(tag).SafeFireAndForget();
+            LoadCurrentPage().SafeFireAndForget();
         }
 
         [RelayCommand]
         private void LoadMore()
         {
             CurrentPage++;
-            LoadPageContent(_currentTag).SafeFireAndForget();
+            LoadCurrentPage().SafeFireAndForget();
+        }
+
+        private async Task LoadCurrentPage()
+        {
+            var page = CurrentPage;
+            var tag = _currentTag;
+            var pageKey = $"{tag}:{page}";
+            if (!_loadedPages.Add(pageKey))
+                return;
+
+            if (_loadPageTask is { IsCompleted: false })
+                await _loadPageTask;
+
+            _loadPageTask = LoadPageContent(tag, page);
+            await _loadPageTask;
         }
     }
 }

@@ -227,7 +227,7 @@ public sealed partial class SongsList : UserControl
             return;
         }
 
-        var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == providerItem.ActualId);
+        var idx = FindVisibleSongIndex(providerItem.ActualId);
         if (idx == -1) return;
         RunOnUIThread(() =>
         {
@@ -239,7 +239,39 @@ public sealed partial class SongsList : UserControl
 
     private void Songs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
-        RefreshVisibleSongs();
+        switch (e.Action)
+        {
+            case NotifyCollectionChangedAction.Add:
+                AddVisibleSongs(e.NewItems);
+                break;
+            case NotifyCollectionChangedAction.Remove:
+                RemoveVisibleSongs(e.OldItems);
+                break;
+            default:
+                RefreshVisibleSongs();
+                break;
+        }
+    }
+
+    private void AddVisibleSongs(IList items)
+    {
+        if (items == null) return;
+        foreach (var item in items)
+        {
+            if (!TryGetSongRow(item, out var row)) continue;
+            if (string.IsNullOrWhiteSpace(FilterBox?.Text) || Filter(row))
+                VisibleSongs.Add(row);
+        }
+    }
+
+    private void RemoveVisibleSongs(IList items)
+    {
+        if (items == null) return;
+        foreach (var item in items)
+        {
+            if (!TryGetSongRow(item, out var row)) continue;
+            VisibleSongs.Remove(row);
+        }
     }
 
 
@@ -418,11 +450,17 @@ public sealed partial class SongsList : UserControl
     private bool Filter(SongListItemViewModel ncsong)
     {
         if (ncsong == null) return false;
-        return (ncsong.SongName ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.ArtistString ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.Album?.Name ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.TranslatedName ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.Alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
+        var filterText = FilterBox.Text?.ToLowerInvariant() ?? string.Empty;
+        return ContainsFilterText(ncsong.SongName, filterText) ||
+               ContainsFilterText(ncsong.ArtistString, filterText) ||
+               ContainsFilterText(ncsong.Album?.Name, filterText) ||
+               ContainsFilterText(ncsong.TranslatedName, filterText) ||
+               ContainsFilterText(ncsong.Alias, filterText);
+    }
+
+    private static bool ContainsFilterText(string text, string filterText)
+    {
+        return (text ?? string.Empty).ToLowerInvariant().Contains(filterText);
     }
 
     private void SongListRoot_Loaded(object sender, RoutedEventArgs e)
@@ -479,7 +517,7 @@ public sealed partial class SongsList : UserControl
             case "FocusingCurrent":
                 var providerItem = _state.NowPlayingProviderItem;
                 if (providerItem is null) return;
-                var idx = VisibleSongs.ToList().FindIndex(t => t.SongId == providerItem.ActualId);
+                var idx = FindVisibleSongIndex(providerItem.ActualId);
                 if (idx == -1) return;
                 SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
                 break;
@@ -490,6 +528,17 @@ public sealed partial class SongsList : UserControl
             default:
                 break;
         }
+    }
+
+    private int FindVisibleSongIndex(string songId)
+    {
+        for (var i = 0; i < VisibleSongs.Count; i++)
+        {
+            if (VisibleSongs[i].SongId == songId)
+                return i;
+        }
+
+        return -1;
     }
     private void RunOnUIThread(Action action)
     {

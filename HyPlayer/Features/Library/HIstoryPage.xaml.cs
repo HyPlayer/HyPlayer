@@ -9,6 +9,7 @@ using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
 using HyPlayer.UI.Lists;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,6 +36,8 @@ public sealed partial class HistoryPage : Page
     private CancellationToken _cancellationToken;
     private Task _songRankWeekLoaderTask;
     private Task _songRankAllLoaderTask;
+    private string _currentSelectionName;
+    private List<SingleSongBase> _songHistoryCache;
 
     public HistoryPage()
     {
@@ -73,40 +76,54 @@ public sealed partial class HistoryPage : Page
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
-        switch ((sender.SelectedItem?.As<NavigationViewItem>()).Name)
+        var selectedName = (sender.SelectedItem?.As<NavigationViewItem>()).Name;
+        if (string.Equals(_currentSelectionName, selectedName, StringComparison.Ordinal) && Songs.Count > 0)
+            return;
+
+        _currentSelectionName = selectedName;
+        switch (selectedName)
         {
             case "SongHis":
-                Songs.Clear();
-                var Songsl = await HistoryManagement.GetSongHistory();
-                var songorder = 0;
-                foreach (var song in Songsl)
-                {
-                    Songs.Add(await SongListItemViewModel.FromProviderSongAsync(song, songorder++));
-                }
-                Songsl.Clear();
+                await LoadSongHistory(selectedName);
                 break;
             case "SongRankWeek":
                 //听歌排行加载部分 - 优先级靠下
-                _songRankWeekLoaderTask = LoadRankWeek();
+                _songRankWeekLoaderTask ??= LoadRankWeek(selectedName);
+                await _songRankWeekLoaderTask;
                 break;
             case "SongRankAll":
                 //听歌排行加载部分 - 优先级靠下
-                _songRankAllLoaderTask = LoadRankAll();
+                _songRankAllLoaderTask ??= LoadRankAll(selectedName);
+                await _songRankAllLoaderTask;
                 break;
         }
     }
 
-    private async Task LoadRankAll()
+    private async Task LoadSongHistory(string selectionName)
     {
-        await LoadRank("all");
+        _songHistoryCache ??= await HistoryManagement.GetSongHistory();
+        if (!string.Equals(_currentSelectionName, selectionName, StringComparison.Ordinal))
+            return;
+
+        Songs.Clear();
+        var songorder = 0;
+        foreach (var song in _songHistoryCache)
+        {
+            Songs.Add(await SongListItemViewModel.FromProviderSongAsync(song, songorder++));
+        }
     }
 
-    private async Task LoadRankWeek()
+    private async Task LoadRankAll(string selectionName)
     {
-        await LoadRank("recent");
+        await LoadRank("all", selectionName);
     }
 
-    private async Task LoadRank(string rangeId)
+    private async Task LoadRankWeek(string selectionName)
+    {
+        await LoadRank("recent", selectionName);
+    }
+
+    private async Task LoadRank(string rangeId, string selectionName)
     {
         Songs.Clear();
         _cancellationToken.ThrowIfCancellationRequested();
@@ -123,6 +140,10 @@ public sealed partial class HistoryPage : Page
                 MaxProgressiveCount = 120
             };
             var rankData = await container.GetAllItemsAsync(_cancellationToken);
+            if (!string.Equals(_currentSelectionName, selectionName, StringComparison.Ordinal))
+                return;
+
+            Songs.Clear();
             for (var i = 0; i < rankData.Count; i++)
             {
                 _cancellationToken.ThrowIfCancellationRequested();

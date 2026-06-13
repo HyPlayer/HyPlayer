@@ -52,6 +52,10 @@ public sealed partial class Search : Page
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _loadResultTask;
+    private readonly Dictionary<string, ContainerBase> _searchContainers = new(StringComparer.Ordinal);
+    private readonly Dictionary<ContainerBase, List<ProvidableItemBase>> _linerSearchItems = new();
+    private string _lastSuggestionKeyword = string.Empty;
+    private List<string> _lastSuggestions = [];
 
     public Search()
     {
@@ -412,7 +416,13 @@ public sealed partial class Search : Page
     private async Task<(bool HasMore, List<ProvidableItemBase> Items)> LoadSearchItemsAsync(string typeId)
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        var container = await _neteaseProvider.SearchProvidableItemsAsync(searchText, typeId, _cancellationToken);
+        var cacheKey = $"{searchText}\u001f{typeId}";
+        if (!_searchContainers.TryGetValue(cacheKey, out var container))
+        {
+            container = await _neteaseProvider.SearchProvidableItemsAsync(searchText, typeId, _cancellationToken);
+            _searchContainers[cacheKey] = container;
+        }
+
         return await GetPagedItemsAsync(container);
     }
 
@@ -427,7 +437,12 @@ public sealed partial class Search : Page
 
         if (container is LinerContainerBase liner)
         {
-            var items = await liner.GetAllItemsAsync(_cancellationToken) ?? [];
+            if (!_linerSearchItems.TryGetValue(container, out var items))
+            {
+                items = await liner.GetAllItemsAsync(_cancellationToken) ?? [];
+                _linerSearchItems[container] = items;
+            }
+
             return (items.Count > (page + 1) * 30, items.Skip(page * 30).Take(30).ToList());
         }
 
@@ -478,12 +493,14 @@ public sealed partial class Search : Page
     private void SearchKeywordBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         searchText = sender.Text;
+        page = 0;
         _loadResultTask = LoadResult();
     }
 
     private async void SearchKeywordBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
-        if (string.IsNullOrEmpty(sender.Text) || args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
+        var keyword = sender.Text;
+        if (string.IsNullOrEmpty(keyword) || args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
         {
             return;
         }
@@ -496,13 +513,20 @@ public sealed partial class Search : Page
                 return;
             }
 
-            var container = await _suggestionProvider.GetSearchSuggestionsAsync(sender.Text);
-            var items = container is LinerContainerBase liner
-                ? await liner.GetAllItemsAsync(_cancellationToken)
-                : [];
-            sender.ItemsSource = items.Select(t => !string.IsNullOrWhiteSpace(t.Name) ? t.Name : t.ActualId)
-                                     .Where(t => !string.IsNullOrWhiteSpace(t))
-                                     .ToList();
+            if (keyword != _lastSuggestionKeyword)
+            {
+                var container = await _suggestionProvider.GetSearchSuggestionsAsync(keyword);
+                var items = container is LinerContainerBase liner
+                    ? await liner.GetAllItemsAsync(_cancellationToken)
+                    : [];
+                _lastSuggestionKeyword = keyword;
+                _lastSuggestions = items.Select(t => !string.IsNullOrWhiteSpace(t.Name) ? t.Name : t.ActualId)
+                                        .Where(t => !string.IsNullOrWhiteSpace(t))
+                                        .ToList();
+            }
+
+            if (sender.Text == keyword)
+                sender.ItemsSource = _lastSuggestions;
         }
         catch (Exception ex)
         {

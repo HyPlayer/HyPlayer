@@ -9,9 +9,10 @@ namespace HyPlayer.UI.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return Ioc.Default.GetRequiredService<Setting>().albumRound || Ioc.Default.GetRequiredService<Setting>().expandAlbumBreath
+            var setting = Ioc.Default.GetRequiredService<Setting>();
+            return setting.albumRound || setting.expandAlbumBreath
                 ? 0
-                : (double)Ioc.Default.GetRequiredService<Setting>().expandedCoverShadowDepth / 10;
+                : (double)setting.expandedCoverShadowDepth / 10;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

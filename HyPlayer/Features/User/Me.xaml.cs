@@ -41,9 +41,9 @@ public sealed partial class Me : Page
         {
             ViewModel.InitializeUserInfo((string)e.Parameter).SafeFireAndForget();
         }
-        else
+        else if (_auth.CurrentUser?.ActualId is { } currentUserId)
         {
-            ViewModel.InitializeUserInfo(_auth.CurrentUser.ActualId).SafeFireAndForget();
+            ViewModel.InitializeUserInfo(currentUserId).SafeFireAndForget();
         }
     }
 

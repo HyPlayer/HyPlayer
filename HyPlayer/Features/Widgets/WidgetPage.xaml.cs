@@ -180,9 +180,6 @@ public sealed partial class WidgetPage : Page
     {
         switch (propertyName)
         {
-            case nameof(PlaybackStateService.NowPlayingProviderItem):
-                HyPlayList_OnPlayItemChange(_state.NowPlayingProviderItem, _state.NowPlayingSnapshot);
-                break;
             case nameof(PlaybackStateService.NowPlayingSnapshot):
                 HyPlayList_OnPlayItemChange(_state.NowPlayingProviderItem, _state.NowPlayingSnapshot);
                 break;
@@ -199,9 +196,7 @@ public sealed partial class WidgetPage : Page
     }
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        var providerItem = _state.NowPlayingProviderItem ?? _playCore.CurrentSong;
-        var snapshot = _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(providerItem);
-        var durationMs = snapshot?.Duration ?? providerItem?.Duration ?? 0;
+        var durationMs = _state.NowPlayingSnapshot?.Duration ?? _state.NowPlayingProviderItem?.Duration ?? 0;
         if (durationMs <= 0) return;
 
         var progress = position.TotalMilliseconds / durationMs * 100;
@@ -224,8 +219,8 @@ public sealed partial class WidgetPage : Page
 
     private void HyPlayList_OnPlayItemChange(SingleSongBase? providerItem, PlaybackCurrentItemSnapshot? snapshot)
     {
-        providerItem ??= _state.NowPlayingProviderItem ?? _playCore.CurrentSong;
-        snapshot ??= _state.NowPlayingSnapshot ?? PlaybackCurrentItemSnapshot.FromProvider(providerItem);
+        providerItem ??= _state.NowPlayingProviderItem;
+        snapshot ??= _state.NowPlayingSnapshot;
         var playItemName = providerItem?.Name ?? snapshot?.Name ?? string.Empty;
         var artistName = providerItem?.CreatorList is { Count: > 0 } creators
             ? string.Join(" / ", creators)

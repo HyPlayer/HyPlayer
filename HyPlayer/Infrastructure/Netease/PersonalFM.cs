@@ -84,11 +84,15 @@ internal sealed class PersonalFM
         _isLoadingNextTrack = true;
         try
         {
-            var queueCount = (await _playCore.GetPlaylistAsync().ConfigureAwait(false)).Count;
+            var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
+            var queueCount = queue.Count;
             if (await _playCore.GetCurrentIndexAsync().ConfigureAwait(false) + 1 >= queueCount)
+            {
                 await AppendMoreTracksCoreAsync().ConfigureAwait(false);
+                queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
+            }
 
-            if (!IsActiveSession || (await _playCore.GetPlaylistAsync().ConfigureAwait(false)).Count == 0)
+            if (!IsActiveSession || queue.Count == 0)
                 return;
 
             await _control.MoveNextAndPlayAsync(userInitiated).ConfigureAwait(false);

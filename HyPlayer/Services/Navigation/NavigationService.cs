@@ -11,6 +11,9 @@ namespace HyPlayer.Services.Navigation;
 /// </summary>
 public class NavigationService : INavigationService
 {
+    private Type? _lastPageType;
+    private object? _lastParameter;
+
     /// <inheritdoc />
     public Frame? RootFrame { get; set; }
 
@@ -21,15 +24,28 @@ public class NavigationService : INavigationService
     public void Navigate(Type pageType, object? parameter = null,
                          NavigationTransitionInfo? transition = null)
     {
-        RootFrame?.Navigate(pageType, parameter, transition
-            ?? new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromRight });
+        if (RootFrame?.CurrentSourcePageType == pageType &&
+            _lastPageType == pageType &&
+            Equals(_lastParameter, parameter))
+            return;
+
+        if (RootFrame?.Navigate(pageType, parameter, transition
+            ?? new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromRight }) == true)
+        {
+            _lastPageType = pageType;
+            _lastParameter = parameter;
+        }
     }
 
     /// <inheritdoc />
     public void NavigateBack()
     {
         if (RootFrame?.CanGoBack == true)
+        {
             RootFrame.GoBack();
+            _lastPageType = RootFrame.CurrentSourcePageType;
+            _lastParameter = null;
+        }
     }
 
     /// <inheritdoc />
@@ -37,12 +53,18 @@ public class NavigationService : INavigationService
     {
         if (RootFrame?.Content is null) return;
         RootFrame.Navigate(RootFrame.CurrentSourcePageType);
+        _lastPageType = RootFrame.CurrentSourcePageType;
+        _lastParameter = null;
     }
 
     /// <inheritdoc />
     public void ClearContent()
     {
         if (RootFrame is not null)
+        {
             RootFrame.Content = null;
+            _lastPageType = null;
+            _lastParameter = null;
+        }
     }
 }

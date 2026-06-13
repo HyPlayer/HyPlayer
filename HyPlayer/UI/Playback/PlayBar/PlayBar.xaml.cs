@@ -327,12 +327,12 @@ DoubleAnimation verticalAnimation;
 
     private async void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
-        if (!_player.PlayerCreated || ViewModel.NowPlayingProviderItem == null) return;
+        var providerItem = ViewModel.NowPlayingProviderItem;
+        if (!_player.PlayerCreated || providerItem == null) return;
 
         if (_player.PrimaryPlaybackSource == null)
         {
-            if (ViewModel.NowPlayingProviderItem != null)
-                await _control.LoadAndPlayAsync(ViewModel.NowPlayingProviderItem, autoPlay: true, removeCurrentSongs: true);
+            await _control.LoadAndPlayAsync(providerItem, autoPlay: true, removeCurrentSongs: true);
             return;
         }
 
@@ -470,14 +470,15 @@ DoubleAnimation verticalAnimation;
     {
         try
         {
-            if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
+            var providerItem = ViewModel.NowPlayingProviderItem;
+            if (providerItem is NeteaseSong providerSong)
             {
                 if (providerSong.Artists.Count > 1)
                     await new ArtistSelectDialog(providerSong.Artists.Select(t => (HyPlayer.PlayCore.Abstraction.Models.Containers.PersonBase)t).ToList()).ShowAsync();
                 else if (providerSong.Artists.Count == 1)
                     _navigation.Navigate(typeof(ArtistPage), providerSong.Artists[0].ActualId);
             }
-            else if (ViewModel.NowPlayingProviderItem is NeteaseRadioProgram { Host: not null } radioProgram)
+            else if (providerItem is NeteaseRadioProgram { Host: not null } radioProgram)
             {
                 _navigation.Navigate(typeof(Me), radioProgram.Host.ActualId);
             }
@@ -491,13 +492,14 @@ DoubleAnimation verticalAnimation;
     {
         try
         {
-            if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
+            var providerItem = ViewModel.NowPlayingProviderItem;
+            if (providerItem is NeteaseSong providerSong)
             {
                 var albumId = providerSong.Album?.ActualId;
                 if (!string.IsNullOrEmpty(albumId) && albumId != "0")
                     _navigation.Navigate(typeof(AlbumPage), albumId);
             }
-            else if (ViewModel.NowPlayingProviderItem is NeteaseRadioProgram { Host: not null } radioProgram)
+            else if (providerItem is NeteaseRadioProgram { Host: not null } radioProgram)
             {
                 _navigation.Navigate(typeof(Me), radioProgram.Host.ActualId);
             }
@@ -518,17 +520,19 @@ DoubleAnimation verticalAnimation;
 
     private void Btn_Down_OnClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.NowPlayingProviderItem != null)
+        var providerItem = ViewModel.NowPlayingProviderItem;
+        if (providerItem != null)
         {
-            DownloadManager.AddDownload(ViewModel.NowPlayingProviderItem);
+            DownloadManager.AddDownload(providerItem);
         }
     }
 
     private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.NowPlayingProviderItem is NeteaseSong providerSong)
+        var providerItem = ViewModel.NowPlayingProviderItem;
+        if (providerItem is NeteaseSong providerSong)
             _navigation.Navigate(typeof(Comments), CommentTarget.Song(providerSong.ActualId));
-        else if (ViewModel.NowPlayingProviderItem is NeteaseRadioProgram radioProgram)
+        else if (providerItem is NeteaseRadioProgram radioProgram)
             _navigation.Navigate(typeof(Comments), CommentTarget.RadioProgram(radioProgram.ActualId));
         RequestCompactPlayer();
     }

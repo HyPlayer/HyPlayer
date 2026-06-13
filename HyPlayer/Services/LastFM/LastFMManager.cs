@@ -16,34 +16,41 @@ namespace HyPlayer.Services.LastFM
     {
         public static async Task TryLoginLastfmAccountFromBrowser(string token)
         {
-            var response = await Ioc.Default.GetRequiredService<LastFMClient>().RequestAsync(LastFMApi.GetSessionApi, new GetSessionRequest() { Token = token });
+            var client = Ioc.Default.GetRequiredService<LastFMClient>();
+            var response = await client.RequestAsync(LastFMApi.GetSessionApi, new GetSessionRequest() { Token = token });
             if (response.IsSuccess)
             {
                 Ioc.Default.GetRequiredService<Setting>().LastFMSession = response.Response.Session;
             }
             else
             {
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("Last.FM 登录失败", response.Error.Message);
+                var notification = Ioc.Default.GetRequiredService<INotificationService>();
+                notification.ShowMessage("Last.FM 登录失败", response.Error.Message);
             }
         }
         public static async Task UpdateNowPlaying(SingleSongBase item)
         {
-            if (!Ioc.Default.GetRequiredService<Setting>().LastFMSession.HasLogined || !Ioc.Default.GetRequiredService<Setting>().UpdateLastFMNowPlaying || item.ProviderId != "ncm" || item.TypeId != NeteaseTypeIds.SingleSong) return;
+            var setting = Ioc.Default.GetRequiredService<Setting>();
+            var session = setting.LastFMSession;
+            if (!session.HasLogined || !setting.UpdateLastFMNowPlaying || item.ProviderId != "ncm" || item.TypeId != NeteaseTypeIds.SingleSong) return;
             var request = new UpdateNowPlayingRequest()
             {
                 Album = item.Album?.Name ?? string.Empty,
                 Artist = item.CreatorList?.FirstOrDefault() ?? string.Empty,
                 Track = item.Name
             };
-            var response = await Ioc.Default.GetRequiredService<LastFMClient>().RequestAsync(LastFMApi.UpdateNowPlayingApi, request, Ioc.Default.GetRequiredService<Setting>().LastFMSession);
+            var response = await Ioc.Default.GetRequiredService<LastFMClient>().RequestAsync(LastFMApi.UpdateNowPlayingApi, request, session);
             if (!response.IsSuccess)
             {
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("Last.FM 上传正在播放失败", response.Error.Message);
+                var notification = Ioc.Default.GetRequiredService<INotificationService>();
+                notification.ShowMessage("Last.FM 上传正在播放失败", response.Error.Message);
             }
         }
         public static async Task Scrobble(SingleSongBase item)
         {
-            if (!Ioc.Default.GetRequiredService<Setting>().LastFMSession.HasLogined || !Ioc.Default.GetRequiredService<Setting>().LastFMScrobble || item.ProviderId != "ncm" || item.TypeId != NeteaseTypeIds.SingleSong) return;
+            var setting = Ioc.Default.GetRequiredService<Setting>();
+            var session = setting.LastFMSession;
+            if (!session.HasLogined || !setting.LastFMScrobble || item.ProviderId != "ncm" || item.TypeId != NeteaseTypeIds.SingleSong) return;
             var request = new ScrobbleRequest()
             {
                 Album = item.Album?.Name ?? string.Empty,
@@ -52,10 +59,11 @@ namespace HyPlayer.Services.LastFM
                 TimeStamp = (uint)(DateTime.UtcNow - DateTime.UnixEpoch - TimeSpan.FromMilliseconds(item.Duration)).TotalSeconds
 
             };
-            var response = await Ioc.Default.GetRequiredService<LastFMClient>().RequestAsync(LastFMApi.ScrobbleApi, request, Ioc.Default.GetRequiredService<Setting>().LastFMSession);
+            var response = await Ioc.Default.GetRequiredService<LastFMClient>().RequestAsync(LastFMApi.ScrobbleApi, request, session);
             if (!response.IsSuccess)
             {
-                Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("Last.FM 上传播放记录失败", response.Error.Message);
+                var notification = Ioc.Default.GetRequiredService<INotificationService>();
+                notification.ShowMessage("Last.FM 上传播放记录失败", response.Error.Message);
             }
         }
     }

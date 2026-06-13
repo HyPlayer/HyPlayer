@@ -5,7 +5,6 @@ using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using System;
@@ -24,35 +23,63 @@ namespace HyPlayer.Features.User
         [ObservableProperty]
         public partial NeteaseUser User { get; set; }
 
-        private IProvidableItemProvidable _itemProvider;
-        private Setting _settings;
+        private readonly IProvidableItemProvidable _itemProvider;
+        private readonly Setting _settings;
         private readonly INotificationService _notification;
+        private string _loadedUserId = string.Empty;
+        private string _initializingUserId = string.Empty;
+        private Task _initializeTask;
+        private Task _loadPlaylistTask;
         public MeViewModel(IProvidableItemProvidable itemProvider, Setting settings, INotificationService notification)
         {
             _itemProvider = itemProvider;
             _settings = settings;
             _notification = notification;
         }
-        public async Task InitializeUserInfo(string uid)
+        public Task InitializeUserInfo(string uid)
+        {
+            if (_loadedUserId == uid && User is not null)
+                return Task.CompletedTask;
+
+            if (_initializingUserId == uid && _initializeTask is not null && !_initializeTask.IsCompleted)
+                return _initializeTask;
+
+            _initializingUserId = uid;
+            _initializeTask = InitializeUserInfoCoreAsync(uid);
+            return _initializeTask;
+        }
+
+        private async Task InitializeUserInfoCoreAsync(string uid)
         {
             var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserDetail, uid, async () =>
             {
                 return await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + uid);
             });
             User = (NeteaseUser)resp;
+            _loadedUserId = uid;
             if (_settings.noImage) User.AvatarUrl = null;
-            LoadPlayList().SafeFireAndForget();
+            _loadPlaylistTask = LoadPlayListCoreAsync();
+            await _loadPlaylistTask;
         }
         public async Task LoadPlayList()
+        {
+            if (_loadPlaylistTask is not null && !_loadPlaylistTask.IsCompleted)
+            {
+                await _loadPlaylistTask;
+                return;
+            }
+
+            _loadPlaylistTask = LoadPlayListCoreAsync();
+            await _loadPlaylistTask;
+        }
+
+        private async Task LoadPlayListCoreAsync()
         {
             try
             {
                 var val = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserPlaylist, User.ActualId, async () =>
                 {
-                    var userItem = await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + User.ActualId);
-                    return userItem is ContainersContainer containersContainer
-                        ? await containersContainer.GetSubContainerAsync()
-                        : [];
+                    return await User.GetSubContainerAsync();
                 });
 
                 var subListIdx = 0;

@@ -108,11 +108,40 @@ namespace HyPlayer.Features.Playlist
 
         private NeteasePlaylist _neteasePlaylist;
         private int _greedyLoadTreashold = 3;
+        private readonly HashSet<int> _loadedPages = [];
+        private string _loadedPlaylistId;
+        private bool _loadedDailyRecommend;
+        private bool _loadedPlaylistDetail;
+        private Task _loadSongListTask;
+        private Task _loadAlbumImageTask;
+        private string _loadedAlbumImageUrl;
 
         public async Task LoadPageData(string PlaylistId, bool loadPlaylist = false)
         {
             QueueScope = SongListQueueScope.Playlist(PlaylistId);
-            if (loadPlaylist)
+            var playlistChanged = !string.Equals(_loadedPlaylistId, PlaylistId, StringComparison.Ordinal)
+                                  || _loadedDailyRecommend != IsDailyRecommend;
+            if (playlistChanged)
+            {
+                DetachSecondTick();
+                Songs.Clear();
+                _dailyRecommendProviderSongs.Clear();
+                _loadedPages.Clear();
+                _neteasePlaylist = null;
+                _loadSongListTask = null;
+                _loadAlbumImageTask = null;
+                _loadedAlbumImageUrl = null;
+                _loadedPlaylistDetail = false;
+                _loadedDailyRecommend = false;
+                CurrentPage = 0;
+                HasMore = false;
+                IntelligenceModeVisible = false;
+                IsMySongList = false;
+            }
+
+            _loadedPlaylistId = PlaylistId;
+
+            if (loadPlaylist && (playlistChanged || PlayList?.ActualId != PlaylistId || _neteasePlaylist?.ActualId != PlaylistId))
             {
                 _neteasePlaylist = await _neteaseProvider.GetPlaylistById(PlaylistId);
                 if (_neteasePlaylist is null)
@@ -122,6 +151,7 @@ namespace HyPlayer.Features.Playlist
                 }
 
                 PlayList = _neteasePlaylist;
+                _loadedPlaylistDetail = false;
             }
 
             DescriptionBoxContent = PlayList.Description;
@@ -133,9 +163,10 @@ namespace HyPlayer.Features.Playlist
             {
                 CoverUri = IsDailyRecommend ? new Uri(PlayList.CoverUrl) : new Uri(PlayList.CoverUrl + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
             }
-            LoadAlbumImage().SafeFireAndForget();
+            StartAlbumImageLoad();
             UpdateTime = PlayList.UpdateTime == 0 ? string.Empty : $"{DateConverter.FriendFormat(DateTimeOffset.FromUnixTimeMilliseconds(PlayList.UpdateTime).LocalDateTime)}更新";
-            LoadSongListItem().SafeFireAndForget();
+            _loadSongListTask ??= LoadSongListItem();
+            _loadSongListTask.SafeFireAndForget();
         }
 
         public async Task LoadSongListItem()
@@ -172,6 +203,9 @@ namespace HyPlayer.Features.Playlist
 
         public async Task LoadDailyRcmdItems()
         {
+            if (_loadedDailyRecommend && _dailyRecommendProviderSongs.Count == Songs.Count && Songs.Count > 0)
+                return;
+
             QueueScope = SongListQueueScope.Content;
             var items = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "recommendSongs", async () =>
             {
@@ -190,38 +224,43 @@ namespace HyPlayer.Features.Playlist
 
             _dailyRecommendProviderSongs.Clear();
             _dailyRecommendProviderSongs.AddRange(items ?? []);
+            Songs.Clear();
             var idx = 0;
             foreach (var song in _dailyRecommendProviderSongs)
             {
                 Songs.Add(await SongListItemViewModel.FromProviderSongAsync(song, idx++));
             }
+            _loadedDailyRecommend = true;
             HasMore = false;
         }
 
         public async Task LoadPlayListItems()
         {
-            _neteasePlaylist ??= await _neteaseProvider.GetPlaylistById(PlayList.ActualId);
-            if (_neteasePlaylist is null)
-            {
-                _notification.ShowMessage("加载歌单出错", "未找到歌单信息");
+            if (_loadedPlaylistDetail)
                 return;
-            }
+
+            if (!await EnsurePlaylistLoadedAsync("加载歌单出错"))
+                return;
 
             PlayList = _neteasePlaylist;
-            if (_neteasePlaylist.IsNewImported &&
-                _neteasePlaylist.Creator?.ActualId == Ioc.Default.GetRequiredService<IAuthService>().CurrentUser?.ActualId)
+            var auth = Ioc.Default.GetRequiredService<IAuthService>();
+            if (IsLikedMusicPlaylist(_neteasePlaylist, auth))
             {
                 IntelligenceModeVisible = true;
                 IsMySongList = true;
             }
+
+            _loadedPlaylistDetail = true;
         }
 
         public async Task LoadCurrentPage()
         {
-            _neteasePlaylist ??= await _neteaseProvider.GetPlaylistById(PlayList.ActualId);
-            if (_neteasePlaylist is null)
+            if (!_loadedPages.Add(CurrentPage))
+                return;
+
+            if (!await EnsurePlaylistLoadedAsync("加载歌单歌曲出错"))
             {
-                _notification.ShowMessage("加载歌单歌曲出错", "未找到歌单信息");
+                _loadedPages.Remove(CurrentPage);
                 return;
             }
 
@@ -232,6 +271,7 @@ namespace HyPlayer.Features.Playlist
             }
             catch (Exception ex)
             {
+                _loadedPages.Remove(CurrentPage);
                 _notification.ShowMessage("加载歌单歌曲出错", ex.Message);
                 return;
             }
@@ -242,6 +282,22 @@ namespace HyPlayer.Features.Playlist
                 Songs.Add(await SongListItemViewModel.FromProviderSongAsync(song, idx++));
             }
             HasMore = rst.hasMore;
+        }
+
+        private async Task<bool> EnsurePlaylistLoadedAsync(string errorTitle)
+        {
+            _neteasePlaylist ??= PlayList as NeteasePlaylist;
+            _neteasePlaylist ??= await _neteaseProvider.GetPlaylistById(PlayList.ActualId);
+            if (_neteasePlaylist is not null)
+                return true;
+
+            _notification.ShowMessage(errorTitle, "未找到歌单信息");
+            return false;
+        }
+
+        private static bool IsLikedMusicPlaylist(NeteasePlaylist playlist, IAuthService auth)
+        {
+            return auth.MySongLists.Count > 0 && playlist.ActualId == auth.MySongLists[0].ActualId;
         }
 
         public async Task LoadAlbumImage()
@@ -256,10 +312,27 @@ namespace HyPlayer.Features.Playlist
             }
         }
 
+        private void StartAlbumImageLoad()
+        {
+            var coverUrl = PlayList.CoverUrl;
+            if (string.Equals(_loadedAlbumImageUrl, coverUrl, StringComparison.Ordinal) &&
+                _loadAlbumImageTask is { IsCompleted: false })
+                return;
+
+            if (string.Equals(_loadedAlbumImageUrl, coverUrl, StringComparison.Ordinal) &&
+                _loadAlbumImageTask is { IsCompletedSuccessfully: true })
+                return;
+
+            _loadedAlbumImageUrl = coverUrl;
+            _loadAlbumImageTask = LoadAlbumImage();
+            _loadAlbumImageTask.SafeFireAndForget();
+        }
+
         public void GreedlyLoad()
         {
             if (HasMore && _greedyLoadTreashold-- <= 0)
             {
+                CurrentPage++;
                 LoadCurrentPage()?.SafeFireAndForget();
                 _greedyLoadTreashold = 3;
             }
@@ -295,9 +368,14 @@ namespace HyPlayer.Features.Playlist
                 await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, PlayList.ActualId);
                 _notification.ShowMessage("清除缓存成功", "已清除当前歌单的缓存");
                 Songs.Clear();
+                _dailyRecommendProviderSongs.Clear();
+                _loadedPages.Clear();
                 CurrentPage = 0;
                 _neteasePlaylist = null;
-                LoadSongListItem().SafeFireAndForget();
+                _loadedPlaylistDetail = false;
+                _loadedDailyRecommend = false;
+                _loadSongListTask = LoadSongListItem();
+                _loadSongListTask.SafeFireAndForget();
 
             }
             catch
@@ -336,7 +414,7 @@ namespace HyPlayer.Features.Playlist
         [RelayCommand]
         private void EnterIntelligencePlay()
         {
-            Api.EnterIntelligencePlay().SafeFireAndForget();
+            Api.EnterIntelligencePlay(PlayList.ActualId).SafeFireAndForget();
         }
 
         [RelayCommand]

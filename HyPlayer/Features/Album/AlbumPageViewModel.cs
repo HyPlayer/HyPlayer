@@ -34,6 +34,8 @@ namespace HyPlayer.Features.Album
         private readonly INavigationService _navigation;
         private readonly IAppNavigator _navigator;
         private readonly IBackgroundTaskRunner _taskRunner;
+        private string _providerAlbumTaskId;
+        private Task<NeteaseAlbum> _providerAlbumTask;
 
         public AlbumPageViewModel(
             PlayCoreBase playCore,
@@ -133,7 +135,10 @@ namespace HyPlayer.Features.Album
             {
                 await _playCore.StopAsync();
                 await _playCore.RemoveAllSongAsync();
-                await _navigator.AppendAsync(new MusicResource.Album(Album.ActualId));
+                if (_providerAlbumSongs.Count > 0)
+                    await _playCore.InsertSongRangeAsync(_providerAlbumSongs);
+                else
+                    await _navigator.AppendAsync(new MusicResource.Album(Album.ActualId));
                 await _playCore.MovePointerToIndexAsync(0);
                 if (_playCore.CurrentSong is { } song)
                     await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
@@ -175,23 +180,28 @@ namespace HyPlayer.Features.Album
         }
 
         [RelayCommand]
-        private void AddAllToPlaylist()
+        private async Task AddAllToPlaylist()
         {
-            _navigator.AppendAsync(new MusicResource.Album(Album.ActualId)).SafeFireAndForget();
+            if (_providerAlbumSongs.Count > 0)
+                await _playCore.InsertSongRangeAsync(_providerAlbumSongs);
+            else
+                await _navigator.AppendAsync(new MusicResource.Album(Album.ActualId));
         }
 
         private async Task<NeteaseAlbum> LoadProviderAlbumAsync(string albumId)
         {
-            if (await _neteaseProvider.GetAlbumById(albumId) is { } album)
-            {
-                return album;
-            }
+            if (_providerAlbumTask is not null && _providerAlbumTaskId == albumId)
+                return await _providerAlbumTask;
 
-            var item = await _neteaseProvider.GetProvidableItemByIdAsync(NeteaseTypeIds.Album + albumId);
-            if (item is NeteaseAlbum providerAlbum)
-            {
-                return providerAlbum;
-            }
+            _providerAlbumTaskId = albumId;
+            _providerAlbumTask = LoadProviderAlbumCoreAsync(albumId);
+            return await _providerAlbumTask;
+        }
+
+        private async Task<NeteaseAlbum> LoadProviderAlbumCoreAsync(string albumId)
+        {
+            if (await _neteaseProvider.GetAlbumById(albumId) is { } album)
+                return album;
 
             _notification.ShowMessage("获取专辑信息失败", "未能从网易云提供程序加载专辑");
             return null;
@@ -199,12 +209,7 @@ namespace HyPlayer.Features.Album
 
         private static async Task<List<SingleSongBase>> LoadAlbumSongsAsync(NeteaseAlbum album)
         {
-            List<ProvidableItemBase> items = (await album.GetProgressiveItemsListAsync(0, album.MaxProgressiveCount)).Item2;
-            if (items is null or { Count: 0 })
-            {
-                items = await album.GetAllItemsAsync();
-            }
-
+            List<ProvidableItemBase> items = await album.GetAllItemsAsync();
             return items.OfType<SingleSongBase>().ToList();
         }
     }

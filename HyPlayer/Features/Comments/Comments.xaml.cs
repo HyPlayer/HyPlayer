@@ -7,6 +7,7 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,6 +48,9 @@ public sealed partial class Comments : Page
     private CancellationToken _cancellationToken;
     private Task _commentLoaderTask;
     private Task _hotCommentLoaderTask;
+    private int _normalCommentsLoadVersion;
+    private int _hotCommentsLoadVersion;
+    private readonly Dictionary<string, Task> _commentLoadTasks = [];
 
     public Comments()
     {
@@ -69,7 +73,7 @@ public sealed partial class Comments : Page
         }
 
         LoadHotComments();
-        _commentLoaderTask = LoadComments(sortType);
+        _commentLoaderTask = StartLoadComments(sortType);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -103,7 +107,7 @@ public sealed partial class Comments : Page
 
     private void LoadHotComments()
     {
-        _hotCommentLoaderTask = LoadComments(2);
+        _hotCommentLoaderTask = StartLoadComments(2);
     }
 
     private async Task LoadComments(int type)
@@ -112,13 +116,21 @@ public sealed partial class Comments : Page
         if (IsShiftingPage) return;
         _cancellationToken.ThrowIfCancellationRequested();
         var isHotCommentsPage = HotCommentsContainer.Visibility == Visibility.Visible;
+        var targetHotComments = type == 2 && isHotCommentsPage;
+        var requestVersion = targetHotComments
+            ? ++_hotCommentsLoadVersion
+            : ++_normalCommentsLoadVersion;
 
         var offset = type == 3 && page != 1 && int.TryParse(cursor, out var cursorOffset)
             ? cursorOffset
             : (page - 1) * 20;
-        var result = await LoadProviderCommentsAsync(offset);
+        var result = await LoadProviderCommentsAsync(offset, type);
+        if (targetHotComments
+                ? requestVersion != _hotCommentsLoadVersion
+                : requestVersion != _normalCommentsLoadVersion)
+            return;
 
-        if (type == 2 && isHotCommentsPage)
+        if (targetHotComments)
             hotComments.Clear();
         else normalComments.Clear();
 
@@ -128,7 +140,7 @@ public sealed partial class Comments : Page
             var cmt = (NeteaseComment)comment;
             cmt.ResourceTypeId = resourcetype;
             cmt.ResourceId = resourceid;
-            if (type == 2 && isHotCommentsPage)
+            if (targetHotComments)
                 hotComments.Add(cmt);
             else normalComments.Add(cmt);
         }
@@ -140,7 +152,24 @@ public sealed partial class Comments : Page
         PrevPage.IsEnabled = page > 1;
     }
 
-    private async Task<HyPlayer.PlayCore.Abstraction.Models.ProviderPageResult<CommentBase>> LoadProviderCommentsAsync(int offset)
+    private Task StartLoadComments(int type)
+    {
+        if (string.IsNullOrEmpty(resourceid))
+            return Task.CompletedTask;
+
+        var offset = type == 3 && page != 1 && int.TryParse(cursor, out var cursorOffset)
+            ? cursorOffset
+            : (page - 1) * 20;
+        var key = $"{resourceid}:{resourcetype}:{page}:{offset}:{type}";
+        if (_commentLoadTasks.TryGetValue(key, out var runningTask) && !runningTask.IsCompleted)
+            return runningTask;
+
+        var task = LoadComments(type);
+        _commentLoadTasks[key] = task;
+        return task;
+    }
+
+    private async Task<HyPlayer.PlayCore.Abstraction.Models.ProviderPageResult<CommentBase>> LoadProviderCommentsAsync(int offset, int type)
     {
         try
         {
@@ -149,6 +178,7 @@ public sealed partial class Comments : Page
                 resourcetype,
                 offset,
                 20,
+                type,
                 _cancellationToken);
         }
         catch (OperationCanceledException)
@@ -170,14 +200,14 @@ public sealed partial class Comments : Page
     private void NextPage_Click(object sender, RoutedEventArgs e)
     {
         page++;
-        _commentLoaderTask = LoadComments(sortType);
+        _commentLoaderTask = StartLoadComments(sortType);
         ScrollTop();
     }
 
     private void PrevPage_Click(object sender, RoutedEventArgs e)
     {
         page--;
-        _commentLoaderTask = LoadComments(sortType);
+        _commentLoaderTask = StartLoadComments(sortType);
         ScrollTop();
     }
 
@@ -190,14 +220,16 @@ public sealed partial class Comments : Page
     private void ComboBoxSortType_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         sortType = ComboBoxSortType.SelectedIndex + 1;
-        _commentLoaderTask = LoadComments(sortType);
+        page = 1;
+        cursor = null;
+        _commentLoaderTask = StartLoadComments(sortType);
     }
 
     private void SkipPage_Click(object sender, RoutedEventArgs e)
     {
         if (int.TryParse(PageSelect.Text, out page))
         {
-            _commentLoaderTask = LoadComments(sortType);
+            _commentLoaderTask = StartLoadComments(sortType);
             ScrollTop();
         }
     }
@@ -260,7 +292,7 @@ public sealed partial class Comments : Page
     {
         if (int.TryParse(PageSelect.Text, out page))
         {
-            _commentLoaderTask = LoadComments(sortType);
+            _commentLoaderTask = StartLoadComments(sortType);
             ScrollTop();
         }
     }
@@ -275,8 +307,7 @@ public sealed partial class Comments : Page
             _ = _notification.InvokeOnUIThread(
             () =>
            {
-               HotCommentsScroll = HotComments.CommentPresentScrollViewer;
-               HotCommentsScroll.ViewChanged += HotCommentsScroll_ViewChanged;
+               AttachHotCommentsScroll(HotComments.CommentPresentScrollViewer);
            });
 
         }, delay);//缓一会再加载，要不然获取不到
@@ -291,8 +322,36 @@ public sealed partial class Comments : Page
 
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
-        HotCommentsScroll?.ViewChanged -= HotCommentsScroll_ViewChanged;
-        MainScroll?.ViewChanged -= MainScroll_ViewChanged;
+        AttachHotCommentsScroll(null);
+        AttachMainScroll(null);
+    }
+
+    private void AttachHotCommentsScroll(ScrollViewer? scrollViewer)
+    {
+        if (ReferenceEquals(HotCommentsScroll, scrollViewer))
+            return;
+
+        if (HotCommentsScroll is not null)
+            HotCommentsScroll.ViewChanged -= HotCommentsScroll_ViewChanged;
+
+        HotCommentsScroll = scrollViewer;
+
+        if (HotCommentsScroll is not null)
+            HotCommentsScroll.ViewChanged += HotCommentsScroll_ViewChanged;
+    }
+
+    private void AttachMainScroll(ScrollViewer? scrollViewer)
+    {
+        if (ReferenceEquals(MainScroll, scrollViewer))
+            return;
+
+        if (MainScroll is not null)
+            MainScroll.ViewChanged -= MainScroll_ViewChanged;
+
+        MainScroll = scrollViewer;
+
+        if (MainScroll is not null)
+            MainScroll.ViewChanged += MainScroll_ViewChanged;
     }
 
     private void ShiftCommentList(bool direction)
@@ -312,12 +371,11 @@ public sealed partial class Comments : Page
                 _ = _notification.InvokeOnUIThread(
                 () =>
                 {
-                    MainScroll = NormalComments.CommentPresentScrollViewer;
+                    AttachMainScroll(NormalComments.CommentPresentScrollViewer);
                     var transform = AllCmtsTB.TransformToVisual(MainScroll);
                     var point = transform.TransformPoint(new Point(0, 25));//要超过判定区域，还要预留一点
                     var y = point.Y + MainScroll.VerticalOffset;
                     MainScroll.ChangeView(null, y, null, false);
-                    MainScroll.ViewChanged += MainScroll_ViewChanged;
                 });
 
             }, delay);

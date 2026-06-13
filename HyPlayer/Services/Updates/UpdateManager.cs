@@ -190,17 +190,20 @@ public static class UpdateManager
 
     public static async Task GetUserCanaryChannelAvailability(string userEmail)
     {
-        var userResp = await Ioc.Default.GetRequiredService<HttpClient>().GetAsync(new Uri($"https://hyplayer.kengwang.com.cn/user/email/{userEmail}"));
+        var httpClient = Ioc.Default.GetRequiredService<HttpClient>();
+        var notification = Ioc.Default.GetRequiredService<INotificationService>();
+        var setting = Ioc.Default.GetRequiredService<Setting>();
+        var userResp = await httpClient.GetAsync(new Uri($"https://hyplayer.kengwang.com.cn/user/email/{userEmail}"));
         if (userResp.IsSuccessStatusCode)
         {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("Canary版本已解锁", "感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新");
-            Ioc.Default.GetRequiredService<Setting>().canaryChannelAvailability = true;
+            notification.ShowMessage("Canary版本已解锁", "感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新");
+            setting.canaryChannelAvailability = true;
         }
         else
         {
-            Ioc.Default.GetRequiredService<Setting>().canaryChannelAvailability = false;
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
-            if (Ioc.Default.GetRequiredService<Setting>().UpdateSource == UpdateSource.Canary) Ioc.Default.GetRequiredService<Setting>().UpdateSource = UpdateSource.Release;
+            setting.canaryChannelAvailability = false;
+            notification.ShowMessage("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
+            if (setting.UpdateSource == UpdateSource.Canary) setting.UpdateSource = UpdateSource.Release;
         }
     }
 }

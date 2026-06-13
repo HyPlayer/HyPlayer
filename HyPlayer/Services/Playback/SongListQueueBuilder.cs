@@ -21,7 +21,6 @@ internal sealed class SongListQueueBuilder(
 
         var currentSongId = state.NowPlayingProviderItem?.ActualId;
         var shiftSong = clickedSong.ActualId == currentSongId && state.IsPlaying;
-        var nowPlayingIndex = await playCore.GetCurrentIndexAsync().ConfigureAwait(false);
 
         if (scope.CanLoadCompleteSource)
         {
@@ -49,6 +48,9 @@ internal sealed class SongListQueueBuilder(
         }
 
         notification.ShowMessage("无感歌单切换", "成功无感切换到歌单");
+        var nowPlayingIndex = state.NowPlayingIndex >= 0
+            ? state.NowPlayingIndex
+            : await playCore.GetCurrentIndexAsync().ConfigureAwait(false);
         if (nowPlayingIndex >= 0)
         {
             await playCore.MovePointerToIndexAsync(nowPlayingIndex).ConfigureAwait(false);

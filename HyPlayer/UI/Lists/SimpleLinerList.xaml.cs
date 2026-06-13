@@ -15,8 +15,8 @@ public partial class SimpleLinerList : UserControl
 {
     public static readonly DependencyProperty ListItemsProperty = DependencyProperty.Register(
         "ListItems", typeof(ObservableCollection<SimpleListItem>),
-        typeof(SimpleListItem),
-        new PropertyMetadata(new ObservableCollection<SimpleListItem>())
+        typeof(SimpleLinerList),
+        new PropertyMetadata(null)
     );
 
     public static readonly DependencyProperty ListHeaderProperty = DependencyProperty.Register(
@@ -28,6 +28,7 @@ public partial class SimpleLinerList : UserControl
     public SimpleLinerList()
     {
         InitializeComponent();
+        ListItems = new ObservableCollection<SimpleListItem>();
     }
 
     public UIElement ListHeader

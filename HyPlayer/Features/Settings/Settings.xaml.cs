@@ -91,9 +91,8 @@ public sealed partial class Settings : Page
                     t?.As<ComboBoxItem>().Tag.ToString() == _setting.downloadAudioRate));
         }
 
-        TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
-            ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString()
-            : "";
+        var localSettings = ApplicationData.Current.LocalSettings.Values;
+        TextBoxXREALIP.Text = localSettings["xRealIp"]?.ToString() ?? "";
         var package = Package.Current;
         var packageId = package.Id;
         var version = packageId.Version;
@@ -218,9 +217,9 @@ public sealed partial class Settings : Page
 
     private void ButtonXREALIPSave_OnClick(object sender, RoutedEventArgs e)
     {
-        ApplicationData.Current.LocalSettings.Values["xRealIp"] =
-            TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
-        _neteaseProvider.ConfigureXRealIP((string)ApplicationData.Current.LocalSettings.Values["xRealIp"]);
+        var xRealIp = string.IsNullOrEmpty(TextBoxXREALIP.Text) ? null : TextBoxXREALIP.Text;
+        ApplicationData.Current.LocalSettings.Values["xRealIp"] = xRealIp;
+        _neteaseProvider.ConfigureXRealIP(xRealIp);
     }
 
     private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)

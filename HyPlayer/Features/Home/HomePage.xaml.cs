@@ -33,7 +33,7 @@ namespace HyPlayer.Features.Home
         private void RefreshRequested(Microsoft.UI.Xaml.Controls.RefreshContainer sender, Microsoft.UI.Xaml.Controls.RefreshRequestedEventArgs args)
         {
             var def = args.GetDeferral();
-            ViewModel.GetDataAsync().ContinueWith(t => def.Complete()).SafeFireAndForget();
+            ViewModel.GetDataAsync(forceRefresh: true).ContinueWith(t => def.Complete()).SafeFireAndForget();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)

@@ -93,6 +93,10 @@ public sealed class PlaybackQueueLoader : IPlaybackQueueLoader
         try
         {
             var songs = new List<SingleSongBase>();
+            var skipDuplicateSingle = result.Batches is [{ Count: 1 }];
+            var existingQueue = skipDuplicateSingle
+                ? await _playCore.GetPlaylistAsync().ConfigureAwait(false)
+                : null;
             foreach (var batch in result.Batches)
             {
                 if (batch is not { Count: > 0 })
@@ -100,9 +104,7 @@ public sealed class PlaybackQueueLoader : IPlaybackQueueLoader
 
                 foreach (var providerSong in batch)
                 {
-                    if (result.Batches.Count == 1
-                        && batch.Count == 1
-                        && await ContainsProviderItemAsync(providerSong).ConfigureAwait(false))
+                    if (existingQueue is not null && ContainsProviderItem(existingQueue, providerSong))
                     {
                         continue;
                     }
@@ -123,6 +125,11 @@ public sealed class PlaybackQueueLoader : IPlaybackQueueLoader
     private async Task<bool> ContainsProviderItemAsync(SingleSongBase song)
     {
         var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
+        return ContainsProviderItem(queue, song);
+    }
+
+    private static bool ContainsProviderItem(IReadOnlyList<SingleSongBase> queue, SingleSongBase song)
+    {
         return queue.Any(providerItem =>
             providerItem.ProviderId == song.ProviderId
             && providerItem.TypeId == song.TypeId

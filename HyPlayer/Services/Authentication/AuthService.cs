@@ -186,7 +186,7 @@ public class AuthService : IAuthService
 
         Setting.SaveCookies();
 
-        var providerUser = await TryGetCurrentProviderUserAsync();
+        var providerUser = await TryGetCurrentProviderUserAsync(result);
         CurrentUser = providerUser is not null
             ? providerUser
             : new NeteaseUser
@@ -296,10 +296,14 @@ public class AuthService : IAuthService
 
     private async Task LoadMyLikelistAsync()
     {
-        var likedSongs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
+        var userId = CurrentUser?.ActualId;
+        if (string.IsNullOrWhiteSpace(userId))
+            return;
+
+        var likedSongs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"likedSongs_{userId}", async () =>
             await new NeteaseUserLibrarySubContainer
             {
-                ActualId = "liked-songs",
+                ActualId = $"liked-songs-{userId}",
                 Kind = NeteaseUserLibrarySubContainer.LikedSongsKind,
                 Name = "我喜欢的音乐"
             }.GetLikedSongIdsAsync());
@@ -307,9 +311,8 @@ public class AuthService : IAuthService
         LikedSongs.AddRange(likedSongs ?? []);
     }
 
-    private async Task<NeteaseUser?> TryGetCurrentProviderUserAsync()
+    private async Task<NeteaseUser?> TryGetCurrentProviderUserAsync(ProviderSessionInfo session)
     {
-        var session = await _authenticationProvider.GetSessionInfoAsync();
         return string.IsNullOrWhiteSpace(session.UserId)
             ? null
             : await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + session.UserId) as NeteaseUser;

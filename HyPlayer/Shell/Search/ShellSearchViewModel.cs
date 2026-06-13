@@ -13,6 +13,8 @@ public sealed class ShellSearchViewModel
     private readonly ISearchSuggestionProvidable _suggestionProvider;
     private readonly INavigationService _navigation;
     private readonly INotificationService _notification;
+    private string _lastSuggestionKeyword = string.Empty;
+    private IReadOnlyList<string>? _lastSuggestions;
 
     public ShellSearchViewModel(ISearchSuggestionProvidable suggestionProvider,
                                  INavigationService navigation,
@@ -26,12 +28,16 @@ public sealed class ShellSearchViewModel
     public async Task<IReadOnlyList<string>?> GetSuggestionsAsync(string keyword)
     {
         if (string.IsNullOrEmpty(keyword)) return null;
+        if (keyword == _lastSuggestionKeyword)
+            return _lastSuggestions;
 
         try
         {
             var container = await _suggestionProvider.GetSearchSuggestionsAsync(keyword);
             var items = container is LinerContainerBase liner ? await liner.GetAllItemsAsync() : [];
-            return items.Select(GetSuggestionText).Where(text => !string.IsNullOrWhiteSpace(text)).ToList();
+            _lastSuggestionKeyword = keyword;
+            _lastSuggestions = items.Select(GetSuggestionText).Where(text => !string.IsNullOrWhiteSpace(text)).ToList();
+            return _lastSuggestions;
         }
         catch (System.Exception ex)
         {

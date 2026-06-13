@@ -367,8 +367,14 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         if (queue.Count == 0)
             return;
 
-        if (_playCore.ActivePlayModeId == "pfm" && await _playCore.GetCurrentIndexAsync().ConfigureAwait(false) + 1 >= queue.Count)
-            await PersonalFM.AppendMoreTracksAsync().ConfigureAwait(false);
+        if (_playCore.ActivePlayModeId == "pfm")
+        {
+            var currentIndex = _state.NowPlayingIndex >= 0
+                ? _state.NowPlayingIndex
+                : await _playCore.GetCurrentIndexAsync().ConfigureAwait(false);
+            if (currentIndex + 1 >= queue.Count)
+                await PersonalFM.AppendMoreTracksAsync().ConfigureAwait(false);
+        }
 
         if (_playCore.ActivePlayModeId == "ltg" && ListenTogetherManager.Instance?.ServerNextIndex is { } serverIndex)
         {
