@@ -28,7 +28,6 @@ public partial class NavigationShellViewModel : ObservableObject
 {
     private readonly IAuthService _auth;
     private readonly INotificationService _notification;
-    private readonly IUserLibraryNavigationProvidable _userLibraryNavigationProvider;
     private readonly IUserLibraryTypeIds _userLibraryTypeIds;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private Task? _loadPlaylistsTask;
@@ -61,14 +60,12 @@ public partial class NavigationShellViewModel : ObservableObject
     public NavigationShellViewModel(
         IAuthService auth,
         INotificationService notification,
-        IUserLibraryNavigationProvidable userLibraryNavigationProvider,
         IUserLibraryTypeIds userLibraryTypeIds,
         IProviderKnownTypeIds knownTypeIds,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
         _auth = auth;
         _notification = notification;
-        _userLibraryNavigationProvider = userLibraryNavigationProvider;
         _userLibraryTypeIds = userLibraryTypeIds;
         _knownTypeIds = knownTypeIds;
 
@@ -208,9 +205,7 @@ public partial class NavigationShellViewModel : ObservableObject
         try
         {
             var containers = await _auth.CurrentUser.GetSubContainerAsync();
-            var groups = await _userLibraryNavigationProvider.GetCurrentUserLibraryNavigationGroupsAsync();
-            if (groups.Count == 0)
-                groups = await BuildFallbackLibraryNavigationGroupsAsync(containers);
+            var groups = await BuildLibraryNavigationGroupsAsync(containers);
 
             ClearProviderLibraryNodes();
             _auth.MySongLists.Clear();
@@ -331,22 +326,23 @@ public partial class NavigationShellViewModel : ObservableObject
         }
     }
 
-    private async Task<IReadOnlyList<ProviderLibraryNavigationGroup>> BuildFallbackLibraryNavigationGroupsAsync(
+    private async Task<IReadOnlyList<ProviderLibraryNavigationGroup>> BuildLibraryNavigationGroupsAsync(
         IReadOnlyList<ContainerBase> containers)
     {
         var items = new List<ContainerBase>();
         foreach (var container in containers)
         {
-            if (TryCreateContainerRoute(container) is not null)
-            {
-                items.Add(container);
-                continue;
-            }
-
-            if (container is LinerContainerBase liner)
+            if (container is LinerContainerBase liner && container.TypeId == _knownTypeIds.PlaylistTypeId)
             {
                 var children = await liner.GetAllItemsAsync();
                 items.AddRange(children.OfType<ContainerBase>().Where(item => TryCreateContainerRoute(item) is not null));
+                continue;
+            }
+
+            if (container is not LinerContainerBase && TryCreateContainerRoute(container) is not null)
+            {
+                items.Add(container);
+                continue;
             }
         }
 
@@ -354,24 +350,38 @@ public partial class NavigationShellViewModel : ObservableObject
             .Where(item => item is not IHasLibraryState libraryState || libraryState.IsOwnedByCurrentUser)
             .ToList();
         var subscribed = items
-            .Where(item => item is IHasLibraryState { IsInCurrentUserLibrary: true })
+            .Where(item => item is IHasLibraryState { IsInCurrentUserLibrary: true, IsOwnedByCurrentUser: false })
             .ToList();
         var groups = new List<ProviderLibraryNavigationGroup>();
 
         if (owned.Count > 0)
+        {
             groups.Add(new ProviderLibraryNavigationGroup
             {
-                Id = "owned",
-                Title = "我创建的内容",
-                Items = owned,
-                DisplayOrder = 10
+                Id = _userLibraryTypeIds.LikedSongsTypeId,
+                Title = "我喜欢的音乐",
+                Items = [owned[0]],
+                DisplayOrder = 0,
+                IsPinned = true
             });
+
+            if (owned.Count > 1)
+            {
+                groups.Add(new ProviderLibraryNavigationGroup
+                {
+                    Id = "owned",
+                    Title = "我创建的歌单",
+                    Items = owned.Skip(1).ToList(),
+                    DisplayOrder = 10
+                });
+            }
+        }
 
         if (subscribed.Count > 0)
             groups.Add(new ProviderLibraryNavigationGroup
             {
                 Id = "subscribed",
-                Title = "我收藏的内容",
+                Title = "我收藏的歌单",
                 Items = subscribed,
                 DisplayOrder = 20
             });
