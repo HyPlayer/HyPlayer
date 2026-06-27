@@ -69,6 +69,7 @@ public sealed partial class SongListDetail : Page
     private void SongListDetail_Unloaded(object sender, RoutedEventArgs e)
     {
         DetachDataRequested();
+        ViewModel.Dispose();
         Unloaded -= SongListDetail_Unloaded;
     }
 

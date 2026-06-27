@@ -14,7 +14,7 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Shell.ExpandedPlayer
 {
-    public partial class ExpandedPlayerViewModel : ObservableObject
+    public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
     {
         // ── Services ──────────────────────────────────────────────
         private readonly PlayCoreBase _playCore;
@@ -217,6 +217,12 @@ namespace HyPlayer.Shell.ExpandedPlayer
         private void RunOnUIThread(Action action)
         {
             _ = _notification.InvokeOnUIThread(action);
+        }
+
+        public void Dispose()
+        {
+            _stateChangedListener.Detach();
+            _songLikeStatusChangedListener.Detach();
         }
     }
 }

@@ -58,6 +58,7 @@ public sealed partial class Search : Page
     private readonly Dictionary<ContainerBase, List<ProvidableItemBase>> _linerSearchItems = new();
     private string _lastSuggestionKeyword = string.Empty;
     private List<string> _lastSuggestions = [];
+    private string _cachedSearchText = string.Empty;
 
     public Search()
     {
@@ -112,6 +113,7 @@ public sealed partial class Search : Page
     {
         _cancellationToken.ThrowIfCancellationRequested();
         if (string.IsNullOrEmpty(searchText)) return;
+        ResetSearchCachesIfKeywordChanged();
         if (Convert.ToBase64String(searchText.ToByteArrayUtf8()) == "6Ieq5p2A")
         {
             _ = Launcher.LaunchUriAsync(new Uri(@"http://music.163.com/m/topic/18926801"));
@@ -449,6 +451,16 @@ public sealed partial class Search : Page
         }
 
         return await GetPagedItemsAsync(container);
+    }
+
+    private void ResetSearchCachesIfKeywordChanged()
+    {
+        if (string.Equals(_cachedSearchText, searchText, StringComparison.Ordinal))
+            return;
+
+        _searchContainers.Clear();
+        _linerSearchItems.Clear();
+        _cachedSearchText = searchText;
     }
 
     private async Task<(bool HasMore, List<ProvidableItemBase> Items)> GetPagedItemsAsync(ContainerBase container)

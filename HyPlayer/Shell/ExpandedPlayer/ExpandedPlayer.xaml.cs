@@ -1382,6 +1382,7 @@ public sealed partial class ExpandedPlayer : Page
         _stateChangedListener.Detach();
         _surfaceStoreChangedListener.Detach();
         _seekRequestedListener.Detach();
+        ViewModel.Dispose();
         Window.Current.SizeChanged -= Current_SizeChanged;
         _lyricBox.OnBeforeRender -= _lyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked -= _lyricBoxOnOnRequestSeek;

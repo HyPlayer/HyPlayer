@@ -97,11 +97,19 @@ public partial class PlaybackStateService : ObservableObject
     {
         SetNowPlaying(null);
         NowPlayingIndex = -1;
+        CoverStream = null;
+        CoverStreamReference = null;
     }
 
     public void PublishQueueChanged(bool isShuffleTrigger = false)
     {
         LastQueueChangeIsShuffleTrigger = isShuffleTrigger;
         QueueRevision++;
+    }
+
+    partial void OnCoverStreamChanging(InMemoryRandomAccessStream? value)
+    {
+        if (!ReferenceEquals(CoverStream, value))
+            CoverStream?.Dispose();
     }
 }

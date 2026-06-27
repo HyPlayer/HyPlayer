@@ -165,7 +165,23 @@ public sealed partial class Comments : Page
 
         var task = LoadComments(type);
         _commentLoadTasks[key] = task;
+        _ = RemoveCommentLoadTaskWhenCompletedAsync(key, task);
         return task;
+    }
+
+    private async Task RemoveCommentLoadTaskWhenCompletedAsync(string key, Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch
+        {
+            // The caller observes cancellation/failure; this cache only owns task lifetime.
+        }
+
+        if (_commentLoadTasks.TryGetValue(key, out var cachedTask) && ReferenceEquals(cachedTask, task))
+            _commentLoadTasks.Remove(key);
     }
 
     private async Task<HyPlayer.PlayCore.Abstraction.Models.ProviderPageResult<CommentBase>> LoadProviderCommentsAsync(int offset, int type)

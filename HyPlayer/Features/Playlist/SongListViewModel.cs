@@ -33,7 +33,7 @@ using Windows.UI;
 
 namespace HyPlayer.Features.Playlist
 {
-    public partial class SongListViewModel : ObservableRecipient
+    public partial class SongListViewModel : ObservableRecipient, IDisposable
     {
         private readonly PlayCoreBase _playCore;
         private readonly IPlaybackQueueLoader _queueLoader;
@@ -362,6 +362,12 @@ namespace HyPlayer.Features.Playlist
                 DetachSecondTick();
             }
         }
+
+        public void Dispose()
+        {
+            DetachSecondTick();
+        }
+
         [RelayCommand]
         private void LoadAllSongs()
         {
