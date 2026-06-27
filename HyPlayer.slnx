@@ -3,10 +3,10 @@
     <Platform Name="arm64" />
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="../HyPlayer.NeteaseProvider/HyPlayer.NeteaseApi/HyPlayer.NeteaseApi.csproj">
+  <Project Path="HyPlayer.NeteaseProvider/HyPlayer.NeteaseApi/HyPlayer.NeteaseApi.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="../HyPlayer.NeteaseProvider/HyPlayer.NeteaseProvider/HyPlayer.NeteaseProvider.csproj">
+  <Project Path="HyPlayer.NeteaseProvider/HyPlayer.NeteaseProvider/HyPlayer.NeteaseProvider.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="../HyPlayer.PlayCore/HyPlayer.PlayCore.Abstraction/HyPlayer.PlayCore.Abstraction.csproj" />
