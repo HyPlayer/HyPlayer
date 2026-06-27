@@ -24,5 +24,5 @@ public interface IQueueSourceProvider
     /// </summary>
     /// <param name="id">源 ID（不含前缀）</param>
     /// <param name="cancellationToken">取消令牌</param>
-    Task<NeteaseQueueSourceLoadResult> LoadAsync(string id, CancellationToken cancellationToken = default);
+    Task<ProviderQueueSourceLoadResult> LoadAsync(string id, CancellationToken cancellationToken = default);
 }

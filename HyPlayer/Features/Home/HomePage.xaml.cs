@@ -2,8 +2,8 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.Features.Playlist;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using System;
 using Windows.UI.Xaml;
@@ -45,7 +45,8 @@ namespace HyPlayer.Features.Home
 
         private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
-            var playList = (NeteasePlaylist)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
+            var playList = (sender?.As<MenuFlyoutItem>())?.CommandParameter as HomeContainerCardViewModel;
+            if (playList is null) return;
             //播放全部歌曲
             await Ioc.Default.GetRequiredService<IAppNavigator>()
                 .PlayAsync(new MusicResource.Playlist(playList.ActualId));
@@ -53,7 +54,8 @@ namespace HyPlayer.Features.Home
 
         private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
         {
-            var playList = (NeteasePlaylist)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
+            var playList = (sender?.As<MenuFlyoutItem>())?.CommandParameter as HomeContainerCardViewModel;
+            if (playList is null) return;
             try
             {
                 await _containerManager.SetContainerPrivacyAsync(playList.ActualId, true);
@@ -68,7 +70,8 @@ namespace HyPlayer.Features.Home
 
         private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
         {
-            var playList = (NeteasePlaylist)(sender?.As<MenuFlyoutItem>())?.CommandParameter;
+            var playList = (sender?.As<MenuFlyoutItem>())?.CommandParameter as HomeContainerCardViewModel;
+            if (playList is null) return;
             try
             {
                 await _containerManager.DeleteContainerAsync(playList.ActualId);
@@ -86,8 +89,8 @@ namespace HyPlayer.Features.Home
         {
             var button = sender?.As<ListViewItem>();
             if (button == null) return;
-            var playlist = button.Tag as NeteasePlaylist;
-            _navigation.Navigate(typeof(SongListDetail), playlist);
+            if (button.Tag is HomeContainerCardViewModel playlist)
+                _navigation.Navigate(typeof(SongListDetail), playlist.Container);
         }
     }
 }

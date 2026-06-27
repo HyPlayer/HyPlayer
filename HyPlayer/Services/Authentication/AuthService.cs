@@ -1,8 +1,9 @@
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Network;
-using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Playback;
@@ -27,7 +28,9 @@ public class AuthService : IAuthService
     private readonly PlaybackStateService _state;
     private readonly IAuthenticationProvidable _authenticationProvider;
     private readonly IQrAuthenticationProvidable _qrAuthenticationProvider;
-    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
+    private readonly IProvableItemLikable _likableProvider;
+    private readonly IProviderAdditionalConfigurationProvidable _additionalConfigurationProvider;
+    private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
@@ -38,7 +41,9 @@ public class AuthService : IAuthService
         PlaybackStateService state,
         IAuthenticationProvidable authenticationProvider,
         IQrAuthenticationProvidable qrAuthenticationProvider,
-        global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
+        IProvableItemLikable likableProvider,
+        IProviderAdditionalConfigurationProvidable additionalConfigurationProvider,
+        IProviderKnownTypeIds knownTypeIds,
         IProvidableItemProvidable itemProvider,
         INotificationService notification,
         IBackgroundTaskRunner taskRunner,
@@ -47,7 +52,9 @@ public class AuthService : IAuthService
         _state = state;
         _authenticationProvider = authenticationProvider;
         _qrAuthenticationProvider = qrAuthenticationProvider;
-        _neteaseProvider = neteaseProvider;
+        _likableProvider = likableProvider;
+        _additionalConfigurationProvider = additionalConfigurationProvider;
+        _knownTypeIds = knownTypeIds;
         _itemProvider = itemProvider;
         _notification = notification;
         _taskRunner = taskRunner;
@@ -58,24 +65,24 @@ public class AuthService : IAuthService
     public bool IsLoggedIn { get; set; }
 
     /// <inheritdoc />
-    public NeteaseUser? CurrentUser { get; set; }
+    public PersonBase? CurrentUser { get; set; }
 
     /// <inheritdoc />
     public List<string> LikedSongs { get; } = [];
 
     /// <inheritdoc />
-    public List<NeteasePlaylist> MySongLists { get; } = [];
+    public List<ContainerBase> MySongLists { get; } = [];
 
     /// <inheritdoc />
     public void ClearRuntimeCookies()
     {
-        _neteaseProvider.ClearRuntimeCookies();
+        _taskRunner.Forget(_authenticationProvider.ImportSessionAsync(new Dictionary<string, string>()), "clear provider session values");
     }
 
     /// <inheritdoc />
     public void SetRuntimeCookie(string name, string value)
     {
-        _neteaseProvider.SetRuntimeCookie(name, value);
+        _taskRunner.Forget(_authenticationProvider.ImportSessionAsync(new Dictionary<string, string> { [name] = value }), "import provider session value");
     }
 
     /// <inheritdoc />
@@ -83,9 +90,12 @@ public class AuthService : IAuthService
     {
         try
         {
-            if (!Setting.LoadCookies() && !_neteaseProvider.HasAdditionalCookies)
+            var sessionValues = Setting.LoadCookies();
+            if (sessionValues.Count == 0 && !_additionalConfigurationProvider.HasAdditionalConfiguration)
                 return new AuthResult(false);
 
+            if (sessionValues.Count > 0)
+                await _authenticationProvider.ImportSessionAsync(sessionValues);
             return await CompleteLoginAsync(false);
         }
         catch (Exception ex)
@@ -179,21 +189,20 @@ public class AuthService : IAuthService
             if (!statusResult.IsAuthenticated)
                 return null;
             return statusResult;
-        });
+        }, forceRefresh: clearLoginCache || _additionalConfigurationProvider.HasAdditionalConfiguration);
 
         if (result is not { IsAuthenticated: true })
             return new AuthResult(false);
 
-        Setting.SaveCookies();
+        Setting.SaveCookies(await _authenticationProvider.ExportSessionAsync());
 
         var providerUser = await TryGetCurrentProviderUserAsync(result);
         CurrentUser = providerUser is not null
             ? providerUser
-            : new NeteaseUser
+            : new ProviderSessionPerson(_knownTypeIds.UserTypeId)
             {
                 ActualId = result.UserId ?? string.Empty,
                 Name = result.DisplayName ?? "已登录",
-                AvatarUrl = "ms-appx:///Assets/icon.png",
                 Description = string.Empty
             };
 
@@ -217,7 +226,7 @@ public class AuthService : IAuthService
         if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("Cookies", out var container))
             container.Values.Clear();
         await _authenticationProvider.LogoutAsync();
-        Setting.SaveCookies();
+        Setting.SaveCookies(await _authenticationProvider.ExportSessionAsync());
 
         try
         {
@@ -266,25 +275,22 @@ public class AuthService : IAuthService
         {
             await RetryPolicies.ApiCallPolicy.ExecuteAsync(async () =>
             {
-                if (providerItem is NeteaseRadioProgram)
+                if (providerItem.TypeId != _knownTypeIds.SingleSongTypeId)
                 {
-                    _notification.ShowMessage("暂不支持红心电台歌曲", "将在后续版本中支持");
+                    _notification.ShowMessage("暂不支持红心此内容", "当前 provider 未将该内容声明为单曲");
                     SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
                     return;
                 }
 
-                if (providerItem is NeteaseSong || providerItem?.ProviderId is "ncm")
-                {
-                    var providerSong = providerItem as NeteaseSong ?? new NeteaseSong { ActualId = songId, Name = providerItem.Name, Artists = [] };
-                    if (isLiked)
-                        await providerSong.UnlikeAsync();
-                    else
-                        await providerSong.LikeAsync();
-                    if (isLiked) LikedSongs.Remove(songId);
-                    else LikedSongs.Add(songId);
-                    SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
-                    return;
-                }
+                var itemId = providerItem.TypeId + songId;
+                if (isLiked)
+                    await _likableProvider.UnlikeProvidableItemAsync(itemId, null);
+                else
+                    await _likableProvider.LikeProvidableItemAsync(itemId, null);
+                if (isLiked) LikedSongs.Remove(songId);
+                else LikedSongs.Add(songId);
+                SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
+                return;
 
             });
         }
@@ -301,21 +307,16 @@ public class AuthService : IAuthService
             return;
 
         var likedSongs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"likedSongs_{userId}", async () =>
-            await new NeteaseUserLibrarySubContainer
-            {
-                ActualId = $"liked-songs-{userId}",
-                Kind = NeteaseUserLibrarySubContainer.LikedSongsKind,
-                Name = "我喜欢的音乐"
-            }.GetLikedSongIdsAsync());
+            await _likableProvider.GetLikedProvidableIdsAsync(_knownTypeIds.SingleSongTypeId));
         LikedSongs.Clear();
         LikedSongs.AddRange(likedSongs ?? []);
     }
 
-    private async Task<NeteaseUser?> TryGetCurrentProviderUserAsync(ProviderSessionInfo session)
+    private async Task<PersonBase?> TryGetCurrentProviderUserAsync(ProviderSessionInfo session)
     {
         return string.IsNullOrWhiteSpace(session.UserId)
             ? null
-            : await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + session.UserId) as NeteaseUser;
+            : await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.UserTypeId + session.UserId) as PersonBase;
     }
 
     private static int MapQrStatusCode(ProviderQrLoginStatus status)
@@ -328,5 +329,17 @@ public class AuthService : IAuthService
             ProviderQrLoginStatus.WaitingForConfirmation => 802,
             _ => 0
         };
+    }
+
+    private sealed class ProviderSessionPerson(string typeId) : PersonBase, IHasDescription
+    {
+        public override string ProviderId => string.Empty;
+        public override string TypeId => typeId;
+        public string? Description { get; set; }
+
+        public override Task<List<ContainerBase>> GetSubContainerAsync(CancellationToken ctk = default)
+        {
+            return Task.FromResult(new List<ContainerBase>());
+        }
     }
 }

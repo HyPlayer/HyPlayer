@@ -15,7 +15,17 @@ namespace HyPlayer.Domain.Settings
         /// </summary>
         public LastFMSession LastFMSession
         {
-            get => JsonSerializer.Deserialize<LastFMSession>(GetSettings(nameof(LastFMSession), "{}"), JsonDefaults.Options);
+            get
+            {
+                try
+                {
+                    return JsonSerializer.Deserialize<LastFMSession>(GetSettings(nameof(LastFMSession), "{}"), JsonDefaults.Options) ?? new LastFMSession();
+                }
+                catch
+                {
+                    return new LastFMSession();
+                }
+            }
             set
             {
                 if (value == null)

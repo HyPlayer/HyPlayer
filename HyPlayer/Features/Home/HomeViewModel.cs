@@ -3,14 +3,16 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.UI.Lists;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,7 +22,8 @@ namespace HyPlayer.Features.Home
     public partial class HomeViewModel : ObservableRecipient
     {
 #nullable enable
-        private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
+        private readonly IProvidableItemProvidable _itemProvider;
+        private readonly IProviderSpecialContainerTypeIds _specialContainerTypeIds;
         private readonly PlayCoreBase _playCore;
         private readonly IPlaybackControlService _control;
         private readonly INavigationService _navigation;
@@ -30,21 +33,23 @@ namespace HyPlayer.Features.Home
         private string _loadedUserId = string.Empty;
 
         [ObservableProperty]
-        public partial List<NeteasePlaylist> RecommendedPlaylist { get; set; }
+        public partial List<HomeContainerCardViewModel> RecommendedPlaylist { get; set; }
         [ObservableProperty]
-        public partial List<NeteasePlaylist> ToplistPlaylist { get; set; }
+        public partial List<HomeContainerCardViewModel> ToplistPlaylist { get; set; }
         [ObservableProperty]
         public partial List<SongListItemViewModel> RecommendedSongItems { get; set; }
         [ObservableProperty]
-        public partial List<NeteasePlaylist> OfficialPlaylists { get; set; }
+        public partial List<HomeContainerCardViewModel> OfficialPlaylists { get; set; }
 #nullable restore
         public HomeViewModel(
-            global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
+            IProvidableItemProvidable itemProvider,
+            IProviderSpecialContainerTypeIds specialContainerTypeIds,
             PlayCoreBase playCore,
             IPlaybackControlService control,
             INavigationService navigation)
         {
-            _neteaseProvider = neteaseProvider;
+            _itemProvider = itemProvider;
+            _specialContainerTypeIds = specialContainerTypeIds;
             _playCore = playCore;
             _control = control;
             _navigation = navigation;
@@ -66,19 +71,13 @@ namespace HyPlayer.Features.Home
 
         private async Task LoadDataCoreAsync(IAuthService auth, string userId)
         {
-            ToplistPlaylist = (await LoadContainerItemsAsync(new NeteaseToplistContainer { ActualId = "chart", Name = "排行榜" }))
-                .OfType<NeteasePlaylist>()
-                .ToList();
-            OfficialPlaylists = (await LoadContainerItemsAsync(new NeteasePlaylistCategoryContainer { ActualId = "官方", Category = "官方", Name = "官方推荐歌单" }))
-                .OfType<NeteasePlaylist>()
-                .ToList();
+            ToplistPlaylist = await LoadSpecialContainerCardsAsync(SpecialContainerType.Toplists, "chart");
+            OfficialPlaylists = await LoadSpecialContainerCardsAsync(SpecialContainerType.PlaylistCategory, "官方");
             // 登录内容
             if (auth.IsLoggedIn)
             {
-                RecommendedPlaylist = (await LoadContainerItemsAsync(new NeteaseRecommendPlaylistContainer { ActualId = "rcpl", Name = "推荐歌单" }))
-                    .OfType<NeteasePlaylist>()
-                    .ToList();
-                _recommendedProviderSongs = (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
+                RecommendedPlaylist = await LoadSpecialContainerCardsAsync(SpecialContainerType.RecommendedPlaylists, "rcpl");
+                _recommendedProviderSongs = (await LoadSpecialContainerItemsAsync(SpecialContainerType.RecommendedSongs, "rcsg"))
                     .OfType<SingleSongBase>()
                     .ToList();
                 RecommendedSongItems = (await Task.WhenAll(_recommendedProviderSongs.Select((song, index) => SongListItemViewModel.FromProviderSongAsync(song, index)))).ToList();
@@ -92,6 +91,45 @@ namespace HyPlayer.Features.Home
 
             _loadedUserId = userId;
             _hasLoaded = true;
+        }
+
+        private async Task<List<HomeContainerCardViewModel>> LoadSpecialContainerCardsAsync(SpecialContainerType type, string actualId)
+        {
+            var items = await LoadSpecialContainerItemsAsync(type, actualId);
+            var containers = items.OfType<ContainerBase>().ToList();
+            var cards = await Task.WhenAll(containers.Select(CreateContainerCardAsync));
+            return cards.ToList();
+        }
+
+        private async Task<List<ProvidableItemBase>> LoadSpecialContainerItemsAsync(SpecialContainerType type, string actualId)
+        {
+            if (!_specialContainerTypeIds.SpecialContainerTypeIds.TryGetValue(type, out var typeId))
+                return [];
+
+            return await _itemProvider.GetProvidableItemByIdAsync(typeId + actualId) is ContainerBase container
+                ? await LoadContainerItemsAsync(container)
+                : [];
+        }
+
+        private static async Task<HomeContainerCardViewModel> CreateContainerCardAsync(ContainerBase container)
+        {
+            var creators = container is IHasCreators creatorsProvider
+                ? await creatorsProvider.GetCreatorsAsync()
+                : null;
+            var cover = container is IHasCover coverProvider
+                ? await coverProvider.GetCoverAsync()
+                : null;
+            var coverUri = cover is IResourceResultOf<Uri?> uriResult ? await uriResult.GetResourceAsync() : null;
+
+            return new HomeContainerCardViewModel
+            {
+                Container = container,
+                Name = container.Name,
+                ActualId = container.ActualId,
+                CoverUrl = coverUri?.ToString() ?? string.Empty,
+                CreatorName = creators?.FirstOrDefault()?.Name ?? string.Empty,
+                Description = container is IHasDescription descriptionProvider ? descriptionProvider.Description ?? string.Empty : string.Empty
+            };
         }
 
         private static async Task<List<ProvidableItemBase>> LoadContainerItemsAsync(ContainerBase container)
@@ -131,5 +169,15 @@ namespace HyPlayer.Features.Home
             await _playCore.InsertSongRangeAsync(_recommendedProviderSongs);
             await _control.MoveNextAndPlayAsync(userInitiated: true);
         }
+    }
+
+    public sealed partial class HomeContainerCardViewModel
+    {
+        public required ContainerBase Container { get; init; }
+        public string? ActualId { get; init; }
+        public string? Name { get; init; }
+        public string CoverUrl { get; init; } = string.Empty;
+        public string CreatorName { get; init; } = string.Empty;
+        public string Description { get; init; } = string.Empty;
     }
 }

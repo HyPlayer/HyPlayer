@@ -2,7 +2,11 @@
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Navigation;
-using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.Services.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -24,6 +28,9 @@ public partial class NavigationShellViewModel : ObservableObject
 {
     private readonly IAuthService _auth;
     private readonly INotificationService _notification;
+    private readonly IUserLibraryNavigationProvidable _userLibraryNavigationProvider;
+    private readonly IUserLibraryTypeIds _userLibraryTypeIds;
+    private readonly IProviderKnownTypeIds _knownTypeIds;
     private Task? _loadPlaylistsTask;
 
     public ObservableCollection<NavigationNode> MenuItems { get; } = [];
@@ -49,18 +56,21 @@ public partial class NavigationShellViewModel : ObservableObject
     [ObservableProperty]
     public partial Visibility AccountSignOutVisibility { get; set; } = Visibility.Collapsed;
 
-    // 跟踪需要动态更新的节点
-    private NavigationNode? _createdContainer;
-    private NavigationNode? _subscribedContainer;
-    private NavigationNode? _likedSongsNode;
+    private readonly List<NavigationNode> _providerLibraryNodes = [];
 
     public NavigationShellViewModel(
         IAuthService auth,
         INotificationService notification,
+        IUserLibraryNavigationProvidable userLibraryNavigationProvider,
+        IUserLibraryTypeIds userLibraryTypeIds,
+        IProviderKnownTypeIds knownTypeIds,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
         _auth = auth;
         _notification = notification;
+        _userLibraryNavigationProvider = userLibraryNavigationProvider;
+        _userLibraryTypeIds = userLibraryTypeIds;
+        _knownTypeIds = knownTypeIds;
 
         BuildMenuItems();
         UpdateAccountStatus();
@@ -82,18 +92,8 @@ public partial class NavigationShellViewModel : ObservableObject
         MenuItems.Add(new NavigationNode { Title = "我的收藏", Icon = new FontIcon { Glyph = "\uE728" }, Route = new AppRoute.Favorite() });
         MenuItems.Add(new NavigationNode { Title = "我的云盘", Icon = new FontIcon { Glyph = "\uE753" }, Route = new AppRoute.MusicCloud() });
         MenuItems.Add(new NavigationNode { IsSeparator = true });
-        MenuItems.Add(new NavigationNode { Title = "歌单", IsHeader = true });
+        MenuItems.Add(new NavigationNode { Title = "资料库", IsHeader = true });
         MenuItems.Add(new NavigationNode { Title = "创建歌单", Icon = new SymbolIcon { Symbol = Symbol.Add }, Action = AppNavigationAction.CreatePlaylist, SelectsOnInvoked = false });
-
-        _likedSongsNode = new NavigationNode { Title = "我喜欢的音乐", Icon = new FontIcon { Glyph = "\uE006" }, Route = new AppRoute.LikedSongs(), IsVisible = false };
-        MenuItems.Add(_likedSongsNode);
-
-        _createdContainer = new NavigationNode { Title = "我创建的歌单", Icon = new SymbolIcon { Symbol = Symbol.List }, IsVisible = false };
-        MenuItems.Add(_createdContainer);
-
-        _subscribedContainer = new NavigationNode { Title = "我收藏的歌单", Icon = new SymbolIcon { Symbol = Symbol.List }, IsVisible = false };
-        MenuItems.Add(_subscribedContainer);
-
     }
 
     /// <summary>根据导航后的页面类型和参数找到对应的 NavigationNode</summary>
@@ -126,7 +126,7 @@ public partial class NavigationShellViewModel : ObservableObject
     {
         if (_auth.CurrentUser is null) return;
 
-        UpdateAccountStatus();
+        _ = UpdateAccountStatusAsync();
     }
 
     public Task RefreshPlaylistsAsync()
@@ -136,30 +136,25 @@ public partial class NavigationShellViewModel : ObservableObject
 
     public void UpdateAfterLogout()
     {
-        _createdContainer?.Children.Clear();
-        _subscribedContainer?.Children.Clear();
-
-        if (_createdContainer is not null)
-            _createdContainer.IsVisible = false;
-        if (_subscribedContainer is not null)
-            _subscribedContainer.IsVisible = false;
-        if (_likedSongsNode is not null)
-            _likedSongsNode.IsVisible = false;
+        ClearProviderLibraryNodes();
 
         IsLoading = false;
-        UpdateAccountStatus();
+        _ = UpdateAccountStatusAsync();
     }
 
     public void UpdateAccountStatus()
     {
+        _ = UpdateAccountStatusAsync();
+    }
+
+    private async Task UpdateAccountStatusAsync()
+    {
         if (_auth.IsLoggedIn && _auth.CurrentUser is { } user)
         {
-            AccountAvatarSource = string.IsNullOrEmpty(user.AvatarUrl)
-                ? null
-                : new BitmapImage(new Uri(user.AvatarUrl + "?param=" + StaticSource.PICSIZE_NAVITEM_USERAVATAR));
+            AccountAvatarSource = await TryCreateAvatarSourceAsync(user);
             AccountInitials = GetUserInitials(user.Name);
             AccountName = string.IsNullOrEmpty(user.Name) ? "已登录" : user.Name;
-            AccountSubtitle = string.IsNullOrEmpty(user.Description) ? "查看个人主页" : user.Description;
+            AccountSubtitle = user is IHasDescription { Description: { Length: > 0 } description } ? description : "查看个人主页";
             AccountProfileButtonText = "个人资料";
             AccountSignOutVisibility = Visibility.Visible;
             return;
@@ -171,6 +166,22 @@ public partial class NavigationShellViewModel : ObservableObject
         AccountSubtitle = "登录以同步歌单与收藏";
         AccountProfileButtonText = "登录";
         AccountSignOutVisibility = Visibility.Collapsed;
+    }
+
+    private static async Task<ImageSource?> TryCreateAvatarSourceAsync(ProvidableItemBase user)
+    {
+        if (user is not IHasCover coverProvider)
+            return null;
+
+        var result = await coverProvider.GetCoverAsync();
+        if (result is not IResourceResultOf<Uri?> typedResult || result.ResourceStatus != ResourceStatus.Success)
+            return null;
+
+        var uri = await typedResult.GetResourceAsync();
+        if (uri is null)
+            return null;
+
+        return new BitmapImage(uri);
     }
 
     private static string GetUserInitials(string? name)
@@ -197,74 +208,15 @@ public partial class NavigationShellViewModel : ObservableObject
         try
         {
             var containers = await _auth.CurrentUser.GetSubContainerAsync();
+            var groups = await _userLibraryNavigationProvider.GetCurrentUserLibraryNavigationGroupsAsync();
+            if (groups.Count == 0)
+                groups = await BuildFallbackLibraryNavigationGroupsAsync(containers);
 
-            _createdContainer?.Children.Clear();
-            _subscribedContainer?.Children.Clear();
+            ClearProviderLibraryNodes();
             _auth.MySongLists.Clear();
 
-            var playlistContainers = containers.OfType<NeteaseUserPlaylistSubContainer>().ToList();
-            var createdPlaylists = playlistContainers
-                .Where(container => container.Name.Contains("创建", StringComparison.Ordinal))
-                .SelectMany(container => container.Playlists)
-                .ToList();
-            var subscribedPlaylists = playlistContainers
-                .Where(container => container.Name.Contains("收藏", StringComparison.Ordinal))
-                .SelectMany(container => container.Playlists)
-                .ToList();
-
-            // 兼容旧 Provider 直接返回歌单的形态。
-            if (createdPlaylists.Count == 0 && subscribedPlaylists.Count == 0)
-            {
-                createdPlaylists = containers.OfType<NeteasePlaylist>().Where(playlist => !playlist.Subscribed).ToList();
-                subscribedPlaylists = containers.OfType<NeteasePlaylist>().Where(playlist => playlist.Subscribed).ToList();
-            }
-
-            var playlists = createdPlaylists.Concat(subscribedPlaylists).ToList();
-
-            if (playlists.Count == 0)
-            {
-                if (_likedSongsNode is not null)
-                    _likedSongsNode.IsVisible = false;
-                return;
-            }
-
-            // 第一个歌单是"我喜欢的音乐"
-            if (createdPlaylists.Count > 0)
-                _auth.MySongLists.Add(createdPlaylists[0]);
-
-            foreach (var pl in createdPlaylists.Skip(1))
-            {
-                if (string.IsNullOrEmpty(pl.ActualId) || string.IsNullOrEmpty(pl.Name))
-                    continue;
-
-                _auth.MySongLists.Add(pl);
-                _createdContainer?.Children.Add(new NavigationNode
-                {
-                    Title = pl.Name,
-                    Route = new AppRoute.Playlist(pl.ActualId),
-                    Icon = new FontIcon { Glyph = "\uE142" }
-                });
-            }
-
-            foreach (var pl in subscribedPlaylists)
-            {
-                if (string.IsNullOrEmpty(pl.ActualId) || string.IsNullOrEmpty(pl.Name))
-                    continue;
-
-                _subscribedContainer?.Children.Add(new NavigationNode
-                {
-                    Title = pl.Name,
-                    Route = new AppRoute.Playlist(pl.ActualId),
-                    Icon = new FontIcon { Glyph = "\uE142" }
-                });
-            }
-
-            if (_createdContainer is not null)
-                _createdContainer.IsVisible = _createdContainer.Children.Count > 0;
-            if (_subscribedContainer is not null)
-                _subscribedContainer.IsVisible = _subscribedContainer.Children.Count > 0;
-            if (_likedSongsNode is not null)
-                _likedSongsNode.IsVisible = playlists.Count > 0;
+            AddOwnedPlaylistCache(groups);
+            RenderProviderLibraryGroups(groups);
         }
         catch (Exception ex)
         {
@@ -274,5 +226,156 @@ public partial class NavigationShellViewModel : ObservableObject
         {
             IsLoading = false;
         }
+    }
+
+    private void ClearProviderLibraryNodes()
+    {
+        foreach (var node in _providerLibraryNodes)
+            MenuItems.Remove(node);
+
+        _providerLibraryNodes.Clear();
+    }
+
+    private void RenderProviderLibraryGroups(IReadOnlyList<ProviderLibraryNavigationGroup> groups)
+    {
+        foreach (var group in groups.OrderBy(group => group.DisplayOrder))
+        {
+            if (group.IsPinned)
+            {
+                foreach (var item in group.Items)
+                {
+                    var node = CreateProviderLibraryItemNode(
+                        item,
+                        group.Id == _userLibraryTypeIds.LikedSongsTypeId);
+                    if (node is not null)
+                        AddProviderLibraryNode(node);
+                }
+
+                continue;
+            }
+
+            var groupNode = new NavigationNode
+            {
+                Title = group.Title,
+                Icon = new SymbolIcon { Symbol = Symbol.List }
+            };
+
+            foreach (var item in group.Items)
+            {
+                var itemNode = CreateProviderLibraryItemNode(item, false);
+                if (itemNode is not null)
+                    groupNode.Children.Add(itemNode);
+            }
+
+            if (groupNode.Children.Count > 0)
+                AddProviderLibraryNode(groupNode);
+        }
+    }
+
+    private void AddProviderLibraryNode(NavigationNode node)
+    {
+        _providerLibraryNodes.Add(node);
+        MenuItems.Add(node);
+    }
+
+    private NavigationNode? CreateProviderLibraryItemNode(ContainerBase item, bool isLikedSongs)
+    {
+        if (string.IsNullOrEmpty(item.ActualId) || string.IsNullOrEmpty(item.Name))
+            return null;
+
+        var route = isLikedSongs ? (AppRoute)new AppRoute.LikedSongs() : TryCreateContainerRoute(item);
+        if (route is null)
+            return null;
+
+        return new NavigationNode
+        {
+            Title = isLikedSongs ? "我喜欢的音乐" : item.Name,
+            Route = route,
+            Icon = new FontIcon { Glyph = isLikedSongs ? "\uE006" : "\uE142" }
+        };
+    }
+
+    private AppRoute? TryCreateContainerRoute(ContainerBase item)
+    {
+        if (item.TypeId == _knownTypeIds.PlaylistTypeId)
+            return new AppRoute.Playlist(item.ActualId);
+        if (item.TypeId == _knownTypeIds.AlbumTypeId)
+            return new AppRoute.Album(item.ActualId);
+        if (item.TypeId == _knownTypeIds.ArtistTypeId)
+            return new AppRoute.Artist(item.ActualId);
+        if (_knownTypeIds.RadioChannelTypeId is not null && item.TypeId == _knownTypeIds.RadioChannelTypeId)
+            return new AppRoute.Radio(item.ActualId);
+
+        return null;
+    }
+
+    private void AddOwnedPlaylistCache(IReadOnlyList<ProviderLibraryNavigationGroup> groups)
+    {
+        var added = new HashSet<string>();
+        foreach (var group in groups.OrderBy(group => group.DisplayOrder))
+        {
+            foreach (var item in group.Items)
+            {
+                if (item.TypeId != _knownTypeIds.PlaylistTypeId ||
+                    string.IsNullOrEmpty(item.ActualId) ||
+                    !added.Add(item.ActualId))
+                    continue;
+
+                if (group.Id == _userLibraryTypeIds.LikedSongsTypeId ||
+                    item is not IHasLibraryState libraryState ||
+                    libraryState.IsOwnedByCurrentUser)
+                {
+                    _auth.MySongLists.Add(item);
+                }
+            }
+        }
+    }
+
+    private async Task<IReadOnlyList<ProviderLibraryNavigationGroup>> BuildFallbackLibraryNavigationGroupsAsync(
+        IReadOnlyList<ContainerBase> containers)
+    {
+        var items = new List<ContainerBase>();
+        foreach (var container in containers)
+        {
+            if (TryCreateContainerRoute(container) is not null)
+            {
+                items.Add(container);
+                continue;
+            }
+
+            if (container is LinerContainerBase liner)
+            {
+                var children = await liner.GetAllItemsAsync();
+                items.AddRange(children.OfType<ContainerBase>().Where(item => TryCreateContainerRoute(item) is not null));
+            }
+        }
+
+        var owned = items
+            .Where(item => item is not IHasLibraryState libraryState || libraryState.IsOwnedByCurrentUser)
+            .ToList();
+        var subscribed = items
+            .Where(item => item is IHasLibraryState { IsInCurrentUserLibrary: true })
+            .ToList();
+        var groups = new List<ProviderLibraryNavigationGroup>();
+
+        if (owned.Count > 0)
+            groups.Add(new ProviderLibraryNavigationGroup
+            {
+                Id = "owned",
+                Title = "我创建的内容",
+                Items = owned,
+                DisplayOrder = 10
+            });
+
+        if (subscribed.Count > 0)
+            groups.Add(new ProviderLibraryNavigationGroup
+            {
+                Id = "subscribed",
+                Title = "我收藏的内容",
+                Items = subscribed,
+                DisplayOrder = 20
+            });
+
+        return groups;
     }
 }

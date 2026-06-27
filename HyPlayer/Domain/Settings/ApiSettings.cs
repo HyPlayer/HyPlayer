@@ -1,6 +1,3 @@
-using HyPlayer.Infrastructure.Serialization;
-using HyPlayer.NeteaseApi;
-using System.Text.Json;
 using Windows.Storage;
 
 namespace HyPlayer.Domain.Settings
@@ -25,10 +22,10 @@ namespace HyPlayer.Domain.Settings
         /// <summary>
         /// Additional API parameters.
         /// </summary>
-        public AdditionalParameters ApiAdditionalParameters
+        public string ApiAdditionalParametersJson
         {
-            get => JsonSerializer.Deserialize<AdditionalParameters>(GetSettings(nameof(ApiAdditionalParameters), "{}"), JsonDefaults.Options) ?? new AdditionalParameters();
-            set => ApplicationData.Current.LocalSettings.Values[nameof(ApiAdditionalParameters)] = JsonSerializer.Serialize(value, JsonDefaults.Options);
+            get => GetSettings("ApiAdditionalParameters", "{}");
+            set => ApplicationData.Current.LocalSettings.Values["ApiAdditionalParameters"] = string.IsNullOrWhiteSpace(value) ? "{}" : value;
         }
 
         /// <summary>

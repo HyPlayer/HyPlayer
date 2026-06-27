@@ -1,5 +1,6 @@
 using HyPlayer.Domain.Settings;
-using HyPlayer.NeteaseProvider.Constants;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using Microsoft.Toolkit.Uwp.Helpers;
@@ -171,7 +172,8 @@ namespace HyPlayer.Services.Tiles
 
         public async Task<TileBackgroundImage?> GetTileBackgroundAsync(SingleSongBase item, IRandomAccessStream stream)
         {
-            if (item.ProviderId != "ncm" || item.TypeId != NeteaseTypeIds.SingleSong || !_setting.EnableTileBackground || stream == null) return null;
+            var singleSongTypeId = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>().SingleSongTypeId;
+            if (item.TypeId != singleSongTypeId || !_setting.EnableTileBackground || stream == null) return null;
 
             using var coverStream = stream.CloneStream();
             StorageFolder storageFolder =

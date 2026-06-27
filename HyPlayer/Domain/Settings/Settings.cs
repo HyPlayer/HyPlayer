@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.NeteaseApi;
 using LiteFM.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -100,7 +99,7 @@ namespace HyPlayer.Domain.Settings
         // --- ApiSettings delegates ---
 
         public bool EnableProxy { get => Api.EnableProxy; set { Api.EnableProxy = value; OnPropertyChanged(); } }
-        public AdditionalParameters ApiAdditionalParameters { get => Api.ApiAdditionalParameters; set { Api.ApiAdditionalParameters = value; OnPropertyChanged(); } }
+        public string ApiAdditionalParametersJson { get => Api.ApiAdditionalParametersJson; set { Api.ApiAdditionalParametersJson = value; OnPropertyChanged(); } }
         public bool UseHttp { get => Api.UseHttp; set { Api.UseHttp = value; OnPropertyChanged(); } }
         public bool EnableCheckTokenApi { get => Api.EnableCheckTokenApi; set { Api.EnableCheckTokenApi = value; OnPropertyChanged(); } }
         public bool enableApiCache { get => Api.enableApiCache; set { Api.enableApiCache = value; OnPropertyChanged(); } }
@@ -295,38 +294,40 @@ namespace HyPlayer.Domain.Settings
         // Static methods
         // ===================================================================
 
-        public static bool SaveCookies()
+        public static bool SaveCookies(IReadOnlyDictionary<string, string> sessionValues)
         {
             var container = ApplicationData.Current.LocalSettings.CreateContainer("LoginedUser", ApplicationDataCreateDisposition.Always);
             container.Values.Clear();
-            foreach (var item in Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>().GetRuntimeCookiesSnapshot())
+            foreach (var item in sessionValues)
             {
                 container.Values[item.Key] = item.Value;
             }
             return true;
         }
 
-        public static bool LoadCookies()
+        public static IReadOnlyDictionary<string, string> LoadCookies()
         {
             if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("LoginedUser", out var container))
             {
                 if (container.Values.Count == 0)
                 {
-                    return false;
+                    return new Dictionary<string, string>();
                 }
                 else
                 {
+                    var values = new Dictionary<string, string>();
                     foreach (var item in container.Values)
                     {
-                        Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>().SetRuntimeCookie(item.Key, (string)item.Value);
+                        if (item.Value is string value)
+                            values[item.Key] = value;
                     }
 
-                    return true;
+                    return values;
                 }
             }
             else
             {
-                return false;
+                return new Dictionary<string, string>();
             }
         }
 

@@ -7,6 +7,7 @@ using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.History;
 using HyPlayer.Services.Updates;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Shell;
 using Kawazu;
 using LiteFM;
@@ -48,7 +49,7 @@ namespace HyPlayer.Features.Settings;
 public sealed partial class Settings : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
+    private readonly IProviderNetworkConfigurationProvidable _providerNetworkConfiguration = Ioc.Default.GetRequiredService<IProviderNetworkConfigurationProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
@@ -219,7 +220,7 @@ public sealed partial class Settings : Page
     {
         var xRealIp = string.IsNullOrEmpty(TextBoxXREALIP.Text) ? null : TextBoxXREALIP.Text;
         ApplicationData.Current.LocalSettings.Values["xRealIp"] = xRealIp;
-        _neteaseProvider.ConfigureXRealIP(xRealIp);
+        _providerNetworkConfiguration.ConfigureClientNetwork(xRealIp, Setting.GetSettings("UseHttp", false));
     }
 
     private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)

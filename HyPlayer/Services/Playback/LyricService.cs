@@ -3,9 +3,9 @@ using ALRC.Converters.Enhancers;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Settings;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Lyric;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
@@ -62,7 +62,7 @@ public sealed class LyricService : ILyricService
     public async Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default)
     {
         var cacheId = providerItem.ActualId;
-        var canUseHyLyricInfoCache = providerItem is NeteaseSong && !string.IsNullOrWhiteSpace(cacheId);
+        var canUseHyLyricInfoCache = !string.IsNullOrWhiteSpace(cacheId);
         if (canUseHyLyricInfoCache)
         {
             var cached = await SimpleCacher.GetOrCreateCacheAsync(
@@ -81,9 +81,8 @@ public sealed class LyricService : ILyricService
 
         var pureLyricInfo = providerItem switch
         {
-            NeteaseSong => await LoadNcLyricAsync(providerItem, ct),
             LocalSong localSong => await LoadLocalLyricAsync(localSong),
-            _ => new PureLyricInfo()
+            _ => await LoadProviderLyricAsync(providerItem, ct)
         };
         var lyricInfo = await ConvertPureLyricInfoAsync(pureLyricInfo, GetArtistText(providerItem));
 
@@ -101,8 +100,7 @@ public sealed class LyricService : ILyricService
                 "cache provider lyric info");
         }
 
-        if (providerItem is NeteaseSong)
-            await TryLoadAmllTtmlAsync(providerItem, lyricInfo, ct);
+        await TryLoadAmllTtmlAsync(providerItem, lyricInfo, ct);
     }
 
     /// <inheritdoc />
@@ -154,11 +152,11 @@ public sealed class LyricService : ILyricService
 
     #region Private helpers
 
-    private async Task<PureLyricInfo> LoadNcLyricAsync(SingleSongBase providerItem, CancellationToken ct)
+    private async Task<PureLyricInfo> LoadProviderLyricAsync(SingleSongBase providerItem, CancellationToken ct)
     {
         try
         {
-            if (providerItem is not NeteaseSong || string.IsNullOrWhiteSpace(providerItem.ActualId))
+            if (string.IsNullOrWhiteSpace(providerItem.ActualId))
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
 
             var lyricResult = await _lyricProvider.GetLyricInfoAsync(providerItem, ct);
@@ -169,7 +167,7 @@ public sealed class LyricService : ILyricService
             if (lyricResult.Count == 0)
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
 
-            return ConvertProviderLyrics(lyricResult);
+            return await ConvertProviderLyricsAsync(lyricResult, ct);
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception ex)
@@ -233,7 +231,7 @@ public sealed class LyricService : ILyricService
             : string.Empty;
     }
 
-    private static PureLyricInfo ConvertProviderLyrics(System.Collections.Generic.IEnumerable<RawLyricInfo> lyrics)
+    private static async Task<PureLyricInfo> ConvertProviderLyricsAsync(System.Collections.Generic.IEnumerable<RawLyricInfo> lyrics, CancellationToken ct)
     {
         static string CleanLyric(string? text) =>
             string.IsNullOrWhiteSpace(text)
@@ -245,16 +243,28 @@ public sealed class LyricService : ILyricService
                         .Where(line => !string.IsNullOrWhiteSpace(line))
                         .Where(line => !line.TrimStart().StartsWith('{')));
 
-        static NeteaseRawLyricInfo? FirstNonEmpty(
-            System.Collections.Generic.IEnumerable<NeteaseRawLyricInfo> items,
+        static ProviderLyricText? FirstNonEmpty(
+            System.Collections.Generic.IEnumerable<ProviderLyricText> items,
             LyricType type) =>
-            items.FirstOrDefault(lyric => lyric.LyricType == type && !string.IsNullOrWhiteSpace(lyric.LyricText));
+            items.FirstOrDefault(lyric => lyric.Info.LyricType == type && !string.IsNullOrWhiteSpace(lyric.Text));
 
-        var providerLyrics = lyrics.OfType<NeteaseRawLyricInfo>()
-            .Where(lyric => !string.IsNullOrWhiteSpace(lyric.LyricText))
+        var providerLyrics = new System.Collections.Generic.List<ProviderLyricText>();
+        foreach (var lyric in lyrics)
+        {
+            var resource = await lyric.GetResourceAsync(ctk: ct);
+            var text = resource is IResourceResultOf<string> textResource
+                ? await textResource.GetResourceAsync(ct)
+                : null;
+
+            if (!string.IsNullOrWhiteSpace(text))
+                providerLyrics.Add(new ProviderLyricText(lyric, text));
+        }
+
+        providerLyrics = providerLyrics
+            .Where(lyric => !string.IsNullOrWhiteSpace(lyric.Text))
             .ToList();
-        var wordLyrics = providerLyrics.Where(lyric => lyric.IsWord).ToList();
-        var normalLyrics = providerLyrics.Where(lyric => !lyric.IsWord).ToList();
+        var wordLyrics = providerLyrics.Where(lyric => lyric.Info.Source?.Contains("yrc", StringComparison.OrdinalIgnoreCase) is true).ToList();
+        var normalLyrics = providerLyrics.Where(lyric => lyric.Info.Source?.Contains("yrc", StringComparison.OrdinalIgnoreCase) is not true).ToList();
 
         var original = FirstNonEmpty(normalLyrics, LyricType.Original);
         var translation = FirstNonEmpty(normalLyrics, LyricType.Translation);
@@ -266,36 +276,36 @@ public sealed class LyricService : ILyricService
         PureLyricInfo result = wordOriginal is null
             ? new PureLyricInfo
             {
-                PureLyrics = CleanLyric(original?.LyricText),
-                TrLyrics = CleanLyric(translation?.LyricText),
-                NeteaseRomaji = CleanLyric(romaji?.LyricText),
+                PureLyrics = CleanLyric(original?.Text),
+                TrLyrics = CleanLyric(translation?.Text),
+                NeteaseRomaji = CleanLyric(romaji?.Text),
             }
             : new KaraokLyricInfo
             {
-                PureLyrics = CleanLyric(original?.LyricText),
-                TrLyrics = CleanLyric(translation?.LyricText),
-                NeteaseRomaji = CleanLyric(romaji?.LyricText),
-                KaraokLyric = CleanLyric(wordOriginal.LyricText),
-                YrTrLyrics = CleanLyric(wordTranslation?.LyricText),
-                YrNeteaseRomaji = CleanLyric(wordRomaji?.LyricText),
+                PureLyrics = CleanLyric(original?.Text),
+                TrLyrics = CleanLyric(translation?.Text),
+                NeteaseRomaji = CleanLyric(romaji?.Text),
+                KaraokLyric = CleanLyric(wordOriginal.Text),
+                YrTrLyrics = CleanLyric(wordTranslation?.Text),
+                YrNeteaseRomaji = CleanLyric(wordRomaji?.Text),
             };
 
-        AddLyricMetadata(result, original, "lyric_user", "歌词贡献者");
-        AddLyricMetadata(result, translation, "translation_user", "翻译贡献者");
+        AddLyricMetadata(result, original?.Info.Source, "source", "歌词来源");
         return result;
     }
 
-    private static void AddLyricMetadata(PureLyricInfo result, NeteaseRawLyricInfo? lyric, string key, string displayName)
+    private static void AddLyricMetadata(PureLyricInfo result, string? value, string key, string displayName)
     {
-        if (lyric?.Author?.ActualId is null) return;
+        if (string.IsNullOrWhiteSpace(value)) return;
         result.LyricMetadata.Add(new LyricInfoMetadata
         {
             Key = key,
-            Value = lyric.Author.Name,
-            ActionUri = $"hyplayer://us{lyric.Author.ActualId}",
+            Value = value,
             DisplayName = displayName
         });
     }
+
+    private sealed record ProviderLyricText(RawLyricInfo Info, string Text);
 
     private static async Task<PureLyricInfo> LoadLocalLyricAsync(LocalSong item)
     {
@@ -322,7 +332,7 @@ public sealed class LyricService : ILyricService
     {
         try
         {
-            if (!_setting.enableAmllTtmlDb || item is not NeteaseSong || string.IsNullOrWhiteSpace(item.ActualId)) return;
+            if (!_setting.enableAmllTtmlDb || string.IsNullOrWhiteSpace(item.ActualId)) return;
 
             using var message = new HttpRequestMessage(HttpMethod.Get, _setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", item.ActualId));
             message.Headers.Add("User-Agent", "HyPlayer LyricsClient");

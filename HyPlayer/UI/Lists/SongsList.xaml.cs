@@ -10,7 +10,6 @@ using HyPlayer.Features.Comments;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -48,11 +47,12 @@ public sealed partial class SongsList : UserControl
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly ISongListQueueBuilder _songListQueueBuilder = Ioc.Default.GetRequiredService<ISongListQueueBuilder>();
+    private readonly IContainerItemManagementProvidable _containerItemManagement = Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
+    private readonly IUserLibraryTypeIds _userLibraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
     private readonly WeakEventListener<SongsList, object?, PropertyChangedEventArgs> _stateChangedListener;
 
     public static readonly DependencyProperty MultiSelectProperty =
@@ -405,20 +405,13 @@ public sealed partial class SongsList : UserControl
         if (!IsCloudStorageList)
         {
             if (QueueScope is not { Kind: SongListQueueScopeKind.Playlist, Id: not null }) return;
-            var playlist = new NeteasePlaylist { ActualId = QueueScope.Id, Name = string.Empty };
             foreach (var id in ids)
-                await playlist.RemoveSongAsync(id);
+                await _containerItemManagement.RemoveItemFromContainerAsync(QueueScope.Id, id);
         }
         else
         {
-            var cloudContainer = new NeteaseUserLibrarySubContainer
-            {
-                ActualId = "cloud",
-                Name = "音乐云盘",
-                Kind = NeteaseUserLibrarySubContainer.CloudKind
-            };
             foreach (var id in ids)
-                await cloudContainer.DeleteCloudItemAsync(id);
+                await _containerItemManagement.RemoveItemFromContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId, id);
 
         }
         if (SongContainer.SelectedItem is SongListItemViewModel row)

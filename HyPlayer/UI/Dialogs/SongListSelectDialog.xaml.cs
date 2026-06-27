@@ -1,8 +1,8 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.Services.Abstractions;
 using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
@@ -14,13 +14,17 @@ namespace HyPlayer.UI.Dialogs;
 public sealed partial class SongListSelect : ContentDialog
 {
     private readonly string SongId;
-    private readonly IReadOnlyList<NeteasePlaylist> _songLists;
+    private readonly IReadOnlyList<ContainerBase> _songLists;
+    private readonly IProvableItemLikable _likableProvider;
+    private readonly IProviderKnownTypeIds _knownTypeIds;
 
     public SongListSelect(string songid)
     {
         InitializeComponent();
         SongId = songid;
         _songLists = Ioc.Default.GetRequiredService<IAuthService>().MySongLists;
+        _likableProvider = Ioc.Default.GetRequiredService<IProvableItemLikable>();
+        _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
         ListViewSongList.Items?.Clear();
         foreach (var songList in _songLists)
         {
@@ -34,11 +38,10 @@ public sealed partial class SongListSelect : ContentDialog
             return;
 
         var selectedSongList = _songLists[ListViewSongList.SelectedIndex];
-        await new NeteasePlaylist
-        {
-            ActualId = selectedSongList.ActualId,
-            Name = string.Empty
-        }.AddSongAsync(SongId);
+        var itemId = SongId.StartsWith(_knownTypeIds.SingleSongTypeId)
+            ? SongId
+            : _knownTypeIds.SingleSongTypeId + SongId;
+        await _likableProvider.LikeProvidableItemAsync(itemId, selectedSongList.ActualId);
         Hide();
     }
 }

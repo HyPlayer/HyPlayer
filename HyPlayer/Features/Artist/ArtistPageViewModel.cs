@@ -5,8 +5,8 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
-using HyPlayer.NeteaseProvider.Constants;
-using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -25,19 +26,22 @@ namespace HyPlayer.Features.Artist
 {
     public partial class ArtistPageViewModel : ObservableRecipient
     {
-        private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
+        private readonly IProvidableItemProvidable _itemProvider;
+        private readonly IProviderKnownTypeIds _knownTypeIds;
         private readonly Setting _setting;
         private readonly INotificationService _notification;
-        private NeteaseArtist _providerArtist;
+        private PersonBase _providerArtist;
         private Task<List<ContainerBase>> _artistSubContainersTask;
         private string _loadedArtistId = string.Empty;
 
         public ArtistPageViewModel(
-            global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
+            IProvidableItemProvidable itemProvider,
+            IProviderKnownTypeIds knownTypeIds,
             Setting setting,
             INotificationService notification)
         {
-            _neteaseProvider = neteaseProvider;
+            _itemProvider = itemProvider;
+            _knownTypeIds = knownTypeIds;
             _setting = setting;
             _notification = notification;
         }
@@ -46,7 +50,7 @@ namespace HyPlayer.Features.Artist
         public ObservableCollection<SongListItemViewModel> HotSongs { get; set; } = [];
         public ObservableCollection<SimpleListItem> Albums { get; set; } = [];
         [ObservableProperty]
-        public partial NeteaseArtist Artist { get; set; }
+        public partial PersonBase Artist { get; set; }
         [ObservableProperty]
         public partial int CurrentPage { get; set; } = 0;
         [ObservableProperty]
@@ -101,7 +105,7 @@ namespace HyPlayer.Features.Artist
             var songs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, Artist.ActualId, async () =>
             {
                 var container = await GetArtistSubContainerAsync("hot");
-                return await LoadProgressiveItemsAsync(container, 0, 50);
+                return container is null ? [] : await LoadProgressiveItemsAsync(container, 0, 50);
             });
             var idx = 0;
             if (songs is null)
@@ -122,7 +126,9 @@ namespace HyPlayer.Features.Artist
                     async () =>
                     {
                         var container = await GetArtistSubContainerAsync("tim");
-                        return await LoadProgressivePageAsync<SingleSongBase>(container, CurrentPage * 50, 50);
+                        return container is null
+                            ? new ProgressivePage<SingleSongBase>()
+                            : await LoadProgressivePageAsync<SingleSongBase>(container, CurrentPage * 50, 50);
                     });
             var idx = 0;
             foreach (var item in page?.Items ?? [])
@@ -141,13 +147,15 @@ namespace HyPlayer.Features.Artist
                     async () =>
                     {
                         var container = await GetArtistSubContainerAsync("alb");
-                        return await LoadProgressivePageAsync<NeteaseAlbum>(container, CurrentPage * 50, 50);
+                        return container is null
+                            ? new ProgressivePage<AlbumBase>()
+                            : await LoadProgressivePageAsync<AlbumBase>(container, CurrentPage * 50, 50);
                     });
 
                 var i = 0;
                 foreach (var album in page?.Items ?? [])
                 {
-                    Albums.Add(MapToSimpleListItem(album, CurrentPage * 50 + i++));
+                    Albums.Add(await MapToSimpleListItemAsync(album, CurrentPage * 50 + i++));
                 }
                 HasNextPage = page?.HasMore ?? false;
                 HasPreviousPage = CurrentPage > 0;
@@ -184,11 +192,11 @@ namespace HyPlayer.Features.Artist
                 LoadAlbum().SafeFireAndForget();
         }
 
-        private async Task<NeteaseArtist> GetProviderArtistAsync(string artistId)
+        private async Task<PersonBase> GetProviderArtistAsync(string artistId)
         {
             try
             {
-                if (await _neteaseProvider.GetProvidableItemByIdAsync(NeteaseTypeIds.Artist + artistId) is NeteaseArtist artist)
+                if (await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.ArtistTypeId + artistId) is PersonBase artist)
                 {
                     return artist;
                 }
@@ -198,25 +206,20 @@ namespace HyPlayer.Features.Artist
                 // Current provider builds artist subcontainers from ActualId; fall back until artist lookup is implemented.
             }
 
-            return new NeteaseArtist
+            return new LocalArtist
             {
                 ActualId = artistId,
                 Name = artistId
             };
         }
 
-        private async Task<IProgressiveLoadingContainer> GetArtistSubContainerAsync(string prefix)
+        private async Task<IProgressiveLoadingContainer?> GetArtistSubContainerAsync(string prefix)
         {
             var subContainers = _providerArtist is null
                 ? []
                 : await (_artistSubContainersTask ??= _providerArtist.GetSubContainerAsync());
-            return subContainers.OfType<NeteaseArtistSubContainer>()
-                       .FirstOrDefault(container => container.ActualId?.StartsWith(prefix) is true)
-                   ?? new NeteaseArtistSubContainer
-                   {
-                       ActualId = prefix + Artist.ActualId,
-                       Name = Artist.Name
-                   };
+            return subContainers.OfType<IProgressiveLoadingContainer>()
+                .FirstOrDefault(container => (container as ProvidableItemBase)?.ActualId?.StartsWith(prefix) is true);
         }
 
         private static async Task<List<ProvidableItemBase>> LoadProgressiveItemsAsync(IProgressiveLoadingContainer container, int start, int count)
@@ -235,22 +238,37 @@ namespace HyPlayer.Features.Artist
             };
         }
 
-        private static SimpleListItem MapToSimpleListItem(NeteaseAlbum album, int order)
+        private static async Task<SimpleListItem> MapToSimpleListItemAsync(AlbumBase album, int order)
         {
+            var creators = album is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync() : null;
+            var aliases = album is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
+            var cover = album is IHasCover coverProvider ? await coverProvider.GetCoverAsync() : null;
+            var coverUri = cover is IResourceResultOf<Uri?> uriResult ? await uriResult.GetResourceAsync() : null;
             return new SimpleListItem
             {
                 Title = album.Name,
-                LineOne = string.Join("/", album.CreatorList ?? album.Artists?.Select(t => t.Name) ?? []),
-                LineTwo = album.Alias != null
-                    ? string.Join(" / ", album.Alias)
+                LineOne = string.Join("/", creators?.Select(t => t.Name) ?? []),
+                LineTwo = aliases != null
+                    ? string.Join(" / ", aliases)
                     : "",
-                LineThree = album.AlbumType ?? "",
+                LineThree = "",
                 Route = new AppRoute.Album($"{album.ActualId}"),
                 PlayResource = new MusicResource.Album($"{album.ActualId}"),
-                CoverLink = album.PictureUrl,
+                CoverLink = coverUri?.ToString(),
                 Order = order,
                 CanPlay = true
             };
+        }
+
+        private sealed class LocalArtist : PersonBase
+        {
+            public override string ProviderId => string.Empty;
+            public override string TypeId => string.Empty;
+
+            public override Task<List<ContainerBase>> GetSubContainerAsync(CancellationToken ctk = default)
+            {
+                return Task.FromResult(new List<ContainerBase>());
+            }
         }
 
         private sealed class ProgressivePage<T> where T : ProvidableItemBase

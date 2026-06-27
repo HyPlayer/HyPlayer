@@ -1,38 +1,33 @@
-﻿using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using WinRT;
 
-//https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了"用户控件"项模板
+namespace HyPlayer.UI.Lists;
 
-namespace HyPlayer.UI.Lists
+public sealed partial class CommentsList : UserControl
 {
-    public sealed partial class CommentsList : UserControl
+    public CommentsList()
     {
-        public CommentsList()
-        {
-            this.InitializeComponent();
-        }
-        public static readonly DependencyProperty CommentsProperty = DependencyProperty.Register
-            (
-            "Comment", typeof(ObservableCollection<NeteaseComment>),
-            typeof(CommentsList),
-            new PropertyMetadata(null)
-        );
-        public ObservableCollection<NeteaseComment> Comments//列表下评论
-        {
-            get => (ObservableCollection<NeteaseComment>)GetValue(CommentsProperty);
-            set
-            {
-                SetValue(CommentsProperty, value);
-            }
-        }
-        public ScrollViewer CommentPresentScrollViewer
+        InitializeComponent();
+    }
 
-        {
-            get => (VisualTreeHelper.GetChild(CommentsContainer, 0)?.As<Border>()).Child?.As<ScrollViewer>();
-        }
+    public static readonly DependencyProperty CommentsProperty = DependencyProperty.Register(
+        "Comment",
+        typeof(ObservableCollection<CommentBase>),
+        typeof(CommentsList),
+        new PropertyMetadata(null));
+
+    public ObservableCollection<CommentBase> Comments
+    {
+        get => (ObservableCollection<CommentBase>)GetValue(CommentsProperty);
+        set => SetValue(CommentsProperty, value);
+    }
+
+    public ScrollViewer CommentPresentScrollViewer
+    {
+        get => (VisualTreeHelper.GetChild(CommentsContainer, 0)?.As<Border>()).Child?.As<ScrollViewer>();
     }
 }

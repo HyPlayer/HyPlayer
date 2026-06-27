@@ -12,6 +12,7 @@ using HyPlayer.Features.Search;
 using HyPlayer.Features.User;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
+using HyPlayer.Shell;
 using HyPlayer.Shell.ExpandedPlayer;
 using Microsoft.Graphics.Canvas.Effects;
 using System.ComponentModel;
@@ -51,9 +52,8 @@ public sealed partial class MainPage : Page
 
     public MainPage()
     {
-        var neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
-        neteaseProvider.ConfigureXRealIP(Setting.GetSettings<string>("xRealIp", null));
-        neteaseProvider.ConfigureDegradeHttp(Setting.GetSettings("UseHttp", false));
+        Ioc.Default.GetRequiredService<HyPlayer.PlayCore.Abstraction.Interfaces.Provider.IProviderNetworkConfigurationProvidable>()
+            .ConfigureClientNetwork(Setting.GetSettings<string>("xRealIp", null), Setting.GetSettings("UseHttp", false));
         if (_setting.uiSound)
         {
             ElementSoundPlayer.State = ElementSoundPlayerState.Off;
@@ -62,6 +62,7 @@ public sealed partial class MainPage : Page
 
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
+        MainFrame.Navigate(typeof(BasePage));
         AttachPlayBarAutoHideListener();
         AttachSurfaceStoreListener();
         UIElement PlayBarMarginRect = PlayBarMarginBackground?.As<UIElement>();

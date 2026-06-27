@@ -12,17 +12,19 @@ using System.Threading.Tasks;
 namespace HyPlayer.Services.Playback.QueueProviders;
 
 /// <summary>
-/// 电台源提供者 — 加载网易云电台/播客全部节目。
+/// 电台源提供者 — 加载 provider 电台/播客全部节目。
 /// Prefix: "rd", Kind: <see cref="SongListQueueScopeKind.Radio"/>
 /// </summary>
 internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
 {
     private readonly IProvidableItemProvidable _provider;
+    private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
 
-    public RadioQueueSourceProvider(IProvidableItemProvidable provider, INotificationService notification)
+    public RadioQueueSourceProvider(IProvidableItemProvidable provider, IProviderKnownTypeIds knownTypeIds, INotificationService notification)
     {
         _provider = provider;
+        _knownTypeIds = knownTypeIds;
         _notification = notification;
     }
 
@@ -30,17 +32,20 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
     public string Prefix => QueueSourcePrefixes.Radio;
     public bool SupportCompleteLoad => true;
 
-    public async Task<NeteaseQueueSourceLoadResult> LoadAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<ProviderQueueSourceLoadResult> LoadAsync(string id, CancellationToken cancellationToken = default)
         => await LoadAsync(id, asc: false, cancellationToken);
 
-    /// <summary>内部重载 — 支持 asc 排序方向（由 <see cref="NeteaseQueueSourceService"/> 调用）</summary>
-    internal async Task<NeteaseQueueSourceLoadResult> LoadAsync(string id, bool asc, CancellationToken cancellationToken = default)
+    /// <summary>内部重载 — 支持 asc 排序方向。</summary>
+    internal async Task<ProviderQueueSourceLoadResult> LoadAsync(string id, bool asc, CancellationToken cancellationToken = default)
     {
         try
         {
-            var radio = await _provider.GetProvidableItemByIdAsync("dj" + id, cancellationToken);
+            if (_knownTypeIds.RadioChannelTypeId is null)
+                return ProviderQueueSourceLoadResult.Failed;
+
+            var radio = await _provider.GetProvidableItemByIdAsync(_knownTypeIds.RadioChannelTypeId + id, cancellationToken);
             if (radio is not IProgressiveLoadingContainer container)
-                return NeteaseQueueSourceLoadResult.Failed;
+                return ProviderQueueSourceLoadResult.Failed;
 
             var hasMore = true;
             var offset = 0;
@@ -68,13 +73,13 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
                 batches.Reverse();
             }
 
-            return NeteaseQueueSourceLoadResult.FromBatches(batches);
+            return ProviderQueueSourceLoadResult.FromBatches(batches);
         }
         catch (Exception ex)
         {
             _notification.ShowMessage("AppendRadioList时发生错误", ex.Message);
         }
 
-        return NeteaseQueueSourceLoadResult.Failed;
+        return ProviderQueueSourceLoadResult.Failed;
     }
 }

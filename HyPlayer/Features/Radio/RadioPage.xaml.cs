@@ -5,8 +5,12 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
@@ -30,7 +34,8 @@ namespace HyPlayer.Features.Radio;
 public sealed partial class RadioPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
+    private readonly IProvidableItemProvidable _itemProvider = Ioc.Default.GetRequiredService<IProvidableItemProvidable>();
+    private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
     private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private readonly WeakEventListener<RadioPage, object?, EventArgs> _secondTickListener;
     private bool _isSecondTickSubscribed;
@@ -43,9 +48,11 @@ public sealed partial class RadioPage : Page
     private bool asc;
     private int i;
     private int page;
-    private NeteaseRadioChannel RadioChannel;
-    private List<NeteaseRadioProgram> _ascendingPrograms;
-    private List<NeteaseRadioProgram> _allPrograms;
+    private ContainerBase RadioChannel;
+    private IProgressiveLoadingContainer _progressiveRadioChannel;
+    private PersonBase _host;
+    private List<SingleSongBase> _ascendingPrograms;
+    private List<SingleSongBase> _allPrograms;
     private Task _programLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -94,7 +101,7 @@ public sealed partial class RadioPage : Page
         foreach (var program in programs)
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            Songs.Add(SongListItemViewModel.FromRadioProgram(program, i++));
+            Songs.Add(await SongListItemViewModel.FromRadioProgramAsync(program, i++));
         }
     }
 
@@ -111,14 +118,23 @@ public sealed partial class RadioPage : Page
             }
         }
 
-        if (e.Parameter is NeteaseRadioChannel radio)
+        if (e.Parameter is ContainerBase radio)
         {
             RadioChannel = radio;
         }
 
+        _progressiveRadioChannel = RadioChannel as IProgressiveLoadingContainer;
+        if (_progressiveRadioChannel is null)
+        {
+            _notification.ShowMessage("获取电台信息失败", "提供程序未返回可分页电台容器");
+            return;
+        }
+
         TextBoxRadioName.Text = RadioChannel.Name;
-        TextBoxDJ.Content = RadioChannel.Host?.Name;
-        TextBlockDesc.Text = RadioChannel.Description;
+        var creators = RadioChannel is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync(_cancellationToken) : null;
+        _host = creators?.FirstOrDefault();
+        TextBoxDJ.Content = _host?.Name;
+        TextBlockDesc.Text = RadioChannel is IHasDescription descriptionProvider ? descriptionProvider.Description : string.Empty;
         if (_setting.noImage)
         {
             ImageRect.ImageSource = null;
@@ -127,7 +143,7 @@ public sealed partial class RadioPage : Page
         {
             var img = new BitmapImage();
             ImageRect.ImageSource = img;
-            img.UriSource = new Uri(RadioChannel.CoverUrl + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
+            img.UriSource = await GetCoverUriAsync(RadioChannel);
         }
 
         Songs.Clear();
@@ -191,7 +207,7 @@ public sealed partial class RadioPage : Page
         var programs = asc
             ? await LoadAscendingProgramsAsync()
             : await LoadAllProgramsAsync();
-        await _playCore.InsertSongRangeAsync(programs.Cast<SingleSongBase>().ToList());
+        await _playCore.InsertSongRangeAsync(programs);
         await _playCore.MovePointerToIndexAsync(0);
         if (_playCore.CurrentSong is { } song)
             await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
@@ -199,7 +215,8 @@ public sealed partial class RadioPage : Page
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        _navigation.Navigate(typeof(Me), RadioChannel.Host?.ActualId);
+        if (!string.IsNullOrWhiteSpace(_host?.ActualId))
+            _navigation.Navigate(typeof(Me), _host.ActualId);
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)
@@ -217,7 +234,7 @@ public sealed partial class RadioPage : Page
         var programs = asc
             ? await LoadAscendingProgramsAsync()
             : await LoadAllProgramsAsync();
-        await _queueLoader.AppendSongsAsync(programs.Cast<SingleSongBase>());
+        await _queueLoader.AppendSongsAsync(programs);
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
@@ -226,15 +243,18 @@ public sealed partial class RadioPage : Page
             ? await LoadAscendingProgramsAsync()
             : await LoadAllProgramsAsync();
 
-        DownloadManager.AddDownload(programs.Cast<SingleSongBase>().ToList());
+        DownloadManager.AddDownload(programs);
     }
 
-    private async Task<NeteaseRadioChannel> GetRadioChannelAsync(string radioId)
+    private async Task<ContainerBase> GetRadioChannelAsync(string radioId)
     {
-        return await _neteaseProvider.GetProvidableItemByIdAsync(global::HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.RadioChannel + radioId, _cancellationToken) as NeteaseRadioChannel;
+        if (_knownTypeIds.RadioChannelTypeId is null)
+            return null;
+
+        return await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.RadioChannelTypeId + radioId, _cancellationToken) as ContainerBase;
     }
 
-    private async Task<(bool HasMore, List<NeteaseRadioProgram> Programs)> LoadProgramPageAsync(int pageIndex, bool ascending)
+    private async Task<(bool HasMore, List<SingleSongBase> Programs)> LoadProgramPageAsync(int pageIndex, bool ascending)
     {
         if (ascending)
         {
@@ -243,11 +263,11 @@ public sealed partial class RadioPage : Page
             return ((pageIndex + 1) * 100 < allPrograms.Count, programs);
         }
 
-        var (hasMore, items) = await RadioChannel.GetProgressiveItemsListAsync(pageIndex * 100, 100, _cancellationToken);
-        return (hasMore, items.OfType<NeteaseRadioProgram>().ToList());
+        var (hasMore, items) = await _progressiveRadioChannel.GetProgressiveItemsListAsync(pageIndex * 100, 100, _cancellationToken);
+        return (hasMore, items.OfType<SingleSongBase>().ToList());
     }
 
-    private async Task<List<NeteaseRadioProgram>> LoadAscendingProgramsAsync()
+    private async Task<List<SingleSongBase>> LoadAscendingProgramsAsync()
     {
         if (_ascendingPrograms is not null) return _ascendingPrograms;
 
@@ -257,13 +277,24 @@ public sealed partial class RadioPage : Page
         return _ascendingPrograms;
     }
 
-    private async Task<List<NeteaseRadioProgram>> LoadAllProgramsAsync()
+    private async Task<List<SingleSongBase>> LoadAllProgramsAsync()
     {
         if (_allPrograms is not null) return _allPrograms;
 
-        var programs = await RadioChannel.GetAllItemsAsync(_cancellationToken);
-        _allPrograms = programs.OfType<NeteaseRadioProgram>().ToList();
+        var programs = RadioChannel is LinerContainerBase liner
+            ? await liner.GetAllItemsAsync(_cancellationToken)
+            : (await _progressiveRadioChannel.GetProgressiveItemsListAsync(0, _progressiveRadioChannel.MaxProgressiveCount, _cancellationToken)).Item2;
+        _allPrograms = programs.OfType<SingleSongBase>().ToList();
         return _allPrograms;
+    }
+
+    private static async Task<Uri?> GetCoverUriAsync(ContainerBase container)
+    {
+        if (container is not IHasCover coverProvider)
+            return null;
+
+        var result = await coverProvider.GetCoverAsync();
+        return result is IResourceResultOf<Uri?> uriResult ? await uriResult.GetResourceAsync() : null;
     }
 
 }

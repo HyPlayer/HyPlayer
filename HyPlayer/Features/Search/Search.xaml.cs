@@ -4,12 +4,13 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Infrastructure.Extensions;
-using HyPlayer.NeteaseProvider.Constants;
-using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
 using HyPlayer.UI.Lists;
@@ -36,7 +37,8 @@ namespace HyPlayer.Features.Search;
 /// </summary>
 public sealed partial class Search : Page
 {
-    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
+    private readonly ISearchableProvider _searchProvider = Ioc.Default.GetRequiredService<ISearchableProvider>();
+    private readonly IProviderSearchCategoryTypeIds _searchTypeIds = Ioc.Default.GetRequiredService<IProviderSearchCategoryTypeIds>();
     private readonly ISearchSuggestionProvidable _suggestionProvider = Ioc.Default.GetService<ISearchSuggestionProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
 
@@ -164,27 +166,29 @@ public sealed partial class Search : Page
     private async Task LoadSongResult()
     {
         var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(NeteaseTypeIds.SingleSong);
+        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.SingleSongSearchTypeId);
         if (items.Count is 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
             return;
         }
 
-        foreach (var song in items.OfType<NeteaseSong>())
+        foreach (var song in items.OfType<SingleSongBase>())
         {
             _cancellationToken.ThrowIfCancellationRequested();
             SongResults.Add(await SongListItemViewModel.FromProviderSongAsync(song, page * 30 + i));
+            var aliases = song is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
+            var translation = song is IHasTranslation translationProvider ? translationProvider.Translation : null;
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
                     Title = song.Name,
                     LineTwo = string.Join(" / ", song.CreatorList ?? []),
                     LineThree = song.Album?.Name,
-                    LineOne = (song.Translation ?? string.Empty) + " / " + string.Join("", song.Alias ?? []),
+                    LineOne = (translation ?? string.Empty) + " / " + string.Join("", aliases ?? []),
                     Route = new AppRoute.Song($"{song.ActualId}"),
                     PlayResource = new MusicResource.Song($"{song.ActualId}"),
-                    CoverLink = song.CoverUrl,
+                    CoverLink = await TryGetCoverLinkAsync(song),
                     Order = page * 30 + i++
                 });
         }
@@ -195,26 +199,29 @@ public sealed partial class Search : Page
     private async Task LoadAlbumResult()
     {
         var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(NeteaseTypeIds.Album);
+        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.AlbumSearchTypeId);
         if (items.Count is 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
             return;
         }
 
-        foreach (var album in items.OfType<NeteaseAlbum>())
+        foreach (var album in items.OfType<AlbumBase>())
         {
             _cancellationToken.ThrowIfCancellationRequested();
+            var aliases = album is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
+            var description = album is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
+            var creators = album is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync(_cancellationToken) : null;
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
                     Title = album.Name,
-                    LineOne = string.Join(" / ", album.CreatorList ?? album.Artists?.Select(t => t.Name) ?? []),
-                    LineTwo = string.Join(" / ", album.Alias ?? []),
-                    LineThree = album.Description,
+                    LineOne = string.Join(" / ", creators?.Select(t => t.Name) ?? []),
+                    LineTwo = string.Join(" / ", aliases ?? []),
+                    LineThree = description,
                     Route = new AppRoute.Album($"{album.ActualId}"),
                     PlayResource = new MusicResource.Album($"{album.ActualId}"),
-                    CoverLink = album.PictureUrl,
+                    CoverLink = await TryGetCoverLinkAsync(album),
                     Order = page * 30 + i++
                 });
         }
@@ -225,14 +232,14 @@ public sealed partial class Search : Page
     private async Task LoadArtistResult()
     {
         var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(NeteaseTypeIds.Artist);
+        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.ArtistSearchTypeId);
         if (items.Count is 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
             return;
         }
 
-        foreach (var artist in items.OfType<NeteaseArtist>())
+        foreach (var artist in items.OfType<ArtistBase>())
         {
             _cancellationToken.ThrowIfCancellationRequested();
             SearchResultContainer.ListItems.Add(new SimpleListItem
@@ -251,26 +258,28 @@ public sealed partial class Search : Page
     private async Task LoadPlaylistResult()
     {
         var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(NeteaseTypeIds.Playlist);
+        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.PlaylistSearchTypeId);
         if (items.Count is 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
             return;
         }
 
-        foreach (var playlist in items.OfType<NeteasePlaylist>())
+        foreach (var playlist in items.OfType<LinerContainerBase>())
         {
             _cancellationToken.ThrowIfCancellationRequested();
+            var description = playlist is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
+            var creators = playlist is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync(_cancellationToken) : null;
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
                     Title = playlist.Name,
-                    LineOne = playlist.Creator?.Name ?? playlist.CreatorList?.FirstOrDefault(),
-                    LineTwo = playlist.Description,
-                    LineThree = $"歌曲数:{playlist.TrackCount}",
+                    LineOne = creators?.FirstOrDefault()?.Name,
+                    LineTwo = description,
+                    LineThree = string.Empty,
                     Route = new AppRoute.Playlist($"{playlist.ActualId}"),
                     PlayResource = new MusicResource.Playlist($"{playlist.ActualId}"),
-                    CoverLink = playlist.CoverUrl,
+                    CoverLink = await TryGetCoverLinkAsync(playlist),
                     Order = page * 30 + i++
                 });
         }
@@ -281,23 +290,24 @@ public sealed partial class Search : Page
     private async Task LoadUserResult()
     {
         var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(NeteaseTypeIds.User);
+        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.UserSearchTypeId);
         if (items.Count is 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
             return;
         }
 
-        foreach (var user in items.OfType<NeteaseUser>())
+        foreach (var user in items.OfType<PersonBase>())
         {
             _cancellationToken.ThrowIfCancellationRequested();
+            var description = user is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
                     Title = user.Name,
-                    LineOne = user.Description,
+                    LineOne = description,
                     Route = new AppRoute.Me($"{user.ActualId}"),
-                    CoverLink = user.AvatarUrl,
+                    CoverLink = await TryGetCoverLinkAsync(user),
                     Order = page * 30 + i++
                 });
         }
@@ -308,26 +318,32 @@ public sealed partial class Search : Page
     private async Task LoadRadioResult()
     {
         var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(NeteaseTypeIds.RadioChannel);
+        if (_searchTypeIds.RadioChannelSearchTypeId is null)
+            return;
+
+        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.RadioChannelSearchTypeId);
         if (items.Count is 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
             return;
         }
 
-        foreach (var radio in items.OfType<NeteaseRadioChannel>())
+        foreach (var radio in items.OfType<LinerContainerBase>())
         {
             _cancellationToken.ThrowIfCancellationRequested();
+            var description = radio is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
                     Title = radio.Name,
-                    LineOne = radio.CreatorList?.FirstOrDefault(),
-                    LineTwo = radio.Description,
-                    LineThree = $"节目数:{radio.ProgramCount}",
+                    LineOne = radio is IHasCreators creatorsProvider
+                        ? (await creatorsProvider.GetCreatorsAsync(_cancellationToken))?.FirstOrDefault()?.Name
+                        : null,
+                    LineTwo = description,
+                    LineThree = string.Empty,
                     Route = new AppRoute.Radio($"{radio.ActualId}"),
                     PlayResource = new MusicResource.Radio($"{radio.ActualId}"),
-                    CoverLink = radio.CoverUrl,
+                    CoverLink = await TryGetCoverLinkAsync(radio),
                     Order = page * 30 + i++
                 });
         }
@@ -340,21 +356,24 @@ public sealed partial class Search : Page
     private async Task LoadMVResult()
     {
         var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(NeteaseTypeIds.Mv);
+        if (_searchTypeIds.RichMediaSearchTypeId is null)
+            return;
+
+        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.RichMediaSearchTypeId);
         if (items.Count is 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
             return;
         }
 
-        foreach (var item in items.OfType<NeteaseMv>())
+        foreach (var item in items.OfType<RichMediaBase>())
         {
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
                     Title = item.Name,
                     Route = new AppRoute.MV($"{item.ActualId}"),
-                    CoverLink = item.CoverUrl,
+                    CoverLink = await TryGetCoverLinkAsync(item),
                     Order = page * 30 + i++
                 });
         }
@@ -365,14 +384,17 @@ public sealed partial class Search : Page
     private async Task LoadMlogResult()
     {
         var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(NeteaseTypeIds.MBlog);
+        if (_searchTypeIds.ShortVideoSearchTypeId is null)
+            return;
+
+        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.ShortVideoSearchTypeId);
         if (items.Count is 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
             return;
         }
 
-        foreach (var item in items.OfType<NeteaseVideo>())
+        foreach (var item in items.OfType<RichMediaBase>())
         {
             _cancellationToken.ThrowIfCancellationRequested();
             SearchResultContainer.ListItems.Add(
@@ -390,14 +412,17 @@ public sealed partial class Search : Page
     private async Task LoadLyricResult()
     {
         var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(NeteaseTypeIds.Lyric);
+        if (_searchTypeIds.LyricSearchTypeId is null)
+            return;
+
+        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.LyricSearchTypeId);
         if (items.Count is 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
             return;
         }
 
-        foreach (var item in items.OfType<NeteaseLyricSearchItem>())
+        foreach (var item in items)
         {
             _cancellationToken.ThrowIfCancellationRequested();
             SearchResultContainer.ListItems.Add(
@@ -419,7 +444,7 @@ public sealed partial class Search : Page
         var cacheKey = $"{searchText}\u001f{typeId}";
         if (!_searchContainers.TryGetValue(cacheKey, out var container))
         {
-            container = await _neteaseProvider.SearchProvidableItemsAsync(searchText, typeId, _cancellationToken);
+            container = await _searchProvider.SearchProvidableItemsAsync(searchText, typeId, _cancellationToken);
             _searchContainers[cacheKey] = container;
         }
 
@@ -453,6 +478,17 @@ public sealed partial class Search : Page
     {
         HasNextPage = hasMore;
         HasPreviousPage = page > 0;
+    }
+
+    private static async Task<string?> TryGetCoverLinkAsync(ProvidableItemBase item)
+    {
+        if (item is not IHasCover coverProvider)
+            return null;
+
+        var result = await coverProvider.GetCoverAsync();
+        return result is IResourceResultOf<Uri?> uriResult
+            ? (await uriResult.GetResourceAsync())?.GetLeftPart(UriPartial.Path)
+            : null;
     }
 
     private void PrevPage_OnClick(object sender, RoutedEventArgs e)

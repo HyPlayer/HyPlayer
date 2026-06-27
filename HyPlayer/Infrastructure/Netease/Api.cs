@@ -1,12 +1,9 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.NeteaseProvider.Mappers;
-using HyPlayer.NeteaseProvider.Constants;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -29,17 +26,16 @@ internal class Api
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
         try
         {
-            var song = new NeteaseSong
-            {
-                ActualId = songid.StartsWith(NeteaseTypeIds.SingleSong) ? songid[2..] : songid,
-                Name = string.Empty,
-                Artists = []
-            };
-
             if (like)
-                await song.LikeAsync();
+            {
+                notification.ShowMessage("暂不支持收藏", "当前抽象只支持从集合中移出项目");
+            }
             else
-                await song.UnlikeAsync();
+            {
+                var libraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
+                var itemManagement = Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
+                await itemManagement.RemoveItemFromContainerAsync(libraryTypeIds.LikedSongsTypeId, NormalizeProviderItemId(songid));
+            }
             return true;
         }
         catch (System.Exception ex)
@@ -73,13 +69,14 @@ internal class Api
         CancellationToken cancellationToken = default)
     {
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
-        var neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
+        var itemProvider = Ioc.Default.GetRequiredService<IProvidableItemProvidable>();
+        var specialTypeIds = Ioc.Default.GetRequiredService<IProviderSpecialContainerTypeIds>();
         var playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
         var control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
         var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         var auth = Ioc.Default.GetRequiredService<IAuthService>();
 
-        var seedPlaylist = await ResolveLikedMusicPlaylistAsync(neteaseProvider, auth, playlistId, cancellationToken);
+        var seedPlaylist = await ResolveLikedMusicPlaylistAsync(auth, playlistId, cancellationToken);
         if (seedPlaylist is null || string.IsNullOrWhiteSpace(seedPlaylist.ActualId))
         {
             notification.ShowMessage("无法进入心动模式", "未找到我喜欢的音乐歌单");
@@ -87,7 +84,7 @@ internal class Api
         }
 
         var seedSongIds = auth.LikedSongs
-            .Select(NormalizeNeteaseSongId)
+            .Select(NormalizeProviderItemId)
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .Select(id => id!)
             .ToList();
@@ -100,17 +97,15 @@ internal class Api
             return;
         }
 
-        seedSongId = NormalizeNeteaseSongId(seedSongId);
-        var currentSongId = NormalizeNeteaseSongId(state.NowPlayingProviderItem?.ActualId);
+        seedSongId = NormalizeProviderItemId(seedSongId);
+        var currentSongId = NormalizeProviderItemId(state.NowPlayingProviderItem?.ActualId);
         var randomSongId = seedSongIds[RandomNumberGenerator.GetInt32(seedSongIds.Count)];
         var seedSong = !string.IsNullOrWhiteSpace(seedSongId) ? seedSongId
             : !string.IsNullOrWhiteSpace(currentSongId) && seedSongIds.Contains(currentSongId) ? currentSongId
             : randomSongId;
-        var requestCount = System.Math.Max(seedSongIds.Count, seedPlaylist.TrackCount);
-
         try
         {
-            var songs = await GetIntelligenceSongsAsync(neteaseProvider, seedPlaylist.ActualId, seedSong, requestCount, cancellationToken);
+            var songs = await GetIntelligenceSongsAsync(itemProvider, specialTypeIds, seedSong, cancellationToken);
             if (songs.Count == 0)
             {
                 notification.ShowMessage("无法进入心动模式", "没有获取到推荐歌曲");
@@ -135,60 +130,42 @@ internal class Api
     }
 
     private static async Task<List<SingleSongBase>> GetIntelligenceSongsAsync(
-        global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
-        string playlistId,
+        IProvidableItemProvidable itemProvider,
+        IProviderSpecialContainerTypeIds specialTypeIds,
         string seedSong,
-        int count,
         CancellationToken cancellationToken)
     {
-        var result = await neteaseProvider.RequestAsync(
-            NeteaseApis.PlaymodeIntelligenceListApi,
-            new PlaymodeIntelligenceListRequest
-            {
-                PlaylistId = playlistId,
-                SongId = seedSong,
-                StartMusicId = seedSong,
-                Count = count
-            },
-            cancellationToken);
+        if (!specialTypeIds.SpecialContainerTypeIds.TryGetValue(SpecialContainerType.ContextRecommendation, out var typeId))
+            return [];
 
-        return result.Match(
-            success => success.Data?
-                           .Select(item => item.SongInfo)
-                           .Where(song => song is not null)
-                           .Select(song => (SingleSongBase)song!.MapToNeteaseMusic())
-                           .ToList() ?? [],
-            _ => []);
+        return await itemProvider.GetProvidableItemByIdAsync(typeId + seedSong, cancellationToken) is LinerContainerBase container
+            ? (await container.GetAllItemsAsync(cancellationToken)).OfType<SingleSongBase>().ToList()
+            : [];
     }
 
     private static async Task<List<string>> GetPlaylistSongIdsAsync(
-        NeteasePlaylist playlist,
+        ContainerBase playlist,
         CancellationToken cancellationToken)
     {
-        var count = playlist.TrackCount > 0
-            ? System.Math.Min(playlist.TrackCount, playlist.MaxProgressiveCount)
-            : playlist.MaxProgressiveCount;
-        var (_, items) = await playlist.GetProgressiveItemsListAsync(0, count, cancellationToken);
+        if (playlist is not IProgressiveLoadingContainer progressive)
+            return [];
+
+        var (_, items) = await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount, cancellationToken);
         return items.OfType<SingleSongBase>()
-            .Select(song => NormalizeNeteaseSongId(song.ActualId))
+            .Select(song => NormalizeProviderItemId(song.ActualId))
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .Select(id => id!)
             .ToList();
     }
 
-    private static async Task<NeteasePlaylist?> ResolveLikedMusicPlaylistAsync(
-        global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
+    private static async Task<ContainerBase?> ResolveLikedMusicPlaylistAsync(
         IAuthService auth,
         string? playlistId,
         CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(playlistId))
         {
-            var playlist = auth.MySongLists.FirstOrDefault(pl => pl.ActualId == playlistId);
-            if (playlist is not null)
-                return playlist;
-
-            return await neteaseProvider.GetPlaylistById(playlistId, cancellationToken);
+            return auth.MySongLists.FirstOrDefault(pl => pl.ActualId == playlistId);
         }
 
         var cached = FindLikedMusicPlaylist(auth.MySongLists);
@@ -202,24 +179,13 @@ internal class Api
         return FindLikedMusicPlaylist(containers);
     }
 
-    private static NeteasePlaylist? FindLikedMusicPlaylist(IEnumerable<ContainerBase> containers)
+    private static ContainerBase? FindLikedMusicPlaylist(IEnumerable<ContainerBase> containers)
     {
-        var playlistContainers = containers.OfType<NeteaseUserPlaylistSubContainer>().ToList();
-        var createdPlaylists = playlistContainers
-            .Where(container => container.Name.Contains("创建", System.StringComparison.Ordinal))
-            .SelectMany(container => container.Playlists)
-            .ToList();
-
-        if (createdPlaylists.Count > 0)
-            return createdPlaylists[0];
-
-        return containers.OfType<NeteasePlaylist>()
-            .Where(playlist => !playlist.Subscribed)
-            .FirstOrDefault();
+        return containers.FirstOrDefault(container => container is not HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem.IHasLibraryState state || state.IsOwnedByCurrentUser);
     }
 
-    private static string? NormalizeNeteaseSongId(string? songId)
+    private static string? NormalizeProviderItemId(string? songId)
     {
-        return songId?.StartsWith(NeteaseTypeIds.SingleSong) is true ? songId[2..] : songId;
+        return songId;
     }
 }

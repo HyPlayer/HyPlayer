@@ -241,7 +241,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
             await SetCurrentSongAsync(song, ct);
             if (autoPlay)
+            {
                 await _playCore.PlayAsync(ct);
+                _state.IsPlaying = true;
+            }
         }
         catch (OperationCanceledException)
         {

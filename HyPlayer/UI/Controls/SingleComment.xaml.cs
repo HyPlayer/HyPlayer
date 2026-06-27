@@ -3,7 +3,6 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain;
 using HyPlayer.Features.User;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -34,7 +33,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             new PropertyMetadata(null));
 
     public static readonly DependencyProperty MainCommentProperty =
-        DependencyProperty.Register("MainComment", typeof(NeteaseComment), typeof(SingleComment),
+        DependencyProperty.Register("MainComment", typeof(CommentBase), typeof(SingleComment),
             new PropertyMetadata(null)); //主评论
 
     public event PropertyChangedEventHandler PropertyChanged;
@@ -46,7 +45,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     }
 
 
-    private ObservableCollection<NeteaseComment> floorComments = new ObservableCollection<NeteaseComment>();
+    private ObservableCollection<CommentBase> floorComments = new ObservableCollection<CommentBase>();
     public UserDisplay CommentUserDisplay;
     private string time = "0";
 
@@ -68,9 +67,9 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         set => SetValue(AvatarSourceProperty, value);
     }
 
-    public NeteaseComment MainComment
+    public CommentBase MainComment
     {
-        get => (NeteaseComment)GetValue(MainCommentProperty);
+        get => (CommentBase)GetValue(MainCommentProperty);
         set
         {
             SetValue(MainCommentProperty, value);
@@ -84,12 +83,15 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         if (!IsLoadMoreComments) floorComments.Clear();
         var offset = !IsLoadMoreComments ? 0 : int.Parse(time ?? "0");
         const int count = 20;
-        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ResourceTypeId}_{MainComment.ResourceId}_{MainComment.ActualId}_{offset}_{count}", async () =>
+        if (!TryResolveCommentTarget(MainComment, out var itemId, out var typeId))
+            return;
+
+        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ProvidableItemId}_{MainComment.ActualId}_{offset}_{count}", async () =>
         {
             return await Ioc.Default.GetRequiredService<ICommentProvidable>()
                 .GetThreadedCommentsAsync(
-                    MainComment.ResourceId,
-                    MainComment.ResourceTypeId,
+                    itemId,
+                    typeId,
                     MainComment.ActualId,
                     offset,
                     count);
@@ -100,9 +102,8 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         }
         foreach (var floorcomment in result.Items)
         {
-            var floorComment = (NeteaseComment)floorcomment;
-            floorComment.ResourceId = MainComment.ResourceId;
-            floorComment.ResourceTypeId = MainComment.ResourceTypeId;
+            var floorComment = floorcomment;
+            floorComment.ProvidableItemId = MainComment.ProvidableItemId;
             floorComment.IsMainComment = false;
             floorComments.Add(floorComment);
         }
@@ -115,9 +116,12 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     {
         try
         {
+            if (!TryResolveCommentTarget(MainComment, out var itemId, out var typeId))
+                return;
+
             await Ioc.Default.GetRequiredService<ICommentProvidable>().SetCommentLikeStateAsync(
-                MainComment.ResourceId,
-                MainComment.ResourceTypeId,
+                itemId,
+                typeId,
                 MainComment.ActualId,
                 !MainComment.HasLiked);
         }
@@ -184,7 +188,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         {
             ActualId = MainComment.Sender?.ActualId ?? string.Empty,
             Name = MainComment.Sender?.Name ?? string.Empty,
-            AvatarUrl = MainComment.AvatarUrl,
+            AvatarUrl = string.Empty,
         });
         ReplyBtn.Visibility = Visibility.Visible;
         FloorCommentsExpander.Visibility = MainComment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
@@ -206,5 +210,25 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)
     {
         floorComments.CollectionChanged -= FloorComments_CollectionChanged;
+    }
+
+    private static bool TryResolveCommentTarget(CommentBase comment, out string itemId, out string typeId)
+    {
+        itemId = string.Empty;
+        typeId = string.Empty;
+        if (string.IsNullOrWhiteSpace(comment.ProvidableItemId))
+            return false;
+
+        var knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
+        var fullId = comment.ProvidableItemId;
+        var providerScopedId = fullId.StartsWith(knownTypeIds.Id, StringComparison.Ordinal)
+            ? fullId[knownTypeIds.Id.Length..]
+            : fullId;
+        if (providerScopedId.Length < 2)
+            return false;
+
+        typeId = providerScopedId[..2];
+        itemId = providerScopedId[2..];
+        return !string.IsNullOrWhiteSpace(itemId);
     }
 }

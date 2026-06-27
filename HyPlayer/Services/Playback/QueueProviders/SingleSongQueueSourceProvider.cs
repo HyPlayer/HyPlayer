@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace HyPlayer.Services.Playback.QueueProviders;
 
 /// <summary>
-/// 单曲源提供者 — 加载单首网易云歌曲详情。
+/// 单曲源提供者 — 加载单首 provider 歌曲详情。
 /// Prefix: "ns", Kind: <see cref="SongListQueueScopeKind.SingleSong"/>
 /// </summary>
 internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
@@ -28,7 +28,7 @@ internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
     public string Prefix => QueueSourcePrefixes.SingleSong;
     public bool SupportCompleteLoad => false;
 
-    public async Task<NeteaseQueueSourceLoadResult> LoadAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<ProviderQueueSourceLoadResult> LoadAsync(string id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -36,14 +36,14 @@ internal sealed class SingleSongQueueSourceProvider : IQueueSourceProvider
             var song = songs.OfType<SingleSongBase>().FirstOrDefault();
 
             return song is not null
-                ? NeteaseQueueSourceLoadResult.FromSongs([song])
-                : NeteaseQueueSourceLoadResult.Failed;
+                ? ProviderQueueSourceLoadResult.FromSongs([song])
+                : ProviderQueueSourceLoadResult.Failed;
         }
         catch (Exception ex)
         {
             _notification.ShowMessage("获取歌曲信息失败", ex.Message);
         }
 
-        return NeteaseQueueSourceLoadResult.Failed;
+        return ProviderQueueSourceLoadResult.Failed;
     }
 }

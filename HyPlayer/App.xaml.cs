@@ -12,9 +12,6 @@ using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Widgets.Services;
 using HyPlayer.Infrastructure.Platform;
-using HyPlayer.NeteaseApi;
-using HyPlayer.NeteaseProvider;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.AudioServices;
@@ -91,17 +88,18 @@ public sealed partial class App : Application
 
     public App()
     {
-        InitializeComponent();
-        InitializeServices();
-        InitializeCommonServices();
-        HistoryManagement.InitializeHistoryTrack();
         Suspending += OnSuspending;
         UnhandledException += App_UnhandledException;
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
+        InitializeComponent();
+        InitializeServices();
+        InitializeCommonServices();
+        HistoryManagement.InitializeHistoryTrack();
         if (AppDepository.Resolve<Setting>().themeRequest != ThemeRequest.Auto)
             RequestedTheme = AppDepository.Resolve<Setting>().themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
         AppDepository.Resolve<IBackgroundTaskRunner>().Forget(InitializeThings, "initialize app cache and converters");
+        
     }
 
     private static void InitializeServices()
@@ -115,7 +113,7 @@ public sealed partial class App : Application
     {
         var setting = AppDepository.Resolve<Setting>();
         var neteaseProvider = AppDepository.Resolve<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
-        neteaseProvider.ConfigureAdditionalParameters(setting.ApiAdditionalParameters);
+        neteaseProvider.ImportAdditionalConfiguration(setting.ApiAdditionalParametersJson);
         neteaseProvider.ConfigureFakeCheckToken(setting.EnableCheckTokenApi);
         var globalTimer = AppDepository.Resolve<IGlobalTimerService>();
         var teachingTip = AppDepository.Resolve<ITeachingTipService>();
@@ -125,6 +123,7 @@ public sealed partial class App : Application
             teachingTip.Roll();
             playBarAutoHide.Tick();
         };
+        
     }
 
     private static void InitializeServices(IDepository depository)
@@ -141,14 +140,25 @@ public sealed partial class App : Application
         depository.AddSingleton<ISearchSuggestionProvidable>(neteaseProvider);
         depository.AddSingleton<ICommentProvidable>(neteaseProvider);
         depository.AddSingleton<IProvidableItemCommentProvidable>(neteaseProvider);
+        depository.AddSingleton<IProvableItemLikable>(neteaseProvider);
         depository.AddSingleton<ILyricProvidable>(neteaseProvider);
         depository.AddSingleton<IMusicResourceProvidable>(neteaseProvider);
         depository.AddSingleton<IProvidableItemProvidable>(neteaseProvider);
         depository.AddSingleton<IProvidableItemRangeProvidable>(neteaseProvider);
         depository.AddSingleton<ISearchableProvider>(neteaseProvider);
         depository.AddSingleton<IContainerPageProvidable>(neteaseProvider);
+        depository.AddSingleton<IProviderKnownTypeIds>(neteaseProvider);
+        depository.AddSingleton<IPersonalRadioProvidable>(neteaseProvider);
         depository.AddSingleton<IProvidableItemDynamicMetadataProvidable>(neteaseProvider);
-        depository.AddSingleton<NeteasePersonalFMContainer>(new NeteasePersonalFMContainer { ActualId = "default", Name = "私人 FM" });
+        depository.AddSingleton<IProviderNetworkConfigurationProvidable>(neteaseProvider);
+        depository.AddSingleton<IContainerItemManagementProvidable>(neteaseProvider);
+        depository.AddSingleton<IProviderAdditionalConfigurationProvidable>(neteaseProvider);
+        depository.AddSingleton<IProviderSearchCategoryTypeIds>(neteaseProvider);
+        depository.AddSingleton<IUserLibraryTypeIds>(neteaseProvider);
+        depository.AddSingleton<IUserLibraryProvidable>(neteaseProvider);
+        depository.AddSingleton<IUserLibraryNavigationProvidable>(neteaseProvider);
+        depository.AddSingleton<IProviderSpecialContainerTypeIds>(neteaseProvider);
+        depository.AddSingleton<IResourceQualityTagProvidable>(neteaseProvider);
         var localProvider = new LocalProvider();
         depository.AddSingleton<LocalProvider>(localProvider);
         depository.AddSingleton<ProviderBase>(localProvider);
@@ -461,14 +471,15 @@ public sealed partial class App : Application
     {
         var deferral = e.SuspendingOperation.GetDeferral();
         var playCore = AppDepository.Resolve<PlayCoreBase>();
-        var neteaseItems = (await playCore.GetPlaylistAsync())
-            .Where(t => t.ProviderId == "ncm")
+        var defaultProvider = AppDepository.Resolve<IProviderKnownTypeIds>();
+        var providerItems = (await playCore.GetPlaylistAsync())
+            .Where(t => t.ProviderId == defaultProvider.Id)
             .ToList();
         var currentItem = playCore.CurrentSong;
-        var currentIndex = currentItem?.ProviderId == "ncm"
-            ? neteaseItems.FindIndex(item => item.TypeId == currentItem.TypeId && item.ActualId == currentItem.ActualId)
+        var currentIndex = currentItem?.ProviderId == defaultProvider.Id
+            ? providerItems.FindIndex(item => item.TypeId == currentItem.TypeId && item.ActualId == currentItem.ActualId)
             : -1;
-        await HistoryManagement.SetcurPlayingListHistory([.. neteaseItems.Select(t => t.ActualId).Where(id => !string.IsNullOrWhiteSpace(id))!], currentIndex);
+        await HistoryManagement.SetcurPlayingListHistory([.. providerItems.Select(t => t.ActualId).Where(id => !string.IsNullOrWhiteSpace(id))!], currentIndex);
         AppDepository.Resolve<IGameBarWidgetService>().Widget?.Close();
         deferral.Complete();
     }

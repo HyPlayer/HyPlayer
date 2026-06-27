@@ -10,8 +10,11 @@ using HyPlayer.Features.Settings;
 using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Shell.Navigation;
 using HyPlayer.UI.Dialogs;
@@ -20,6 +23,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using BitmapIcon = Windows.UI.Xaml.Controls.BitmapIcon;
@@ -544,7 +548,7 @@ public sealed class AppNavigator : IAppNavigator
             var playlistId = parameter switch
             {
                 string id => id,
-                NeteasePlaylist pl => pl.ActualId,
+                ContainerBase pl => pl.ActualId,
                 _ => null
             };
 
@@ -591,20 +595,40 @@ public sealed class AppNavigator : IAppNavigator
         }
     }
 
-    private static NeteasePlaylist CreateDailyRecommendPlaylist() => new()
+    private static ContainerBase CreateDailyRecommendPlaylist() => new DailyRecommendContainer
     {
         ActualId = DailyRecommendPlaylistId,
-        CoverUrl = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-        Creator = new NeteaseUser
-        {
-            ActualId = "1",
-            Name = "网易云音乐",
-            Description = "网易云音乐官方账号 "
-        },
-        Subscribed = false,
-        Name = "每日歌曲推荐",
-        Description = "根据你的口味生成，每天6:00更新"
+        Name = "每日歌曲推荐"
     };
+
+    private sealed class DailyRecommendContainer : ContainerBase, IHasCover, IHasDescription
+    {
+        public override string ProviderId => string.Empty;
+        public override string TypeId => "daily";
+        public string? Description { get; set; } = "根据你的口味生成，每天6:00更新";
+
+        public Task<ResourceResultBase> GetCoverAsync(ImageResourceQualityTag? qualityTag = null, CancellationToken ctk = default)
+        {
+            return Task.FromResult<ResourceResultBase>(new DailyRecommendImageResult
+            {
+                ResourceStatus = ResourceStatus.Success,
+                ExternalException = null,
+                Uri = new Uri("https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg")
+            });
+        }
+    }
+
+    private sealed class DailyRecommendImageResult : ResourceResultBase, IResourceResultOf<Uri?>
+    {
+        public override Exception? ExternalException { get; init; }
+        public override required ResourceStatus ResourceStatus { get; init; }
+        public Uri? Uri { get; init; }
+
+        public Task<Uri?> GetResourceAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Uri);
+        }
+    }
 
     private sealed partial class NavigationNodeSubscription : IDisposable
     {

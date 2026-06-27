@@ -31,8 +31,6 @@ public sealed class LocalSong : SingleSongBase, IHasTranslation
 
     public string? Translation { get; set; }
 
-    public string? LegacyNeteaseId { get; init; }
-
     public bool IsNcm { get; init; }
 
     public IReadOnlyList<PersonBase>? Artists { get; init; }

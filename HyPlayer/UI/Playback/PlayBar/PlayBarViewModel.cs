@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
@@ -15,7 +14,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.DataTransfer;
 
 namespace HyPlayer.UI.Playback.PlayBar;
 
@@ -29,7 +27,6 @@ public partial class PlayBarViewModel : ObservableObject
     private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IAuthService _authService;
-    private readonly DataTransferManager _dataTransferManager;
     private readonly WeakEventListener<PlayBarViewModel, object?, PropertyChangedEventArgs> _stateChangedListener;
     private int _queueCount;
 
@@ -51,7 +48,6 @@ public partial class PlayBarViewModel : ObservableObject
         _notification = notification;
         _taskRunner = taskRunner;
         _authService = authService;
-        _dataTransferManager = DataTransferManager.GetForCurrentView();
         SyncFromState();
         _stateChangedListener = new WeakEventListener<PlayBarViewModel, object?, PropertyChangedEventArgs>(this)
         {
@@ -124,9 +120,7 @@ public partial class PlayBarViewModel : ObservableObject
     public double ProgressMilliseconds => Position.TotalMilliseconds;
     public double DurationMilliseconds => Duration != TimeSpan.Zero ? Duration.TotalMilliseconds : NowPlayingSnapshot?.Duration ?? 0;
     public string PlayStateGlyph => IsPlaying ? "\uF8AE" : "\uF5B0";
-    public bool CanShareCurrentSong => NowPlayingProviderItem is NeteaseSong
-                                       || NowPlayingSnapshot is { IsLocal: false };
-    public DataTransferManager DataTransferManager => _dataTransferManager;
+    public bool CanShareCurrentSong => NowPlayingSnapshot is { IsLocal: false };
 
     // ── Relay Commands ──
 

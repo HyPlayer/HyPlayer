@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HyPlayer": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

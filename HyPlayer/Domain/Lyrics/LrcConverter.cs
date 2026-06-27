@@ -6,6 +6,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
+using HyPlayer.LyricRenderer.Text;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -54,7 +55,7 @@ public static class LrcConverter
             }
 
 
-            var line = new SyllablesRenderingLyricLine
+            var line = new TextRenderingLyricLine
             {
                 KeyFrames =
                 [
@@ -69,9 +70,8 @@ public static class LrcConverter
             };
             if (alrcLine.Words is { Count: > 0 })
             {
-                line.IsSyllable = true;
-                line.Syllables = alrcLine.Words
-                    .Select(w => new RenderingSyllable(w.Word, w.Start, w.End, w.Transliteration)).ToList();
+                line.Tokens = alrcLine.Words
+                    .Select(w => new LyricTextToken(w.Word, w.Start, w.End, w.Transliteration)).ToList();
             }
 
             if (alrc.Header?.Styles?.FirstOrDefault(t => t.Id == alrcLine.LineStyle) is { } style)

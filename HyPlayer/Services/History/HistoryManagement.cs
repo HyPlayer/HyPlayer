@@ -122,7 +122,7 @@ namespace HyPlayer.Services.History
             {
                 var songIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                     .Values["songHistory"].ToString(), JsonDefaults.Options);
-                return await LoadNeteaseSongsAsync(songIds);
+                return await LoadProviderSongsAsync(songIds);
             }
             catch (Exception e)
             {
@@ -156,7 +156,7 @@ namespace HyPlayer.Services.History
             {
                 var nowIds = trackIds.GetRange(nowIndex * 500,
                     Math.Min(500, trackIds.Count - nowIndex * 500));
-                var songs = await LoadNeteaseSongsAsync(nowIds);
+                var songs = await LoadProviderSongsAsync(nowIds);
                 nowIndex++;
                 retsongs.AddRange(songs);
             }
@@ -185,7 +185,7 @@ namespace HyPlayer.Services.History
             return ParseCurPlayingListHistoryState(text);
         }
 
-        private static async Task<List<SingleSongBase>> LoadNeteaseSongsAsync(List<string> songIds)
+        private static async Task<List<SingleSongBase>> LoadProviderSongsAsync(List<string> songIds)
         {
             if (songIds.Count == 0) return [];
 

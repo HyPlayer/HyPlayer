@@ -1,7 +1,6 @@
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
@@ -125,14 +124,11 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     {
         if (providerItem is not IHasCover coverProvider) return null;
 
-        var coverResult = await coverProvider.GetCoverAsync(new NeteaseImageResourceQualityTag(1024, 1024));
+        var coverResult = await coverProvider.GetCoverAsync(new ImageResourceQualityTag(1024, 1024));
         if (coverResult is IResourceResultOf<Uri?> nullableUriResult)
             return await nullableUriResult.GetResourceAsync();
         if (coverResult is IResourceResultOf<Uri> uriResult)
             return await uriResult.GetResourceAsync();
-        if (coverResult is NeteaseImageResourceResult { ResourceStatus: ResourceStatus.Success, Uri: { } uri })
-            return uri;
-
         return null;
     }
 

@@ -3,7 +3,7 @@
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Features.Artist;
-using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.UI.Dialogs;
 using System;
@@ -37,7 +37,7 @@ public sealed partial class AlbumPage : Page
         var albumId = string.Empty;
         switch (e.Parameter)
         {
-            case NeteaseAlbum album:
+            case AlbumBase album:
                 albumId = album.ActualId;
                 break;
             case string:
@@ -50,7 +50,7 @@ public sealed partial class AlbumPage : Page
     private async void TextBoxAuthor_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
         if (ViewModel.Artists.Count > 1)
-            await new ArtistSelectDialog(ViewModel.Artists.ConvertAll(a => (HyPlayer.PlayCore.Abstraction.Models.Containers.PersonBase)a)).ShowAsync();
+            await new ArtistSelectDialog(ViewModel.Artists).ShowAsync();
         else
             _navigation.Navigate(typeof(ArtistPage), ViewModel.Artists[0].ActualId);
     }

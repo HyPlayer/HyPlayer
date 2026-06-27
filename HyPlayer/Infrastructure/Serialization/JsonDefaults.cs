@@ -1,6 +1,4 @@
 using HyPlayer.Classes;
-using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.Extensions.JsonSerializer;
 using LiteFM;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -16,6 +14,6 @@ public static class JsonDefaults
     {
         Converters = { new NumberToStringConverter(), new JsonBooleanConverter(), new JsonObjectStringConverter() },
         WriteIndented = true,
-        TypeInfoResolver = JsonTypeInfoResolver.Combine(JsonDefaultContext.Default, NeteaseApiContractJsonContext.Default, LastFMJsonDefaultContext.Default)
+        TypeInfoResolver = JsonTypeInfoResolver.Combine(JsonDefaultContext.Default, LastFMJsonDefaultContext.Default)
     };
 }

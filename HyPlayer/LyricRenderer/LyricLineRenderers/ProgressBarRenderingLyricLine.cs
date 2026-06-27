@@ -35,7 +35,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
-        float actualX = offset.X + SyllablesRenderingLyricLine.TextPadding;
+        float actualX = offset.X + TextRenderingLyricLine.TextPadding;
         float actualY = offset.Y + Height;
 
         if (context.CurrentLyricTime > EndTime || context.CurrentLyricTime < StartTime) return true;// 未激活

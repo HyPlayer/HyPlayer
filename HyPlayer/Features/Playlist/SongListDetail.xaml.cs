@@ -2,7 +2,7 @@
 
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Models;
 using System;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.UI.Xaml;
@@ -80,14 +80,14 @@ public sealed partial class SongListDetail : Page
 
         if (e.Parameter != null)
         {
-            if (e.Parameter is NeteasePlaylist playList)
+            if (e.Parameter is ContainerBase playList)
             {
                 var isDailyRecommend = playList.ActualId == DailyRecommendPlaylistId;
                 ViewModel.IsDailyRecommend = isDailyRecommend;
                 if (isDailyRecommend)
                 {
-                    ViewModel.DescriptionBoxContent = playList.Description;
-                    ViewModel.CoverUri = new Uri(playList.CoverUrl);
+                    ViewModel.PlayList = playList;
+                    ViewModel.DescriptionBoxContent = string.Empty;
                     ViewModel.LoadSongListItem().SafeFireAndForget();
                 }
                 else

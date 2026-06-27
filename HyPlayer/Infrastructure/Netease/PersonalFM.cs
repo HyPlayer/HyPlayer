@@ -3,8 +3,8 @@
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
@@ -30,6 +30,8 @@ internal sealed class PersonalFM
 
     private readonly PlayCoreBase _playCore;
     private readonly IPlaybackControlService _control;
+    private readonly IProvidableItemProvidable _itemProvider;
+    private readonly IProviderSpecialContainerTypeIds _specialContainerTypeIds;
     private readonly PlaybackStateService _playbackState;
     private readonly Setting _setting;
     private string _previousStrategyId = string.Empty;
@@ -39,6 +41,8 @@ internal sealed class PersonalFM
     {
         _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
         _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+        _itemProvider = Ioc.Default.GetRequiredService<IProvidableItemProvidable>();
+        _specialContainerTypeIds = Ioc.Default.GetRequiredService<IProviderSpecialContainerTypeIds>();
         _playbackState = Ioc.Default.GetRequiredService<PlaybackStateService>();
         _setting = Ioc.Default.GetRequiredService<Setting>();
     }
@@ -132,29 +136,25 @@ internal sealed class PersonalFM
         _instance = null;
     }
 
-    private static async Task<List<SingleSongBase>> LoadPersonalFmAsync()
+    private async Task<List<SingleSongBase>> LoadPersonalFmAsync()
     {
-        return (await new NeteasePersonalFMContainer { ActualId = "default", Name = "私人 FM" }
-                .GetNextItemsRangeAsync()
-                .ConfigureAwait(false))
-            .OfType<SingleSongBase>()
-            .ToList();
+        if (!_specialContainerTypeIds.SpecialContainerTypeIds.TryGetValue(SpecialContainerType.PersonalRadio, out var typeId))
+            return [];
+
+        return await _itemProvider.GetProvidableItemByIdAsync(typeId + "default") is UndeterminedContainerBase container
+            ? (await container.GetNextItemsRangeAsync().ConfigureAwait(false)).OfType<SingleSongBase>().ToList()
+            : [];
     }
 
-    private static async Task<List<SingleSongBase>> LoadAiDjAsync(SingleSongBase currentSong)
+    private async Task<List<SingleSongBase>> LoadAiDjAsync(SingleSongBase currentSong)
     {
         var itemId = currentSong.ActualId ?? currentSong.Name;
-        var container = new NeteaseContextRecommendationContainer
-        {
-            ActualId = itemId,
-            SeedItemId = itemId,
-            Name = "相关推荐",
-            Count = 10
-        };
+        if (!_specialContainerTypeIds.SpecialContainerTypeIds.TryGetValue(SpecialContainerType.ContextRecommendation, out var typeId))
+            return await LoadPersonalFmAsync().ConfigureAwait(false);
 
-        var songs = (await container.GetAllItemsAsync().ConfigureAwait(false))
-            .OfType<SingleSongBase>()
-            .ToList();
+        var songs = await _itemProvider.GetProvidableItemByIdAsync(typeId + itemId) is LinerContainerBase container
+            ? (await container.GetAllItemsAsync().ConfigureAwait(false)).OfType<SingleSongBase>().ToList()
+            : [];
 
         return songs.Count > 0 ? songs : await LoadPersonalFmAsync().ConfigureAwait(false);
     }

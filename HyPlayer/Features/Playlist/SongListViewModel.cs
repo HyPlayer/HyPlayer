@@ -9,9 +9,10 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Imaging;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -37,7 +38,10 @@ namespace HyPlayer.Features.Playlist
         private readonly PlayCoreBase _playCore;
         private readonly IPlaybackQueueLoader _queueLoader;
         private readonly IPlaybackControlService _control;
-        private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider;
+        private readonly IProvidableItemProvidable _itemProvider;
+        private readonly IProviderKnownTypeIds _knownTypeIds;
+        private readonly IProviderSpecialContainerTypeIds _specialContainerTypeIds;
+        private readonly IContainerItemManagementProvidable _containerItemManagement;
         private readonly Setting _setting;
         private readonly INotificationService _notification;
         private readonly INavigationService _navigation;
@@ -51,7 +55,10 @@ namespace HyPlayer.Features.Playlist
             PlayCoreBase playCore,
             IPlaybackQueueLoader queueLoader,
             IPlaybackControlService control,
-            global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
+            IProvidableItemProvidable itemProvider,
+            IProviderKnownTypeIds knownTypeIds,
+            IProviderSpecialContainerTypeIds specialContainerTypeIds,
+            IContainerItemManagementProvidable containerItemManagement,
             Setting setting,
             INotificationService notification,
             INavigationService navigation,
@@ -62,7 +69,10 @@ namespace HyPlayer.Features.Playlist
             _playCore = playCore;
             _queueLoader = queueLoader;
             _control = control;
-            _neteaseProvider = neteaseProvider;
+            _itemProvider = itemProvider;
+            _knownTypeIds = knownTypeIds;
+            _specialContainerTypeIds = specialContainerTypeIds;
+            _containerItemManagement = containerItemManagement;
             _setting = setting;
             _notification = notification;
             _navigation = navigation;
@@ -80,7 +90,7 @@ namespace HyPlayer.Features.Playlist
         public ObservableCollection<SongListItemViewModel> Songs { get; set; } = [];
         private readonly List<SingleSongBase> _dailyRecommendProviderSongs = [];
         [ObservableProperty]
-        public partial NeteasePlaylist PlayList { get; set; }
+        public partial ContainerBase PlayList { get; set; }
         [ObservableProperty]
         public partial bool IsDailyRecommend { get; set; }
         [ObservableProperty]
@@ -95,6 +105,12 @@ namespace HyPlayer.Features.Playlist
         public partial bool IsLoading { get; set; }
         [ObservableProperty]
         public partial string DescriptionBoxContent { get; set; }
+        [ObservableProperty]
+        public partial string CreatorName { get; set; }
+        [ObservableProperty]
+        public partial string? CreatorId { get; set; }
+        [ObservableProperty]
+        public partial bool Subscribed { get; set; }
 #nullable enable
         [ObservableProperty]
         public partial string? UpdateTime { get; set; }
@@ -106,7 +122,8 @@ namespace HyPlayer.Features.Playlist
         public partial SongListQueueScope QueueScope { get; set; }
 #nullable restore
 
-        private NeteasePlaylist _neteasePlaylist;
+        private ContainerBase _playlistContainer;
+        private IProgressiveLoadingContainer _progressivePlaylist;
         private int _greedyLoadTreashold = 3;
         private readonly HashSet<int> _loadedPages = [];
         private string _loadedPlaylistId;
@@ -127,7 +144,8 @@ namespace HyPlayer.Features.Playlist
                 Songs.Clear();
                 _dailyRecommendProviderSongs.Clear();
                 _loadedPages.Clear();
-                _neteasePlaylist = null;
+                _playlistContainer = null;
+                _progressivePlaylist = null;
                 _loadSongListTask = null;
                 _loadAlbumImageTask = null;
                 _loadedAlbumImageUrl = null;
@@ -141,30 +159,32 @@ namespace HyPlayer.Features.Playlist
 
             _loadedPlaylistId = PlaylistId;
 
-            if (loadPlaylist && (playlistChanged || PlayList?.ActualId != PlaylistId || _neteasePlaylist?.ActualId != PlaylistId))
+            if (loadPlaylist && (playlistChanged || PlayList?.ActualId != PlaylistId || _playlistContainer?.ActualId != PlaylistId))
             {
-                _neteasePlaylist = await _neteaseProvider.GetPlaylistById(PlaylistId);
-                if (_neteasePlaylist is null)
+                _playlistContainer = await LoadProviderPlaylistAsync(PlaylistId);
+                if (_playlistContainer is null)
                 {
                     _notification.ShowMessage("加载歌单出错", "未找到歌单信息");
                     return;
                 }
 
-                PlayList = _neteasePlaylist;
+                PlayList = _playlistContainer;
                 _loadedPlaylistDetail = false;
             }
 
-            DescriptionBoxContent = PlayList.Description;
+            DescriptionBoxContent = PlayList is IHasDescription descriptionProvider ? descriptionProvider.Description ?? string.Empty : string.Empty;
+            await LoadCreatorAsync(PlayList);
+            Subscribed = PlayList is IHasLibraryState { IsInCurrentUserLibrary: true };
             if (_setting.noImage)
             {
                 CoverUri = null;
             }
             else
             {
-                CoverUri = IsDailyRecommend ? new Uri(PlayList.CoverUrl) : new Uri(PlayList.CoverUrl + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
+                CoverUri = await GetCoverUriAsync(PlayList);
             }
             StartAlbumImageLoad();
-            UpdateTime = PlayList.UpdateTime == 0 ? string.Empty : $"{DateConverter.FriendFormat(DateTimeOffset.FromUnixTimeMilliseconds(PlayList.UpdateTime).LocalDateTime)}更新";
+            UpdateTime = string.Empty;
             _loadSongListTask ??= LoadSongListItem();
             _loadSongListTask.SafeFireAndForget();
         }
@@ -211,7 +231,7 @@ namespace HyPlayer.Features.Playlist
             {
                 try
                 {
-                    return (await LoadContainerItemsAsync(new NeteaseRecommendSongContainer { ActualId = "rcsg", Name = "推荐歌曲" }))
+                    return (await LoadDailyRecommendContainerItemsAsync())
                         .OfType<SingleSongBase>()
                         .ToList();
                 }
@@ -242,9 +262,9 @@ namespace HyPlayer.Features.Playlist
             if (!await EnsurePlaylistLoadedAsync("加载歌单出错"))
                 return;
 
-            PlayList = _neteasePlaylist;
+            PlayList = _playlistContainer;
             var auth = Ioc.Default.GetRequiredService<IAuthService>();
-            if (IsLikedMusicPlaylist(_neteasePlaylist, auth))
+            if (IsLikedMusicPlaylist(_playlistContainer, auth))
             {
                 IntelligenceModeVisible = true;
                 IsMySongList = true;
@@ -267,7 +287,7 @@ namespace HyPlayer.Features.Playlist
             (bool hasMore, List<ProvidableItemBase> items) rst;
             try
             {
-                rst = await _neteasePlaylist.GetProgressiveItemsListAsync(CurrentPage * 500, 500);
+                rst = await _progressivePlaylist.GetProgressiveItemsListAsync(CurrentPage * 500, 500);
             }
             catch (Exception ex)
             {
@@ -286,23 +306,24 @@ namespace HyPlayer.Features.Playlist
 
         private async Task<bool> EnsurePlaylistLoadedAsync(string errorTitle)
         {
-            _neteasePlaylist ??= PlayList as NeteasePlaylist;
-            _neteasePlaylist ??= await _neteaseProvider.GetPlaylistById(PlayList.ActualId);
-            if (_neteasePlaylist is not null)
+            _playlistContainer ??= PlayList;
+            _progressivePlaylist ??= _playlistContainer as IProgressiveLoadingContainer;
+            if (_progressivePlaylist is not null)
                 return true;
 
             _notification.ShowMessage(errorTitle, "未找到歌单信息");
             return false;
         }
 
-        private static bool IsLikedMusicPlaylist(NeteasePlaylist playlist, IAuthService auth)
+        private static bool IsLikedMusicPlaylist(ContainerBase playlist, IAuthService auth)
         {
             return auth.MySongLists.Count > 0 && playlist.ActualId == auth.MySongLists[0].ActualId;
         }
 
         public async Task LoadAlbumImage()
         {
-            using var result = await _httpClient.GetAsync(new Uri(PlayList.CoverUrl + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            if (CoverUri is null) return;
+            using var result = await _httpClient.GetAsync(CoverUri);
             if (result.IsSuccessStatusCode)
             {
                 using var stream = await result.Content.ReadAsStreamAsync();
@@ -314,7 +335,7 @@ namespace HyPlayer.Features.Playlist
 
         private void StartAlbumImageLoad()
         {
-            var coverUrl = PlayList.CoverUrl;
+            var coverUrl = CoverUri?.ToString();
             if (string.Equals(_loadedAlbumImageUrl, coverUrl, StringComparison.Ordinal) &&
                 _loadAlbumImageTask is { IsCompleted: false })
                 return;
@@ -371,7 +392,8 @@ namespace HyPlayer.Features.Playlist
                 _dailyRecommendProviderSongs.Clear();
                 _loadedPages.Clear();
                 CurrentPage = 0;
-                _neteasePlaylist = null;
+                _playlistContainer = null;
+                _progressivePlaylist = null;
                 _loadedPlaylistDetail = false;
                 _loadedDailyRecommend = false;
                 _loadSongListTask = LoadSongListItem();
@@ -443,16 +465,15 @@ namespace HyPlayer.Features.Playlist
         {
             try
             {
-                var playlist = new NeteasePlaylist { ActualId = PlayList.ActualId, Name = PlayList.Name };
-                if (PlayList.Subscribed)
+                if (Subscribed)
                 {
-                    await playlist.UnsubscribeAsync();
+                    await _containerItemManagement.RemoveItemFromContainerAsync(PlayList.TypeId, PlayList.ActualId);
+                    Subscribed = false;
                 }
                 else
                 {
-                    await playlist.SubscribeAsync();
+                    _notification.ShowMessage("暂不支持收藏", "当前抽象只支持从集合中移出项目");
                 }
-                PlayList.Subscribed = !PlayList.Subscribed;
             }
             catch (Exception ex)
             {
@@ -474,7 +495,40 @@ namespace HyPlayer.Features.Playlist
         [RelayCommand]
         private void NavigateToAuthor()
         {
-            _navigation.Navigate(typeof(Me), PlayList.Creator?.ActualId);
+            if (!string.IsNullOrWhiteSpace(CreatorId))
+                _navigation.Navigate(typeof(Me), CreatorId);
+        }
+
+        private async Task<ContainerBase?> LoadProviderPlaylistAsync(string playlistId)
+        {
+            return await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.PlaylistTypeId + playlistId) as ContainerBase;
+        }
+
+        private async Task<List<ProvidableItemBase>> LoadDailyRecommendContainerItemsAsync()
+        {
+            if (!_specialContainerTypeIds.SpecialContainerTypeIds.TryGetValue(SpecialContainerType.RecommendedSongs, out var typeId))
+                return [];
+
+            return await _itemProvider.GetProvidableItemByIdAsync(typeId + "rcsg") is ContainerBase container
+                ? await LoadContainerItemsAsync(container)
+                : [];
+        }
+
+        private async Task LoadCreatorAsync(ContainerBase container)
+        {
+            var creators = container is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync() : null;
+            var creator = creators?.FirstOrDefault();
+            CreatorName = creator?.Name ?? string.Empty;
+            CreatorId = creator?.ActualId;
+        }
+
+        private static async Task<Uri?> GetCoverUriAsync(ContainerBase container)
+        {
+            if (container is not IHasCover coverProvider)
+                return null;
+
+            var cover = await coverProvider.GetCoverAsync();
+            return cover is IResourceResultOf<Uri?> uriResult ? await uriResult.GetResourceAsync() : null;
         }
     }
 }

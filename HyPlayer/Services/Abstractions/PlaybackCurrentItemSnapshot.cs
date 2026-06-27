@@ -1,6 +1,7 @@
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using System.Text.Json.Serialization;
 
 namespace HyPlayer.Services.Abstractions;
 
@@ -33,6 +34,7 @@ public sealed class PlaybackCurrentItemSnapshot
     public string AlbumName { get; }
     public long Duration { get; }
     public bool IsLocal { get; }
+    [JsonIgnore]
     public SingleSongBase? ProviderItem { get; }
 
     public static PlaybackCurrentItemSnapshot? FromProvider(SingleSongBase? item)

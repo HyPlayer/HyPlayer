@@ -108,7 +108,7 @@
                                     x:Name="TextBoxAuthor"
                                     Padding="0"
                                     Command="{x:Bind ViewModel.NavigateToAuthorCommand}"
-                                    Content="{x:Bind ViewModel.PlayList.Creator.Name, Mode=OneWay}"
+                                    Content="{x:Bind ViewModel.CreatorName, Mode=OneWay}"
                                     FontSize="16"
                                     Style="{StaticResource TextBlockButtonStyle}" />
                                 <TextBlock
@@ -131,8 +131,8 @@
                                             x:Name="LikedIcon"
                                             Margin="0,0,8,0"
                                             FontSize="12"
-                                            Glyph="{x:Bind ViewModel.PlayList.Subscribed, Mode=OneWay, Converter={StaticResource BoolToLikeIconConverter}}" />
-                                        <TextBlock x:Name="LikeBtnText" Text="{x:Bind ViewModel.PlayList.Subscribed, Mode=OneWay, Converter={StaticResource BoolToLikeStringConverter}}" />
+                                            Glyph="{x:Bind ViewModel.Subscribed, Mode=OneWay, Converter={StaticResource BoolToLikeIconConverter}}" />
+                                        <TextBlock x:Name="LikeBtnText" Text="{x:Bind ViewModel.Subscribed, Mode=OneWay, Converter={StaticResource BoolToLikeStringConverter}}" />
                                     </StackPanel>
                                 </Button>
                                 <Button Margin="0,6,0,0" Command="{x:Bind ViewModel.PlayAllCommand}">

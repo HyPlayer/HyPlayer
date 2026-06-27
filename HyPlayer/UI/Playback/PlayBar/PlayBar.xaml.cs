@@ -8,9 +8,9 @@ using HyPlayer.Features.Artist;
 using HyPlayer.Features.Comments;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
@@ -69,7 +69,7 @@ public sealed partial class PlayBar
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly ILocalFileImportService _localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
-    private readonly NeteasePersonalFMContainer _personalFmContainer = Ioc.Default.GetRequiredService<NeteasePersonalFMContainer>();
+    private readonly IPersonalRadioProvidable _personalRadioProvider = Ioc.Default.GetRequiredService<IPersonalRadioProvidable>();
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private readonly IAppLifecycleStateService _lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
@@ -78,6 +78,7 @@ public sealed partial class PlayBar
     private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
     private WeakEventListener<PlayBar, object?, SongLikeStatusChangedEventArgs>? _songLikeStatusChangedListener;
     private WeakEventListener<PlayBar, object?, EventArgs>? _loginCompletedListener;
+    private DataTransferManager? _dataTransferManager;
 
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding = false;
@@ -455,7 +456,7 @@ DoubleAnimation verticalAnimation;
         {
             var songId = ViewModel.NowPlayingProviderItem?.ActualId;
             if (!string.IsNullOrEmpty(songId))
-                _taskRunner.Forget(_personalFmContainer.MoveItemToTrashAsync(songId), "trash personal FM item");
+                _taskRunner.Forget(_personalRadioProvider.MovePersonalRadioItemToTrashAsync(songId), "trash personal radio item");
             PersonalFM.LoadNextFMStatic();
         }
         ViewModel.SyncFromState();
@@ -471,16 +472,16 @@ DoubleAnimation verticalAnimation;
         try
         {
             var providerItem = ViewModel.NowPlayingProviderItem;
-            if (providerItem is NeteaseSong providerSong)
+            if (providerItem is null)
+                return;
+
+            var creators = await providerItem.GetCreatorsAsync();
+            if (creators is { Count: > 1 })
+                await new ArtistSelectDialog(creators).ShowAsync();
+            else if (creators is { Count: 1 })
             {
-                if (providerSong.Artists.Count > 1)
-                    await new ArtistSelectDialog(providerSong.Artists.Select(t => (HyPlayer.PlayCore.Abstraction.Models.Containers.PersonBase)t).ToList()).ShowAsync();
-                else if (providerSong.Artists.Count == 1)
-                    _navigation.Navigate(typeof(ArtistPage), providerSong.Artists[0].ActualId);
-            }
-            else if (providerItem is NeteaseRadioProgram { Host: not null } radioProgram)
-            {
-                _navigation.Navigate(typeof(Me), radioProgram.Host.ActualId);
+                var creator = creators[0];
+                _navigation.Navigate(creator is ArtistBase ? typeof(ArtistPage) : typeof(Me), creator.ActualId);
             }
         }
         catch
@@ -488,21 +489,20 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    private void TbAlbumName_OnTapped(object sender, RoutedEventArgs e)
+    private async void TbAlbumName_OnTapped(object sender, RoutedEventArgs e)
     {
         try
         {
             var providerItem = ViewModel.NowPlayingProviderItem;
-            if (providerItem is NeteaseSong providerSong)
+            if (providerItem?.Album is { ActualId: { Length: > 0 } albumId } && albumId != "0")
             {
-                var albumId = providerSong.Album?.ActualId;
-                if (!string.IsNullOrEmpty(albumId) && albumId != "0")
-                    _navigation.Navigate(typeof(AlbumPage), albumId);
+                _navigation.Navigate(typeof(AlbumPage), albumId);
+                return;
             }
-            else if (providerItem is NeteaseRadioProgram { Host: not null } radioProgram)
-            {
-                _navigation.Navigate(typeof(Me), radioProgram.Host.ActualId);
-            }
+
+            var creators = providerItem is null ? null : await providerItem.GetCreatorsAsync();
+            if (creators is { Count: 1 })
+                _navigation.Navigate(typeof(Me), creators[0].ActualId);
         }
         catch
         {
@@ -511,9 +511,7 @@ DoubleAnimation verticalAnimation;
 
     private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
     {
-        var songId = ViewModel.NowPlayingProviderItem is NeteaseSong providerSong
-            ? providerSong.ActualId
-            : null;
+        var songId = ViewModel.NowPlayingProviderItem?.ActualId;
         if (!string.IsNullOrEmpty(songId))
             await new SongListSelect(songId).ShowAsync();
     }
@@ -530,17 +528,19 @@ DoubleAnimation verticalAnimation;
     private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
     {
         var providerItem = ViewModel.NowPlayingProviderItem;
-        if (providerItem is NeteaseSong providerSong)
-            _navigation.Navigate(typeof(Comments), CommentTarget.Song(providerSong.ActualId));
-        else if (providerItem is NeteaseRadioProgram radioProgram)
-            _navigation.Navigate(typeof(Comments), CommentTarget.RadioProgram(radioProgram.ActualId));
+        if (!string.IsNullOrEmpty(providerItem?.ActualId))
+            _navigation.Navigate(typeof(Comments), new CommentTarget(providerItem.TypeId, providerItem.ActualId));
         RequestCompactPlayer();
     }
 
     private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
     {
-        // NOTE: 分享电台节目功能尚未实现
-        if (ViewModel.NowPlayingProviderItem is not NeteaseSong) return;
+        if (ViewModel.NowPlayingProviderItem is null) return;
+        if (_dataTransferManager is null)
+        {
+            _notification.ShowMessage("分享不可用", "当前窗口未初始化分享服务");
+            return;
+        }
 
         //展示系统的共享ui
         DataTransferManager.ShowShareUI();
@@ -701,7 +701,15 @@ DoubleAnimation verticalAnimation;
             catch
             {
             }
-        ViewModel.DataTransferManager.DataRequested += DataTransferManager_DataRequested;
+        try
+        {
+            _dataTransferManager = DataTransferManager.GetForCurrentView();
+            _dataTransferManager.DataRequested += DataTransferManager_DataRequested;
+        }
+        catch (Exception ex)
+        {
+            _diagnostics.Logs.Add("Failed to initialize PlayBar share integration: " + ex.Message);
+        }
     }
 
     private void DataTransferManager_DataRequested(DataTransferManager sender, DataRequestedEventArgs args)
@@ -868,7 +876,8 @@ DoubleAnimation verticalAnimation;
         _surfaceStoreChangedListener?.Detach();
         _songLikeStatusChangedListener?.Detach();
         _loginCompletedListener?.Detach();
-        ViewModel.DataTransferManager.DataRequested -= DataTransferManager_DataRequested;
+        if (_dataTransferManager is not null)
+            _dataTransferManager.DataRequested -= DataTransferManager_DataRequested;
     }
 
     private void RunOnUIThread(Action action)

@@ -16,7 +16,7 @@ using HyPlayer.Features.Video;
 using HyPlayer.Features.Welcome;
 using HyPlayer.Infrastructure.Diagnostics;
 using HyPlayer.Infrastructure.Serialization;
-using HyPlayer.NeteaseApi;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Playback;
 using System;
@@ -43,7 +43,7 @@ namespace HyPlayer.Shell;
 public sealed partial class TestPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _neteaseProvider = Ioc.Default.GetRequiredService<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
+    private readonly IProviderAdditionalConfigurationProvidable _providerAdditionalConfiguration = Ioc.Default.GetRequiredService<IProviderAdditionalConfigurationProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
@@ -84,7 +84,7 @@ public sealed partial class TestPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        TbAdditionalApiParameters.Text = JsonSerializer.Serialize<AdditionalParameters>(_setting.ApiAdditionalParameters, JsonDefaults.Options);
+        TbAdditionalApiParameters.Text = _setting.ApiAdditionalParametersJson;
     }
 
     public string ResourceId
@@ -167,8 +167,10 @@ public sealed partial class TestPage : Page
             {
                 ActualId = _auth.CurrentUser.ActualId,
                 Name = _auth.CurrentUser.Name,
-                AvatarUrl = _auth.CurrentUser.AvatarUrl,
-                Description = _auth.CurrentUser.Description
+                AvatarUrl = string.Empty,
+                Description = _auth.CurrentUser is HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem.IHasDescription descriptionProvider
+                    ? descriptionProvider.Description
+                    : string.Empty
             } : null,
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
             IsInBackground = Ioc.Default.GetRequiredService<IAppLifecycleStateService>().IsInBackground,
@@ -194,19 +196,12 @@ public sealed partial class TestPage : Page
     {
         try
         {
-            var result = JsonSerializer.Deserialize<AdditionalParameters>(TbAdditionalApiParameters.Text, JsonDefaults.Options);
-            if (result != null)
-            {
-                _setting.ApiAdditionalParameters = result;
-                _neteaseProvider.ConfigureAdditionalParameters(result);
-                var authService = Ioc.Default.GetRequiredService<IAuthService>();
-                authService.NotifyLoginCompleted();
-                _notification.ShowMessage("成功设置API附加参数", "请重启应用以使更改生效");
-            }
-            else
-            {
-                throw new Exception("Invalid JSON");
-            }
+            using var _ = JsonDocument.Parse(TbAdditionalApiParameters.Text);
+            _setting.ApiAdditionalParametersJson = TbAdditionalApiParameters.Text;
+            _providerAdditionalConfiguration.ImportAdditionalConfiguration(TbAdditionalApiParameters.Text);
+            var authService = Ioc.Default.GetRequiredService<IAuthService>();
+            authService.NotifyLoginCompleted();
+            _notification.ShowMessage("成功设置API附加参数", "请重启应用以使更改生效");
         }
         catch (Exception ex)
         {

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Serialization;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
@@ -14,6 +15,7 @@ namespace HyPlayer.Services.Cache;
 public static class SimpleCacher
 {
     private static StorageFolder? cacheFolder;
+    private static readonly ConcurrentDictionary<Type, bool> jsonSupportedTypes = new();
 
 
     public static async Task InitializeAsync()
@@ -41,7 +43,8 @@ public static class SimpleCacher
     restart:
         var fileName = $"{id}.cache";
         bool hasCache = false;
-        if (await dir.TryGetItemAsync(fileName) is StorageFile cacheFile && !forceRefresh)
+        var supportsJsonCache = SupportsJsonCache<T>();
+        if (supportsJsonCache && await dir.TryGetItemAsync(fileName) is StorageFile cacheFile && !forceRefresh)
         {
             hasCache = true;
             // Check for expiration
@@ -61,6 +64,13 @@ public static class SimpleCacher
                 {
                     var rst = JsonSerializer.Deserialize<T>(content, JsonDefaults.Options);
                     return rst;
+                }
+                catch (NotSupportedException)
+                {
+                    jsonSupportedTypes[typeof(T)] = false;
+                    supportsJsonCache = false;
+                    if (forceUseCache)
+                        return default;
                 }
                 catch
                 {
@@ -92,12 +102,21 @@ public static class SimpleCacher
             return default;
         }
 
+        if (!supportsJsonCache)
+        {
+            return data;
+        }
+
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
             var json = JsonSerializer.Serialize(data, JsonDefaults.Options);
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             await FileIO.WriteTextAsync(file, json);
+        }
+        catch (NotSupportedException)
+        {
+            jsonSupportedTypes[typeof(T)] = false;
         }
         catch
         {
@@ -108,6 +127,21 @@ public static class SimpleCacher
 
 
         return data;
+    }
+
+    private static bool SupportsJsonCache<T>() where T : class
+    {
+        return jsonSupportedTypes.GetOrAdd(typeof(T), static type =>
+        {
+            try
+            {
+                return JsonDefaults.Options.TypeInfoResolver?.GetTypeInfo(type, JsonDefaults.Options) is not null;
+            }
+            catch (NotSupportedException)
+            {
+                return false;
+            }
+        });
     }
 
     public static async Task ResetCacheAsync(CacheType type, string id, bool isPrefix = false)

@@ -1,7 +1,5 @@
 using Windows.UI;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
-using WinRT;
 
 namespace HyPlayer.Services.Playback;
 
@@ -18,11 +16,8 @@ public readonly record struct PlaybackThemeSnapshot(
 )
 {
     public static PlaybackThemeSnapshot Default => new(
-        Application.Current.Resources["SystemControlPageTextBaseHighBrush"]?.As<SolidColorBrush>()
-            ?? new SolidColorBrush(Colors.White),
-        Application.Current.Resources["TextFillColorTertiaryBrush"]?.As<SolidColorBrush>()
-            ?? new SolidColorBrush(Colors.Gray),
-        (Application.Current.Resources["SystemControlPageTextBaseHighBrush"]?.As<SolidColorBrush>())?.Color
-            ?? Colors.White,
+        new SolidColorBrush(Colors.White),
+        new SolidColorBrush(Colors.Gray),
+        Colors.White,
         false);
 }

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace HyPlayer.Services.Playback.QueueProviders;
 
 /// <summary>
-/// 歌单源提供者 — 加载网易云歌单全部歌曲。
+/// 歌单源提供者 — 加载 provider 歌单全部歌曲。
 /// Prefix: "pl", Kind: <see cref="SongListQueueScopeKind.Playlist"/>
 /// </summary>
 internal sealed class PlaylistQueueSourceProvider : IQueueSourceProvider
@@ -29,7 +29,7 @@ internal sealed class PlaylistQueueSourceProvider : IQueueSourceProvider
     public string Prefix => QueueSourcePrefixes.Playlist;
     public bool SupportCompleteLoad => true;
 
-    public async Task<NeteaseQueueSourceLoadResult> LoadAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<ProviderQueueSourceLoadResult> LoadAsync(string id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -52,16 +52,16 @@ internal sealed class PlaylistQueueSourceProvider : IQueueSourceProvider
             if (batches.Count == 0)
             {
                 _notification.ShowMessage("获取歌单失败", "歌曲详情为空或全部获取失败");
-                return NeteaseQueueSourceLoadResult.Failed;
+                return ProviderQueueSourceLoadResult.Failed;
             }
 
-            return NeteaseQueueSourceLoadResult.FromBatches(batches);
+            return ProviderQueueSourceLoadResult.FromBatches(batches);
         }
         catch (Exception ex)
         {
             _notification.ShowMessage("AppendPlayList时发生错误", ex.Message);
         }
 
-        return NeteaseQueueSourceLoadResult.Failed;
+        return ProviderQueueSourceLoadResult.Failed;
     }
 }

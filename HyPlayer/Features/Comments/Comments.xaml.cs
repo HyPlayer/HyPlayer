@@ -2,7 +2,6 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Comments;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
@@ -31,6 +30,7 @@ namespace HyPlayer.Features.Comments;
 public sealed partial class Comments : Page
 {
     private readonly IProvidableItemCommentProvidable _commentProvider = Ioc.Default.GetRequiredService<IProvidableItemCommentProvidable>();
+    private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
 
 #nullable enable
@@ -42,8 +42,8 @@ public sealed partial class Comments : Page
     private string resourcetype;
     private int sortType = 1;
     private bool IsShiftingPage = false;
-    private ObservableCollection<NeteaseComment> hotComments = new ObservableCollection<NeteaseComment>();
-    private ObservableCollection<NeteaseComment> normalComments = new ObservableCollection<NeteaseComment>();
+    private ObservableCollection<CommentBase> hotComments = new ObservableCollection<CommentBase>();
+    private ObservableCollection<CommentBase> normalComments = new ObservableCollection<CommentBase>();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _commentLoaderTask;
@@ -137,9 +137,8 @@ public sealed partial class Comments : Page
         foreach (var comment in result.Items)
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var cmt = (NeteaseComment)comment;
-            cmt.ResourceTypeId = resourcetype;
-            cmt.ResourceId = resourceid;
+            var cmt = comment;
+            cmt.ProvidableItemId = CreateProvidableItemId(resourcetype, resourceid);
             if (targetHotComments)
                 hotComments.Add(cmt);
             else normalComments.Add(cmt);
@@ -194,6 +193,11 @@ public sealed partial class Comments : Page
                 HasMore = false
             };
         }
+    }
+
+    private string CreateProvidableItemId(string typeId, string actualId)
+    {
+        return _knownTypeIds.Id + typeId + actualId;
     }
 
 

@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.NeteaseProvider.Constants;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Services.Abstractions;
@@ -32,7 +32,7 @@ namespace HyPlayer.Services.LastFM
         {
             var setting = Ioc.Default.GetRequiredService<Setting>();
             var session = setting.LastFMSession;
-            if (!session.HasLogined || !setting.UpdateLastFMNowPlaying || item.ProviderId != "ncm" || item.TypeId != NeteaseTypeIds.SingleSong) return;
+            if (!session.HasLogined || !setting.UpdateLastFMNowPlaying || !IsSingleSong(item)) return;
             var request = new UpdateNowPlayingRequest()
             {
                 Album = item.Album?.Name ?? string.Empty,
@@ -50,7 +50,7 @@ namespace HyPlayer.Services.LastFM
         {
             var setting = Ioc.Default.GetRequiredService<Setting>();
             var session = setting.LastFMSession;
-            if (!session.HasLogined || !setting.LastFMScrobble || item.ProviderId != "ncm" || item.TypeId != NeteaseTypeIds.SingleSong) return;
+            if (!session.HasLogined || !setting.LastFMScrobble || !IsSingleSong(item)) return;
             var request = new ScrobbleRequest()
             {
                 Album = item.Album?.Name ?? string.Empty,
@@ -65,6 +65,11 @@ namespace HyPlayer.Services.LastFM
                 var notification = Ioc.Default.GetRequiredService<INotificationService>();
                 notification.ShowMessage("Last.FM 上传播放记录失败", response.Error.Message);
             }
+        }
+
+        private static bool IsSingleSong(SingleSongBase item)
+        {
+            return item.TypeId == Ioc.Default.GetRequiredService<IProviderKnownTypeIds>().SingleSongTypeId;
         }
     }
 }

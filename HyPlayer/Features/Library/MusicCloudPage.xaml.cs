@@ -5,8 +5,10 @@ using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
@@ -36,6 +38,8 @@ public sealed partial class MusicCloudPage : Page
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+    private readonly IUserLibraryProvidable _userLibraryProvider = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
+    private readonly IUserLibraryTypeIds _userLibraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
     private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private readonly WeakEventListener<MusicCloudPage, object?, EventArgs> _secondTickListener;
     private bool _isSecondTickSubscribed;
@@ -72,18 +76,14 @@ public sealed partial class MusicCloudPage : Page
         {
             try
             {
-                var container = new NeteaseUserLibrarySubContainer
-                {
-                    ActualId = "cloud",
-                    Name = "音乐云盘",
-                    Kind = NeteaseUserLibrarySubContainer.CloudKind,
-                    MaxProgressiveCount = 749
-                };
+                if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId, _cancellationToken) is not IProgressiveLoadingContainer container)
+                    return new CloudLibraryPage();
+
                 var (hasMore, items) = await container.GetProgressiveItemsListAsync(currentPage * 749, 749, _cancellationToken);
                 return new CloudLibraryPage
                 {
                     HasMore = hasMore,
-                    Items = items.OfType<HyPlayer.PlayCore.Abstraction.Models.Containers.CloudLibraryItemBase>().ToList()
+                    Items = items.OfType<CloudLibraryItemBase>().ToList()
                 };
             }
             catch (Exception ex)
@@ -119,7 +119,7 @@ public sealed partial class MusicCloudPage : Page
     private sealed class CloudLibraryPage
     {
         public bool HasMore { get; init; }
-        public List<HyPlayer.PlayCore.Abstraction.Models.Containers.CloudLibraryItemBase> Items { get; init; } = [];
+        public List<CloudLibraryItemBase> Items { get; init; } = [];
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -250,13 +250,8 @@ public sealed partial class MusicCloudPage : Page
         _loadResultTask = LoadMusicCloudItem();
     }
 
-    private static async Task<SongListItemViewModel> MapCloudLibraryItemToRowAsync(HyPlayer.PlayCore.Abstraction.Models.Containers.CloudLibraryItemBase item, int order)
+    private static async Task<SongListItemViewModel> MapCloudLibraryItemToRowAsync(CloudLibraryItemBase item, int order)
     {
-        if (item is NeteaseCloudLibraryItem { Song: SingleSongBase song })
-        {
-            return await SongListItemViewModel.FromProviderSongAsync(song, order, isCloud: true);
-        }
-
-        return SongListItemViewModel.FromFallback(item.ActualId, item.Name, order, isCloud: true);
+        return await SongListItemViewModel.FromProviderSongAsync(item, order, isCloud: true);
     }
 }

@@ -8,8 +8,9 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Audio;
 using HyPlayer.Infrastructure.Extensions;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Lyric;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -44,6 +45,7 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
     private readonly HttpClient _httpClient;
     private readonly ILyricProvidable _lyricProvider;
     private readonly IMusicResourceProvidable _musicResourceProvider;
+    private readonly IResourceQualityTagProvidable _qualityTagProvider;
     private readonly IDiagnosticsStateService _diagnostics;
     private readonly SingleSongBase _providerSong;
     private readonly string _downloadAlbumName;
@@ -97,6 +99,7 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         HttpClient httpClient,
         ILyricProvidable lyricProvider,
         IMusicResourceProvidable musicResourceProvider,
+        IResourceQualityTagProvidable qualityTagProvider,
         IDiagnosticsStateService diagnostics)
     {
         _notification = notification;
@@ -104,14 +107,16 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
         _httpClient = httpClient;
         _lyricProvider = lyricProvider;
         _musicResourceProvider = musicResourceProvider;
+        _qualityTagProvider = qualityTagProvider;
         _diagnostics = diagnostics;
         _providerSong = song;
         _downloadAlbumName = song.Album?.Name ?? string.Empty;
         _downloadArtistNames = GetProviderArtistNames(song);
         _downloadSongName = song.Name ?? string.Empty;
         _downloadOrder = 0;
-        _downloadTrackId = song is NeteaseSong neteaseSong ? neteaseSong.TrackNumber : 0;
-        _downloadCdName = song is NeteaseSong neteaseSongWithCd ? neteaseSongWithCd.CdName : null;
+        var trackMetadata = song as IHasTrackMetadata;
+        _downloadTrackId = trackMetadata?.TrackNumber ?? 0;
+        _downloadCdName = trackMetadata?.DiscName;
         _downloadSongId = song.ActualId ?? string.Empty;
         _downloadAlbumId = song.Album?.ActualId;
         _downloadAlbumCover = GetProviderAlbumCover(song);
@@ -310,15 +315,11 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
             try
             {
                 var lyrics = await _lyricProvider.GetLyricInfoAsync(_providerSong);
-                var original = lyrics.OfType<NeteaseRawLyricInfo>()
-                    .FirstOrDefault(lyric => !lyric.IsWord && lyric.LyricType == LyricType.Original)
-                    ?.LyricText;
+                var original = await GetLyricTextAsync(lyrics, LyricType.Original, word: false);
                 if (string.IsNullOrWhiteSpace(original)) return;
                 if (original == "[99:00.00]纯音乐，请欣赏") return;
                 var lrc = Utils.ConvertPureLyric(original);
-                var translation = lyrics.OfType<NeteaseRawLyricInfo>()
-                    .FirstOrDefault(lyric => !lyric.IsWord && lyric.LyricType == LyricType.Translation)
-                    ?.LyricText;
+                var translation = await GetLyricTextAsync(lyrics, LyricType.Translation, word: false);
                 if (_setting.downloadTranslation && !string.IsNullOrWhiteSpace(translation))
                 {
                     Utils.ConvertTranslation(translation, lrc);
@@ -450,9 +451,9 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                 HasPaused = false;
                 Message = "正在获取下载链接";
             });
-            var musicResource = await _musicResourceProvider.GetMusicResourceAsync(
-                _providerSong,
-                new NeteaseMusicQualityTag(_setting.downloadAudioRate));
+            var qualityTags = await _qualityTagProvider.GetAvailableQualityTagsAsync(ResourceType.Audio);
+            qualityTags.TryGetValue(_setting.downloadAudioRate, out var qualityTag);
+            var musicResource = await _musicResourceProvider.GetMusicResourceAsync(_providerSong, qualityTag);
 
             if (musicResource?.Uri is null)
             {
@@ -467,11 +468,10 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
                 return;
             }
 
-            var neteaseResource = musicResource as NeteaseMusicResource;
-            var extension = (neteaseResource?.MusicType ?? neteaseResource?.EncodeType ?? musicResource.ExtensionName ?? "mp3")
+            var extension = (musicResource.ExtensionName ?? "mp3")
                 .ToLowerInvariant();
             FileName += "." + extension;
-            _downloadBitrate = int.TryParse(neteaseResource?.BitRate, out var bitRate) ? bitRate : 0;
+            _downloadBitrate = 0;
             _downloadFormat = extension;
 
             _downloadOperation = DownloadManager.Downloader.CreateDownload(
@@ -495,17 +495,39 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
 
     private static string[] GetProviderArtistNames(SingleSongBase song)
     {
-        if (song is NeteaseSong { Artists: { Count: > 0 } artists })
-            return artists.Select(artist => artist.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToArray();
-
         return song.CreatorList?.Where(name => !string.IsNullOrWhiteSpace(name)).ToArray() ?? [];
     }
 
     private static string? GetProviderAlbumCover(SingleSongBase song)
     {
-        return song.Album is NeteaseAlbum album
-            ? album.PictureUrl
-            : (song as NeteaseSong)?.CoverUrl;
+        var coverProvider = song.Album as IHasCover ?? song as IHasCover;
+        if (coverProvider is null)
+            return null;
+
+        var result = coverProvider.GetCoverAsync().GetAwaiter().GetResult();
+        return result is IResourceResultOf<Uri?> uriResult
+            ? uriResult.GetResourceAsync().GetAwaiter().GetResult()?.ToString()
+            : null;
+    }
+
+    private static async Task<string?> GetLyricTextAsync(IEnumerable<RawLyricInfo> lyrics, LyricType type, bool word)
+    {
+        foreach (var lyric in lyrics)
+        {
+            var isWord = lyric.Source?.Contains("yrc", StringComparison.OrdinalIgnoreCase) is true;
+            if (isWord != word || lyric.LyricType != type)
+                continue;
+
+            var result = await lyric.GetResourceAsync();
+            if (result is not IResourceResultOf<string> textResult)
+                continue;
+
+            var text = await textResult.GetResourceAsync();
+            if (!string.IsNullOrWhiteSpace(text))
+                return text;
+        }
+
+        return null;
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
@@ -536,6 +558,7 @@ internal static class DownloadManager
     private static HttpClient HttpClient => Ioc.Default.GetRequiredService<HttpClient>();
     private static ILyricProvidable LyricProvider => Ioc.Default.GetRequiredService<ILyricProvidable>();
     private static IMusicResourceProvidable MusicResourceProvider => Ioc.Default.GetRequiredService<IMusicResourceProvidable>();
+    private static IResourceQualityTagProvidable QualityTagProvider => Ioc.Default.GetRequiredService<IResourceQualityTagProvidable>();
     private static IDiagnosticsStateService Diagnostics => Ioc.Default.GetRequiredService<IDiagnosticsStateService>();
     public static ObservableCollection<DownloadObject> DownloadLists = [];
     public static BackgroundDownloader Downloader = new();
@@ -631,7 +654,7 @@ internal static class DownloadManager
 
     private static DownloadObject CreateDownloadObject(SingleSongBase song)
     {
-        return new DownloadObject(song, Notification, Setting, HttpClient, LyricProvider, MusicResourceProvider, Diagnostics);
+        return new DownloadObject(song, Notification, Setting, HttpClient, LyricProvider, MusicResourceProvider, QualityTagProvider, Diagnostics);
     }
 
     public static void CacheAlbumPicture(string albumId, Picture picture)

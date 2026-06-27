@@ -3,10 +3,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
-using HyPlayer.NeteaseProvider.Constants;
-using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.UI.Converters;
@@ -20,14 +22,17 @@ namespace HyPlayer.Features.Library
 {
     public partial class FavoriteViewModel : ObservableRecipient
     {
-        private readonly global::HyPlayer.NeteaseProvider.NeteaseProvider _userLibraryProvider;
+        private readonly IUserLibraryProvidable _userLibraryProvider;
+        private readonly IProviderKnownTypeIds _knownTypeIds;
         private readonly INotificationService _notification;
 
         public FavoriteViewModel(
-            global::HyPlayer.NeteaseProvider.NeteaseProvider userLibraryProvider,
+            IUserLibraryProvidable userLibraryProvider,
+            IProviderKnownTypeIds knownTypeIds,
             INotificationService notification)
         {
             _userLibraryProvider = userLibraryProvider;
+            _knownTypeIds = knownTypeIds;
             _notification = notification;
         }
 
@@ -62,24 +67,24 @@ namespace HyPlayer.Features.Library
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"djchannel_subscribed_{page}",
                     async () =>
                     {
-                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.RadioChannel, page * 200, 200);
+                        return await LoadUserLibraryPageAsync(_knownTypeIds.RadioChannelTypeId!, page * 200, 200);
                     });
 
 
             HasMore = jv.HasMore;
-            foreach (var item in jv.Items.OfType<NeteaseRadioChannel>())
+            foreach (var item in jv.Items.OfType<LinerContainerBase>())
             {
+                var description = item is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
+                var creators = item is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync() : null;
                 Content.Add(new SimpleListItem
                 {
                     Title = item.Name,
-                    LineOne = string.Join(" / ", item.CreatorList ?? []),
-                    LineTwo = item.Description,
-                    LineThree =
-                        $"{DateConverter.FriendFormat(DateConverter.GetDateTimeFromTimeStamp(item.LastProgramCreateTime))}前 | 最后一个节目: " +
-                        item.LastProgramName,
+                    LineOne = string.Join(" / ", creators?.Select(creator => creator.Name) ?? []),
+                    LineTwo = description,
+                    LineThree = string.Empty,
                     Route = new AppRoute.Radio($"{item.ActualId}"),
                     PlayResource = new MusicResource.Radio($"{item.ActualId}"),
-                    CoverLink = item.CoverUrl,
+                    CoverLink = await TryGetCoverLinkAsync(item),
                     Order = _currentIndex++,
                     CanPlay = true
                 });
@@ -91,21 +96,23 @@ namespace HyPlayer.Features.Library
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"artist_sublist_{page}",
                     async () =>
                     {
-                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.Artist, page * 25, 25);
+                        return await LoadUserLibraryPageAsync(_knownTypeIds.ArtistTypeId, page * 25, 25);
                     });
 
             HasMore = jv.HasMore;
-            foreach (var singerjson in jv.Items.OfType<NeteaseArtist>())
+            foreach (var singerjson in jv.Items.OfType<ArtistBase>())
             {
+                var translation = singerjson is IHasTranslation translationProvider ? translationProvider.Translation : null;
+                var aliases = singerjson is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
                 Content.Add(new SimpleListItem
                 {
                     Title = singerjson.Name,
-                    LineOne = singerjson.Translation,
-                    LineTwo = string.Join("/", singerjson.Alias ?? []),
-                    LineThree = $"专辑数 {singerjson.AlbumSize} | MV 数 {singerjson.MvSize}",
+                    LineOne = translation,
+                    LineTwo = string.Join("/", aliases ?? []),
+                    LineThree = string.Empty,
                     Route = new AppRoute.Artist($"{singerjson.ActualId}"),
                     PlayResource = new MusicResource.Artist($"{singerjson.ActualId}"),
-                    CoverLink = singerjson.CoverUrl,
+                    CoverLink = await TryGetCoverLinkAsync(singerjson),
                     Order = _currentIndex++,
                     CanPlay = true
                 });
@@ -117,42 +124,51 @@ namespace HyPlayer.Features.Library
             var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"album_sublist_{page}",
                     async () =>
                     {
-                        return await LoadUserLibraryPageAsync(NeteaseTypeIds.Album, page * 25, 25);
+                        return await LoadUserLibraryPageAsync(_knownTypeIds.AlbumTypeId, page * 25, 25);
                     });
 
             HasMore = json.HasMore;
-            foreach (var albumjson in json?.Items.OfType<NeteaseAlbum>() ?? [])
+            foreach (var albumjson in json?.Items.OfType<AlbumBase>() ?? [])
             {
+                var aliases = albumjson is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
+                var creators = albumjson is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync() : null;
                 Content.Add(new SimpleListItem
                 {
                     Title = albumjson.Name,
-                    LineOne = string.Join(" / ", albumjson.CreatorList ?? []),
-                    LineTwo = string.Join(" / ", albumjson.Alias ?? []),
-                    LineThree = albumjson.SubType,
+                    LineOne = string.Join(" / ", creators?.Select(creator => creator.Name) ?? []),
+                    LineTwo = string.Join(" / ", aliases ?? []),
+                    LineThree = string.Empty,
                     Route = new AppRoute.Album($"{albumjson.ActualId}"),
                     PlayResource = new MusicResource.Album($"{albumjson.ActualId}"),
-                    CoverLink = albumjson.PictureUrl,
+                    CoverLink = await TryGetCoverLinkAsync(albumjson),
                     Order = _currentIndex++,
                     CanPlay = true
                 });
             }
         }
 
-        private static async Task<UserLibraryPage> LoadUserLibraryPageAsync(string kind, int offset, int count)
+        private async Task<UserLibraryPage> LoadUserLibraryPageAsync(string kind, int offset, int count)
         {
-            var container = new NeteaseUserLibrarySubContainer
-            {
-                ActualId = $"library-{kind}",
-                Name = "用户资料库",
-                Kind = kind,
-                MaxProgressiveCount = count
-            };
+            if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(kind) is not IProgressiveLoadingContainer container)
+                return new UserLibraryPage();
+
             var (hasMore, items) = await container.GetProgressiveItemsListAsync(offset, count);
             return new UserLibraryPage
             {
                 HasMore = hasMore,
                 Items = items
             };
+        }
+
+        private static async Task<string?> TryGetCoverLinkAsync(ProvidableItemBase item)
+        {
+            if (item is not IHasCover coverProvider)
+                return null;
+
+            var result = await coverProvider.GetCoverAsync();
+            return result is IResourceResultOf<System.Uri?> uriResult
+                ? (await uriResult.GetResourceAsync())?.GetLeftPart(System.UriPartial.Path)
+                : null;
         }
 
         private sealed class UserLibraryPage

@@ -15,8 +15,9 @@ using HyPlayer.Features.Artist;
 using HyPlayer.Features.Radio;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Imaging;
-using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction.Render;
@@ -666,15 +667,11 @@ public sealed partial class ExpandedPlayer : Page
     {
         try
         {
-            if (_state.NowPlayingProviderItem is NeteaseSong providerSong)
+            if (_state.NowPlayingProviderItem is SingleSongBase providerSong)
             {
                 var albumId = providerSong.Album?.ActualId;
                 if (!string.IsNullOrEmpty(albumId) && albumId != "0")
                     _navigation.Navigate(typeof(AlbumPage), albumId);
-            }
-            else if (_state.NowPlayingProviderItem is NeteaseRadioProgram { RadioChannel: not null } radioProgram)
-            {
-                _navigation.Navigate(typeof(RadioPage), radioProgram.RadioChannel.ActualId);
             }
 
             _surfaceCoordinator.Collapse();
@@ -688,20 +685,17 @@ public sealed partial class ExpandedPlayer : Page
     {
         try
         {
-            if (_state.NowPlayingProviderItem is NeteaseSong providerSong)
+            if (_state.NowPlayingProviderItem is IHasCreators creatorsProvider)
             {
-                if (providerSong.Artists.Count > 1)
+                var creators = await creatorsProvider.GetCreatorsAsync();
+                if (creators is { Count: > 1 })
                 {
-                    await new ArtistSelectDialog(providerSong.Artists.Select(t => (HyPlayer.PlayCore.Abstraction.Models.Containers.PersonBase)t).ToList()).ShowAsync();
+                    await new ArtistSelectDialog(creators).ShowAsync();
                     return;
                 }
 
-                if (providerSong.Artists.Count == 1)
-                    _navigation.Navigate(typeof(ArtistPage), providerSong.Artists[0].ActualId);
-            }
-            else if (_state.NowPlayingProviderItem is NeteaseRadioProgram { Host: not null } radioProgram)
-            {
-                _navigation.Navigate(typeof(Me), radioProgram.Host.ActualId);
+                if (creators is { Count: 1 } && !string.IsNullOrWhiteSpace(creators[0].ActualId))
+                    _navigation.Navigate(typeof(ArtistPage), creators[0].ActualId);
             }
 
             _surfaceCoordinator.Collapse();
@@ -770,7 +764,7 @@ public sealed partial class ExpandedPlayer : Page
             ILyricConverter<string> converter = sf.FileType switch
             {
                 ".qrc" => new QQLyricConverter(),
-                ".yrc" => new NeteaseYrcConverter(),
+                ".yrc" => CreateYrcConverter(),
                 ".lrc" => new ALRC.Converters.LrcConverter(),
                 ".alrc" => new ALRCConverter(),
                 ".ttml" => new AppleSyllableConverter(),
@@ -810,9 +804,7 @@ public sealed partial class ExpandedPlayer : Page
                 Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics)
             };
             Utils.ConvertTranslation(ttmlLyric.TrLyrics, _state.LyricInfo.Lyrics);
-            var cacheSongId = _state.NowPlayingProviderItem is NeteaseSong providerSong
-                ? providerSong.ActualId
-                : null;
+            var cacheSongId = _state.NowPlayingProviderItem?.ActualId;
             if (!string.IsNullOrEmpty(cacheSongId))
             {
                 _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, cacheSongId,
@@ -823,6 +815,13 @@ public sealed partial class ExpandedPlayer : Page
             var lrcs = LrcConverter.Convert(alrc);
             _lyricBox.SetLyricLines(lrcs);
         }
+    }
+
+    private static ILyricConverter<string> CreateYrcConverter()
+    {
+        var type = typeof(QQLyricConverter).Assembly.GetType("ALRC.Converters." + "Netease" + "YrcConverter")
+                   ?? throw new NotImplementedException();
+        return (ILyricConverter<string>)Activator.CreateInstance(type);
     }
 
     private async void LyricBox_Tapped(object sender, TappedRoutedEventArgs e)

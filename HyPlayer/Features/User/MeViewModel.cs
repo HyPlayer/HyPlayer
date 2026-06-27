@@ -3,8 +3,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
-using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using System;
@@ -21,18 +25,21 @@ namespace HyPlayer.Features.User
         [ObservableProperty]
         public partial List<SimpleListItem> MyPlaylist { get; set; }
         [ObservableProperty]
-        public partial NeteaseUser User { get; set; }
+        public partial UserProfileViewData User { get; set; }
 
         private readonly IProvidableItemProvidable _itemProvider;
+        private readonly IProviderKnownTypeIds _knownTypeIds;
         private readonly Setting _settings;
         private readonly INotificationService _notification;
+        private PersonBase _providerUser;
         private string _loadedUserId = string.Empty;
         private string _initializingUserId = string.Empty;
         private Task _initializeTask;
         private Task _loadPlaylistTask;
-        public MeViewModel(IProvidableItemProvidable itemProvider, Setting settings, INotificationService notification)
+        public MeViewModel(IProvidableItemProvidable itemProvider, IProviderKnownTypeIds knownTypeIds, Setting settings, INotificationService notification)
         {
             _itemProvider = itemProvider;
+            _knownTypeIds = knownTypeIds;
             _settings = settings;
             _notification = notification;
         }
@@ -53,11 +60,14 @@ namespace HyPlayer.Features.User
         {
             var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserDetail, uid, async () =>
             {
-                return await _itemProvider.GetProvidableItemByIdAsync(HyPlayer.NeteaseProvider.Constants.NeteaseTypeIds.User + uid);
+                return await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.UserTypeId + uid);
             });
-            User = (NeteaseUser)resp;
+            if (resp is not PersonBase user)
+                return;
+
+            _providerUser = user;
+            User = await CreateUserProfileViewDataAsync(user);
             _loadedUserId = uid;
-            if (_settings.noImage) User.AvatarUrl = null;
             _loadPlaylistTask = LoadPlayListCoreAsync();
             await _loadPlaylistTask;
         }
@@ -79,30 +89,37 @@ namespace HyPlayer.Features.User
             {
                 var val = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserPlaylist, User.ActualId, async () =>
                 {
-                    return await User.GetSubContainerAsync();
+                    return await _providerUser.GetSubContainerAsync();
                 });
 
                 var subListIdx = 0;
                 var likedList = new List<SimpleListItem>();
                 var myList = new List<SimpleListItem>();
-                var playlists = new List<NeteasePlaylist>();
-                foreach (var container in val?.OfType<NeteaseUserPlaylistSubContainer>() ?? [])
+                var playlists = new List<ContainerBase>();
+                foreach (var container in val?.OfType<ContainerBase>() ?? [])
                 {
-                    var items = await container.GetAllItemsAsync();
-                    playlists.AddRange(items.OfType<NeteasePlaylist>());
+                    var items = await LoadContainerItemsAsync(container);
+                    playlists.AddRange(items.OfType<ContainerBase>());
                 }
 
                 foreach (var valuePlaylist in playlists)
                 {
-                    if (valuePlaylist.Creator?.ActualId != User.ActualId)
+                    var creators = valuePlaylist is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync() : null;
+                    var owner = creators?.FirstOrDefault();
+                    var description = valuePlaylist is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
+                    var coverLink = _settings.noImage ? null : await TryGetCoverLinkAsync(valuePlaylist);
+                    var isOwned = valuePlaylist is IHasLibraryState libraryState
+                        ? libraryState.IsOwnedByCurrentUser
+                        : owner?.ActualId == User.ActualId;
+                    if (!isOwned)
                     {
                         likedList.Add(
                             new SimpleListItem
                             {
-                                CoverLink = _settings.noImage ? null : valuePlaylist.CoverUrl,
-                                LineOne = valuePlaylist.Creator?.Name,
-                                LineThree = $"播放量: {valuePlaylist.PlayCount} | 歌曲数: {valuePlaylist.TrackCount}",
-                                LineTwo = valuePlaylist.Description,
+                                CoverLink = coverLink,
+                                LineOne = owner?.Name,
+                                LineThree = string.Empty,
+                                LineTwo = description,
                                 Order = subListIdx++,
                                 Route = new AppRoute.Playlist($"{valuePlaylist.ActualId}"),
                                 PlayResource = new MusicResource.Playlist($"{valuePlaylist.ActualId}"),
@@ -116,10 +133,10 @@ namespace HyPlayer.Features.User
                         myList.Add(
                             new SimpleListItem
                             {
-                                CoverLink = _settings.noImage ? null : valuePlaylist.CoverUrl,
-                                LineOne = valuePlaylist.Creator?.Name,
-                                LineThree = $"播放量: {valuePlaylist.PlayCount} | 歌曲数: {valuePlaylist.TrackCount}",
-                                LineTwo = valuePlaylist.Description,
+                                CoverLink = coverLink,
+                                LineOne = owner?.Name,
+                                LineThree = string.Empty,
+                                LineTwo = description,
                                 Order = subListIdx++,
                                 Route = new AppRoute.Playlist($"{valuePlaylist.ActualId}"),
                                 PlayResource = new MusicResource.Playlist($"{valuePlaylist.ActualId}"),
@@ -138,5 +155,44 @@ namespace HyPlayer.Features.User
             }
         }
 
+        private static async Task<List<ProvidableItemBase>> LoadContainerItemsAsync(ContainerBase container)
+        {
+            return container switch
+            {
+                LinerContainerBase liner => await liner.GetAllItemsAsync(),
+                IProgressiveLoadingContainer progressive => (await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount)).Item2,
+                _ => []
+            };
+        }
+
+        private async Task<UserProfileViewData> CreateUserProfileViewDataAsync(PersonBase user)
+        {
+            return new UserProfileViewData
+            {
+                ActualId = user.ActualId,
+                Name = user.Name,
+                Description = user is IHasDescription descriptionProvider ? descriptionProvider.Description : null,
+                AvatarUrl = _settings.noImage ? null : await TryGetCoverLinkAsync(user)
+            };
+        }
+
+        private static async Task<string?> TryGetCoverLinkAsync(ProvidableItemBase item)
+        {
+            if (item is not IHasCover coverProvider)
+                return null;
+
+            var result = await coverProvider.GetCoverAsync();
+            return result is IResourceResultOf<Uri?> uriResult
+                ? (await uriResult.GetResourceAsync())?.GetLeftPart(UriPartial.Path)
+                : null;
+        }
+
+        public sealed class UserProfileViewData
+        {
+            public string? ActualId { get; init; }
+            public string? Name { get; init; }
+            public string? Description { get; init; }
+            public string? AvatarUrl { get; init; }
+        }
     }
 }

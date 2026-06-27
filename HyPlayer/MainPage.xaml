@@ -65,8 +65,7 @@
     <Grid>
         <Frame
             Name="MainFrame"
-            x:FieldModifier="public"
-            SourcePageType="hyPlayerPage:BasePage" />
+            x:FieldModifier="public" />
         <ContentControl
             Name="ExpandedPlayer"
             HorizontalContentAlignment="Stretch"

@@ -37,7 +37,7 @@ namespace HyPlayer.LyricRenderer
 
         public bool EnableTranslation
         {
-            get => Context.EnableTransliteration;
+            get => Context.EnableTranslation;
             set
             {
                 Context.EnableTranslation = value;

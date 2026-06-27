@@ -2,8 +2,10 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
-using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
@@ -30,6 +32,8 @@ public sealed partial class HistoryPage : Page
 {
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+    private readonly IUserLibraryProvidable _userLibraryProvider = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
+    private readonly IUserLibraryTypeIds _userLibraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
 
     private readonly ObservableCollection<SongListItemViewModel> Songs = new();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -129,17 +133,16 @@ public sealed partial class HistoryPage : Page
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var container = new NeteaseUserLibrarySubContainer
-            {
-                ActualId = $"history-{rangeId}{_auth.CurrentUser.ActualId}",
-                Name = "听歌排行",
-                Kind = rangeId.Equals("recent", StringComparison.OrdinalIgnoreCase)
-                    ? NeteaseUserLibrarySubContainer.ListeningHistoryRecentKind
-                    : NeteaseUserLibrarySubContainer.ListeningHistoryAllKind,
-                UserId = _auth.CurrentUser.ActualId,
-                MaxProgressiveCount = 120
-            };
-            var rankData = await container.GetAllItemsAsync(_cancellationToken);
+            if (_auth.CurrentUser?.ActualId is null)
+                return;
+
+            var libraryTypeId = rangeId.Equals("recent", StringComparison.OrdinalIgnoreCase)
+                ? _userLibraryTypeIds.RecentListeningHistoryTypeId
+                : _userLibraryTypeIds.AllListeningHistoryTypeId;
+            if (await _userLibraryProvider.GetUserLibraryContainerAsync(_auth.CurrentUser.ActualId, libraryTypeId, _cancellationToken) is not ContainerBase container)
+                return;
+
+            var rankData = await LoadContainerItemsAsync(container);
             if (!string.Equals(_currentSelectionName, selectionName, StringComparison.Ordinal))
                 return;
 
@@ -162,5 +165,15 @@ public sealed partial class HistoryPage : Page
             return await SongListItemViewModel.FromProviderSongAsync(song, order);
 
         return SongListItemViewModel.FromFallback(item.ActualId, item.Name, order);
+    }
+
+    private async Task<List<ProvidableItemBase>> LoadContainerItemsAsync(ContainerBase container)
+    {
+        return container switch
+        {
+            LinerContainerBase liner => await liner.GetAllItemsAsync(_cancellationToken),
+            IProgressiveLoadingContainer progressive => (await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount, _cancellationToken)).Item2,
+            _ => []
+        };
     }
 }

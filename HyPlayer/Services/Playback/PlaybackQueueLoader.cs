@@ -85,7 +85,7 @@ public sealed class PlaybackQueueLoader : IPlaybackQueueLoader
         return true;
     }
 
-    private async Task AppendLoadedBatchesAsync(NeteaseQueueSourceLoadResult result)
+    private async Task AppendLoadedBatchesAsync(ProviderQueueSourceLoadResult result)
     {
         if (!result.Success)
             return;
