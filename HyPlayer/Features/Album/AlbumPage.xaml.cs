@@ -54,4 +54,19 @@ public sealed partial class AlbumPage : Page
         else
             _navigation.Navigate(typeof(ArtistPage), ViewModel.Artists[0].ActualId);
     }
+
+    private async void PlayAll_Click(object sender, RoutedEventArgs e)
+    {
+        await SongContainer.PlayAllAsync();
+    }
+
+    private async void AddAll_Click(object sender, RoutedEventArgs e)
+    {
+        await SongContainer.AddAllToPlaylistAsync();
+    }
+
+    private void DownloadAll_Click(object sender, RoutedEventArgs e)
+    {
+        SongContainer.DownloadAllLoaded();
+    }
 }

@@ -27,7 +27,7 @@
             </ListView.Footer>
             <ListView.Header>
                 <StackPanel x:Name="HeaderPanel" Orientation="Vertical">
-                    <ContentControl Content="{x:Bind ListHeader}" />
+                    <ContentControl x:Name="HeaderContentControl" />
                 </StackPanel>
             </ListView.Header>
             <ListView.ItemsPanel>

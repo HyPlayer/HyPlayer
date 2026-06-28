@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using WinRT;
 
 namespace HyPlayer.UI.Lists;
 
@@ -249,7 +250,9 @@ public sealed class SongListItemViewModel
     }
 }
 
-public sealed class SongListItemGroup(IEnumerable<SongListItemViewModel> items) : List<SongListItemViewModel>(items)
+[GeneratedBindableCustomProperty]
+public sealed partial class SongListItemGroup(IEnumerable<SongListItemViewModel> items) : List<SongListItemViewModel>(items)
 {
     public string Key { get; set; } = string.Empty;
+    public List<SongListItemViewModel> Items => this;
 }

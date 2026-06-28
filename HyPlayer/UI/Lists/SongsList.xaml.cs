@@ -93,7 +93,8 @@ public sealed partial class SongsList : UserControl
     );
 
     public static readonly DependencyProperty ListHeaderProperty = DependencyProperty.Register(
-        "ListHeader", typeof(UIElement), typeof(SongsList), new PropertyMetadata(default(UIElement)));
+        "ListHeader", typeof(UIElement), typeof(SongsList),
+        new PropertyMetadata(default(UIElement), OnListHeaderChanged));
 
     public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
         "Footer", typeof(UIElement), typeof(SongsList), new PropertyMetadata(default(UIElement)));
@@ -143,7 +144,6 @@ public sealed partial class SongsList : UserControl
         get => (UIElement)GetValue(ListHeaderProperty);
         set
         {
-            HeaderPanel.Padding = new Thickness(0, 0, 0, 25);
             SetValue(ListHeaderProperty, value);
         }
     }
@@ -212,6 +212,24 @@ public sealed partial class SongsList : UserControl
     }
 
     public bool IsAddingSongToPlaylist = false;
+
+    private static void OnListHeaderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((SongsList)d).UpdateListHeader((UIElement)e.NewValue);
+    }
+
+    private void UpdateListHeader(UIElement header)
+    {
+        if (HeaderPanel is null || HeaderContentControl is null)
+            return;
+
+        if (header is not null || IsSearchEnabled)
+            HeaderPanel.Padding = new Thickness(0, 0, 0, 25);
+        else
+            HeaderPanel.Padding = new Thickness(0);
+
+        HeaderContentControl.Content = header;
+    }
 
     private void HyPlayListOnOnPlayItemChange(SingleSongBase? providerItem)
     {

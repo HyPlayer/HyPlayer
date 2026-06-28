@@ -6,7 +6,6 @@
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:controls1="using:HyPlayer.UI.Lists"
     xmlns:uiControls="using:HyPlayer.UI.Controls"
-    xmlns:controls2="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
@@ -39,23 +38,15 @@
             <RowDefinition />
             <RowDefinition Height="175" />
         </Grid.RowDefinitions>
-        <controls2:ProgressRing
-            Grid.Row="0"
-            Width="100"
-            Height="100"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            IsActive="True"
-            Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
-        <controls1:SongsList
-            x:Name="SongsList"
+        <controls1:ContainerSongsView
+            x:Name="ContainerSongs"
             Grid.RowSpan="2"
             CanViewComments="True"
+            Container="{x:Bind ViewModel.PlayList, Mode=OneWay}"
+            GreedyLoad="{x:Bind ViewModel.GreedyLoad, Mode=OneWay}"
             IsMySongList="{x:Bind ViewModel.IsMySongList, Mode=OneWay}"
-            IsSearchEnabled="True"
-            QueueScope="{x:Bind ViewModel.QueueScope, Mode=OneWay}"
-            Songs="{x:Bind ViewModel.Songs, Mode=OneWay}">
-            <controls1:SongsList.ListHeader>
+            IsSearchEnabled="True">
+            <controls1:ContainerSongsView.ListHeader>
                 <Grid>
                     <Border
                         x:Name="RectangleImageBack"
@@ -93,6 +84,7 @@
                             </ui:Effects.Shadow>
                         </frieren:ImageEx>
                         <StackPanel
+                            x:Name="PlaylistInfoPanel"
                             Grid.Column="1"
                             Margin="0,0,0,12"
                             VerticalAlignment="Center">
@@ -101,6 +93,7 @@
                                 Style="{ThemeResource TitleTextBlockStyle}"
                                 Text="{x:Bind ViewModel.PlayList.Name, Mode=OneWay}" />
                             <StackPanel
+                                x:Name="PlaylistActions"
                                 Margin="0,4,0,0"
                                 Orientation="Horizontal"
                                 Spacing="4">
@@ -135,7 +128,7 @@
                                         <TextBlock x:Name="LikeBtnText" Text="{x:Bind ViewModel.Subscribed, Mode=OneWay, Converter={StaticResource BoolToLikeStringConverter}}" />
                                     </StackPanel>
                                 </Button>
-                                <Button Margin="0,6,0,0" Command="{x:Bind ViewModel.PlayAllCommand}">
+                                <Button Margin="0,6,0,0" Click="PlayAll_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <FontIcon
                                             x:Name="IconPlay"
@@ -170,6 +163,7 @@
 
                         </StackPanel>
                         <StackPanel
+                            x:Name="PlaylistMoreActions"
                             Grid.Column="1"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top"
@@ -182,11 +176,11 @@
                                 <Button.Flyout>
                                     <MenuFlyout Placement="BottomEdgeAlignedRight">
                                         <MenuFlyoutItem
-                                            Command="{x:Bind ViewModel.PlayAllCommand}"
+                                            Click="AddAll_Click"
                                             Icon="Add"
                                             Text="添加" />
                                         <MenuFlyoutItem
-                                            Command="{x:Bind ViewModel.DownloadAllCommand}"
+                                            Click="DownloadAll_Click"
                                             Icon="Download"
                                             Text="下载" />
                                         <MenuFlyoutItem
@@ -194,7 +188,7 @@
                                             Icon="Share"
                                             Text="分享" />
                                         <MenuFlyoutItem
-                                            Command="{x:Bind ViewModel.ResetCacheCommand}"
+                                            Click="ResetCache_Click"
                                             Icon="Refresh"
                                             Text="刷新缓存" />
 
@@ -216,19 +210,8 @@
                             TextWrapping="Wrap" />
                     </Grid>
                 </Grid>
-            </controls1:SongsList.ListHeader>
-            <controls1:SongsList.Footer>
-                <Button
-                    x:Name="NextPage"
-                    Grid.Row="1"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
-                    Command="{x:Bind ViewModel.NextPageCommand}"
-                    Content="加载更多"
-                    Style="{StaticResource ButtonRevealStyle}"
-                    Visibility="{x:Bind ViewModel.HasMore, Mode=OneWay}" />
-            </controls1:SongsList.Footer>
-        </controls1:SongsList>
+            </controls1:ContainerSongsView.ListHeader>
+        </controls1:ContainerSongsView>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>
@@ -236,11 +219,13 @@
                         <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
-                        <Setter Target="Btns.Margin" Value="0,20,5,10" />
-                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
-                        <Setter Target="Btns.VerticalAlignment" Value="Bottom" />
-                        <Setter Target="Btns.Spacing" Value="5" />
+                        <Setter Target="RectangleImage.Visibility" Value="Collapsed" />
+                        <Setter Target="PlaylistInfoPanel.(Grid.Column)" Value="0" />
+                        <Setter Target="PlaylistInfoPanel.(Grid.ColumnSpan)" Value="2" />
+                        <Setter Target="PlaylistActions.Margin" Value="0,8,0,0" />
+                        <Setter Target="PlaylistActions.Spacing" Value="5" />
+                        <Setter Target="PlaylistMoreActions.(Grid.Column)" Value="1" />
+                        <Setter Target="PlaylistMoreActions.VerticalAlignment" Value="Top" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -249,11 +234,12 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="RectangleImage.Visibility" Value="Visible" />
-                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
-                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
-                        <Setter Target="Btns.VerticalAlignment" Value="Top" />
-                        <Setter Target="Btns.Margin" Value="0,20,10,10" />
-                        <Setter Target="Btns.Spacing" Value="10" />
+                        <Setter Target="PlaylistInfoPanel.(Grid.Column)" Value="1" />
+                        <Setter Target="PlaylistInfoPanel.(Grid.ColumnSpan)" Value="1" />
+                        <Setter Target="PlaylistActions.Margin" Value="0,4,0,0" />
+                        <Setter Target="PlaylistActions.Spacing" Value="4" />
+                        <Setter Target="PlaylistMoreActions.(Grid.Column)" Value="1" />
+                        <Setter Target="PlaylistMoreActions.VerticalAlignment" Value="Top" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>

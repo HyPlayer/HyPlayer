@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Features.Album;
@@ -11,7 +12,9 @@ using HyPlayer.Features.User;
 using HyPlayer.Features.Video;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
@@ -45,6 +48,7 @@ public sealed class AppNavigator : IAppNavigator
     private readonly IPlaybackQueueLoader _queueLoader;
     private readonly IPlaybackControlService _control;
     private readonly IAuthService _auth;
+    private readonly IUserLibraryStateService _userLibraryState;
     private readonly INotificationService _notification;
     private NavigationView? _navigationView;
     private NavigationShellViewModel? _shellViewModel;
@@ -60,6 +64,7 @@ public sealed class AppNavigator : IAppNavigator
                         IPlaybackQueueLoader queueLoader,
                         IPlaybackControlService control,
                         IAuthService auth,
+                        IUserLibraryStateService userLibraryState,
                         INotificationService notification)
     {
         _navigation = navigation;
@@ -67,6 +72,7 @@ public sealed class AppNavigator : IAppNavigator
         _queueLoader = queueLoader;
         _control = control;
         _auth = auth;
+        _userLibraryState = userLibraryState;
         _notification = notification;
     }
 
@@ -520,8 +526,8 @@ public sealed class AppNavigator : IAppNavigator
 
     private Task LikedSongsPage()
     {
-        if (_auth.MySongLists.Count > 0)
-            _navigation.Navigate(typeof(SongListDetail), _auth.MySongLists[0].ActualId);
+        if (_userLibraryState.LikedSongsPlaylist is { ActualId: { Length: > 0 } likedSongsId })
+            _navigation.Navigate(typeof(SongListDetail), likedSongsId);
         return Task.CompletedTask;
     }
 
@@ -556,7 +562,7 @@ public sealed class AppNavigator : IAppNavigator
             {
                 if (playlistId == DailyRecommendPlaylistId)
                     return new AppRoute.DailyRecommend();
-                if (_auth.MySongLists.Count > 0 && playlistId == _auth.MySongLists[0].ActualId)
+                if (_userLibraryState.IsLikedSongsPlaylist(playlistId))
                     return new AppRoute.LikedSongs();
                 return new AppRoute.Playlist(playlistId);
             }
@@ -601,11 +607,34 @@ public sealed class AppNavigator : IAppNavigator
         Name = "每日歌曲推荐"
     };
 
-    private sealed class DailyRecommendContainer : ContainerBase, IHasCover, IHasDescription
+    private sealed class DailyRecommendContainer : LinerContainerBase, IHasCover, IHasDescription
     {
         public override string ProviderId => string.Empty;
         public override string TypeId => "daily";
         public string? Description { get; set; } = "根据你的口味生成，每天6:00更新";
+
+        public override async Task<List<ProvidableItemBase>> GetAllItemsAsync(CancellationToken ctk = default)
+        {
+            var specialTypeIds = Ioc.Default.GetRequiredService<IProviderSpecialContainerTypeIds>();
+            var itemProvider = Ioc.Default.GetRequiredService<IProvidableItemProvidable>();
+            if (!specialTypeIds.SpecialContainerTypeIds.TryGetValue(SpecialContainerType.RecommendedSongs, out var typeId))
+                return [];
+
+            return await itemProvider.GetProvidableItemByIdAsync(typeId + "rcsg", ctk) is ContainerBase container
+                ? await LoadContainerItemsAsync(container, ctk)
+                : [];
+        }
+
+        private static async Task<List<ProvidableItemBase>> LoadContainerItemsAsync(ContainerBase container, CancellationToken ctk)
+        {
+            return container switch
+            {
+                IProgressiveLoadingContainer progressive => (await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount, ctk)).Item2,
+                LinerContainerBase liner => await liner.GetAllItemsAsync(ctk),
+                UndeterminedContainerBase undetermined => await undetermined.GetNextItemsRangeAsync(ctk),
+                _ => []
+            };
+        }
 
         public Task<ResourceResultBase> GetCoverAsync(ImageResourceQualityTag? qualityTag = null, CancellationToken ctk = default)
         {

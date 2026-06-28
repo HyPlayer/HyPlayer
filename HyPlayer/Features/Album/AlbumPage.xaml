@@ -12,13 +12,12 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <controls1:GroupedSongsList
+        <controls1:ContainerSongsView
             x:Name="SongContainer"
             Grid.Row="1"
             Margin="20,30,0,0"
-            GroupedSongs="{x:Bind ViewModel.AlbumSongsViewSource, Mode=OneWay}"
-            QueueScope="{x:Bind ViewModel.QueueScope, Mode=OneWay}">
-            <controls1:GroupedSongsList.ListHeader>
+            Container="{x:Bind ViewModel.Album, Mode=OneWay}">
+            <controls1:ContainerSongsView.ListHeader>
                 <controls:DockPanel
                     x:Name="GridPersonalInformation"
                     Grid.Row="0"
@@ -74,7 +73,7 @@
                                 Text="{x:Bind ViewModel.PublishTime, Mode=OneWay, Converter={StaticResource DateConverter}}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="15">
-                            <Button Command="{x:Bind ViewModel.PlayAllCommand}" Style="{ThemeResource AccentButtonStyle}">
+                            <Button Click="PlayAll_Click" Style="{ThemeResource AccentButtonStyle}">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
                                         x:Name="IconPlay"
@@ -83,8 +82,8 @@
                                     <TextBlock Margin="4,0,0,0" Text="播放" />
                                 </StackPanel>
                             </Button>
-                            <Button Command="{x:Bind ViewModel.AddAllToPlaylistCommand}" Content="添加全部" />
-                            <Button Command="{x:Bind ViewModel.DownloadAllCommand}" Content="下载全部" />
+                            <Button Click="AddAll_Click" Content="添加全部" />
+                            <Button Click="DownloadAll_Click" Content="下载全部" />
                             <ToggleButton
                                 x:Name="BtnSub"
                                 Command="{x:Bind ViewModel.SubscribeCommand}"
@@ -102,8 +101,8 @@
                             TextWrapping="WrapWholeWords" />
                     </StackPanel>
                 </controls:DockPanel>
-            </controls1:GroupedSongsList.ListHeader>
-        </controls1:GroupedSongsList>
+            </controls1:ContainerSongsView.ListHeader>
+        </controls1:ContainerSongsView>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>

@@ -49,7 +49,8 @@ public sealed partial class GroupedSongsList : UserControl
     );
 
     public static readonly DependencyProperty ListHeaderProperty = DependencyProperty.Register(
-        "ListHeader", typeof(UIElement), typeof(GroupedSongsList), new PropertyMetadata(default(UIElement)));
+        "ListHeader", typeof(UIElement), typeof(GroupedSongsList),
+        new PropertyMetadata(default(UIElement), OnListHeaderChanged));
 
     public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
         "Footer", typeof(UIElement), typeof(GroupedSongsList), new PropertyMetadata(default(UIElement)));
@@ -90,7 +91,6 @@ public sealed partial class GroupedSongsList : UserControl
         get => (UIElement)GetValue(ListHeaderProperty);
         set
         {
-            HeaderPanel.Padding = new Thickness(0, 0, 0, 25);
             SetValue(ListHeaderProperty, value);
         }
     }
@@ -112,6 +112,20 @@ public sealed partial class GroupedSongsList : UserControl
     {
         get => (SongListQueueScope)GetValue(QueueScopeProperty);
         set => SetValue(QueueScopeProperty, value);
+    }
+
+    private static void OnListHeaderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((GroupedSongsList)d).UpdateListHeader((UIElement)e.NewValue);
+    }
+
+    private void UpdateListHeader(UIElement header)
+    {
+        if (HeaderPanel is null || HeaderContentControl is null)
+            return;
+
+        HeaderPanel.Padding = header is null ? new Thickness(0) : new Thickness(0, 0, 0, 25);
+        HeaderContentControl.Content = header;
     }
 
     private void HyPlayListOnOnPlayItemChange(SingleSongBase? providerItem)

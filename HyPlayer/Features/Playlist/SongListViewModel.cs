@@ -9,22 +9,14 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
 using HyPlayer.Infrastructure.Imaging;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
-using HyPlayer.UI.Lists;
-using HyPlayer.Services.Downloads;
-using HyPlayer.UI.Converters;
-using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -35,74 +27,47 @@ namespace HyPlayer.Features.Playlist
 {
     public partial class SongListViewModel : ObservableRecipient, IDisposable
     {
-        private readonly PlayCoreBase _playCore;
-        private readonly IPlaybackQueueLoader _queueLoader;
-        private readonly IPlaybackControlService _control;
         private readonly IProvidableItemProvidable _itemProvider;
         private readonly IProviderKnownTypeIds _knownTypeIds;
-        private readonly IProviderSpecialContainerTypeIds _specialContainerTypeIds;
         private readonly IContainerItemManagementProvidable _containerItemManagement;
         private readonly Setting _setting;
         private readonly INotificationService _notification;
         private readonly INavigationService _navigation;
-        private readonly IAppNavigator _navigator;
+        private readonly IUserLibraryStateService _userLibraryState;
         private readonly HttpClient _httpClient;
-        private readonly IGlobalTimerService _globalTimer;
-        private readonly WeakEventListener<SongListViewModel, object?, EventArgs> _secondTickListener;
-        private bool _isSecondTickSubscribed;
 
         public SongListViewModel(
-            PlayCoreBase playCore,
-            IPlaybackQueueLoader queueLoader,
-            IPlaybackControlService control,
             IProvidableItemProvidable itemProvider,
             IProviderKnownTypeIds knownTypeIds,
-            IProviderSpecialContainerTypeIds specialContainerTypeIds,
             IContainerItemManagementProvidable containerItemManagement,
             Setting setting,
             INotificationService notification,
             INavigationService navigation,
-            IAppNavigator navigator,
-            HttpClient httpClient,
-            IGlobalTimerService globalTimer)
+            IUserLibraryStateService userLibraryState,
+            HttpClient httpClient)
         {
-            _playCore = playCore;
-            _queueLoader = queueLoader;
-            _control = control;
             _itemProvider = itemProvider;
             _knownTypeIds = knownTypeIds;
-            _specialContainerTypeIds = specialContainerTypeIds;
             _containerItemManagement = containerItemManagement;
             _setting = setting;
             _notification = notification;
             _navigation = navigation;
-            _navigator = navigator;
+            _userLibraryState = userLibraryState;
             _httpClient = httpClient;
-            _globalTimer = globalTimer;
-            _secondTickListener = new WeakEventListener<SongListViewModel, object?, EventArgs>(this)
-            {
-                OnEventAction = static (instance, _, _) => instance.GreedlyLoad(),
-                OnDetachAction = weakEventListener => { _globalTimer.SecondTick -= weakEventListener.OnEvent; }
-            };
-            QueueScope = SongListQueueScope.Visible;
         }
 
-        public ObservableCollection<SongListItemViewModel> Songs { get; set; } = [];
-        private readonly List<SingleSongBase> _dailyRecommendProviderSongs = [];
         [ObservableProperty]
         public partial ContainerBase PlayList { get; set; }
         [ObservableProperty]
         public partial bool IsDailyRecommend { get; set; }
-        [ObservableProperty]
-        public partial int CurrentPage { get; set; }
-        [ObservableProperty]
-        public partial bool HasMore { get; set; }
         [ObservableProperty]
         public partial bool IntelligenceModeVisible { get; set; }
         [ObservableProperty]
         public partial bool IsMySongList { get; set; }
         [ObservableProperty]
         public partial bool IsLoading { get; set; }
+        [ObservableProperty]
+        public partial bool GreedyLoad { get; set; }
         [ObservableProperty]
         public partial string DescriptionBoxContent { get; set; }
         [ObservableProperty]
@@ -118,41 +83,33 @@ namespace HyPlayer.Features.Playlist
         public partial Uri? CoverUri { get; set; }
         [ObservableProperty]
         public partial Color AlbumColor { get; set; }
-        [ObservableProperty]
-        public partial SongListQueueScope QueueScope { get; set; }
 #nullable restore
 
         private ContainerBase _playlistContainer;
-        private IProgressiveLoadingContainer _progressivePlaylist;
-        private int _greedyLoadTreashold = 3;
-        private readonly HashSet<int> _loadedPages = [];
         private string _loadedPlaylistId;
         private bool _loadedDailyRecommend;
         private bool _loadedPlaylistDetail;
-        private Task _loadSongListTask;
         private Task _loadAlbumImageTask;
         private string _loadedAlbumImageUrl;
 
+        public Task LoadPageData(ContainerBase playlist)
+        {
+            _playlistContainer = playlist;
+            PlayList = playlist;
+            return LoadPageData(playlist.ActualId);
+        }
+
         public async Task LoadPageData(string PlaylistId, bool loadPlaylist = false)
         {
-            QueueScope = SongListQueueScope.Playlist(PlaylistId);
             var playlistChanged = !string.Equals(_loadedPlaylistId, PlaylistId, StringComparison.Ordinal)
                                   || _loadedDailyRecommend != IsDailyRecommend;
             if (playlistChanged)
             {
-                DetachSecondTick();
-                Songs.Clear();
-                _dailyRecommendProviderSongs.Clear();
-                _loadedPages.Clear();
                 _playlistContainer = null;
-                _progressivePlaylist = null;
-                _loadSongListTask = null;
                 _loadAlbumImageTask = null;
                 _loadedAlbumImageUrl = null;
                 _loadedPlaylistDetail = false;
                 _loadedDailyRecommend = false;
-                CurrentPage = 0;
-                HasMore = false;
                 IntelligenceModeVisible = false;
                 IsMySongList = false;
             }
@@ -172,9 +129,11 @@ namespace HyPlayer.Features.Playlist
                 _loadedPlaylistDetail = false;
             }
 
+            await LoadPlayListItems();
             DescriptionBoxContent = PlayList is IHasDescription descriptionProvider ? descriptionProvider.Description ?? string.Empty : string.Empty;
             await LoadCreatorAsync(PlayList);
             Subscribed = PlayList is IHasLibraryState { IsInCurrentUserLibrary: true };
+            GreedyLoad = _setting.greedlyLoadPlayContainerItems;
             if (_setting.noImage)
             {
                 CoverUri = null;
@@ -185,73 +144,7 @@ namespace HyPlayer.Features.Playlist
             }
             StartAlbumImageLoad();
             UpdateTime = string.Empty;
-            _loadSongListTask ??= LoadSongListItem();
-            _loadSongListTask.SafeFireAndForget();
-        }
-
-        public async Task LoadSongListItem()
-        {
-            IsLoading = true;
-            if (!IsDailyRecommend)
-            {
-                await LoadPlayListItems();
-                await LoadCurrentPage();
-            }
-            else
-            {
-                IntelligenceModeVisible = false;
-                await LoadDailyRcmdItems();
-            }
-            if (_setting.greedlyLoadPlayContainerItems)
-                AttachSecondTick();
-            IsLoading = false;
-        }
-
-        private void AttachSecondTick()
-        {
-            if (_isSecondTickSubscribed) return;
-            _globalTimer.SecondTick += _secondTickListener.OnEvent;
-            _isSecondTickSubscribed = true;
-        }
-
-        private void DetachSecondTick()
-        {
-            if (!_isSecondTickSubscribed) return;
-            _secondTickListener.Detach();
-            _isSecondTickSubscribed = false;
-        }
-
-        public async Task LoadDailyRcmdItems()
-        {
-            if (_loadedDailyRecommend && _dailyRecommendProviderSongs.Count == Songs.Count && Songs.Count > 0)
-                return;
-
-            QueueScope = SongListQueueScope.Content;
-            var items = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "recommendSongs", async () =>
-            {
-                try
-                {
-                    return (await LoadDailyRecommendContainerItemsAsync())
-                        .OfType<SingleSongBase>()
-                        .ToList();
-                }
-                catch (Exception ex)
-                {
-                    _notification.ShowMessage("加载日推出错", ex.Message);
-                    return null;
-                }
-            }, TimeSpan.FromDays(1));
-
-            _dailyRecommendProviderSongs.Clear();
-            _dailyRecommendProviderSongs.AddRange(items ?? []);
-            Songs.Clear();
-            var idx = 0;
-            foreach (var song in _dailyRecommendProviderSongs)
-            {
-                Songs.Add(await SongListItemViewModel.FromProviderSongAsync(song, idx++));
-            }
             _loadedDailyRecommend = true;
-            HasMore = false;
         }
 
         public async Task LoadPlayListItems()
@@ -259,12 +152,15 @@ namespace HyPlayer.Features.Playlist
             if (_loadedPlaylistDetail)
                 return;
 
-            if (!await EnsurePlaylistLoadedAsync("加载歌单出错"))
+            _playlistContainer ??= PlayList;
+            if (_playlistContainer is null)
+            {
+                _notification.ShowMessage("加载歌单出错", "未找到歌单信息");
                 return;
+            }
 
             PlayList = _playlistContainer;
-            var auth = Ioc.Default.GetRequiredService<IAuthService>();
-            if (IsLikedMusicPlaylist(_playlistContainer, auth))
+            if (IsLikedMusicPlaylist(_playlistContainer))
             {
                 IntelligenceModeVisible = true;
                 IsMySongList = true;
@@ -273,51 +169,9 @@ namespace HyPlayer.Features.Playlist
             _loadedPlaylistDetail = true;
         }
 
-        public async Task LoadCurrentPage()
+        private bool IsLikedMusicPlaylist(ContainerBase playlist)
         {
-            if (!_loadedPages.Add(CurrentPage))
-                return;
-
-            if (!await EnsurePlaylistLoadedAsync("加载歌单歌曲出错"))
-            {
-                _loadedPages.Remove(CurrentPage);
-                return;
-            }
-
-            (bool hasMore, List<ProvidableItemBase> items) rst;
-            try
-            {
-                rst = await _progressivePlaylist.GetProgressiveItemsListAsync(CurrentPage * 500, 500);
-            }
-            catch (Exception ex)
-            {
-                _loadedPages.Remove(CurrentPage);
-                _notification.ShowMessage("加载歌单歌曲出错", ex.Message);
-                return;
-            }
-
-            var idx = CurrentPage * 500;
-            foreach (var song in rst.items.OfType<SingleSongBase>())
-            {
-                Songs.Add(await SongListItemViewModel.FromProviderSongAsync(song, idx++));
-            }
-            HasMore = rst.hasMore;
-        }
-
-        private async Task<bool> EnsurePlaylistLoadedAsync(string errorTitle)
-        {
-            _playlistContainer ??= PlayList;
-            _progressivePlaylist ??= _playlistContainer as IProgressiveLoadingContainer;
-            if (_progressivePlaylist is not null)
-                return true;
-
-            _notification.ShowMessage(errorTitle, "未找到歌单信息");
-            return false;
-        }
-
-        private static bool IsLikedMusicPlaylist(ContainerBase playlist, IAuthService auth)
-        {
-            return auth.MySongLists.Count > 0 && playlist.ActualId == auth.MySongLists[0].ActualId;
+            return _userLibraryState.IsLikedSongsPlaylist(playlist.ActualId);
         }
 
         public async Task LoadAlbumImage()
@@ -349,44 +203,16 @@ namespace HyPlayer.Features.Playlist
             _loadAlbumImageTask.SafeFireAndForget();
         }
 
-        public void GreedlyLoad()
-        {
-            if (HasMore && _greedyLoadTreashold-- <= 0)
-            {
-                CurrentPage++;
-                LoadCurrentPage()?.SafeFireAndForget();
-                _greedyLoadTreashold = 3;
-            }
-            else if (HasMore == false)
-            {
-                DetachSecondTick();
-            }
-        }
-
         public void Dispose()
         {
-            DetachSecondTick();
         }
 
-        [RelayCommand]
-        private void LoadAllSongs()
-        {
-            if (!IsDailyRecommend)
-            {
-                _queueLoader.AppendSourceByKindAsync(SongListQueueScopeKind.Playlist, PlayList.ActualId).SafeFireAndForget();
-            }
-            else
-            {
-                _playCore.InsertSongRangeAsync(GetDailyRecommendProviderSongs().ToList()).SafeFireAndForget();
-            }
-        }
         [RelayCommand]
         private void NavigateToComments()
         {
             _navigation.Navigate(typeof(Comments.Comments), CommentTarget.Playlist(PlayList.ActualId));
         }
-        [RelayCommand]
-        private async Task ResetCacheAsync()
+        public async Task ResetCacheAsync()
         {
             try
             {
@@ -394,17 +220,10 @@ namespace HyPlayer.Features.Playlist
                 await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, PlayList.ActualId, true);
                 await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, PlayList.ActualId);
                 _notification.ShowMessage("清除缓存成功", "已清除当前歌单的缓存");
-                Songs.Clear();
-                _dailyRecommendProviderSongs.Clear();
-                _loadedPages.Clear();
-                CurrentPage = 0;
                 _playlistContainer = null;
-                _progressivePlaylist = null;
                 _loadedPlaylistDetail = false;
                 _loadedDailyRecommend = false;
-                _loadSongListTask = LoadSongListItem();
-                _loadSongListTask.SafeFireAndForget();
-
+                await LoadPageData(PlayList.ActualId, true);
             }
             catch
             {
@@ -413,57 +232,9 @@ namespace HyPlayer.Features.Playlist
         }
 
         [RelayCommand]
-        private async Task PlayAllAsync()
-        {
-            if (!IsDailyRecommend)
-            {
-                await _playCore.StopAsync();
-                await _playCore.RemoveAllSongAsync();
-                await _navigator.AppendAsync(new MusicResource.Playlist(PlayList.ActualId));
-                await _control.MoveNextAndPlayAsync(userInitiated: true);
-            }
-            else
-            {
-                await _playCore.StopAsync();
-                await _playCore.RemoveAllSongAsync();
-                await _playCore.InsertSongRangeAsync(GetDailyRecommendProviderSongs().ToList());
-                _navigator.SetPlaybackSource(new MusicResource.DailyRecommend(PlayList.ActualId));
-                await _control.MoveNextAndPlayAsync(userInitiated: true);
-            }
-        }
-
-        [RelayCommand]
-        private void NextPage()
-        {
-            CurrentPage++;
-            LoadCurrentPage().SafeFireAndForget();
-        }
-
-        [RelayCommand]
         private void EnterIntelligencePlay()
         {
             Api.EnterIntelligencePlay(PlayList.ActualId).SafeFireAndForget();
-        }
-
-        [RelayCommand]
-        private void DownloadAll()
-        {
-            if (IsDailyRecommend && HasCompleteDailyRecommendProviderSongs())
-                DownloadManager.AddDownload(_dailyRecommendProviderSongs);
-            else
-                DownloadManager.AddDownload(Songs.Select(song => song.ToProviderSong()).ToList());
-        }
-
-        private bool HasCompleteDailyRecommendProviderSongs()
-        {
-            return _dailyRecommendProviderSongs.Count > 0 && _dailyRecommendProviderSongs.Count == Songs.Count;
-        }
-
-        private IEnumerable<SingleSongBase> GetDailyRecommendProviderSongs()
-        {
-            return HasCompleteDailyRecommendProviderSongs()
-                ? _dailyRecommendProviderSongs
-                : Songs.Select(song => song.ToProviderSong());
         }
 
         [RelayCommand]
@@ -487,17 +258,6 @@ namespace HyPlayer.Features.Playlist
             }
         }
 
-        private static async Task<List<ProvidableItemBase>> LoadContainerItemsAsync(ContainerBase container)
-        {
-            return container switch
-            {
-                IProgressiveLoadingContainer progressive => (await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount)).Item2,
-                LinerContainerBase liner => await liner.GetAllItemsAsync(),
-                UndeterminedContainerBase undetermined => await undetermined.GetNextItemsRangeAsync(),
-                _ => []
-            };
-        }
-
         [RelayCommand]
         private void NavigateToAuthor()
         {
@@ -508,16 +268,6 @@ namespace HyPlayer.Features.Playlist
         private async Task<ContainerBase?> LoadProviderPlaylistAsync(string playlistId)
         {
             return await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.PlaylistTypeId + playlistId) as ContainerBase;
-        }
-
-        private async Task<List<ProvidableItemBase>> LoadDailyRecommendContainerItemsAsync()
-        {
-            if (!_specialContainerTypeIds.SpecialContainerTypeIds.TryGetValue(SpecialContainerType.RecommendedSongs, out var typeId))
-                return [];
-
-            return await _itemProvider.GetProvidableItemByIdAsync(typeId + "rcsg") is ContainerBase container
-                ? await LoadContainerItemsAsync(container)
-                : [];
         }
 
         private async Task LoadCreatorAsync(ContainerBase container)

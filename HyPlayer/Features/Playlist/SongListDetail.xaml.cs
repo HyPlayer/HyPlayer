@@ -87,13 +87,11 @@ public sealed partial class SongListDetail : Page
                 ViewModel.IsDailyRecommend = isDailyRecommend;
                 if (isDailyRecommend)
                 {
-                    ViewModel.PlayList = playList;
-                    ViewModel.DescriptionBoxContent = string.Empty;
-                    ViewModel.LoadSongListItem().SafeFireAndForget();
+                    ViewModel.LoadPageData(playList).SafeFireAndForget();
                 }
                 else
                 {
-                    ViewModel.LoadPageData(playList.ActualId, true).SafeFireAndForget();
+                    ViewModel.LoadPageData(playList).SafeFireAndForget();
                 }
             }
             else
@@ -108,5 +106,26 @@ public sealed partial class SongListDetail : Page
     private void BtnShare_Clicked(object sender, RoutedEventArgs e)
     {
         DataTransferManager.ShowShareUI();
+    }
+
+    private async void PlayAll_Click(object sender, RoutedEventArgs e)
+    {
+        await ContainerSongs.PlayAllAsync();
+    }
+
+    private async void AddAll_Click(object sender, RoutedEventArgs e)
+    {
+        await ContainerSongs.AddAllToPlaylistAsync();
+    }
+
+    private void DownloadAll_Click(object sender, RoutedEventArgs e)
+    {
+        ContainerSongs.DownloadAllLoaded();
+    }
+
+    private async void ResetCache_Click(object sender, RoutedEventArgs e)
+    {
+        await ViewModel.ResetCacheAsync();
+        ContainerSongs.ResetAndLoad();
     }
 }
