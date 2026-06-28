@@ -1,9 +1,12 @@
 using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,11 +39,16 @@ internal sealed class AlbumQueueSourceProvider : IQueueSourceProvider
         try
         {
             var album = await _provider.GetProvidableItemByIdAsync(_knownTypeIds.AlbumTypeId + id, cancellationToken);
-            if (album is not LinerContainerBase linerAlbum)
-                return ProviderQueueSourceLoadResult.Failed;
+            var songs = album switch
+            {
+                LinerContainerBase linerAlbum => await linerAlbum.GetAllItemsAsync(cancellationToken),
+                IProgressiveLoadingContainer progressiveAlbum => await LoadAllProgressiveItemsAsync(progressiveAlbum, cancellationToken),
+                _ => null
+            };
 
-            var songs = await linerAlbum.GetAllItemsAsync(cancellationToken);
-            return ProviderQueueSourceLoadResult.FromSongs(songs.OfType<SingleSongBase>().ToList());
+            return songs is null
+                ? ProviderQueueSourceLoadResult.Failed
+                : ProviderQueueSourceLoadResult.FromSongs(songs.OfType<SingleSongBase>().ToList());
         }
         catch (Exception ex)
         {
@@ -48,5 +56,29 @@ internal sealed class AlbumQueueSourceProvider : IQueueSourceProvider
         }
 
         return ProviderQueueSourceLoadResult.Failed;
+    }
+
+    private static async Task<List<ProvidableItemBase>> LoadAllProgressiveItemsAsync(
+        IProgressiveLoadingContainer container,
+        CancellationToken cancellationToken)
+    {
+        var items = new List<ProvidableItemBase>();
+        var offset = 0;
+        var count = container.MaxProgressiveCount;
+        var hasMore = true;
+
+        while (hasMore)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var result = await container.GetProgressiveItemsListAsync(offset, count, cancellationToken);
+            hasMore = result.Item1;
+            if (result.Item2.Count == 0)
+                break;
+
+            items.AddRange(result.Item2);
+            offset += result.Item2.Count;
+        }
+
+        return items;
     }
 }

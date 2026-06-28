@@ -225,10 +225,31 @@ namespace HyPlayer.Features.Album
         {
             List<ProvidableItemBase> items = album switch
             {
-                IProgressiveLoadingContainer progressive => (await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount)).Item2,
+                IProgressiveLoadingContainer progressive => await LoadAllProgressiveItemsAsync(progressive),
                 _ => []
             };
             return items.OfType<SingleSongBase>().ToList();
+        }
+
+        private static async Task<List<ProvidableItemBase>> LoadAllProgressiveItemsAsync(IProgressiveLoadingContainer container)
+        {
+            var items = new List<ProvidableItemBase>();
+            var offset = 0;
+            var count = container.MaxProgressiveCount;
+            var hasMore = true;
+
+            while (hasMore)
+            {
+                var result = await container.GetProgressiveItemsListAsync(offset, count);
+                hasMore = result.Item1;
+                if (result.Item2.Count == 0)
+                    break;
+
+                items.AddRange(result.Item2);
+                offset += result.Item2.Count;
+            }
+
+            return items;
         }
 
         private static async Task<Uri?> GetCoverUriAsync(AlbumBase album)

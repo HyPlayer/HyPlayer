@@ -98,7 +98,10 @@ namespace HyPlayer.Features.User
                 var playlists = new List<ContainerBase>();
                 foreach (var container in val?.OfType<ContainerBase>() ?? [])
                 {
-                    var items = await LoadContainerItemsAsync(container);
+                    if (container.TypeId != _knownTypeIds.PlaylistTypeId)
+                        continue;
+
+                    var items = await LoadPlaylistContainerItemsAsync(container);
                     playlists.AddRange(items.OfType<ContainerBase>());
                 }
 
@@ -155,7 +158,7 @@ namespace HyPlayer.Features.User
             }
         }
 
-        private static async Task<List<ProvidableItemBase>> LoadContainerItemsAsync(ContainerBase container)
+        private static async Task<List<ProvidableItemBase>> LoadPlaylistContainerItemsAsync(ContainerBase container)
         {
             return container switch
             {
