@@ -41,6 +41,7 @@ public sealed partial class Search : Page
     private readonly IProviderSearchCategoryTypeIds _searchTypeIds = Ioc.Default.GetRequiredService<IProviderSearchCategoryTypeIds>();
     private readonly ISearchSuggestionProvidable _suggestionProvider = Ioc.Default.GetService<ISearchSuggestionProvidable>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
 
     public static readonly DependencyProperty HasNextPageProperty = DependencyProperty.Register(
         "HasNextPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
@@ -121,7 +122,7 @@ public sealed partial class Search : Page
         }
 
         TBNoRes.Visibility = Visibility.Collapsed;
-        HistoryManagement.AddSearchHistory(searchText);
+        _history.AddSearchHistory(searchText);
 
         SearchResultContainer.ListItems.Clear();
         SongResults.Clear();

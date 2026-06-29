@@ -2,9 +2,9 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Downloads;
 using System;
-using System.Linq;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -22,6 +22,7 @@ namespace HyPlayer.Features.Downloads;
 public sealed partial class DownloadPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly IDownloadService _downloadService = Ioc.Default.GetRequiredService<IDownloadService>();
 
     public DownloadPage()
     {
@@ -35,7 +36,7 @@ public sealed partial class DownloadPage : Page
 
     private void Button_CleanAll_Click(object sender, RoutedEventArgs e)
     {
-        DownloadManager.DownloadLists.Clear();
+        _downloadService.ClearCompleted();
     }
 
     private void PauseBtn_Click(object sender, RoutedEventArgs e)
@@ -44,15 +45,13 @@ public sealed partial class DownloadPage : Page
         switch (downloadObject.Status)
         {
             case DownloadObject.DownloadStatus.Downloading or DownloadObject.DownloadStatus.Queueing:
-                downloadObject.Pause();
+                _downloadService.Pause(downloadObject);
                 break;
             case DownloadObject.DownloadStatus.Paused:
-                downloadObject.Resume();
+                _downloadService.Resume(downloadObject);
                 break;
             case DownloadObject.DownloadStatus.Error:
-                downloadObject.Message = "等待中";
-                downloadObject.Progress = 0;
-                downloadObject.Status = DownloadObject.DownloadStatus.Queueing;
+                _downloadService.Retry(downloadObject);
                 break;
         }
     }
@@ -60,37 +59,16 @@ public sealed partial class DownloadPage : Page
     private void RemoveBtn_Click(object sender, RoutedEventArgs e)
     {
         if ((sender?.As<Button>())?.DataContext is not DownloadObject downloadObject) return;
-        downloadObject.Remove();
+        _downloadService.Remove(downloadObject);
     }
 
     private void PauseAllBtn_Click(object sender, RoutedEventArgs e)
     {
-        foreach (var downloadObject in DownloadManager.DownloadLists.Where(t =>
-                     t.Status is DownloadObject.DownloadStatus.Downloading or DownloadObject.DownloadStatus.Queueing))
-        {
-            downloadObject.Pause();
-        }
+        _downloadService.PauseAll();
     }
 
     private void Resume_All(object sender, RoutedEventArgs e)
     {
-        foreach (var downloadObject in DownloadManager.DownloadLists.Where(t =>
-                     t.Status != DownloadObject.DownloadStatus.Downloading))
-        {
-            if (downloadObject.Status == DownloadObject.DownloadStatus.Paused)
-            {
-                downloadObject.Message = "排队中";
-                downloadObject.HasPaused = false;
-            }
-
-            if (downloadObject.Status == DownloadObject.DownloadStatus.Error)
-            {
-                downloadObject.Message = "排队中";
-                downloadObject.Progress = 0;
-                downloadObject.HasPaused = false;
-                downloadObject.HasError = false;
-            }
-            downloadObject.Status = DownloadObject.DownloadStatus.Queueing;
-        }
+        _downloadService.ResumeAll();
     }
 }

@@ -20,16 +20,6 @@ public sealed class SongLikeStatusChangedEventArgs(bool isLiked) : EventArgs
     public bool IsLiked { get; } = isLiked;
 }
 
-public sealed class LyricLoadedEventArgs(HyLyricInfo info) : EventArgs
-{
-    public HyLyricInfo Info { get; } = info;
-}
-
-public sealed class LyricIndexChangedEventArgs(int index) : EventArgs
-{
-    public int Index { get; } = index;
-}
-
 public sealed class PlaybackTrackChangedEventArgs(SingleSongBase item) : EventArgs
 {
     public SingleSongBase Item { get; } = item;

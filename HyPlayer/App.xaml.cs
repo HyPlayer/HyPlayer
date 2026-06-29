@@ -24,6 +24,7 @@ using HyPlayer.Services.Authentication;
 using HyPlayer.Services.Background;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Diagnostics;
+using HyPlayer.Services.Downloads;
 using HyPlayer.Services.History;
 using HyPlayer.Services.LastFM;
 using HyPlayer.Services.Lyrics;
@@ -95,7 +96,7 @@ public sealed partial class App : Application
         InitializeComponent();
         InitializeServices();
         InitializeCommonServices();
-        HistoryManagement.InitializeHistoryTrack();
+        AppDepository.Resolve<IHistoryService>().InitializeHistoryTrack();
         if (AppDepository.Resolve<Setting>().themeRequest != ThemeRequest.Auto)
             RequestedTheme = AppDepository.Resolve<Setting>().themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
         AppDepository.Resolve<IBackgroundTaskRunner>().Forget(InitializeThings, "initialize app cache and converters");
@@ -210,6 +211,7 @@ public sealed partial class App : Application
         depository.Add(typeof(INotificationSubscriber<InnerPlayListChangedNotification>), typeof(PlayCoreStateSynchronizer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<PlayCoreStateSynchronizer>());
         depository.AddSingleton<ISongListQueueBuilder, SongListQueueBuilder>();
         depository.AddSingleton<ILyricService, LyricService>();
+        depository.AddSingleton<ILastFmService, LastFmService>();
         depository.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
         depository.AddSingleton<ITileService, TileService>();
 
@@ -220,6 +222,9 @@ public sealed partial class App : Application
         depository.AddSingleton<NavigationShellViewModel>();
         depository.AddSingleton<INotificationService, NotificationService>();
         depository.AddSingleton<IAppLifecycleStateService, AppLifecycleStateService>();
+        depository.AddSingleton<IUserLibraryStateService, UserLibraryStateService>();
+        depository.AddSingleton<IHistoryService, HistoryService>();
+        depository.AddSingleton<IDownloadService, DownloadService>();
         depository.AddSingleton<IDisplayKeepAwakeService, DisplayKeepAwakeService>();
         depository.AddSingleton<IKawazuStateService, KawazuStateService>();
         depository.AddSingleton<IDiagnosticsStateService, DiagnosticsStateService>();
@@ -366,7 +371,7 @@ public sealed partial class App : Application
             var launchUri = (args?.As<IProtocolActivatedEventArgs>())?.Uri;
             if (launchUri?.Host == "link.last.fm")
                 AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
-                    LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty)),
+                    AppDepository.Resolve<ILastFmService>().CompleteBrowserLoginAsync(launchUri.Query.Replace("?token=", string.Empty)),
                     "complete Last.FM browser login");
         }
     }
@@ -414,8 +419,9 @@ public sealed partial class App : Application
         {
             var playCore = AppDepository.Resolve<PlayCoreBase>();
             var localFileImport = AppDepository.Resolve<ILocalFileImportService>();
+            var history = AppDepository.Resolve<IHistoryService>();
             playCore.PlaySourceId = "local";
-            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
+            await history.ClearCurrentPlayingListHistoryAsync();
 
             NavigateToRootPage();
             Window.Current.Activate();
@@ -479,7 +485,9 @@ public sealed partial class App : Application
         var currentIndex = currentItem?.ProviderId == defaultProvider.Id
             ? providerItems.FindIndex(item => item.TypeId == currentItem.TypeId && item.ActualId == currentItem.ActualId)
             : -1;
-        await HistoryManagement.SetcurPlayingListHistory([.. providerItems.Select(t => t.ActualId).Where(id => !string.IsNullOrWhiteSpace(id))!], currentIndex);
+        await AppDepository.Resolve<IHistoryService>().SetCurrentPlayingListHistoryAsync(
+            [.. providerItems.Select(t => t.ActualId).Where(id => !string.IsNullOrWhiteSpace(id))!],
+            currentIndex);
         AppDepository.Resolve<IGameBarWidgetService>().Widget?.Close();
         deferral.Complete();
     }

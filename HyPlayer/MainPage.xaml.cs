@@ -197,8 +197,9 @@ public sealed partial class MainPage : Page
                 navigation.Navigate(typeof(Me));
                 break;
             case "likedsongs":
-                var auth = Ioc.Default.GetRequiredService<IAuthService>();
-                navigation.Navigate(typeof(SongListDetail), auth.MySongLists[0].ActualId);
+                var userLibrary = Ioc.Default.GetRequiredService<IUserLibraryStateService>();
+                if (userLibrary.LikedSongsPlaylist is { ActualId: { Length: > 0 } likedSongsId })
+                    navigation.Navigate(typeof(SongListDetail), likedSongsId);
                 break;
             case "local":
                 navigation.Navigate(typeof(LocalMusicPage));

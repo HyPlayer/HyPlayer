@@ -6,7 +6,6 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.LastFM;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
@@ -28,6 +27,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     private readonly IPlayer _player;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly ITileService _tileService;
+    private readonly ILastFmService _lastFm;
 
     public PlaybackNotificationService(
         PlaybackStateService state,
@@ -35,7 +35,8 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         HttpClient http,
         IPlayer player,
         IBackgroundTaskRunner taskRunner,
-        ITileService tileService)
+        ITileService tileService,
+        ILastFmService lastFm)
     {
         _state = state;
         _setting = setting;
@@ -43,6 +44,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         _player = player;
         _taskRunner = taskRunner;
         _tileService = tileService;
+        _lastFm = lastFm;
     }
 
     /// <inheritdoc />
@@ -51,16 +53,21 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         if (providerItem == null) return;
         UpdateSmtcDisplayInfo(providerItem);
 
-        // 1. 刷新封面
         if (!_setting.noImage)
+        {
             await RefreshCoverAsync(providerItem);
-        await _tileService.UpdateTile(providerItem, _state.CoverStream);
-        if (!_setting.noImage)
             UpdateSmtcThumbnail();
-        // 2. Last.FM now-playing
+        }
+        else
+        {
+            _state.CoverStream = null;
+            _state.CoverStreamReference = null;
+        }
+
+        await _tileService.UpdateTile(providerItem, _setting.noImage ? null : _state.CoverStream);
         if (_setting.UpdateLastFMNowPlaying)
         {
-            _taskRunner.Forget(LastFMManager.UpdateNowPlaying(providerItem), "update Last.FM now playing");
+            _taskRunner.Forget(_lastFm.UpdateNowPlayingAsync(providerItem), "update Last.FM now playing");
         }
     }
 
@@ -83,11 +90,8 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
             await newStream.WriteAsync(buffer);
             var newRef = RandomAccessStreamReference.CreateFromStream(newStream);
 
-            // Atomic swap
-            var oldStream = _state.CoverStream;
             _state.CoverStreamReference = newRef;
             _state.CoverStream = newStream;
-            oldStream?.Dispose();
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -100,7 +104,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     public async Task ScrobbleAsync(SingleSongBase providerItem)
     {
         if (providerItem == null) return;
-        await LastFMManager.Scrobble(providerItem);
+        await _lastFm.ScrobbleAsync(providerItem);
     }
 
     private void UpdateSmtcDisplayInfo(SingleSongBase providerItem)

@@ -22,7 +22,7 @@ public sealed partial class SongListSelect : ContentDialog
     {
         InitializeComponent();
         SongId = songid;
-        _songLists = Ioc.Default.GetRequiredService<IAuthService>().MySongLists;
+        _songLists = Ioc.Default.GetRequiredService<IUserLibraryStateService>().OwnedPlaylists;
         _likableProvider = Ioc.Default.GetRequiredService<IProvableItemLikable>();
         _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
         ListViewSongList.Items?.Clear();

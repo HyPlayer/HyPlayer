@@ -53,6 +53,7 @@ public sealed partial class Settings : Page
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
+    private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
 
     private bool isbyprogram;
     private int _elapse = 10;
@@ -278,7 +279,7 @@ public sealed partial class Settings : Page
 
     private void ClearHistory_Click(object sender, RoutedEventArgs e)
     {
-        _ = HistoryManagement.ClearHistory();
+        _ = _history.ClearHistoryAsync();
     }
 
 

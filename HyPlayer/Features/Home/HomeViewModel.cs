@@ -27,6 +27,7 @@ namespace HyPlayer.Features.Home
         private readonly PlayCoreBase _playCore;
         private readonly IPlaybackControlService _control;
         private readonly INavigationService _navigation;
+        private readonly IUserLibraryStateService _userLibraryState;
         private List<SingleSongBase> _recommendedProviderSongs = [];
         private Task? _loadDataTask;
         private bool _hasLoaded;
@@ -46,13 +47,15 @@ namespace HyPlayer.Features.Home
             IProviderSpecialContainerTypeIds specialContainerTypeIds,
             PlayCoreBase playCore,
             IPlaybackControlService control,
-            INavigationService navigation)
+            INavigationService navigation,
+            IUserLibraryStateService userLibraryState)
         {
             _itemProvider = itemProvider;
             _specialContainerTypeIds = specialContainerTypeIds;
             _playCore = playCore;
             _control = control;
             _navigation = navigation;
+            _userLibraryState = userLibraryState;
         }
 
         public Task GetDataAsync(bool forceRefresh = false)
@@ -146,7 +149,8 @@ namespace HyPlayer.Features.Home
         [RelayCommand]
         private void OnLikedClicked()
         {
-            _navigation.Navigate(typeof(SongListDetail), Ioc.Default.GetRequiredService<IAuthService>().MySongLists[0].ActualId);
+            if (_userLibraryState.LikedSongsPlaylist is { ActualId: { Length: > 0 } likedSongsId })
+                _navigation.Navigate(typeof(SongListDetail), likedSongsId);
         }
 
         [RelayCommand]

@@ -6,6 +6,7 @@ using HyPlayer.Shell.Login;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Web.WebView2.Core;
 using System;
+using System.Collections.Generic;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -75,11 +76,13 @@ public sealed partial class ThirdPartyLogin : Page
         {
             LoadingRingContainer.Visibility = Visibility.Visible;
             var cookies = await sender.CoreWebView2.CookieManager.GetCookiesAsync("https://music.163.com");
+            var runtimeCookies = new Dictionary<string, string>();
             foreach (var cookie in cookies)
             {
-                _auth.SetRuntimeCookie(cookie.Name, cookie.Value);
+                runtimeCookies[cookie.Name] = cookie.Value;
             }
 
+            await _auth.ImportRuntimeCookiesAsync(runtimeCookies);
             await Ioc.Default.GetRequiredService<ShellLoginService>().CompleteExternalLoginAsync();
         }
     }

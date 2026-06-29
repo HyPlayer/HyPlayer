@@ -1,8 +1,6 @@
 #region
 
 #nullable enable annotations
-using ALRC.Converters;
-using ALRC.Converters.Enhancers;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.Animations;
 using CommunityToolkit.WinUI.Media;
@@ -24,7 +22,6 @@ using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
 using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Cache;
 using HyPlayer.Services.Playback;
 using HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 using HyPlayer.Shell.Playback;
@@ -58,7 +55,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using HyALRCLyricInfo = HyPlayer.Domain.Lyrics.HyALRCLyricInfo;
 using LrcConverter = HyPlayer.Domain.Lyrics.LrcConverter;
 using UISettings = Windows.UI.ViewManagement.UISettings;
 
@@ -760,68 +756,12 @@ public sealed partial class ExpandedPlayer : Page
         var sf = await picker.PickSingleFileAsync();
         if (sf != null)
         {
-            var qrc = await FileIO.ReadTextAsync(sf);
-            ILyricConverter<string> converter = sf.FileType switch
-            {
-                ".qrc" => new QQLyricConverter(),
-                ".yrc" => CreateYrcConverter(),
-                ".lrc" => new ALRC.Converters.LrcConverter(),
-                ".alrc" => new ALRCConverter(),
-                ".ttml" => new AppleSyllableConverter(),
-                ".lys" => new LyricifySyllableConverter(),
-                _ => throw new NotImplementedException()
-            };
-
-            var lrcConverter = new ALRC.Converters.LrcConverter();
-            var lrcTranslationConverter = new LrcTranslationEnhancer();
-            var alrc = converter.Convert(qrc);
-            var lrc = lrcConverter.ConvertBack(alrc);
-            var trLrc = lrcTranslationConverter.Extract(alrc);
-
-            HyALRCLyricInfo ttmlLyric = new()
-            {
-                PureLyrics = lrc,
-                TrLyrics = trLrc,
-                ALRC = alrc,
-                LyricMetadata =
-                [
-                    new LyricInfoMetadata
-                    {
-                        Key = "lyric_source",
-                        Value = "本地歌词",
-                        DisplayName = "歌词来源",
-                        ActionUri = sf.Path
-                    }
-                ],
-                SongMetadata = []
-            };
-
-            _state.LyricInfo = new HyLyricInfo
-            {
-                LyricMetadata = ttmlLyric.LyricMetadata,
-                PureLyricInfo = ttmlLyric,
-                SongMetadata = ttmlLyric.SongMetadata,
-                Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics)
-            };
-            Utils.ConvertTranslation(ttmlLyric.TrLyrics, _state.LyricInfo.Lyrics);
-            var cacheSongId = _state.NowPlayingProviderItem?.ActualId;
-            if (!string.IsNullOrEmpty(cacheSongId))
-            {
-                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, cacheSongId,
-                    () => Task.FromResult(_state.LyricInfo)!, forceRefresh: true);
-            }
-
-
-            var lrcs = LrcConverter.Convert(alrc);
-            _lyricBox.SetLyricLines(lrcs);
+            var lyricInfo = await _lyricService.ImportLyricsAsync(sf, _state.NowPlayingProviderItem);
+            if (lyricInfo?.PureLyricInfo is HyALRCLyricInfo alrcLyricInfo)
+                _lyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.ALRC));
+            else
+                LoadLyricsBox();
         }
-    }
-
-    private static ILyricConverter<string> CreateYrcConverter()
-    {
-        var type = typeof(QQLyricConverter).Assembly.GetType("ALRC.Converters." + "Netease" + "YrcConverter")
-                   ?? throw new NotImplementedException();
-        return (ILyricConverter<string>)Activator.CreateInstance(type);
     }
 
     private async void LyricBox_Tapped(object sender, TappedRoutedEventArgs e)

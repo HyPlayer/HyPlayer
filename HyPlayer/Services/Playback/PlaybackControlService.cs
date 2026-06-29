@@ -309,7 +309,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
 
         if (_setting.LastFMScrobble && _state.NowPlayingProviderItem is not null)
         {
-            _taskRunner.Forget(LastFMManager.Scrobble(_state.NowPlayingProviderItem), "update Last.FM now playing");
+            _taskRunner.Forget(_playbackNotification.ScrobbleAsync(_state.NowPlayingProviderItem), "update Last.FM scrobble");
         }
         _taskRunner.Forget(HandleTrackEndedSafeAsync(), "handle track ended");
     }

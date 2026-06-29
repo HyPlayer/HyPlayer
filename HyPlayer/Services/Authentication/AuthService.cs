@@ -35,6 +35,7 @@ public class AuthService : IAuthService
     private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier;
+    private readonly IUserLibraryStateService _userLibraryState;
     private readonly SemaphoreSlim _likeSongGate = new(1, 1);
 
     public AuthService(
@@ -47,7 +48,8 @@ public class AuthService : IAuthService
         IProvidableItemProvidable itemProvider,
         INotificationService notification,
         IBackgroundTaskRunner taskRunner,
-        IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
+        IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier,
+        IUserLibraryStateService userLibraryState)
     {
         _state = state;
         _authenticationProvider = authenticationProvider;
@@ -59,6 +61,7 @@ public class AuthService : IAuthService
         _notification = notification;
         _taskRunner = taskRunner;
         _playlistCollectionChangeNotifier = playlistCollectionChangeNotifier;
+        _userLibraryState = userLibraryState;
     }
 
     /// <inheritdoc />
@@ -71,18 +74,15 @@ public class AuthService : IAuthService
     public List<string> LikedSongs { get; } = [];
 
     /// <inheritdoc />
-    public List<ContainerBase> MySongLists { get; } = [];
-
-    /// <inheritdoc />
-    public void ClearRuntimeCookies()
+    public Task ClearRuntimeCookiesAsync()
     {
-        _taskRunner.Forget(_authenticationProvider.ImportSessionAsync(new Dictionary<string, string>()), "clear provider session values");
+        return _authenticationProvider.ImportSessionAsync(new Dictionary<string, string>());
     }
 
     /// <inheritdoc />
-    public void SetRuntimeCookie(string name, string value)
+    public Task ImportRuntimeCookiesAsync(IReadOnlyDictionary<string, string> cookies)
     {
-        _taskRunner.Forget(_authenticationProvider.ImportSessionAsync(new Dictionary<string, string> { [name] = value }), "import provider session value");
+        return _authenticationProvider.ImportSessionAsync(cookies);
     }
 
     /// <inheritdoc />
@@ -221,7 +221,7 @@ public class AuthService : IAuthService
         IsLoggedIn = false;
         CurrentUser = null;
         LikedSongs.Clear();
-        MySongLists.Clear();
+        _userLibraryState.Clear();
 
         if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("Cookies", out var container))
             container.Values.Clear();
@@ -268,7 +268,7 @@ public class AuthService : IAuthService
     private async Task LikeSongCoreAsync()
     {
         var providerItem = _state.NowPlayingProviderItem;
-        var songId = providerItem?.ActualId;
+        var songId = NormalizeSongActualId(providerItem?.ActualId);
         if (string.IsNullOrWhiteSpace(songId)) return;
         var isLiked = LikedSongs.Contains(songId);
         try
@@ -309,7 +309,21 @@ public class AuthService : IAuthService
         var likedSongs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"likedSongs_{userId}", async () =>
             await _likableProvider.GetLikedProvidableIdsAsync(_knownTypeIds.SingleSongTypeId));
         LikedSongs.Clear();
-        LikedSongs.AddRange(likedSongs ?? []);
+        LikedSongs.AddRange((likedSongs ?? [])
+            .Select(NormalizeSongActualId)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id!)
+            .Distinct());
+    }
+
+    private string? NormalizeSongActualId(string? providerItemId)
+    {
+        if (string.IsNullOrWhiteSpace(providerItemId))
+            return providerItemId;
+
+        return providerItemId.StartsWith(_knownTypeIds.SingleSongTypeId, StringComparison.Ordinal)
+            ? providerItemId[_knownTypeIds.SingleSongTypeId.Length..]
+            : providerItemId;
     }
 
     private async Task<PersonBase?> TryGetCurrentProviderUserAsync(ProviderSessionInfo session)

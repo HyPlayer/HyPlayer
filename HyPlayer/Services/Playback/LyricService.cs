@@ -26,9 +26,6 @@ namespace HyPlayer.Services.Playback;
 /// </summary>
 public sealed class LyricService : ILyricService
 {
-    public event EventHandler<LyricLoadedEventArgs>? LyricLoaded;
-    public event EventHandler<LyricIndexChangedEventArgs>? LyricIndexChanged;
-
     private readonly ILyricProvidable _lyricProvider;
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
@@ -74,7 +71,6 @@ public sealed class LyricService : ILyricService
             {
                 _state.LyricInfo = cached;
                 _state.LyricIndex = 0;
-                LyricLoaded?.Invoke(this, new LyricLoadedEventArgs(cached));
                 return;
             }
         }
@@ -88,8 +84,6 @@ public sealed class LyricService : ILyricService
 
         _state.LyricInfo = lyricInfo;
         _state.LyricIndex = 0;
-
-        LyricLoaded?.Invoke(this, new LyricLoadedEventArgs(lyricInfo));
 
         if (canUseHyLyricInfoCache && HasCacheableLyrics(lyricInfo, providerItem))
         {
@@ -146,8 +140,29 @@ public sealed class LyricService : ILyricService
         if (changed)
         {
             _state.LyricIndex = idx;
-            LyricIndexChanged?.Invoke(this, new LyricIndexChangedEventArgs(idx));
         }
+    }
+
+    public async Task<HyLyricInfo?> ImportLyricsAsync(StorageFile lyricFile, SingleSongBase? currentSong, CancellationToken ct = default)
+    {
+        var content = await FileIO.ReadTextAsync(lyricFile).AsTask(ct);
+        var lyricInfo = await ConvertAlrcLyricAsync(content, lyricFile.FileType, "本地歌词", lyricFile.Path);
+        _state.LyricInfo = lyricInfo;
+        _state.LyricIndex = 0;
+
+        var cacheSongId = currentSong?.ActualId;
+        if (!string.IsNullOrEmpty(cacheSongId))
+        {
+            _taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.HyLyricInfo,
+                cacheSongId,
+                () => Task.FromResult(lyricInfo),
+                forceRefresh: true,
+                cancellationToken: ct),
+                "cache imported lyric info");
+        }
+
+        return lyricInfo;
     }
 
     #region Private helpers
@@ -338,51 +353,20 @@ public sealed class LyricService : ILyricService
             message.Headers.Add("User-Agent", "HyPlayer LyricsClient");
             using var ttml = await _httpClient.SendAsync(message, ct);
             var ttmlContent = await ttml.Content.ReadAsStringAsync(ct);
-            var ttmlConverter = new AppleSyllableConverter();
-            var lrcConverter = new LrcConverter();
-            var lrcTranslationConverter = new LrcTranslationEnhancer();
-            var alrc = ttmlConverter.Convert(ttmlContent);
-            var lrc = lrcConverter.ConvertBack(alrc);
-            var trLrc = lrcTranslationConverter.Extract(alrc);
+            var importedLyric = await ConvertAlrcLyricAsync(
+                ttmlContent,
+                ".ttml",
+                "amll-ttml-db",
+                $"https://github.com/amll-dev/amll-ttml-db/blob/main/ncm-lyrics/{item.ActualId}.ttml",
+                includeAuthorMetadata: true);
+            _state.LyricInfo = importedLyric;
+            _state.LyricIndex = 0;
 
-            var ttmlLyric = new HyALRCLyricInfo
-            {
-                PureLyrics = lrc,
-                TrLyrics = trLrc,
-                ALRC = alrc,
-                LyricMetadata =
-                [
-                    new LyricInfoMetadata
-                    {
-                        Key = "lyric_user",
-                        Value = alrc.LyricInfo?.Author,
-                        DisplayName = "歌词作者",
-                        ActionUri = $"https://github.com/{alrc.LyricInfo?.Author}"
-                    },
-                    new LyricInfoMetadata
-                    {
-                        Key = "source",
-                        Value = "amll-ttml-db",
-                        DisplayName = "歌词来源",
-                        ActionUri = $"https://github.com/amll-dev/amll-ttml-db/blob/main/ncm-lyrics/{item.ActualId}.ttml"
-                    }
-                ],
-                SongMetadata = []
-            };
-
-            lyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics);
-            Utils.ConvertTranslation(ttmlLyric.TrLyrics, lyricInfo.Lyrics);
-            lyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
-            lyricInfo.SongMetadata = ttmlLyric.SongMetadata;
-            lyricInfo.PureLyricInfo = ttmlLyric;
-
-        LyricLoaded?.Invoke(this, new LyricLoadedEventArgs(lyricInfo));
-
-            if (HasCacheableLyrics(lyricInfo, item))
+            if (HasCacheableLyrics(importedLyric, item))
             {
                 _taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
                     CacheType.HyLyricInfo, item.ActualId,
-                    () => Task.FromResult(lyricInfo),
+                    () => Task.FromResult(importedLyric),
                     forceRefresh: true,
                     cancellationToken: ct),
                     "refresh AMLL lyric cache");
@@ -392,6 +376,81 @@ public sealed class LyricService : ILyricService
         {
 
         }
+    }
+
+    private static Task<HyLyricInfo> ConvertAlrcLyricAsync(
+        string lyricText,
+        string fileType,
+        string sourceName,
+        string? sourceUri,
+        bool includeAuthorMetadata = false)
+    {
+        var converter = CreateAlrcConverter(fileType);
+        var lrcConverter = new LrcConverter();
+        var lrcTranslationConverter = new LrcTranslationEnhancer();
+        var alrc = converter.Convert(lyricText);
+        var lrc = lrcConverter.ConvertBack(alrc);
+        var trLrc = lrcTranslationConverter.Extract(alrc);
+        var metadata = new System.Collections.Generic.List<LyricInfoMetadata>();
+
+        if (includeAuthorMetadata && !string.IsNullOrWhiteSpace(alrc.LyricInfo?.Author))
+        {
+            metadata.Add(new LyricInfoMetadata
+            {
+                Key = "lyric_user",
+                Value = alrc.LyricInfo.Author,
+                DisplayName = "歌词作者",
+                ActionUri = $"https://github.com/{alrc.LyricInfo.Author}"
+            });
+        }
+
+        metadata.Add(new LyricInfoMetadata
+        {
+            Key = "source",
+            Value = sourceName,
+            DisplayName = "歌词来源",
+            ActionUri = sourceUri
+        });
+
+        var pureLyricInfo = new HyALRCLyricInfo
+        {
+            PureLyrics = lrc,
+            TrLyrics = trLrc,
+            ALRC = alrc,
+            LyricMetadata = metadata,
+            SongMetadata = []
+        };
+
+        var lyricInfo = new HyLyricInfo
+        {
+            LyricMetadata = pureLyricInfo.LyricMetadata,
+            PureLyricInfo = pureLyricInfo,
+            SongMetadata = pureLyricInfo.SongMetadata,
+            Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics)
+        };
+        Utils.ConvertTranslation(pureLyricInfo.TrLyrics, lyricInfo.Lyrics);
+        return Task.FromResult(lyricInfo);
+    }
+
+    private static ILyricConverter<string> CreateAlrcConverter(string fileType)
+    {
+        return fileType switch
+        {
+            ".qrc" => new QQLyricConverter(),
+            ".yrc" => CreateYrcConverter(),
+            ".lrc" => new LrcConverter(),
+            ".alrc" => new ALRCConverter(),
+            ".ttml" => new AppleSyllableConverter(),
+            ".lys" => new LyricifySyllableConverter(),
+            _ => throw new NotImplementedException()
+        };
+    }
+
+    private static ILyricConverter<string> CreateYrcConverter()
+    {
+        var type = typeof(QQLyricConverter).Assembly.GetType("ALRC.Converters." + "Netease" + "YrcConverter")
+                   ?? throw new NotImplementedException();
+        return (ILyricConverter<string>)Activator.CreateInstance(type);
     }
 
     private static bool HasDisplayableLyrics(HyLyricInfo lyricInfo, SingleSongBase providerItem)

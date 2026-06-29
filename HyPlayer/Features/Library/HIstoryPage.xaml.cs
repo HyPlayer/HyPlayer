@@ -34,6 +34,7 @@ public sealed partial class HistoryPage : Page
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly IUserLibraryProvidable _userLibraryProvider = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
     private readonly IUserLibraryTypeIds _userLibraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
+    private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
 
     private readonly ObservableCollection<SongListItemViewModel> Songs = new();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -105,7 +106,7 @@ public sealed partial class HistoryPage : Page
 
     private async Task LoadSongHistory(string selectionName)
     {
-        _songHistoryCache ??= await HistoryManagement.GetSongHistory();
+        _songHistoryCache ??= await _history.GetSongHistoryAsync();
         if (!string.Equals(_currentSelectionName, selectionName, StringComparison.Ordinal))
             return;
 

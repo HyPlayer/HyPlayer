@@ -68,6 +68,7 @@ public sealed partial class PlayBar
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
     private readonly ILocalFileImportService _localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
     private readonly IPersonalRadioProvidable _personalRadioProvider = Ioc.Default.GetRequiredService<IPersonalRadioProvidable>();
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
@@ -278,7 +279,7 @@ DoubleAnimation verticalAnimation;
                     : "\uE006";
             });
             if (!string.IsNullOrEmpty(songId))
-                HistoryManagement.AddNCSongHistory(songId);
+                _history.AddNCSongHistory(songId);
         }
 
         /*
@@ -767,7 +768,7 @@ DoubleAnimation verticalAnimation;
         if (ViewModel.PlaySourceId == "local") return;
         try
         {
-            var state = await HistoryManagement.GetCurPlayingListHistoryStateAsync();
+            var state = await _history.GetCurrentPlayingListHistoryStateAsync();
             if (state.Songs.Count > 0)
             {
                 await _playCore.RemoveAllSongAsync();

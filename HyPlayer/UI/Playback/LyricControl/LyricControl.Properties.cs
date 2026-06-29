@@ -17,8 +17,8 @@ namespace HyPlayer.UI.Playback.LyricControl
         /// </summary>
         public int BlurAmount
         {
-            get => (int)GetValue(CurrentTimeProperty);
-            set => SetValue(CurrentTimeProperty, value);
+            get => (int)GetValue(BlurAmountProperty);
+            set => SetValue(BlurAmountProperty, value);
         }
 
         public static readonly DependencyProperty BlurAmountProperty =
@@ -88,7 +88,7 @@ namespace HyPlayer.UI.Playback.LyricControl
         }
 
         public static readonly DependencyProperty HorizontalTextAlignmentProperty =
-            DependencyProperty.Register(nameof(CurrentTime), typeof(CanvasHorizontalAlignment), typeof(LyricControl), new PropertyMetadata(CanvasHorizontalAlignment.Center, OnHorizontalTextAlignmentChanged));
+            DependencyProperty.Register(nameof(HorizontalTextAlignment), typeof(CanvasHorizontalAlignment), typeof(LyricControl), new PropertyMetadata(CanvasHorizontalAlignment.Center, OnHorizontalTextAlignmentChanged));
 
         private CanvasHorizontalAlignment _horizontalTextAlignment = CanvasHorizontalAlignment.Center;
 

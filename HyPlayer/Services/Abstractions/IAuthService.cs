@@ -1,5 +1,5 @@
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -23,14 +23,11 @@ public interface IAuthService
     /// <summary>喜欢的歌曲 ID 列表</summary>
     List<string> LikedSongs { get; }
 
-    /// <summary>用户歌单列表</summary>
-    List<ContainerBase> MySongLists { get; }
-
     /// <summary>清理运行时 Cookie。</summary>
-    void ClearRuntimeCookies();
+    Task ClearRuntimeCookiesAsync();
 
-    /// <summary>写入运行时 Cookie。</summary>
-    void SetRuntimeCookie(string name, string value);
+    /// <summary>批量写入运行时 Cookie。</summary>
+    Task ImportRuntimeCookiesAsync(IReadOnlyDictionary<string, string> cookies);
 
     /// <summary>尝试使用已保存 Cookie 恢复登录。</summary>
     Task<AuthResult> TryLoadSavedLoginAsync();

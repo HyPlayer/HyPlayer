@@ -75,8 +75,9 @@ internal class Api
         var control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
         var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         var auth = Ioc.Default.GetRequiredService<IAuthService>();
+        var userLibrary = Ioc.Default.GetRequiredService<IUserLibraryStateService>();
 
-        var seedPlaylist = await ResolveLikedMusicPlaylistAsync(auth, playlistId, cancellationToken);
+        var seedPlaylist = await ResolveLikedMusicPlaylistAsync(auth, userLibrary, playlistId, cancellationToken);
         if (seedPlaylist is null || string.IsNullOrWhiteSpace(seedPlaylist.ActualId))
         {
             notification.ShowMessage("无法进入心动模式", "未找到我喜欢的音乐歌单");
@@ -160,15 +161,16 @@ internal class Api
 
     private static async Task<ContainerBase?> ResolveLikedMusicPlaylistAsync(
         IAuthService auth,
+        IUserLibraryStateService userLibrary,
         string? playlistId,
         CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(playlistId))
         {
-            return auth.MySongLists.FirstOrDefault(pl => pl.ActualId == playlistId);
+            return userLibrary.FindUserPlaylist(playlistId);
         }
 
-        var cached = FindLikedMusicPlaylist(auth.MySongLists);
+        var cached = userLibrary.LikedSongsPlaylist;
         if (cached is not null)
             return cached;
 

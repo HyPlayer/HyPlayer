@@ -48,10 +48,10 @@ public sealed class ShellLoginService
         _setting = setting;
     }
 
-    public Task ShowLoginRequiredDialogAsync()
+    public async Task ShowLoginRequiredDialogAsync()
     {
-        _auth.ClearRuntimeCookies();
-        return ShowPreLoginHintAsync();
+        await _auth.ClearRuntimeCookiesAsync();
+        await ShowPreLoginHintAsync();
     }
 
     public async Task TryLoadSavedLoginAsync()

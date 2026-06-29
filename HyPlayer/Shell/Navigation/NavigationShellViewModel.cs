@@ -29,6 +29,8 @@ public partial class NavigationShellViewModel : ObservableObject
     private readonly IAuthService _auth;
     private readonly INotificationService _notification;
     private readonly IUserLibraryTypeIds _userLibraryTypeIds;
+    private readonly IUserLibraryNavigationProvidable _userLibraryNavigationProvider;
+    private readonly IUserLibraryStateService _userLibraryState;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private Task? _loadPlaylistsTask;
 
@@ -61,12 +63,16 @@ public partial class NavigationShellViewModel : ObservableObject
         IAuthService auth,
         INotificationService notification,
         IUserLibraryTypeIds userLibraryTypeIds,
+        IUserLibraryNavigationProvidable userLibraryNavigationProvider,
+        IUserLibraryStateService userLibraryState,
         IProviderKnownTypeIds knownTypeIds,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
         _auth = auth;
         _notification = notification;
         _userLibraryTypeIds = userLibraryTypeIds;
+        _userLibraryNavigationProvider = userLibraryNavigationProvider;
+        _userLibraryState = userLibraryState;
         _knownTypeIds = knownTypeIds;
 
         BuildMenuItems();
@@ -134,6 +140,7 @@ public partial class NavigationShellViewModel : ObservableObject
     public void UpdateAfterLogout()
     {
         ClearProviderLibraryNodes();
+        _userLibraryState.Clear();
 
         IsLoading = false;
         _ = UpdateAccountStatusAsync();
@@ -204,13 +211,10 @@ public partial class NavigationShellViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var containers = await _auth.CurrentUser.GetSubContainerAsync();
-            var groups = await BuildLibraryNavigationGroupsAsync(containers);
+            var groups = await _userLibraryNavigationProvider.GetCurrentUserLibraryNavigationGroupsAsync();
 
             ClearProviderLibraryNodes();
-            _auth.MySongLists.Clear();
-
-            AddOwnedPlaylistCache(groups);
+            _userLibraryState.UpdateFromNavigationGroups(groups);
             RenderProviderLibraryGroups(groups);
         }
         catch (Exception ex)
@@ -304,88 +308,4 @@ public partial class NavigationShellViewModel : ObservableObject
         return null;
     }
 
-    private void AddOwnedPlaylistCache(IReadOnlyList<ProviderLibraryNavigationGroup> groups)
-    {
-        var added = new HashSet<string>();
-        foreach (var group in groups.OrderBy(group => group.DisplayOrder))
-        {
-            foreach (var item in group.Items)
-            {
-                if (item.TypeId != _knownTypeIds.PlaylistTypeId ||
-                    string.IsNullOrEmpty(item.ActualId) ||
-                    !added.Add(item.ActualId))
-                    continue;
-
-                if (group.Id == _userLibraryTypeIds.LikedSongsTypeId ||
-                    item is not IHasLibraryState libraryState ||
-                    libraryState.IsOwnedByCurrentUser)
-                {
-                    _auth.MySongLists.Add(item);
-                }
-            }
-        }
-    }
-
-    private async Task<IReadOnlyList<ProviderLibraryNavigationGroup>> BuildLibraryNavigationGroupsAsync(
-        IReadOnlyList<ContainerBase> containers)
-    {
-        var items = new List<ContainerBase>();
-        foreach (var container in containers)
-        {
-            if (container is LinerContainerBase liner && container.TypeId == _knownTypeIds.PlaylistTypeId)
-            {
-                var children = await liner.GetAllItemsAsync();
-                items.AddRange(children.OfType<ContainerBase>().Where(item => TryCreateContainerRoute(item) is not null));
-                continue;
-            }
-
-            if (container is not LinerContainerBase && TryCreateContainerRoute(container) is not null)
-            {
-                items.Add(container);
-                continue;
-            }
-        }
-
-        var owned = items
-            .Where(item => item is not IHasLibraryState libraryState || libraryState.IsOwnedByCurrentUser)
-            .ToList();
-        var subscribed = items
-            .Where(item => item is IHasLibraryState { IsInCurrentUserLibrary: true, IsOwnedByCurrentUser: false })
-            .ToList();
-        var groups = new List<ProviderLibraryNavigationGroup>();
-
-        if (owned.Count > 0)
-        {
-            groups.Add(new ProviderLibraryNavigationGroup
-            {
-                Id = _userLibraryTypeIds.LikedSongsTypeId,
-                Title = "我喜欢的音乐",
-                Items = [owned[0]],
-                DisplayOrder = 0,
-                IsPinned = true
-            });
-
-            if (owned.Count > 1)
-            {
-                groups.Add(new ProviderLibraryNavigationGroup
-                {
-                    Id = "owned",
-                    Title = "我创建的歌单",
-                    Items = owned.Skip(1).ToList(),
-                    DisplayOrder = 10
-                });
-            }
-        }
-
-        if (subscribed.Count > 0)
-            groups.Add(new ProviderLibraryNavigationGroup
-            {
-                Id = "subscribed",
-                Title = "我收藏的歌单",
-                Items = subscribed,
-                DisplayOrder = 20
-            });
-
-        return groups;
-    }
 }

@@ -3,6 +3,7 @@ using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Storage;
 
 namespace HyPlayer.Services.Abstractions;
 
@@ -11,9 +12,6 @@ namespace HyPlayer.Services.Abstractions;
 /// </summary>
 public interface ILyricService
 {
-    event EventHandler<LyricLoadedEventArgs>? LyricLoaded;
-    event EventHandler<LyricIndexChangedEventArgs>? LyricIndexChanged;
-
     /// <summary>当前歌词信息</summary>
     HyLyricInfo CurrentLyricInfo { get; }
 
@@ -27,6 +25,11 @@ public interface ILyricService
     /// 为指定 Provider 曲目加载歌词。
     /// </summary>
     Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default);
+
+    /// <summary>
+    /// 导入本地歌词并写入当前播放歌曲的歌词状态/缓存。
+    /// </summary>
+    Task<HyLyricInfo?> ImportLyricsAsync(StorageFile lyricFile, SingleSongBase? currentSong, CancellationToken ct = default);
 
     /// <summary>
     /// 根据播放位置更新当前歌词行

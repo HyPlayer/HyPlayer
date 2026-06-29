@@ -37,7 +37,7 @@ using UwpStorageFileAbstraction = HyPlayer.Infrastructure.Audio.UwpStorageFileAb
 
 namespace HyPlayer.Services.Downloads;
 
-internal sealed partial class DownloadObject : INotifyPropertyChanged
+public sealed partial class DownloadObject : INotifyPropertyChanged
 {
     private DownloadOperation _downloadOperation;
     private readonly INotificationService _notification;
@@ -195,6 +195,24 @@ internal sealed partial class DownloadObject : INotifyPropertyChanged
             Message = "下载中";
             HasPaused = false;
         });
+    }
+
+    public void Queue()
+    {
+        Status = DownloadStatus.Queueing;
+        _ = _notification.InvokeOnUIThread(() =>
+        {
+            Message = "排队中";
+            HasPaused = false;
+            HasError = false;
+        });
+    }
+
+    public void Retry()
+    {
+        Progress = 0;
+        HadSize = 0;
+        Queue();
     }
 
     public void Remove()
