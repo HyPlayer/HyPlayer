@@ -9,7 +9,7 @@
   <Project Path="HyPlayer.NeteaseProvider/HyPlayer.NeteaseProvider/HyPlayer.NeteaseProvider.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="../HyPlayer.PlayCore/HyPlayer.PlayCore.Abstraction/HyPlayer.PlayCore.Abstraction.csproj" />
+  <Project Path="HyPlayer.PlayCore/HyPlayer.PlayCore.Abstraction/HyPlayer.PlayCore.Abstraction.csproj" />
   <Project Path="HyPlayer.Frieren/HyPlayer.Frieren.csproj">
     <Platform Solution="*|arm64" Project="arm64" />
     <Platform Solution="*|x64" Project="x64" />
