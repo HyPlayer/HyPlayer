@@ -8,12 +8,12 @@ namespace HyPlayer.Infrastructure.Imaging
 {
     public static class ImageDecoder
     {
-        public static async Task<Dictionary<Vector3, int>> GetPixelColor(BitmapDecoder bitmapDecoder)
+        public static async Task<List<Vector4>> GetPixelColor(BitmapDecoder bitmapDecoder)
         {
             var pixelDataProvider = await bitmapDecoder.GetPixelDataAsync();
             var pixels = pixelDataProvider.DetachPixelData();
             var count = bitmapDecoder.PixelWidth * bitmapDecoder.PixelHeight;
-            var vector = new Dictionary<Vector3, int>();
+            var vectors = new List<Vector4>();
             for (int i = 0; i < count; i += 10)
             {
                 var offset = i * 4;
@@ -22,17 +22,10 @@ namespace HyPlayer.Infrastructure.Imaging
                 var r = pixels[offset + 2];
                 var a = pixels[offset + 3];
                 if (a == 0) continue;
-                var color = new Vector3(r, g, b);
-                if (vector.TryGetValue(color, out int value))
-                {
-                    vector[color] = ++value;
-                }
-                else
-                {
-                    vector[color] = 1;
-                }
+                var color = new Vector4(a, r, g, b);
+                vectors.Add(color);
             }
-            return vector;
+            return vectors;
         }
     }
 }

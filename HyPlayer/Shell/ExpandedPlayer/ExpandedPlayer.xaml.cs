@@ -27,8 +27,6 @@ using HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 using HyPlayer.Shell.Playback;
 using HyPlayer.UI.Dialogs;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
-using Impressionist.Abstractions;
-using Impressionist.Implementations;
 using Microsoft.Graphics.Canvas;
 using CommunityToolkit.WinUI.Helpers;
 using System;
@@ -57,6 +55,7 @@ using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using LrcConverter = HyPlayer.Domain.Lyrics.LrcConverter;
 using UISettings = Windows.UI.ViewManagement.UISettings;
+using ColorHelper = HyPlayer.Infrastructure.Imaging.ColorHelper;
 
 #endregion
 
@@ -148,7 +147,6 @@ public sealed partial class ExpandedPlayer : Page
         _canvasState.BackgroundType = _settings.expandedPlayerBackgroundType;
         _canvasState.IsPlaying = _state.IsPlaying;
         _canvasState.EnableFft = _settings.EnableFFT;
-        _canvasState.IsolationLightWave = _settings.IsolationLightWave;
         _canvasState.WindowMode = _windowMode;
         _canvasState.AlbumColorVectors = _albumColorVectors;
     }
@@ -159,7 +157,7 @@ public sealed partial class ExpandedPlayer : Page
         ViewModel = Ioc.Default.GetRequiredService<ExpandedPlayerViewModel>();
         _canvasState.LyricBox = _lyricBox;
         SyncCanvasState();
-        _backgroundShaderLayer = new BackgroundShaderLayer(_canvasState);
+        _backgroundShaderLayer = new BackgroundShaderLayer(_canvasState, _settings);
         _spectrumLayer = new SpectrumLayer(_canvasState, _player);
         _lyricsLayer = new LyricsLayer(_canvasState);
         DataContext = ViewModel;
@@ -778,7 +776,7 @@ public sealed partial class ExpandedPlayer : Page
         }
     }
 
-    private async Task<bool> IsBrightAsync(IRandomAccessStream stream)
+        private async Task<bool> IsBrightAsync(IRandomAccessStream stream)
     {
         _lastCoverSong = _state.NowPlayingProviderItem;
         var finalResult = false; //在不手动指定背景类型为2至5时需要执行颜色采样
@@ -791,41 +789,27 @@ public sealed partial class ExpandedPlayer : Page
         if (_state.NowPlayingProviderItem == null) return false;
         try
         {
-            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
-            var colors = await ImageDecoder.GetPixelColor(decoder);
-            ThemeColorResult themeColor;
-            PaletteResult palette;
-            if (_settings.expandedPlayerBackgroundType != BackgroundType.Animated && _settings.expandedPlayerBackgroundType != BackgroundType.Isolation)
+            var theme = await ColorHelper.ExtractThemeColorFromStream(stream);
+            albumMainColor = theme;
+            if (_settings.expandedPlayerBackgroundType == BackgroundType.Animated || _settings.expandedPlayerBackgroundType == BackgroundType.Isolation)
             {
-                themeColor = KMeansPaletteGenerator.CreateThemeColor(colors, true, true);
-                albumMainColor = Color.FromArgb(255, (byte)themeColor.Color.X, (byte)themeColor.Color.Y, (byte)themeColor.Color.Z);
-            }
-            else
-            {
-                palette = _settings.ColorGeneratorType switch
+               var palette = await ColorHelper.ExtractPaletteFromStream(stream);
+                if(_settings.expandedPlayerBackgroundType == BackgroundType.Animated)
                 {
-                    ColorGeneratorType.KMeans => await KMeansPaletteGenerator.CreatePalette(
-                                                colors,
-                                                _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                true,
-                                                true,
-                                                true),
-                    ColorGeneratorType.OctTree => palette = await OctTreePaletteGenerator.CreatePalette(
-                                                colors,
-                                                _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                true),
-                    _ => await AutoPaletteGenerator.CreatePalette(
-                                                colors,
-                                                _settings.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
-                                                true,
-                                                true,
-                                                true),
-                };
-                themeColor = palette.ThemeColor;
-                _albumColors = [.. palette.Palette.Select(quantizedColor => Color.FromArgb(255, (byte)quantizedColor.X, (byte)quantizedColor.Y, (byte)quantizedColor.Z))];
-                albumMainColor = Color.FromArgb(255, (byte)themeColor.Color.X, (byte)themeColor.Color.Y, (byte)themeColor.Color.Z);
-                _albumColorVectors = [.. palette.Palette.Select(t => t / 255)];
-                _canvasState.AlbumColorVectors = _albumColorVectors;
+                    _albumColors = [.. palette.Select(quantizedColor => Color.FromArgb(255, (byte)quantizedColor.X, (byte)quantizedColor.Y, (byte)quantizedColor.Z))];
+                }
+                else
+                {
+                    _albumColorVectors = [.. palette.Select(t => t / 255)];
+                    _canvasState.AlbumColorVectors = _albumColorVectors;
+                }
+                var themeVector = Vector3.Zero;
+                foreach(var item in palette)
+                {
+                    themeVector += item;
+                }
+                themeVector /= palette.Count;
+                theme = Color.FromArgb(255, (byte)themeVector.X, (byte)themeVector.Y, (byte)themeVector.Z);
             }
             if (_settings.expandedPlayerBackgroundType is BackgroundType.CoverTheme)
             {
@@ -834,7 +818,7 @@ public sealed partial class ExpandedPlayer : Page
             }
             if (!resultGenerated)
             {
-                finalResult = !themeColor.ColorIsDark;
+                finalResult = !new Vector3(theme.R, theme.G, theme.B).RGBVectorLStarIsDark();
                 resultGenerated = true;
             }
         }

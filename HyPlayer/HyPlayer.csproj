@@ -61,6 +61,7 @@
     <PackageReference Include="CommunityToolkit.Uwp.Media">
       <Version>8.2.251219</Version>
     </PackageReference>
+    <PackageReference Include="ComputeSharp.D2D1.Uwp" Version="3.2.0" />
     <PackageReference Include="F23.StringSimilarity">
       <Version>7.0.1</Version>
     </PackageReference>
@@ -97,7 +98,7 @@
     <ProjectReference Include="..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseProvider\HyPlayer.NeteaseProvider.csproj" />
     <ProjectReference Include="..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\HyPlayer.NeteaseApi.csproj" />
     <ProjectReference Include="..\HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj" />
-    <ProjectReference Include="..\Impressionist\Impressionist\Impressionist.csproj" />
+    <ProjectReference Include="..\Impressionist\Impressionist.csproj" />
     <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj" />
     <ProjectReference Include="..\Microsoft.Gaming.XboxGameBar.Projection\Microsoft.Gaming.XboxGameBar.Projection.csproj" />
   </ItemGroup>

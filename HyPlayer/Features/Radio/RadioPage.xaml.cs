@@ -170,7 +170,6 @@ public sealed partial class RadioPage : Page
     }
 
     int treashold = 3;
-    int cooldownTime = 0;
 
     private void GreedlyLoad()
     {
