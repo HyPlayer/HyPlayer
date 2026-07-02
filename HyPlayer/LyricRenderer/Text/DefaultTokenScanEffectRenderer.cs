@@ -16,6 +16,8 @@ namespace HyPlayer.LyricRenderer.Text;
 public class DefaultTokenScanEffectRenderer : ITextHighlightEffectRenderer
 {
     private const float LiftAmount = 3;
+    private const float EdgeLiftRamp = 0.08f;
+    private const float LiftTrailingWidth = 0.5f;
     private readonly Color _defaultColor = Color.FromArgb(255, 128, 128, 0);
 
     public void Render(
@@ -146,13 +148,33 @@ public class DefaultTokenScanEffectRenderer : ITextHighlightEffectRenderer
         var displacementMap = new CanvasCommandList(session);
         using var displacementSession = displacementMap.CreateDrawingSession();
         displacementSession.Clear(_defaultColor);
-        var gradientStops = new CanvasGradientStop[]
+        var progress = Math.Clamp(percentage, 0, 1);
+        var liftedColor = Color.FromArgb(255, 128, 255, 0);
+        var gradientStops = new List<CanvasGradientStop>
         {
-            new() { Position = percentage - 0.5f, Color = Color.FromArgb(255, 128, 255, 0) },
-            new() { Position = percentage, Color = Color.FromArgb(255, 128, 255, 0) },
-            new() { Position = percentage + 0.5f, Color = Color.FromArgb(255, 128, 128, 0) }
+            new() { Position = 0, Color = GetLiftColor(Math.Clamp(progress / EdgeLiftRamp, 0, 1)) }
         };
-        using var gradientBrush = new CanvasLinearGradientBrush(displacementSession, gradientStops);
+
+        if (progress > 0)
+        {
+            gradientStops.Add(new CanvasGradientStop { Position = progress, Color = liftedColor });
+        }
+
+        if (progress < 1)
+        {
+            gradientStops.Add(new CanvasGradientStop
+            {
+                Position = Math.Clamp(progress + LiftTrailingWidth, progress, 1),
+                Color = _defaultColor
+            });
+        }
+
+        if (gradientStops[^1].Position < 1)
+        {
+            gradientStops.Add(new CanvasGradientStop { Position = 1, Color = _defaultColor });
+        }
+
+        using var gradientBrush = new CanvasLinearGradientBrush(displacementSession, [.. gradientStops]);
         var currentBoundsRect = GetUnionBounds(currentBounds);
         gradientBrush.StartPoint = new Vector2((float)currentBoundsRect.Left, 0);
         gradientBrush.EndPoint = new Vector2((float)currentBoundsRect.Width + (float)currentBoundsRect.Left, 0);
@@ -168,6 +190,15 @@ public class DefaultTokenScanEffectRenderer : ITextHighlightEffectRenderer
         var right = bounds.Max(t => t.Right);
         var bottom = bounds.Max(t => t.Bottom);
         return new Rect(left, top, right - left, bottom - top);
+    }
+
+    private static Color GetLiftColor(float amount)
+    {
+        return Color.FromArgb(
+            255,
+            128,
+            (byte)Math.Round(128 + (255 - 128) * Math.Clamp(amount, 0, 1)),
+            0);
     }
 
     private static bool ShouldUseDisplacement(TextRenderFrame frame)
