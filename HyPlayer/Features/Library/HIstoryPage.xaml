@@ -39,11 +39,11 @@
                 <NavigationViewItem x:Name="SongRankAll" Content="听歌排行 (全部)" />
             </NavigationView.MenuItems>
         </NavigationView>
-        <controls:SongsList
-            x:Name="SongsList"
+        <controls:ContainerItemsView
+            x:Name="ItemsList"
             Grid.Row="2"
             Margin="20,0,20,0"
-            Songs="{x:Bind Songs, Mode=OneWay}" />
+            Container="{x:Bind HistoryContainer, Mode=OneWay}" />
     </Grid>
 
 

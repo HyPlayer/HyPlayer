@@ -55,10 +55,10 @@ public sealed partial class MVPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (e.Parameter is SongListItemViewModel row)
+        if (e.Parameter is ProvidableItemRowViewModel row)
         {
-            MVId = row.MVId;
-            songid = row.SongId;
+            MVId = row.RichMediaId;
+            songid = row.ActualId;
             _relateiveLoaderTask = LoadRelateive();
         }
         else if (e.Parameter is SingleSongBase providerSong)

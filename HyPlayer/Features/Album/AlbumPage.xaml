@@ -12,12 +12,12 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <controls1:ContainerSongsView
+        <controls1:ContainerItemsView
             x:Name="SongContainer"
             Grid.Row="1"
             Margin="20,30,0,0"
             Container="{x:Bind ViewModel.Album, Mode=OneWay}">
-            <controls1:ContainerSongsView.ListHeader>
+            <controls1:ContainerItemsView.ListHeader>
                 <controls:DockPanel
                     x:Name="GridPersonalInformation"
                     Grid.Row="0"
@@ -101,8 +101,8 @@
                             TextWrapping="WrapWholeWords" />
                     </StackPanel>
                 </controls:DockPanel>
-            </controls1:ContainerSongsView.ListHeader>
-        </controls1:ContainerSongsView>
+            </controls1:ContainerItemsView.ListHeader>
+        </controls1:ContainerItemsView>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>

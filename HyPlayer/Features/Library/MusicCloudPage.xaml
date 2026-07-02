@@ -36,23 +36,13 @@
                 TextWrapping="Wrap" />
         </controls:DockPanel>
 
-        <controls1:SongsList
+        <controls1:ContainerItemsView
             x:Name="SongContainer"
             Grid.Row="1"
-            IsCloudStorageList="True"
-            IsSearchEnabled="True"
-            Songs="{x:Bind Items}">
-            <controls1:SongsList.Footer>
-                <Button
-                    x:Name="NextPage"
-                    Grid.Row="2"
-                    HorizontalAlignment="Center"
-                    Click="NextPage_OnClickPage_OnClick"
-                    Content="加载更多"
-                    Style="{StaticResource ButtonRevealStyle}"
-                    Visibility="Collapsed" />
-            </controls1:SongsList.Footer>
-        </controls1:SongsList>
+            Container="{x:Bind CloudContainer, Mode=OneWay}"
+            ExtraItemActions="{x:Bind ItemActions, Mode=OneWay}"
+            GreedyLoad="{x:Bind GreedyLoad, Mode=OneWay}"
+            IsSearchEnabled="True" />
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>

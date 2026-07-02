@@ -198,8 +198,8 @@ public sealed partial class MainPage : Page
                 break;
             case "likedsongs":
                 var userLibrary = Ioc.Default.GetRequiredService<IUserLibraryStateService>();
-                if (userLibrary.LikedSongsPlaylist is { ActualId: { Length: > 0 } likedSongsId })
-                    navigation.Navigate(typeof(SongListDetail), likedSongsId);
+                if (userLibrary.LikedSongsPlaylist is { ActualId: { Length: > 0 } likedSongs })
+                    navigation.Navigate(typeof(SongListDetail), likedSongs);
                 break;
             case "local":
                 navigation.Navigate(typeof(LocalMusicPage));

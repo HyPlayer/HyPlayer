@@ -24,9 +24,9 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             request.HiddenOnBlur ? FontWeights.Normal : FontWeights.SemiBold,
             CanvasWordWrapping.WholeWord);
 
-        var isRomajiTokenLine = request.Tokens.Any(t => t.Transliteration is not null);
-        var transliterationActual = isRomajiTokenLine
-            ? string.Join("", request.Tokens.Select(t => t.Transliteration))
+        var hasTokenTransliteration = request.Tokens.Any(t => !string.IsNullOrEmpty(t.Transliteration));
+        var transliterationActual = hasTokenTransliteration
+            ? string.Join("", request.Tokens.Select(t => t.Transliteration ?? string.Empty))
             : request.Transliteration;
 
         CanvasTextLayout? transliterationLayout = null;
@@ -34,7 +34,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         var additionalHeight = 0.0f;
         var requestedWidth = Math.Clamp(request.Context.ItemWidth - request.TextPadding, 0, int.MaxValue);
 
-        if ((!string.IsNullOrWhiteSpace(transliterationActual) || !string.IsNullOrWhiteSpace(request.Translation) || isRomajiTokenLine) &&
+        if ((!string.IsNullOrWhiteSpace(transliterationActual) || !string.IsNullOrWhiteSpace(request.Translation) || hasTokenTransliteration) &&
             !string.IsNullOrWhiteSpace(transliterationActual) &&
             request.Context.EnableTransliteration)
         {
@@ -77,46 +77,64 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             : request.Text;
         var wrappedText = WrapText(request.Session, actualText, textFormat, requestedWidth, request.CanvasHeight);
         var textLayout = new CanvasTextLayout(request.Session, wrappedText, textFormat, requestedWidth, request.CanvasHeight);
+        var lyricSourceIndexMap = CreateSourceIndexMap(wrappedText, actualText);
+        var lyricTokenIndexMap = CreateTokenIndexMap(request.Tokens, t => t.Text);
+        var transliterationSourceIndexMap = transliterationActual is not null
+            ? CreateSourceIndexMap(transliterationActual, transliterationActual)
+            : [];
+        var transliterationTokenIndexMap = hasTokenTransliteration
+            ? CreateTokenIndexMap(request.Tokens, t => t.Transliteration ?? string.Empty)
+            : [];
 
-        var renderStartX = (float)textLayout.LayoutBounds.X;
-        if (transliterationLayout is not null) renderStartX = Math.Min(renderStartX, (float)transliterationLayout.LayoutBounds.X);
-        if (translationLayout is not null) renderStartX = Math.Min(renderStartX, (float)translationLayout.LayoutBounds.X);
-
-        var tokenBounds = CreateTokenBounds(textLayout, request.Tokens, actualText, renderStartX, request.TextPadding, request.LiftAmount);
-        var characterBounds = CreateCharacterBounds(textLayout, actualText, renderStartX, request.TextPadding, request.LiftAmount);
-        var expandedBounds = request.Tokens.Count > 0
-            ? tokenBounds.SelectMany(t => t).ToArray()
-            : textLayout.GetCharacterRegions(0, actualText.Length)
-                .Select(t => new Rect(t.LayoutBounds.X - renderStartX + request.TextPadding, t.LayoutBounds.Y, t.LayoutBounds.Width, t.LayoutBounds.Height))
-                .ToArray();
-
-        var scalingCenterX = (float)(request.Alignment switch
-        {
-            TextAlignment.Center => textLayout.LayoutBounds.Width / 2 + request.TextPadding,
-            TextAlignment.Right => textLayout.LayoutBounds.Width + request.TextPadding,
-            _ => request.TextPadding
-        });
+        var renderStartX = GetContentLeft(textLayout, transliterationLayout, translationLayout);
+        var renderEndX = GetContentRight(textLayout, transliterationLayout, translationLayout);
+        var drawOffsetX = -renderStartX + request.TextPadding;
+        var scalingCenterX = GetScalingCenterX(textLayout, renderStartX, request.TextPadding, request.Alignment);
         var drawingOffsetY = (request.HiddenOnBlur ? request.LyricFontSize / 2 : request.LyricFontSize) / 8f;
         var renderingHeight = (float)textLayout.LayoutBounds.Height + drawingOffsetY + additionalHeight;
-        var renderingWidth = (float)Math.Max(textLayout.LayoutBounds.Width,
-            Math.Max(transliterationLayout?.LayoutBounds.Width ?? 0, translationLayout?.LayoutBounds.Width ?? 0)) + 32;
+        var renderingWidth = Math.Max(1, renderEndX - renderStartX + request.TextPadding * 2);
+        var useDynamicTransliteration = hasTokenTransliteration && transliterationLayout is not null;
 
         var staticPersistCache = CreatePersistCache(request.Session, renderingWidth, renderingHeight, request.Context.Dpi, request.Context.Effects.CacheRenderTarget, out var staticSession);
         var defaultTextPersistCache = CreatePersistCache(request.Session, renderingWidth, renderingHeight, request.Context.Dpi, request.Context.Effects.CacheRenderTarget, out var defaultTextSession);
+        ICanvasImage? defaultTransliterationPersistCache = null;
+        CanvasDrawingSession? transliterationSessionToDispose = null;
+        if (useDynamicTransliteration)
+        {
+            defaultTransliterationPersistCache = CreatePersistCache(
+                request.Session,
+                renderingWidth,
+                renderingHeight,
+                request.Context.Dpi,
+                request.Context.Effects.CacheRenderTarget,
+                out transliterationSessionToDispose);
+        }
         var sizePixelRect = new Rect(0, 0, renderingWidth, renderingHeight);
         float textRenderActualTop;
+        float transliterationRenderTop = drawingOffsetY;
+        IReadOnlyList<LyricGlyphCluster> lyricGlyphClusters;
+        IReadOnlyList<LyricGlyphCluster> transliterationGlyphClusters = [];
 
         using (staticSession)
         using (defaultTextSession)
+        using (transliterationSessionToDispose)
         {
             staticSession.Clear(Colors.Transparent);
             defaultTextSession.Clear(Colors.Transparent);
+            transliterationSessionToDispose?.Clear(Colors.Transparent);
             var actualTop = drawingOffsetY;
-            var drawOffsetX = -renderStartX + request.TextPadding;
 
             if (transliterationLayout is not null)
             {
-                staticSession.DrawTextLayout(transliterationLayout, drawOffsetX, actualTop, request.FocusingColor);
+                if (useDynamicTransliteration)
+                {
+                    transliterationSessionToDispose!.DrawTextLayout(transliterationLayout, drawOffsetX, actualTop, request.FocusingColor);
+                }
+                else
+                {
+                    staticSession.DrawTextLayout(transliterationLayout, drawOffsetX, actualTop, request.FocusingColor);
+                }
+
                 actualTop += (float)transliterationLayout.LayoutBounds.Height;
             }
 
@@ -127,6 +145,28 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             if (translationLayout is not null)
             {
                 staticSession.DrawTextLayout(translationLayout, drawOffsetX, actualTop, request.FocusingColor);
+            }
+
+            lyricGlyphClusters = CollectGlyphClusters(
+                LyricTextLayer.Lyric,
+                textLayout,
+                drawOffsetX,
+                textRenderActualTop,
+                lyricSourceIndexMap,
+                lyricTokenIndexMap,
+                request.Context.Dpi,
+                request.Tokens.Count);
+            if (useDynamicTransliteration)
+            {
+                transliterationGlyphClusters = CollectGlyphClusters(
+                    LyricTextLayer.Transliteration,
+                    transliterationLayout!,
+                    drawOffsetX,
+                    transliterationRenderTop,
+                    transliterationSourceIndexMap,
+                    transliterationTokenIndexMap,
+                    request.Context.Dpi,
+                    request.Tokens.Count);
             }
         }
 
@@ -139,16 +179,16 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             TransliterationLayout = transliterationLayout,
             StaticPersistCache = staticPersistCache,
             DefaultTextPersistCache = defaultTextPersistCache,
+            DefaultTransliterationPersistCache = defaultTransliterationPersistCache,
             SizePixelRect = sizePixelRect,
-            TokenBounds = tokenBounds,
-            CharacterBounds = characterBounds,
-            ExpandedBounds = expandedBounds,
-            RenderStartX = renderStartX,
             TextRenderActualTop = textRenderActualTop,
             DrawingOffsetY = drawingOffsetY,
             RenderingWidth = renderingWidth,
             RenderingHeight = renderingHeight,
-            ScalingCenterX = scalingCenterX
+            ScalingCenterX = scalingCenterX,
+            FocusingColor = request.FocusingColor,
+            LyricGlyphClusters = lyricGlyphClusters,
+            TransliterationGlyphClusters = transliterationGlyphClusters
         };
     }
 
@@ -227,58 +267,113 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         return sb.ToString();
     }
 
-    private static IReadOnlyList<Rect[]> CreateTokenBounds(
+    private static IReadOnlyList<LyricGlyphCluster> CollectGlyphClusters(
+        LyricTextLayer layer,
+        CanvasTextLayout layout,
+        float drawOffsetX,
+        float drawOffsetY,
+        IReadOnlyList<int> sourceIndexMap,
+        IReadOnlyList<int> tokenIndexMap,
+        float dpi,
+        int tokenCount)
+    {
+        var collector = new LyricGlyphPlanCollector(layer, sourceIndexMap, tokenIndexMap, dpi);
+        layout.DrawToTextRenderer(collector, drawOffsetX, drawOffsetY);
+        var clusters = collector.Clusters.ToArray();
+        LyricGlyphPlanCollector.FinalizeClusterIndexes(clusters, tokenCount);
+        return clusters;
+    }
+
+    private static float GetContentLeft(params CanvasTextLayout?[] layouts)
+    {
+        var left = float.MaxValue;
+        for (var i = 0; i < layouts.Length; i++)
+        {
+            if (layouts[i] is null) continue;
+            left = Math.Min(left, (float)layouts[i]!.LayoutBounds.Left);
+        }
+
+        return left == float.MaxValue ? 0 : left;
+    }
+
+    private static float GetContentRight(params CanvasTextLayout?[] layouts)
+    {
+        var right = 0f;
+        for (var i = 0; i < layouts.Length; i++)
+        {
+            if (layouts[i] is null) continue;
+            right = Math.Max(right, (float)layouts[i]!.LayoutBounds.Right);
+        }
+
+        return right;
+    }
+
+    private static float GetScalingCenterX(
         CanvasTextLayout textLayout,
-        IReadOnlyList<LyricTextToken> tokens,
-        string text,
         float renderStartX,
         float textPadding,
-        float liftAmount)
+        TextAlignment alignment)
+    {
+        var bounds = textLayout.LayoutBounds;
+        return alignment switch
+        {
+            TextAlignment.Center => (float)(bounds.Left + bounds.Width / 2) - renderStartX + textPadding,
+            TextAlignment.Right => (float)bounds.Right - renderStartX + textPadding,
+            _ => (float)bounds.Left - renderStartX + textPadding
+        };
+    }
+
+    private static int[] CreateSourceIndexMap(string layoutText, string sourceText)
+    {
+        var map = new int[layoutText.Length];
+        var sourceIndex = 0;
+        for (var i = 0; i < layoutText.Length; i++)
+        {
+            if (layoutText[i] == '\n')
+            {
+                map[i] = -1;
+                continue;
+            }
+
+            while (sourceIndex < sourceText.Length && sourceText[sourceIndex] != layoutText[i])
+            {
+                sourceIndex++;
+            }
+
+            map[i] = sourceIndex < sourceText.Length ? sourceIndex : -1;
+            if (sourceIndex < sourceText.Length)
+            {
+                sourceIndex++;
+            }
+        }
+
+        return map;
+    }
+
+    private static int[] CreateTokenIndexMap(
+        IReadOnlyList<LyricTextToken> tokens,
+        Func<LyricTextToken, string> textSelector)
     {
         if (tokens.Count == 0) return [];
 
-        var tokenBounds = new List<Rect[]>();
-        var alreadyLetterCount = 0;
-        foreach (var token in tokens)
+        var totalLength = 0;
+        for (var i = 0; i < tokens.Count; i++)
         {
-            var region = textLayout.GetCharacterRegions(alreadyLetterCount, token.Text.Length);
-            if (region is { Length: > 0 })
+            totalLength += textSelector(tokens[i]).Length;
+        }
+
+        var map = new int[totalLength];
+        var position = 0;
+        for (var i = 0; i < tokens.Count; i++)
+        {
+            var text = textSelector(tokens[i]);
+            for (var j = 0; j < text.Length && position < map.Length; j++)
             {
-                tokenBounds.Add([.. region.Select(t => new Rect(
-                    t.LayoutBounds.X - renderStartX + textPadding,
-                    t.LayoutBounds.Y + liftAmount,
-                    t.LayoutBounds.Width,
-                    t.LayoutBounds.Height))]);
-                alreadyLetterCount += token.Text.Length;
-            }
-            else
-            {
-                tokenBounds.Add([]);
+                map[position++] = i;
             }
         }
 
-        return tokenBounds;
-    }
-
-    private static IReadOnlyList<Rect[]> CreateCharacterBounds(
-        CanvasTextLayout textLayout,
-        string text,
-        float renderStartX,
-        float textPadding,
-        float liftAmount)
-    {
-        var characterBounds = new List<Rect[]>();
-        for (var i = 0; i < text.Length; i++)
-        {
-            var region = textLayout.GetCharacterRegions(i, 1);
-            characterBounds.Add([.. region.Select(t => new Rect(
-                t.LayoutBounds.X - renderStartX + textPadding,
-                t.LayoutBounds.Y + liftAmount,
-                t.LayoutBounds.Width,
-                t.LayoutBounds.Height))]);
-        }
-
-        return characterBounds;
+        return map;
     }
 
     private static ICanvasImage CreatePersistCache(

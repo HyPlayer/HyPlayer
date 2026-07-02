@@ -1,43 +1,41 @@
 #nullable enable
 
 using System;
-using System.Linq;
-using Windows.Foundation;
-
 namespace HyPlayer.LyricRenderer.Text;
 
 public sealed class DefaultTextProgressResolver : ITextProgressResolver
 {
     public TextRenderFrame Resolve(long currentTime, long lineStartTime, long lineEndTime, LyricTextLayoutSnapshot layout)
     {
-        var currentTokenIndex = layout.Tokens.Count > 0
-            ? layout.Tokens.ToList().FindLastIndex(t => t.StartTime <= currentTime)
-            : -1;
-
+        var currentTokenIndex = FindCurrentTokenIndex(layout, currentTime);
         var currentProgress = GetCurrentTokenProgress(currentTime, lineStartTime, lineEndTime, layout, currentTokenIndex);
-        var beforeBounds = layout.TokenBounds.Take(Math.Max(currentTokenIndex, 0)).SelectMany(t => t).ToArray();
-        var afterBounds = currentTokenIndex >= 0
-            ? layout.TokenBounds.Skip(currentTokenIndex + 1).SelectMany(t => t).ToArray()
-            : layout.TokenBounds.SelectMany(t => t).ToArray();
-        var currentBounds = currentTokenIndex >= 0
-            ? layout.TokenBounds.ElementAtOrDefault(currentTokenIndex) ?? []
-            : [];
-        var highlightBounds = currentTokenIndex >= 0 ? currentBounds : layout.ExpandedBounds;
-        var currentToken = currentTokenIndex >= 0 ? layout.Tokens[currentTokenIndex] : null;
+        var lineProgress = GetLineProgress(currentTime, lineStartTime, lineEndTime);
+        var currentToken = (uint)currentTokenIndex < (uint)layout.Tokens.Count ? layout.Tokens[currentTokenIndex] : null;
+        var currentTokenDuration = currentToken is null ? lineEndTime - lineStartTime : currentToken.EndTime - currentToken.StartTime;
 
         return new TextRenderFrame
         {
             CurrentTokenIndex = currentTokenIndex,
             CurrentTokenProgress = currentProgress,
-            BeforeTokenBounds = beforeBounds,
-            CurrentTokenBounds = currentBounds,
-            AfterTokenBounds = afterBounds,
-            HighlightBounds = highlightBounds,
-            FullLineBounds = layout.ExpandedBounds,
-            CharacterBounds = layout.CharacterBounds.SelectMany(t => t).ToArray(),
-            CurrentCharacterProgress = currentProgress,
+            CurrentTokenDuration = currentTokenDuration,
+            LineProgress = lineProgress,
+            CurrentLyricSourcePosition = GetCurrentSourcePosition(layout, currentTokenIndex, currentProgress, t => t.Text),
+            CurrentTransliterationSourcePosition = GetCurrentSourcePosition(layout, currentTokenIndex, currentProgress, t => t.Transliteration ?? string.Empty),
             CurrentToken = currentToken
         };
+    }
+
+    private static int FindCurrentTokenIndex(LyricTextLayoutSnapshot layout, long currentTime)
+    {
+        for (var i = layout.Tokens.Count - 1; i >= 0; i--)
+        {
+            if (layout.Tokens[i].StartTime <= currentTime)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private static float GetCurrentTokenProgress(
@@ -59,5 +57,34 @@ public sealed class DefaultTextProgressResolver : ITextProgressResolver
         var tokenDuration = currentToken.EndTime - currentToken.StartTime;
         if (tokenDuration <= 0) return 1;
         return Math.Clamp((currentTime - currentToken.StartTime) * 1.0f / tokenDuration, 0, 1);
+    }
+
+    private static float GetLineProgress(long currentTime, long lineStartTime, long lineEndTime)
+    {
+        var duration = lineEndTime - lineStartTime;
+        if (duration <= 0) return 1;
+        return Math.Clamp((currentTime - lineStartTime) * 1f / duration, 0, 1);
+    }
+
+    private static float GetCurrentSourcePosition(
+        LyricTextLayoutSnapshot layout,
+        int currentTokenIndex,
+        float currentProgress,
+        Func<LyricTextToken, string> textSelector)
+    {
+        if (layout.Tokens.Count <= 0)
+        {
+            return layout.Text.Length * Math.Clamp(currentProgress, 0, 1);
+        }
+
+        if (currentTokenIndex < 0) return 0;
+
+        var position = 0;
+        for (var i = 0; i < currentTokenIndex && i < layout.Tokens.Count; i++)
+        {
+            position += textSelector(layout.Tokens[i]).Length;
+        }
+
+        return position + textSelector(layout.Tokens[currentTokenIndex]).Length * Math.Clamp(currentProgress, 0, 1);
     }
 }

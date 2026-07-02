@@ -38,7 +38,7 @@ namespace HyPlayer.Features.Home
         [ObservableProperty]
         public partial List<HomeContainerCardViewModel> ToplistPlaylist { get; set; }
         [ObservableProperty]
-        public partial List<SongListItemViewModel> RecommendedSongItems { get; set; }
+        public partial List<ProvidableItemRowViewModel> RecommendedSongItems { get; set; }
         [ObservableProperty]
         public partial List<HomeContainerCardViewModel> OfficialPlaylists { get; set; }
 #nullable restore
@@ -83,7 +83,8 @@ namespace HyPlayer.Features.Home
                 _recommendedProviderSongs = (await LoadSpecialContainerItemsAsync(SpecialContainerType.RecommendedSongs, "rcsg"))
                     .OfType<SingleSongBase>()
                     .ToList();
-                RecommendedSongItems = (await Task.WhenAll(_recommendedProviderSongs.Select((song, index) => SongListItemViewModel.FromProviderSongAsync(song, index)))).ToList();
+                var displayResolver = ProvidableItemDisplayResolver.CreateDefault();
+                RecommendedSongItems = (await Task.WhenAll(_recommendedProviderSongs.Select((song, index) => displayResolver.CreateRowAsync(song, index)))).ToList();
             }
             else
             {
@@ -149,8 +150,8 @@ namespace HyPlayer.Features.Home
         [RelayCommand]
         private void OnLikedClicked()
         {
-            if (_userLibraryState.LikedSongsPlaylist is { ActualId: { Length: > 0 } likedSongsId })
-                _navigation.Navigate(typeof(SongListDetail), likedSongsId);
+            if (_userLibraryState.LikedSongsPlaylist is { ActualId: { Length: > 0 } likedSongs })
+                _navigation.Navigate(typeof(SongListDetail), likedSongs);
         }
 
         [RelayCommand]

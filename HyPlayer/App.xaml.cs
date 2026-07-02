@@ -204,6 +204,7 @@ public sealed partial class App : Application
         depository.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
         depository.AddSingleton<ILocalFileImportService, LocalFileImportService>();
         depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
+        depository.Add(typeof(INotificationSubscriber<PlaybackRequestFailedNotification>), typeof(PlaybackControlService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<IPlaybackControlService>());
         depository.AddSingleton<IPlaybackQueueLoader, PlaybackQueueLoader>();
         depository.AddSingleton<PlayCoreStateSynchronizer>();
         depository.Add(typeof(INotificationSubscriber<CurrentSongChangedNotification>), typeof(PlayCoreStateSynchronizer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<PlayCoreStateSynchronizer>());
@@ -251,7 +252,6 @@ public sealed partial class App : Application
         depository.AddTransient<FavoriteViewModel>();
         depository.AddTransient<AlbumPageViewModel>();
         depository.AddTransient<PlayBarViewModel>();
-        depository.AddTransient<GroupedSongsListViewModel>();
     }
 
     private static async Task InitializeThings()

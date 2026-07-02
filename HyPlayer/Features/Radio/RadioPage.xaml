@@ -6,11 +6,12 @@
     xmlns:controls1="using:HyPlayer.UI.Lists"
     NavigationCacheMode="Disabled">
     <Grid>
-        <controls1:SongsList
+        <controls1:ContainerItemsView
             x:Name="SongContainer"
+            Container="{x:Bind CurrentContainer, Mode=OneWay}"
             IsSearchEnabled="True"
-            Songs="{x:Bind Songs, Mode=OneWay}">
-            <controls1:SongsList.ListHeader>
+            QueueScope="{x:Bind CurrentQueueScope, Mode=OneWay}">
+            <controls1:ContainerItemsView.ListHeader>
                 <controls:DockPanel
                     x:Name="GridPersonalInformation"
                     Grid.Row="0"
@@ -89,18 +90,8 @@
                             TextWrapping="WrapWholeWords" />
                     </StackPanel>
                 </controls:DockPanel>
-            </controls1:SongsList.ListHeader>
-            <controls1:SongsList.Footer>
-                <Button
-                    x:Name="NextPage"
-                    Grid.Row="2"
-                    HorizontalAlignment="Center"
-                    Click="NextPage_OnClickPage_OnClick"
-                    Content="加载更多"
-                    Style="{StaticResource ButtonRevealStyle}"
-                    Visibility="Collapsed" />
-            </controls1:SongsList.Footer>
-        </controls1:SongsList>
+            </controls1:ContainerItemsView.ListHeader>
+        </controls1:ContainerItemsView>
 
 
         <VisualStateManager.VisualStateGroups>

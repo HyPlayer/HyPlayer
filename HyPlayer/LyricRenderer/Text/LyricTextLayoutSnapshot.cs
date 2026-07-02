@@ -17,16 +17,16 @@ public sealed class LyricTextLayoutSnapshot : IDisposable
     public CanvasTextLayout? TransliterationLayout { get; init; }
     public required ICanvasImage StaticPersistCache { get; init; }
     public required ICanvasImage DefaultTextPersistCache { get; init; }
+    public ICanvasImage? DefaultTransliterationPersistCache { get; init; }
     public required Rect SizePixelRect { get; init; }
-    public required IReadOnlyList<Rect[]> TokenBounds { get; init; }
-    public required IReadOnlyList<Rect[]> CharacterBounds { get; init; }
-    public required Rect[] ExpandedBounds { get; init; }
-    public required float RenderStartX { get; init; }
     public required float TextRenderActualTop { get; init; }
     public required float DrawingOffsetY { get; init; }
     public required float RenderingWidth { get; init; }
     public required float RenderingHeight { get; init; }
     public required float ScalingCenterX { get; init; }
+    public required Windows.UI.Color FocusingColor { get; init; }
+    public required IReadOnlyList<LyricGlyphCluster> LyricGlyphClusters { get; init; }
+    public required IReadOnlyList<LyricGlyphCluster> TransliterationGlyphClusters { get; init; }
 
     public void Dispose()
     {
@@ -35,5 +35,6 @@ public sealed class LyricTextLayoutSnapshot : IDisposable
         TransliterationLayout?.Dispose();
         (StaticPersistCache as IDisposable)?.Dispose();
         (DefaultTextPersistCache as IDisposable)?.Dispose();
+        (DefaultTransliterationPersistCache as IDisposable)?.Dispose();
     }
 }

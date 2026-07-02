@@ -1,7 +1,7 @@
 #nullable enable
 
 using Microsoft.Graphics.Canvas;
-using Windows.Foundation;
+using HyPlayer.LyricRenderer.Abstraction;
 
 namespace HyPlayer.LyricRenderer.Text;
 
@@ -11,6 +11,5 @@ public interface ITextHighlightEffectRenderer
         CanvasDrawingSession session,
         LyricTextLayoutSnapshot layout,
         TextRenderFrame frame,
-        Rect sizePixelRect,
-        float textTop);
+        RenderContext context);
 }

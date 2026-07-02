@@ -47,7 +47,7 @@ namespace HyPlayer.UI.Playback.PlayBar;
 
 public sealed partial class PlayBar
 {
-    private SolidColorBrush _playbackAccentBrush = PlaybackThemeSnapshot.Default.AccentBrush;
+    private SolidColorBrush _playbackAccentBrush = CreateCompactPlaybackTheme(ElementTheme.Dark).AccentBrush;
     private ElementTheme _playbackAccentTheme = ElementTheme.Dark;
 
     // ---------------------------------------------------------------
@@ -121,6 +121,12 @@ DoubleAnimation verticalAnimation;
         InitializeComponent();
     }
 
+    private void PlayBar_ActualThemeChanged(FrameworkElement sender, object args)
+    {
+        if (!_surfaceStore.IsExpanded)
+            ApplyCompactPlaybackTheme();
+    }
+
     private void OnPlaybackStatePropertyChanged(string? propertyName)
     {
         switch (propertyName)
@@ -143,7 +149,10 @@ DoubleAnimation verticalAnimation;
                 OnPlaybackSurfaceModeChanged(store.SurfaceMode);
                 break;
             case nameof(PlaybackSurfaceStore.Theme):
-                ApplyPlaybackTheme(store.Theme);
+                if (store.IsExpanded)
+                    ApplyPlaybackTheme(store.Theme);
+                else
+                    ApplyCompactPlaybackTheme();
                 break;
         }
     }
@@ -173,7 +182,7 @@ DoubleAnimation verticalAnimation;
             GridSongAdvancedOperation.Visibility = projection.ShowAdvancedOperations ? Visibility.Visible : Visibility.Collapsed;
 
             if (!isExpanded)
-                ApplyPlaybackTheme(PlaybackThemeSnapshot.Default);
+                ApplyCompactPlaybackTheme();
 
             if (!isExpanded)
                 StartPreparedCollapseAnimations();
@@ -187,6 +196,26 @@ DoubleAnimation verticalAnimation;
     {
         PlaybackAccentBrush = theme.AccentBrush;
         PlaybackAccentTheme = theme.IsBright ? ElementTheme.Light : ElementTheme.Dark;
+    }
+
+    private void ApplyCompactPlaybackTheme()
+    {
+        var theme = ActualTheme == ElementTheme.Light ? ElementTheme.Light : ElementTheme.Dark;
+        ApplyPlaybackTheme(CreateCompactPlaybackTheme(theme));
+    }
+
+    private static PlaybackThemeSnapshot CreateCompactPlaybackTheme(ElementTheme theme)
+    {
+        var isLight = theme == ElementTheme.Light;
+        var accentColor = isLight ? Colors.Black : Colors.White;
+        var idleColor = isLight
+            ? Color.FromArgb(114, 0, 0, 0)
+            : Color.FromArgb(66, 255, 255, 255);
+        return new PlaybackThemeSnapshot(
+            new SolidColorBrush(accentColor),
+            new SolidColorBrush(idleColor),
+            accentColor,
+            isLight);
     }
 
     private void StartPreparedCollapseAnimations()
@@ -637,7 +666,12 @@ DoubleAnimation verticalAnimation;
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
+        ActualThemeChanged -= PlayBar_ActualThemeChanged;
+        ActualThemeChanged += PlayBar_ActualThemeChanged;
         InitializedAni.Begin();
+        if (!_surfaceStore.IsExpanded)
+            ApplyCompactPlaybackTheme();
+
         ViewModel.SetVolumeCommand.Execute((double)_setting.Volume);
         SliderAudioRate.Value = (double)_setting.Volume;
         ViewModel.SyncFromState();
@@ -872,6 +906,7 @@ DoubleAnimation verticalAnimation;
 
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)
     {
+        ActualThemeChanged -= PlayBar_ActualThemeChanged;
         _enteredForegroundListener?.Detach();
         _stateChangedListener?.Detach();
         _surfaceStoreChangedListener?.Detach();

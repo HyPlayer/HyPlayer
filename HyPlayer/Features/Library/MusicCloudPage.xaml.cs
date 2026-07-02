@@ -5,18 +5,16 @@ using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Infrastructure.Netease;
-using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.Services.Downloads;
 using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,180 +35,55 @@ public sealed partial class MusicCloudPage : Page
 {
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly IUserLibraryProvidable _userLibraryProvider = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
     private readonly IUserLibraryTypeIds _userLibraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
-    private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
-    private readonly WeakEventListener<MusicCloudPage, object?, EventArgs> _secondTickListener;
-    private bool _isSecondTickSubscribed;
+    private readonly IContainerItemManagementProvidable _containerItemManagement = Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
 
-    private readonly ObservableCollection<SongListItemViewModel> Items = new();
-    private int page;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
-    private Task _loadResultTask;
-    private readonly HashSet<int> _loadedPages = [];
+
+    public static readonly DependencyProperty CloudContainerProperty = DependencyProperty.Register(
+        nameof(CloudContainer), typeof(ContainerBase), typeof(MusicCloudPage), new PropertyMetadata(default(ContainerBase)));
 
     public MusicCloudPage()
     {
+        ItemActions =
+        [
+            new ProvidableItemAction
+            {
+                Text = "从云盘删除",
+                ExecuteAsync = DeleteCloudItemAsync
+            }
+        ];
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
-        _secondTickListener = new WeakEventListener<MusicCloudPage, object?, EventArgs>(this)
-        {
-            OnEventAction = static (instance, _, _) => instance.GreedlyLoad(),
-            OnDetachAction = weakEventListener => { _globalTimer.SecondTick -= weakEventListener.OnEvent; },
-        };
     }
 
-    public async Task LoadMusicCloudItem()
+    public ContainerBase CloudContainer
     {
-        var currentPage = page;
-        if (!_loadedPages.Add(currentPage))
-            return;
-
-        if (_loadResultTask is { IsCompleted: false })
-            await _loadResultTask;
-
-        _cancellationToken.ThrowIfCancellationRequested();
-        var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userCloud_" + currentPage, async () =>
-        {
-            try
-            {
-                if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId, _cancellationToken) is not IProgressiveLoadingContainer container)
-                    return new CloudLibraryPage();
-
-                var (hasMore, items) = await container.GetProgressiveItemsListAsync(currentPage * 749, 749, _cancellationToken);
-                return new CloudLibraryPage
-                {
-                    HasMore = hasMore,
-                    Items = items.OfType<CloudLibraryItemBase>().ToList()
-                };
-            }
-            catch (Exception ex)
-            {
-                treashold = ++cooldownTime * 10;
-                page--;
-                _loadedPages.Remove(currentPage);
-                _notification.ShowMessage("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求: {ex.Message}");
-                return null;
-            }
-        });
-
-
-
-
-        var idx = currentPage * 749;
-        foreach (var jToken in jv?.Items ?? [])
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            try
-            {
-                Items.Add(await MapCloudLibraryItemToRowAsync(jToken, idx++));
-            }
-            catch
-            {
-                //ignore
-            }
-
-            NextPage.Visibility = jv.HasMore ? Visibility.Visible : Visibility.Collapsed;
-        }
+        get => (ContainerBase)GetValue(CloudContainerProperty);
+        set => SetValue(CloudContainerProperty, value);
     }
 
-    private sealed class CloudLibraryPage
-    {
-        public bool HasMore { get; init; }
-        public List<CloudLibraryItemBase> Items { get; init; } = [];
-    }
+    public bool GreedyLoad => _setting.greedlyLoadPlayContainerItems;
+    public List<ProvidableItemAction> ItemActions { get; }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        DetachSecondTick();
-
-        if (_loadResultTask != null && !_loadResultTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _loadResultTask;
-            }
-            catch
-            {
-                //Ignore
-            }
-        }
-
+        _cancellationTokenSource.Cancel();
         _cancellationTokenSource?.Dispose();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        StartLoadCurrentPage();
-        if (_setting.greedlyLoadPlayContainerItems)
-            AttachSecondTick();
-    }
-
-    private void AttachSecondTick()
-    {
-        if (_isSecondTickSubscribed) return;
-        _globalTimer.SecondTick += _secondTickListener.OnEvent;
-        _isSecondTickSubscribed = true;
-    }
-
-    private void DetachSecondTick()
-    {
-        if (!_isSecondTickSubscribed) return;
-        _secondTickListener.Detach();
-        _isSecondTickSubscribed = false;
-    }
-
-    int treashold = 3;
-    int cooldownTime = 0;
-
-    private void GreedlyLoad()
-    {
-        _ = _notification.InvokeOnUIThread(() =>
-        {
-            if (treashold > 10)
-            {
-                treashold--;
-                return;
-            }
-
-            if (Items.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0)
-            {
-                NextPage_OnClickPage_OnClick(null, null);
-                treashold = 3;
-            }
-            else if (Items.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
-            {
-                DetachSecondTick();
-                OnLoadedAllSongs();
-            }
-        });
-    }
-
-    public void OnLoadedAllSongs()
-    {
-        if (_setting.AutoAddGreedilyLoadedSongsToPlayList && _playCore.PlaySourceId == "Content")
-        {
-            _ = _playCore.InsertSongRangeAsync(Items.Select(song => song.ToProviderSong()).ToList());
-        }
-    }
-
-    private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (_loadResultTask is { IsCompleted: false })
-            return;
-
-        page++;
-        StartLoadCurrentPage();
+        await LoadCloudContainerAsync();
     }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        DownloadManager.AddDownload(Items.Select(song => song.ToProviderSong()).ToList());
+        SongContainer.DownloadAllLoaded();
     }
 
     private async void BtnUpload_Click(object sender, RoutedEventArgs e)
@@ -239,19 +112,34 @@ public sealed partial class MusicCloudPage : Page
     private async void BtnRefresh_OnClick(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
-        Items.Clear();
-        _loadedPages.Clear();
-        page = 0;
-        StartLoadCurrentPage();
+        await LoadCloudContainerAsync();
     }
 
-    private void StartLoadCurrentPage()
+    private async Task LoadCloudContainerAsync()
     {
-        _loadResultTask = LoadMusicCloudItem();
+        if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId, _cancellationToken) is ContainerBase container)
+        {
+            CloudContainer = container;
+            Bindings.Update();
+        }
     }
 
-    private static async Task<SongListItemViewModel> MapCloudLibraryItemToRowAsync(CloudLibraryItemBase item, int order)
+    private async Task DeleteCloudItemAsync(ProvidableItemRowViewModel row)
     {
-        return await SongListItemViewModel.FromProviderSongAsync(item, order, isCloud: true);
+        if (string.IsNullOrWhiteSpace(row.ItemId))
+            return;
+
+        try
+        {
+            await _containerItemManagement.RemoveItemFromContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId, row.ItemId, _cancellationToken);
+            await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
+            _notification.ShowMessage("已从云盘删除", row.Title);
+            await LoadCloudContainerAsync();
+            SongContainer.ResetAndLoad();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("删除云盘歌曲失败", ex.Message);
+        }
     }
 }

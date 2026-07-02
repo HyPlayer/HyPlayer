@@ -35,12 +35,12 @@
                     <NavigationViewItem Content="播客" Tag="Radio" />
                 </NavigationView.MenuItems>
             </NavigationView>
-            <controls:SimpleLinerList
+            <controls:ContainerItemsView
                 x:Name="ItemContainer"
                 Grid.Row="1"
                 Margin="-15,0,0,0"
-                ListItems="{x:Bind ViewModel.Content}">
-                <controls:SimpleLinerList.Footer>
+                Container="{x:Bind ViewModel.ContentContainer, Mode=OneWay}">
+                <controls:ContainerItemsView.Footer>
                     <Button
                         x:Name="BtnLoadMore"
                         Grid.Row="2"
@@ -49,8 +49,8 @@
                         Content="加载更多"
                         Style="{StaticResource ButtonRevealStyle}"
                         Visibility="{x:Bind ViewModel.HasMore, Mode=OneWay}" />
-                </controls:SimpleLinerList.Footer>
-            </controls:SimpleLinerList>
+                </controls:ContainerItemsView.Footer>
+            </controls:ContainerItemsView>
         </Grid>
     </Grid>
 

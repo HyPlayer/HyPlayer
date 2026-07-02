@@ -5,12 +5,10 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
 using HyPlayer.UI.Lists;
@@ -46,11 +44,17 @@ namespace HyPlayer.Features.Artist
             _notification = notification;
         }
 
-        public ObservableCollection<SongListItemViewModel> AllSongs { get; set; } = [];
-        public ObservableCollection<SongListItemViewModel> HotSongs { get; set; } = [];
-        public ObservableCollection<SimpleListItem> Albums { get; set; } = [];
+        private readonly ObservableCollection<ProvidableItemBase> _allSongs = [];
+        private readonly ObservableCollection<ProvidableItemBase> _hotSongs = [];
+        private readonly ObservableCollection<ProvidableItemBase> _albums = [];
         [ObservableProperty]
         public partial PersonBase Artist { get; set; }
+        [ObservableProperty]
+        public partial ContainerBase AllSongsContainer { get; set; }
+        [ObservableProperty]
+        public partial ContainerBase HotSongsContainer { get; set; }
+        [ObservableProperty]
+        public partial ContainerBase AlbumsContainer { get; set; }
         [ObservableProperty]
         public partial int CurrentPage { get; set; } = 0;
         [ObservableProperty]
@@ -101,40 +105,38 @@ namespace HyPlayer.Features.Artist
         private async Task LoadHotSongs()
         {
 
-            HotSongs.Clear();
+            _hotSongs.Clear();
             var songs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, Artist.ActualId, async () =>
             {
                 var container = await GetArtistSubContainerAsync("hot");
                 return container is null ? [] : await LoadProgressiveItemsAsync(container, 0, 50);
             });
-            var idx = 0;
             if (songs is null)
             {
                 return;
             }
 
-            foreach (var item in songs.OfType<SingleSongBase>())
-            {
-                HotSongs.Add(await SongListItemViewModel.FromProviderSongAsync(item, idx++));
-            }
+            foreach (var item in songs)
+                _hotSongs.Add(item);
+            HotSongsContainer = new StaticItemsContainer(_hotSongs, "热门歌曲", "artist-hot");
         }
 
         private async Task LoadSongs()
         {
-            if (CurrentPage == 0) AllSongs.Clear();
+            if (CurrentPage == 0) _allSongs.Clear();
             var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial, Artist.ActualId + "_" + CurrentPage,
                     async () =>
                     {
                         var container = await GetArtistSubContainerAsync("tim");
                         return container is null
-                            ? new ProgressivePage<SingleSongBase>()
-                            : await LoadProgressivePageAsync<SingleSongBase>(container, CurrentPage * 50, 50);
+                            ? new ProgressivePage<ProvidableItemBase>()
+                            : await LoadProgressivePageAsync<ProvidableItemBase>(container, CurrentPage * 50, 50);
                     });
-            var idx = 0;
             foreach (var item in page?.Items ?? [])
             {
-                AllSongs.Add(await SongListItemViewModel.FromProviderSongAsync(item, CurrentPage * 50 + idx++));
+                _allSongs.Add(item);
             }
+            AllSongsContainer = new StaticItemsContainer(_allSongs, "全部歌曲", "artist-songs");
             HasNextPage = page?.HasMore ?? false;
             HasPreviousPage = CurrentPage > 0;
         }
@@ -142,7 +144,7 @@ namespace HyPlayer.Features.Artist
         {
             try
             {
-                Albums.Clear();
+                _albums.Clear();
                 var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList, Artist.ActualId + "_" + CurrentPage,
                     async () =>
                     {
@@ -152,11 +154,11 @@ namespace HyPlayer.Features.Artist
                             : await LoadProgressivePageAsync<AlbumBase>(container, CurrentPage * 50, 50);
                     });
 
-                var i = 0;
                 foreach (var album in page?.Items ?? [])
                 {
-                    Albums.Add(await MapToSimpleListItemAsync(album, CurrentPage * 50 + i++));
+                    _albums.Add(album);
                 }
+                AlbumsContainer = new StaticItemsContainer(_albums, "专辑", "artist-albums");
                 HasNextPage = page?.HasMore ?? false;
                 HasPreviousPage = CurrentPage > 0;
             }
@@ -170,9 +172,9 @@ namespace HyPlayer.Features.Artist
         {
             CurrentPage++;
             if (CurrentPivotIndex == 1)
-                AllSongs.Clear();
+                _allSongs.Clear();
             else if (CurrentPivotIndex == 2)
-                Albums.Clear();
+                _albums.Clear();
             if (CurrentPivotIndex == 1)
                 LoadSongs().SafeFireAndForget();
             else if (CurrentPivotIndex == 2)
@@ -183,9 +185,9 @@ namespace HyPlayer.Features.Artist
         {
             CurrentPage--;
             if (CurrentPivotIndex == 1)
-                AllSongs.Clear();
+                _allSongs.Clear();
             else if (CurrentPivotIndex == 2)
-                Albums.Clear();
+                _albums.Clear();
             if (CurrentPivotIndex == 1)
                 LoadSongs().SafeFireAndForget();
             else if (CurrentPivotIndex == 2)
@@ -235,28 +237,6 @@ namespace HyPlayer.Features.Artist
             {
                 HasMore = hasMore,
                 Items = items.OfType<T>().ToList()
-            };
-        }
-
-        private static async Task<SimpleListItem> MapToSimpleListItemAsync(AlbumBase album, int order)
-        {
-            var creators = album is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync() : null;
-            var aliases = album is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
-            var cover = album is IHasCover coverProvider ? await coverProvider.GetCoverAsync() : null;
-            var coverUri = cover is IResourceResultOf<Uri?> uriResult ? await uriResult.GetResourceAsync() : null;
-            return new SimpleListItem
-            {
-                Title = album.Name,
-                LineOne = string.Join("/", creators?.Select(t => t.Name) ?? []),
-                LineTwo = aliases != null
-                    ? string.Join(" / ", aliases)
-                    : "",
-                LineThree = "",
-                Route = new AppRoute.Album($"{album.ActualId}"),
-                PlayResource = new MusicResource.Album($"{album.ActualId}"),
-                CoverLink = coverUri?.ToString(),
-                Order = order,
-                CanPlay = true
             };
         }
 

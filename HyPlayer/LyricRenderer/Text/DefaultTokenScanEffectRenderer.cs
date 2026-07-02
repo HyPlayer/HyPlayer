@@ -1,208 +1,147 @@
 #nullable enable
 
+using HyPlayer.LyricRenderer.Abstraction;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Brushes;
-using Microsoft.Graphics.Canvas.Effects;
-using Microsoft.Graphics.Canvas.Geometry;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using Windows.Foundation;
 using Windows.UI;
 
 namespace HyPlayer.LyricRenderer.Text;
 
 public class DefaultTokenScanEffectRenderer : ITextHighlightEffectRenderer
 {
-    private const float LiftAmount = 3;
-    private const float EdgeLiftRamp = 0.08f;
-    private const float LiftTrailingWidth = 0.5f;
-    private readonly Color _defaultColor = Color.FromArgb(255, 128, 128, 0);
+    private readonly IReadOnlyList<ILyricGlyphEffect> _effects;
+
+    public DefaultTokenScanEffectRenderer()
+        : this([new TokenScanGlyphEffect()])
+    {
+    }
+
+    public DefaultTokenScanEffectRenderer(IReadOnlyList<ILyricGlyphEffect> effects)
+    {
+        _effects = effects;
+    }
 
     public void Render(
         CanvasDrawingSession session,
         LyricTextLayoutSnapshot layout,
         TextRenderFrame frame,
-        Rect sizePixelRect,
-        float textTop)
+        RenderContext context)
     {
-        using var beforeGeometry = CreateGroupGeometry(session, frame.BeforeTokenBounds);
-        using var afterGeometry = CreateGroupGeometry(session, frame.AfterTokenBounds);
-        using var currentGeometry = CreateGroupGeometry(session, frame.CurrentTokenBounds);
-        using var currentHighlightGeometry = CreateHighlightGeometry(session, frame.CurrentTokenProgress, frame.HighlightBounds);
-
-        var beforeMatrix = Matrix3x2.CreateTranslation(0, textTop - LiftAmount);
-        var afterMatrix = Matrix3x2.CreateTranslation(0, textTop);
-
-        var textLayoutCommandList = new CanvasCommandList(session);
-        using (var textLayoutSession = textLayoutCommandList.CreateDrawingSession())
+        using var brush = new CanvasSolidColorBrush(session, layout.FocusingColor);
+        DrawClusters(session, brush, layout.LyricGlyphClusters, layout, frame, context);
+        if (context.EnableTransliteration && layout.TransliterationGlyphClusters.Count > 0)
         {
-            if (frame.BeforeTokenBounds.Length > 0)
-            {
-                using (textLayoutSession.CreateLayer(1, beforeGeometry, beforeMatrix))
-                {
-                    textLayoutSession.DrawImage(layout.DefaultTextPersistCache, 0, textTop - LiftAmount, sizePixelRect, 1);
-                }
-            }
-
-            if (frame.AfterTokenBounds.Length > 0)
-            {
-                using (textLayoutSession.CreateLayer(1, afterGeometry, afterMatrix))
-                {
-                    textLayoutSession.DrawImage(layout.DefaultTextPersistCache, 0, textTop, sizePixelRect, 0.3f);
-                }
-            }
+            DrawClusters(session, brush, layout.TransliterationGlyphClusters, layout, frame, context);
         }
-
-        var currentCommandList = new CanvasCommandList(session);
-        using (var currentDrawingSession = currentCommandList.CreateDrawingSession())
-        {
-            using (currentDrawingSession.CreateLayer(1, currentGeometry, afterMatrix))
-            {
-                currentDrawingSession.DrawImage(layout.DefaultTextPersistCache, 0, textTop, sizePixelRect, 0.3f);
-            }
-
-            using (currentDrawingSession.CreateLayer(1, currentHighlightGeometry, afterMatrix))
-            {
-                currentDrawingSession.DrawImage(layout.DefaultTextPersistCache, 0, textTop);
-            }
-        }
-
-        if (ShouldUseDisplacement(frame))
-        {
-            using var displacementMap = CreateDisplacementMap(session, currentGeometry, frame.CurrentTokenBounds, frame.CurrentTokenProgress, textTop);
-            var displacementEffect = new DisplacementMapEffect
-            {
-                Source = currentCommandList,
-                Displacement = displacementMap,
-                XChannelSelect = EffectChannelSelect.Red,
-                YChannelSelect = EffectChannelSelect.Green,
-                Amount = LiftAmount * 2
-            };
-            session.DrawImage(displacementEffect, 0, 0);
-        }
-        else
-        {
-            var normalLift = frame.CurrentTokenIndex != -1
-                ? -LiftAmount * Math.Clamp(frame.CurrentTokenProgress, 0, 1)
-                : 0f;
-            session.DrawImage(currentCommandList, 0, normalLift);
-        }
-
-        session.DrawImage(textLayoutCommandList);
     }
 
-    protected static CanvasGeometry CreateGroupGeometry(ICanvasResourceCreator creator, IReadOnlyList<Rect> bounds)
-    {
-        if (bounds.Count == 0) return CanvasGeometry.CreateGroup(creator, []);
-        return CanvasGeometry.CreateGroup(creator, [.. bounds.Select(t => CanvasGeometry.CreateRectangle(creator, t))]);
-    }
-
-    protected static CanvasGeometry CreateHighlightGeometry(ICanvasResourceCreator creator, float percentage, IReadOnlyList<Rect> bounds)
-    {
-        if (percentage <= 0 || bounds.Count == 0) return CanvasGeometry.CreateGroup(creator, []);
-
-        var totalWidth = bounds.Sum(t => t.Width);
-        var targetWidth = totalWidth * percentage;
-        var geometries = new List<CanvasGeometry>();
-
-        if (bounds.Count > 1)
-        {
-            foreach (var rect in bounds)
-            {
-                if (targetWidth <= 0) break;
-                if (rect.Width <= targetWidth)
-                {
-                    geometries.Add(CanvasGeometry.CreateRectangle(creator, rect));
-                    targetWidth -= (float)rect.Width;
-                }
-                else
-                {
-                    geometries.Add(CanvasGeometry.CreateRectangle(creator, new Rect(rect.X, rect.Y, targetWidth, rect.Height)));
-                    targetWidth = 0;
-                }
-            }
-        }
-        else
-        {
-            var rect = bounds[0];
-            if (rect.Width > 0)
-            {
-                return CanvasGeometry.CreateRectangle(
-                    creator,
-                    new Rect(rect.X, rect.Y, rect.Width * Math.Clamp(percentage, 0, 1), rect.Height));
-            }
-        }
-
-        return CanvasGeometry.CreateGroup(creator, [.. geometries]);
-    }
-
-    private CanvasCommandList CreateDisplacementMap(
+    private void DrawClusters(
         CanvasDrawingSession session,
-        CanvasGeometry currentGeometry,
-        IReadOnlyList<Rect> currentBounds,
-        float percentage,
-        float textTop)
+        CanvasSolidColorBrush brush,
+        IReadOnlyList<LyricGlyphCluster> clusters,
+        LyricTextLayoutSnapshot layout,
+        TextRenderFrame frame,
+        RenderContext context)
     {
-        var displacementMap = new CanvasCommandList(session);
-        using var displacementSession = displacementMap.CreateDrawingSession();
-        displacementSession.Clear(_defaultColor);
-        var progress = Math.Clamp(percentage, 0, 1);
-        var liftedColor = Color.FromArgb(255, 128, 255, 0);
-        var gradientStops = new List<CanvasGradientStop>
+        for (var i = 0; i < clusters.Count; i++)
         {
-            new() { Position = 0, Color = GetLiftColor(Math.Clamp(progress / EdgeLiftRamp, 0, 1)) }
-        };
-
-        if (progress > 0)
-        {
-            gradientStops.Add(new CanvasGradientStop { Position = progress, Color = liftedColor });
-        }
-
-        if (progress < 1)
-        {
-            gradientStops.Add(new CanvasGradientStop
+            var cluster = clusters[i];
+            var state = LyricGlyphDrawState.FromCluster(cluster, layout.FocusingColor);
+            var effectContext = new LyricGlyphEffectContext(context, layout, frame, cluster);
+            for (var effectIndex = 0; effectIndex < _effects.Count; effectIndex++)
             {
-                Position = Math.Clamp(progress + LiftTrailingWidth, progress, 1),
-                Color = _defaultColor
-            });
-        }
+                _effects[effectIndex].Apply(effectContext, ref state);
+            }
 
-        if (gradientStops[^1].Position < 1)
+            DrawCluster(session, brush, state);
+        }
+    }
+
+    private static void DrawCluster(
+        CanvasDrawingSession session,
+        CanvasSolidColorBrush brush,
+        LyricGlyphDrawState state)
+    {
+        if (state.SkipDraw)
         {
-            gradientStops.Add(new CanvasGradientStop { Position = 1, Color = _defaultColor });
+            return;
         }
 
-        using var gradientBrush = new CanvasLinearGradientBrush(displacementSession, [.. gradientStops]);
-        var currentBoundsRect = GetUnionBounds(currentBounds);
-        gradientBrush.StartPoint = new Vector2((float)currentBoundsRect.Left, 0);
-        gradientBrush.EndPoint = new Vector2((float)currentBoundsRect.Width + (float)currentBoundsRect.Left, 0);
-        displacementSession.FillGeometry(currentGeometry, 0, textTop, gradientBrush);
-        return displacementMap;
+        var alpha = (byte)Math.Round(state.Color.A * Math.Clamp(state.Opacity, 0, 1));
+        if (alpha == 0)
+        {
+            return;
+        }
+
+        brush.Color = Color.FromArgb(alpha, state.Color.R, state.Color.G, state.Color.B);
+        var originalTransform = session.Transform;
+
+        try
+        {
+            if (Math.Abs(state.Scale - 1) > 0.001f)
+            {
+                session.Transform = Matrix3x2.CreateScale(state.Scale, state.Origin) * originalTransform;
+            }
+
+            if (state.BlurRadius > 0.001f)
+            {
+                DrawBlurApproximation(session, brush, state);
+            }
+
+            DrawGlyphRun(session, state, brush);
+        }
+        finally
+        {
+            session.Transform = originalTransform;
+        }
     }
 
-    private static Rect GetUnionBounds(IReadOnlyList<Rect> bounds)
+    private static void DrawBlurApproximation(
+        CanvasDrawingSession session,
+        CanvasSolidColorBrush brush,
+        LyricGlyphDrawState state)
     {
-        if (bounds.Count == 0) return Rect.Empty;
-        var left = bounds.Min(t => t.Left);
-        var top = bounds.Min(t => t.Top);
-        var right = bounds.Max(t => t.Right);
-        var bottom = bounds.Max(t => t.Bottom);
-        return new Rect(left, top, right - left, bottom - top);
+        var originalColor = brush.Color;
+        var blurAlpha = (byte)Math.Round(originalColor.A * 0.25f);
+        if (blurAlpha == 0)
+        {
+            return;
+        }
+
+        brush.Color = Color.FromArgb(blurAlpha, originalColor.R, originalColor.G, originalColor.B);
+        var offset = Math.Clamp(state.BlurRadius, 0.5f, 3f);
+        var originalOrigin = state.Origin;
+        state.Origin = originalOrigin + new Vector2(-offset, 0);
+        DrawGlyphRun(session, state, brush);
+        state.Origin = originalOrigin + new Vector2(offset, 0);
+        DrawGlyphRun(session, state, brush);
+        state.Origin = originalOrigin + new Vector2(0, -offset);
+        DrawGlyphRun(session, state, brush);
+        state.Origin = originalOrigin + new Vector2(0, offset);
+        DrawGlyphRun(session, state, brush);
+        brush.Color = originalColor;
     }
 
-    private static Color GetLiftColor(float amount)
+    private static void DrawGlyphRun(
+        CanvasDrawingSession session,
+        LyricGlyphDrawState state,
+        CanvasSolidColorBrush brush)
     {
-        return Color.FromArgb(
-            255,
-            128,
-            (byte)Math.Round(128 + (255 - 128) * Math.Clamp(amount, 0, 1)),
-            0);
-    }
-
-    private static bool ShouldUseDisplacement(TextRenderFrame frame)
-    {
-        return frame.CurrentToken is { Duration: >= 500, CharacterCount: >= 4 } && frame.CurrentTokenBounds.Length > 0;
+        session.DrawGlyphRun(
+            state.Origin,
+            state.FontFace,
+            state.FontSize,
+            state.Glyphs,
+            state.IsSideways,
+            state.BidiLevel,
+            brush,
+            state.MeasuringMode,
+            state.LocaleName,
+            state.TextString,
+            state.ClusterMap,
+            state.CharacterIndex);
     }
 }

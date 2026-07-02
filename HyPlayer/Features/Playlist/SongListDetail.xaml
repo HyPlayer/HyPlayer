@@ -38,15 +38,16 @@
             <RowDefinition />
             <RowDefinition Height="175" />
         </Grid.RowDefinitions>
-        <controls1:ContainerSongsView
+        <controls1:ContainerItemsView
             x:Name="ContainerSongs"
             Grid.RowSpan="2"
             CanViewComments="True"
             Container="{x:Bind ViewModel.PlayList, Mode=OneWay}"
+            ExtraItemActions="{x:Bind ItemActions, Mode=OneWay}"
             GreedyLoad="{x:Bind ViewModel.GreedyLoad, Mode=OneWay}"
             IsMySongList="{x:Bind ViewModel.IsMySongList, Mode=OneWay}"
             IsSearchEnabled="True">
-            <controls1:ContainerSongsView.ListHeader>
+            <controls1:ContainerItemsView.ListHeader>
                 <Grid>
                     <Border
                         x:Name="RectangleImageBack"
@@ -210,8 +211,8 @@
                             TextWrapping="Wrap" />
                     </Grid>
                 </Grid>
-            </controls1:ContainerSongsView.ListHeader>
-        </controls1:ContainerSongsView>
+            </controls1:ContainerItemsView.ListHeader>
+        </controls1:ContainerItemsView>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>

@@ -181,7 +181,7 @@
                 </Grid>
             </ListViewItem>
         </DataTemplate>
-        <DataTemplate x:Key="RecommendedSongCardTemplate" x:DataType="lists:SongListItemViewModel">
+        <DataTemplate x:Key="RecommendedSongCardTemplate" x:DataType="lists:ProvidableItemRowViewModel">
             <ListViewItem
                 x:Name="Card"
                 Width="256"
@@ -211,7 +211,11 @@
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="6">
-                        <Image Source="{x:Bind CoverString}" Stretch="Uniform" />
+                        <Image Stretch="Uniform">
+                            <Image.Source>
+                                <BitmapImage UriSource="{x:Bind Cover}" />
+                            </Image.Source>
+                        </Image>
                     </Border>
                     <Grid
                         Grid.Row="1"
@@ -226,17 +230,17 @@
                             FontSize="14"
                             FontWeight="SemiBold"
                             MaxLines="1"
-                            Text="{x:Bind SongName}"
+                            Text="{x:Bind Title}"
                             TextTrimming="CharacterEllipsis"
-                            ToolTipService.ToolTip="{x:Bind SongName}" />
+                            ToolTipService.ToolTip="{x:Bind Title}" />
                         <TextBlock
                             Grid.Row="1"
                             FontSize="14"
                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="1"
-                            Text="{x:Bind ArtistString}"
+                            Text="{x:Bind LineOne}"
                             TextTrimming="CharacterEllipsis"
-                            ToolTipService.ToolTip="{x:Bind ArtistString}" />
+                            ToolTipService.ToolTip="{x:Bind LineOne}" />
                     </Grid>
                 </Grid>
             </ListViewItem>

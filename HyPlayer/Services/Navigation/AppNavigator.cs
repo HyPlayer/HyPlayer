@@ -526,8 +526,8 @@ public sealed class AppNavigator : IAppNavigator
 
     private Task LikedSongsPage()
     {
-        if (_userLibraryState.LikedSongsPlaylist is { ActualId: { Length: > 0 } likedSongsId })
-            _navigation.Navigate(typeof(SongListDetail), likedSongsId);
+        if (_userLibraryState.LikedSongsPlaylist is { ActualId: { Length: > 0 } likedSongs })
+            _navigation.Navigate(typeof(SongListDetail), likedSongs);
         return Task.CompletedTask;
     }
 

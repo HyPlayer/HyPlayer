@@ -2,16 +2,14 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Navigation;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.Cache;
-using HyPlayer.UI.Converters;
+using HyPlayer.UI.Lists;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -36,11 +34,13 @@ namespace HyPlayer.Features.Library
             _notification = notification;
         }
 
-        public ObservableCollection<SimpleListItem> Content { get; set; } = new();
+        private readonly ObservableCollection<ProvidableItemBase> _content = new();
         [ObservableProperty]
         public partial int CurrentPage { get; set; }
         [ObservableProperty]
         public partial bool HasMore { get; set; }
+        [ObservableProperty]
+        public partial ContainerBase ContentContainer { get; set; }
         private int _currentIndex = 1;
         private string _currentTag;
         private Task _loadPageTask;
@@ -74,21 +74,9 @@ namespace HyPlayer.Features.Library
             HasMore = jv.HasMore;
             foreach (var item in jv.Items.OfType<LinerContainerBase>())
             {
-                var description = item is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
-                var creators = item is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync() : null;
-                Content.Add(new SimpleListItem
-                {
-                    Title = item.Name,
-                    LineOne = string.Join(" / ", creators?.Select(creator => creator.Name) ?? []),
-                    LineTwo = description,
-                    LineThree = string.Empty,
-                    Route = new AppRoute.Radio($"{item.ActualId}"),
-                    PlayResource = new MusicResource.Radio($"{item.ActualId}"),
-                    CoverLink = await TryGetCoverLinkAsync(item),
-                    Order = _currentIndex++,
-                    CanPlay = true
-                });
+                _content.Add(item);
             }
+            RefreshContentContainer();
         }
 
         private async Task LoadArtistResult(int page)
@@ -102,21 +90,9 @@ namespace HyPlayer.Features.Library
             HasMore = jv.HasMore;
             foreach (var singerjson in jv.Items.OfType<ArtistBase>())
             {
-                var translation = singerjson is IHasTranslation translationProvider ? translationProvider.Translation : null;
-                var aliases = singerjson is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
-                Content.Add(new SimpleListItem
-                {
-                    Title = singerjson.Name,
-                    LineOne = translation,
-                    LineTwo = string.Join("/", aliases ?? []),
-                    LineThree = string.Empty,
-                    Route = new AppRoute.Artist($"{singerjson.ActualId}"),
-                    PlayResource = new MusicResource.Artist($"{singerjson.ActualId}"),
-                    CoverLink = await TryGetCoverLinkAsync(singerjson),
-                    Order = _currentIndex++,
-                    CanPlay = true
-                });
+                _content.Add(singerjson);
             }
+            RefreshContentContainer();
         }
 
         private async Task LoadAlbumResult(int page)
@@ -130,21 +106,9 @@ namespace HyPlayer.Features.Library
             HasMore = json.HasMore;
             foreach (var albumjson in json?.Items.OfType<AlbumBase>() ?? [])
             {
-                var aliases = albumjson is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
-                var creators = albumjson is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync() : null;
-                Content.Add(new SimpleListItem
-                {
-                    Title = albumjson.Name,
-                    LineOne = string.Join(" / ", creators?.Select(creator => creator.Name) ?? []),
-                    LineTwo = string.Join(" / ", aliases ?? []),
-                    LineThree = string.Empty,
-                    Route = new AppRoute.Album($"{albumjson.ActualId}"),
-                    PlayResource = new MusicResource.Album($"{albumjson.ActualId}"),
-                    CoverLink = await TryGetCoverLinkAsync(albumjson),
-                    Order = _currentIndex++,
-                    CanPlay = true
-                });
+                _content.Add(albumjson);
             }
+            RefreshContentContainer();
         }
 
         private async Task<UserLibraryPage> LoadUserLibraryPageAsync(string kind, int offset, int count)
@@ -160,17 +124,6 @@ namespace HyPlayer.Features.Library
             };
         }
 
-        private static async Task<string?> TryGetCoverLinkAsync(ProvidableItemBase item)
-        {
-            if (item is not IHasCover coverProvider)
-                return null;
-
-            var result = await coverProvider.GetCoverAsync();
-            return result is IResourceResultOf<System.Uri?> uriResult
-                ? (await uriResult.GetResourceAsync())?.GetLeftPart(System.UriPartial.Path)
-                : null;
-        }
-
         private sealed class UserLibraryPage
         {
             public bool HasMore { get; init; }
@@ -183,7 +136,7 @@ namespace HyPlayer.Features.Library
             if (string.IsNullOrEmpty(tag))
                 return;
 
-            if (string.Equals(_currentTag, tag, System.StringComparison.Ordinal) && Content.Count > 0)
+            if (string.Equals(_currentTag, tag, System.StringComparison.Ordinal) && _content.Count > 0)
                 return;
 
             CurrentPage = 0;
@@ -191,7 +144,8 @@ namespace HyPlayer.Features.Library
             _currentTag = tag;
             _loadedPages.Clear();
             _loadPageTask = null;
-            Content.Clear();
+            _content.Clear();
+            RefreshContentContainer();
             LoadCurrentPage().SafeFireAndForget();
         }
 
@@ -215,6 +169,11 @@ namespace HyPlayer.Features.Library
 
             _loadPageTask = LoadPageContent(tag, page);
             await _loadPageTask;
+        }
+
+        private void RefreshContentContainer()
+        {
+            ContentContainer = new StaticItemsContainer(_content, "收藏", _currentTag ?? "favorite");
         }
     }
 }

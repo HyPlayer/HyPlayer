@@ -18,7 +18,6 @@ using HyPlayer.UI.Lists;
 using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,73 +35,48 @@ public sealed partial class RadioPage : Page
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly IProvidableItemProvidable _itemProvider = Ioc.Default.GetRequiredService<IProvidableItemProvidable>();
     private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
-    private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
-    private readonly WeakEventListener<RadioPage, object?, EventArgs> _secondTickListener;
-    private bool _isSecondTickSubscribed;
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
-    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly IPlaybackQueueLoader _queueLoader = Ioc.Default.GetRequiredService<IPlaybackQueueLoader>();
-    private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
 
     private bool asc;
-    private int i;
-    private int page;
     private ContainerBase RadioChannel;
     private IProgressiveLoadingContainer _progressiveRadioChannel;
     private PersonBase _host;
     private List<SingleSongBase> _ascendingPrograms;
     private List<SingleSongBase> _allPrograms;
-    private Task _programLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
 
-    public ObservableCollection<SongListItemViewModel> Songs = new();
+    public static readonly DependencyProperty CurrentContainerProperty = DependencyProperty.Register(
+        nameof(CurrentContainer), typeof(ContainerBase), typeof(RadioPage), new PropertyMetadata(default(ContainerBase)));
+
+    public static readonly DependencyProperty CurrentQueueScopeProperty = DependencyProperty.Register(
+        nameof(CurrentQueueScope), typeof(SongListQueueScope), typeof(RadioPage), new PropertyMetadata(SongListQueueScope.Visible));
 
     public RadioPage()
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
-        _secondTickListener = new WeakEventListener<RadioPage, object?, EventArgs>(this)
-        {
-            OnEventAction = static (instance, _, _) => instance.GreedlyLoad(),
-            OnDetachAction = weakEventListener => {_globalTimer.SecondTick -= weakEventListener.OnEvent; }
-        };
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    public ContainerBase CurrentContainer
+    {
+        get => (ContainerBase)GetValue(CurrentContainerProperty);
+        set => SetValue(CurrentContainerProperty, value);
+    }
+
+    public SongListQueueScope CurrentQueueScope
+    {
+        get => (SongListQueueScope)GetValue(CurrentQueueScopeProperty);
+        set => SetValue(CurrentQueueScopeProperty, value);
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        DetachSecondTick();
-
-        if (_programLoaderTask != null && !_programLoaderTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _programLoaderTask;
-            }
-            catch
-            {
-                //Ignore
-            }
-        }
-
+        _cancellationTokenSource.Cancel();
         _cancellationTokenSource?.Dispose();
-    }
-
-    private async Task LoadProgram()
-    {
-        _cancellationToken.ThrowIfCancellationRequested();
-
-        var (hasMore, programs) = await LoadProgramPageAsync(page, asc);
-
-        NextPage.Visibility = hasMore ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var program in programs)
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            Songs.Add(await SongListItemViewModel.FromRadioProgramAsync(program, i++));
-        }
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -146,70 +120,17 @@ public sealed partial class RadioPage : Page
             img.UriSource = await GetCoverUriAsync(RadioChannel);
         }
 
-        Songs.Clear();
         _ascendingPrograms = null;
         _allPrograms = null;
-        SongContainer.QueueScope = SongListQueueScope.Radio(RadioChannel.ActualId);
-        _programLoaderTask = LoadProgram();
-        if (_setting.greedlyLoadPlayContainerItems)
-            AttachSecondTick();
-    }
-
-    private void AttachSecondTick()
-    {
-        if (_isSecondTickSubscribed) return;
-        _globalTimer.SecondTick += _secondTickListener.OnEvent;
-        _isSecondTickSubscribed = true;
-    }
-
-    private void DetachSecondTick()
-    {
-        if (!_isSecondTickSubscribed) return;
-        _secondTickListener.Detach();
-        _isSecondTickSubscribed = false;
-    }
-
-    int treashold = 3;
-
-    private void GreedlyLoad()
-    {
-        _ = _notification.InvokeOnUIThread(() =>
-        {
-            if (treashold > 10)
-            {
-                treashold--;
-                return;
-            }
-
-            if (Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0)
-            {
-                NextPage_OnClickPage_OnClick(null, null);
-                treashold = 3;
-            }
-            else if (Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
-            {
-                DetachSecondTick();
-            }
-        });
-    }
-
-    private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
-    {
-        page++;
-        _programLoaderTask = LoadProgram();
+        CurrentQueueScope = SongListQueueScope.Radio(RadioChannel.ActualId);
+        CurrentContainer = RadioChannel;
+        SongContainer.GreedyLoad = _setting.greedlyLoadPlayContainerItems;
+        Bindings.Update();
     }
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        await _playCore.StopAsync();
-        await _playCore.RemoveAllSongAsync();
-        var programs = asc
-            ? await LoadAscendingProgramsAsync()
-            : await LoadAllProgramsAsync();
-        await _playCore.InsertSongRangeAsync(programs);
-        await _playCore.MovePointerToIndexAsync(0);
-        if (_playCore.CurrentSong is { } song)
-            await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
+        await SongContainer.PlayAllAsync();
     }
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
@@ -220,12 +141,10 @@ public sealed partial class RadioPage : Page
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
-        Songs.Clear();
-        page = 0;
-        i = 0;
         asc = !asc;
         _ascendingPrograms = null;
-        _programLoaderTask = LoadProgram();
+        CurrentContainer = asc ? new ReorderedContainer(RadioChannel, reverse: true) : RadioChannel;
+        Bindings.Update();
     }
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
@@ -251,19 +170,6 @@ public sealed partial class RadioPage : Page
             return null;
 
         return await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.RadioChannelTypeId + radioId, _cancellationToken) as ContainerBase;
-    }
-
-    private async Task<(bool HasMore, List<SingleSongBase> Programs)> LoadProgramPageAsync(int pageIndex, bool ascending)
-    {
-        if (ascending)
-        {
-            var allPrograms = await LoadAscendingProgramsAsync();
-            var programs = allPrograms.Skip(pageIndex * 100).Take(100).ToList();
-            return ((pageIndex + 1) * 100 < allPrograms.Count, programs);
-        }
-
-        var (hasMore, items) = await _progressiveRadioChannel.GetProgressiveItemsListAsync(pageIndex * 100, 100, _cancellationToken);
-        return (hasMore, items.OfType<SingleSongBase>().ToList());
     }
 
     private async Task<List<SingleSongBase>> LoadAscendingProgramsAsync()

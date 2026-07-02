@@ -1,5 +1,6 @@
 using AsyncAwaitBestPractices;
 using Depository.Abstraction.Interfaces;
+using Depository.Abstraction.Interfaces.NotificationHub;
 using HyPlayer;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
@@ -28,7 +29,9 @@ namespace HyPlayer.Services.Playback;
 /// 通过 <see cref="PlaybackStateService"/> 写入播放状态，并通过 owner service events 发布业务事件。
 /// </para>
 /// </summary>
-public sealed partial class PlaybackControlService : IPlaybackControlService, IDisposable
+public sealed partial class PlaybackControlService : IPlaybackControlService,
+                                                     INotificationSubscriber<PlaybackRequestFailedNotification>,
+                                                     IDisposable
 {
     public event EventHandler<SeekRequestedEventArgs>? SeekRequested;
 
@@ -46,6 +49,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
     private SystemMediaTransportControls? _smtc;
 
     private readonly SemaphoreSlim _seekerLock = new(1, 1);
+    private readonly SemaphoreSlim _autoSkipLock = new(1, 1);
     private CancellationTokenSource? _playbackCts;
     private CancellationTokenSource? _lyricCts;
     private bool _disposed;
@@ -243,7 +247,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             if (autoPlay)
             {
                 await _playCore.PlayAsync(ct);
-                _state.IsPlaying = true;
+                _state.IsPlaying = _playCore.CurrentPlayingTicket is not null;
             }
         }
         catch (OperationCanceledException)
@@ -362,9 +366,71 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         }
     }
 
+    public Task HandleNotificationAsync(PlaybackRequestFailedNotification notification, CancellationToken ctk = new())
+    {
+        if (notification.Song is null || !ReferenceEquals(notification.Song, _state.NowPlayingProviderItem))
+            return Task.CompletedTask;
+
+        _taskRunner.Forget(AutoSkipPlaybackFailureAsync(notification), "auto skip failed playback request");
+        return Task.CompletedTask;
+    }
+
+    private async Task AutoSkipPlaybackFailureAsync(PlaybackRequestFailedNotification notification)
+    {
+        if (!await _autoSkipLock.WaitAsync(0).ConfigureAwait(false))
+            return;
+
+        try
+        {
+            if (notification.Song is null || !ReferenceEquals(notification.Song, _state.NowPlayingProviderItem))
+                return;
+
+            var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
+            if (queue.Count == 0)
+            {
+                _state.IsPlaying = false;
+                return;
+            }
+
+            var failuresObserved = 1;
+            while (failuresObserved < queue.Count)
+            {
+                await MoveNextAndPlayAsync(userInitiated: false, repeatSingleOnAutoAdvance: false).ConfigureAwait(false);
+
+                if (_playCore.CurrentPlayingTicket is not null)
+                    return;
+
+                failuresObserved++;
+                queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
+                if (queue.Count == 0)
+                {
+                    _state.IsPlaying = false;
+                    return;
+                }
+            }
+
+            _state.IsPlaying = false;
+            System.Diagnostics.Debug.WriteLine("Playback auto-skip stopped because every queued song failed to resolve.");
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Playback failure auto-skip failed: {ex.Message}");
+        }
+        finally
+        {
+            _autoSkipLock.Release();
+        }
+    }
+
     #endregion
 
     public async Task MoveNextAndPlayAsync(bool userInitiated)
+        => await MoveNextAndPlayAsync(userInitiated, repeatSingleOnAutoAdvance: true).ConfigureAwait(false);
+
+    private async Task MoveNextAndPlayAsync(bool userInitiated, bool repeatSingleOnAutoAdvance)
     {
         var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
         if (queue.Count == 0)
@@ -384,7 +450,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
             ListenTogetherManager.Instance.ServerNextIndex = null;
             await _playCore.MovePointerToIndexAsync(serverIndex).ConfigureAwait(false);
         }
-        else if (_playCore.ActivePlayModeId == "sgl" && _state.NowPlayingProviderItem is not null && !userInitiated)
+        else if (repeatSingleOnAutoAdvance
+                 && _playCore.ActivePlayModeId == "sgl"
+                 && _state.NowPlayingProviderItem is not null
+                 && !userInitiated)
         {
             await SeekAsync(TimeSpan.Zero).ConfigureAwait(false);
             Play();
@@ -433,6 +502,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService, ID
         _lyricCts?.Cancel();
         _lyricCts?.Dispose();
         _seekerLock.Dispose();
+        _autoSkipLock.Dispose();
     }
 
     #endregion

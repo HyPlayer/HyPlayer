@@ -2,14 +2,11 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Navigation;
 using HyPlayer.Infrastructure.Extensions;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
@@ -49,7 +46,9 @@ public sealed partial class Search : Page
     public static readonly DependencyProperty HasPreviousPageProperty = DependencyProperty.Register(
         "HasPreviousPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
 
-    private readonly ObservableCollection<SongListItemViewModel> SongResults = [];
+    public static readonly DependencyProperty CurrentResultContainerProperty = DependencyProperty.Register(
+        nameof(CurrentResultContainer), typeof(ContainerBase), typeof(Search), new PropertyMetadata(default(ContainerBase)));
+
     private int page;
     private string searchText = "";
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -78,6 +77,12 @@ public sealed partial class Search : Page
     {
         get => (bool)GetValue(HasPreviousPageProperty);
         set => SetValue(HasPreviousPageProperty, value);
+    }
+
+    public ContainerBase CurrentResultContainer
+    {
+        get => (ContainerBase)GetValue(CurrentResultContainerProperty);
+        set => SetValue(CurrentResultContainerProperty, value);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -124,40 +129,10 @@ public sealed partial class Search : Page
         TBNoRes.Visibility = Visibility.Collapsed;
         _history.AddSearchHistory(searchText);
 
-        SearchResultContainer.ListItems.Clear();
-        SongResults.Clear();
+        CurrentResultContainer = null;
         try
         {
-            switch (((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString())
-            {
-                case "1":
-                    await LoadSongResult();
-                    break;
-                case "10":
-                    await LoadAlbumResult();
-                    break;
-                case "100":
-                    await LoadArtistResult();
-                    break;
-                case "1000":
-                    await LoadPlaylistResult();
-                    break;
-                case "1002":
-                    await LoadUserResult();
-                    break;
-                case "1004":
-                    await LoadMVResult();
-                    break;
-                case "1006":
-                    await LoadLyricResult();
-                    break;
-                case "1009":
-                    await LoadRadioResult();
-                    break;
-                case "1014":
-                    await LoadMlogResult();
-                    break;
-            }
+            await LoadCurrentCategoryResult();
         }
         catch (Exception ex)
         {
@@ -166,279 +141,39 @@ public sealed partial class Search : Page
         }
     }
 
-    private async Task LoadSongResult()
+    private async Task LoadCurrentCategoryResult()
     {
-        var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.SingleSongSearchTypeId);
+        var typeId = GetCurrentSearchTypeId();
+        if (string.IsNullOrWhiteSpace(typeId))
+            return;
+
+        var (hasMore, items) = await LoadSearchItemsAsync(typeId);
         if (items.Count is 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
             return;
         }
 
-        foreach (var song in items.OfType<SingleSongBase>())
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SongResults.Add(await SongListItemViewModel.FromProviderSongAsync(song, page * 30 + i));
-            var aliases = song is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
-            var translation = song is IHasTranslation translationProvider ? translationProvider.Translation : null;
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = song.Name,
-                    LineTwo = string.Join(" / ", song.CreatorList ?? []),
-                    LineThree = song.Album?.Name,
-                    LineOne = (translation ?? string.Empty) + " / " + string.Join("", aliases ?? []),
-                    Route = new AppRoute.Song($"{song.ActualId}"),
-                    PlayResource = new MusicResource.Song($"{song.ActualId}"),
-                    CoverLink = await TryGetCoverLinkAsync(song),
-                    Order = page * 30 + i++
-                });
-        }
-
+        CurrentResultContainer = new StaticItemsContainer(items, searchText, $"{typeId}:{page}", typeId);
         UpdatePageState(hasMore);
+        Bindings.Update();
     }
 
-    private async Task LoadAlbumResult()
+    private string? GetCurrentSearchTypeId()
     {
-        var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.AlbumSearchTypeId);
-        if (items.Count is 0)
+        return ((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString() switch
         {
-            TBNoRes.Visibility = Visibility.Visible;
-            return;
-        }
-
-        foreach (var album in items.OfType<AlbumBase>())
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            var aliases = album is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
-            var description = album is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
-            var creators = album is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync(_cancellationToken) : null;
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = album.Name,
-                    LineOne = string.Join(" / ", creators?.Select(t => t.Name) ?? []),
-                    LineTwo = string.Join(" / ", aliases ?? []),
-                    LineThree = description,
-                    Route = new AppRoute.Album($"{album.ActualId}"),
-                    PlayResource = new MusicResource.Album($"{album.ActualId}"),
-                    CoverLink = await TryGetCoverLinkAsync(album),
-                    Order = page * 30 + i++
-                });
-        }
-
-        UpdatePageState(hasMore);
-    }
-
-    private async Task LoadArtistResult()
-    {
-        var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.ArtistSearchTypeId);
-        if (items.Count is 0)
-        {
-            TBNoRes.Visibility = Visibility.Visible;
-            return;
-        }
-
-        foreach (var artist in items.OfType<ArtistBase>())
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SearchResultContainer.ListItems.Add(new SimpleListItem
-            {
-                Title = artist.Name,
-                Route = new AppRoute.Artist($"{artist.ActualId}"),
-                PlayResource = new MusicResource.Artist($"{artist.ActualId}"),
-                Order = page * 30 + i++,
-                CanPlay = true
-            });
-        }
-
-        UpdatePageState(hasMore);
-    }
-
-    private async Task LoadPlaylistResult()
-    {
-        var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.PlaylistSearchTypeId);
-        if (items.Count is 0)
-        {
-            TBNoRes.Visibility = Visibility.Visible;
-            return;
-        }
-
-        foreach (var playlist in items.OfType<LinerContainerBase>())
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            var description = playlist is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
-            var creators = playlist is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync(_cancellationToken) : null;
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = playlist.Name,
-                    LineOne = creators?.FirstOrDefault()?.Name,
-                    LineTwo = description,
-                    LineThree = string.Empty,
-                    Route = new AppRoute.Playlist($"{playlist.ActualId}"),
-                    PlayResource = new MusicResource.Playlist($"{playlist.ActualId}"),
-                    CoverLink = await TryGetCoverLinkAsync(playlist),
-                    Order = page * 30 + i++
-                });
-        }
-
-        UpdatePageState(hasMore);
-    }
-
-    private async Task LoadUserResult()
-    {
-        var i = 0;
-        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.UserSearchTypeId);
-        if (items.Count is 0)
-        {
-            TBNoRes.Visibility = Visibility.Visible;
-            return;
-        }
-
-        foreach (var user in items.OfType<PersonBase>())
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            var description = user is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = user.Name,
-                    LineOne = description,
-                    Route = new AppRoute.Me($"{user.ActualId}"),
-                    CoverLink = await TryGetCoverLinkAsync(user),
-                    Order = page * 30 + i++
-                });
-        }
-
-        UpdatePageState(hasMore);
-    }
-
-    private async Task LoadRadioResult()
-    {
-        var i = 0;
-        if (_searchTypeIds.RadioChannelSearchTypeId is null)
-            return;
-
-        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.RadioChannelSearchTypeId);
-        if (items.Count is 0)
-        {
-            TBNoRes.Visibility = Visibility.Visible;
-            return;
-        }
-
-        foreach (var radio in items.OfType<LinerContainerBase>())
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            var description = radio is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = radio.Name,
-                    LineOne = radio is IHasCreators creatorsProvider
-                        ? (await creatorsProvider.GetCreatorsAsync(_cancellationToken))?.FirstOrDefault()?.Name
-                        : null,
-                    LineTwo = description,
-                    LineThree = string.Empty,
-                    Route = new AppRoute.Radio($"{radio.ActualId}"),
-                    PlayResource = new MusicResource.Radio($"{radio.ActualId}"),
-                    CoverLink = await TryGetCoverLinkAsync(radio),
-                    Order = page * 30 + i++
-                });
-        }
-
-        UpdatePageState(hasMore);
-    }
-
-
-
-    private async Task LoadMVResult()
-    {
-        var i = 0;
-        if (_searchTypeIds.RichMediaSearchTypeId is null)
-            return;
-
-        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.RichMediaSearchTypeId);
-        if (items.Count is 0)
-        {
-            TBNoRes.Visibility = Visibility.Visible;
-            return;
-        }
-
-        foreach (var item in items.OfType<RichMediaBase>())
-        {
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = item.Name,
-                    Route = new AppRoute.MV($"{item.ActualId}"),
-                    CoverLink = await TryGetCoverLinkAsync(item),
-                    Order = page * 30 + i++
-                });
-        }
-
-        UpdatePageState(hasMore);
-    }
-
-    private async Task LoadMlogResult()
-    {
-        var i = 0;
-        if (_searchTypeIds.ShortVideoSearchTypeId is null)
-            return;
-
-        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.ShortVideoSearchTypeId);
-        if (items.Count is 0)
-        {
-            TBNoRes.Visibility = Visibility.Visible;
-            return;
-        }
-
-        foreach (var item in items.OfType<RichMediaBase>())
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = item.Name,
-                    Route = new AppRoute.MV($"{item.ActualId}"),
-                    Order = page * 30 + i++
-                });
-        }
-
-        UpdatePageState(hasMore);
-    }
-
-    private async Task LoadLyricResult()
-    {
-        var i = 0;
-        if (_searchTypeIds.LyricSearchTypeId is null)
-            return;
-
-        var (hasMore, items) = await LoadSearchItemsAsync(_searchTypeIds.LyricSearchTypeId);
-        if (items.Count is 0)
-        {
-            TBNoRes.Visibility = Visibility.Visible;
-            return;
-        }
-
-        foreach (var item in items)
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-            SearchResultContainer.ListItems.Add(
-                new SimpleListItem
-                {
-                    Title = item.Name,
-                    Route = new AppRoute.Song($"{item.ActualId}"),
-                    PlayResource = new MusicResource.Song($"{item.ActualId}"),
-                    Order = page * 30 + i++
-                });
-        }
-
-        UpdatePageState(hasMore);
+            "1" => _searchTypeIds.SingleSongSearchTypeId,
+            "10" => _searchTypeIds.AlbumSearchTypeId,
+            "100" => _searchTypeIds.ArtistSearchTypeId,
+            "1000" => _searchTypeIds.PlaylistSearchTypeId,
+            "1002" => _searchTypeIds.UserSearchTypeId,
+            "1004" => _searchTypeIds.RichMediaSearchTypeId,
+            "1006" => _searchTypeIds.LyricSearchTypeId,
+            "1009" => _searchTypeIds.RadioChannelSearchTypeId,
+            "1014" => _searchTypeIds.ShortVideoSearchTypeId,
+            _ => null
+        };
     }
 
     private async Task<(bool HasMore, List<ProvidableItemBase> Items)> LoadSearchItemsAsync(string typeId)
@@ -493,17 +228,6 @@ public sealed partial class Search : Page
         HasPreviousPage = page > 0;
     }
 
-    private static async Task<string?> TryGetCoverLinkAsync(ProvidableItemBase item)
-    {
-        if (item is not IHasCover coverProvider)
-            return null;
-
-        var result = await coverProvider.GetCoverAsync();
-        return result is IResourceResultOf<Uri?> uriResult
-            ? (await uriResult.GetResourceAsync())?.GetLeftPart(UriPartial.Path)
-            : null;
-    }
-
     private void PrevPage_OnClick(object sender, RoutedEventArgs e)
     {
         page--;
@@ -520,17 +244,6 @@ public sealed partial class Search : Page
         NavigationViewSelectionChangedEventArgs args)
     {
         page = 0;
-        if ((args.SelectedItem as NavigationViewItem).Tag.ToString() == "1")
-        {
-            SongsSearchResultContainer.Visibility = Visibility.Visible;
-            SearchResultContainer.Visibility = Visibility.Collapsed;
-        }
-        else
-        {
-            SongsSearchResultContainer.Visibility = Visibility.Collapsed;
-            SearchResultContainer.Visibility = Visibility.Visible;
-        }
-
         _loadResultTask = LoadResult();
     }
 

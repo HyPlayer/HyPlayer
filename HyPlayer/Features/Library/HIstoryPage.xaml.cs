@@ -6,15 +6,14 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
 using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using WinRT;
@@ -36,19 +35,27 @@ public sealed partial class HistoryPage : Page
     private readonly IUserLibraryTypeIds _userLibraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
     private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
 
-    private readonly ObservableCollection<SongListItemViewModel> Songs = new();
+    public static readonly DependencyProperty HistoryContainerProperty = DependencyProperty.Register(
+        nameof(HistoryContainer), typeof(ContainerBase), typeof(HistoryPage), new PropertyMetadata(default(ContainerBase)));
+
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _songRankWeekLoaderTask;
     private Task _songRankAllLoaderTask;
     private string _currentSelectionName;
-    private List<SingleSongBase> _songHistoryCache;
+    private List<ProvidableItemBase> _songHistoryCache;
 
     public HistoryPage()
     {
         InitializeComponent();
         HisModeNavView.SelectedItem = SongHis;
         _cancellationToken = _cancellationTokenSource.Token;
+    }
+
+    public ContainerBase HistoryContainer
+    {
+        get => (ContainerBase)GetValue(HistoryContainerProperty);
+        set => SetValue(HistoryContainerProperty, value);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -82,7 +89,7 @@ public sealed partial class HistoryPage : Page
         NavigationViewSelectionChangedEventArgs args)
     {
         var selectedName = (sender.SelectedItem?.As<NavigationViewItem>()).Name;
-        if (string.Equals(_currentSelectionName, selectedName, StringComparison.Ordinal) && Songs.Count > 0)
+        if (string.Equals(_currentSelectionName, selectedName, StringComparison.Ordinal) && HistoryContainer is not null)
             return;
 
         _currentSelectionName = selectedName;
@@ -106,16 +113,13 @@ public sealed partial class HistoryPage : Page
 
     private async Task LoadSongHistory(string selectionName)
     {
-        _songHistoryCache ??= await _history.GetSongHistoryAsync();
+        if (_songHistoryCache is null)
+            _songHistoryCache = [.. await _history.GetSongHistoryAsync()];
         if (!string.Equals(_currentSelectionName, selectionName, StringComparison.Ordinal))
             return;
 
-        Songs.Clear();
-        var songorder = 0;
-        foreach (var song in _songHistoryCache)
-        {
-            Songs.Add(await SongListItemViewModel.FromProviderSongAsync(song, songorder++));
-        }
+        HistoryContainer = new StaticItemsContainer(_songHistoryCache, "最近播放", "history");
+        Bindings.Update();
     }
 
     private async Task LoadRankAll(string selectionName)
@@ -130,7 +134,6 @@ public sealed partial class HistoryPage : Page
 
     private async Task LoadRank(string rangeId, string selectionName)
     {
-        Songs.Clear();
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -147,25 +150,13 @@ public sealed partial class HistoryPage : Page
             if (!string.Equals(_currentSelectionName, selectionName, StringComparison.Ordinal))
                 return;
 
-            Songs.Clear();
-            for (var i = 0; i < rankData.Count; i++)
-            {
-                _cancellationToken.ThrowIfCancellationRequested();
-                Songs.Add(await MapHistoryItemToRowAsync(rankData[i], i));
-            }
+            HistoryContainer = new StaticItemsContainer(rankData, "听歌排行", rangeId);
+            Bindings.Update();
         }
         catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
         {
             _notification.ShowMessage("获取播放记录失败", ex.Message);
         }
-    }
-
-    private static async Task<SongListItemViewModel> MapHistoryItemToRowAsync(ProvidableItemBase item, int order)
-    {
-        if (item is SingleSongBase song)
-            return await SongListItemViewModel.FromProviderSongAsync(song, order);
-
-        return SongListItemViewModel.FromFallback(item.ActualId, item.Name, order);
     }
 
     private async Task<List<ProvidableItemBase>> LoadContainerItemsAsync(ContainerBase container)

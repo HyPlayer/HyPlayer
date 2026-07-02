@@ -3,7 +3,12 @@
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.Services.Abstractions;
+using HyPlayer.Services.Cache;
+using HyPlayer.UI.Lists;
 using System;
+using System.Collections.Generic;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -21,16 +26,47 @@ namespace HyPlayer.Features.Playlist;
 public sealed partial class SongListDetail : Page
 {
     private const string DailyRecommendPlaylistId = "daily_recommend";
+    private readonly IContainerItemManagementProvidable _containerItemManagement = Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
     private bool _dataRequestedSubscribed;
     public SongListViewModel ViewModel => (SongListViewModel)DataContext;
+    public List<ProvidableItemAction> ItemActions { get; }
 
     public SongListDetail()
     {
+        ItemActions =
+        [
+            new ProvidableItemAction
+            {
+                Text = "从歌单移除",
+                CanExecute = _ => ViewModel.IsMySongList && ViewModel.PlayList is not null,
+                ExecuteAsync = RemoveItemFromPlaylistAsync
+            }
+        ];
         InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<SongListViewModel>();
         Unloaded += SongListDetail_Unloaded;
         AttachDataRequested();
+    }
+
+    private async System.Threading.Tasks.Task RemoveItemFromPlaylistAsync(ProvidableItemRowViewModel row)
+    {
+        if (ViewModel.PlayList is null || string.IsNullOrWhiteSpace(row.ItemId))
+            return;
+
+        try
+        {
+            await _containerItemManagement.RemoveItemFromContainerAsync(ViewModel.PlayList.ActualId, row.ItemId);
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, ViewModel.PlayList.ActualId);
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, ViewModel.PlayList.ActualId, true);
+            _notification.ShowMessage("已从歌单移除", row.Title);
+            ContainerSongs.ResetAndLoad();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("移除失败", ex.Message);
+        }
     }
 
     private void AttachDataRequested()

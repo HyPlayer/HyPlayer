@@ -96,11 +96,15 @@ public class TextRenderingLyricLine : RenderingLyricLine
                         textDrawingSession,
                         _layout,
                         frame,
-                        _layout.SizePixelRect,
-                        _layout.TextRenderActualTop);
+                        context);
                 }
                 else
                 {
+                    if (_layout.DefaultTransliterationPersistCache is not null)
+                    {
+                        textDrawingSession.DrawImage(_layout.DefaultTransliterationPersistCache, 0, 0, _layout.SizePixelRect, opacity);
+                    }
+
                     textDrawingSession.DrawImage(_layout.DefaultTextPersistCache, 0, _layout.TextRenderActualTop, _layout.SizePixelRect, opacity);
                 }
             }
