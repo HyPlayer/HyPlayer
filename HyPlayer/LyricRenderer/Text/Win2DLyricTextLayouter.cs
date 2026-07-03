@@ -148,6 +148,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             }
 
             lyricGlyphClusters = CollectGlyphClusters(
+                defaultTextSession,
                 LyricTextLayer.Lyric,
                 textLayout,
                 drawOffsetX,
@@ -159,6 +160,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             if (useDynamicTransliteration)
             {
                 transliterationGlyphClusters = CollectGlyphClusters(
+                    transliterationSessionToDispose!,
                     LyricTextLayer.Transliteration,
                     transliterationLayout!,
                     drawOffsetX,
@@ -268,6 +270,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
     }
 
     private static IReadOnlyList<LyricGlyphCluster> CollectGlyphClusters(
+        CanvasDrawingSession layoutSession,
         LyricTextLayer layer,
         CanvasTextLayout layout,
         float drawOffsetX,
@@ -277,7 +280,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         float dpi,
         int tokenCount)
     {
-        var collector = new LyricGlyphPlanCollector(layer, sourceIndexMap, tokenIndexMap, dpi);
+        var collector = new LyricGlyphPlanCollector(layoutSession, layer, sourceIndexMap, tokenIndexMap, dpi);
         layout.DrawToTextRenderer(collector, drawOffsetX, drawOffsetY);
         var clusters = collector.Clusters.ToArray();
         LyricGlyphPlanCollector.FinalizeClusterIndexes(clusters, tokenCount);

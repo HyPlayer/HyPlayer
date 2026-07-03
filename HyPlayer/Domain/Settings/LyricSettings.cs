@@ -258,6 +258,24 @@ namespace HyPlayer.Domain.Settings
         }
 
         /// <summary>
+        /// Lyric render scan style.
+        /// </summary>
+        public LyricScanStyle lyricRenderScanStyle
+        {
+            get
+            {
+                var value = GetSettings(nameof(lyricRenderScanStyle), (int)LyricScanStyle.RectReveal);
+                return System.Enum.IsDefined(typeof(LyricScanStyle), value)
+                    ? (LyricScanStyle)value
+                    : LyricScanStyle.RectReveal;
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderScanStyle)] = (int)value;
+            }
+        }
+
+        /// <summary>
         /// Whether lyric render scale when focusing is enabled.
         /// </summary>
         public bool lyricRenderScaleWhenFocusing

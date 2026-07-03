@@ -76,4 +76,10 @@
         SyncRollingCalculator = 3,
         CircleEaseRollingCalculator = 4
     }
+
+    public enum LyricScanStyle : int
+    {
+        RectReveal = 0,
+        TokenOpacity = 1
+    }
 }

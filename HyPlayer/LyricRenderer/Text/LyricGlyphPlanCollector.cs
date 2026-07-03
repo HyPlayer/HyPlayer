@@ -1,5 +1,6 @@
 #nullable enable
 
+using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Numerics;
 namespace HyPlayer.LyricRenderer.Text;
 
 internal sealed partial class LyricGlyphPlanCollector(
+    CanvasDrawingSession renderSession,
     LyricTextLayer layer,
     IReadOnlyList<int> sourceIndexMap,
     IReadOnlyList<int> tokenIndexMap,
@@ -67,6 +69,11 @@ internal sealed partial class LyricGlyphPlanCollector(
 
             var clusterGlyphs = new CanvasGlyph[glyphEnd - glyphStart];
             Array.Copy(glyphs, glyphStart, clusterGlyphs, 0, clusterGlyphs.Length);
+            var advanceWidth = 0f;
+            for (var glyphIndex = 0; glyphIndex < clusterGlyphs.Length; glyphIndex++)
+            {
+                advanceWidth += clusterGlyphs[glyphIndex].Advance;
+            }
 
             var sourceStart = int.MaxValue;
             var sourceEnd = -1;
@@ -97,6 +104,16 @@ internal sealed partial class LyricGlyphPlanCollector(
                 }
             }
 
+            var visualBounds = GetGlyphVisualBounds(
+                renderSession,
+                new Vector2(point.X + advanceOrigins[glyphStart], point.Y),
+                fontFace,
+                fontSize,
+                clusterGlyphs,
+                isSideways,
+                bidiLevel,
+                measuringMode);
+
             _clusters.Add(new LyricGlyphCluster
             {
                 Layer = layer,
@@ -122,7 +139,12 @@ internal sealed partial class LyricGlyphPlanCollector(
                 SourceStart = sourceStart == int.MaxValue ? -1 : sourceStart,
                 SourceEnd = sourceEnd,
                 TokenStartIndex = tokenStartIndex == int.MaxValue ? -1 : tokenStartIndex,
-                TokenEndIndexExclusive = tokenEndIndexExclusive
+                TokenEndIndexExclusive = tokenEndIndexExclusive,
+                AdvanceWidth = advanceWidth,
+                VisualLeft = visualBounds.Left,
+                VisualTop = visualBounds.Top,
+                VisualRight = visualBounds.Right,
+                VisualBottom = visualBounds.Bottom
             });
         }
     }
@@ -167,10 +189,22 @@ internal sealed partial class LyricGlyphPlanCollector(
     public static void FinalizeClusterIndexes(IReadOnlyList<LyricGlyphCluster> clusters, int tokenCount)
     {
         var tokenCounts = tokenCount > 0 ? new int[tokenCount] : [];
+        var currentVisualLine = 0;
+        var currentVisualLineStart = 0;
         for (var i = 0; i < clusters.Count; i++)
         {
+            if (i > 0 && Math.Abs(clusters[i].BaseState.Origin.Y - clusters[i - 1].BaseState.Origin.Y) > 0.5f)
+            {
+                FinalizeVisualLine(clusters, currentVisualLineStart, i);
+                currentVisualLine++;
+                currentVisualLineStart = i;
+            }
+
             clusters[i].LayerClusterIndex = i;
             clusters[i].LayerClusterCount = clusters.Count;
+            clusters[i].VisualLineIndex = currentVisualLine;
+            clusters[i].VisualWidth = Math.Max(0, clusters[i].VisualRight - clusters[i].VisualLeft);
+            clusters[i].VisualHeight = Math.Max(1, clusters[i].VisualBottom - clusters[i].VisualTop);
             var tokenIndex = clusters[i].TokenStartIndex;
             if ((uint)tokenIndex < (uint)tokenCounts.Length)
             {
@@ -179,13 +213,88 @@ internal sealed partial class LyricGlyphPlanCollector(
             }
         }
 
+        FinalizeVisualLine(clusters, currentVisualLineStart, clusters.Count);
+        var visualLineCount = currentVisualLine + 1;
+
         for (var i = 0; i < clusters.Count; i++)
         {
             var tokenIndex = clusters[i].TokenStartIndex;
+            clusters[i].LayerVisualLineCount = visualLineCount;
             clusters[i].TokenClusterCount = (uint)tokenIndex < (uint)tokenCounts.Length
                 ? tokenCounts[tokenIndex]
                 : clusters.Count;
         }
+    }
+
+    private static void FinalizeVisualLine(IReadOnlyList<LyricGlyphCluster> clusters, int start, int endExclusive)
+    {
+        var count = Math.Max(0, endExclusive - start);
+        for (var i = start; i < endExclusive; i++)
+        {
+            clusters[i].VisualLineClusterIndex = i - start;
+            clusters[i].VisualLineClusterCount = count;
+            clusters[i].VisualLineStartClusterIndex = start;
+            clusters[i].VisualLineEndClusterIndexExclusive = endExclusive;
+        }
+    }
+
+    private static (float Left, float Top, float Right, float Bottom) GetGlyphVisualBounds(
+        CanvasDrawingSession renderSession,
+        Vector2 origin,
+        CanvasFontFace fontFace,
+        float fontSize,
+        CanvasGlyph[] glyphs,
+        bool isSideways,
+        uint bidiLevel,
+        CanvasTextMeasuringMode measuringMode)
+    {
+        var fallbackLeft = origin.X;
+        var fallbackRight = fallbackLeft;
+        for (var i = 0; i < glyphs.Length; i++)
+        {
+            fallbackRight += Math.Max(0, glyphs[i].Advance);
+        }
+
+        var (fallbackTop, fallbackBottom) = GetRunVerticalBounds(origin.Y, fontFace, fontSize);
+        var bounds = fontFace.GetGlyphRunBounds(
+            renderSession,
+            origin,
+            fontSize,
+            glyphs,
+            isSideways,
+            bidiLevel,
+            measuringMode);
+        var left = (float)bounds.Left;
+        var top = (float)bounds.Top;
+        var right = (float)bounds.Right;
+        var bottom = (float)bounds.Bottom;
+
+        if (!float.IsFinite(left) ||
+            !float.IsFinite(top) ||
+            !float.IsFinite(right) ||
+            !float.IsFinite(bottom) ||
+            right <= left ||
+            bottom <= top)
+        {
+            return (fallbackLeft, fallbackTop, Math.Max(fallbackRight, fallbackLeft + 1), fallbackBottom);
+        }
+
+        const float boundsPadding = 1;
+        return (left - boundsPadding, top - boundsPadding, right + boundsPadding, bottom + boundsPadding);
+    }
+
+    private static (float Top, float Bottom) GetRunVerticalBounds(float baselineY, CanvasFontFace fontFace, float fontSize)
+    {
+        var scale = GetFontDesignUnitScale(fontFace, fontSize);
+        var ascent = fontFace.Ascent * scale;
+        var descent = fontFace.Descent * scale;
+        return (baselineY - ascent, baselineY + descent);
+    }
+
+    private static float GetFontDesignUnitScale(CanvasFontFace fontFace, float fontSize)
+    {
+        var emHeight = Math.Max(1f, fontFace.Ascent + fontFace.Descent);
+        return fontSize / emHeight;
     }
 
     private static float[] CreateAdvanceOrigins(IReadOnlyList<CanvasGlyph> glyphs)

@@ -381,6 +381,12 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderSimpleLineScanning, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="扫词样式">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderScanStyle, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                            <ComboBoxItem Content="矩形显露" />
+                                            <ComboBoxItem Content="逐字透明度" />
+                                        </ComboBox>
+                                    </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="将会把每一行歌词预渲染, 将会造成大量内存占用" Header="预渲染合成">
                                         <ToggleSwitch
                                             MinWidth="10"

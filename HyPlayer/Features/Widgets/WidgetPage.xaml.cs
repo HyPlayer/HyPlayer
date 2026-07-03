@@ -300,6 +300,7 @@ public sealed partial class WidgetPage : Page
         LyricBox.Context.Effects.FocusHighlighting = _setting.lyricRenderFocusHighlighting;
         LyricBox.Context.Effects.TransliterationScanning = _setting.lyricRenderTransliterationScanning;
         LyricBox.Context.Effects.SimpleLineScanning = _setting.lyricRenderSimpleLineScanning;
+        LyricBox.Context.Effects.ScanStyle = _setting.lyricRenderScanStyle;
         LyricBox.Context.PreferTypography.Font = _gameBarSettings.LyricFontFamily;
         LyricBox.Context.LineSpacing = _gameBarSettings.LyricLineSpacing;
         LyricBox.EnableTranslation = _gameBarSettings.EnableTranslation;

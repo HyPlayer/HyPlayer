@@ -219,6 +219,7 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.Context.Effects.FocusHighlighting = _settings.lyricRenderFocusHighlighting;
         _lyricBox.Context.Effects.TransliterationScanning = _settings.lyricRenderTransliterationScanning;
         _lyricBox.Context.Effects.SimpleLineScanning = _settings.lyricRenderSimpleLineScanning;
+        _lyricBox.Context.Effects.ScanStyle = _settings.lyricRenderScanStyle;
         _lyricBox.Context.PreferTypography.Font = _settings.lyricFontFamily;
         _lyricBox.Context.LineSpacing = _settings.lyricLineSpacing;
 

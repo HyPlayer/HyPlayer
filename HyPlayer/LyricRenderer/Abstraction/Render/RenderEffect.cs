@@ -32,4 +32,9 @@ public class RenderEffects
     /// 预渲染合成
     /// </summary>
     public bool CacheRenderTarget { get; set; } = false;
+
+    /// <summary>
+    /// 扫词样式
+    /// </summary>
+    public HyPlayer.Domain.LyricScanStyle ScanStyle { get; set; } = HyPlayer.Domain.LyricScanStyle.RectReveal;
 }
