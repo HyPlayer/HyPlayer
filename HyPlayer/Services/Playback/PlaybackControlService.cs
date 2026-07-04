@@ -368,7 +368,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
     public Task HandleNotificationAsync(PlaybackRequestFailedNotification notification, CancellationToken ctk = new())
     {
-        if (notification.Song is null || !ReferenceEquals(notification.Song, _state.NowPlayingProviderItem))
+        if (!IsCurrentPlaybackFailure(notification.Song))
             return Task.CompletedTask;
 
         _taskRunner.Forget(AutoSkipPlaybackFailureAsync(notification), "auto skip failed playback request");
@@ -382,7 +382,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
         try
         {
-            if (notification.Song is null || !ReferenceEquals(notification.Song, _state.NowPlayingProviderItem))
+            if (!IsCurrentPlaybackFailure(notification.Song))
                 return;
 
             var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
@@ -423,6 +423,17 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         {
             _autoSkipLock.Release();
         }
+    }
+
+    private bool IsCurrentPlaybackFailure(SingleSongBase? failedSong)
+    {
+        if (failedSong is null || _state.NowPlayingProviderItem is not { } currentSong)
+            return false;
+
+        return ReferenceEquals(failedSong, currentSong)
+               || (failedSong.ProviderId == currentSong.ProviderId
+                   && failedSong.TypeId == currentSong.TypeId
+                   && failedSong.ActualId == currentSong.ActualId);
     }
 
     #endregion
