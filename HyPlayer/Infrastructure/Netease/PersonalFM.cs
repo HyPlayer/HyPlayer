@@ -57,6 +57,7 @@ internal sealed class PersonalFM
         fm._playCore.RemoveAllSongAsync().SafeFireAndForget();
         fm._playCore.SetPlayModeAsync("pfm").SafeFireAndForget();
         fm._playbackState.ActiveStrategyId = "pfm";
+        fm._setting.ActiveStrategyId = "pfm";
         fm._playbackState.IsInFm = true;
         fm.LoadNextTrackAsync().SafeFireAndForget();
     }
@@ -133,6 +134,7 @@ internal sealed class PersonalFM
 
         _instance._playCore.SetPlayModeAsync(_instance._previousStrategyId).SafeFireAndForget();
         _instance._playbackState.ActiveStrategyId = _instance._previousStrategyId;
+        _instance._setting.ActiveStrategyId = _instance._previousStrategyId;
         _instance = null;
     }
 

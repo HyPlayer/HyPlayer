@@ -86,6 +86,7 @@ public sealed partial class App : Application
     ///     已执行，逻辑上等同于 main() 或 WinMain()。
     /// </summary>
     private Frame rootFrame;
+    private bool _playbackMemoryRestoreRequested;
 
     public App()
     {
@@ -97,6 +98,7 @@ public sealed partial class App : Application
         InitializeServices();
         InitializeCommonServices();
         AppDepository.Resolve<IHistoryService>().InitializeHistoryTrack();
+        _ = AppDepository.Resolve<IPlaybackMemoryService>().InitializeAsync();
         if (AppDepository.Resolve<Setting>().themeRequest != ThemeRequest.Auto)
             RequestedTheme = AppDepository.Resolve<Setting>().themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
         AppDepository.Resolve<IBackgroundTaskRunner>().Forget(InitializeThings, "initialize app cache and converters");
@@ -197,6 +199,7 @@ public sealed partial class App : Application
         depository.AddSingleton<IQueueSourceProvider, PlaylistQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, AlbumQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, RadioQueueSourceProvider>();
+        depository.AddSingleton<IQueueSourceProvider, DailyRecommendQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, SingerHotQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, SingleSongQueueSourceProvider>();
 
@@ -214,6 +217,7 @@ public sealed partial class App : Application
         depository.AddSingleton<ILyricService, LyricService>();
         depository.AddSingleton<ILastFmService, LastFmService>();
         depository.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
+        depository.AddSingleton<IPlaybackMemoryService, PlaybackMemoryService>();
         depository.AddSingleton<ITileService, TileService>();
 
         // ── 应用核心：认证 / 导航 / 通知 / UI 状态 ──
@@ -413,6 +417,11 @@ public sealed partial class App : Application
                 Window.Current.Activate();
             }
 
+            if (!_playbackMemoryRestoreRequested)
+            {
+                _playbackMemoryRestoreRequested = true;
+                await AppDepository.Resolve<IPlaybackMemoryService>().RestoreAsync();
+            }
         }
         // 本地播放
         else if (args is FileActivatedEventArgs)
@@ -420,8 +429,10 @@ public sealed partial class App : Application
             var playCore = AppDepository.Resolve<PlayCoreBase>();
             var localFileImport = AppDepository.Resolve<ILocalFileImportService>();
             var history = AppDepository.Resolve<IHistoryService>();
+            var playbackMemory = AppDepository.Resolve<IPlaybackMemoryService>();
             playCore.PlaySourceId = "local";
             await history.ClearCurrentPlayingListHistoryAsync();
+            await playbackMemory.ClearAsync();
 
             NavigateToRootPage();
             Window.Current.Activate();
@@ -476,18 +487,7 @@ public sealed partial class App : Application
     private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
-        var playCore = AppDepository.Resolve<PlayCoreBase>();
-        var defaultProvider = AppDepository.Resolve<IProviderKnownTypeIds>();
-        var providerItems = (await playCore.GetPlaylistAsync())
-            .Where(t => t.ProviderId == defaultProvider.Id)
-            .ToList();
-        var currentItem = playCore.CurrentSong;
-        var currentIndex = currentItem?.ProviderId == defaultProvider.Id
-            ? providerItems.FindIndex(item => item.TypeId == currentItem.TypeId && item.ActualId == currentItem.ActualId)
-            : -1;
-        await AppDepository.Resolve<IHistoryService>().SetCurrentPlayingListHistoryAsync(
-            [.. providerItems.Select(t => t.ActualId).Where(id => !string.IsNullOrWhiteSpace(id))!],
-            currentIndex);
+        await AppDepository.Resolve<IPlaybackMemoryService>().SaveNowAsync();
         AppDepository.Resolve<IGameBarWidgetService>().Widget?.Close();
         deferral.Complete();
     }

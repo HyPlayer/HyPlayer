@@ -69,6 +69,7 @@ public sealed partial class PlayBar
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
+    private readonly IPlaybackMemoryService _playbackMemory = Ioc.Default.GetRequiredService<IPlaybackMemoryService>();
     private readonly ILocalFileImportService _localFileImport = Ioc.Default.GetRequiredService<ILocalFileImportService>();
     private readonly IPersonalRadioProvidable _personalRadioProvider = Ioc.Default.GetRequiredService<IPersonalRadioProvidable>();
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
@@ -802,33 +803,8 @@ DoubleAnimation verticalAnimation;
         if (ViewModel.PlaySourceId == "local") return;
         try
         {
-            var state = await _history.GetCurrentPlayingListHistoryStateAsync();
-            if (state.Songs.Count > 0)
-            {
-                await _playCore.RemoveAllSongAsync();
-                await _playCore.InsertSongRangeAsync(state.Songs);
-                var restoreIndex = state.CurrentIndex;
-                var queue = await _playCore.GetPlaylistAsync();
-                if (restoreIndex < 0 || restoreIndex >= queue.Count)
-                    restoreIndex = queue.Count > 0 ? 0 : -1;
-
-                if (restoreIndex >= 0)
-                {
-                    var providerItem = queue[restoreIndex];
-
-                    await _control.LoadAndPlayAsync(providerItem, autoPlay: false, removeCurrentSongs: true);
-                    await _playCore.MovePointerToIndexAsync(restoreIndex);
-                    RunOnUIThread(() =>
-                    {
-                        var targetingIndex = ViewModel.GetTargetingIndex();
-                        if (targetingIndex >= 0 && targetingIndex < PlayItems.Count)
-                        {
-                            ListBoxPlayList.ScrollIntoView(PlayItems[targetingIndex]);
-                        }
-                    });
-                }
-
-            }
+            if ((await _playCore.GetPlaylistAsync()).Count == 0)
+                await _playbackMemory.RestoreAsync();
         }
         catch
         {

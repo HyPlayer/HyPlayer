@@ -4,6 +4,7 @@ using HyPlayer.Infrastructure.Diagnostics;
 using HyPlayer.Infrastructure.Netease;
 using HyPlayer.Services.Abstractions;
 using HyPlayer.Services.History;
+using HyPlayer.Services.Playback;
 using LiteFM.Abstractions;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -15,6 +16,9 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(The163KeyClass))]
     [JsonSerializable(typeof(List<string>))]
     [JsonSerializable(typeof(CurPlayingListHistoryState))]
+    [JsonSerializable(typeof(PlaybackMemoryState))]
+    [JsonSerializable(typeof(PlaybackItemIdentity))]
+    [JsonSerializable(typeof(List<PlaybackItemIdentity>))]
     [JsonSerializable(typeof(HyLyricInfo))]
     [JsonSerializable(typeof(HyALRCLyricInfo))]
     [JsonSerializable(typeof(LastFMSession))]

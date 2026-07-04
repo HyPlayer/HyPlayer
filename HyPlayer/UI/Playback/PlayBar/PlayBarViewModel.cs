@@ -159,6 +159,7 @@ public partial class PlayBarViewModel : ObservableObject
         };
         await _playCore.SetPlayModeAsync(nextStrategy);
         _state.ActiveStrategyId = nextStrategy;
+        _setting.ActiveStrategyId = nextStrategy;
         ActiveStrategyId = nextStrategy;
     }
 

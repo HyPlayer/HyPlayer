@@ -763,7 +763,7 @@ public sealed partial class ContainerItemsView : UserControl
             return SongListQueueScope.Radio(container.ActualId, !HasMore);
 
         if (container.TypeId == DailyRecommendContainerTypeId)
-            return SongListQueueScope.Content;
+            return SongListQueueScope.DailyRecommend(container.ActualId, !HasMore);
 
         return SongListQueueScope.Visible;
     }

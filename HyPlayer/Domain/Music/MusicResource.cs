@@ -17,7 +17,7 @@ public abstract record MusicResource
     {
         Album album => "al" + album.Id,
         Artist artist => "ar" + artist.Id,
-        DailyRecommend dailyRecommend => dailyRecommend.Id,
+        DailyRecommend dailyRecommend => "dr" + dailyRecommend.Id,
         Playlist playlist => "pl" + playlist.Id,
         Radio radio => "rd" + radio.Id,
         Song song => "ns" + song.Id,
@@ -26,6 +26,12 @@ public abstract record MusicResource
 
     public static bool TryParseExternalResource(string value, out MusicResource resource)
     {
+        if (value.Length >= 2 && value.StartsWith("dr") && value[2..].Length > 0)
+        {
+            resource = new DailyRecommend(value[2..]);
+            return true;
+        }
+
         resource = value.Length >= 2 && IsNumeric(value[2..]) ? value[..2] switch
         {
             "al" => new Album(value[2..]),

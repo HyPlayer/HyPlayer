@@ -141,6 +141,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
             };
             _ = _playCore.SetPlayModeAsync(next);
             _state.ActiveStrategyId = next;
+            _settings.ActiveStrategyId = next;
             ActiveStrategyId = next;
         }
 

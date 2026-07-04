@@ -8,6 +8,7 @@ public enum SongListQueueScopeKind
     Radio,
     Artist,
     SingleSong,
+    DailyRecommend,
     Content
 }
 
@@ -24,6 +25,7 @@ public static class QueueSourcePrefixes
     public const string SingerAlias = "sh";
     public const string Radio = "rd";
     public const string Content = "Content";
+    public const string DailyRecommend = "dr";
 }
 
 public sealed record SongListQueueScope(
@@ -50,7 +52,12 @@ public sealed record SongListQueueScope(
         return new SongListQueueScope(SongListQueueScopeKind.Radio, radioId, isCompleteSource);
     }
 
-    public bool CanLoadCompleteSource => IsCompleteSource && Kind is SongListQueueScopeKind.Playlist or SongListQueueScopeKind.Album or SongListQueueScopeKind.Radio;
+    public static SongListQueueScope DailyRecommend(string id, bool isCompleteSource = true)
+    {
+        return new SongListQueueScope(SongListQueueScopeKind.DailyRecommend, id, isCompleteSource);
+    }
+
+    public bool CanLoadCompleteSource => IsCompleteSource && Kind is SongListQueueScopeKind.Playlist or SongListQueueScopeKind.Album or SongListQueueScopeKind.Radio or SongListQueueScopeKind.DailyRecommend;
 
     public string? ToSourceId()
     {
@@ -59,6 +66,7 @@ public sealed record SongListQueueScope(
             SongListQueueScopeKind.Playlist when Id != null => $"{QueueSourcePrefixes.Playlist}{Id}",
             SongListQueueScopeKind.Album when Id != null => $"{QueueSourcePrefixes.Album}{Id}",
             SongListQueueScopeKind.Radio when Id != null => $"{QueueSourcePrefixes.Radio}{Id}",
+            SongListQueueScopeKind.DailyRecommend when Id != null => $"{QueueSourcePrefixes.DailyRecommend}{Id}",
             _ => null
         };
     }
@@ -70,6 +78,7 @@ public sealed record SongListQueueScope(
             SongListQueueScopeKind.Playlist when Id != null => $"{QueueSourcePrefixes.Playlist}{Id}",
             SongListQueueScopeKind.Album when Id != null => $"{QueueSourcePrefixes.Album}{Id}",
             SongListQueueScopeKind.Radio when Id != null => $"{QueueSourcePrefixes.Radio}{Id}",
+            SongListQueueScopeKind.DailyRecommend when Id != null => $"{QueueSourcePrefixes.DailyRecommend}{Id}",
             SongListQueueScopeKind.Content => QueueSourcePrefixes.Content,
             _ => null
         };

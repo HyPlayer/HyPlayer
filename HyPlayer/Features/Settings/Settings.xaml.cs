@@ -54,6 +54,7 @@ public sealed partial class Settings : Page
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
     private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
+    private readonly IPlaybackMemoryService _playbackMemory = Ioc.Default.GetRequiredService<IPlaybackMemoryService>();
 
     private bool isbyprogram;
     private int _elapse = 10;
@@ -277,9 +278,10 @@ public sealed partial class Settings : Page
         ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
     }
 
-    private void ClearHistory_Click(object sender, RoutedEventArgs e)
+    private async void ClearHistory_Click(object sender, RoutedEventArgs e)
     {
-        _ = _history.ClearHistoryAsync();
+        await _history.ClearHistoryAsync();
+        await _playbackMemory.ClearAsync();
     }
 
 
