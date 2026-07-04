@@ -41,9 +41,27 @@ public sealed class RectRevealCalculator
             return null;
         }
 
+        return GetRevealClip(cluster, state, 0, width);
+    }
+
+    public Rect? GetRevealClip(LyricGlyphCluster cluster, LyricGlyphDrawState state, float start, float width)
+    {
+        if (width <= 0)
+        {
+            return null;
+        }
+
+        var clippedStart = Math.Clamp(start, 0, cluster.VisualWidth);
+        var clippedEnd = Math.Clamp(start + width, 0, cluster.VisualWidth);
+        if (clippedEnd <= clippedStart)
+        {
+            return null;
+        }
+
         var offsetX = state.Origin.X - cluster.BaseState.Origin.X;
         var offsetY = state.Origin.Y - cluster.BaseState.Origin.Y;
-        return new Rect(cluster.VisualLeft + offsetX, cluster.VisualTop + offsetY, width, cluster.VisualHeight);
+        return new Rect(cluster.VisualLeft + offsetX + clippedStart, cluster.VisualTop + offsetY,
+            clippedEnd - clippedStart, cluster.VisualHeight);
     }
 
     private static float GetLineProgress(LyricGlyphCluster cluster, TextRenderFrame frame)

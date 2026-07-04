@@ -3,6 +3,7 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Settings;
 using HyPlayer.LyricRenderer;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.RollingCalculators;
 using HyPlayer.PlayCore.Abstraction;
@@ -284,6 +285,7 @@ public sealed partial class WidgetPage : Page
         LyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         LyricBox.OnBeforeRender += LyricBox_OnBeforeRender;
         LyricBox.OnLyricLineClicked += LyricView_OnRequestSeek;
+        LyricBox.Context.Specs = LyricRenderSpecs.FromPreset(_setting.lyricRenderSpecPreset);
         LyricBox.Context.LyricPaddingTopRatio = _setting.lyricPaddingTopRatio / 100f;
         LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
         LyricBox.Context.Effects.Blur = _setting.lyricRenderBlur;
@@ -294,6 +296,7 @@ public sealed partial class WidgetPage : Page
             RollingCalculator.LyricifyRollingCalculator => new LyricifyRollingCalculator(),
             RollingCalculator.SyncRollingCalculator => new SyncRollingCalculator(),
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
+            RollingCalculator.SpecAwareRollingCalculator => new SpecAwareRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         LyricBox.Context.Effects.ScaleWhenFocusing = _setting.lyricRenderScaleWhenFocusing;

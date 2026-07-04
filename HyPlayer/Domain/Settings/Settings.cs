@@ -133,6 +133,7 @@ namespace HyPlayer.Domain.Settings
         public bool lyricRenderTransliterationScanning { get => Lyric.lyricRenderTransliterationScanning; set { Lyric.lyricRenderTransliterationScanning = value; OnPropertyChanged(); } }
         public bool lyricRenderSimpleLineScanning { get => Lyric.lyricRenderSimpleLineScanning; set { Lyric.lyricRenderSimpleLineScanning = value; OnPropertyChanged(); } }
         public LyricScanStyle lyricRenderScanStyle { get => Lyric.lyricRenderScanStyle; set { Lyric.lyricRenderScanStyle = value; OnPropertyChanged(); } }
+        public LyricRenderSpecPreset lyricRenderSpecPreset { get => Lyric.lyricRenderSpecPreset; set { Lyric.lyricRenderSpecPreset = value; OnPropertyChanged(); } }
         public bool lyricRenderScaleWhenFocusing { get => Lyric.lyricRenderScaleWhenFocusing; set { Lyric.lyricRenderScaleWhenFocusing = value; OnPropertyChanged(); } }
         public bool lyricRenderBlur { get => Lyric.lyricRenderBlur; set { Lyric.lyricRenderBlur = value; OnPropertyChanged(); } }
         public bool lyricRenderFade { get => Lyric.lyricRenderFade; set { Lyric.lyricRenderFade = value; OnPropertyChanged(); } }

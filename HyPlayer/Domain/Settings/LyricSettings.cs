@@ -276,6 +276,24 @@ namespace HyPlayer.Domain.Settings
         }
 
         /// <summary>
+        /// Lyric renderer parameter preset.
+        /// </summary>
+        public LyricRenderSpecPreset lyricRenderSpecPreset
+        {
+            get
+            {
+                var value = GetSettings(nameof(lyricRenderSpecPreset), (int)LyricRenderSpecPreset.Modern);
+                return System.Enum.IsDefined(typeof(LyricRenderSpecPreset), value)
+                    ? (LyricRenderSpecPreset)value
+                    : LyricRenderSpecPreset.Modern;
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderSpecPreset)] = (int)value;
+            }
+        }
+
+        /// <summary>
         /// Whether lyric render scale when focusing is enabled.
         /// </summary>
         public bool lyricRenderScaleWhenFocusing
@@ -316,7 +334,7 @@ namespace HyPlayer.Domain.Settings
         /// </summary>
         public RollingCalculator LineRollingCalculator
         {
-            get => GetSettings(nameof(LineRollingCalculator), RollingCalculator.ElasticEaseRollingCalculator);
+            get => GetSettings(nameof(LineRollingCalculator), RollingCalculator.SpecAwareRollingCalculator);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(LineRollingCalculator)] = (int)value;

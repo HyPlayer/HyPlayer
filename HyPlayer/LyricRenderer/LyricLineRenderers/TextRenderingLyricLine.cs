@@ -22,8 +22,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
 public class TextRenderingLyricLine : RenderingLyricLine
 {
-    private const long ScaleAnimationDuration = 500;
-
     private readonly CustomElasticEase _elasticEase = new() { Springiness = 6 };
     private readonly ILyricTextLayouter _layouter;
     private readonly ITextProgressResolver _progressResolver;
@@ -33,6 +31,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
     private float _canvasWidth;
     private float _canvasHeight;
     private ReactionState _reactionState = ReactionState.Leave;
+    private long _reactionStateUntilTick;
     private LyricTextLayoutSnapshot? _layout;
 
     private TextAlignment _cachedAlignment;
@@ -58,9 +57,6 @@ public class TextRenderingLyricLine : RenderingLyricLine
         _highlightEffectRenderer = highlightEffectRenderer;
     }
 
-    public const float TextPadding = 16;
-    public const float LiftAmount = 3;
-
     public string? Text { get; set; }
     public List<LyricTextToken> Tokens { get; set; } = [];
     public string? Transliteration { get; set; }
@@ -71,14 +67,22 @@ public class TextRenderingLyricLine : RenderingLyricLine
     public override void GoToReactionState(ReactionState state, RenderContext context)
     {
         _reactionState = state;
+        if (state == ReactionState.Press)
+        {
+            _reactionStateUntilTick = context.RenderTick +
+                                      Math.Max(100, context.Specs.TapProgressFreezeDurationMs) *
+                                      TimeSpan.TicksPerMillisecond;
+        }
     }
 
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
         if (_layout is null) return true;
 
+        RefreshTimeState(context);
         var drawingTop = offset.Y + _layout.DrawingOffsetY;
         var actualOffsetX = offset.X;
+        var isPressed = _reactionState == ReactionState.Press && context.RenderTick <= _reactionStateUntilTick;
 
         var totalCommand = new CanvasCommandList(session);
         using (var targetDrawingSession = totalCommand.CreateDrawingSession())
@@ -86,12 +90,12 @@ public class TextRenderingLyricLine : RenderingLyricLine
             var textCommandList = new CanvasCommandList(targetDrawingSession);
             using (var textDrawingSession = textCommandList.CreateDrawingSession())
             {
-                var opacity = _isFocusing ? 1 : 0.3f;
+                var opacity = _isFocusing ? 1 : context.Specs.DeselectedLineOpacity;
                 textDrawingSession.DrawImage(_layout.StaticPersistCache, 0, 0, _layout.SizePixelRect, opacity);
 
                 if (_isFocusing && (Tokens.Count > 0 || context.Effects.SimpleLineScanning))
                 {
-                    var frame = _progressResolver.Resolve(context.CurrentLyricTime, StartTime, EndTime, _layout);
+                    var frame = _progressResolver.Resolve(context.ProgressLyricTime, StartTime, EndTime, _layout);
                     _highlightEffectRenderer.Render(
                         textDrawingSession,
                         _layout,
@@ -113,57 +117,78 @@ public class TextRenderingLyricLine : RenderingLyricLine
             {
                 var highlightEffectBuilder = new CanvasImageBuilder(textCommandList);
                 highlightEffectBuilder
-                    .AddShadowEffect(6, _cachedShadowColor ?? _cachedFocusingColor)
-                    .AddOpacityEffect(0.4f);
+                    .AddShadowEffect(context.Specs.GlowRadius, _cachedShadowColor ?? _cachedFocusingColor)
+                    .AddOpacityEffect(context.Specs.GlowOpacity);
                 targetDrawingSession.DrawImage(highlightEffectBuilder.Build(), actualOffsetX, 0);
             }
 
             targetDrawingSession.DrawImage(textCommandList, actualOffsetX, 0);
         }
 
-        var gap = _isFocusing ? 0 : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex), 1, 250);
+        var gap = _isFocusing
+            ? 0f
+            : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex) * 1f, 1, context.Specs.MaxBlurRadius);
         var finalEffectBuilder = new CanvasImageBuilder(totalCommand);
 
         if (context.Effects.ScaleWhenFocusing)
         {
             var progress = 0f;
+            var scaleAnimationDuration = Math.Max(1, context.Specs.ScaleAnimationDurationMs);
             if (context.CurrentLyricTime - EndTime >= 0 &&
-                context.CurrentLyricTime - EndTime <= ScaleAnimationDuration)
+                context.CurrentLyricTime - EndTime <= scaleAnimationDuration)
             {
                 progress = 1 - (float)EaseFunction.Ease(Math.Clamp(
-                    (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1));
+                    (context.CurrentLyricTime - EndTime) * 1.0f / scaleAnimationDuration, 0, 1));
             }
             else if (_isFocusing && context.CurrentLyricTime - StartTime >= 0)
             {
+                var scaleEnterAnimationDuration = Math.Max(1, context.Specs.ScaleEnterAnimationDurationMs);
                 progress = (float)_elasticEase.Ease(Math.Clamp(
-                    (context.CurrentLyricTime - StartTime) * 1.0f / 1000, 0, 1));
+                    (context.CurrentLyricTime - StartTime) * 1.0f / scaleEnterAnimationDuration, 0, 1));
             }
 
-            var scaling = 0.8F + progress * 0.2F;
+            var scaling = context.Specs.DeselectedScale +
+                          progress * (context.Specs.SelectedScale - context.Specs.DeselectedScale);
+            if (isPressed)
+            {
+                scaling *= context.Specs.TouchDownScale;
+            }
+
             finalEffectBuilder
                 .AddTransform2DEffect(GetCenterMatrix(0, 0, actualOffsetX + _layout.ScalingCenterX,
                     (float)_layout.TextLayout.LayoutBounds.Height / 2, scaling, scaling))
-                .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f, 0, 1));
+                .AddOpacityEffect(Math.Clamp(context.Specs.MinimumScaleOpacity +
+                                             progress * (1 - context.Specs.MinimumScaleOpacity), 0, 1));
         }
 
         if (context.Effects.Blur && !_isFocusing && !context.IsScrolling)
         {
-            finalEffectBuilder.AddGaussianBlurEffect(Math.Clamp(gap, 0, 250));
+            finalEffectBuilder.AddGaussianBlurEffect(Math.Clamp(
+                gap * context.Specs.BlurRadiusPerLine,
+                0,
+                context.Specs.MaxBlurRadius));
         }
 
         var setting = Ioc.Default.GetRequiredService<Setting>();
         if (setting.lyricRenderFade && !context.IsScrolling)
         {
+            var fadeDistance = Math.Max(0.1f, context.Specs.FadeDistanceBase - (setting.lyricFadingRatio / 10f));
             finalEffectBuilder.AddOpacityEffect(1 -
-                Math.Clamp(gap / (10f - (setting.lyricFadingRatio / 10f)), 0, 0.9f));
+                Math.Clamp(gap / fadeDistance,
+                    0f,
+                    context.Specs.MaxFadeOpacityLoss));
         }
 
         session.DrawImage(finalEffectBuilder.Build(), 0, drawingTop);
         if (_reactionState == ReactionState.Enter && !string.IsNullOrEmpty(_layout.Text))
         {
-            session.FillRoundedRectangle(offset.X, offset.Y,
-                RenderingWidth + 2, RenderingHeight + 8, 6, 6,
-                Color.FromArgb(10, 255, 255, 255));
+            var margin = context.Specs.HighlightMargin;
+            var alpha = (byte)Math.Clamp(context.Specs.HighlightBackgroundAlpha * 255, 0, 255);
+            session.FillRoundedRectangle(offset.X - margin / 2, offset.Y - margin / 2,
+                RenderingWidth + context.Specs.HoverHighlightExtraWidth + margin,
+                RenderingHeight + context.Specs.HoverHighlightExtraHeight + margin,
+                context.Specs.HighlightCornerRadius, context.Specs.HighlightCornerRadius,
+                Color.FromArgb(alpha, 255, 255, 255));
         }
 
         if (context.Debug)
@@ -178,8 +203,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
 
     public override void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
     {
-        _isFocusing = context.CurrentKeyframe >= StartTime && context.CurrentKeyframe < EndTime;
-        Hidden = HiddenOnBlur && !_isFocusing;
+        RefreshTimeState(context);
 
         if (_canvasWidth == 0.0f) return;
         if (_layout is null)
@@ -220,8 +244,8 @@ public class TextRenderingLyricLine : RenderingLyricLine
             Translation = Translation,
             Transliteration = Transliteration,
             HiddenOnBlur = HiddenOnBlur,
-            TextPadding = TextPadding,
-            LiftAmount = LiftAmount,
+            TextPadding = context.Specs.TextPadding,
+            LiftAmount = context.Specs.SyllableLift,
             FocusingColor = _cachedFocusingColor,
             CanvasHeight = _canvasHeight,
             Alignment = _cachedAlignment,
@@ -233,6 +257,40 @@ public class TextRenderingLyricLine : RenderingLyricLine
 
         RenderingHeight = _layout.RenderingHeight;
         RenderingWidth = _layout.RenderingWidth;
+    }
+
+    public override void RefreshTimeState(RenderContext context)
+    {
+        _isFocusing = IsSelectedAtCurrentTime(context);
+        Hidden = HiddenOnBlur && !_isFocusing;
+    }
+
+    private bool IsSelectedAtCurrentTime(RenderContext context)
+    {
+        var time = context.CurrentLyricTime;
+        if (context.Specs.MaxSelectedLines <= 1)
+        {
+            return time >= StartTime && time < EndTime;
+        }
+
+        var enterStart = StartTime - context.Specs.AnimationHeadstartMs;
+        var finishEnd = EndTime + context.Specs.LineFinishProgressAnimationDurationMs;
+        if (time < enterStart || time > finishEnd)
+        {
+            return false;
+        }
+
+        if (time >= StartTime + context.Specs.LineDelayMs && time < EndTime)
+        {
+            return true;
+        }
+
+        if (time >= EndTime && Id < context.CurrentLyricLineIndex)
+        {
+            return context.CurrentLyricLineIndex - Id < context.Specs.MaxSelectedLines;
+        }
+
+        return time >= enterStart && Id == context.CurrentLyricLineIndex;
     }
 
     public static Matrix3x2 GetCenterMatrix(float x, float y, float xCenter, float yCenter, float xScale, float yScale)

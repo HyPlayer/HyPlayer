@@ -17,8 +17,17 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
 {
     public LyricTextLayoutSnapshot CreateLayout(LyricTextLayoutRequest request)
     {
+        var hiddenScale = request.Context.Specs.HiddenOnBlurFontScale;
+        var lyricFontSize = request.HiddenOnBlur ? request.LyricFontSize * hiddenScale : request.LyricFontSize;
+        var transliterationFontSize = request.HiddenOnBlur
+            ? request.TransliterationFontSize * hiddenScale
+            : request.TransliterationFontSize;
+        var translationFontSize = request.HiddenOnBlur
+            ? request.TranslationFontSize * hiddenScale
+            : request.TranslationFontSize;
+
         using var textFormat = CreateTextFormat(
-            request.HiddenOnBlur ? request.LyricFontSize / 2 : request.LyricFontSize,
+            lyricFontSize,
             request.Alignment,
             request.FontFamily,
             request.HiddenOnBlur ? FontWeights.Normal : FontWeights.SemiBold,
@@ -39,7 +48,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             request.Context.EnableTransliteration)
         {
             using var transliterationFormat = CreateTextFormat(
-                request.HiddenOnBlur ? request.TransliterationFontSize / 2 : request.TransliterationFontSize,
+                transliterationFontSize,
                 request.Alignment,
                 request.FontFamily,
                 FontWeights.Normal,
@@ -50,13 +59,13 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                 transliterationFormat,
                 requestedWidth,
                 request.CanvasHeight);
-            additionalHeight += 10;
+            additionalHeight += request.Context.Specs.TransliterationSpacing;
         }
 
         if (!string.IsNullOrWhiteSpace(request.Translation) && request.Context.EnableTranslation)
         {
             using var translationFormat = CreateTextFormat(
-                request.HiddenOnBlur ? request.TranslationFontSize / 2 : request.TranslationFontSize,
+                translationFontSize,
                 request.Alignment,
                 request.FontFamily,
                 FontWeights.Normal,
@@ -90,7 +99,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         var renderEndX = GetContentRight(textLayout, transliterationLayout, translationLayout);
         var drawOffsetX = -renderStartX + request.TextPadding;
         var scalingCenterX = GetScalingCenterX(textLayout, renderStartX, request.TextPadding, request.Alignment);
-        var drawingOffsetY = (request.HiddenOnBlur ? request.LyricFontSize / 2 : request.LyricFontSize) / 8f;
+        var drawingOffsetY = lyricFontSize / 8f;
         var renderingHeight = (float)textLayout.LayoutBounds.Height + drawingOffsetY + additionalHeight;
         var renderingWidth = Math.Max(1, renderEndX - renderStartX + request.TextPadding * 2);
         var useDynamicTransliteration = hasTokenTransliteration && transliterationLayout is not null;

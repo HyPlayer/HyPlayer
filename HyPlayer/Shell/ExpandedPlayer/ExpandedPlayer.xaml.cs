@@ -18,6 +18,7 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.LyricRenderer;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
@@ -201,6 +202,7 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         _lyricBox.OnBeforeRender += _lyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked += _lyricBoxOnOnRequestSeek;
+        _lyricBox.Context.Specs = LyricRenderSpecs.FromPreset(_settings.lyricRenderSpecPreset);
         _lyricBox.Context.LyricWidthRatio = _settings.lyricRenderWidthRatio / 100f;
         _lyricBox.Context.LyricPaddingTopRatio = _settings.lyricPaddingTopRatio / 100f;
         _lyricBox.Context.CurrentLyricTime = 0;
@@ -213,6 +215,7 @@ public sealed partial class ExpandedPlayer : Page
             RollingCalculator.LyricifyRollingCalculator => new LyricifyRollingCalculator(),
             RollingCalculator.SyncRollingCalculator => new SyncRollingCalculator(),
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
+            RollingCalculator.SpecAwareRollingCalculator => new SpecAwareRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         _lyricBox.Context.Effects.ScaleWhenFocusing = _settings.lyricRenderScaleWhenFocusing;

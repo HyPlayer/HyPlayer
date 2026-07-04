@@ -74,12 +74,19 @@
         SinRollingCalculator = 1,
         LyricifyRollingCalculator = 2,
         SyncRollingCalculator = 3,
-        CircleEaseRollingCalculator = 4
+        CircleEaseRollingCalculator = 4,
+        SpecAwareRollingCalculator = 5
     }
 
     public enum LyricScanStyle : int
     {
         RectReveal = 0,
         TokenOpacity = 1
+    }
+
+    public enum LyricRenderSpecPreset : int
+    {
+        Modern = 0,
+        Legacy = 1
     }
 }

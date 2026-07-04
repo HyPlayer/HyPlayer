@@ -16,6 +16,11 @@ public sealed class TokenOpacityGlyphEffect : ILyricGlyphEffect
         }
 
         var progress = TokenGlyphProgress.GetHighlightProgress(context.Cluster, context.Frame);
-        state.Opacity = Math.Clamp(0.3f + 0.7f * progress, 0.3f, 1f);
+        var minOpacity = context.RenderContext.Specs.TokenMinOpacity;
+        var maxOpacity = context.RenderContext.Specs.TokenMaxOpacity;
+        state.Opacity = Math.Clamp(
+            minOpacity + (maxOpacity - minOpacity) * progress,
+            minOpacity,
+            maxOpacity);
     }
 }

@@ -39,6 +39,11 @@ public class RenderContext
     public long CurrentLyricTime { get; set; }
 
     /// <summary>
+    /// 扫词进度使用的歌词时间, 可在点击跳转后短暂冻结.
+    /// </summary>
+    public long ProgressLyricTime { get; set; }
+
+    /// <summary>
     /// 渲染时间刻 单位微秒
     /// 精细动画时使用
     /// </summary>
@@ -118,6 +123,11 @@ public class RenderContext
     /// 特殊效果设置
     /// </summary>
     public RenderEffects Effects { get; set; } = new();
+
+    /// <summary>
+    /// 歌词渲染手感参数.
+    /// </summary>
+    public LyricRenderSpecs Specs { get; set; } = LyricRenderSpecs.Modern;
 
     /// <summary>
     /// 行间距

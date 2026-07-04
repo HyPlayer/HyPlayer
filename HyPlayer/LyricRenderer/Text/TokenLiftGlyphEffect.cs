@@ -4,8 +4,6 @@ namespace HyPlayer.LyricRenderer.Text;
 
 public sealed class TokenLiftGlyphEffect : ILyricGlyphEffect
 {
-    private const float LiftAmount = 3;
-
     public void Apply(LyricGlyphEffectContext context, ref LyricGlyphDrawState state)
     {
         if (context.Cluster.Layer == LyricTextLayer.Transliteration &&
@@ -14,6 +12,12 @@ public sealed class TokenLiftGlyphEffect : ILyricGlyphEffect
             return;
         }
 
-        state.Origin.Y -= LiftAmount * TokenGlyphProgress.GetLiftProgress(context.Cluster, context.Frame);
+        state.Origin.Y -= context.RenderContext.Specs.SyllableLift *
+                          TokenGlyphProgress.GetLiftProgress(
+                              context.Cluster,
+                              context.Frame,
+                              context.RenderContext.Specs.ShortTokenLiftDurationThresholdMs,
+                              context.RenderContext.Specs.CooperativeLiftWindow,
+                              context.RenderContext.Specs.CooperativeLiftEasingPower);
     }
 }

@@ -25,6 +25,11 @@ public abstract class RenderingLyricLine
     public abstract void OnKeyFrame(CanvasDrawingSession session, RenderContext context);
     public abstract void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context);
     public abstract void OnTypographyChanged(CanvasDrawingSession session, RenderContext context);
+
+    public virtual void RefreshTimeState(RenderContext context)
+    {
+    }
+
     public T TypographySelector<T>(Func<RenderTypography?, T?> expression, RenderContext context)
     {
         return (expression(Typography) ??

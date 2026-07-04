@@ -363,6 +363,12 @@
                                     <FontIcon Glyph="&#xE794;" />
                                 </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Items>
+                                    <controls3:SettingsCard Header="歌词渲染风格">
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderSpecPreset, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                            <ComboBoxItem Content="现代歌词效果" />
+                                            <ComboBoxItem Content="经典 HyPlayer 效果" />
+                                        </ComboBox>
+                                    </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="焦点歌词增加整体辉光">
                                         <ToggleSwitch
                                             MinWidth="10"
@@ -419,6 +425,7 @@
                                             <ComboBoxItem Content="Lyricify 函数" />
                                             <ComboBoxItem Content="同步线性函数" />
                                             <ComboBoxItem Content="CircleEase" />
+                                            <ComboBoxItem Content="现代阻尼函数" />
                                         </ComboBox>
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>

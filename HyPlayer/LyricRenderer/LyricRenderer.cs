@@ -34,6 +34,8 @@ namespace HyPlayer.LyricRenderer
         private bool _pointerPressed;
         private bool _jumpedLyrics = false;
         private double? _lastPointerPressedYValue;
+        private long _progressFreezeUntilTick;
+        private long _frozenProgressLyricTime;
 
         public bool EnableTranslation
         {
@@ -201,6 +203,7 @@ namespace HyPlayer.LyricRenderer
             for (var i = Context.CurrentLyricLineIndex; i < Context.LyricLines.Count; i++)
             {
                 var currentLine = Context.LyricLines[i];
+                currentLine.RefreshTimeState(Context);
                 if (currentLine.Hidden || Context.CurrentKeyframe == 0)
                 {
                     Context.RenderOffsets[currentLine.Id].Y = theoryRenderAfterPosition;
@@ -249,6 +252,7 @@ namespace HyPlayer.LyricRenderer
             for (var i = Context.CurrentLyricLineIndex - 1; i >= 0; i--)
             {
                 var currentLine = Context.LyricLines[i];
+                currentLine.RefreshTimeState(Context);
                 if (currentLine.Hidden || Context.CurrentKeyframe == 0)
                 {
                     Context.RenderOffsets[currentLine.Id].Y = renderedBeforeStartPosition;
@@ -311,7 +315,13 @@ namespace HyPlayer.LyricRenderer
             {
                 Context.RenderTick = timing.TotalTime.Ticks;
                 if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return;
+                Context.ProgressLyricTime = Context.RenderTick <= _progressFreezeUntilTick
+                    ? _frozenProgressLyricTime
+                    : Context.CurrentLyricTime;
                 OnBeforeRender?.Invoke(this);
+                Context.ProgressLyricTime = Context.RenderTick <= _progressFreezeUntilTick
+                    ? _frozenProgressLyricTime
+                    : Context.CurrentLyricTime;
                 // 鼠标滚轮时间 5 s 清零
                 if ((Context.ScrollingDelta != 0 || (Context.IsScrolling && !_pointerPressed)) &&
                     Context.RenderTick - _lastWheelTime > 50000000 && Context.IsPlaying || Context.IsSeek)
@@ -563,6 +573,7 @@ namespace HyPlayer.LyricRenderer
                 {
                     Context.LyricLines[renderOffsetsKey].GoToReactionState(ReactionState.Press, Context);
                     OnLyricLineClicked?.Invoke(Context.LyricLines[renderOffsetsKey]);
+                    FreezeProgressForTap();
                     _jumpedLyrics = true;
                     break;
                 }
@@ -575,6 +586,14 @@ namespace HyPlayer.LyricRenderer
         private void LyricView_Tapped(object sender, TappedRoutedEventArgs e)
         {
             _jumpedLyrics = false;
+        }
+
+        private void FreezeProgressForTap()
+        {
+            if (Context.Specs.TapProgressFreezeDurationMs <= 0) return;
+            _frozenProgressLyricTime = Context.CurrentLyricTime;
+            _progressFreezeUntilTick = Context.RenderTick +
+                                       Context.Specs.TapProgressFreezeDurationMs * TimeSpan.TicksPerMillisecond;
         }
     }
 }
