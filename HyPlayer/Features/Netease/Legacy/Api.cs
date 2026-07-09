@@ -1,6 +1,7 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
@@ -125,7 +126,7 @@ internal class Api
             : randomSongId;
         try
         {
-            var songs = await GetIntelligenceSongsAsync(itemProvider, specialTypeIds, seedSong, cancellationToken);
+            var songs = await GetIntelligenceSongsAsync(itemProvider, specialTypeIds, seedPlaylist.ActualId, seedSong, cancellationToken);
             if (songs.Count == 0)
             {
                 notification.ShowMessage("无法进入心动模式", "没有获取到推荐歌曲");
@@ -152,13 +153,15 @@ internal class Api
     private static async Task<List<SingleSongBase>> GetIntelligenceSongsAsync(
         IProvidableItemProvidable itemProvider,
         IProviderSpecialContainerTypeIds specialTypeIds,
+        string playlistId,
         string seedSong,
         CancellationToken cancellationToken)
     {
         if (!specialTypeIds.SpecialContainerTypeIds.TryGetValue(SpecialContainerType.ContextRecommendation, out var typeId))
             return [];
 
-        return await itemProvider.GetProvidableItemByIdAsync(typeId + seedSong, cancellationToken) is LinerContainerBase container
+        var contextRecommendationId = NeteaseContextRecommendationContainer.CreateActualId(playlistId, seedSong);
+        return await itemProvider.GetProvidableItemByIdAsync(typeId + contextRecommendationId, cancellationToken) is LinerContainerBase container
             ? (await container.GetAllItemsAsync(cancellationToken)).OfType<SingleSongBase>().ToList()
             : [];
     }
