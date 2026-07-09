@@ -5,8 +5,27 @@ using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Settings;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.Shell.Playback;
+using HyPlayer.Shell.Services;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
 using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
@@ -135,7 +154,7 @@ public sealed partial class CompactPlayerPage : Page
         RunOnUIThread(() =>
         {
             PlayStateIcon.Glyph =
-                _player.GlobalPlaybackStatus == PlaybackStatus.Playing
+                _state.IsPlaying
                     ? "\uF8AE" :
                     "\uF5B0";
         });
@@ -201,7 +220,7 @@ public sealed partial class CompactPlayerPage : Page
         {
             IconLiked.Foreground = isLiked
                 ? new SolidColorBrush(Colors.Red)
-                : Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
+                : Windows.UI.Xaml.Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
             IconLiked.Glyph = isLiked
                 ? "\uE00B"
                 : "\uE006";
@@ -322,7 +341,7 @@ public sealed partial class CompactPlayerPage : Page
             {
                 IconLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
+                    : Windows.UI.Xaml.Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
                 IconLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";

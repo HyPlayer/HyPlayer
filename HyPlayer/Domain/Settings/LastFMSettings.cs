@@ -1,4 +1,4 @@
-using HyPlayer.Infrastructure.Serialization;
+using HyPlayer.Platform.Serialization;
 using LiteFM.Abstractions;
 using System.Text.Json;
 using Windows.Storage;

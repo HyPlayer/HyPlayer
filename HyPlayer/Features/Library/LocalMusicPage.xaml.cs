@@ -1,14 +1,34 @@
-﻿#region
+#region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Downloads;
-using HyPlayer.Infrastructure.Netease;
+using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback.LocalProvider;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.Shell.Playback;
+using HyPlayer.Shell.Services;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
+using HyPlayer.Platform.Playback.LocalProvider;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -93,7 +113,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private async void Playall_Click(object sender, RoutedEventArgs e)
     {
-        await _playCore.StopAsync();
+        await _control.StopAsync();
         await _playCore.RemoveAllSongAsync();
         await _playCore.InsertSongRangeAsync(localHyItems.Cast<SingleSongBase>().ToList());
         if (localHyItems.Count > 0)
@@ -177,7 +197,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private async void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
-        await _playCore.StopAsync();
+        await _control.StopAsync();
         await _playCore.RemoveAllSongAsync();
         await _playCore.InsertSongRangeAsync(localHyItems.Cast<SingleSongBase>().ToList());
         if (ListBoxLocalMusicContainer.SelectedItem is LocalSong selectedItem)

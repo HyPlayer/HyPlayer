@@ -6,7 +6,7 @@
     xmlns:controls2="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls3="using:CommunityToolkit.WinUI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hyplayer="using:HyPlayer.Infrastructure.Extensions"
+    xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">

@@ -1,8 +1,6 @@
 using ALRC.Abstraction;
 using ALRC.Converters;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Lyrics.LyricEnhancers;
-using HyPlayer.Domain.Settings;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
@@ -25,11 +23,14 @@ public static class LrcConverter
         new SublineAlignmentEnhancer(),
     ];
 
-    public static List<RenderingLyricLine> Convert(ALRCFile alrc, List<LyricInfoMetadata> lyricMetadata = null,
-        List<LyricInfoMetadata> songMetadata = null)
+    public static List<RenderingLyricLine> Convert(
+        ALRCFile alrc,
+        List<LyricInfoMetadata> lyricMetadata = null,
+        List<LyricInfoMetadata> songMetadata = null,
+        bool optimizeLyric = false)
     {
         var result = new List<RenderingLyricLine>();
-        if (Ioc.Default.GetRequiredService<Setting>().OptimizeLyric)
+        if (optimizeLyric)
             foreach (var lyricEnhancer in LyricEnhancers)
             {
                 alrc = lyricEnhancer.Enhance(true, alrc);

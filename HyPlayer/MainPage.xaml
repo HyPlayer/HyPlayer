@@ -5,7 +5,7 @@
     xmlns:controls2="using:HyPlayer.UI.Playback.PlayBar"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyPlayerPage="using:HyPlayer.Shell"
-    xmlns:hyplayer="using:HyPlayer.Infrastructure.Extensions"
+    xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"

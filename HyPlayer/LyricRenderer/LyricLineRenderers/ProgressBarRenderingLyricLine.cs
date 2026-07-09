@@ -47,13 +47,13 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         {
             var surplus = (float)(context.CurrentLyricTime - StartTime) / EnterAnimationDuration;
             var prog = AnimationEaseFunction.Ease(Math.Clamp(surplus, 0, 1));
-            var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width * prog, Height), 4, 4);
+            using var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width * prog, Height), 4, 4);
             session.FillGeometry(geometry, actualX, actualY, _baseGradientBrush);
             return true;
         }
         else if (remain > LeaveAnimationDuration)
         {
-            var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width, Height), 4, 4);
+            using var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width, Height), 4, 4);
             session.FillGeometry(geometry, actualX, actualY, _baseGradientBrush);
         }
 
@@ -77,7 +77,8 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
             geometryFill = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width * progress, Height), 4, 4);
         }
 
-        var cl = new CanvasCommandList(session);
+        using var geometryFillToDispose = geometryFill;
+        using var cl = new CanvasCommandList(session);
         using (var clds = cl.CreateDrawingSession())
         {
             clds.FillGeometry(geometryFill, actualX, actualY, focusingColor);
@@ -134,5 +135,11 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
         // ignore
+    }
+
+    public override void Dispose()
+    {
+        _baseGradientBrush?.Dispose();
+        _baseGradientBrush = null;
     }
 }

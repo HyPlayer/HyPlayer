@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <Page
     x:Class="HyPlayer.Features.Home.HomePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -8,7 +8,7 @@
     xmlns:communityBehaviors="using:CommunityToolkit.WinUI.Behaviors"
     xmlns:controls="using:HyPlayer.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hyplayer="using:HyPlayer.Infrastructure.Extensions"
+    xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:lists="using:HyPlayer.UI.Lists"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"

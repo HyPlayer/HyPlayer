@@ -1,6 +1,6 @@
 using HyPlayer.Domain;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Services.Playback;
+using HyPlayer.Features.Playback.Services;
 using System;
 using Windows.UI;
 using Windows.UI.Xaml.Media;

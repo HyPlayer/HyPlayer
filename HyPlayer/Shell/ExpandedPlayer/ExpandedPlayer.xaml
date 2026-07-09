@@ -7,7 +7,7 @@
     xmlns:controls1="using:HyPlayer.UI.Controls"
     xmlns:alignableWrapPanel="using:HyPlayer.UI.Controls.AlignableWrapPanel"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:hyplayer="using:HyPlayer.Infrastructure.Extensions"
+    xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:CommunityToolkit.WinUI"

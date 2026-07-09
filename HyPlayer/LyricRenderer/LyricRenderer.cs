@@ -112,6 +112,7 @@ namespace HyPlayer.LyricRenderer
         public void SetLyricLines(List<RenderingLyricLine> lines)
         {
             _initializing = true;
+            Clear();
             Context.LyricLines.Clear();
             Context.LyricLines.AddRange(lines);
             _keyFrameRendered.Clear();
@@ -162,6 +163,29 @@ namespace HyPlayer.LyricRenderer
 
             _isTypographyChanged = true;
             _initializing = false;
+        }
+
+        public void Clear()
+        {
+            foreach (var line in Context.LyricLines)
+            {
+                line.Dispose();
+            }
+
+            Context.LyricLines.Clear();
+            Context.RenderingLyricLines.Clear();
+            Context.RenderOffsets.Clear();
+            Context.SnapshotRenderOffsets.Clear();
+            _keyFrameRendered.Clear();
+            _targetingKeyFrames.Clear();
+            Context.CurrentLyricLine = default!;
+            Context.CurrentLyricLineIndex = 0;
+            Context.PointerFocusingIndex = -1;
+            Context.ScrollingDelta = 0;
+            Context.IsScrolling = false;
+            _needRecalculate = false;
+            _needRecalculateSize = false;
+            _isTypographyChanged = true;
         }
 
         private void RecalculateItemsSize(CanvasDrawingSession session)

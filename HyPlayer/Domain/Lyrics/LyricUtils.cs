@@ -1,9 +1,7 @@
 using ALRC.Abstraction;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Lyrics.LyricParser.Implementation;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Services.Abstractions;
 using Kawazu;
 using System;
 using System.Collections.Generic;
@@ -14,6 +12,11 @@ namespace HyPlayer.Domain.Lyrics;
 
 public static class Utils
 {
+    public readonly record struct LyricConversionOptions(
+        bool MigrateLyrics,
+        RomajiSource RomajiSource,
+        KawazuConverter? KawazuConverter);
+
     public static List<SongLyric> ConvertPureLyric(string lyricAllText)
     {
         if (string.IsNullOrWhiteSpace(lyricAllText))
@@ -39,7 +42,7 @@ public static class Utils
             }
     }
 
-    public static void ConvertYrcTranslation(KaraokLyricInfo lyricInfo, List<SongLyric> lyrics)
+    public static void ConvertYrcTranslation(KaraokLyricInfo lyricInfo, List<SongLyric> lyrics, bool migrateLyrics = false)
     {
         if (lyrics.Count == 0)
             return;
@@ -51,7 +54,7 @@ public static class Utils
         }
 
         var targetLyrics = LrcParser.ParseLrc(lyricInfo.YrTrLyrics.AsSpan());
-        if (Ioc.Default.GetRequiredService<Setting>().MigrateLyrics && !string.IsNullOrWhiteSpace(lyricInfo.TrLyrics))
+        if (migrateLyrics && !string.IsNullOrWhiteSpace(lyricInfo.TrLyrics))
         {
             var sourceLyrics = LrcParser.ParseLrc(lyricInfo.TrLyrics.AsSpan());
             var migrated = MigrationTool.Migrate(targetLyrics, sourceLyrics);
@@ -59,7 +62,7 @@ public static class Utils
             {
                 foreach (var lyric in lyrics.Where(t =>
                              t.LyricLine.StartTime == lyricsLine.StartTime ||
-                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime))
                 {
                     lyric.Translation = lyricsLine.CurrentLyric;
                     break;
@@ -72,7 +75,7 @@ public static class Utils
             {
                 foreach (var lyric in lyrics.Where(t =>
                              t.LyricLine.StartTime == lyricsLine.StartTime ||
-                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime))
                 {
                     lyric.Translation = lyricsLine.CurrentLyric;
                     break;
@@ -95,7 +98,7 @@ public static class Utils
             }
     }
 
-    public static void ConvertYrcNeteaseRomaji(KaraokLyricInfo lyricInfo, List<SongLyric> lyrics)
+    public static void ConvertYrcNeteaseRomaji(KaraokLyricInfo lyricInfo, List<SongLyric> lyrics, bool migrateLyrics = false)
     {
         if (lyrics.Count == 0)
             return;
@@ -107,7 +110,7 @@ public static class Utils
         }
 
         var targetLyrics = LrcParser.ParseLrc(lyricInfo.YrNeteaseRomaji.AsSpan());
-        if (Ioc.Default.GetRequiredService<Setting>().MigrateLyrics && !string.IsNullOrWhiteSpace(lyricInfo.NeteaseRomaji))
+        if (migrateLyrics && !string.IsNullOrWhiteSpace(lyricInfo.NeteaseRomaji))
         {
             var sourceLyrics = LrcParser.ParseLrc(lyricInfo.NeteaseRomaji.AsSpan());
             var migrated = MigrationTool.Migrate(targetLyrics, sourceLyrics);
@@ -115,7 +118,7 @@ public static class Utils
             {
                 foreach (var lyric in lyrics.Where(t =>
                              t.LyricLine.StartTime == lyricsLine.StartTime ||
-                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime))
                 {
                     lyric.Romaji = lyricsLine.CurrentLyric;
                     break;
@@ -128,7 +131,7 @@ public static class Utils
             {
                 foreach (var lyric in lyrics.Where(t =>
                              t.LyricLine.StartTime == lyricsLine.StartTime ||
-                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime))
                 {
                     lyric.Romaji = lyricsLine.CurrentLyric;
                     break;
@@ -137,9 +140,8 @@ public static class Utils
         }
     }
 
-    public static async Task ConvertKawazuRomaji(List<SongLyric> lyrics)
+    public static async Task ConvertKawazuRomaji(List<SongLyric> lyrics, KawazuConverter? kawazu)
     {
-        var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>().Converter;
         if (kawazu is null) return;
         foreach (var lyricItem in lyrics)
         {
@@ -205,33 +207,36 @@ public static class Utils
         }
     }
 
-    public static async Task ConvertRomaji(PureLyricInfo pureLyricInfo, List<SongLyric> lyrics)
+    public static async Task ConvertRomaji(
+        PureLyricInfo pureLyricInfo,
+        List<SongLyric> lyrics,
+        LyricConversionOptions options)
     {
-        switch (Ioc.Default.GetRequiredService<Setting>().LyricRomajiSource)
+        switch (options.RomajiSource)
         {
             case RomajiSource.None:
                 break;
             case RomajiSource.AutoSelect:
                 if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji))
                     if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo)
-                        ConvertYrcNeteaseRomaji(karaokLyricInfo, lyrics);
+                        ConvertYrcNeteaseRomaji(karaokLyricInfo, lyrics, options.MigrateLyrics);
                     else ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
                 else
-                    await ConvertKawazuRomaji(lyrics);
+                    await ConvertKawazuRomaji(lyrics, options.KawazuConverter);
                 break;
             case RomajiSource.NeteaseOnly:
                 if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji))
                     if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo)
-                        ConvertYrcNeteaseRomaji(karaokLyricInfo, lyrics);
+                        ConvertYrcNeteaseRomaji(karaokLyricInfo, lyrics, options.MigrateLyrics);
                     else ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
                 break;
             case RomajiSource.KawazuOnly:
-                await ConvertKawazuRomaji(lyrics);
+                await ConvertKawazuRomaji(lyrics, options.KawazuConverter);
                 break;
         }
     }
 
-    public static List<SongLyric> ConvertKaraok(PureLyricInfo pureLyricInfo)
+    public static List<SongLyric> ConvertKaraok(PureLyricInfo pureLyricInfo, bool migrateLyrics = false)
     {
         if (pureLyricInfo is not KaraokLyricInfo karaokLyricInfo ||
             string.IsNullOrWhiteSpace(karaokLyricInfo.KaraokLyric))
@@ -240,8 +245,7 @@ public static class Utils
         try
         {
             var parsedLyrics = KaraokeParser.ParseKaraoke(karaokLyricInfo.KaraokLyric.AsSpan());
-            if (Ioc.Default.GetRequiredService<Setting>().MigrateLyrics &&
-                !string.IsNullOrWhiteSpace(pureLyricInfo.PureLyrics))
+            if (migrateLyrics && !string.IsNullOrWhiteSpace(pureLyricInfo.PureLyrics))
             {
                 var pureLyrics = LrcParser.ParseLrc(pureLyricInfo.PureLyrics.AsSpan());
                 var migrated = MigrationTool.Migrate(parsedLyrics, pureLyrics);

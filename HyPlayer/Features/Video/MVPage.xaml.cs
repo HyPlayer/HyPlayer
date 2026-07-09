@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Comments;
@@ -8,7 +8,27 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Services.Abstractions;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.Shell.Playback;
+using HyPlayer.Shell.Services;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
 using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
@@ -41,10 +61,15 @@ public sealed partial class MVPage : Page
     private string mvquality = "1080";
     private string songid;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationTokenSource _videoLoadCancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _relateiveLoaderTask;
     private Task _videoLoaderTask;
     private Task _videoInfoLoaderTask;
+    private MediaSource _currentMediaSource;
+    private int _videoLoadVersion;
+    private bool _isUnloaded;
+    private bool _updatingQualitySelection;
 
     public MVPage()
     {
@@ -76,9 +101,12 @@ public sealed partial class MVPage : Page
 
     private void LoadThings()
     {
+        if (_isUnloaded) return;
+
         Ioc.Default.GetRequiredService<IPlaybackControlService>().Pause();
-        _videoLoaderTask = LoadVideo();
-        _videoInfoLoaderTask = LoadVideoInfo();
+        var token = ResetVideoLoad(out var loadVersion);
+        _videoLoaderTask = LoadVideo(loadVersion, token);
+        _videoInfoLoaderTask = LoadVideoInfo(loadVersion, token);
         LoadComment();
     }
 
@@ -107,12 +135,14 @@ public sealed partial class MVPage : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        MediaPlayerElement.MediaPlayer?.Pause();
+        _isUnloaded = true;
+        _cancellationTokenSource.Cancel();
+        _videoLoadCancellationTokenSource.Cancel();
+        ReleaseCurrentMediaSource();
         if (_relateiveLoaderTask != null && !_relateiveLoaderTask.IsCompleted)
         {
             try
             {
-                _cancellationTokenSource.Cancel();
                 await _relateiveLoaderTask;
             }
             catch
@@ -124,7 +154,6 @@ public sealed partial class MVPage : Page
         {
             try
             {
-                _cancellationTokenSource.Cancel();
                 await _videoLoaderTask;
             }
             catch
@@ -136,7 +165,6 @@ public sealed partial class MVPage : Page
         {
             try
             {
-                _cancellationTokenSource.Cancel();
                 await _videoInfoLoaderTask;
             }
             catch
@@ -144,102 +172,167 @@ public sealed partial class MVPage : Page
             }
         }
 
-        MediaPlayerElement.Source = null;
         _cancellationTokenSource?.Dispose();
+        _videoLoadCancellationTokenSource?.Dispose();
     }
 
-    private async Task LoadVideo()
+    private async Task LoadVideo(int loadVersion, CancellationToken cancellationToken)
     {
-
-        //纯MV
-        _cancellationToken.ThrowIfCancellationRequested();
-        LoadingControl.IsLoading = true;
-        var resource = await _richMediaProvider.GetRichMediaResourceAsync(
-            MVId,
-            GetRichMediaTypeId(),
-            mvquality,
-            _cancellationToken);
-        var resourceResult = resource is null ? null : await resource.GetResourceAsync(ctk: _cancellationToken);
-        if (resourceResult is not IResourceResultOf<Uri?> uriResource)
+        try
         {
-            _notification.ShowMessage("加载视频时出错", "视频资源为空");
-            return;
-        }
-
-        var uri = await uriResource.GetResourceAsync(_cancellationToken);
-        if (uri is null)
-        {
-            _notification.ShowMessage("加载视频时出错", "视频地址为空");
-            return;
-        }
-
-        MediaPlayerElement.Source = MediaSource.CreateFromUri(uri);
-        var mediaPlayer = MediaPlayerElement.MediaPlayer;
-        mediaPlayer.Play();
-        LoadingControl.IsLoading = false;
-    }
-
-    private async Task LoadVideoInfo()
-    {
-        _cancellationToken.ThrowIfCancellationRequested();
-        if (MvIdRegex().IsMatch(MVId))
-        {
-            var richMedia = await _richMediaProvider.GetRichMediaAsync(MVId, GetRichMediaTypeId(), _cancellationToken);
-            if (richMedia is null)
+            var mvId = MVId;
+            var quality = mvquality;
+            cancellationToken.ThrowIfCancellationRequested();
+            LoadingControl.IsLoading = true;
+            var resource = await _richMediaProvider.GetRichMediaResourceAsync(
+                mvId,
+                GetRichMediaTypeId(mvId),
+                quality,
+                cancellationToken);
+            var resourceResult = resource is null ? null : await resource.GetResourceAsync(ctk: cancellationToken);
+            if (resourceResult is not IResourceResultOf<Uri?> uriResource)
             {
-                _notification.ShowMessage("加载视频信息时出错", "视频信息为空");
+                if (!IsCurrentVideoLoad(loadVersion, cancellationToken)) return;
+                _notification.ShowMessage("加载视频时出错", "视频资源为空");
                 return;
             }
 
-            await DisplayRichMediaAsync(richMedia);
-        }
-        else
-        {
-            var richMedia = await _richMediaProvider.GetRichMediaAsync(MVId, GetRichMediaTypeId(), _cancellationToken);
-            if (richMedia is null)
+            var uri = await uriResource.GetResourceAsync(cancellationToken);
+            if (!IsCurrentVideoLoad(loadVersion, cancellationToken)) return;
+            if (uri is null)
             {
-                _notification.ShowMessage("加载视频信息时出错", "视频信息为空");
+                _notification.ShowMessage("加载视频时出错", "视频地址为空");
                 return;
             }
 
-            await DisplayRichMediaAsync(richMedia);
+            ReleaseCurrentMediaSource();
+            _currentMediaSource = MediaSource.CreateFromUri(uri);
+            MediaPlayerElement.Source = _currentMediaSource;
+            var mediaPlayer = MediaPlayerElement.MediaPlayer;
+            mediaPlayer.Play();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            if (IsCurrentVideoLoad(loadVersion, cancellationToken))
+                LoadingControl.IsLoading = false;
+        }
+    }
+
+    private async Task LoadVideoInfo(int loadVersion, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var mvId = MVId;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (MvIdRegex().IsMatch(mvId))
+            {
+                var richMedia = await _richMediaProvider.GetRichMediaAsync(mvId, GetRichMediaTypeId(mvId), cancellationToken);
+                if (!IsCurrentVideoLoad(loadVersion, cancellationToken)) return;
+                if (richMedia is null)
+                {
+                    _notification.ShowMessage("加载视频信息时出错", "视频信息为空");
+                    return;
+                }
+
+                await DisplayRichMediaAsync(richMedia, cancellationToken);
+            }
+            else
+            {
+                var richMedia = await _richMediaProvider.GetRichMediaAsync(mvId, GetRichMediaTypeId(mvId), cancellationToken);
+                if (!IsCurrentVideoLoad(loadVersion, cancellationToken)) return;
+                if (richMedia is null)
+                {
+                    _notification.ShowMessage("加载视频信息时出错", "视频信息为空");
+                    return;
+                }
+
+                await DisplayRichMediaAsync(richMedia, cancellationToken);
+            }
+        }
+        catch (OperationCanceledException)
+        {
         }
     }
 
     private void VideoQualityBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (_updatingQualitySelection)
+            return;
+
         mvquality = VideoQualityBox.SelectedItem?.ToString();
-        _videoLoaderTask = LoadVideo();
+        if (_isUnloaded || string.IsNullOrEmpty(MVId)) return;
+
+        var token = ResetVideoLoad(out var loadVersion);
+        _videoLoaderTask = LoadVideo(loadVersion, token);
     }
 
     private void RelativeList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        MVId = (RelativeList.SelectedItem as RichMediaCardViewModel)?.ActualId ?? string.Empty;
+        if (RelativeList.SelectedItem is not RichMediaCardViewModel item) return;
+
+        MVId = item.ActualId;
         LoadThings();
     }
 
     [GeneratedRegex("^[0-9]*$")]
     private static partial Regex MvIdRegex();
 
-    private string GetRichMediaTypeId()
+    private string GetRichMediaTypeId(string mvId)
     {
-        if (MvIdRegex().IsMatch(MVId) && _knownTypeIds.RichMediaTypeId is not null)
+        if (MvIdRegex().IsMatch(mvId) && _knownTypeIds.RichMediaTypeId is not null)
             return _knownTypeIds.RichMediaTypeId;
 
         return _searchCategoryTypeIds.ShortVideoSearchTypeId ?? _knownTypeIds.RichMediaTypeId ?? string.Empty;
     }
 
-    private async Task DisplayRichMediaAsync(RichMediaBase richMedia)
+    private async Task DisplayRichMediaAsync(RichMediaBase richMedia, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         TextBoxVideoName.Text = richMedia.Name;
         TextBoxSinger.Text = richMedia is IHasCreators creatorsProvider
-            ? string.Join(" / ", (await creatorsProvider.GetCreatorsAsync(_cancellationToken))?.Select(creator => creator.Name) ?? [])
+            ? string.Join(" / ", (await creatorsProvider.GetCreatorsAsync(cancellationToken))?.Select(creator => creator.Name) ?? [])
             : string.Empty;
         TextBoxDesc.Text = richMedia is IHasDescription descriptionProvider ? descriptionProvider.Description : string.Empty;
         TextBoxOtherInfo.Text = string.Empty;
-        if (!VideoQualityBox.Items.Contains(mvquality))
-            VideoQualityBox.Items.Add(mvquality);
-        VideoQualityBox.SelectedItem = mvquality;
+        _updatingQualitySelection = true;
+        try
+        {
+            if (!VideoQualityBox.Items.Contains(mvquality))
+                VideoQualityBox.Items.Add(mvquality);
+            VideoQualityBox.SelectedItem = mvquality;
+        }
+        finally
+        {
+            _updatingQualitySelection = false;
+        }
+    }
+
+    private CancellationToken ResetVideoLoad(out int loadVersion)
+    {
+        _videoLoadCancellationTokenSource.Cancel();
+        _videoLoadCancellationTokenSource.Dispose();
+        _videoLoadCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_cancellationToken);
+        loadVersion = ++_videoLoadVersion;
+        ReleaseCurrentMediaSource();
+        return _videoLoadCancellationTokenSource.Token;
+    }
+
+    private bool IsCurrentVideoLoad(int loadVersion, CancellationToken cancellationToken)
+    {
+        return !_isUnloaded
+               && loadVersion == _videoLoadVersion
+               && !cancellationToken.IsCancellationRequested;
+    }
+
+    private void ReleaseCurrentMediaSource()
+    {
+        MediaPlayerElement.MediaPlayer?.Pause();
+        MediaPlayerElement.Source = null;
+        (_currentMediaSource as IDisposable)?.Dispose();
+        _currentMediaSource = null;
     }
 
     private static async Task<RichMediaCardViewModel> MapRichMediaToCardAsync(RichMediaBase item)

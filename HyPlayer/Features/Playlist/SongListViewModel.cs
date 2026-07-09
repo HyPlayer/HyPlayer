@@ -7,22 +7,43 @@ using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
-using HyPlayer.Infrastructure.Imaging;
-using HyPlayer.Infrastructure.Netease;
+using HyPlayer.Platform.Imaging;
+using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Cache;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.Shell.Playback;
+using HyPlayer.Shell.Services;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
+using HyPlayer.Platform.Storage.Cache;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI;
-using ColorHelper = HyPlayer.Infrastructure.Imaging.ColorHelper;
+using ColorHelper = HyPlayer.Platform.Imaging.ColorHelper;
 
 namespace HyPlayer.Features.Playlist
 {
@@ -92,6 +113,8 @@ namespace HyPlayer.Features.Playlist
         private bool _loadedPlaylistDetail;
         private Task _loadAlbumImageTask;
         private string _loadedAlbumImageUrl;
+        private CancellationTokenSource? _albumImageCancellationTokenSource;
+        private bool _disposed;
 
         public Task LoadPageData(ContainerBase playlist)
         {
@@ -107,7 +130,7 @@ namespace HyPlayer.Features.Playlist
             if (playlistChanged)
             {
                 _playlistContainer = null;
-                _loadAlbumImageTask = null;
+                CancelAlbumImageLoad();
                 _loadedAlbumImageUrl = null;
                 _loadedPlaylistDetail = false;
                 _loadedDailyRecommend = false;
@@ -175,21 +198,25 @@ namespace HyPlayer.Features.Playlist
             return _userLibraryState.IsLikedSongsPlaylist(playlist.ActualId);
         }
 
-        public async Task LoadAlbumImage()
+        public async Task LoadAlbumImage(CancellationToken cancellationToken)
         {
             if (CoverUri is null) return;
-            using var result = await _httpClient.GetAsync(CoverUri);
+            using var result = await _httpClient.GetAsync(CoverUri, cancellationToken);
             if (result.IsSuccessStatusCode)
             {
-                using var stream = await result.Content.ReadAsStreamAsync();
+                using var stream = await result.Content.ReadAsStreamAsync(cancellationToken);
                 using var inputStream = stream.AsRandomAccessStream();
                 Color imageMainColor = await ColorHelper.ExtractThemeColorFromStream(inputStream);
+                cancellationToken.ThrowIfCancellationRequested();
                 AlbumColor = imageMainColor;
             }
         }
 
         private void StartAlbumImageLoad()
         {
+            if (_disposed)
+                return;
+
             var coverUrl = CoverUri?.ToString();
             if (string.Equals(_loadedAlbumImageUrl, coverUrl, StringComparison.Ordinal) &&
                 _loadAlbumImageTask is { IsCompleted: false })
@@ -199,13 +226,26 @@ namespace HyPlayer.Features.Playlist
                 _loadAlbumImageTask is { IsCompletedSuccessfully: true })
                 return;
 
+            CancelAlbumImageLoad();
             _loadedAlbumImageUrl = coverUrl;
-            _loadAlbumImageTask = LoadAlbumImage();
+            _albumImageCancellationTokenSource = new CancellationTokenSource();
+            _loadAlbumImageTask = LoadAlbumImage(_albumImageCancellationTokenSource.Token);
             _loadAlbumImageTask.SafeFireAndForget();
         }
 
         public void Dispose()
         {
+            if (_disposed) return;
+            _disposed = true;
+            CancelAlbumImageLoad();
+        }
+
+        private void CancelAlbumImageLoad()
+        {
+            _albumImageCancellationTokenSource?.Cancel();
+            _albumImageCancellationTokenSource?.Dispose();
+            _albumImageCancellationTokenSource = null;
+            _loadAlbumImageTask = null;
         }
 
         [RelayCommand]

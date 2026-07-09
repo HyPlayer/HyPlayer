@@ -7,15 +7,32 @@ using HyPlayer.Features.Album;
 using HyPlayer.Features.Artist;
 using HyPlayer.Features.Comments;
 using HyPlayer.Features.User;
-using HyPlayer.Infrastructure.Netease;
+using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Downloads;
-using HyPlayer.Services.History;
-using HyPlayer.Services.Playback;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.Shell.Playback;
+using HyPlayer.Shell.Services;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
 using HyPlayer.UI.Dialogs;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using CommunityToolkit.WinUI.Helpers;
@@ -303,7 +320,7 @@ DoubleAnimation verticalAnimation;
                     : Visibility.Collapsed;
                 FlyoutLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
+                    : Windows.UI.Xaml.Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
                 FlyoutLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
@@ -792,7 +809,7 @@ DoubleAnimation verticalAnimation;
             : Visibility.Collapsed;
         FlyoutLiked.Foreground = isLiked
             ? new SolidColorBrush(Colors.Red)
-            : Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
+            : Windows.UI.Xaml.Application.Current.Resources["TextFillColorPrimaryBrush"]?.As<Brush>();
         FlyoutLiked.Glyph = isLiked
             ? "\uE00B"
             : "\uE006";

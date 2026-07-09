@@ -1,10 +1,5 @@
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Domain.Navigation;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Services.Abstractions;
 using System;
-using System.Threading.Tasks;
 
 namespace HyPlayer.Domain.Music
 {
@@ -18,10 +13,11 @@ namespace HyPlayer.Domain.Music
         public int Order { get; set; } = 0;
         public AppRoute? Route { get; set; }
         public MusicResource? PlayResource { get; set; }
+        public bool ShowCover { get; set; } = true;
         public string Title { get; set; }
 
         public Uri CoverUri =>
-            Ioc.Default.GetRequiredService<Setting>().noImage
+            !ShowCover
                 ? null
                 : new Uri((string.IsNullOrEmpty(CoverLink)
                               ? "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg"
@@ -30,13 +26,5 @@ namespace HyPlayer.Domain.Music
                           StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM);
 
         public int DisplayOrder => Order + 1;
-
-        [RelayCommand]
-        public async Task Play()
-        {
-            if (PlayResource is null) return;
-
-            await Ioc.Default.GetRequiredService<IAppNavigator>().PlayAsync(PlayResource);
-        }
     }
 }

@@ -125,4 +125,14 @@ public class ActionLyricLine : RenderingLyricLine
             pstDs.DrawTextLayout(textLayout, -_renderStartX + 16, 0, TypographySelector(t => t?.IdleColor, context)!.Value);
         }
     }
+
+    public override void Dispose()
+    {
+        textFormat?.Dispose();
+        textLayout?.Dispose();
+        (_staticPersistCache as IDisposable)?.Dispose();
+        textFormat = null;
+        textLayout = null;
+        _staticPersistCache = null;
+    }
 }

@@ -12,7 +12,7 @@ using HyPlayer.Features.Album;
 using HyPlayer.Features.Artist;
 using HyPlayer.Features.Radio;
 using HyPlayer.Features.User;
-using HyPlayer.Infrastructure.Imaging;
+using HyPlayer.Platform.Imaging;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -21,10 +21,28 @@ using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Playback;
-using HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
+using HyPlayer.Shell.Services;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
+using HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 using HyPlayer.UI.Dialogs;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Graphics.Canvas;
@@ -55,7 +73,7 @@ using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using LrcConverter = HyPlayer.Domain.Lyrics.LrcConverter;
 using UISettings = Windows.UI.ViewManagement.UISettings;
-using ColorHelper = HyPlayer.Infrastructure.Imaging.ColorHelper;
+using ColorHelper = HyPlayer.Platform.Imaging.ColorHelper;
 
 #endregion
 
@@ -299,7 +317,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void _lyricBox_OnBeforeRender(LyricRenderer.LyricRenderView view)
     {
-        view.Context.IsPlaying = _player.GlobalPlaybackStatus == PlaybackStatus.Playing;
+        view.Context.IsPlaying = _state.IsPlaying;
         var primaryAudioInputNode = _player.PrimaryAudioInputNode;
         if (primaryAudioInputNode == null)
         {
@@ -515,11 +533,19 @@ public sealed partial class ExpandedPlayer : Page
             if (_lyricIsCleaning) return;
             if (_state.LyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
             {
-                _lyricBox.SetLyricLines(LrcConverter.Convert(Utils.ConvertToALRC(_state.LyricInfo.Lyrics, _player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0), _state.LyricInfo.LyricMetadata, _state.LyricInfo.SongMetadata));
+                _lyricBox.SetLyricLines(LrcConverter.Convert(
+                    Utils.ConvertToALRC(_state.LyricInfo.Lyrics, _player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0),
+                    _state.LyricInfo.LyricMetadata,
+                    _state.LyricInfo.SongMetadata,
+                    _settings.OptimizeLyric));
             }
             else
             {
-                _lyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.ALRC, alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata));
+                _lyricBox.SetLyricLines(LrcConverter.Convert(
+                    alrcLyricInfo.ALRC,
+                    alrcLyricInfo.LyricMetadata,
+                    alrcLyricInfo.SongMetadata,
+                    _settings.OptimizeLyric));
             }
             _lyricBox.ChangeAlignment(_settings.lyricAlignment switch
             {
@@ -757,7 +783,9 @@ public sealed partial class ExpandedPlayer : Page
         {
             var lyricInfo = await _lyricService.ImportLyricsAsync(sf, _state.NowPlayingProviderItem);
             if (lyricInfo?.PureLyricInfo is HyALRCLyricInfo alrcLyricInfo)
-                _lyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.ALRC));
+                _lyricBox.SetLyricLines(LrcConverter.Convert(
+                    alrcLyricInfo.ALRC,
+                    optimizeLyric: _settings.OptimizeLyric));
             else
                 LoadLyricsBox();
         }
@@ -1311,6 +1339,7 @@ public sealed partial class ExpandedPlayer : Page
         Window.Current.SizeChanged -= Current_SizeChanged;
         _lyricBox.OnBeforeRender -= _lyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked -= _lyricBoxOnOnRequestSeek;
+        _lyricBox.Clear();
         if (_settings.albumRotate)
             RotateAnimationSet.Stop();
         if (_settings.expandAlbumBreath)

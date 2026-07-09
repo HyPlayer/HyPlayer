@@ -1,57 +1,38 @@
 #region
 
-using Depository.Abstraction.Enums;
-using Depository.Abstraction.Interfaces;
-using Depository.Abstraction.Interfaces.NotificationHub;
 using Depository.Extensions.DependencyInjection;
-using Depository.Extensions;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Composition;
 using HyPlayer.Classes;
-using HyPlayer.Domain;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Infrastructure.Platform;
-using HyPlayer.PlayCore;
+using HyPlayer.Domain;
 using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Interfaces.AudioServices;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models.Notifications;
-using HyPlayer.PlayCore.PlayListControllers;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.AppState;
-using HyPlayer.Services.Authentication;
-using HyPlayer.Services.Background;
-using HyPlayer.Services.Cache;
-using HyPlayer.Services.Diagnostics;
-using HyPlayer.Services.Downloads;
-using HyPlayer.Services.History;
-using HyPlayer.Services.LastFM;
-using HyPlayer.Services.Lyrics;
-using HyPlayer.Services.Navigation;
-using HyPlayer.Services.Notifications;
-using HyPlayer.Services.Playback;
-using HyPlayer.Services.Playback.AudioServices;
-using HyPlayer.Services.Playback.LocalProvider;
-using HyPlayer.Services.Playback.QueueProviders;
-using HyPlayer.Services.Runtime;
-using HyPlayer.Services.Tiles;
-using HyPlayer.Shell.Login;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Search;
 using HyPlayer.Shell.Services;
-using HyPlayer.UI.Lists;
 using HyPlayer.UI.Playback.PlayBar;
 using HyPlayer.UI.TeachingTips;
-using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Kawazu;
-using LiteFM;
-using LiteFM.Abstractions;
 using Microsoft.Gaming.XboxGameBar;
 using System;
-using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -60,15 +41,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using WinRT;
-using AlbumPageViewModel = HyPlayer.Features.Album.AlbumPageViewModel;
-using ArtistPageViewModel = HyPlayer.Features.Artist.ArtistPageViewModel;
-using ExpandedPlayerViewModel = HyPlayer.Shell.ExpandedPlayer.ExpandedPlayerViewModel;
-using FavoriteViewModel = HyPlayer.Features.Library.FavoriteViewModel;
-using HomeViewModel = HyPlayer.Features.Home.HomeViewModel;
-using MeViewModel = HyPlayer.Features.User.MeViewModel;
-using NavigationShellViewModel = HyPlayer.Shell.Navigation.NavigationShellViewModel;
-using PlayBarViewModel = HyPlayer.UI.Playback.PlayBar.PlayBarViewModel;
-using SongListViewModel = HyPlayer.Features.Playlist.SongListViewModel;
 using WidgetPage = HyPlayer.Features.Widgets.WidgetPage;
 using WidgetSettingsPage = HyPlayer.Features.Widgets.WidgetSettingsPage;
 
@@ -79,7 +51,7 @@ namespace HyPlayer;
 /// <summary>
 ///     提供特定于应用程序的行为，以补充默认的应用程序类。
 /// </summary>
-public sealed partial class App : Application
+public sealed partial class App : Windows.UI.Xaml.Application
 {
     /// <summary>
     ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
@@ -108,7 +80,7 @@ public sealed partial class App : Application
     private static void InitializeServices()
     {
         AppDepository.Initialize();
-        InitializeServices(AppDepository.Root);
+        HyPlayerComposition.ConfigureServices(AppDepository.Root);
         Ioc.Default.ConfigureServices(new DepositoryServiceProvider(AppDepository.Root));
     }
 
@@ -127,135 +99,6 @@ public sealed partial class App : Application
             playBarAutoHide.Tick();
         };
         
-    }
-
-    private static void InitializeServices(IDepository depository)
-    {
-        var setting = new Setting();
-        var neteaseProvider = new global::HyPlayer.NeteaseProvider.NeteaseProvider();
-        var client = neteaseProvider.ConfigureHttpClient(setting.EnableProxy);
-        depository.AddSingleton<HttpClient>(client);
-        depository.AddSingleton<global::HyPlayer.NeteaseProvider.NeteaseProvider>(neteaseProvider);
-        depository.AddSingleton<ProviderBase>(neteaseProvider);
-        depository.AddSingleton<IContainerManagementProvidable>(neteaseProvider);
-        depository.AddSingleton<IAuthenticationProvidable>(neteaseProvider);
-        depository.AddSingleton<IQrAuthenticationProvidable>(neteaseProvider);
-        depository.AddSingleton<ISearchSuggestionProvidable>(neteaseProvider);
-        depository.AddSingleton<ICommentProvidable>(neteaseProvider);
-        depository.AddSingleton<IProvidableItemCommentProvidable>(neteaseProvider);
-        depository.AddSingleton<IProvableItemLikable>(neteaseProvider);
-        depository.AddSingleton<ILyricProvidable>(neteaseProvider);
-        depository.AddSingleton<IMusicResourceProvidable>(neteaseProvider);
-        depository.AddSingleton<IProvidableItemProvidable>(neteaseProvider);
-        depository.AddSingleton<IProvidableItemRangeProvidable>(neteaseProvider);
-        depository.AddSingleton<ISearchableProvider>(neteaseProvider);
-        depository.AddSingleton<IContainerPageProvidable>(neteaseProvider);
-        depository.AddSingleton<IProviderKnownTypeIds>(neteaseProvider);
-        depository.AddSingleton<IPersonalRadioProvidable>(neteaseProvider);
-        depository.AddSingleton<IProvidableItemDynamicMetadataProvidable>(neteaseProvider);
-        depository.AddSingleton<IProviderNetworkConfigurationProvidable>(neteaseProvider);
-        depository.AddSingleton<IContainerItemManagementProvidable>(neteaseProvider);
-        depository.AddSingleton<IProviderAdditionalConfigurationProvidable>(neteaseProvider);
-        depository.AddSingleton<IProviderSearchCategoryTypeIds>(neteaseProvider);
-        depository.AddSingleton<IUserLibraryTypeIds>(neteaseProvider);
-        depository.AddSingleton<IUserLibraryProvidable>(neteaseProvider);
-        depository.AddSingleton<IUserLibraryNavigationProvidable>(neteaseProvider);
-        depository.AddSingleton<IProviderSpecialContainerTypeIds>(neteaseProvider);
-        depository.AddSingleton<IResourceQualityTagProvidable>(neteaseProvider);
-        var localProvider = new LocalProvider();
-        depository.AddSingleton<LocalProvider>(localProvider);
-        depository.AddSingleton<ProviderBase>(localProvider);
-        depository.AddSingleton<IMusicResourceProvidable>(localProvider);
-        depository.AddSingleton<LastFMClient>(new LastFMClient(new LastFMOptions() { ApiKey = LastFMConstants.APIKEY, ApiSecret = LastFMConstants.SECRET }, client));
-        depository.AddSingleton<Setting>(setting);
-        depository.AddSingleton<AudioGraphPlayer>();
-        depository.Add(typeof(IPlayer), typeof(AudioGraphPlayer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<AudioGraphPlayer>());
-
-        // ── PlayCore playback foundation ──
-        depository.AddSingleton<INotificationHub, PlayCoreNotificationHub>();
-        depository.AddSingleton<DefaultPlayListManager>();
-        depository.Add(typeof(PlayListManagerBase), typeof(DefaultPlayListManager), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<DefaultPlayListManager>());
-        depository.AddSingleton<OrderedRollPlayController>();
-        depository.Add(typeof(PlayControllerBase), typeof(OrderedRollPlayController), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<OrderedRollPlayController>());
-        depository.Add(typeof(INotificationSubscriber<InnerPlayListChangedNotification>), typeof(OrderedRollPlayController), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<OrderedRollPlayController>());
-        depository.AddSingleton<Chopin>();
-        depository.Add(typeof(PlayCoreBase), typeof(Chopin), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<Chopin>());
-        depository.Add(typeof(INotificationSubscriber<CurrentSongChangedNotification>), typeof(Chopin), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<Chopin>());
-        depository.AddSingleton<ChopinAudioService>();
-        depository.Add(typeof(AudioServiceBase), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
-        depository.Add(typeof(IPlayAudioTicketService), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
-        depository.Add(typeof(IPauseAudioTicketService), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
-        depository.Add(typeof(IStopAudioTicketService), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
-        depository.Add(typeof(IAudioTicketSeekableService), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
-        depository.Add(typeof(IOutgoingVolumeChangeable), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
-        depository.Add(typeof(IAudioTicketVolumeChangeable), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
-        depository.Add(typeof(IPlaybackSpeedChangeable.IPlaybackRateChangeableService), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
-        depository.Add(typeof(IAudioTicketListProvidable), typeof(ChopinAudioService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<ChopinAudioService>());
-
-        // ── 播放核心：状态中心 ──
-        depository.AddSingleton<PlaybackStateService>();
-
-        // ── 播放核心：队列源 Provider ──
-        depository.AddSingleton<IQueueSourceProvider, PlaylistQueueSourceProvider>();
-        depository.AddSingleton<IQueueSourceProvider, AlbumQueueSourceProvider>();
-        depository.AddSingleton<IQueueSourceProvider, RadioQueueSourceProvider>();
-        depository.AddSingleton<IQueueSourceProvider, DailyRecommendQueueSourceProvider>();
-        depository.AddSingleton<IQueueSourceProvider, SingerHotQueueSourceProvider>();
-        depository.AddSingleton<IQueueSourceProvider, SingleSongQueueSourceProvider>();
-
-        // ── 播放核心：服务 ──
-        depository.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
-        depository.AddSingleton<ILocalFileImportService, LocalFileImportService>();
-        depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
-        depository.Add(typeof(INotificationSubscriber<PlaybackRequestFailedNotification>), typeof(PlaybackControlService), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<IPlaybackControlService>());
-        depository.AddSingleton<IPlaybackQueueLoader, PlaybackQueueLoader>();
-        depository.AddSingleton<PlayCoreStateSynchronizer>();
-        depository.Add(typeof(INotificationSubscriber<CurrentSongChangedNotification>), typeof(PlayCoreStateSynchronizer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<PlayCoreStateSynchronizer>());
-        depository.Add(typeof(INotificationSubscriber<OrderedPlaylistChangedNotification>), typeof(PlayCoreStateSynchronizer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<PlayCoreStateSynchronizer>());
-        depository.Add(typeof(INotificationSubscriber<InnerPlayListChangedNotification>), typeof(PlayCoreStateSynchronizer), DependencyLifetime.Singleton, implementationFactory: dep => dep.Resolve<PlayCoreStateSynchronizer>());
-        depository.AddSingleton<ISongListQueueBuilder, SongListQueueBuilder>();
-        depository.AddSingleton<ILyricService, LyricService>();
-        depository.AddSingleton<ILastFmService, LastFmService>();
-        depository.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
-        depository.AddSingleton<IPlaybackMemoryService, PlaybackMemoryService>();
-        depository.AddSingleton<ITileService, TileService>();
-
-        // ── 应用核心：认证 / 导航 / 通知 / UI 状态 ──
-        depository.AddSingleton<IAuthService, AuthService>();
-        depository.AddSingleton<INavigationService, NavigationService>();
-        depository.AddSingleton<IAppNavigator, AppNavigator>();
-        depository.AddSingleton<NavigationShellViewModel>();
-        depository.AddSingleton<INotificationService, NotificationService>();
-        depository.AddSingleton<IAppLifecycleStateService, AppLifecycleStateService>();
-        depository.AddSingleton<IUserLibraryStateService, UserLibraryStateService>();
-        depository.AddSingleton<IHistoryService, HistoryService>();
-        depository.AddSingleton<IDownloadService, DownloadService>();
-        depository.AddSingleton<IDisplayKeepAwakeService, DisplayKeepAwakeService>();
-        depository.AddSingleton<IKawazuStateService, KawazuStateService>();
-        depository.AddSingleton<IDiagnosticsStateService, DiagnosticsStateService>();
-        depository.AddSingleton<IGameBarWidgetService, GameBarWidgetService>();
-        depository.AddSingleton<IShellHostStateService, ShellHostStateService>();
-        depository.AddSingleton<IGlobalTimerService, GlobalTimerService>();
-        depository.AddSingleton<ITeachingTipService, TeachingTipService>();
-        depository.AddSingleton<IPlayBarAutoHideService, PlayBarAutoHideService>();
-        depository.AddSingleton<IPlaylistCollectionChangeNotifier, PlaylistCollectionChangeNotifier>();
-
-        // ── 播放 UI：状态存储 / shell 状态机 / 表面协调器 ──
-        depository.AddSingleton<PlaybackSurfaceStore>();
-        depository.AddSingleton<PlaybackShellStateMachine>();
-        depository.AddSingleton<IPlaybackSurfaceCoordinator, PlaybackSurfaceCoordinator>();
-        depository.AddTransient<ShellSearchViewModel>();
-        depository.AddSingleton<ShellLoginService>();
-
-        // ── ViewModels ──
-        depository.AddTransient<HomeViewModel>();
-        depository.AddTransient<MeViewModel>();
-        depository.AddTransient<ExpandedPlayerViewModel>();
-        depository.AddTransient<ArtistPageViewModel>();
-        depository.AddTransient<SongListViewModel>();
-        depository.AddTransient<FavoriteViewModel>();
-        depository.AddTransient<AlbumPageViewModel>();
-        depository.AddTransient<PlayBarViewModel>();
     }
 
     private static async Task InitializeThings()

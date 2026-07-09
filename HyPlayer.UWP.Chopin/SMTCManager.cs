@@ -1,4 +1,5 @@
 ﻿using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using Windows.Media;
 using Windows.Storage.Streams;
@@ -10,12 +11,23 @@ namespace HyPlayer.UWP.Chopin
         private SystemMediaTransportControls _smtc;
         public void OnPauseAll()
         {
-            _smtc.PlaybackStatus = MediaPlaybackStatus.Paused;
+            UpdatePlaybackStatus(PlaybackStatus.Paused);
         }
 
         public void OnPlayAll()
         {
-            _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+            UpdatePlaybackStatus(PlaybackStatus.Playing);
+        }
+
+        public void UpdatePlaybackStatus(PlaybackStatus status)
+        {
+            _smtc.PlaybackStatus = status switch
+            {
+                PlaybackStatus.Playing => MediaPlaybackStatus.Playing,
+                PlaybackStatus.Paused => MediaPlaybackStatus.Paused,
+                PlaybackStatus.Closed => MediaPlaybackStatus.Closed,
+                _ => MediaPlaybackStatus.Closed
+            };
         }
 
         public void OnPositionChange(SystemMediaTransportControlsTimelineProperties properties)

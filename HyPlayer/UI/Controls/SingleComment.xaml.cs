@@ -2,12 +2,33 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain;
+using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Cache;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.Shell.Playback;
+using HyPlayer.Shell.Services;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
+using HyPlayer.Platform.Storage.Cache;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -46,6 +67,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
 
     private ObservableCollection<CommentBase> floorComments = new ObservableCollection<CommentBase>();
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     public UserDisplay CommentUserDisplay;
     private string time = "0";
 
@@ -184,12 +206,14 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        CommentUserDisplay = new UserDisplay(new CommentUserInfo
-        {
-            ActualId = MainComment.Sender?.ActualId ?? string.Empty,
-            Name = MainComment.Sender?.Name ?? string.Empty,
-            AvatarUrl = string.Empty,
-        });
+        CommentUserDisplay = new UserDisplay(
+            new CommentUserInfo
+            {
+                ActualId = MainComment.Sender?.ActualId ?? string.Empty,
+                Name = MainComment.Sender?.Name ?? string.Empty,
+                AvatarUrl = string.Empty,
+            },
+            _setting.noImage);
         ReplyBtn.Visibility = Visibility.Visible;
         FloorCommentsExpander.Visibility = MainComment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
         Bindings.Update();

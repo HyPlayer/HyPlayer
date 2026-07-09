@@ -286,23 +286,21 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public void PlayAll()
         {
             ThrowExceptionIfDisposed();
-            if (_defaultPlayer == null || GlobalPlaybackStatus == PlaybackStatus.Playing || ConnectedPlaybackSourceCount == 0) return;
+            if (_defaultPlayer == null || ConnectedPlaybackSourceCount == 0) return;
 
-            _defaultPlayer.Start();
-            GlobalPlaybackStatus = PlaybackStatus.Playing;
-            OnGlobalPlaybackStatusChanged?.Invoke(PlaybackStatus.Playing);
-            SMTCManager?.OnPlayAll();
+            if (GlobalPlaybackStatus != PlaybackStatus.Playing)
+                _defaultPlayer.Start();
+            UpdateGlobalPlaybackStatus(PlaybackStatus.Playing);
         }
 
         public void PauseAll()
         {
             ThrowExceptionIfDisposed();
-            if (_defaultPlayer == null || GlobalPlaybackStatus == PlaybackStatus.Paused) return;
+            if (_defaultPlayer == null) return;
 
-            _defaultPlayer.Stop();
-            GlobalPlaybackStatus = PlaybackStatus.Paused;
-            SMTCManager?.OnPauseAll();
-            OnGlobalPlaybackStatusChanged?.Invoke(PlaybackStatus.Paused);
+            if (GlobalPlaybackStatus != PlaybackStatus.Paused)
+                _defaultPlayer.Stop();
+            UpdateGlobalPlaybackStatus(PlaybackStatus.Paused);
         }
 
         public void PlayPlaybackSource(IPlaybackSource playbackSource)
@@ -456,6 +454,12 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
             _audioInputNodes.TryRemove(source, out _);
             _audioInputNodesReverseDictionary.TryRemove(node, out _);
+
+            if (_audioInputNodes.IsEmpty)
+            {
+                _defaultPlayer.Stop();
+                UpdateGlobalPlaybackStatus(PlaybackStatus.Closed);
+            }
         }
 
         public void RemoveAllPlaybackSource()
@@ -472,7 +476,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             _audioInputNodesReverseDictionary.Clear();
             _primaryPlaybackSource = null;
             _defaultPlayer.Stop();
-             GlobalPlaybackStatus = PlaybackStatus.Closed;
+            UpdateGlobalPlaybackStatus(PlaybackStatus.Closed);
         }
 
         public List<AudioGraphPlaybackSource> GetConnectedPlaybackSource()
@@ -540,6 +544,19 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         #endregion
 
         #region Helper Methods
+        private void UpdateGlobalPlaybackStatus(PlaybackStatus status)
+        {
+            if (GlobalPlaybackStatus == status)
+            {
+                SMTCManager?.UpdatePlaybackStatus(status);
+                return;
+            }
+
+            GlobalPlaybackStatus = status;
+            SMTCManager?.UpdatePlaybackStatus(status);
+            OnGlobalPlaybackStatusChanged?.Invoke(status);
+        }
+
         private MediaSourceAudioInputNode GetAudioInputNodeOrThrow(IPlaybackSource playbackSource)
         {
             if (playbackSource is not AudioGraphPlaybackSource source)

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace HyPlayer.LyricRenderer.Abstraction.Render;
 
-public abstract class RenderingLyricLine
+public abstract class RenderingLyricLine : IDisposable
 {
     public int Id { get; set; }
     public RenderTypography? Typography { get; set; }
@@ -25,6 +25,10 @@ public abstract class RenderingLyricLine
     public abstract void OnKeyFrame(CanvasDrawingSession session, RenderContext context);
     public abstract void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context);
     public abstract void OnTypographyChanged(CanvasDrawingSession session, RenderContext context);
+    public virtual void Dispose()
+    {
+    }
+
     public T TypographySelector<T>(Func<RenderTypography?, T?> expression, RenderContext context)
     {
         return (expression(Typography) ??

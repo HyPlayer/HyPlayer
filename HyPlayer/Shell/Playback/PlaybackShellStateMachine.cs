@@ -1,4 +1,4 @@
-using HyPlayer.Services.Playback;
+using HyPlayer.Features.Playback.Services;
 using System;
 
 namespace HyPlayer.Shell.Playback;

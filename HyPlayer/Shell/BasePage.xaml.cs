@@ -2,8 +2,28 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Updates;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.Shell.Playback;
+using HyPlayer.Shell.Services;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
+using HyPlayer.Features.Settings.Services;
 using HyPlayer.Shell.Login;
 using HyPlayer.Shell.Navigation;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
@@ -84,9 +104,7 @@ public sealed partial class BasePage : Page
         }
 
         if (args.VirtualKey == VirtualKey.GamepadY)
-            if (_playback.IsPlaying)
-                _player.PauseAll();
-            else if (!_playback.IsPlaying) _player.PlayAll();
+            _playback.TogglePlayPause();
 
         if (args.VirtualKey == VirtualKey.Escape)
             CollapseExpandedPlayerIfNeeded();

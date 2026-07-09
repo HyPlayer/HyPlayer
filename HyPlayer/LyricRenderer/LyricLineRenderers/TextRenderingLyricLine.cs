@@ -80,10 +80,10 @@ public class TextRenderingLyricLine : RenderingLyricLine
         var drawingTop = offset.Y + _layout.DrawingOffsetY;
         var actualOffsetX = offset.X;
 
-        var totalCommand = new CanvasCommandList(session);
+        using var totalCommand = new CanvasCommandList(session);
         using (var targetDrawingSession = totalCommand.CreateDrawingSession())
         {
-            var textCommandList = new CanvasCommandList(targetDrawingSession);
+            using var textCommandList = new CanvasCommandList(targetDrawingSession);
             using (var textDrawingSession = textCommandList.CreateDrawingSession())
             {
                 var opacity = _isFocusing ? 1 : 0.3f;
@@ -233,6 +233,12 @@ public class TextRenderingLyricLine : RenderingLyricLine
 
         RenderingHeight = _layout.RenderingHeight;
         RenderingWidth = _layout.RenderingWidth;
+    }
+
+    public override void Dispose()
+    {
+        _layout?.Dispose();
+        _layout = null;
     }
 
     public static Matrix3x2 GetCenterMatrix(float x, float y, float xCenter, float yCenter, float xScale, float yScale)

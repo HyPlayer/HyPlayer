@@ -17,9 +17,27 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Services.Abstractions;
-using HyPlayer.Services.Downloads;
-using HyPlayer.Services.Playback;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.Shell.Playback;
+using HyPlayer.Shell.Services;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -66,6 +84,7 @@ public sealed partial class ContainerItemsView : UserControl
     private IProgressiveLoadingContainer? _progressiveContainer;
     private UndeterminedContainerBase? _undeterminedContainer;
     private bool _isSecondTickSubscribed;
+    private bool _isStateSubscribed;
     private int _greedyLoadThreshold = 3;
     private int _nextOffset;
 
@@ -129,7 +148,7 @@ public sealed partial class ContainerItemsView : UserControl
             },
             OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
         };
-        _state.PropertyChanged += _stateChangedListener.OnEvent;
+        AttachStateChanged();
         UpdateListHeader(ListHeader);
     }
 
@@ -238,7 +257,7 @@ public sealed partial class ContainerItemsView : UserControl
         var songs = LoadedProviderSongs.ToList();
         if (songs.Count == 0) return;
 
-        await _playCore.StopAsync();
+        await _control.StopAsync();
         await _playCore.RemoveAllSongAsync();
         await _playCore.InsertSongRangeAsync(songs);
         await _control.MoveNextAndPlayAsync(userInitiated: true);
@@ -295,6 +314,7 @@ public sealed partial class ContainerItemsView : UserControl
 
     private void ContainerItemsView_Loaded(object sender, RoutedEventArgs e)
     {
+        AttachStateChanged();
         MultiSelect = false;
         Bindings.Update();
     }
@@ -302,8 +322,10 @@ public sealed partial class ContainerItemsView : UserControl
     private void ContainerItemsView_Unloaded(object sender, RoutedEventArgs e)
     {
         DetachSecondTick();
-        _stateChangedListener.Detach();
+        DetachStateChanged();
         _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _loadCts = null;
     }
 
     private void UpdateListHeader(UIElement? header)
@@ -558,7 +580,7 @@ public sealed partial class ContainerItemsView : UserControl
                     {
                         Text = action.Text,
                         Tag = action,
-                        Style = (Style)Application.Current.Resources["MenuFlyoutItemRevealStyle"]
+                        Style = (Style)Windows.UI.Xaml.Application.Current.Resources["MenuFlyoutItemRevealStyle"]
                     };
                     item.Click += async (_, _) => await action.ExecuteAsync(row);
                     flyout.Items.Add(item);
@@ -577,7 +599,7 @@ public sealed partial class ContainerItemsView : UserControl
                     {
                         Text = action.Text,
                         Tag = action,
-                        Style = (Style)Application.Current.Resources["MenuFlyoutItemRevealStyle"]
+                        Style = (Style)Windows.UI.Xaml.Application.Current.Resources["MenuFlyoutItemRevealStyle"]
                     };
                     item.Click += async (_, _) => await action.ExecuteAsync(selectedRows);
                     flyout.Items.Add(item);
@@ -818,6 +840,24 @@ public sealed partial class ContainerItemsView : UserControl
         _isSecondTickSubscribed = false;
     }
 
+    private void AttachStateChanged()
+    {
+        if (_isStateSubscribed)
+            return;
+
+        _state.PropertyChanged += _stateChangedListener.OnEvent;
+        _isStateSubscribed = true;
+    }
+
+    private void DetachStateChanged()
+    {
+        if (!_isStateSubscribed)
+            return;
+
+        _stateChangedListener.Detach();
+        _isStateSubscribed = false;
+    }
+
     private IReadOnlyList<ProvidableItemRowViewModel> GetSelectedRows()
     {
         var rows = ItemList.SelectedItems
@@ -851,7 +891,7 @@ public sealed partial class ContainerItemsView : UserControl
     public static Brush GetBrush(bool isAvailable)
     {
         return isAvailable
-            ? (Brush)Application.Current.Resources["DefaultTextForegroundThemeBrush"]
+            ? (Brush)Windows.UI.Xaml.Application.Current.Resources["DefaultTextForegroundThemeBrush"]
             : new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
     }
 }
