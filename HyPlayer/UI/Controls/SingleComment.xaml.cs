@@ -4,7 +4,9 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.User;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Application.Diagnostics;
@@ -204,14 +206,14 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     }
 
 
-    private void UserControl_Loaded(object sender, RoutedEventArgs e)
+    private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
         CommentUserDisplay = new UserDisplay(
             new CommentUserInfo
             {
                 ActualId = MainComment.Sender?.ActualId ?? string.Empty,
                 Name = MainComment.Sender?.Name ?? string.Empty,
-                AvatarUrl = string.Empty,
+                AvatarUrl = await GetCommentAvatarUrlAsync(MainComment),
             },
             _setting.noImage);
         ReplyBtn.Visibility = Visibility.Visible;
@@ -234,6 +236,18 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     private void UserControl_Unloaded(object sender, RoutedEventArgs e)
     {
         floorComments.CollectionChanged -= FloorComments_CollectionChanged;
+    }
+
+    private static async Task<string?> GetCommentAvatarUrlAsync(CommentBase comment)
+    {
+        if (comment.Sender is not IHasCover coverProvider)
+            return null;
+
+        var result = await coverProvider.GetCoverAsync();
+        if (result is not IResourceResultOf<Uri?> uriResult || result.ResourceStatus != ResourceStatus.Success)
+            return null;
+
+        return (await uriResult.GetResourceAsync())?.ToString();
     }
 
     private static bool TryResolveCommentTarget(CommentBase comment, out string itemId, out string typeId)
