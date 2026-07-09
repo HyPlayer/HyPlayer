@@ -64,7 +64,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     private readonly Setting _setting;
     private readonly HttpClient _httpClient;
     private readonly ILyricProvidable _lyricProvider;
-    private readonly IMusicResourceProvidable _musicResourceProvider;
+    private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
     private readonly IResourceQualityTagProvidable _qualityTagProvider;
     private readonly IDiagnosticsStateService _diagnostics;
     private readonly SingleSongBase _providerSong;
@@ -118,7 +118,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         Setting setting,
         HttpClient httpClient,
         ILyricProvidable lyricProvider,
-        IMusicResourceProvidable musicResourceProvider,
+        IEnumerable<IMusicResourceProvidable> musicResourceProviders,
         IResourceQualityTagProvidable qualityTagProvider,
         IDiagnosticsStateService diagnostics)
     {
@@ -126,7 +126,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         _setting = setting;
         _httpClient = httpClient;
         _lyricProvider = lyricProvider;
-        _musicResourceProvider = musicResourceProvider;
+        _musicResourceProviders = musicResourceProviders?.ToList() ?? throw new ArgumentNullException(nameof(musicResourceProviders));
         _qualityTagProvider = qualityTagProvider;
         _diagnostics = diagnostics;
         _providerSong = song;
@@ -491,7 +491,21 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
             });
             var qualityTags = await _qualityTagProvider.GetAvailableQualityTagsAsync(ResourceType.Audio);
             qualityTags.TryGetValue(_setting.downloadAudioRate, out var qualityTag);
-            var musicResource = await _musicResourceProvider.GetMusicResourceAsync(_providerSong, qualityTag);
+            var musicResourceProvider = _musicResourceProviders.FirstOrDefault(provider => provider.Id == _providerSong.ProviderId);
+            if (musicResourceProvider is null)
+            {
+                Status = DownloadStatus.Error;
+                _ = _notification.InvokeOnUIThread(() =>
+                {
+                    Message = "未找到歌曲下载源";
+                    HasError = true;
+                    HasPaused = true;
+                    Progress = 100;
+                });
+                return;
+            }
+
+            var musicResource = await musicResourceProvider.GetMusicResourceAsync(_providerSong, qualityTag);
 
             if (musicResource?.Uri is null)
             {
@@ -595,7 +609,7 @@ internal static class DownloadManager
     private static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
     private static HttpClient HttpClient => Ioc.Default.GetRequiredService<HttpClient>();
     private static ILyricProvidable LyricProvider => Ioc.Default.GetRequiredService<ILyricProvidable>();
-    private static IMusicResourceProvidable MusicResourceProvider => Ioc.Default.GetRequiredService<IMusicResourceProvidable>();
+    private static IReadOnlyList<IMusicResourceProvidable> MusicResourceProviders => global::HyPlayer.AppDepository.ResolveMultiple<IMusicResourceProvidable>();
     private static IResourceQualityTagProvidable QualityTagProvider => Ioc.Default.GetRequiredService<IResourceQualityTagProvidable>();
     private static IDiagnosticsStateService Diagnostics => Ioc.Default.GetRequiredService<IDiagnosticsStateService>();
     public static ObservableCollection<DownloadObject> DownloadLists = [];
@@ -692,7 +706,7 @@ internal static class DownloadManager
 
     private static DownloadObject CreateDownloadObject(SingleSongBase song)
     {
-        return new DownloadObject(song, Notification, Setting, HttpClient, LyricProvider, MusicResourceProvider, QualityTagProvider, Diagnostics);
+        return new DownloadObject(song, Notification, Setting, HttpClient, LyricProvider, MusicResourceProviders, QualityTagProvider, Diagnostics);
     }
 
     public static void CacheAlbumPicture(string albumId, Picture picture)
