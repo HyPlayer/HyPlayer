@@ -224,11 +224,5 @@ public class TextRenderingLyricLine : RenderingLyricLine
         _layout = null;
     }
 
-    public static Matrix3x2 GetCenterMatrix(float x, float y, float xCenter, float yCenter, float xScale, float yScale)
-    {
-        return Matrix3x2.CreateTranslation(-xCenter, -yCenter)
-               * Matrix3x2.CreateScale(xScale, yScale)
-               * Matrix3x2.CreateTranslation(x, y)
-               * Matrix3x2.CreateTranslation(xCenter, yCenter);
-    }
+
 }
