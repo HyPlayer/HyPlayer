@@ -29,6 +29,11 @@ public class RenderEffects
     public bool Blur { get; set; } = true;
 
     /// <summary>
+    /// 歌词淡入淡出
+    /// </summary>
+    public bool Fade { get; set; } = true;
+
+    /// <summary>
     /// 预渲染合成
     /// </summary>
     public bool CacheRenderTarget { get; set; } = false;

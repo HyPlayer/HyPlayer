@@ -50,7 +50,6 @@ public static class LrcConverter
                     ],
                     StartTime = alrcLine.Start ?? 0,
                     EndTime = alrcLine.End ?? 0,
-                    HiddenOnBlur = true
                 });
                 continue;
             }

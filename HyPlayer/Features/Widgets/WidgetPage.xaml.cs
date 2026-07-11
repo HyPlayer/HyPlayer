@@ -308,6 +308,7 @@ public sealed partial class WidgetPage : Page
         LyricBox.Context.LyricPaddingTopRatio = _setting.lyricPaddingTopRatio / 100f;
         LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
         LyricBox.Context.Effects.Blur = _setting.lyricRenderBlur;
+        LyricBox.Context.Effects.Fade = _setting.lyricRenderFade;
         LyricBox.Context.Effects.CacheRenderTarget = _setting.lyricCacheRenderTarget;
         LyricBox.Context.LineRollingEaseCalculator = _setting.LineRollingCalculator switch
         {
