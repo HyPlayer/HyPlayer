@@ -110,53 +110,6 @@ public class TextRenderingLyricLine : RenderingLyricLine
 
         targetDrawingSession.DrawImage(textCommandList, 0, 0);
 
-        //var gap = _isFocusing ? 0 : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex), 1, 250);
-        //var finalEffectBuilder = new CanvasImageBuilder(commandList);
-
-        //if (context.Effects.ScaleWhenFocusing)
-        //{
-        //    var progress = 0f;
-        //    if (context.CurrentLyricTime - EndTime >= 0 &&
-        //        context.CurrentLyricTime - EndTime <= ScaleAnimationDuration)
-        //    {
-        //        progress = 1 - (float)EaseFunction.Ease(Math.Clamp(
-        //            (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1));
-        //    }
-        //    else if (_isFocusing && context.CurrentLyricTime - StartTime >= 0)
-        //    {
-        //        progress = (float)_elasticEase.Ease(Math.Clamp(
-        //            (context.CurrentLyricTime - StartTime) * 1.0f / 1000, 0, 1));
-        //    }
-
-        //    var scaling = 0.8F + progress * 0.2F;
-        //    finalEffectBuilder
-        //        .AddTransform2DEffect(GetCenterMatrix(0, 0, actualOffsetX + _layout.ScalingCenterX,
-        //            (float)_layout.TextLayout.LayoutBounds.Height / 2, scaling, scaling))
-        //        .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f, 0, 1));
-        //}
-
-        //if (context.Effects.Blur && !_isFocusing && !context.IsScrolling)
-        //{
-        //    finalEffectBuilder.AddGaussianBlurEffect(Math.Clamp(gap, 0, 250));
-        //}
-
-        //var setting = Ioc.Default.GetRequiredService<Setting>();
-        //if (setting.lyricRenderFade && !context.IsScrolling)
-        //{
-        //    finalEffectBuilder.AddOpacityEffect(1 -
-        //        Math.Clamp(gap / (10f - (setting.lyricFadingRatio / 10f)), 0, 0.9f));
-        //}
-
-        //session.DrawImage(finalEffectBuilder.Build(), 0, drawingTop);
-        //if (_reactionState == ReactionState.Enter && !string.IsNullOrEmpty(_layout.Text))
-        //{
-        //    session.FillRoundedRectangle(offset.X, offset.Y,
-        //        RenderingWidth + 2, RenderingHeight + 8, 6, 6,
-        //        Color.FromArgb(10, 255, 255, 255));
-        //}
-
-
-
         return true;
     }
 

@@ -309,6 +309,7 @@ public sealed partial class WidgetPage : Page
         LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
         LyricBox.Context.Effects.Blur = _setting.lyricRenderBlur;
         LyricBox.Context.Effects.Fade = _setting.lyricRenderFade;
+        LyricBox.Context.Effects.FadingRatio = _setting.lyricFadingRatio;
         LyricBox.Context.Effects.CacheRenderTarget = _setting.lyricCacheRenderTarget;
         LyricBox.Context.LineRollingEaseCalculator = _setting.LineRollingCalculator switch
         {
@@ -318,6 +319,7 @@ public sealed partial class WidgetPage : Page
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
+        LyricBox.Context.Effects.Transform3D = _setting.lyricRenderTransform3D;
         LyricBox.Context.Effects.ScaleWhenFocusing = _setting.lyricRenderScaleWhenFocusing;
         LyricBox.Context.Effects.FocusHighlighting = _setting.lyricRenderFocusHighlighting;
         LyricBox.Context.Effects.TransliterationScanning = _setting.lyricRenderTransliterationScanning;

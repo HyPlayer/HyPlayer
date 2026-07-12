@@ -1,5 +1,6 @@
 ﻿#nullable enable
-using HyPlayer.Domain.Lyrics;
+using HyPlayer.LyricRenderer.Animator;
+using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using HyPlayer.LyricRenderer.Builder;
 using Impressionist.Helpers;
 using Microsoft.Graphics.Canvas;
@@ -29,9 +30,11 @@ public abstract class RenderingLyricLine : IDisposable
     public long EndTime { get; set; }
 
     public bool IsActive { get; private set; }
-    private Transition _blurTransition = new Transition { Duration = TimeSpan.FromSeconds(0.5), Easing = new CustomCircleEase { EasingMode = EasingMode.EaseOut } };
-    private Transition _opacityTransition = new Transition { Duration = TimeSpan.FromSeconds(1), Easing = new CustomCircleEase { EasingMode = EasingMode.EaseOut } };
-    private Transition _scaleTranslation = new Transition { Duration = TimeSpan.FromSeconds(0.25), Easing = new CustomCircleEase { EasingMode = EasingMode.EaseOut } };
+    public bool IsPlayed { get; private set; }
+    private CanvasTransition _blurTransition = new CanvasTransition { Duration = TimeSpan.FromSeconds(0.5), Easing = new CustomCircleEase { EasingMode = EasingMode.EaseOut } };
+    private CanvasTransition _opacityTransition = new CanvasTransition { Duration = TimeSpan.FromSeconds(1), Easing = new CustomCircleEase { EasingMode = EasingMode.EaseOut } };
+    private CanvasTransition _scaleTranslation = new CanvasTransition { Duration = TimeSpan.FromSeconds(0.25), Easing = new CustomCircleEase { EasingMode = EasingMode.EaseOut } };
+    private CanvasTransition _transform3dTranslation = new CanvasTransition { Duration = TimeSpan.FromSeconds(0.5), Easing = new CustomCircleEase { EasingMode = EasingMode.EaseOut } };
     public bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
         using var commandList = new CanvasCommandList(session);
@@ -46,8 +49,19 @@ public abstract class RenderingLyricLine : IDisposable
             effectBuilder
                 .AddTransform2DEffect(GetCenterMatrix(0, 0, offset.X,
                     RenderingHeight / 2, scaling, scaling));
+
         }
         var gap = IsActive ? 0 : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex), 1, 250);
+
+        if (context.Effects.Transform3D)
+        {
+            var targetAngle = IsActive ? 0f : Math.Clamp(-(float)(gap * 15), -60f, 60f);
+            if (context.IsScrolling) targetAngle = 0;
+            var angle = _transform3dTranslation.Animate(context.CurrentLyricTime, targetAngle);
+            effectBuilder.AddTransform3DEffect(
+                Get3DMatrix(new(-(float)offset.X, 0, 0),
+                angleY: angle, depth: 2500f));
+        }
 
         if (context.Effects.Blur && !IsActive && !context.IsScrolling)
         {
@@ -58,8 +72,9 @@ public abstract class RenderingLyricLine : IDisposable
 
         if (context.Effects.Fade)
         {
-            var opacity = Math.Clamp(0.6 - (gap / (10f - (20 / 10f))), 0, 1);
-            if (gap == 0 || context.IsScrolling) opacity = 1;
+            var opacity = Math.Clamp(0.5 - (gap / (10f - (context.Effects.FadingRatio / 10f))), 0, 1);
+            if (gap == 0) opacity = 1;
+            if (context.IsScrolling) opacity = Math.Max(opacity, 0.5);
             effectBuilder.AddOpacityEffect(_opacityTransition.Animate(context.CurrentLyricTime, opacity));
         }
 
@@ -78,6 +93,27 @@ public abstract class RenderingLyricLine : IDisposable
             session.DrawRectangle(offset.X, offset.Y, RenderingWidth, RenderingHeight, Colors.Yellow);
         }
         return result;
+    }
+
+    protected Matrix4x4 Get3DMatrix(Vector3 center, float angleX = 0,
+        float angleY = 0, float angleZ = 0, float depth = 800f)
+    {
+        var parallaxTranslation = Matrix4x4.Identity;
+
+
+        var rotationX = (float)(Math.PI * angleX / 180.0);
+        var rotationY = (float)(Math.PI * angleY / 180.0);
+        var rotationZ = (float)(Math.PI * angleZ / 180.0);
+
+        var rotation = Matrix4x4.CreateRotationX(rotationX) *
+                       Matrix4x4.CreateRotationY(rotationY) *
+                       Matrix4x4.CreateRotationZ(rotationZ);
+
+        var perspective = Matrix4x4.Identity;
+        if (depth > 0) perspective.M34 = 1.0f / depth;
+
+        return Matrix4x4.CreateTranslation(-center) * rotation * perspective *
+                         Matrix4x4.CreateTranslation(center) * parallaxTranslation;
     }
     public static Matrix3x2 GetCenterMatrix(float x, float y, float xCenter, float yCenter, float xScale, float yScale)
     {
@@ -117,40 +153,6 @@ public abstract class RenderingLyricLine : IDisposable
     {
         return (expression(Typography) ??
                 expression(context.PreferTypography) ?? expression(RenderTypography.Default))!;
-    }
-}
-
-public class Transition
-{
-    public TimeSpan Duration { get; set; }
-    public EaseFunctionBase Easing { get; set; }
-    private double _startValue;
-    private double _targetValue = double.NaN;
-    private double _startTime = double.MinValue;
-
-    public float Animate(long currentTime, double value)
-    {
-        if (double.IsNaN(_targetValue))
-        {
-            // First call: jump directly to the initial value with no animation.
-            _startValue = value;
-            _targetValue = value;
-            _startTime = currentTime;
-            return (float)value;
-        }
-
-        if (Math.Abs(value - _targetValue) > double.Epsilon)
-        {
-            // Target changed mid-animation: capture current interpolated position as
-            // the new start so the transition continues smoothly from here.
-            var currentProgress = Math.Clamp((currentTime - _startTime) / Duration.TotalMilliseconds, 0, 1);
-            _startValue = _startValue + (_targetValue - _startValue) * Easing.Ease(currentProgress);
-            _targetValue = value;
-            _startTime = currentTime;
-        }
-
-        var progress = Math.Clamp((currentTime - _startTime) / Duration.TotalMilliseconds, 0, 1);
-        return (float)(_startValue + (_targetValue - _startValue) * Easing.Ease(progress));
     }
 }
 
