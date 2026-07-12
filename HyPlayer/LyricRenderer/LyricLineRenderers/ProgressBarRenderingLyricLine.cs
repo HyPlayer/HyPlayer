@@ -86,7 +86,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
     public override void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context)
     {
         RenderingHeight = Height + 2 * VerticalPadding;
-        RenderingWidth = Width;
+        RenderingWidth = Width + 2 * TextRenderingLyricLine.TextPadding;
         _baseGradientBrush?.Dispose();
 
         var baseColor = context.PreferTypography.IdleColor!.Value;
