@@ -112,7 +112,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
-        // ignore
+        OnRenderSizeChanged(session, context);
     }
 
     public override void Dispose()
