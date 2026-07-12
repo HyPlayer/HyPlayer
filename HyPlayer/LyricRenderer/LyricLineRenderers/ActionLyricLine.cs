@@ -26,12 +26,9 @@ public class ActionLyricLine : RenderingLyricLine
     private float _renderStartX = 0f;
 
 
-    protected override bool RenderCore(CanvasCommandList commandList, RenderContext context)
+    protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
         if (textLayout is null) return true;
-
-        using var session = commandList.CreateDrawingSession();
-
         session.DrawImage(_staticPersistCache, 0, 0);
         return true;
     }

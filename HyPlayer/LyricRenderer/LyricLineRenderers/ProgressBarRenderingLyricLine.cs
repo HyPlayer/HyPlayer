@@ -29,11 +29,10 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
     private CanvasLinearGradientBrush _baseGradientBrush;
 
-    protected override bool RenderCore(CanvasCommandList commandList, RenderContext context)
+    protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
         float x = TextRenderingLyricLine.TextPadding;
         float y = Height;
-        using var session = commandList.CreateDrawingSession();
 
         if (context.CurrentLyricTime > EndTime || context.CurrentLyricTime < StartTime) return true;// 未激活
         var remain = EndTime - context.CurrentLyricTime;
@@ -87,7 +86,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
     public override void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context)
     {
         RenderingHeight = Height + 2 * VerticalPadding;
-        RenderingWidth = context.ItemWidth;
+        RenderingWidth = Width;
         _baseGradientBrush?.Dispose();
 
         var baseColor = context.PreferTypography.IdleColor!.Value;

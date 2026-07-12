@@ -38,8 +38,16 @@ public abstract class RenderingLyricLine : IDisposable
     public bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
         using var commandList = new CanvasCommandList(session);
+        bool result;
+        // Close the drawing session immediately after rendering so commandList
+        // can be used as an image source for the effects pipeline below.
+        using (var currentLineSession = commandList.CreateDrawingSession())
+        {
+            result = RenderCore(currentLineSession, context);
+        }
 
-        var result = RenderCore(commandList, context);
+        var gap = IsActive ? 0 : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex), 1, 250);
+
         var effectBuilder = new CanvasImageBuilder(commandList);
 
         if (context.Effects.ScaleWhenFocusing)
@@ -51,47 +59,53 @@ public abstract class RenderingLyricLine : IDisposable
                     RenderingHeight / 2, scaling, scaling));
 
         }
-        var gap = IsActive ? 0 : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex), 1, 250);
+        if (context.Effects.Blur && !IsActive && !context.IsScrolling)
+        {
+            var blur = Math.Clamp(gap, 0, 250);
+            effectBuilder.AddGaussianBlurEffect(_blurTransition.Animate(context.CurrentLyricTime, blur));
+        }
+
+        if (context.Effects.Fade)
+        {
+            var opacity = Math.Clamp(0.6 - (gap / (10f - (context.Effects.FadingRatio / 10f))), 0, 1);
+            if (gap == 0) opacity = 1;
+            if (context.IsScrolling) opacity = Math.Max(opacity, 0.5);
+            effectBuilder.AddOpacityEffect(_opacityTransition.Animate(context.CurrentLyricTime, opacity));
+        }
+
+        using var compositeList = new CanvasCommandList(session);
+        using (var compositeSession = compositeList.CreateDrawingSession())
+        {
+            compositeSession.DrawImage(effectBuilder.Build());
+
+            if (ReactionState == ReactionState.Enter && !Hidden)
+            {
+                compositeSession.FillRoundedRectangle(0, 0,
+                    RenderingWidth + 2, RenderingHeight + 8, 6, 6,
+                    Color.FromArgb(10, 255, 255, 255));
+            }
+
+            if (context.Debug)
+            {
+                compositeSession.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})", 0, 0, Colors.Red);
+                compositeSession.DrawText(Id.ToString(), 0, 15, Colors.Red);
+                compositeSession.DrawRectangle(0, 0, RenderingWidth, RenderingHeight, Colors.Yellow);
+            }
+        }
+
+        var finalEffectBuilder = new CanvasImageBuilder(compositeList);
 
         if (context.Effects.Transform3D)
         {
             var targetAngle = IsActive ? 0f : Math.Clamp(-(float)(gap * 15), -60f, 60f);
             if (context.IsScrolling) targetAngle = 0;
             var angle = _transform3dTranslation.Animate(context.CurrentLyricTime, targetAngle);
-            effectBuilder.AddTransform3DEffect(
+            finalEffectBuilder.AddTransform3DEffect(
                 Get3DMatrix(new(-(float)offset.X, 0, 0),
                 angleY: angle, depth: 2500f));
         }
+        session.DrawImage(finalEffectBuilder.Build(), offset.X, offset.Y);
 
-        if (context.Effects.Blur && !IsActive && !context.IsScrolling)
-        {
-            var blur = Math.Clamp(gap, 0, 250);
-            if (context.IsScrolling) blur = 0;
-            effectBuilder.AddGaussianBlurEffect(_blurTransition.Animate(context.CurrentLyricTime, blur));
-        }
-
-        if (context.Effects.Fade)
-        {
-            var opacity = Math.Clamp(0.5 - (gap / (10f - (context.Effects.FadingRatio / 10f))), 0, 1);
-            if (gap == 0) opacity = 1;
-            if (context.IsScrolling) opacity = Math.Max(opacity, 0.5);
-            effectBuilder.AddOpacityEffect(_opacityTransition.Animate(context.CurrentLyricTime, opacity));
-        }
-
-        session.DrawImage(effectBuilder.Build(), offset.X, offset.Y);
-        if (ReactionState == ReactionState.Enter && !Hidden)
-        {
-            session.FillRoundedRectangle(offset.X, offset.Y,
-                RenderingWidth + 2, RenderingHeight + 8, 6, 6,
-                Color.FromArgb(10, 255, 255, 255));
-        }
-
-        if (context.Debug)
-        {
-            session.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})", offset.X, offset.Y, Colors.Red);
-            session.DrawText(Id.ToString(), offset.X, offset.Y + 15, Colors.Red);
-            session.DrawRectangle(offset.X, offset.Y, RenderingWidth, RenderingHeight, Colors.Yellow);
-        }
         return result;
     }
 
@@ -126,7 +140,7 @@ public abstract class RenderingLyricLine : IDisposable
     {
         ReactionState = state;
     }
-    protected abstract bool RenderCore(CanvasCommandList commandList, RenderContext context);
+    protected abstract bool RenderCore(CanvasDrawingSession session, RenderContext context);
 
     public void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
     {

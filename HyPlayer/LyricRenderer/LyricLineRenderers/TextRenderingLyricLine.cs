@@ -67,13 +67,11 @@ public class TextRenderingLyricLine : RenderingLyricLine
     public EaseFunctionBase EaseFunction { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
 
 
-    protected override bool RenderCore(CanvasCommandList commandList, RenderContext context)
+    protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
         if (_layout is null) return true;
 
-
-        using var targetDrawingSession = commandList.CreateDrawingSession();
-        using var textCommandList = new CanvasCommandList(targetDrawingSession);
+        using var textCommandList = new CanvasCommandList(session);
         using (var textDrawingSession = textCommandList.CreateDrawingSession())
         {
             var opacity = IsActive ? 1 : 0.3f;
@@ -105,10 +103,10 @@ public class TextRenderingLyricLine : RenderingLyricLine
             highlightEffectBuilder
                 .AddShadowEffect(6, _cachedShadowColor ?? _cachedFocusingColor)
                 .AddOpacityEffect(0.4f);
-            targetDrawingSession.DrawImage(highlightEffectBuilder.Build(), 0, 0);
+            session.DrawImage(highlightEffectBuilder.Build(), 0, 0);
         }
 
-        targetDrawingSession.DrawImage(textCommandList, 0, 0);
+        session.DrawImage(textCommandList, 0, 0);
 
         return true;
     }
