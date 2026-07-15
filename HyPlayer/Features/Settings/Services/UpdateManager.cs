@@ -105,7 +105,7 @@ public static class UpdateManager
             }}"),
             Method = HttpMethod.Get
         };
-        message.Headers.Add("User-Agent", "HyPlayer-Update-Client");
+        message.Headers.Add("User-Agent", "HyPlayer-Apply-Client");
         using var versionsResponse = await Ioc.Default.GetRequiredService<HttpClient>().SendAsync(message);
         if (!versionsResponse.IsSuccessStatusCode)
         {

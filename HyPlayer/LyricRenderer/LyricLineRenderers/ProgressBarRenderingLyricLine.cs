@@ -119,5 +119,6 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
     {
         _baseGradientBrush?.Dispose();
         _baseGradientBrush = null;
+        base.Dispose();
     }
 }

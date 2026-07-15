@@ -12,11 +12,10 @@ public class CanvasTransition
     private double _targetValue = double.NaN;
     private double _startTime = double.MinValue;
 
-    public float Animate(long currentTime, double value)
+    public virtual float Animate(long currentTime, double value)
     {
         if (double.IsNaN(_targetValue))
         {
-            // First call: jump directly to the initial value with no animation.
             _startValue = value;
             _targetValue = value;
             _startTime = currentTime;
@@ -25,8 +24,6 @@ public class CanvasTransition
 
         if (Math.Abs(value - _targetValue) > double.Epsilon)
         {
-            // Target changed mid-animation: capture current interpolated position as
-            // the new start so the transition continues smoothly from here.
             var currentProgress = Math.Clamp((currentTime - _startTime) / Duration.TotalMilliseconds, 0, 1);
             _startValue = _startValue + (_targetValue - _startValue) * Easing.Ease(currentProgress);
             _targetValue = value;

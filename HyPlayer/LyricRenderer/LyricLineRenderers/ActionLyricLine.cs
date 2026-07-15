@@ -110,5 +110,6 @@ public class ActionLyricLine : RenderingLyricLine
         textFormat = null;
         textLayout = null;
         _staticPersistCache = null;
+        base.Dispose();
     }
 }

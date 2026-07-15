@@ -173,7 +173,6 @@ public class TextRenderingLyricLine : RenderingLyricLine
     {
         _layout?.Dispose();
         _layout = null;
+        base.Dispose();
     }
-
-
 }
