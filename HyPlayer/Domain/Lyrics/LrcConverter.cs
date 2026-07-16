@@ -157,7 +157,6 @@ public static class LrcConverter
                 });
             }
 
-
             if (settings.lyricRenderScaleWhenFocusing)
             {
                 lyricLine.FinalEffects.Add(new LyricTransform2DEffect
@@ -181,13 +180,14 @@ public static class LrcConverter
             {
                 lyricLine.FinalEffects.Add(new LyricTransform3DEffect
                 {
+                    Duration = TimeSpan.FromSeconds(1),
                     AngleY = new((lyricLine, context) =>
                     {
                         var gap = Math.Abs(lyricLine.Id - context.CurrentLyricLineIndex);
                         var angle = Math.Clamp(-15 * gap, -60, 60);
                         if (context.IsScrolling || lyricLine.IsActive) angle = 0;
                         return angle;
-                    }, new CanvasTransition { Duration = TimeSpan.FromSeconds(1) }),
+                    }),
                 });
             }
         }
