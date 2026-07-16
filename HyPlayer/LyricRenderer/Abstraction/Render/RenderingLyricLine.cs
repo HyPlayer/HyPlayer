@@ -42,50 +42,9 @@ public abstract class RenderingLyricLine : IDisposable
 
     public bool IsPlayed { get; private set; }
 
-    public List<LyricEffect> Effects { get; set; }
-    = [
-        new LyricBlurEffect{
-            Amount  = new((lyricLine, context) =>
-            {
-                var blur = GetGapValue(lyricLine, context, 0f, 15f);
-                blur = (context.IsScrolling) ? 0 : blur;
-                return blur;
-            })
-        },
-        new LyricOpacityEffect{
-            Opacity = new((lyricLine, context) =>
-            {
-                var opacity = Math.Clamp(GetGapValue(lyricLine, context, 0.4f, 0f),0,1);
-                if(lyricLine.IsActive) opacity = 1;
-                if (context.IsScrolling) opacity = MathF.Max(opacity, 0.4f);
-                return (float)opacity;
-            })
-        }];
+    public List<LyricEffect> Effects { get; set; } = [];
 
-    public List<LyricEffect> FinalEffects { get; set; } = [
-        new LyricTransform2DEffect
-        {
-            XScale = new((lyricLine, context) =>
-            {
-                var scale = GetGapValue(lyricLine, context, 1f, 0.5f);
-                if (context.IsScrolling) scale = Math.Max(scale, 0.8f);
-                return scale;
-            }),
-            YScale = new((lyricLine, context) =>
-            {
-                var scale = GetGapValue(lyricLine, context, 1f, 0.5f);
-                if (context.IsScrolling) scale = Math.Max(scale, 0.8f);
-                return scale;
-            })
-        }];
-
-    private static float GetGapValue(RenderingLyricLine lyricLine, RenderContext context, float start, float target)
-    {
-        var gap = Math.Abs((context.RenderOffsets[context.CurrentLyricLineIndex].Y - context.RenderOffsets[lyricLine.Id].Y) / context.ViewHeight);
-        if (lyricLine.IsActive) gap = 0;
-        var value = start + (target - start) * gap;
-        return value;
-    }
+    public List<LyricEffect> FinalEffects { get; set; } = [];
 
     public bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
