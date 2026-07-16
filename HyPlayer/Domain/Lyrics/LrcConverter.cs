@@ -160,7 +160,7 @@ public static class LrcConverter
 
             if (settings.lyricRenderScaleWhenFocusing)
             {
-                lyricLine.Effects.Add(new LyricTransform2DEffect
+                lyricLine.FinalEffects.Add(new LyricTransform2DEffect
                 {
                     XScale = new((lyricLine, context) =>
                     {
@@ -179,7 +179,7 @@ public static class LrcConverter
 
             if (settings.lyricRenderTransform3D)
             {
-                lyricLine.Effects.Add(new LyricTransform3DEffect
+                lyricLine.FinalEffects.Add(new LyricTransform3DEffect
                 {
                     AngleY = new((lyricLine, context) =>
                     {
