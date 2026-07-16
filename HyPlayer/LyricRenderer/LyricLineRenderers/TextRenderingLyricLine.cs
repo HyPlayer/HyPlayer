@@ -74,8 +74,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
         using var textCommandList = new CanvasCommandList(session);
         using (var textDrawingSession = textCommandList.CreateDrawingSession())
         {
-            var opacity = IsActive ? 1 : 0.3f;
-            textDrawingSession.DrawImage(_layout.StaticPersistCache, 0, 0, _layout.SizePixelRect, opacity);
+            textDrawingSession.DrawImage(_layout.StaticPersistCache, 0, 0, _layout.SizePixelRect, 1);
 
             if (IsActive && (Tokens.Count > 0 || context.Effects.SimpleLineScanning))
             {
@@ -90,10 +89,10 @@ public class TextRenderingLyricLine : RenderingLyricLine
             {
                 if (_layout.DefaultTransliterationPersistCache is not null)
                 {
-                    textDrawingSession.DrawImage(_layout.DefaultTransliterationPersistCache, 0, 0, _layout.SizePixelRect, opacity);
+                    textDrawingSession.DrawImage(_layout.DefaultTransliterationPersistCache, 0, 0, _layout.SizePixelRect, 1);
                 }
 
-                textDrawingSession.DrawImage(_layout.DefaultTextPersistCache, 0, _layout.TextRenderActualTop, _layout.SizePixelRect, opacity);
+                textDrawingSession.DrawImage(_layout.DefaultTextPersistCache, 0, _layout.TextRenderActualTop, _layout.SizePixelRect, 1);
             }
         }
 

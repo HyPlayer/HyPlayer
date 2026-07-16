@@ -55,11 +55,13 @@ public abstract class RenderingLyricLine : IDisposable
         new LyricOpacityEffect{
             Opacity = new((lyricLine, context) =>
             {
-                var opacity = Math.Clamp(GetGapValue(lyricLine, context, 1f, 0f),0,1);
-                if (context.IsScrolling) opacity = MathF.Max(opacity, 0.6F);
+                var opacity = Math.Clamp(GetGapValue(lyricLine, context, 0.4f, 0f),0,1);
+                if(lyricLine.IsActive) opacity = 1;
+                if (context.IsScrolling) opacity = MathF.Max(opacity, 0.4f);
                 return (float)opacity;
             })
         }];
+
     public List<LyricEffect> FinalEffects { get; set; } = [
         new LyricTransform2DEffect
         {
