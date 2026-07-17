@@ -593,7 +593,7 @@ public sealed class AppNavigator : IAppNavigator
     public async Task PlayAsync(MusicResource resource)
     {
         await _control.StopAsync();
-        await _playCore.RemoveAllSongAsync();
+        await _control.ClearQueueAsync();
         await AppendAsync(resource);
         await _control.MoveNextAndPlayAsync(true);
     }

@@ -176,8 +176,7 @@ public partial class PlayBarViewModel : ObservableObject
             "sgl" => "seq",
             _ => "seq"
         };
-        await _playCore.SetPlayModeAsync(nextStrategy);
-        _state.ActiveStrategyId = nextStrategy;
+        await _control.SetPlayModeAsync(nextStrategy);
         _setting.ActiveStrategyId = nextStrategy;
         ActiveStrategyId = nextStrategy;
     }
@@ -197,9 +196,14 @@ public partial class PlayBarViewModel : ObservableObject
     [RelayCommand]
     private void RemoveAll()
     {
-        _taskRunner.Forget(_control.StopAsync(), "stop before clearing PlayCore queue");
-        _taskRunner.Forget(_playCore.RemoveAllSongAsync(), "clear PlayCore queue");
+        _taskRunner.Forget(StopAndClearQueueAsync(), "stop and clear PlayCore queue");
         _state.ClearNowPlaying();
+    }
+
+    private async Task StopAndClearQueueAsync()
+    {
+        await _control.StopAsync().ConfigureAwait(false);
+        await _control.ClearQueueAsync().ConfigureAwait(false);
     }
 
     [RelayCommand]

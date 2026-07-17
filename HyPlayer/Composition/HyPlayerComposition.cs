@@ -23,6 +23,7 @@ using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Playback.Transitions;
 using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
@@ -194,6 +195,11 @@ internal static class HyPlayerComposition
             DependencyLifetime.Singleton,
             implementationFactory: dep => dep.Resolve<ChopinAudioService>());
         depository.Add(
+            typeof(IPreparedAudioTicketService),
+            typeof(ChopinAudioService),
+            DependencyLifetime.Singleton,
+            implementationFactory: dep => dep.Resolve<ChopinAudioService>());
+        depository.Add(
             typeof(IAudioTicketListProvidable),
             typeof(ChopinAudioService),
             DependencyLifetime.Singleton,
@@ -210,6 +216,9 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IQueueSourceProvider, SingerHotQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, SingleSongQueueSourceProvider>();
         depository.AddSingleton<ILocalFileImportService, LocalFileImportService>();
+        depository.AddSingleton<ITrackTransition, DirectTransition>();
+        depository.AddSingleton<ITrackTransition, GaplessTransition>();
+        depository.AddSingleton<ITrackTransition, CrossFadeTransition>();
         depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
         depository.Add(
             typeof(INotificationSubscriber<PlaybackRequestFailedNotification>),

@@ -149,7 +149,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
         private async Task MovePreviousAsync() => await _control.MovePreviousAndPlayAsync();
 
         [RelayCommand]
-        private void ChangePlayMode()
+        private async Task ChangePlayMode()
         {
             // Cycle: seq → sgl → shn → seq
             var next = ActiveStrategyId switch
@@ -158,8 +158,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
                 "sgl" => "shn",
                 _ => "seq"
             };
-            _ = _playCore.SetPlayModeAsync(next);
-            _state.ActiveStrategyId = next;
+            await _control.SetPlayModeAsync(next);
             _settings.ActiveStrategyId = next;
             ActiveStrategyId = next;
         }

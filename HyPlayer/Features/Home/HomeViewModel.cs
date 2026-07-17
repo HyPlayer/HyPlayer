@@ -190,7 +190,7 @@ namespace HyPlayer.Features.Home
         private async Task OnPlayAllRecommendedSongsClickedAsync()
         {
             await _control.StopAsync();
-            await _playCore.RemoveAllSongAsync();
+            await _control.ClearQueueAsync();
             await _playCore.InsertSongRangeAsync(_recommendedProviderSongs);
             await _control.MoveNextAndPlayAsync(userInitiated: true);
         }

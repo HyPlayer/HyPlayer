@@ -73,8 +73,8 @@ internal sealed class PersonalFM
         var fm = new PersonalFM();
         _instance = fm;
         fm._previousStrategyId = fm._playbackState.ActiveStrategyId;
-        fm._playCore.RemoveAllSongAsync().SafeFireAndForget();
-        fm._playCore.SetPlayModeAsync("pfm").SafeFireAndForget();
+        fm._control.ClearQueueAsync().SafeFireAndForget();
+        fm._control.SetPlayModeAsync("pfm").SafeFireAndForget();
         fm._playbackState.ActiveStrategyId = "pfm";
         fm._setting.ActiveStrategyId = "pfm";
         fm._playbackState.IsInFm = true;
@@ -149,9 +149,9 @@ internal sealed class PersonalFM
 
         _instance._playbackState.IsInFm = false;
         if (clearPlaylist)
-            _instance._playCore.RemoveAllSongAsync().SafeFireAndForget();
+            _instance._control.ClearQueueAsync().SafeFireAndForget();
 
-        _instance._playCore.SetPlayModeAsync(_instance._previousStrategyId).SafeFireAndForget();
+        _instance._control.SetPlayModeAsync(_instance._previousStrategyId).SafeFireAndForget();
         _instance._playbackState.ActiveStrategyId = _instance._previousStrategyId;
         _instance._setting.ActiveStrategyId = _instance._previousStrategyId;
         _instance = null;

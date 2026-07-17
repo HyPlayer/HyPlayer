@@ -89,7 +89,7 @@ internal sealed class SongListQueueBuilder(
                 if (!shiftSong)
                     await control.StopAsync().ConfigureAwait(false);
 
-                await playCore.RemoveAllSongAsync().ConfigureAwait(false);
+                await control.ClearQueueAsync().ConfigureAwait(false);
                 await playCore.InsertSongRangeAsync(visibleSongs.ToList()).ConfigureAwait(false);
             }
             finally
@@ -117,7 +117,7 @@ internal sealed class SongListQueueBuilder(
         try
         {
             await control.StopAsync().ConfigureAwait(false);
-            await playCore.RemoveAllSongAsync().ConfigureAwait(false);
+            await control.ClearQueueAsync().ConfigureAwait(false);
             await playCore.InsertSongAsync(clickedSong).ConfigureAwait(false);
             await playCore.MovePointerToIndexAsync(0).ConfigureAwait(false);
             if (playSourceId != null)
@@ -153,7 +153,7 @@ internal sealed class SongListQueueBuilder(
 
             await _queueMutationLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             lockTaken = true;
-            await playCore.RemoveAllSongAsync(cancellationToken).ConfigureAwait(false);
+            await control.ClearQueueAsync(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
             await playCore.InsertSongRangeAsync(songs, ctk: cancellationToken).ConfigureAwait(false);
 
@@ -246,7 +246,7 @@ internal sealed class SongListQueueBuilder(
         {
             if (stopBeforeClear)
                 await control.StopAsync(cancellationToken).ConfigureAwait(false);
-            await playCore.RemoveAllSongAsync(cancellationToken).ConfigureAwait(false);
+            await control.ClearQueueAsync(cancellationToken).ConfigureAwait(false);
         }
 
         await queueLoader.AppendSourceByKindAsync(scope.Kind, scope.Id, cancellationToken).ConfigureAwait(false);

@@ -114,7 +114,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private async void Playall_Click(object sender, RoutedEventArgs e)
     {
         await _control.StopAsync();
-        await _playCore.RemoveAllSongAsync();
+        await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(localHyItems.Cast<SingleSongBase>().ToList());
         if (localHyItems.Count > 0)
         {
@@ -198,7 +198,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     {
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
         await _control.StopAsync();
-        await _playCore.RemoveAllSongAsync();
+        await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(localHyItems.Cast<SingleSongBase>().ToList());
         if (ListBoxLocalMusicContainer.SelectedItem is LocalSong selectedItem)
         {

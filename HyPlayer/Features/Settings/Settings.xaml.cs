@@ -74,6 +74,8 @@ public sealed partial class Settings : Page
     private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
     private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
     private readonly IPlaybackMemoryService _playbackMemory = Ioc.Default.GetRequiredService<IPlaybackMemoryService>();
+    private readonly IPlaybackControlService _playbackControl = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
     private bool isbyprogram;
     private int _elapse = 10;
@@ -92,6 +94,20 @@ public sealed partial class Settings : Page
     {
         isbyprogram = true;
         InitializeComponent();
+    }
+
+    private void TransitionMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (TransitionMode.SelectedValue is not string transitionId
+            || transitionId is not ("dir" or "gap" or "xfd")
+            || transitionId == _setting.TransitionId)
+            return;
+
+        _setting.TransitionId = transitionId;
+        Bindings.Update();
+        _taskRunner.Forget(
+            _playbackControl.SetTransitionAsync(transitionId),
+            "change track transition");
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

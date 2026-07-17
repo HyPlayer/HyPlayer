@@ -258,7 +258,7 @@ public sealed partial class ContainerItemsView : UserControl
         if (songs.Count == 0) return;
 
         await _control.StopAsync();
-        await _playCore.RemoveAllSongAsync();
+        await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(songs);
         await _control.MoveNextAndPlayAsync(userInitiated: true);
     }

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media;
 using Windows.Media.Audio;
@@ -26,11 +27,17 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private AudioFrameOutputNode _frameOutputNode;
         private bool _disposedValue;
         private readonly Timer _positionTimer = new() { AutoReset = true, Interval = 100 };
+        private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
         private TimeSpan _lastPosition = TimeSpan.Zero;
         private string _currentDeviceId = string.Empty;
         private double _volume = 1;
         private AudioGraphPlaybackSource _primaryPlaybackSource;
         #endregion
+
+        public AudioGraphPlayer()
+        {
+            _positionTimer.Elapsed += PositionTimer_Elapsed;
+        }
 
         #region Public Properties
         public bool PlayerCreated => _defaultPlayer != null;
@@ -78,6 +85,16 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         #endregion
 
+        public void SetPrimaryPlaybackSource(IPlaybackSource playbackSource)
+        {
+            ThrowExceptionIfDisposed();
+            if (playbackSource is not AudioGraphPlaybackSource source
+                || !_audioInputNodes.ContainsKey(source))
+                throw new ArgumentException("PlaybackSource is not connected.", nameof(playbackSource));
+
+            PrimaryPlaybackSource = source;
+        }
+
         #region Events
         public delegate void PositionChangeHandler(TimeSpan position);
         public event PositionChangeHandler OnPositionChanged;
@@ -101,27 +118,57 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (settings is not AudioGraphAudioSetting audioGraphSetting)
                 throw new ArgumentException("Setting is not AudioGraphSetting");
 
-            _positionTimer.Elapsed += PositionTimer_Elapsed;
+            await _lifecycleGate.WaitAsync();
+            try
+            {
+                if (PlayerCreated)
+                    return;
 
-            // 创建 AudioGraph 和输出节点
-            var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
-            var graphResult = await AudioGraph.CreateAsync(setting);
-            if (graphResult.Status != AudioGraphCreationStatus.Success)
-                throw graphResult.ExtendedError;
-            _defaultPlayer = graphResult.Graph;
-            _defaultPlayer.QuantumProcessed += GraphOnQuantumProcessed;
-            EnableFFTProcessing = settings.EnableFFTProcessing;
-            var outputResult = await _defaultPlayer.CreateDeviceOutputNodeAsync();
-            if (outputResult.Status != AudioDeviceNodeCreationStatus.Success)
-                throw outputResult.ExtendedError;
-            _outputNode = outputResult.DeviceOutputNode;
-            var encodingProperties = _outputNode.EncodingProperties.Copy();
-            encodingProperties.ChannelCount = 1;
-            var frameOutputResult = _defaultPlayer.CreateFrameOutputNode(encodingProperties);
-            _frameOutputNode = frameOutputResult;
-            _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
-            _currentDeviceId = audioGraphSetting.DefaultDeviceId;
-            _positionTimer.Start();
+                AudioGraph newGraph = null;
+                AudioDeviceOutputNode newOutputNode = null;
+                AudioFrameOutputNode newFrameOutputNode = null;
+                try
+                {
+                    var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
+                    var graphResult = await AudioGraph.CreateAsync(setting);
+                    if (graphResult.Status != AudioGraphCreationStatus.Success)
+                        throw graphResult.ExtendedError;
+
+                    newGraph = graphResult.Graph;
+                    var outputResult = await newGraph.CreateDeviceOutputNodeAsync();
+                    if (outputResult.Status != AudioDeviceNodeCreationStatus.Success)
+                        throw outputResult.ExtendedError;
+
+                    newOutputNode = outputResult.DeviceOutputNode;
+                    var encodingProperties = newOutputNode.EncodingProperties.Copy();
+                    encodingProperties.ChannelCount = 1;
+                    newFrameOutputNode = newGraph.CreateFrameOutputNode(encodingProperties);
+                    newOutputNode.OutgoingGain = audioGraphSetting.OutputVolume;
+
+                    _outputNode = newOutputNode;
+                    _frameOutputNode = newFrameOutputNode;
+                    _currentDeviceId = audioGraphSetting.DefaultDeviceId;
+                    EnableFFTProcessing = settings.EnableFFTProcessing;
+                    newGraph.QuantumProcessed += GraphOnQuantumProcessed;
+                    Volatile.Write(ref _defaultPlayer, newGraph);
+                    _positionTimer.Start();
+
+                    newGraph = null;
+                    newOutputNode = null;
+                    newFrameOutputNode = null;
+                }
+                catch
+                {
+                    newFrameOutputNode?.Dispose();
+                    newOutputNode?.Dispose();
+                    newGraph?.Dispose();
+                    throw;
+                }
+            }
+            finally
+            {
+                _lifecycleGate.Release();
+            }
         }
 
         private void GraphOnQuantumProcessed(AudioGraph sender, object args)
@@ -141,110 +188,117 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public async Task ChangePlayerServiceImplementation(IAudioSettings settings)
         {
             ThrowExceptionIfDisposed();
-            _positionTimer.Stop();
-
             if (settings is not AudioGraphAudioSetting audioGraphSetting)
                 throw new ArgumentException("Setting is not AudioGraphSetting");
 
-            if (_currentDeviceId == audioGraphSetting.DefaultDeviceId)
-                return;
-
-            var oldPlayer = _defaultPlayer;
-            var oldOutputNode = _outputNode;
-            var oldNodes = _audioInputNodes.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
+            await _lifecycleGate.WaitAsync();
             try
             {
-                // 创建新的 AudioGraph
-                var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
-                var newPlayerResult = await AudioGraph.CreateAsync(setting);
-                if (newPlayerResult.Status != AudioGraphCreationStatus.Success)
-                    throw newPlayerResult.ExtendedError;
-                var newPlayer = newPlayerResult.Graph;
+                if (_currentDeviceId == audioGraphSetting.DefaultDeviceId)
+                    return;
 
+                _positionTimer.Stop();
+                var oldPlayer = _defaultPlayer;
+                var oldOutputNode = _outputNode;
+                var oldNodes = _audioInputNodes.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-                oldPlayer.Stop();
-                oldPlayer.QuantumProcessed -= GraphOnQuantumProcessed;
-
-                // 创建新的输出节点
-                var deviceNodeCreateResult = await newPlayer.CreateDeviceOutputNodeAsync();
-                if (deviceNodeCreateResult.Status != AudioDeviceNodeCreationStatus.Success)
-                    throw deviceNodeCreateResult.ExtendedError;
-                var newOutputNode = deviceNodeCreateResult.DeviceOutputNode;
-                newOutputNode.OutgoingGain = oldOutputNode.OutgoingGain;
-
-                var encodingProperties = _outputNode.EncodingProperties.Copy();
-                encodingProperties.ChannelCount = 1;
-                var frameOutputResult = newPlayer.CreateFrameOutputNode(encodingProperties);
-                _frameOutputNode = frameOutputResult;
-
-                // 转移所有播放源
-                var newNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
-                var newNodesReverse = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
-
-                foreach (var (source, oldNode) in oldNodes)
+                try
                 {
-                    // 捕获旧节点状态
-                    var position = oldNode.Position;
-                    var gain = oldNode.OutgoingGain;
-                    var factor = oldNode.PlaybackSpeedFactor;
-                    var effects = oldNode.EffectDefinitions.ToList();
+                    // 创建新的 AudioGraph
+                    var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
+                    var newPlayerResult = await AudioGraph.CreateAsync(setting);
+                    if (newPlayerResult.Status != AudioGraphCreationStatus.Success)
+                        throw newPlayerResult.ExtendedError;
+                    var newPlayer = newPlayerResult.Graph;
 
-                    // 清理旧节点
-                    oldNode.MediaSourceCompleted -= OnMediaSourceCompleted;
-                    oldNode.Dispose();
-                    source.PlaybackSource?.Reset();
 
-                    // 准备播放源
-                    if (source.PlaybackSource == null)
-                        await source.CreatePlaybackSource();
-                    await source.PlaybackSource?.OpenAsync();
+                    oldPlayer.Stop();
+                    oldPlayer.QuantumProcessed -= GraphOnQuantumProcessed;
 
-                    // 在新图中创建节点
-                    var createResult = await newPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
-                    if (createResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
-                        throw createResult.ExtendedError;
-                    var newNode = createResult.Node;
+                    // 创建新的输出节点
+                    var deviceNodeCreateResult = await newPlayer.CreateDeviceOutputNodeAsync();
+                    if (deviceNodeCreateResult.Status != AudioDeviceNodeCreationStatus.Success)
+                        throw deviceNodeCreateResult.ExtendedError;
+                    var newOutputNode = deviceNodeCreateResult.DeviceOutputNode;
+                    newOutputNode.OutgoingGain = oldOutputNode.OutgoingGain;
 
-                    // 应用状态
-                    newNode.PlaybackSpeedFactor = factor;
-                    newNode.OutgoingGain = gain;
-                    newNode.AddOutgoingConnection(newOutputNode);
-                    newNode.AddOutgoingConnection(_frameOutputNode);
-                    newNode.MediaSourceCompleted += OnMediaSourceCompleted;
+                    var encodingProperties = _outputNode.EncodingProperties.Copy();
+                    encodingProperties.ChannelCount = 1;
+                    var frameOutputResult = newPlayer.CreateFrameOutputNode(encodingProperties);
+                    _frameOutputNode = frameOutputResult;
 
-                    // 应用效果
-                    foreach (var effect in effects)
+                    // 转移所有播放源
+                    var newNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
+                    var newNodesReverse = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
+
+                    foreach (var (source, oldNode) in oldNodes)
                     {
-                        newNode.EnableEffectsByDefinition(effect);
+                        // 捕获旧节点状态
+                        var position = oldNode.Position;
+                        var gain = oldNode.OutgoingGain;
+                        var factor = oldNode.PlaybackSpeedFactor;
+                        var effects = oldNode.EffectDefinitions.ToList();
+
+                        // 清理旧节点
+                        oldNode.MediaSourceCompleted -= OnMediaSourceCompleted;
+                        oldNode.Dispose();
+                        source.PlaybackSource?.Reset();
+
+                        // 准备播放源
+                        if (source.PlaybackSource == null)
+                            await source.CreatePlaybackSource();
+                        await source.PlaybackSource?.OpenAsync();
+
+                        // 在新图中创建节点
+                        var createResult = await newPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
+                        if (createResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
+                            throw createResult.ExtendedError;
+                        var newNode = createResult.Node;
+
+                        // 应用状态
+                        newNode.PlaybackSpeedFactor = factor;
+                        newNode.OutgoingGain = gain;
+                        newNode.AddOutgoingConnection(newOutputNode);
+                        newNode.AddOutgoingConnection(_frameOutputNode);
+                        newNode.MediaSourceCompleted += OnMediaSourceCompleted;
+
+                        // 应用效果
+                        foreach (var effect in effects)
+                        {
+                            newNode.EnableEffectsByDefinition(effect);
+                        }
+
+                        // 恢复位置并开始
+                        await Task.Delay(250);
+                        newNode.Seek(position);
+                        newNode.Start();
+
+                        newNodes[source] = newNode;
+                        newNodesReverse[newNode] = source;
                     }
 
-                    // 恢复位置并开始
-                    await Task.Delay(250);
-                    newNode.Seek(position);
-                    newNode.Start();
+                    // 替换为新图
+                    _defaultPlayer = newPlayer;
+                    newPlayer.QuantumProcessed += GraphOnQuantumProcessed;
+                    EnableFFTProcessing = settings.EnableFFTProcessing;
+                    _outputNode = newOutputNode;
+                    _audioInputNodes.Clear();
+                    foreach (var kvp in newNodes) _audioInputNodes.TryAdd(kvp.Key, kvp.Value);
+                    _audioInputNodesReverseDictionary.Clear();
+                    foreach (var kvp in newNodesReverse) _audioInputNodesReverseDictionary.TryAdd(kvp.Key, kvp.Value);
 
-                    newNodes[source] = newNode;
-                    newNodesReverse[newNode] = source;
+                    _currentDeviceId = audioGraphSetting.DefaultDeviceId;
+                    if (GlobalPlaybackStatus == PlaybackStatus.Playing) newPlayer.Start();
                 }
-
-                // 替换为新图
-                _defaultPlayer = newPlayer;
-                newPlayer.QuantumProcessed += GraphOnQuantumProcessed;
-                EnableFFTProcessing = settings.EnableFFTProcessing;
-                _outputNode = newOutputNode;
-                _audioInputNodes.Clear();
-                foreach (var kvp in newNodes) _audioInputNodes.TryAdd(kvp.Key, kvp.Value);
-                _audioInputNodesReverseDictionary.Clear();
-                foreach (var kvp in newNodesReverse) _audioInputNodesReverseDictionary.TryAdd(kvp.Key, kvp.Value);
-
-                _currentDeviceId = audioGraphSetting.DefaultDeviceId;
-                if (GlobalPlaybackStatus == PlaybackStatus.Playing) newPlayer.Start();
+                finally
+                {
+                    oldPlayer.Dispose();
+                    _positionTimer.Start();
+                }
             }
             finally
             {
-                oldPlayer.Dispose();
-                _positionTimer.Start();
+                _lifecycleGate.Release();
             }
         }
 
@@ -256,6 +310,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             {
                 _positionTimer?.Stop();
                 _positionTimer?.Dispose();
+                _lifecycleGate.Dispose();
             }
 
             // 清理所有播放源

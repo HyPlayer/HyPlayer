@@ -170,8 +170,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
 
         if (!string.IsNullOrWhiteSpace(memory.ActiveStrategyId))
         {
-            await _playCore.SetPlayModeAsync(memory.ActiveStrategyId).ConfigureAwait(false);
-            _state.ActiveStrategyId = memory.ActiveStrategyId;
+            await _control.SetPlayModeAsync(memory.ActiveStrategyId).ConfigureAwait(false);
             _setting.ActiveStrategyId = memory.ActiveStrategyId;
         }
 
@@ -198,7 +197,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
         if (!TryParseSource(memory, out var kind, out var id))
             return false;
 
-        await _playCore.RemoveAllSongAsync().ConfigureAwait(false);
+        await _control.ClearQueueAsync().ConfigureAwait(false);
         var success = await _queueLoader.AppendSourceByKindAsync(kind, id).ConfigureAwait(false);
         if (!success)
             return false;
@@ -209,7 +208,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
 
     private async Task RestoreQueueFromSnapshotAsync(IReadOnlyList<PlaybackItemIdentity> queue)
     {
-        await _playCore.RemoveAllSongAsync().ConfigureAwait(false);
+        await _control.ClearQueueAsync().ConfigureAwait(false);
         var songs = await LoadSnapshotSongsAsync(queue).ConfigureAwait(false);
         if (songs.Count > 0)
             await _playCore.InsertSongRangeAsync(songs).ConfigureAwait(false);

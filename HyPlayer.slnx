@@ -16,6 +16,9 @@
   <Project Path="HyPlayer.Package/HyPlayer.Package.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" Id="4a6ea262-870a-44ee-9777-87691d25b32c">
     <Deploy />
   </Project>
+  <Project Path="HyPlayer.Playback.Tests/HyPlayer.Playback.Tests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
   <Project Path="HyPlayer.PlayCore/HyPlayer.PlayCore.Abstraction/HyPlayer.PlayCore.Abstraction.csproj" />
   <Project Path="HyPlayer.PlayCore/HyPlayer.PlayCore/HyPlayer.PlayCore.csproj" />
   <Project Path="HyPlayer.UWP.Chopin/HyPlayer.UWP.Chopin.csproj">

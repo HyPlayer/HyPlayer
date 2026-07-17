@@ -53,9 +53,9 @@ public sealed partial class BasePage : Page
     private readonly ShellLoginService _loginService = Ioc.Default.GetRequiredService<ShellLoginService>();
     private readonly NavigationShellViewModel _navigationShell = Ioc.Default.GetRequiredService<NavigationShellViewModel>();
     private readonly IPlaybackControlService _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-    private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
     private readonly IShellHostStateService _shellHost = Ioc.Default.GetRequiredService<IShellHostStateService>();
     private readonly ITeachingTipService _teachingTip = Ioc.Default.GetRequiredService<ITeachingTipService>();
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
     public BasePage()
     {
@@ -63,10 +63,7 @@ public sealed partial class BasePage : Page
         _shellHost.AppTitleBar = AppTitleBar;
         _teachingTip.Tip = TheTeachingTip;
 
-        if (!_player.PlayerCreated)
-        {
-            _ = _playback.InitializeAsync();
-        }
+        _taskRunner.Forget(_playback.InitializeAsync(), "initialize playback control");
 
         ApplicationView.TerminateAppOnFinalViewClose = false;
         _navigator.AttachNavigationView(NavMain, BaseFrame, _navigationShell);

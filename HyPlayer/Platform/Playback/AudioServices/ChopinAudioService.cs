@@ -22,6 +22,7 @@ public sealed class ChopinAudioService :
     IOutgoingVolumeChangeable,
     IAudioTicketVolumeChangeable,
     IPlaybackRateChangeableService,
+    IPreparedAudioTicketService,
     IAudioTicketListProvidable
 {
     private readonly IPlayer _player;
@@ -43,6 +44,26 @@ public sealed class ChopinAudioService :
     public override async Task<AudioTicketBase> GetAudioTicketAsync(MusicResourceBase musicResource, CancellationToken ctk = default)
     {
         return await CreateAudioTicketAsync(musicResource, setAsPrimarySource: true, ctk: ctk);
+    }
+
+    public async Task<AudioTicketBase> GetPreparedAudioTicketAsync(
+        MusicResourceBase musicResource,
+        CancellationToken ctk = default)
+    {
+        return await CreateAudioTicketAsync(
+            musicResource,
+            setAsPrimarySource: false,
+            ctk: ctk).ConfigureAwait(false);
+    }
+
+    public Task SetPrimaryAudioTicketAsync(AudioTicketBase ticket, CancellationToken ctk = default)
+    {
+        ctk.ThrowIfCancellationRequested();
+        if (ticket is not ChopinAudioTicket chopinTicket)
+            throw new ArgumentException("Ticket does not belong to Chopin.", nameof(ticket));
+
+        _player.SetPrimaryPlaybackSource(chopinTicket.PlaybackSource);
+        return Task.CompletedTask;
     }
 
     public async Task<ChopinAudioTicket> CreateAudioTicketAsync(

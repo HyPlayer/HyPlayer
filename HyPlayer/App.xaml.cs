@@ -280,11 +280,9 @@ public sealed partial class App : Windows.UI.Xaml.Application
             NavigateToRootPage();
             Window.Current.Activate();
             var control = AppDepository.Resolve<IPlaybackControlService>();
-            var player = AppDepository.Resolve<AudioGraphPlayer>();
-            if (!player.PlayerCreated)
-            {
-                AppDepository.Resolve<IBackgroundTaskRunner>().Forget(control.InitializeAsync(), "initialize player for file activation");
-            }
+            AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
+                control.InitializeAsync(),
+                "initialize player for file activation");
             foreach (var storageItem in (args?.As<FileActivatedEventArgs>()).Files)
             {
                 var file = (StorageFile)storageItem;
