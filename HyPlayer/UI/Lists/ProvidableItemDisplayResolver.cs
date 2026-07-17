@@ -42,6 +42,7 @@ public sealed class ProvidableItemDisplayResolver
         {
             Item = item,
             Order = order,
+            Translation = string.IsNullOrEmpty(translation) ? null : $"({translation})",
             Title = item.Name ?? item.ActualId ?? string.Empty,
             LineOne = string.Join(" / ",creators.Select(t=>t.Name) ?? []),
             LineTwo = album,

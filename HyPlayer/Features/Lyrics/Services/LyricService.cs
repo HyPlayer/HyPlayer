@@ -3,6 +3,7 @@ using ALRC.Converters.Enhancers;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Lyric;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -83,6 +84,7 @@ public sealed class LyricService : ILyricService
     {
         var cacheId = providerItem.ActualId;
         var canUseHyLyricInfoCache = !string.IsNullOrWhiteSpace(cacheId);
+        var forceRefreshHyLyricInfoCache = false;
         if (canUseHyLyricInfoCache)
         {
             var cached = await SimpleCacher.GetOrCreateCacheAsync(
@@ -92,9 +94,14 @@ public sealed class LyricService : ILyricService
 
             if (cached is not null && HasDisplayableLyrics(cached, providerItem))
             {
-                _state.LyricInfo = cached;
-                _state.LyricIndex = 0;
-                return;
+                if (!HasLegacyNeteaseSourceMetadata(cached))
+                {
+                    _state.LyricInfo = cached;
+                    _state.LyricIndex = 0;
+                    return;
+                }
+
+                forceRefreshHyLyricInfoCache = true;
             }
         }
 
@@ -113,6 +120,7 @@ public sealed class LyricService : ILyricService
             _taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
                 CacheType.HyLyricInfo, cacheId,
                 () => Task.FromResult(lyricInfo),
+                forceRefresh: forceRefreshHyLyricInfoCache,
                 cancellationToken: ct),
                 "cache provider lyric info");
         }
@@ -346,18 +354,46 @@ public sealed class LyricService : ILyricService
                 YrNeteaseRomaji = CleanLyric(wordRomaji?.Text),
             };
 
-        AddLyricMetadata(result, original?.Info.Source, "source", "歌词来源");
+        var displayedOriginal = wordOriginal ?? original;
+        var displayedTranslation = wordTranslation ?? translation;
+        AddProviderContributorMetadata(result, displayedOriginal?.Info, "lyric_user", "歌词贡献者");
+        AddProviderContributorMetadata(result, displayedTranslation?.Info, "translation_user", "翻译贡献者");
+
+        if (result.LyricMetadata.Count == 0)
+        {
+            AddLyricMetadata(
+                result,
+                displayedOriginal?.Info.Source ?? displayedTranslation?.Info.Source ?? wordRomaji?.Info.Source ?? romaji?.Info.Source,
+                "source",
+                "歌词来源");
+        }
+
         return result;
     }
 
-    private static void AddLyricMetadata(PureLyricInfo result, string? value, string key, string displayName)
+    private static void AddProviderContributorMetadata(PureLyricInfo result, RawLyricInfo? lyric, string key, string displayName)
+    {
+        if (lyric is not NeteaseRawLyricInfo { Author: { } author } ||
+            string.IsNullOrWhiteSpace(author.Name))
+        {
+            return;
+        }
+
+        var actionUri = string.IsNullOrWhiteSpace(author.ActualId)
+            ? null
+            : $"hyplayer://us{author.ActualId}";
+        AddLyricMetadata(result, author.Name, key, displayName, actionUri);
+    }
+
+    private static void AddLyricMetadata(PureLyricInfo result, string? value, string key, string displayName, string? actionUri = null)
     {
         if (string.IsNullOrWhiteSpace(value)) return;
         result.LyricMetadata.Add(new LyricInfoMetadata
         {
             Key = key,
             Value = value,
-            DisplayName = displayName
+            DisplayName = displayName,
+            ActionUri = actionUri
         });
     }
 
@@ -505,6 +541,13 @@ public sealed class LyricService : ILyricService
     private static bool HasCacheableLyrics(HyLyricInfo lyricInfo, SingleSongBase providerItem)
     {
         return HasDisplayableLyrics(lyricInfo, providerItem);
+    }
+
+    private static bool HasLegacyNeteaseSourceMetadata(HyLyricInfo lyricInfo)
+    {
+        return lyricInfo.LyricMetadata.Any(t =>
+            string.Equals(t.Key, "source", StringComparison.Ordinal) &&
+            t.Value?.StartsWith("netease:", StringComparison.OrdinalIgnoreCase) is true);
     }
 
     #endregion

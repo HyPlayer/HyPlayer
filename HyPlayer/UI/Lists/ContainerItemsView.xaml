@@ -282,12 +282,22 @@
                                         Margin="0,0,0,4"
                                         VerticalAlignment="Center"
                                         Orientation="Vertical">
-                                        <TextBlock
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock
                                                 x:Name="TitleText"
                                                 FontSize="19"
                                                 FontWeight="Bold"
                                                 Style="{ThemeResource SubtitleTextBlockStyle}"
                                                 Text="{x:Bind Title, Mode=OneWay}" />
+                                            <TextBlock
+                                                x:Name="TranslationText"
+                                                FontSize="19"
+                                                Foreground="Gray"
+                                                FontWeight="Bold"
+                                                Style="{ThemeResource SubtitleTextBlockStyle}"
+                                                Visibility="{x:Bind TranslationVisible, Mode=OneWay}"
+                                                Text="{x:Bind Translation, Mode=OneWay}" />
+                                        </StackPanel>
                                         <TextBlock
                                             x:Name="LineOneText"
                                             FontSize="12"

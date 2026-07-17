@@ -498,15 +498,48 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
 
             if (!_audioInputNodes.TryGetValue(source, out MediaSourceAudioInputNode node)) return;
+
+            // Stop first: even if a later detach step fails, the source must become silent
+            // before ownership can be retried by the caller.
+            try
+            {
+                node.Stop();
+                source.PlaybackStatus = PlaybackStatus.Paused;
+            }
+            catch
+            {
+                // Continue through disconnect. A successful node disposal is the authoritative
+                // indication that cleanup completed.
+            }
+
             node.MediaSourceCompleted -= OnMediaSourceCompleted;
+
+            try
+            {
+                node.RemoveOutgoingConnection(_outputNode);
+            }
+            catch
+            {
+                // Disposing the node below still provides the final detach boundary.
+            }
+
+            try
+            {
+                node.RemoveOutgoingConnection(_frameOutputNode);
+            }
+            catch
+            {
+                // Disposing the node below still provides the final detach boundary.
+            }
+
+            // Keep the dictionaries and primary-source ownership intact if disposal fails,
+            // allowing the ticket owner to retry instead of losing the graph node.
+            node.Dispose();
 
             if (PrimaryPlaybackSource == source)
                 PrimaryPlaybackSource = null;
 
-            node.RemoveOutgoingConnection(_outputNode);
-            node.RemoveOutgoingConnection(_frameOutputNode);
-            node.Dispose();
-
+            source.PlaybackStatus = PlaybackStatus.Closed;
             _audioInputNodes.TryRemove(source, out _);
             _audioInputNodesReverseDictionary.TryRemove(node, out _);
 

@@ -35,28 +35,63 @@ public sealed class CrossFadeTransition : ITrackTransition
         var remaining = context.Duration - context.Position;
         if (_prepared is null && remaining <= PreloadWindow)
         {
-            _prepared = await context.Host.PrepareNextAsync(context, ct).ConfigureAwait(false);
-            if (_prepared is not null)
+            var prepared = await context.Host.PrepareNextAsync(context, ct).ConfigureAwait(false);
+            if (prepared is not null)
             {
-                await _prepared.Ticket.SetPlaybackRateAsync(context.PlaybackRate, ct).ConfigureAwait(false);
-                await _prepared.Ticket.SetVolumeAsync(0, ct).ConfigureAwait(false);
+                _prepared = prepared;
+                try
+                {
+                    await prepared.Ticket.SetPlaybackRateAsync(context.PlaybackRate, ct).ConfigureAwait(false);
+                    await prepared.Ticket.SetVolumeAsync(0, ct).ConfigureAwait(false);
+                }
+                catch (Exception effectException)
+                {
+                    try
+                    {
+                        await ReleasePreparedAsync(prepared).ConfigureAwait(false);
+                    }
+                    catch (Exception cleanupException)
+                    {
+                        throw new AggregateException(effectException, cleanupException);
+                    }
+
+                    throw;
+                }
             }
         }
 
         if (_prepared is null || remaining > context.CrossFadeDuration)
             return;
 
-        var prepared = _prepared;
-        await prepared.Ticket.PlayAsync(ct).ConfigureAwait(false);
-        _promotion = await context.Host.PromoteAsync(prepared, ct).ConfigureAwait(false);
-        if (_promotion is null)
+        var incoming = _prepared;
+        PreparedPlaybackPromotion? promotion;
+        try
         {
-            _prepared = null;
-            await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
+            await incoming.Ticket.PlayAsync(ct).ConfigureAwait(false);
+            promotion = await context.Host.PromoteAsync(incoming, ct).ConfigureAwait(false);
+        }
+        catch (Exception startException)
+        {
+            try
+            {
+                await ReleasePreparedAsync(incoming).ConfigureAwait(false);
+            }
+            catch (Exception cleanupException)
+            {
+                throw new AggregateException(startException, cleanupException);
+            }
+
+            throw;
+        }
+
+        if (promotion is null)
+        {
+            await ReleasePreparedAsync(incoming).ConfigureAwait(false);
             return;
         }
 
         _prepared = null;
+        _promotion = promotion;
         _fadeStartedAt = Stopwatch.GetTimestamp();
         await ApplyFadeAsync(context.CrossFadeDuration, ct).ConfigureAwait(false);
     }
@@ -65,25 +100,42 @@ public sealed class CrossFadeTransition : ITrackTransition
     {
         if (_promotion is not null)
         {
-            await CompleteFadeAsync(ct).ConfigureAwait(false);
+            await CompleteFadeAsync().ConfigureAwait(false);
             return;
         }
 
         var prepared = _prepared;
-        _prepared = null;
         if (prepared is not null)
         {
-            await prepared.Ticket.PlayAsync(ct).ConfigureAwait(false);
-            var promotion = await context.Host.PromoteAsync(prepared, ct).ConfigureAwait(false);
+            PreparedPlaybackPromotion? promotion;
+            try
+            {
+                await prepared.Ticket.PlayAsync(ct).ConfigureAwait(false);
+                promotion = await context.Host.PromoteAsync(prepared, ct).ConfigureAwait(false);
+            }
+            catch (Exception startException)
+            {
+                try
+                {
+                    await ReleasePreparedAsync(prepared).ConfigureAwait(false);
+                }
+                catch (Exception cleanupException)
+                {
+                    throw new AggregateException(startException, cleanupException);
+                }
+
+                throw;
+            }
+
             if (promotion is not null)
             {
-                await promotion.Incoming.SetVolumeAsync(promotion.Incoming.TargetVolume, ct).ConfigureAwait(false);
-                if (promotion.Outgoing is not null)
-                    await promotion.Outgoing.DisposeAsync().ConfigureAwait(false);
+                _prepared = null;
+                _promotion = promotion;
+                await CompleteFadeAsync().ConfigureAwait(false);
                 return;
             }
 
-            await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
+            await ReleasePreparedAsync(prepared).ConfigureAwait(false);
         }
 
         await context.Host.AdvanceDirectAsync(context, ct).ConfigureAwait(false);
@@ -91,13 +143,10 @@ public sealed class CrossFadeTransition : ITrackTransition
 
     public async Task CancelAsync(CancellationToken ct)
     {
-        var prepared = _prepared;
-        _prepared = null;
-        if (prepared is not null)
-            await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
+        await CompleteFadeAsync().ConfigureAwait(false);
 
-        if (_promotion is not null)
-            await CompleteFadeAsync(ct).ConfigureAwait(false);
+        if (_prepared is { } prepared)
+            await ReleasePreparedAsync(prepared).ConfigureAwait(false);
     }
 
     private async Task ApplyFadeAsync(TimeSpan duration, CancellationToken ct)
@@ -110,32 +159,79 @@ public sealed class CrossFadeTransition : ITrackTransition
         var progress = Math.Clamp(elapsedSeconds / totalSeconds, 0d, 1d);
         var angle = progress * Math.PI / 2d;
 
-        await promotion.Incoming
-            .SetVolumeAsync(promotion.Incoming.TargetVolume * Math.Sin(angle), ct)
-            .ConfigureAwait(false);
-        if (promotion.Outgoing is not null)
+        try
         {
-            await promotion.Outgoing
-                .SetVolumeAsync(promotion.Outgoing.TargetVolume * Math.Cos(angle), ct)
+            await promotion.Incoming
+                .SetVolumeAsync(promotion.Incoming.TargetVolume * Math.Sin(angle), ct)
                 .ConfigureAwait(false);
+            if (promotion.Outgoing is not null)
+            {
+                await promotion.Outgoing
+                    .SetVolumeAsync(promotion.Outgoing.TargetVolume * Math.Cos(angle), ct)
+                    .ConfigureAwait(false);
+            }
+        }
+        catch (Exception effectException)
+        {
+            try
+            {
+                await CompleteFadeAsync().ConfigureAwait(false);
+            }
+            catch (Exception cleanupException)
+            {
+                throw new AggregateException(effectException, cleanupException);
+            }
+
+            throw;
         }
 
         if (progress >= 1d)
-            await CompleteFadeAsync(ct).ConfigureAwait(false);
+            await CompleteFadeAsync().ConfigureAwait(false);
     }
 
-    private async Task CompleteFadeAsync(CancellationToken ct)
+    private async Task CompleteFadeAsync()
     {
         var promotion = _promotion;
-        _promotion = null;
-        _fadeStartedAt = 0;
         if (promotion is null)
             return;
 
-        await promotion.Incoming
-            .SetVolumeAsync(promotion.Incoming.TargetVolume, ct)
-            .ConfigureAwait(false);
-        if (promotion.Outgoing is not null)
-            await promotion.Outgoing.DisposeAsync().ConfigureAwait(false);
+        Exception? normalizationException = null;
+        try
+        {
+            await promotion.Incoming
+                .SetVolumeAsync(promotion.Incoming.TargetVolume, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            normalizationException = ex;
+        }
+
+        try
+        {
+            await promotion.SettleOutgoingAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex) when (normalizationException is not null)
+        {
+            throw new AggregateException(normalizationException, ex);
+        }
+        finally
+        {
+            if (promotion.Outgoing is null && ReferenceEquals(_promotion, promotion))
+            {
+                _promotion = null;
+                _fadeStartedAt = 0;
+            }
+        }
+
+        if (normalizationException is not null)
+            throw normalizationException;
+    }
+
+    private async Task ReleasePreparedAsync(TransitionPreparedTrack prepared)
+    {
+        await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
+        if (ReferenceEquals(_prepared, prepared))
+            _prepared = null;
     }
 }

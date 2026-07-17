@@ -68,6 +68,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
     private readonly ChopinAudioService _audioService;
+    private readonly SmtcPlaybackCommandDispatcher _smtcCommandDispatcher;
     private SystemMediaTransportControls? _smtc;
 
     private readonly SemaphoreSlim _autoSkipLock = new(1, 1);
@@ -121,6 +122,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         _activeTransition = _transitions.TryGetValue(_setting.TransitionId, out var transition)
             ? transition
             : _transitions["dir"];
+        _smtcCommandDispatcher = new SmtcPlaybackCommandDispatcher(
+            PlayCoreAfterInitializationAsync,
+            PauseCoreAsync,
+            () => MoveNextAndPlayAsync(userInitiated: true),
+            MovePreviousAndPlayAsync);
         _state.ActiveTransitionId = _activeTransition.Id;
 
         if (_player is AudioGraphPlayer graphPlayer)
@@ -149,7 +155,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         await _transitionGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            await _activeTransition.CancelAsync(ct).ConfigureAwait(false);
+            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
             _activeTransition = transition;
             _state.ActiveTransitionId = transition.Id;
         }
@@ -164,7 +170,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         await _transitionGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            await _activeTransition.CancelAsync(ct).ConfigureAwait(false);
+            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
             await _playCore.SetPlayModeAsync(playModeId, ct).ConfigureAwait(false);
             _state.ActiveStrategyId = _playCore.ActivePlayModeId;
         }
@@ -179,7 +185,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         await _transitionGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            await _activeTransition.CancelAsync(ct).ConfigureAwait(false);
+            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
             await _playCore.RemoveAllSongAsync(ct).ConfigureAwait(false);
         }
         finally
@@ -225,30 +231,31 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             {
                 SystemMediaTransportControls? smtc = null;
                 var uiInitialization = _notification.InvokeOnUIThread(() =>
-                    smtc = Windows.Media.SystemMediaTransportControls.GetForCurrentView());
+                {
+                    smtc = Windows.Media.SystemMediaTransportControls.GetForCurrentView();
+                    smtc.IsPlayEnabled = true;
+                    smtc.IsPauseEnabled = true;
+                    smtc.IsNextEnabled = true;
+                    smtc.IsPreviousEnabled = true;
+                    smtc.IsEnabled = true;
+                    smtc.DisplayUpdater.Type = Windows.Media.MediaPlaybackType.Music;
+                    smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Closed;
+                    graphPlayer.SMTCManager = new UWP.Chopin.SMTCManager(smtc);
+                    _smtc = smtc;
+
+                    if (!_smtcSubscribed)
+                    {
+                        smtc.ButtonPressed += SMTC_ButtonPressed;
+                        smtc.PlaybackPositionChangeRequested += SMTC_PlaybackPositionChangeRequested;
+                        _smtcSubscribed = true;
+                    }
+                });
                 if (uiInitialization is null)
                     throw new InvalidOperationException("SMTC initialization requires an active UI view.");
 
                 await uiInitialization;
                 if (smtc is null)
                     throw new InvalidOperationException("SMTC initialization did not return a control instance.");
-
-                smtc.IsPlayEnabled = true;
-                smtc.IsPauseEnabled = true;
-                smtc.IsNextEnabled = true;
-                smtc.IsPreviousEnabled = true;
-                smtc.IsEnabled = true;
-                smtc.DisplayUpdater.Type = Windows.Media.MediaPlaybackType.Music;
-                smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Closed;
-                graphPlayer.SMTCManager = new UWP.Chopin.SMTCManager(smtc);
-                _smtc = smtc;
-
-                if (!_smtcSubscribed)
-                {
-                    smtc.ButtonPressed += SMTC_ButtonPressed;
-                    smtc.PlaybackPositionChangeRequested += SMTC_PlaybackPositionChangeRequested;
-                    _smtcSubscribed = true;
-                }
             }
 
             _state.Volume = _setting.Volume / 100d;
@@ -267,24 +274,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
     private void SMTC_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args)
     {
-        switch (args.Button)
-        {
-            case SystemMediaTransportControlsButton.Play:
-                Play();
-                break;
-
-            case SystemMediaTransportControlsButton.Pause:
-                Pause();
-                break;
-
-            case SystemMediaTransportControlsButton.Next:
-                _taskRunner.Forget(MoveNextAndPlayAsync(userInitiated: true), "SMTC next");
-                break;
-
-            case SystemMediaTransportControlsButton.Previous:
-                _taskRunner.Forget(MovePreviousAndPlayAsync(), "SMTC previous");
-                break;
-        }
+        var button = args.Button;
+        _taskRunner.Forget(
+            Task.Run(() => _smtcCommandDispatcher.DispatchAsync(button)),
+            $"SMTC {button}");
     }
 
     /// <inheritdoc />
@@ -329,8 +322,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         await _transitionGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            await _activeTransition.CancelAsync(ct).ConfigureAwait(false);
-            await StopCoreAsync(ct).ConfigureAwait(false);
+            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+            await StopCoreAsync(CancellationToken.None).ConfigureAwait(false);
         }
         finally
         {
@@ -389,7 +382,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             await _transitionGate.WaitAsync(ct).ConfigureAwait(false);
             try
             {
-                await _activeTransition.CancelAsync(ct).ConfigureAwait(false);
+                await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
                 await LoadAndPlayCoreAsync(song, autoPlay, removeCurrentSongs, ct).ConfigureAwait(false);
             }
             finally
