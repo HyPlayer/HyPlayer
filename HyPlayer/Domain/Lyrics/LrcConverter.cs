@@ -1,10 +1,15 @@
 using ALRC.Abstraction;
 using ALRC.Converters;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Lyrics.LyricEnhancers;
+using HyPlayer.Domain.Settings;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
+using HyPlayer.LyricRenderer.Animator;
+using HyPlayer.LyricRenderer.Effect;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.Text;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -50,7 +55,6 @@ public static class LrcConverter
                     ],
                     StartTime = alrcLine.Start ?? 0,
                     EndTime = alrcLine.End ?? 0,
-                    HiddenOnBlur = true
                 });
                 continue;
             }
@@ -120,6 +124,83 @@ public static class LrcConverter
             }
         }
 
+        var settings = Ioc.Default.GetRequiredService<Setting>();
+
+        foreach (var lyricLine in result)
+        {
+            if (settings.lyricRenderFade)
+            {
+                lyricLine.Effects.Add(
+                    new LyricOpacityEffect
+                    {
+                        Opacity = new((lyricLine, context) =>
+                        {
+                            var opacity = Math.Clamp(GetGapValue(lyricLine, context, 0.4f, 0f), 0, 1);
+                            if (lyricLine.IsActive) opacity = 1;
+                            if (context.IsScrolling) opacity = MathF.Max(opacity, 0.4f);
+                            return (float)opacity;
+                        })
+                    });
+            }
+
+            if (settings.lyricRenderBlur)
+            {
+
+                lyricLine.Effects.Add(new LyricBlurEffect
+                {
+                    Amount = new((lyricLine, context) =>
+                    {
+                        var blur = GetGapValue(lyricLine, context, 0f, 10f);
+                        blur = (context.IsScrolling) ? 0 : blur;
+                        return blur;
+                    })
+                });
+            }
+
+            if (settings.lyricRenderScaleWhenFocusing)
+            {
+                lyricLine.FinalEffects.Add(new LyricTransform2DEffect
+                {
+                    XScale = new((lyricLine, context) =>
+                    {
+                        var scale = GetGapValue(lyricLine, context, 1f, 0.5f);
+                        if (context.IsScrolling) scale = Math.Max(scale, 0.8f);
+                        return scale;
+                    }),
+                    YScale = new((lyricLine, context) =>
+                    {
+                        var scale = GetGapValue(lyricLine, context, 1f, 0.5f);
+                        if (context.IsScrolling) scale = Math.Max(scale, 0.8f);
+                        return scale;
+                    })
+                });
+            }
+
+            if (settings.lyricRenderTransform3D)
+            {
+                lyricLine.FinalEffects.Add(new LyricTransform3DEffect
+                {
+                    Duration = TimeSpan.FromSeconds(1),
+                    AngleY = new((lyricLine, context) =>
+                    {
+                        var gap = Math.Abs(lyricLine.Id - context.CurrentLyricLineIndex);
+                        var angle = Math.Clamp(-15 * gap, -60, 60);
+                        if (context.IsScrolling || lyricLine.IsActive) angle = 0;
+                        return angle;
+                    }),
+                });
+            }
+        }
+
         return result;
+    }
+
+
+    private static float GetGapValue(RenderingLyricLine lyricLine, RenderContext context, float start, float target)
+    {
+        var gap = Math.Abs((context.RenderOffsets[context.CurrentLyricLineIndex].Y - context.RenderOffsets[lyricLine.Id].Y) / context.ViewHeight);
+        if (lyricLine.IsActive) gap = 0;
+        var value = start + (target - start) * gap;
+        return value;
     }
 }

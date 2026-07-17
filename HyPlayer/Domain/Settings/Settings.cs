@@ -144,6 +144,7 @@ namespace HyPlayer.Domain.Settings
         public bool lyricRenderSimpleLineScanning { get => Lyric.lyricRenderSimpleLineScanning; set { Lyric.lyricRenderSimpleLineScanning = value; OnPropertyChanged(); } }
         public LyricScanStyle lyricRenderScanStyle { get => Lyric.lyricRenderScanStyle; set { Lyric.lyricRenderScanStyle = value; OnPropertyChanged(); } }
         public bool lyricRenderScaleWhenFocusing { get => Lyric.lyricRenderScaleWhenFocusing; set { Lyric.lyricRenderScaleWhenFocusing = value; OnPropertyChanged(); } }
+        public bool lyricRenderTransform3D { get => Lyric.lyricRenderTransform3D; set { Lyric.lyricRenderTransform3D = value; OnPropertyChanged(); } }
         public bool lyricRenderBlur { get => Lyric.lyricRenderBlur; set { Lyric.lyricRenderBlur = value; OnPropertyChanged(); } }
         public bool lyricRenderFade { get => Lyric.lyricRenderFade; set { Lyric.lyricRenderFade = value; OnPropertyChanged(); } }
         public RollingCalculator LineRollingCalculator { get => Lyric.LineRollingCalculator; set { Lyric.LineRollingCalculator = value; OnPropertyChanged(); } }

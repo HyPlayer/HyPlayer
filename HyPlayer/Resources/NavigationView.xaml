@@ -8,7 +8,7 @@
     <Thickness x:Key="NavigationViewContentGridBorderThickness">1,1,0,0</Thickness>
     <CornerRadius x:Key="NavigationViewContentGridCornerRadius">8</CornerRadius>
     <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="Transparent" />
-    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"/>
+    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource LayerOnMicaBaseAltFillColorDefault}" />
 
     <Style x:Key="LeftNavViewDefaultStyle" TargetType="muxc:NavigationView">
         <Style.Setters>

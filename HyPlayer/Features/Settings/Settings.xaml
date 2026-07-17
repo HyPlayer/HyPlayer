@@ -405,11 +405,17 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderBlur, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="非聚焦行逐渐渐隐">
+                                    <controls3:SettingsCard Header="非聚焦行渐隐">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderFade, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="3D效果">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderTransform3D, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
                                     <controls3:SettingsCard Description="不同函数有不同的效果" Header="行滚动函数">

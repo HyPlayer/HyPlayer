@@ -1,5 +1,6 @@
 ﻿using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
+using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
@@ -204,6 +205,11 @@ namespace HyPlayer.LyricRenderer
         private readonly Dictionary<long, bool> _keyFrameRendered = new();
         private readonly Dictionary<long, List<RenderingLyricLine>> _targetingKeyFrames = new();
 
+        private CanvasTransition _scrollTranslation = new CanvasTransition { 
+            Duration = TimeSpan.FromSeconds(0.15), 
+            Easing = new CustomCircleEase { EasingMode = EasingMode.EaseOut } };
+
+
         private void RecalculateRenderOffset(CanvasDrawingSession session)
         {
             if (Context.LyricLines is { Count: <= 0 }) return;
@@ -217,7 +223,7 @@ namespace HyPlayer.LyricRenderer
             if (Context.CurrentLyricLineIndex < 0) Context.CurrentLyricLineIndex = Context.LyricLines.Count - 1;
             Context.CurrentLyricLine = Context.LyricLines[Context.CurrentLyricLineIndex];
             Context.RenderingLyricLines.Clear();
-            var theoryRenderAfterPosition = Context.LyricPaddingTopRatio * Context.ViewHeight + Context.ScrollingDelta;
+            var theoryRenderAfterPosition = Context.LyricPaddingTopRatio * Context.ViewHeight + _scrollTranslation.Animate(Context.CurrentLyricTime,Context.ScrollingDelta);
             var theoryRenderBeforePosition = theoryRenderAfterPosition;
             var renderedAfterStartPosition = theoryRenderAfterPosition;
             var renderedBeforeStartPosition = theoryRenderAfterPosition;

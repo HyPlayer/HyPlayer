@@ -28,15 +28,11 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
     private const int VerticalPadding = 4;
 
     private CanvasLinearGradientBrush _baseGradientBrush;
-    public override void GoToReactionState(ReactionState state, RenderContext context)
-    {
 
-    }
-
-    public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
+    protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
-        float actualX = offset.X + TextRenderingLyricLine.TextPadding;
-        float actualY = offset.Y + Height;
+        float x = TextRenderingLyricLine.TextPadding;
+        float y = Height;
 
         if (context.CurrentLyricTime > EndTime || context.CurrentLyricTime < StartTime) return true;// 未激活
         var remain = EndTime - context.CurrentLyricTime;
@@ -48,13 +44,13 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
             var surplus = (float)(context.CurrentLyricTime - StartTime) / EnterAnimationDuration;
             var prog = AnimationEaseFunction.Ease(Math.Clamp(surplus, 0, 1));
             using var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width * prog, Height), 4, 4);
-            session.FillGeometry(geometry, actualX, actualY, _baseGradientBrush);
+            session.FillGeometry(geometry, x, y, _baseGradientBrush);
             return true;
         }
         else if (remain > LeaveAnimationDuration)
         {
             using var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width, Height), 4, 4);
-            session.FillGeometry(geometry, actualX, actualY, _baseGradientBrush);
+            session.FillGeometry(geometry, x, y, _baseGradientBrush);
         }
 
 
@@ -81,34 +77,16 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         using var cl = new CanvasCommandList(session);
         using (var clds = cl.CreateDrawingSession())
         {
-            clds.FillGeometry(geometryFill, actualX, actualY, focusingColor);
+            clds.FillGeometry(geometryFill, x, y, focusingColor);
         }
         session.DrawImage(cl);
         return true;
     }
 
-    private bool _isFocusing;
-
-    public bool HiddenOnBlur = true;
-
-    public override void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
-    {
-        _isFocusing = (context.CurrentKeyframe >= StartTime) && (context.CurrentKeyframe < EndTime);
-        Hidden = false;
-        if (HiddenOnBlur && !_isFocusing)
-        {
-            Hidden = true;
-        }
-    }
-
     public override void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context)
     {
-        if (HiddenOnBlur && !_isFocusing)
-        {
-            Hidden = true;
-        }
         RenderingHeight = Height + 2 * VerticalPadding;
-        RenderingWidth = context.ItemWidth;
+        RenderingWidth = Width + 2 * TextRenderingLyricLine.TextPadding;
         _baseGradientBrush?.Dispose();
 
         var baseColor = context.PreferTypography.IdleColor!.Value;
@@ -134,12 +112,13 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
-        // ignore
+        OnRenderSizeChanged(session, context);
     }
 
     public override void Dispose()
     {
         _baseGradientBrush?.Dispose();
         _baseGradientBrush = null;
+        base.Dispose();
     }
 }

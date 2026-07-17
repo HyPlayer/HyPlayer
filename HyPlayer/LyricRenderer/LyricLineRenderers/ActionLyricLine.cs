@@ -11,8 +11,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
 public class ActionLyricLine : RenderingLyricLine
 {
-    private long _lastReactionTime;
-    private ReactionState _reactionState;
     private float _canvasWidth;
     private CanvasTextFormat textFormat;
     private CanvasTextLayout textLayout;
@@ -27,37 +25,15 @@ public class ActionLyricLine : RenderingLyricLine
     // 新增：用于记录文本排版的实际起始 X 坐标
     private float _renderStartX = 0f;
 
-    public override void GoToReactionState(ReactionState state, RenderContext context)
-    {
-        _lastReactionTime = context.CurrentLyricTime;
-        _reactionState = state;
-    }
 
-    public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
+    protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
         if (textLayout is null) return true;
-
-        float actualOffsetX = offset.X;
-
-        if (_reactionState == ReactionState.Enter)
-        {
-            var color = new Color
-            {
-                A = 40,
-                R = 135,
-                G = 206,
-                B = 255
-            };
-            session.FillRoundedRectangle(offset.X, offset.Y,
-                RenderingWidth, RenderingHeight, 6, 6, color);
-        }
-
-        var drawingTop = offset.Y;
-        session.DrawImage(_staticPersistCache, actualOffsetX, drawingTop);
+        session.DrawImage(_staticPersistCache, 0, 0);
         return true;
     }
 
-    public override void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
+    protected override void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
     {
         if (_canvasWidth == 0.0f) return;
         if (textFormat is null)
@@ -134,5 +110,6 @@ public class ActionLyricLine : RenderingLyricLine
         textFormat = null;
         textLayout = null;
         _staticPersistCache = null;
+        base.Dispose();
     }
 }

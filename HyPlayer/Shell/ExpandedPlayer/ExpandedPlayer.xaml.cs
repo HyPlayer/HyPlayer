@@ -224,7 +224,10 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.Context.CurrentLyricTime = 0;
         _lyricBox.Context.Debug = _settings.LyricRendererDebugMode;
         _lyricBox.Context.Effects.Blur = _settings.lyricRenderBlur;
+        _lyricBox.Context.Effects.Transform3D = _settings.lyricRenderTransform3D;
         _lyricBox.Context.Effects.CacheRenderTarget = _settings.lyricCacheRenderTarget;
+        _lyricBox.Context.Effects.Fade = _settings.lyricRenderFade;
+        _lyricBox.Context.Effects.FadingRatio = _settings.lyricFadingRatio;
         _lyricBox.Context.LineRollingEaseCalculator = _settings.LineRollingCalculator switch
         {
             RollingCalculator.SinRollingCalculator => new SinRollingCalculator(),

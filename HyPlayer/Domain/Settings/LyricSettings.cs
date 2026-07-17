@@ -288,6 +288,18 @@ namespace HyPlayer.Domain.Settings
         }
 
         /// <summary>
+        /// Whether lyric render trasnform 3D when focusing is enabled.
+        /// </summary>
+        public bool lyricRenderTransform3D
+        {
+            get => GetSettings(nameof(lyricRenderTransform3D), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderTransform3D)] = value;
+            }
+        }
+
+        /// <summary>
         /// Whether lyric render blur is enabled.
         /// </summary>
         public bool lyricRenderBlur

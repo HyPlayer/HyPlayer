@@ -30,6 +30,16 @@ public class CanvasImageBuilder(ICanvasImage source)
         return this;
     }
 
+    public CanvasImageBuilder AddTransform3DEffect(Matrix4x4 transformMatrix)
+    {
+        _source = new Transform3DEffect
+        {
+            Source = _source,
+            TransformMatrix = transformMatrix,
+        };
+        return this;
+    }
+
     public CanvasImageBuilder AddGaussianBlurEffect(float blurAmount)
     {
         _source = new GaussianBlurEffect
