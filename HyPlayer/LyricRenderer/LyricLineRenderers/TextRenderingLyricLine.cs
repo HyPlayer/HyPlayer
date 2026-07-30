@@ -1,12 +1,9 @@
 #nullable enable
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Settings;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
-using HyPlayer.LyricRenderer.Builder;
 using HyPlayer.LyricRenderer.Text;
 using Microsoft.Graphics.Canvas;
 using System;
@@ -39,7 +36,6 @@ public class TextRenderingLyricLine : RenderingLyricLine
     private float _cachedTranslationFontSize;
     private string? _cachedFontFamily;
     private Color _cachedFocusingColor;
-    private Color? _cachedShadowColor;
 
     public TextRenderingLyricLine()
         : this(new Win2DLyricTextLayouter(), new DefaultTextProgressResolver(), new DefaultTokenScanEffectRenderer())
@@ -60,6 +56,8 @@ public class TextRenderingLyricLine : RenderingLyricLine
     public const float LiftAmount = 3;
 
     public string? Text { get; set; }
+    public override string ExpressionText => Text ?? string.Empty;
+    public override bool IsTextLine => true;
     public List<LyricTextToken> Tokens { get; set; } = [];
     public string? Transliteration { get; set; }
     public string? Translation { get; set; }
@@ -94,15 +92,6 @@ public class TextRenderingLyricLine : RenderingLyricLine
 
                 textDrawingSession.DrawImage(_layout.DefaultTextPersistCache, 0, _layout.TextRenderActualTop, _layout.SizePixelRect, 1);
             }
-        }
-
-        if (IsActive && context.Effects.FocusHighlighting)
-        {
-            var highlightEffectBuilder = new CanvasImageBuilder(textCommandList);
-            highlightEffectBuilder
-                .AddShadowEffect(6, _cachedShadowColor ?? _cachedFocusingColor)
-                .AddOpacityEffect(0.4f);
-            session.DrawImage(highlightEffectBuilder.Build(), 0, 0);
         }
 
         session.DrawImage(textCommandList, 0, 0);
@@ -140,7 +129,6 @@ public class TextRenderingLyricLine : RenderingLyricLine
         _cachedTranslationFontSize = TypographySelector(t => t?.TranslationFontSize, context)!.Value;
         _cachedFontFamily = TypographySelector(t => t?.Font, context);
         _cachedFocusingColor = TypographySelector(t => t?.FocusingColor, context)!.Value;
-        _cachedShadowColor = TypographySelector(t => t?.ShadowColor, context);
 
         _layout?.Dispose();
         _layout = _layouter.CreateLayout(new LyricTextLayoutRequest

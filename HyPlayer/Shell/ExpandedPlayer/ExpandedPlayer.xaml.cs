@@ -29,6 +29,7 @@ using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Widgets.Services;
@@ -101,6 +102,7 @@ public sealed partial class ExpandedPlayer : Page
     private readonly HttpClient _httpClient = Ioc.Default.GetRequiredService<HttpClient>();
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
+    private readonly ILyricEffectProfileService _lyricEffectProfiles = Ioc.Default.GetRequiredService<ILyricEffectProfileService>();
     private readonly WeakEventListener<ExpandedPlayer, object?, EventArgs> _secondTickListener;
     private readonly WeakEventListener<ExpandedPlayer, object?, EventArgs> _enteredForegroundListener;
     private readonly WeakEventListener<ExpandedPlayer, object?, PlayBarVisibilityChangedEventArgs> _playBarVisibilityListener;
@@ -173,6 +175,8 @@ public sealed partial class ExpandedPlayer : Page
     {
         InitializeComponent();
         ViewModel = Ioc.Default.GetRequiredService<ExpandedPlayerViewModel>();
+        _lyricBox.SetEffectProfile(_lyricEffectProfiles.EffectiveProfile);
+        _lyricEffectProfiles.ProfileChanged += OnLyricEffectProfileChanged;
         _canvasState.LyricBox = _lyricBox;
         SyncCanvasState();
         _backgroundShaderLayer = new BackgroundShaderLayer(_canvasState, _settings);
@@ -223,11 +227,7 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.Context.LyricPaddingTopRatio = _settings.lyricPaddingTopRatio / 100f;
         _lyricBox.Context.CurrentLyricTime = 0;
         _lyricBox.Context.Debug = _settings.LyricRendererDebugMode;
-        _lyricBox.Context.Effects.Blur = _settings.lyricRenderBlur;
-        _lyricBox.Context.Effects.Transform3D = _settings.lyricRenderTransform3D;
         _lyricBox.Context.Effects.CacheRenderTarget = _settings.lyricCacheRenderTarget;
-        _lyricBox.Context.Effects.Fade = _settings.lyricRenderFade;
-        _lyricBox.Context.Effects.FadingRatio = _settings.lyricFadingRatio;
         _lyricBox.Context.LineRollingEaseCalculator = _settings.LineRollingCalculator switch
         {
             RollingCalculator.SinRollingCalculator => new SinRollingCalculator(),
@@ -236,8 +236,6 @@ public sealed partial class ExpandedPlayer : Page
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
-        _lyricBox.Context.Effects.ScaleWhenFocusing = _settings.lyricRenderScaleWhenFocusing;
-        _lyricBox.Context.Effects.FocusHighlighting = _settings.lyricRenderFocusHighlighting;
         _lyricBox.Context.Effects.TransliterationScanning = _settings.lyricRenderTransliterationScanning;
         _lyricBox.Context.Effects.SimpleLineScanning = _settings.lyricRenderSimpleLineScanning;
         _lyricBox.Context.Effects.ScanStyle = _settings.lyricRenderScanStyle;
@@ -1318,6 +1316,11 @@ public sealed partial class ExpandedPlayer : Page
             _lyricBox.LyricView_PointerReleased(sender, e);
     }
 
+    private void OnLyricEffectProfileChanged(object? sender, LyricEffectProfileChangedEventArgs args)
+    {
+        _lyricBox.SetEffectProfile(args.Profile);
+    }
+
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
         if (ApplicationView.GetForCurrentView().ViewMode == ApplicationViewMode.CompactOverlay)
@@ -1339,6 +1342,7 @@ public sealed partial class ExpandedPlayer : Page
         _surfaceStoreChangedListener.Detach();
         _seekRequestedListener.Detach();
         ViewModel.Dispose();
+        _lyricEffectProfiles.ProfileChanged -= OnLyricEffectProfileChanged;
         Window.Current.SizeChanged -= Current_SizeChanged;
         _lyricBox.OnBeforeRender -= _lyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked -= _lyricBoxOnOnRequestSeek;

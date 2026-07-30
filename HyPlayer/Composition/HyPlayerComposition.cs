@@ -21,6 +21,11 @@ using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Lyrics.Effects;
+using HyPlayer.LyricEffects.Drawing;
+using HyPlayer.LyricEffects.Expressions;
+using HyPlayer.LyricRenderer.Pipeline;
+
 using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Platform.Runtime;
@@ -260,6 +265,11 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IPlaylistCollectionChangeNotifier, PlaylistCollectionChangeNotifier>();
         depository.AddSingleton<ILastFmService, LastFmService>();
         depository.AddSingleton<ITileService, TileService>();
+        depository.AddSingleton<ILyricExpressionCompiler, LyricExpressionCompiler>();
+        depository.AddSingleton<ILyricDrawScriptParser, LyricDrawScriptParser>();
+        depository.AddSingleton<LyricDrawCommandRegistry>();
+        depository.AddSingleton<ILyricRenderOperationRegistry, LyricRenderOperationRegistry>();
+        depository.AddSingleton<ILyricEffectProfileService, LyricEffectProfileService>();
     }
 
     private static void ConfigureShellServices(IDepository depository)

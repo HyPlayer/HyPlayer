@@ -1,18 +1,12 @@
 ﻿#nullable enable
 using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
-using HyPlayer.LyricRenderer.Animator;
-using HyPlayer.LyricRenderer.Animator.EaseFunctions;
-using HyPlayer.LyricRenderer.Builder;
-using HyPlayer.LyricRenderer.Effect;
-using Impressionist.Helpers;
+using HyPlayer.LyricEffects.Expressions;
+using HyPlayer.LyricRenderer.Pipeline;
 using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Effects;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using Windows.Graphics.Effects;
 using Windows.UI;
-using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml;
 
 namespace HyPlayer.LyricRenderer.Abstraction.Render;
 
@@ -42,9 +36,11 @@ public abstract class RenderingLyricLine : IDisposable
 
     public bool IsPlayed { get; private set; }
 
-    public List<LyricEffect> Effects { get; set; } = [];
+    private LyricRenderPipelineInstance? _renderPipeline;
 
-    public List<LyricEffect> FinalEffects { get; set; } = [];
+    public virtual string ExpressionText => string.Empty;
+
+    public virtual bool IsTextLine => false;
 
     public bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
@@ -55,43 +51,43 @@ public abstract class RenderingLyricLine : IDisposable
             result = RenderCore(currentLineSession, context);
         }
 
-        var gap = IsActive ? 0 : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex), 1, 250);
-
-        ICanvasImage ef = commandList;
-        foreach (var effect in Effects)
+        ICanvasImage finalImage;
+        if (context.EffectProfile is { } profile)
         {
-            ef = effect.Apply(ef, this, context);
-        }
-
-
-        var compositeList = new CanvasCommandList(session);
-        using (var compositeSession = compositeList.CreateDrawingSession())
-        {
-            compositeSession.DrawImage(ef);
-
-            if (ReactionState == ReactionState.Enter && !Hidden)
+            if (_renderPipeline?.Version != profile.Version)
             {
-                compositeSession.FillRoundedRectangle(0, 0,
-                    RenderingWidth + 2, RenderingHeight + 8, 6, 6,
-                    Color.FromArgb(10, 255, 255, 255));
+                _renderPipeline?.Dispose();
+                _renderPipeline = profile.CreatePipeline();
             }
 
-            if (context.Debug)
+            using var emptyImage = new CanvasCommandList(session);
+            using (emptyImage.CreateDrawingSession())
             {
-                compositeSession.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})", 0, 0, Colors.Red);
-                compositeSession.DrawText(Id.ToString(), 0, 15, Colors.Red);
-                compositeSession.DrawRectangle(0, 0, RenderingWidth, RenderingHeight, Colors.Yellow);
             }
+
+            using var resources = new LyricRenderFrameResourceScope();
+            finalImage = _renderPipeline!.Apply(emptyImage, new LyricRenderOperationContext
+            {
+                SourceImage = commandList,
+                TargetSession = session,
+                Resources = resources,
+                Line = CreateExpressionLine(context, offset),
+                Frame = CreateExpressionFrame(context),
+                OffsetX = offset.X,
+                OffsetY = offset.Y,
+                DebugEnabled = context.Debug
+            });
+            session.DrawImage(finalImage, offset.X, offset.Y);
         }
-
-
-        ICanvasImage finalEffect = compositeList;
-        foreach (var effect in FinalEffects)
+        else
         {
-            finalEffect = effect.Apply(finalEffect, this, context);
+            session.DrawImage(commandList, offset.X, offset.Y);
+            // 配置服务尚未初始化时保留调试回退绘制。
+            if (!context.Debug) return result;
+            session.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})", offset.X, offset.Y, Colors.Red);
+            session.DrawText(Id.ToString(), offset.X, offset.Y + 15, Colors.Red);
+            session.DrawRectangle(offset.X, offset.Y, RenderingWidth, RenderingHeight, Colors.Yellow);
         }
-
-        session.DrawImage(finalEffect, offset.X, offset.Y);
 
         return result;
     }
@@ -124,15 +120,73 @@ public abstract class RenderingLyricLine : IDisposable
     }
     public virtual void Dispose()
     {
-        foreach (var effect in Effects)
-        {
-            effect.Dispose();
-        }
-        foreach (var effect in FinalEffects)
-        {
-            effect.Dispose();
-        }
+        _renderPipeline?.Dispose();
+        _renderPipeline = null;
     }
+
+    private LyricExpressionLine CreateExpressionLine(RenderContext context, LineRenderOffset offset)
+    {
+        var relativeIndex = Id - context.CurrentLyricLineIndex;
+        var currentOffsetY = context.RenderOffsets.TryGetValue(context.CurrentLyricLineIndex, out var currentOffset)
+            ? currentOffset.Y
+            : offset.Y;
+        var viewportDistance = context.ViewHeight <= 0
+            ? 0
+            : Math.Abs((currentOffsetY - offset.Y) / context.ViewHeight);
+        if (IsActive) viewportDistance = 0;
+
+        var duration = EndTime - StartTime;
+        var progress = duration <= 0
+            ? (IsPlayed ? 1f : 0f)
+            : Math.Clamp((context.CurrentLyricTime - StartTime) / (float)duration, 0, 1);
+        var alignment = TypographySelector(t => t?.Alignment, context)!.Value;
+        var anchorX = alignment switch
+        {
+            TextAlignment.Center => RenderingWidth / 2,
+            TextAlignment.Right => RenderingWidth,
+            _ => 0
+        };
+        var idle = TypographySelector(t => t?.IdleColor, context)!.Value;
+        var accent = TypographySelector(t => t?.FocusingColor, context)!.Value;
+
+        return new LyricExpressionLine(
+            Id,
+            relativeIndex,
+            Math.Abs(relativeIndex),
+            viewportDistance,
+            IsActive,
+            IsPlayed,
+            ReactionState == ReactionState.Enter,
+            Hidden,
+            IsTextLine,
+            StartTime,
+            EndTime,
+            progress,
+            RenderingWidth,
+            RenderingHeight,
+            anchorX,
+            RenderingHeight / 2,
+            ExpressionText,
+            ToExpressionColor(idle),
+            ToExpressionColor(accent));
+    }
+
+    private static LyricExpressionFrame CreateExpressionFrame(RenderContext context) =>
+        new(
+            context.CurrentLyricLineIndex,
+            context.CurrentLyricTime,
+            context.RenderTick / TimeSpan.TicksPerMillisecond,
+            context.IsPlaying,
+            context.IsScrolling,
+            context.IsSeek,
+            context.ScrollingDelta,
+            context.ViewWidth,
+            context.ViewHeight,
+            context.Dpi,
+            context.BeatPerMinute);
+
+    private static LyricColorValue ToExpressionColor(Color color) =>
+        new(color.A, color.R, color.G, color.B);
 
     public T TypographySelector<T>(Func<RenderTypography?, T?> expression, RenderContext context)
     {

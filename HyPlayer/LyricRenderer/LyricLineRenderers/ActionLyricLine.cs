@@ -24,6 +24,7 @@ public class ActionLyricLine : RenderingLyricLine
 
     // 新增：用于记录文本排版的实际起始 X 坐标
     private float _renderStartX = 0f;
+    public override string ExpressionText => Text ?? string.Empty;
 
 
     protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)

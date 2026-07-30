@@ -3,11 +3,13 @@ using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using Microsoft.Graphics.Canvas;
+using HyPlayer.LyricRenderer.Pipeline;
 using Microsoft.Graphics.Canvas.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.UI;
+using System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
@@ -31,6 +33,14 @@ namespace HyPlayer.LyricRenderer
         public event LyricLineClickedDelegate OnLyricLineClicked;
 
         private readonly CustomCircleEase _circleEase = new() { EasingMode = EasingMode.EaseOut };
+
+        private CompiledLyricEffectProfile? _pendingEffectProfile;
+
+        public void SetEffectProfile(CompiledLyricEffectProfile profile)
+        {
+            ArgumentNullException.ThrowIfNull(profile);
+            Interlocked.Exchange(ref _pendingEffectProfile, profile);
+        }
 
         private bool _pointerPressed;
         private bool _jumpedLyrics = false;
@@ -342,6 +352,8 @@ namespace HyPlayer.LyricRenderer
                 Context.RenderTick = timing.TotalTime.Ticks;
                 if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return;
                 OnBeforeRender?.Invoke(this);
+                if (Interlocked.Exchange(ref _pendingEffectProfile, null) is { } pendingProfile)
+                    Context.EffectProfile = pendingProfile;
                 // 鼠标滚轮时间 5 s 清零
                 if ((Context.ScrollingDelta != 0 || (Context.IsScrolling && !_pointerPressed)) &&
                     Context.RenderTick - _lastWheelTime > 50000000 && Context.IsPlaying || Context.IsSeek)

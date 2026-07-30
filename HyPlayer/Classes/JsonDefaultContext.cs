@@ -10,6 +10,7 @@ using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.LyricEffects.Models;
 using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Widgets.Services;
@@ -30,7 +31,7 @@ using static HyPlayer.Features.Settings.Services.UpdateManager;
 
 namespace HyPlayer.Classes
 {
-    [JsonSourceGenerationOptions(WriteIndented = true)]
+    [JsonSourceGenerationOptions(WriteIndented = true, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
     [JsonSerializable(typeof(The163KeyClass))]
     [JsonSerializable(typeof(List<string>))]
     [JsonSerializable(typeof(CurPlayingListHistoryState))]
@@ -45,6 +46,11 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(CommentUserInfo))]
     [JsonSerializable(typeof(LatestApplicationUpdate))]
     [JsonSerializable(typeof(GitHubReleaseResponse))]
+    [JsonSerializable(typeof(LyricEffectProfileDocument))]
+    [JsonSerializable(typeof(LyricRenderOperationDefinition))]
+    [JsonSerializable(typeof(LyricOperationParameterDefinition))]
+    [JsonSerializable(typeof(LyricTransitionDefinition))]
+    [JsonSerializable(typeof(List<LyricRenderOperationDefinition>))]
     public partial class JsonDefaultContext : JsonSerializerContext
     {
     }

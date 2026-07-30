@@ -62,7 +62,6 @@
       <Version>8.2.251219</Version>
     </PackageReference>
     <PackageReference Include="ComputeSharp.D2D1.Uwp" Version="3.2.0" />
-    <PackageReference Include="DynamicExpresso.Core" Version="2.19.3" />
     <PackageReference Include="F23.StringSimilarity">
       <Version>7.0.1</Version>
     </PackageReference>
@@ -93,6 +92,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\HyPlayer.LyricEffects\HyPlayer.LyricEffects.csproj" />
     <ProjectReference Include="..\HyPlayer.Frieren\HyPlayer.Frieren.csproj" />
     <ProjectReference Include="..\HyPlayer.PlayCore\HyPlayer.PlayCore.Abstraction\HyPlayer.PlayCore.Abstraction.csproj" />
     <ProjectReference Include="..\HyPlayer.PlayCore\HyPlayer.PlayCore\HyPlayer.PlayCore.csproj" />
