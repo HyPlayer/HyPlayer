@@ -61,7 +61,7 @@
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel
                             x:Name="StackPanelLyricSet"
-                            Margin="0,8,12,150"
+                            Margin="12,8,12,150"
                             HorizontalAlignment="Stretch"
                             Orientation="Vertical"
                             Spacing="12">
@@ -455,7 +455,7 @@
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="0,8,12,150"
+                            Margin="12,8,12,150"
                             Orientation="Vertical"
                             Spacing="12">
                             <controls3:SettingsExpander
@@ -692,7 +692,7 @@
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
 
-                        <StackPanel Margin="0,8,12,150" Spacing="12">
+                        <StackPanel Margin="12,8,12,150" Spacing="12">
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
@@ -958,7 +958,7 @@
                 <ScrollViewer VerticalScrollMode="Enabled">
                     <Grid>
                         <StackPanel
-                            Margin="0,8,12,150"
+                            Margin="12,8,12,150"
                             Orientation="Vertical"
                             Spacing="12">
                             <controls3:SettingsExpander
@@ -1159,7 +1159,7 @@
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="0,8,12,150"
+                            Margin="12,8,12,150"
                             Orientation="Vertical"
                             Spacing="12">
                             <controls:InfoBar
