@@ -16,7 +16,7 @@ namespace HyPlayer.LyricRenderer.Pipeline;
 public sealed class LyricDrawCommandRegistry
 {
     private readonly Dictionary<string, ILyricDrawCommandFactory> _factories =
-        new(StringComparer.OrdinalIgnoreCase);
+        [with(StringComparer.OrdinalIgnoreCase)];
 
     public LyricDrawCommandRegistry()
     {
@@ -24,7 +24,7 @@ public sealed class LyricDrawCommandRegistry
     }
 
     public IReadOnlyList<LyricDrawCommandSignature> Signatures =>
-        _factories.Values.Select(factory => factory.Signature).OrderBy(signature => signature.Name).ToList();
+        (LyricDrawCommandSignature[])[.. _factories.Values.Select(factory => factory.Signature).OrderBy(signature => signature.Name)];
 
     public void Register(ILyricDrawCommandFactory factory)
     {
@@ -37,21 +37,12 @@ public sealed class LyricDrawCommandRegistry
         _factories.TryGetValue(name, out factory!);
 }
 
-internal sealed class DrawScriptOperationFactory : ILyricRenderOperationFactory
+internal sealed partial class DrawScriptOperationFactory(
+    ILyricExpressionCompiler expressionCompiler,
+    ILyricDrawScriptParser parser,
+    LyricDrawCommandRegistry commands) : ILyricRenderOperationFactory
 {
-    private readonly ILyricExpressionCompiler _expressionCompiler;
-    private readonly ILyricDrawScriptParser _parser;
-    private readonly LyricDrawCommandRegistry _commands;
-
-    public DrawScriptOperationFactory(
-        ILyricExpressionCompiler expressionCompiler,
-        ILyricDrawScriptParser parser,
-        LyricDrawCommandRegistry commands)
-    {
-        _expressionCompiler = expressionCompiler;
-        _parser = parser;
-        _commands = commands;
-    }
+    private readonly LyricDrawCommandRegistry _commands = commands;
 
     public LyricRenderOperationDescriptor Descriptor { get; } = new()
     {
@@ -66,7 +57,7 @@ internal sealed class DrawScriptOperationFactory : ILyricRenderOperationFactory
     public LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
     {
         var diagnostics = new List<LyricProfileDiagnostic>();
-        var parseResult = _parser.Parse(definition.Script ?? string.Empty);
+        var parseResult = parser.Parse(definition.Script ?? string.Empty);
         if (!parseResult.IsSuccess)
         {
             diagnostics.Add(new LyricProfileDiagnostic(
@@ -178,21 +169,21 @@ internal sealed class DrawScriptOperationFactory : ILyricRenderOperationFactory
         {
             case LyricExpressionValueType.Scalar:
             {
-                var result = _expressionCompiler.CompileScalar(source);
+                var result = expressionCompiler.CompileScalar(source);
                 if (result.IsSuccess) return CompiledDrawArgument.Scalar(result.Expression!);
                 AddExpressionDiagnostic(definition, command, result.Diagnostic!, diagnostics);
                 return null;
             }
             case LyricExpressionValueType.Color:
             {
-                var result = _expressionCompiler.CompileColor(source);
+                var result = expressionCompiler.CompileColor(source);
                 if (result.IsSuccess) return CompiledDrawArgument.Color(result.Expression!);
                 AddExpressionDiagnostic(definition, command, result.Diagnostic!, diagnostics);
                 return null;
             }
             case LyricExpressionValueType.Text:
             {
-                var result = _expressionCompiler.CompileText(source);
+                var result = expressionCompiler.CompileText(source);
                 if (result.IsSuccess) return CompiledDrawArgument.Text(result.Expression!);
                 AddExpressionDiagnostic(definition, command, result.Diagnostic!, diagnostics);
                 return null;
@@ -223,26 +214,19 @@ internal sealed class DrawScriptOperationFactory : ILyricRenderOperationFactory
         AboveSource
     }
 
-    private sealed class DrawScriptOperation : ILyricRenderOperation
+    private sealed partial class DrawScriptOperation(IReadOnlyList<DrawScriptOperationFactory.CompiledDrawCommand> commands, DrawScriptOperationFactory.DrawScriptPlacement placement) : ILyricRenderOperation
     {
-        private readonly IReadOnlyList<CompiledDrawCommand> _commands;
-        private readonly DrawScriptPlacement _placement;
-
-        public DrawScriptOperation(IReadOnlyList<CompiledDrawCommand> commands, DrawScriptPlacement placement)
-        {
-            _commands = commands;
-            _placement = placement;
-        }
+        private readonly IReadOnlyList<CompiledDrawCommand> _commands = commands;
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
             var commandList = context.Resources.Track(new CanvasCommandList(context.TargetSession));
             using var session = commandList.CreateDrawingSession();
             var executionContext = new LyricDrawExecutionContext(session);
-            if (_placement == DrawScriptPlacement.AboveSource) session.DrawImage(source);
+            if (placement == DrawScriptPlacement.AboveSource) session.DrawImage(source);
             foreach (var command in _commands) command.Execute(executionContext, context);
             executionContext.EnsureBalanced();
-            if (_placement == DrawScriptPlacement.BehindSource) session.DrawImage(source);
+            if (placement == DrawScriptPlacement.BehindSource) session.DrawImage(source);
             return commandList;
         }
 
@@ -251,21 +235,12 @@ internal sealed class DrawScriptOperationFactory : ILyricRenderOperationFactory
         }
     }
 
-    private sealed class CompiledDrawCommand
+    private sealed class CompiledDrawCommand(ILyricDrawCommandFactory factory, IReadOnlyList<DrawScriptOperationFactory.CompiledDrawArgument> arguments)
     {
-        private readonly ILyricDrawCommandFactory _factory;
-        private readonly IReadOnlyList<CompiledDrawArgument> _arguments;
-
-        public CompiledDrawCommand(ILyricDrawCommandFactory factory, IReadOnlyList<CompiledDrawArgument> arguments)
-        {
-            _factory = factory;
-            _arguments = arguments;
-        }
-
         public void Execute(LyricDrawExecutionContext executionContext, LyricRenderOperationContext renderContext)
         {
-            var values = _arguments.Select(argument => argument.Evaluate(renderContext)).ToArray();
-            _factory.Execute(executionContext, values);
+            var values = arguments.Select(argument => argument.Evaluate(renderContext)).ToArray();
+            factory.Execute(executionContext, values);
         }
     }
 
@@ -307,7 +282,7 @@ internal sealed class DrawScriptOperationFactory : ILyricRenderOperationFactory
                     _color!(context.Line, context.Frame, context.Functions)),
                 LyricExpressionValueType.Text => LyricDrawValue.FromText(
                     _text!(context.Line, context.Frame, context.Functions) ?? string.Empty),
-                _ => throw new ArgumentOutOfRangeException()
+                _ => throw new ArgumentOutOfRangeException(nameof(context))
             };
         }
 
@@ -327,37 +302,37 @@ internal static class BuiltInDrawCommandFactories
     private static readonly LyricExpressionValueType T = LyricExpressionValueType.Text;
 
     public static IReadOnlyList<ILyricDrawCommandFactory> CreateAll() =>
-    [
-        Command("FillRectangle", [S, S, S, S, C], (context, value) =>
+    (ILyricDrawCommandFactory[])[
+        Command("FillRectangle", (LyricExpressionValueType[]) [S, S, S, S, C], (context, value) =>
             context.Session.FillRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, Color(value[4]))),
-        Command("StrokeRectangle", [S, S, S, S, C, S], (context, value) =>
+        Command("StrokeRectangle", (LyricExpressionValueType[]) [S, S, S, S, C, S], (context, value) =>
             context.Session.DrawRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, Color(value[4]), value[5].Scalar)),
-        Command("FillRoundedRectangle", [S, S, S, S, S, C], (context, value) =>
+        Command("FillRoundedRectangle", (LyricExpressionValueType[]) [S, S, S, S, S, C], (context, value) =>
             context.Session.FillRoundedRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, value[4].Scalar, value[4].Scalar, Color(value[5]))),
-        Command("StrokeRoundedRectangle", [S, S, S, S, S, C, S], (context, value) =>
+        Command("StrokeRoundedRectangle", (LyricExpressionValueType[]) [S, S, S, S, S, C, S], (context, value) =>
             context.Session.DrawRoundedRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, value[4].Scalar, value[4].Scalar, Color(value[5]), value[6].Scalar)),
-        Command("FillEllipse", [S, S, S, S, C], (context, value) =>
+        Command("FillEllipse", (LyricExpressionValueType[]) [S, S, S, S, C], (context, value) =>
             context.Session.FillEllipse(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, Color(value[4]))),
-        Command("StrokeEllipse", [S, S, S, S, C, S], (context, value) =>
+        Command("StrokeEllipse", (LyricExpressionValueType[]) [S, S, S, S, C, S], (context, value) =>
             context.Session.DrawEllipse(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, Color(value[4]), value[5].Scalar)),
-        Command("DrawLine", [S, S, S, S, C, S], (context, value) =>
+        Command("DrawLine", (LyricExpressionValueType[]) [S, S, S, S, C, S], (context, value) =>
             context.Session.DrawLine(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, Color(value[4]), value[5].Scalar)),
-        Command("DrawText", [T, S, S, S, C], DrawText),
+        Command("DrawText", (LyricExpressionValueType[]) [T, S, S, S, C], DrawText),
         Command("Save", [], (context, _) => context.Save()),
         Command("Restore", [], (context, _) => context.Restore()),
-        Command("Translate", [S, S], (context, value) =>
+        Command("Translate", (LyricExpressionValueType[]) [S, S], (context, value) =>
             context.Session.Transform *= Matrix3x2.CreateTranslation(value[0].Scalar, value[1].Scalar)),
-        Command("Scale", [S, S, S, S], (context, value) =>
+        Command("Scale", (LyricExpressionValueType[]) [S, S, S, S], (context, value) =>
             context.Session.Transform *= Matrix3x2.CreateScale(value[0].Scalar, value[1].Scalar, new Vector2(value[2].Scalar, value[3].Scalar))),
-        Command("Rotate", [S, S, S], (context, value) =>
+        Command("Rotate", (LyricExpressionValueType[]) [S, S, S], (context, value) =>
             context.Session.Transform *= Matrix3x2.CreateRotation(MathF.PI * value[0].Scalar / 180f, new Vector2(value[1].Scalar, value[2].Scalar)))
     ];
 
-    private static ILyricDrawCommandFactory Command(
+    private static DelegateDrawCommandFactory Command(
         string name,
         IReadOnlyList<LyricExpressionValueType> arguments,
         Action<LyricDrawExecutionContext, IReadOnlyList<LyricDrawValue>> execute) =>
-        new DelegateDrawCommandFactory(new LyricDrawCommandSignature(name, arguments), execute);
+        new(new LyricDrawCommandSignature(name, arguments), execute);
 
     private static void DrawText(LyricDrawExecutionContext context, IReadOnlyList<LyricDrawValue> values)
     {
@@ -368,21 +343,13 @@ internal static class BuiltInDrawCommandFactories
     private static Color Color(LyricDrawValue value) =>
         Windows.UI.Color.FromArgb(value.Color.A, value.Color.R, value.Color.G, value.Color.B);
 
-    private sealed class DelegateDrawCommandFactory : ILyricDrawCommandFactory
+    private sealed class DelegateDrawCommandFactory(
+        LyricDrawCommandSignature signature,
+        Action<LyricDrawExecutionContext, IReadOnlyList<LyricDrawValue>> execute) : ILyricDrawCommandFactory
     {
-        private readonly Action<LyricDrawExecutionContext, IReadOnlyList<LyricDrawValue>> _execute;
-
-        public DelegateDrawCommandFactory(
-            LyricDrawCommandSignature signature,
-            Action<LyricDrawExecutionContext, IReadOnlyList<LyricDrawValue>> execute)
-        {
-            Signature = signature;
-            _execute = execute;
-        }
-
-        public LyricDrawCommandSignature Signature { get; }
+        public LyricDrawCommandSignature Signature { get; } = signature;
 
         public void Execute(LyricDrawExecutionContext context, IReadOnlyList<LyricDrawValue> arguments) =>
-            _execute(context, arguments);
+            execute(context, arguments);
     }
 }

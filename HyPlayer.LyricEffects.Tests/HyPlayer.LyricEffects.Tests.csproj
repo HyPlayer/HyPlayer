@@ -5,13 +5,14 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <OutputType>Exe</OutputType>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <PublishAot>true</PublishAot>
     <IsAotCompatible>true</IsAotCompatible>
     <NoWarn>IL2026;IL3050</NoWarn>
+	<Platforms>ARM64;x64</Platforms>
+	<Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

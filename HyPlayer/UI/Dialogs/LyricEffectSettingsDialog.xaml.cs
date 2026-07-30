@@ -31,20 +31,14 @@ using WinRT;
 namespace HyPlayer.UI.Dialogs;
 
 [GeneratedBindableCustomProperty]
-public partial class LyricEffectOperationItem : INotifyPropertyChanged
+public partial class LyricEffectOperationItem(
+    LyricRenderOperationDefinition definition,
+    LyricRenderOperationDescriptor? descriptor) : INotifyPropertyChanged
 {
     private string _status = string.Empty;
-    private LyricRenderOperationDescriptor? _descriptor;
+    private LyricRenderOperationDescriptor? _descriptor = descriptor;
 
-    public LyricEffectOperationItem(
-        LyricRenderOperationDefinition definition,
-        LyricRenderOperationDescriptor? descriptor)
-    {
-        Definition = definition;
-        _descriptor = descriptor;
-    }
-
-    public LyricRenderOperationDefinition Definition { get; }
+    public LyricRenderOperationDefinition Definition { get; } = definition;
 
     public string InstanceId => Definition.InstanceId;
 
@@ -200,7 +194,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
     private LyricEffectProfileDocument BuildDocument()
     {
         var document = LyricEffectPresets.CloneProfile(_draft);
-        document.Operations = Operations.Select(item => item.Definition).ToList();
+        document.Operations = [.. Operations.Select(item => item.Definition)];
         return document;
     }
 
@@ -504,7 +498,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
                 key,
                 TransitionProperty.Easing,
                 transition.EasingId,
-                ["linear", "circle", "sine", "exponential", "elastic", "bounce"])));
+                (string[])["linear", "circle", "sine", "exponential", "elastic", "bounce"])));
         expander.Items.Add(CreateSettingsCard(
             "缓动模式",
             "控制曲线作用于进入、退出或两端",
@@ -512,7 +506,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
                 key,
                 TransitionProperty.Mode,
                 transition.Mode,
-                ["in", "out", "inout"])));
+                (string[])["in", "out", "inout"])));
     }
 
     private ComboBox TransitionCombo(
@@ -753,7 +747,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
                 SuggestedFileName = string.IsNullOrWhiteSpace(_draft.Name) ? "lyric-effects" : _draft.Name
             };
-            picker.FileTypeChoices.Add("HyPlayer 歌词特效", new List<string> { ".hylfx" });
+            picker.FileTypeChoices.Add("HyPlayer 歌词特效", [".hylfx"]);
             var file = await picker.PickSaveFileAsync();
             if (file is null) return;
             await FileIO.WriteTextAsync(file, json, Windows.Storage.Streams.UnicodeEncoding.Utf8);

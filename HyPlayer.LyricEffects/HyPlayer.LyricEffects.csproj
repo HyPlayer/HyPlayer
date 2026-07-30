@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <IsAotCompatible>true</IsAotCompatible>
+	<Platforms>ARM64;x64</Platforms>
+	<Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

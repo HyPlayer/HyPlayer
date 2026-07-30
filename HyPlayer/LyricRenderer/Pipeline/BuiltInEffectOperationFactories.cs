@@ -10,14 +10,9 @@ using System.Numerics;
 
 namespace HyPlayer.LyricRenderer.Pipeline;
 
-internal abstract class ExpressionOperationFactoryBase : ILyricRenderOperationFactory
+internal abstract class ExpressionOperationFactoryBase(ILyricExpressionCompiler compiler) : ILyricRenderOperationFactory
 {
-    protected ExpressionOperationFactoryBase(ILyricExpressionCompiler compiler)
-    {
-        Compiler = compiler;
-    }
-
-    protected ILyricExpressionCompiler Compiler { get; }
+    protected ILyricExpressionCompiler Compiler { get; } = compiler;
 
     public abstract LyricRenderOperationDescriptor Descriptor { get; }
 
@@ -42,7 +37,7 @@ internal abstract class ExpressionOperationFactoryBase : ILyricRenderOperationFa
     }
 }
 
-internal sealed class OpacityOperationFactory : ExpressionOperationFactoryBase
+internal sealed partial class OpacityOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor Opacity = new()
     {
@@ -55,16 +50,12 @@ internal sealed class OpacityOperationFactory : ExpressionOperationFactoryBase
         Maximum = 1
     };
 
-    public OpacityOperationFactory(ILyricExpressionCompiler compiler) : base(compiler)
-    {
-    }
-
     public override LyricRenderOperationDescriptor Descriptor { get; } = new()
     {
         TypeId = LyricBuiltInOperationTypes.Opacity,
         DisplayName = "透明度",
         Description = "改变当前歌词行合成结果的透明度。",
-        Parameters = [Opacity]
+        Parameters = (LyricOperationParameterDescriptor[])[Opacity]
     };
 
     public override LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
@@ -74,20 +65,14 @@ internal sealed class OpacityOperationFactory : ExpressionOperationFactoryBase
         return Result(definition, diagnostics, opacity is null ? null : () => new OpacityOperation(opacity.CreateRuntime()));
     }
 
-    private sealed class OpacityOperation : ILyricRenderOperation
+    private sealed partial class OpacityOperation(ScalarParameterRuntime opacity) : ILyricRenderOperation
     {
-        private readonly ScalarParameterRuntime _opacity;
         private readonly OpacityEffect _effect = new();
-
-        public OpacityOperation(ScalarParameterRuntime opacity)
-        {
-            _opacity = opacity;
-        }
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
             _effect.Source = source;
-            _effect.Opacity = _opacity.Evaluate(context);
+            _effect.Opacity = opacity.Evaluate(context);
             return _effect;
         }
 
@@ -95,7 +80,7 @@ internal sealed class OpacityOperationFactory : ExpressionOperationFactoryBase
     }
 }
 
-internal sealed class BlurOperationFactory : ExpressionOperationFactoryBase
+internal sealed partial class BlurOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor Amount = new()
     {
@@ -108,16 +93,12 @@ internal sealed class BlurOperationFactory : ExpressionOperationFactoryBase
         Maximum = 250
     };
 
-    public BlurOperationFactory(ILyricExpressionCompiler compiler) : base(compiler)
-    {
-    }
-
     public override LyricRenderOperationDescriptor Descriptor { get; } = new()
     {
         TypeId = LyricBuiltInOperationTypes.GaussianBlur,
         DisplayName = "高斯模糊",
         Description = "对当前合成图像应用 Win2D 高斯模糊。",
-        Parameters = [Amount]
+        Parameters = (LyricOperationParameterDescriptor[])[Amount]
     };
 
     public override LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
@@ -127,20 +108,14 @@ internal sealed class BlurOperationFactory : ExpressionOperationFactoryBase
         return Result(definition, diagnostics, amount is null ? null : () => new BlurOperation(amount.CreateRuntime()));
     }
 
-    private sealed class BlurOperation : ILyricRenderOperation
+    private sealed partial class BlurOperation(ScalarParameterRuntime amount) : ILyricRenderOperation
     {
-        private readonly ScalarParameterRuntime _amount;
         private readonly GaussianBlurEffect _effect = new();
-
-        public BlurOperation(ScalarParameterRuntime amount)
-        {
-            _amount = amount;
-        }
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
             _effect.Source = source;
-            _effect.BlurAmount = _amount.Evaluate(context);
+            _effect.BlurAmount = amount.Evaluate(context);
             return _effect;
         }
 
@@ -148,7 +123,7 @@ internal sealed class BlurOperationFactory : ExpressionOperationFactoryBase
     }
 }
 
-internal sealed class GlowOperationFactory : ExpressionOperationFactoryBase
+internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor Blur = new()
     {
@@ -180,16 +155,12 @@ internal sealed class GlowOperationFactory : ExpressionOperationFactoryBase
         DefaultExpression = "line.AccentColor"
     };
 
-    public GlowOperationFactory(ILyricExpressionCompiler compiler) : base(compiler)
-    {
-    }
-
     public override LyricRenderOperationDescriptor Descriptor { get; } = new()
     {
         TypeId = LyricBuiltInOperationTypes.Glow,
         DisplayName = "整体辉光",
         Description = "在歌词图像后合成带颜色的阴影辉光。",
-        Parameters = [Blur, Opacity, Color]
+        Parameters = (LyricOperationParameterDescriptor[])[Blur, Opacity, Color]
     };
 
     public override LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
@@ -206,7 +177,7 @@ internal sealed class GlowOperationFactory : ExpressionOperationFactoryBase
                 : () => new GlowOperation(blur.CreateRuntime(), opacity.CreateRuntime(), color));
     }
 
-    private sealed class GlowOperation : ILyricRenderOperation
+    private sealed partial class GlowOperation : ILyricRenderOperation
     {
         private readonly ScalarParameterRuntime _blur;
         private readonly ScalarParameterRuntime _opacity;
@@ -248,7 +219,7 @@ internal sealed class GlowOperationFactory : ExpressionOperationFactoryBase
     }
 }
 
-internal sealed class Transform2DOperationFactory : ExpressionOperationFactoryBase
+internal sealed partial class Transform2DOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor[] ParameterDescriptors =
     [
@@ -260,10 +231,6 @@ internal sealed class Transform2DOperationFactory : ExpressionOperationFactoryBa
         Scalar("anchorX", "X 锚点", "line.AnchorX"),
         Scalar("anchorY", "Y 锚点", "line.AnchorY")
     ];
-
-    public Transform2DOperationFactory(ILyricExpressionCompiler compiler) : base(compiler)
-    {
-    }
 
     public override LyricRenderOperationDescriptor Descriptor { get; } = new()
     {
@@ -303,19 +270,13 @@ internal sealed class Transform2DOperationFactory : ExpressionOperationFactoryBa
         Maximum = maximum
     };
 
-    private sealed class Transform2DOperation : ILyricRenderOperation
+    private sealed partial class Transform2DOperation(ScalarParameterRuntime[] parameters) : ILyricRenderOperation
     {
-        private readonly ScalarParameterRuntime[] _parameters;
         private readonly Transform2DEffect _effect = new();
-
-        public Transform2DOperation(ScalarParameterRuntime[] parameters)
-        {
-            _parameters = parameters;
-        }
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
-            var values = _parameters.Select(parameter => parameter.Evaluate(context)).ToArray();
+            var values = parameters.Select(parameter => parameter.Evaluate(context)).ToArray();
             var anchor = new Vector2(values[5], values[6]);
             _effect.Source = source;
             _effect.TransformMatrix =
@@ -330,7 +291,7 @@ internal sealed class Transform2DOperationFactory : ExpressionOperationFactoryBa
     }
 }
 
-internal sealed class Transform3DOperationFactory : ExpressionOperationFactoryBase
+internal sealed partial class Transform3DOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor[] ParameterDescriptors =
     [
@@ -341,10 +302,6 @@ internal sealed class Transform3DOperationFactory : ExpressionOperationFactoryBa
         Scalar("anchorX", "X 锚点", "line.AnchorX"),
         Scalar("anchorY", "Y 锚点", "line.AnchorY")
     ];
-
-    public Transform3DOperationFactory(ILyricExpressionCompiler compiler) : base(compiler)
-    {
-    }
 
     public override LyricRenderOperationDescriptor Descriptor { get; } = new()
     {
@@ -384,19 +341,13 @@ internal sealed class Transform3DOperationFactory : ExpressionOperationFactoryBa
         Maximum = maximum
     };
 
-    private sealed class Transform3DOperation : ILyricRenderOperation
+    private sealed partial class Transform3DOperation(ScalarParameterRuntime[] parameters) : ILyricRenderOperation
     {
-        private readonly ScalarParameterRuntime[] _parameters;
         private readonly Transform3DEffect _effect = new();
-
-        public Transform3DOperation(ScalarParameterRuntime[] parameters)
-        {
-            _parameters = parameters;
-        }
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
-            var values = _parameters.Select(parameter => parameter.Evaluate(context)).ToArray();
+            var values = parameters.Select(parameter => parameter.Evaluate(context)).ToArray();
             var center = new Vector3(values[4], values[5], 0);
             var perspective = Matrix4x4.Identity;
             perspective.M34 = 1f / values[3];
