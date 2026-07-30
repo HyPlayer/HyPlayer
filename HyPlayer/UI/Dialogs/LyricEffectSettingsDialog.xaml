@@ -7,12 +7,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:win2d="using:Microsoft.Graphics.Canvas.UI.Xaml"
     Title="歌词特效链"
-    CloseButtonText="取消"
-    DefaultButton="Primary"
-    PrimaryButtonText="保存"
-    Closed="Dialog_Closed"
     CloseButtonClick="Dialog_CloseButtonClick"
+    CloseButtonText="取消"
+    Closed="Dialog_Closed"
+    DefaultButton="Primary"
     PrimaryButtonClick="Dialog_PrimaryButtonClick"
+    PrimaryButtonText="保存"
     mc:Ignorable="d">
 
     <ContentDialog.Resources>
@@ -37,7 +37,7 @@
                 Margin="4,0,0,10"
                 FontSize="18"
                 FontWeight="SemiBold"
-                Text="活动操作链（从上到下执行）" />
+                Text="活动操作链" />
             <ListView
                 x:Name="OperationList"
                 Grid.Row="1"
@@ -53,27 +53,25 @@
                     <DataTemplate x:DataType="local:LyricEffectOperationItem">
                         <Grid MinHeight="76" Padding="4">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="28" />
-                                <ColumnDefinition />
+                                <ColumnDefinition Width="50" />
+                                <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <FontIcon
+                            <ToggleSwitch
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
-                                FontSize="15"
-                                Glyph="&#xE700;" />
+                                IsEnabled="{Binding CanToggle}"
+                                IsOn="{Binding IsEnabled, Mode=TwoWay}"
+                                OffContent=""
+                                OnContent="" />
                             <StackPanel
                                 Grid.Column="1"
                                 Margin="4,0,8,0"
                                 VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Foreground="{ThemeResource SystemControlHighlightAccentBrush}" Text="{Binding CategoryLabel}" />
                                     <TextBlock
-                                        FontSize="11"
-                                        Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
-                                        Text="{Binding CategoryLabel}" />
-                                    <TextBlock
-                                        FontWeight="SemiBold"
                                         Text="{Binding DisplayName}"
                                         TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
@@ -84,49 +82,40 @@
                                     Text="{Binding Description}"
                                     TextTrimming="CharacterEllipsis"
                                     TextWrapping="Wrap" />
-                                <TextBlock
-                                    Foreground="OrangeRed"
-                                    FontSize="11"
-                                    Text="{Binding Status}"
-                                    TextTrimming="CharacterEllipsis" />
                             </StackPanel>
-                            <ToggleSwitch
-                                Grid.Column="2"
-                                Margin="0,0,8,0"
-                                VerticalAlignment="Center"
-                                IsEnabled="{Binding CanToggle}"
-                                IsOn="{Binding IsEnabled, Mode=TwoWay}" />
+
                             <Button
                                 Grid.Column="3"
-                                Padding="8"
                                 VerticalAlignment="Center"
                                 Background="Transparent"
+                                BorderBrush="Transparent"
                                 ToolTipService.ToolTip="更多操作">
                                 <FontIcon FontSize="14" Glyph="&#xE712;" />
                                 <Button.Flyout>
                                     <MenuFlyout>
                                         <MenuFlyoutItem
                                             Click="MoveUp_Click"
-                                            Text="上移"
-                                            Tag="{Binding InstanceId}" />
+                                            Tag="{Binding InstanceId}"
+                                            Text="上移" />
                                         <MenuFlyoutItem
                                             Click="MoveDown_Click"
-                                            Text="下移"
-                                            Tag="{Binding InstanceId}" />
+                                            Tag="{Binding InstanceId}"
+                                            Text="下移" />
                                         <MenuFlyoutSeparator />
                                         <MenuFlyoutItem
                                             Click="Duplicate_Click"
                                             IsEnabled="{Binding CanDuplicate}"
-                                            Text="复制"
-                                            Tag="{Binding InstanceId}" />
+                                            Tag="{Binding InstanceId}"
+                                            Text="复制" />
                                         <MenuFlyoutItem
                                             Click="Delete_Click"
                                             IsEnabled="{Binding CanDelete}"
-                                            Text="删除"
-                                            Tag="{Binding InstanceId}" />
+                                            Tag="{Binding InstanceId}"
+                                            Text="删除" />
                                     </MenuFlyout>
                                 </Button.Flyout>
                             </Button>
+
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
@@ -138,7 +127,7 @@
                             <MenuFlyout x:Name="OperationPresetFlyout" />
                         </Button.Flyout>
                     </Button>
-                    <Button Content="更换整套预设">
+                    <Button Content="预设">
                         <Button.Flyout>
                             <MenuFlyout x:Name="ProfilePresetFlyout" />
                         </Button.Flyout>
@@ -148,7 +137,7 @@
                     Margin="0,8,0,0"
                     Orientation="Horizontal"
                     Spacing="8">
-                    <Button Click="Import_Click" Content="导入 .hylfx" />
+                    <Button Click="Import_Click" Content="导入" />
                     <Button Click="Export_Click" Content="导出" />
                 </StackPanel>
                 <TextBlock
@@ -186,7 +175,10 @@
             </Border>
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="EditorPanel" Padding="4,8,12,20" Spacing="10" />
+                <StackPanel
+                    x:Name="EditorPanel"
+                    Padding="4,8,12,20"
+                    Spacing="10" />
             </ScrollViewer>
         </Grid>
     </Grid>

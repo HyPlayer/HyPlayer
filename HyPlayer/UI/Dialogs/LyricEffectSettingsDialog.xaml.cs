@@ -178,9 +178,9 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         _preview.ChangeRenderColor(Colors.White, Color.FromArgb(255, 255, 213, 79), Colors.Black);
         _preview.SetLyricLines(
         [
-            new TextRenderingLyricLine { Text = "让每一行歌词都有自己的呼吸", StartTime = 0, EndTime = 3000, KeyFrames = [0, 3000] },
-            new TextRenderingLyricLine { Text = "Expression API v1", Translation = "稳定、安全、可拓展", StartTime = 3000, EndTime = 6000, KeyFrames = [3000, 6000] },
-            new TextRenderingLyricLine { Text = "拖动节点即可改变绘制顺序", StartTime = 6000, EndTime = 9000, KeyFrames = [6000, 9000] }
+            new TextRenderingLyricLine { Text = "Lorem ipsum dolor sit amet", StartTime = 0, EndTime = 3000, KeyFrames = [0, 3000], Typography = new(){ Alignment  = TextAlignment.Start} },
+            new TextRenderingLyricLine { Text = "consectetur adipisicing elit", Translation = "测试测试测试测试", StartTime = 3000, EndTime = 6000, KeyFrames = [3000, 6000], Typography = new(){ Alignment  = TextAlignment.Start} },
+            new TextRenderingLyricLine { Text = "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua", StartTime = 6000, EndTime = 9000, KeyFrames = [6000, 9000] , Typography = new(){ Alignment  = TextAlignment.Start}}
         ]);
     }
 
@@ -376,20 +376,20 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         string description,
         UIElement content,
         ContentAlignment contentAlignment = ContentAlignment.Right) => new()
-    {
-        Header = header,
-        Description = description,
-        Content = content,
-        ContentAlignment = contentAlignment,
-        HorizontalAlignment = HorizontalAlignment.Stretch
-    };
+        {
+            Header = header,
+            Description = description,
+            Content = content,
+            ContentAlignment = contentAlignment,
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
 
     private static LyricOperationParameterDefinition CreateParameterDefinition(
         LyricOperationParameterDescriptor descriptor) => new()
-    {
-        Expression = descriptor.DefaultExpression,
-        Transition = descriptor.SupportsTransition ? new LyricTransitionDefinition() : null
-    };
+        {
+            Expression = descriptor.DefaultExpression,
+            Transition = descriptor.SupportsTransition ? new LyricTransitionDefinition() : null
+        };
 
     private void AddExpressionEditor(
         LyricOperationParameterDescriptor descriptor,
