@@ -8,6 +8,7 @@
     <IsAotCompatible>true</IsAotCompatible>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Platforms>x64;arm64</Platforms>
+    <Platforms>ARM64;x64</Platforms>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 </Project>
