@@ -61,7 +61,8 @@
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel
                             x:Name="StackPanelLyricSet"
-                            Margin="12,8,12,150"
+                            Margin="12,8,12,0"
+                            Padding="0,0,0,144"
                             HorizontalAlignment="Stretch"
                             Orientation="Vertical"
                             Spacing="12">
@@ -455,7 +456,8 @@
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="12,8,12,150"
+                            Margin="12,8,12,0"
+                            Padding="0,0,0,144"
                             Orientation="Vertical"
                             Spacing="12">
                             <controls3:SettingsExpander
@@ -692,7 +694,10 @@
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
 
-                        <StackPanel Margin="12,8,12,150" Spacing="12">
+                        <StackPanel
+                            Margin="12,8,12,0"
+                            Padding="0,0,0,144"
+                            Spacing="12">
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
@@ -772,17 +777,22 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.IsolationLightWave, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Description="0 为无边框" Header="唱片边框厚度">
-                                        <Slider
-                                            x:Name="SliderAlbumBorderLength"
-                                            Width="256"
+                                    <controls3:SettingsCard
+                                        Description="0 为无边框"
+                                        Header="唱片边框厚度">
+                                        <controls:NumberBox
+                                            Width="80"
                                             HorizontalAlignment="Right"
+                                            LargeChange="10"
                                             Maximum="280"
                                             Minimum="0"
-                                            ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
-                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.albumBorderLength, Mode=TwoWay}" />
+                                            SmallChange="1"
+                                            SpinButtonPlacementMode="Compact"
+                                            Value="{x:Bind hyplayer:XamlHelpers.Setting.albumBorderLength, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Description="0为无阴影" Header="歌词页面封面阴影强度">
+                                    <controls3:SettingsCard
+                                        Description="0为无阴影"
+                                        Header="歌词页面封面阴影强度">
                                         <Slider
                                             x:Name="SliderAlbumShadowDepth"
                                             Width="256"
@@ -958,7 +968,8 @@
                 <ScrollViewer VerticalScrollMode="Enabled">
                     <Grid>
                         <StackPanel
-                            Margin="12,8,12,150"
+                            Margin="12,8,12,0"
+                            Padding="0,0,0,144"
                             Orientation="Vertical"
                             Spacing="12">
                             <controls3:SettingsExpander
@@ -1159,7 +1170,8 @@
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="12,8,12,150"
+                            Margin="12,8,12,0"
+                            Padding="0,0,0,144"
                             Orientation="Vertical"
                             Spacing="12">
                             <controls:InfoBar
@@ -1287,7 +1299,9 @@
             <PivotItem Header="关于">
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
-                        <Grid Margin="0,8,12,150">
+                        <Grid
+                            Margin="0,8,12,0"
+                            Padding="0,0,0,144">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
