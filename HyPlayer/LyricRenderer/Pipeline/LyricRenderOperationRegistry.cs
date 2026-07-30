@@ -15,6 +15,7 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
 
     private readonly Dictionary<string, ILyricRenderOperationFactory> _factories =
         new(StringComparer.OrdinalIgnoreCase);
+    private readonly FocusedTextEffectCompiler _focusedTextCompiler;
     private int _version;
 
     public LyricRenderOperationRegistry(
@@ -22,6 +23,7 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
         ILyricDrawScriptParser drawScriptParser,
         LyricDrawCommandRegistry drawCommands)
     {
+        _focusedTextCompiler = new FocusedTextEffectCompiler(expressionCompiler, drawScriptParser, drawCommands);
         Register(new SourceDrawOperationFactory());
         Register(new DebugDrawOperationFactory());
         Register(new GlowOperationFactory(expressionCompiler));
@@ -80,7 +82,9 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
             if (definition.IsEnabled && result.Operation is not null) compiled.Add(result.Operation);
         }
 
-        if (diagnostics.Any(item => item.Severity == LyricProfileDiagnosticSeverity.Error))
+        var focusedText = _focusedTextCompiler.Compile(document.FocusedText, diagnostics);
+
+        if (diagnostics.Any(item => item.Severity == LyricProfileDiagnosticSeverity.Error) || focusedText is null)
             return new LyricProfileCompileResult { Diagnostics = diagnostics };
 
         return new LyricProfileCompileResult
@@ -89,7 +93,8 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
             Profile = new CompiledLyricEffectProfile(
                 Interlocked.Increment(ref _version),
                 LyricEffectPresets.CloneProfile(document),
-                compiled)
+                compiled,
+                focusedText)
         };
     }
 

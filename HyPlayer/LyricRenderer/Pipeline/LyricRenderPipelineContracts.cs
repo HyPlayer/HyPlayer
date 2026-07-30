@@ -37,11 +37,13 @@ public sealed class CompiledLyricEffectProfile
     internal CompiledLyricEffectProfile(
         int version,
         LyricEffectProfileDocument document,
-        IReadOnlyList<CompiledLyricRenderOperation> operations)
+        IReadOnlyList<CompiledLyricRenderOperation> operations,
+        CompiledFocusedTextEffectProfile focusedText)
     {
         Version = version;
         Document = document;
         Operations = operations;
+        FocusedText = focusedText;
     }
 
     public int Version { get; }
@@ -49,6 +51,8 @@ public sealed class CompiledLyricEffectProfile
     public LyricEffectProfileDocument Document { get; }
 
     internal IReadOnlyList<CompiledLyricRenderOperation> Operations { get; }
+
+    public CompiledFocusedTextEffectProfile FocusedText { get; }
 
     internal LyricRenderPipelineInstance CreatePipeline() =>
         new(Version, Operations.Select(operation => operation.Create()).ToList());

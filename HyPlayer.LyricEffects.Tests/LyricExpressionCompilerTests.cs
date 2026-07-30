@@ -66,6 +66,36 @@ public class LyricExpressionCompilerTests
         await Task.CompletedTask;
     }
 
+    [Test]
+    public async Task Rgba_ShouldCreateCustomColorsInFocusedColorExpressions()
+    {
+        var result = _compiler.CompileFocusedColor("rgba(12, 34, 56, 0.5)");
+        var sample = FocusedTextExpressionSamples.All[0];
+
+        result.IsSuccess.Should().BeTrue();
+        result.Expression!(sample.Line, sample.Frame, sample.Text, sample.Word, sample.Glyph,
+                LyricExpressionFunctions.Instance)
+            .Should().Be(new LyricColorValue(128, 12, 34, 56));
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task FocusedExpressions_ShouldKeepRevealAndMotionIndependent()
+    {
+        var reveal = _compiler.CompileFocusedScalar("glyph.RevealProgress");
+        var motion = _compiler.CompileFocusedScalar("glyph.MotionProgress");
+        var sample = FocusedTextExpressionSamples.All[0];
+
+        reveal.IsSuccess.Should().BeTrue();
+        motion.IsSuccess.Should().BeTrue();
+        reveal.Expression!(sample.Line, sample.Frame, sample.Text, sample.Word, sample.Glyph,
+            LyricExpressionFunctions.Instance).Should().Be(0.5f);
+        motion.Expression!(sample.Line, sample.Frame, sample.Text, sample.Word, sample.Glyph,
+            LyricExpressionFunctions.Instance).Should().Be(0.4f);
+        await Task.CompletedTask;
+    }
+
     private static LyricExpressionLine Line(
         bool isActive = true,
         float viewportDistance = 0,

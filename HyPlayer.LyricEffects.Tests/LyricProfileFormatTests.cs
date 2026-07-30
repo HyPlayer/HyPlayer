@@ -43,17 +43,67 @@ public class LyricProfileFormatTests
         old.Operations.RemoveAll(item =>
             item.TypeId is LyricBuiltInOperationTypes.Source or LyricBuiltInOperationTypes.Debug);
         var migrated = LyricEffectProfileValidation.MigrateToCurrent(old);
-        migrated.SchemaVersion.Should().Be(1);
-        migrated.ExpressionApiVersion.Should().Be(1);
+        migrated.SchemaVersion.Should().Be(2);
+        migrated.ExpressionApiVersion.Should().Be(2);
+        migrated.FocusedText.Operations.Should().Contain(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift);
         migrated.Operations.Count(item => item.TypeId == LyricBuiltInOperationTypes.Source).Should().Be(1);
         migrated.Operations.Count(item => item.TypeId == LyricBuiltInOperationTypes.Debug).Should().Be(1);
         migrated.Operations.First().TypeId.Should().Be(LyricBuiltInOperationTypes.Source);
         migrated.Operations.Last().TypeId.Should().Be(LyricBuiltInOperationTypes.Debug);
 
         var future = LyricEffectPresets.CreateDefaultProfile();
-        future.SchemaVersion = 2;
+        future.SchemaVersion = 3;
         var action = () => LyricEffectProfileValidation.MigrateToCurrent(future);
         action.Should().Throw<NotSupportedException>();
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task FocusedTextRoundTrip_ShouldKeepRevealAndLiftIndependent()
+    {
+        var source = LyricEffectPresets.CreateDefaultProfile();
+        source.FocusedText.HighlightRevealMode = HighlightRevealMode.RectangleClip;
+        var lift = source.FocusedText.Operations.Single(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift);
+        lift.Options["motion"] = "Pulse";
+        lift.Targets.Should().Contain(FocusedTextTargets.LyricCurrentHighlighted);
+        lift.Targets.Should().Contain(FocusedTextTargets.LyricCurrentPending);
+
+        var json = JsonSerializer.Serialize(source, LyricEffectJsonContext.Default.LyricEffectProfileDocument);
+        var result = JsonSerializer.Deserialize(json, LyricEffectJsonContext.Default.LyricEffectProfileDocument)!;
+
+        result.FocusedText.HighlightRevealMode.Should().Be(HighlightRevealMode.RectangleClip);
+        result.FocusedText.Operations.Single(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift).Options["motion"].Should().Be("Pulse");
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task FocusedUnknownNodeAndExtensions_ShouldRoundTripUnchanged()
+    {
+        var source = LyricEffectPresets.CreateDefaultProfile();
+        source.FocusedText.ExtensionData = new Dictionary<string, JsonElement>
+        {
+            ["vendorFocused"] = JsonDocument.Parse("{\"enabled\":true}").RootElement.Clone()
+        };
+        source.FocusedText.Operations.Add(new FocusedTextOperationDefinition
+        {
+            TypeId = "vendor.focus.future",
+            DisplayName = "Future focused node",
+            Targets = [FocusedTextTargets.Translation],
+            ExtensionData = new Dictionary<string, JsonElement>
+            {
+                ["payload"] = JsonDocument.Parse("[1,2,3]").RootElement.Clone()
+            }
+        });
+
+        var json = JsonSerializer.Serialize(source, LyricEffectJsonContext.Default.LyricEffectProfileDocument);
+        var result = JsonSerializer.Deserialize(json, LyricEffectJsonContext.Default.LyricEffectProfileDocument)!;
+
+        result.FocusedText.ExtensionData!["vendorFocused"].GetProperty("enabled").GetBoolean().Should().BeTrue();
+        result.FocusedText.Operations.Single(item => item.TypeId == "vendor.focus.future")
+            .ExtensionData!["payload"].GetArrayLength().Should().Be(3);
         await Task.CompletedTask;
     }
 

@@ -124,7 +124,7 @@ public abstract class RenderingLyricLine : IDisposable
         _renderPipeline = null;
     }
 
-    private LyricExpressionLine CreateExpressionLine(RenderContext context, LineRenderOffset offset)
+    protected LyricExpressionLine CreateExpressionLine(RenderContext context, LineRenderOffset offset)
     {
         var relativeIndex = Id - context.CurrentLyricLineIndex;
         var currentOffsetY = context.RenderOffsets.TryGetValue(context.CurrentLyricLineIndex, out var currentOffset)
@@ -171,7 +171,7 @@ public abstract class RenderingLyricLine : IDisposable
             ToExpressionColor(accent));
     }
 
-    private static LyricExpressionFrame CreateExpressionFrame(RenderContext context) =>
+    protected static LyricExpressionFrame CreateExpressionFrame(RenderContext context) =>
         new(
             context.CurrentLyricLineIndex,
             context.CurrentLyricTime,

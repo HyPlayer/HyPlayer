@@ -25,6 +25,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
     private readonly ILyricTextLayouter _layouter;
     private readonly ITextProgressResolver _progressResolver;
     private readonly ITextHighlightEffectRenderer _highlightEffectRenderer;
+    private readonly FocusedLyricTextRenderer _focusedTextRenderer = new();
 
     private float _canvasWidth;
     private float _canvasHeight;
@@ -74,14 +75,34 @@ public class TextRenderingLyricLine : RenderingLyricLine
         {
             textDrawingSession.DrawImage(_layout.StaticPersistCache, 0, 0, _layout.SizePixelRect, 1);
 
-            if (IsActive && (Tokens.Count > 0 || context.Effects.SimpleLineScanning))
+            if (IsActive && context.EffectProfile is { } effectProfile)
             {
                 var frame = _progressResolver.Resolve(context.CurrentLyricTime, StartTime, EndTime, _layout);
-                _highlightEffectRenderer.Render(
+                var offset = context.RenderOffsets.TryGetValue(Id, out var currentOffset)
+                    ? currentOffset
+                    : new LineRenderOffset();
+                _focusedTextRenderer.Render(
                     textDrawingSession,
                     _layout,
                     frame,
-                    context);
+                    context,
+                    effectProfile.FocusedText,
+                    CreateExpressionLine(context, offset),
+                    CreateExpressionFrame(context));
+            }
+            else if (IsActive && (Tokens.Count > 0 || context.Effects.SimpleLineScanning))
+            {
+                var frame = _progressResolver.Resolve(context.CurrentLyricTime, StartTime, EndTime, _layout);
+                _highlightEffectRenderer.Render(textDrawingSession, _layout, frame, context);
+                if (_layout.DefaultTranslationPersistCache is not null)
+                {
+                    textDrawingSession.DrawImage(
+                        _layout.DefaultTranslationPersistCache,
+                        0,
+                        _layout.TranslationRenderActualTop,
+                        _layout.SizePixelRect,
+                        1);
+                }
             }
             else
             {
@@ -91,6 +112,15 @@ public class TextRenderingLyricLine : RenderingLyricLine
                 }
 
                 textDrawingSession.DrawImage(_layout.DefaultTextPersistCache, 0, _layout.TextRenderActualTop, _layout.SizePixelRect, 1);
+                if (_layout.DefaultTranslationPersistCache is not null)
+                {
+                    textDrawingSession.DrawImage(
+                        _layout.DefaultTranslationPersistCache,
+                        0,
+                        _layout.TranslationRenderActualTop,
+                        _layout.SizePixelRect,
+                        1);
+                }
             }
         }
 
@@ -138,6 +168,8 @@ public class TextRenderingLyricLine : RenderingLyricLine
             Typography = Typography ?? context.PreferTypography,
             Text = Text ?? string.Empty,
             Tokens = Tokens,
+            LineStartTime = StartTime,
+            LineEndTime = EndTime,
             Translation = Translation,
             Transliteration = Transliteration,
             HiddenOnBlur = HiddenOnBlur,

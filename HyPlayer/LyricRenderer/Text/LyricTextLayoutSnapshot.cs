@@ -18,8 +18,10 @@ public sealed class LyricTextLayoutSnapshot : IDisposable
     public required ICanvasImage StaticPersistCache { get; init; }
     public required ICanvasImage DefaultTextPersistCache { get; init; }
     public ICanvasImage? DefaultTransliterationPersistCache { get; init; }
+    public ICanvasImage? DefaultTranslationPersistCache { get; init; }
     public required Rect SizePixelRect { get; init; }
     public required float TextRenderActualTop { get; init; }
+    public required float TranslationRenderActualTop { get; init; }
     public required float DrawingOffsetY { get; init; }
     public required float RenderingWidth { get; init; }
     public required float RenderingHeight { get; init; }
@@ -27,6 +29,7 @@ public sealed class LyricTextLayoutSnapshot : IDisposable
     public required Windows.UI.Color FocusingColor { get; init; }
     public required IReadOnlyList<LyricGlyphCluster> LyricGlyphClusters { get; init; }
     public required IReadOnlyList<LyricGlyphCluster> TransliterationGlyphClusters { get; init; }
+    public required IReadOnlyList<LyricGlyphCluster> TranslationGlyphClusters { get; init; }
 
     public void Dispose()
     {
@@ -36,5 +39,6 @@ public sealed class LyricTextLayoutSnapshot : IDisposable
         (StaticPersistCache as IDisposable)?.Dispose();
         (DefaultTextPersistCache as IDisposable)?.Dispose();
         (DefaultTransliterationPersistCache as IDisposable)?.Dispose();
+        (DefaultTranslationPersistCache as IDisposable)?.Dispose();
     }
 }

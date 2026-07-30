@@ -44,6 +44,31 @@ public readonly record struct LyricExpressionFrame(
     float Dpi,
     float Bpm);
 
+public readonly record struct FocusedTextExpressionText(
+    bool IsLyric,
+    bool IsTransliteration,
+    bool IsTranslation);
+
+public readonly record struct FocusedTextExpressionWord(
+    bool Exists,
+    int Index,
+    int Count,
+    long StartTimeMs,
+    long EndTimeMs,
+    float Progress,
+    bool IsInferred)
+{
+    public long DurationMs => Math.Max(EndTimeMs - StartTimeMs, 0);
+}
+
+public readonly record struct FocusedTextExpressionGlyph(
+    int Index,
+    int Count,
+    int IndexInWord,
+    int CountInWord,
+    float RevealProgress,
+    float MotionProgress);
+
 public sealed class LyricExpressionFunctions
 {
     public static LyricExpressionFunctions Instance { get; } = new();

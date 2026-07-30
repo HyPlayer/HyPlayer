@@ -47,10 +47,13 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(LatestApplicationUpdate))]
     [JsonSerializable(typeof(GitHubReleaseResponse))]
     [JsonSerializable(typeof(LyricEffectProfileDocument))]
+    [JsonSerializable(typeof(FocusedTextEffectDefinition))]
+    [JsonSerializable(typeof(FocusedTextOperationDefinition))]
     [JsonSerializable(typeof(LyricRenderOperationDefinition))]
     [JsonSerializable(typeof(LyricOperationParameterDefinition))]
     [JsonSerializable(typeof(LyricTransitionDefinition))]
     [JsonSerializable(typeof(List<LyricRenderOperationDefinition>))]
+    [JsonSerializable(typeof(List<FocusedTextOperationDefinition>))]
     public partial class JsonDefaultContext : JsonSerializerContext
     {
     }

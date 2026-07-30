@@ -352,29 +352,17 @@
                                     <FontIcon Glyph="&#xE794;" />
                                 </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Description="拖动排序、编辑表达式与绘图脚本，支持 .hylfx 导入导出" Header="歌词特效链">
+                                    <controls3:SettingsCard Description="对完整歌词行应用辉光、渐隐、模糊、变换与绘图脚本" Header="歌词整体特效链">
                                         <Button
                                             HorizontalAlignment="Right"
                                             Click="OpenLyricEffectSettings_Click"
-                                            Content="编辑特效链" />
+                                            Content="编辑整体链" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="音译扫词">
-                                        <ToggleSwitch
-                                            MinWidth="10"
+                                    <controls3:SettingsCard Description="分别编辑正文、音译和翻译的高亮状态；Reveal 与 Glyph 动画可同时启用" Header="聚焦歌词特效链">
+                                        <Button
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderTransliterationScanning, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="非逐字行扫词">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderSimpleLineScanning, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="扫词样式">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderScanStyle, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
-                                            <ComboBoxItem Content="矩形显露" />
-                                            <ComboBoxItem Content="逐字透明度" />
-                                        </ComboBox>
+                                            Click="OpenFocusedLyricEffectSettings_Click"
+                                            Content="编辑聚焦链" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Description="将会把每一行歌词预渲染, 将会造成大量内存占用" Header="预渲染合成">
                                         <ToggleSwitch

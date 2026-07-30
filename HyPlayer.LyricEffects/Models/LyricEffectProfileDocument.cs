@@ -6,8 +6,8 @@ namespace HyPlayer.LyricEffects.Models;
 public sealed class LyricEffectProfileDocument
 {
     public const string CurrentFormat = "hyplayer.lyric-effects";
-    public const int CurrentSchemaVersion = 1;
-    public const int CurrentExpressionApiVersion = 1;
+    public const int CurrentSchemaVersion = 2;
+    public const int CurrentExpressionApiVersion = 2;
 
     public string Format { get; set; } = CurrentFormat;
 
@@ -18,6 +18,66 @@ public sealed class LyricEffectProfileDocument
     public string Name { get; set; } = "HyPlayer 默认";
 
     public List<LyricRenderOperationDefinition> Operations { get; set; } = [];
+
+    public FocusedTextEffectDefinition FocusedText { get; set; } = new();
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? ExtensionData { get; set; }
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<UntimedLyricLineMode>))]
+public enum UntimedLyricLineMode
+{
+    DirectHighlight,
+    InferWords
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<HighlightRevealMode>))]
+public enum HighlightRevealMode
+{
+    RectangleClip,
+    GlyphStep,
+    WholeWord
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<TransliterationProgressMode>))]
+public enum TransliterationProgressMode
+{
+    FollowMain,
+    WholeLine
+}
+
+public sealed class FocusedTextEffectDefinition
+{
+    public UntimedLyricLineMode UntimedLineMode { get; set; } = UntimedLyricLineMode.DirectHighlight;
+
+    public HighlightRevealMode HighlightRevealMode { get; set; } = HighlightRevealMode.RectangleClip;
+
+    public TransliterationProgressMode TransliterationMode { get; set; } = TransliterationProgressMode.FollowMain;
+
+    public List<FocusedTextOperationDefinition> Operations { get; set; } = [];
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? ExtensionData { get; set; }
+}
+
+public sealed class FocusedTextOperationDefinition
+{
+    public string InstanceId { get; set; } = Guid.NewGuid().ToString("N");
+
+    public string TypeId { get; set; } = string.Empty;
+
+    public string DisplayName { get; set; } = string.Empty;
+
+    public bool IsEnabled { get; set; } = true;
+
+    public List<string> Targets { get; set; } = [];
+
+    public Dictionary<string, LyricOperationParameterDefinition> Parameters { get; set; } = [];
+
+    public Dictionary<string, string> Options { get; set; } = [];
+
+    public string? Script { get; set; }
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? ExtensionData { get; set; }

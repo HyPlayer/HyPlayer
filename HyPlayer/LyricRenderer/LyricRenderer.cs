@@ -353,7 +353,12 @@ namespace HyPlayer.LyricRenderer
                 if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return;
                 OnBeforeRender?.Invoke(this);
                 if (Interlocked.Exchange(ref _pendingEffectProfile, null) is { } pendingProfile)
+                {
                     Context.EffectProfile = pendingProfile;
+                    // InferWords 会改变布局中的 Word/Glyph 映射；预览或提交配置后必须重建快照。
+                    _isTypographyChanged = true;
+                    _needRecalculate = true;
+                }
                 // 鼠标滚轮时间 5 s 清零
                 if ((Context.ScrollingDelta != 0 || (Context.IsScrolling && !_pointerPressed)) &&
                     Context.RenderTick - _lastWheelTime > 50000000 && Context.IsPlaying || Context.IsSeek)

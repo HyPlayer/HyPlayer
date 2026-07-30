@@ -521,4 +521,10 @@ public sealed partial class Settings : Page
     {
         await new HyPlayer.UI.Dialogs.LyricEffectSettingsDialog().ShowAsync();
     }
+
+    private async void OpenFocusedLyricEffectSettings_Click(object sender, RoutedEventArgs e)
+    {
+        await new HyPlayer.UI.Dialogs.FocusedLyricEffectSettingsDialog().ShowAsync();
+    }
+
 }

@@ -1,5 +1,6 @@
 #nullable enable
 
+using HyPlayer.LyricEffects.Models;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System;
@@ -17,6 +18,15 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
 {
     public LyricTextLayoutSnapshot CreateLayout(LyricTextLayoutRequest request)
     {
+        var tokens = request.Tokens.Count > 0
+            ? request.Tokens
+            : request.Context.EffectProfile?.FocusedText.Definition.UntimedLineMode == UntimedLyricLineMode.InferWords
+                ? InferredLyricWordTokenizer.Infer(
+                    request.Text,
+                    request.Transliteration,
+                    request.LineStartTime,
+                    request.LineEndTime)
+                : [];
         using var textFormat = CreateTextFormat(
             request.HiddenOnBlur ? request.LyricFontSize / 2 : request.LyricFontSize,
             request.Alignment,
@@ -24,9 +34,9 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             request.HiddenOnBlur ? FontWeights.Normal : FontWeights.SemiBold,
             CanvasWordWrapping.WholeWord);
 
-        var hasTokenTransliteration = request.Tokens.Any(t => !string.IsNullOrEmpty(t.Transliteration));
+        var hasTokenTransliteration = tokens.Any(t => !string.IsNullOrEmpty(t.Transliteration));
         var transliterationActual = hasTokenTransliteration
-            ? string.Join("", request.Tokens.Select(t => t.Transliteration ?? string.Empty))
+            ? string.Join("", tokens.Select(t => t.Transliteration ?? string.Empty))
             : request.Transliteration;
 
         CanvasTextLayout? transliterationLayout = null;
@@ -72,18 +82,18 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         additionalHeight += (float)(transliterationLayout?.LayoutBounds.Height ?? 0f);
         additionalHeight += (float)(translationLayout?.LayoutBounds.Height ?? 0f);
 
-        var actualText = request.Tokens.Count > 0
-            ? string.Join("", request.Tokens.Select(t => t.Text))
+        var actualText = tokens.Count > 0
+            ? string.Join("", tokens.Select(t => t.Text))
             : request.Text;
         var wrappedText = WrapText(request.Session, actualText, textFormat, requestedWidth, request.CanvasHeight);
         var textLayout = new CanvasTextLayout(request.Session, wrappedText, textFormat, requestedWidth, request.CanvasHeight);
         var lyricSourceIndexMap = CreateSourceIndexMap(wrappedText, actualText);
-        var lyricTokenIndexMap = CreateTokenIndexMap(request.Tokens, t => t.Text);
+        var lyricTokenIndexMap = CreateTokenIndexMap(tokens, t => t.Text);
         var transliterationSourceIndexMap = transliterationActual is not null
             ? CreateSourceIndexMap(transliterationActual, transliterationActual)
             : [];
         var transliterationTokenIndexMap = hasTokenTransliteration
-            ? CreateTokenIndexMap(request.Tokens, t => t.Transliteration ?? string.Empty)
+            ? CreateTokenIndexMap(tokens, t => t.Transliteration ?? string.Empty)
             : [];
 
         var renderStartX = GetContentLeft(textLayout, transliterationLayout, translationLayout);
@@ -93,7 +103,8 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         var drawingOffsetY = (request.HiddenOnBlur ? request.LyricFontSize / 2 : request.LyricFontSize) / 8f;
         var renderingHeight = (float)textLayout.LayoutBounds.Height + drawingOffsetY + additionalHeight;
         var renderingWidth = Math.Max(1, renderEndX - renderStartX + request.TextPadding * 2);
-        var useDynamicTransliteration = hasTokenTransliteration && transliterationLayout is not null;
+        // 音译必须始终进入动态 Glyph 层，否则 WholeLine 模式会绕过目标选择和聚焦特效链。
+        var useDynamicTransliteration = transliterationLayout is not null;
 
         var staticPersistCache = CreatePersistCache(request.Session, renderingWidth, renderingHeight, request.Context.Dpi, request.Context.Effects.CacheRenderTarget, out var staticSession);
         var defaultTextPersistCache = CreatePersistCache(request.Session, renderingWidth, renderingHeight, request.Context.Dpi, request.Context.Effects.CacheRenderTarget, out var defaultTextSession);
@@ -109,19 +120,35 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                 request.Context.Effects.CacheRenderTarget,
                 out transliterationSessionToDispose);
         }
+        ICanvasImage? defaultTranslationPersistCache = null;
+        CanvasDrawingSession? translationSessionToDispose = null;
+        if (translationLayout is not null)
+        {
+            defaultTranslationPersistCache = CreatePersistCache(
+                request.Session,
+                renderingWidth,
+                renderingHeight,
+                request.Context.Dpi,
+                request.Context.Effects.CacheRenderTarget,
+                out translationSessionToDispose);
+        }
         var sizePixelRect = new Rect(0, 0, renderingWidth, renderingHeight);
         float textRenderActualTop;
+        float translationRenderActualTop = 0;
         float transliterationRenderTop = drawingOffsetY;
         IReadOnlyList<LyricGlyphCluster> lyricGlyphClusters;
         IReadOnlyList<LyricGlyphCluster> transliterationGlyphClusters = [];
+        IReadOnlyList<LyricGlyphCluster> translationGlyphClusters = [];
 
         using (staticSession)
         using (defaultTextSession)
         using (transliterationSessionToDispose)
+        using (translationSessionToDispose)
         {
             staticSession.Clear(Colors.Transparent);
             defaultTextSession.Clear(Colors.Transparent);
             transliterationSessionToDispose?.Clear(Colors.Transparent);
+            translationSessionToDispose?.Clear(Colors.Transparent);
             var actualTop = drawingOffsetY;
 
             if (transliterationLayout is not null)
@@ -144,7 +171,22 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
 
             if (translationLayout is not null)
             {
-                staticSession.DrawTextLayout(translationLayout, drawOffsetX, actualTop, request.FocusingColor);
+                translationRenderActualTop = actualTop;
+                translationSessionToDispose!.DrawTextLayout(translationLayout, drawOffsetX, 0, request.FocusingColor);
+            }
+            if (translationLayout is not null)
+            {
+                var translationSource = request.Translation!.TrimEnd();
+                translationGlyphClusters = CollectGlyphClusters(
+                    translationSessionToDispose!,
+                    LyricTextLayer.Translation,
+                    translationLayout,
+                    drawOffsetX,
+                    translationRenderActualTop,
+                    CreateSourceIndexMap(translationSource, translationSource),
+                    [],
+                    request.Context.Dpi,
+                    0);
             }
 
             lyricGlyphClusters = CollectGlyphClusters(
@@ -156,7 +198,8 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                 lyricSourceIndexMap,
                 lyricTokenIndexMap,
                 request.Context.Dpi,
-                request.Tokens.Count);
+                tokens.Count);
+            RetimeInferredTokens(tokens, lyricGlyphClusters, request.LineStartTime, request.LineEndTime);
             if (useDynamicTransliteration)
             {
                 transliterationGlyphClusters = CollectGlyphClusters(
@@ -168,30 +211,70 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                     transliterationSourceIndexMap,
                     transliterationTokenIndexMap,
                     request.Context.Dpi,
-                    request.Tokens.Count);
+                    tokens.Count,
+                    proportionalTokenWeights: !hasTokenTransliteration &&
+                                              request.Context.EffectProfile?.FocusedText.Definition.TransliterationMode ==
+                                              TransliterationProgressMode.FollowMain
+                        ? CreateTokenGlyphWeights(lyricGlyphClusters, tokens.Count)
+                        : null);
             }
         }
 
         return new LyricTextLayoutSnapshot
         {
             Text = actualText,
-            Tokens = request.Tokens.ToArray(),
+            Tokens = tokens.ToArray(),
             TextLayout = textLayout,
             TranslationLayout = translationLayout,
             TransliterationLayout = transliterationLayout,
             StaticPersistCache = staticPersistCache,
             DefaultTextPersistCache = defaultTextPersistCache,
             DefaultTransliterationPersistCache = defaultTransliterationPersistCache,
+            DefaultTranslationPersistCache = defaultTranslationPersistCache,
             SizePixelRect = sizePixelRect,
             TextRenderActualTop = textRenderActualTop,
+            TranslationRenderActualTop = translationRenderActualTop,
             DrawingOffsetY = drawingOffsetY,
             RenderingWidth = renderingWidth,
             RenderingHeight = renderingHeight,
             ScalingCenterX = scalingCenterX,
             FocusingColor = request.FocusingColor,
             LyricGlyphClusters = lyricGlyphClusters,
-            TransliterationGlyphClusters = transliterationGlyphClusters
+            TransliterationGlyphClusters = transliterationGlyphClusters,
+            TranslationGlyphClusters = translationGlyphClusters
         };
+    }
+
+    private static void RetimeInferredTokens(
+        IReadOnlyList<LyricTextToken> tokens,
+        IReadOnlyList<LyricGlyphCluster> lyricClusters,
+        long lineStartTime,
+        long lineEndTime)
+    {
+        if (tokens.Count == 0 || tokens.Any(token => !token.IsInferred)) return;
+
+        var glyphCounts = new int[tokens.Count];
+        foreach (var cluster in lyricClusters)
+        {
+            if ((uint)cluster.TokenStartIndex < (uint)glyphCounts.Length)
+                glyphCounts[cluster.TokenStartIndex]++;
+        }
+
+        var glyphWeights = glyphCounts.Select(count => Math.Max(1, count)).ToArray();
+        var totalGlyphCount = Math.Max(1, glyphWeights.Sum());
+        var lineDuration = Math.Max(0, lineEndTime - lineStartTime);
+        var elapsedGlyphCount = 0;
+        for (var index = 0; index < tokens.Count; index++)
+        {
+            var start = lineStartTime + lineDuration * elapsedGlyphCount / totalGlyphCount;
+            elapsedGlyphCount += glyphWeights[index];
+            var end = index == tokens.Count - 1
+                ? lineEndTime
+                : lineStartTime + lineDuration * Math.Min(elapsedGlyphCount, totalGlyphCount) / totalGlyphCount;
+            tokens[index].StartTime = start;
+            tokens[index].EndTime = end;
+            tokens[index].Duration = end - start;
+        }
     }
 
     private static CanvasTextFormat CreateTextFormat(
@@ -278,13 +361,46 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         IReadOnlyList<int> sourceIndexMap,
         IReadOnlyList<int> tokenIndexMap,
         float dpi,
-        int tokenCount)
+        int tokenCount,
+        IReadOnlyList<int>? proportionalTokenWeights = null)
     {
         var collector = new LyricGlyphPlanCollector(layoutSession, layer, sourceIndexMap, tokenIndexMap, dpi);
         layout.DrawToTextRenderer(collector, drawOffsetX, drawOffsetY);
         var clusters = collector.Clusters.ToArray();
+        if (proportionalTokenWeights is { Count: > 0 } && tokenCount > 0 && clusters.Length > 0)
+        {
+            // 整行音译没有逐 Word 映射时，按累计 GlyphUnit 比例映射正文时间轴。
+            var totalWeight = Math.Max(1, proportionalTokenWeights.Sum(weight => Math.Max(1, weight)));
+            for (var index = 0; index < clusters.Length; index++)
+            {
+                var position = (index + 0.5f) * totalWeight / clusters.Length;
+                var cumulative = 0;
+                var tokenIndex = 0;
+                while (tokenIndex < tokenCount - 1)
+                {
+                    cumulative += Math.Max(1, proportionalTokenWeights[tokenIndex]);
+                    if (position < cumulative) break;
+                    tokenIndex++;
+                }
+                clusters[index].TokenStartIndex = tokenIndex;
+                clusters[index].TokenEndIndexExclusive = tokenIndex + 1;
+            }
+        }
         LyricGlyphPlanCollector.FinalizeClusterIndexes(clusters, tokenCount);
         return clusters;
+    }
+
+    private static int[] CreateTokenGlyphWeights(
+        IReadOnlyList<LyricGlyphCluster> clusters,
+        int tokenCount)
+    {
+        var weights = new int[tokenCount];
+        foreach (var cluster in clusters)
+        {
+            if ((uint)cluster.TokenStartIndex < (uint)weights.Length)
+                weights[cluster.TokenStartIndex]++;
+        }
+        return weights;
     }
 
     private static float GetContentLeft(params CanvasTextLayout?[] layouts)

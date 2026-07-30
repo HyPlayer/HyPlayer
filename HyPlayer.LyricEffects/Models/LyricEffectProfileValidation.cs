@@ -32,6 +32,8 @@ public static class LyricEffectProfileValidation
             errors.Add(new("配置版本号无效。"));
         if (document.Operations.Count > MaximumOperationCount)
             errors.Add(new($"歌词特效链最多允许 {MaximumOperationCount} 个节点。"));
+        if (document.FocusedText.Operations.Count > MaximumOperationCount)
+            errors.Add(new($"聚焦歌词特效链最多允许 {MaximumOperationCount} 个节点。"));
 
         var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var operation in document.Operations.Take(MaximumOperationCount))
@@ -40,6 +42,26 @@ public static class LyricEffectProfileValidation
                 errors.Add(new("节点 instanceId 不能为空或重复。", operation.InstanceId));
             if (string.IsNullOrWhiteSpace(operation.TypeId))
                 errors.Add(new("节点 typeId 不能为空。", operation.InstanceId, "typeId"));
+            if (operation.Script?.Length > LyricDrawScriptParser.MaximumScriptLength)
+                errors.Add(new($"绘图脚本不能超过 {LyricDrawScriptParser.MaximumScriptLength} 个字符。", operation.InstanceId, "script"));
+
+            foreach (var (key, parameter) in operation.Parameters)
+            {
+                if (parameter.Expression.Length > LyricExpressionCompiler.MaximumExpressionLength)
+                    errors.Add(new($"表达式不能超过 {LyricExpressionCompiler.MaximumExpressionLength} 个字符。", operation.InstanceId, key));
+            }
+        }
+
+        foreach (var operation in document.FocusedText.Operations.Take(MaximumOperationCount))
+        {
+            if (string.IsNullOrWhiteSpace(operation.InstanceId) || !ids.Add(operation.InstanceId))
+                errors.Add(new("节点 instanceId 不能为空或重复。", operation.InstanceId));
+            if (string.IsNullOrWhiteSpace(operation.TypeId))
+                errors.Add(new("节点 typeId 不能为空。", operation.InstanceId, "typeId"));
+            if (operation.Targets.Count == 0)
+                errors.Add(new("聚焦歌词节点必须至少选择一个目标。", operation.InstanceId, "targets"));
+            if (operation.Targets.Distinct(StringComparer.Ordinal).Count() != operation.Targets.Count)
+                errors.Add(new("聚焦歌词节点不能包含重复目标。", operation.InstanceId, "targets"));
             if (operation.Script?.Length > LyricDrawScriptParser.MaximumScriptLength)
                 errors.Add(new($"绘图脚本不能超过 {LyricDrawScriptParser.MaximumScriptLength} 个字符。", operation.InstanceId, "script"));
 
@@ -69,10 +91,16 @@ public static class LyricEffectProfileValidation
             case 0:
                 // v0 是开发预览格式；节点字段与 v1 相同，v1 仅固定了根标识和版本语义。
                 migrated.Format = LyricEffectProfileDocument.CurrentFormat;
-                migrated.SchemaVersion = 1;
-                migrated.ExpressionApiVersion = 1;
+                migrated.SchemaVersion = 2;
+                migrated.ExpressionApiVersion = 2;
+                migrated.FocusedText = LyricEffectPresets.CreateDefaultFocusedText();
                 break;
             case 1:
+                migrated.SchemaVersion = 2;
+                migrated.ExpressionApiVersion = 2;
+                migrated.FocusedText = LyricEffectPresets.CreateDefaultFocusedText();
+                break;
+            case 2:
                 break;
             default:
                 throw new NotSupportedException($"无法迁移 schemaVersion {migrated.SchemaVersion}。");
@@ -80,6 +108,7 @@ public static class LyricEffectProfileValidation
 
         EnsureRequiredOperation(migrated, LyricBuiltInOperationTypes.Source, LyricEffectPresets.CreateSource, insertAtStart: true);
         EnsureRequiredOperation(migrated, LyricBuiltInOperationTypes.Debug, LyricEffectPresets.CreateDebug, insertAtStart: false);
+        migrated.FocusedText ??= LyricEffectPresets.CreateDefaultFocusedText();
         return migrated;
     }
 
