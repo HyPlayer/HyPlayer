@@ -125,6 +125,18 @@ internal sealed partial class BlurOperationFactory(ILyricExpressionCompiler comp
 
 internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
 {
+    private static readonly LyricOperationParameterDescriptor X = new()
+    {
+        Key = "x", DisplayName = "X 偏移", ValueType = LyricExpressionValueType.Scalar,
+        DefaultExpression = "0", SupportsTransition = true
+    };
+
+    private static readonly LyricOperationParameterDescriptor Y = new()
+    {
+        Key = "y", DisplayName = "Y 偏移", ValueType = LyricExpressionValueType.Scalar,
+        DefaultExpression = "0", SupportsTransition = true
+    };
+
     private static readonly LyricOperationParameterDescriptor Blur = new()
     {
         Key = "blur",
@@ -152,7 +164,8 @@ internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler comp
         Key = "color",
         DisplayName = "辉光颜色",
         ValueType = LyricExpressionValueType.Color,
-        DefaultExpression = "line.AccentColor"
+        DefaultExpression = "line.FocusingColor",
+        SupportsTransition = true
     };
 
     public override LyricRenderOperationDescriptor Descriptor { get; } = new()
@@ -160,36 +173,45 @@ internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler comp
         TypeId = LyricBuiltInOperationTypes.Glow,
         DisplayName = "整体辉光",
         Description = "在歌词图像后合成带颜色的阴影辉光。",
-        Parameters = (LyricOperationParameterDescriptor[])[Blur, Opacity, Color]
+        Parameters = (LyricOperationParameterDescriptor[])[X, Y, Blur, Opacity, Color]
     };
 
     public override LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
     {
         var diagnostics = new List<LyricProfileDiagnostic>();
+        var x = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, X, diagnostics);
+        var y = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, Y, diagnostics);
         var blur = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, Blur, diagnostics);
         var opacity = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, Opacity, diagnostics);
         var color = LyricOperationCompilerHelpers.CompileColor(Compiler, definition, Color, diagnostics);
         return Result(
             definition,
             diagnostics,
-            blur is null || opacity is null || color is null
+            x is null || y is null || blur is null || opacity is null || color is null
                 ? null
-                : () => new GlowOperation(blur.CreateRuntime(), opacity.CreateRuntime(), color));
+                : () => new GlowOperation(
+                    x.CreateRuntime(), y.CreateRuntime(), blur.CreateRuntime(), opacity.CreateRuntime(), color.CreateRuntime()));
     }
 
     private sealed partial class GlowOperation : ILyricRenderOperation
     {
+        private readonly ScalarParameterRuntime _x;
+        private readonly ScalarParameterRuntime _y;
         private readonly ScalarParameterRuntime _blur;
         private readonly ScalarParameterRuntime _opacity;
-        private readonly CompiledColorParameter _color;
+        private readonly ColorParameterRuntime _color;
         private readonly ShadowEffect _shadow = new();
         private readonly OpacityEffect _shadowOpacity = new();
 
         public GlowOperation(
+            ScalarParameterRuntime x,
+            ScalarParameterRuntime y,
             ScalarParameterRuntime blur,
             ScalarParameterRuntime opacity,
-            CompiledColorParameter color)
+            ColorParameterRuntime color)
         {
+            _x = x;
+            _y = y;
             _blur = blur;
             _opacity = opacity;
             _color = color;
@@ -206,7 +228,7 @@ internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler comp
 
             var commandList = context.Resources.Track(new CanvasCommandList(context.TargetSession));
             using var drawingSession = commandList.CreateDrawingSession();
-            drawingSession.DrawImage(_shadowOpacity);
+            drawingSession.DrawImage(_shadowOpacity, _x.Evaluate(context), _y.Evaluate(context));
             drawingSession.DrawImage(source);
             return commandList;
         }
@@ -284,7 +306,24 @@ internal sealed partial class Transform2DOperationFactory(ILyricExpressionCompil
                 Matrix3x2.CreateScale(values[2], values[3]) *
                 Matrix3x2.CreateRotation(MathF.PI * values[4] / 180f) *
                 Matrix3x2.CreateTranslation(anchor + new Vector2(values[0], values[1]));
+            context.GeometryBounds = TransformBounds(context.GeometryBounds, _effect.TransformMatrix);
             return _effect;
+        }
+
+        private static Windows.Foundation.Rect TransformBounds(Windows.Foundation.Rect bounds, Matrix3x2 matrix)
+        {
+            var points = new[]
+            {
+                Vector2.Transform(new Vector2((float)bounds.Left, (float)bounds.Top), matrix),
+                Vector2.Transform(new Vector2((float)bounds.Right, (float)bounds.Top), matrix),
+                Vector2.Transform(new Vector2((float)bounds.Left, (float)bounds.Bottom), matrix),
+                Vector2.Transform(new Vector2((float)bounds.Right, (float)bounds.Bottom), matrix)
+            };
+            var left = points.Min(point => point.X);
+            var top = points.Min(point => point.Y);
+            var right = points.Max(point => point.X);
+            var bottom = points.Max(point => point.Y);
+            return new Windows.Foundation.Rect(left, top, right - left, bottom - top);
         }
 
         public void Dispose() => _effect.Dispose();

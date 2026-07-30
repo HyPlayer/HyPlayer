@@ -7,7 +7,6 @@ using HyPlayer.LyricEffects.Presets;
 using HyPlayer.LyricRenderer.Pipeline;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -67,9 +66,7 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
     public const string ActiveFileName = "active.hylfx";
     public const string BackupFileName = "active.backup.hylfx";
     private const string TemporaryFileName = "active.tmp";
-    private const string FocusedTextMigrationMarker = "FocusedTextProfileV2Migrated";
 
-    private readonly Setting _settings;
     private readonly ILyricRenderOperationRegistry _registry;
     private readonly SemaphoreSlim _initializeLock = new(1, 1);
     private readonly object _stateLock = new();
@@ -80,7 +77,6 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
 
     public LyricEffectProfileService(Setting settings, ILyricRenderOperationRegistry registry)
     {
-        _settings = settings;
         _registry = registry;
         _committedDocument = LyricEffectPresets.CreateDefaultProfile();
         _committedProfile = CompileOrThrow(_committedDocument);
@@ -135,21 +131,12 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
 
             if (document is null)
             {
-                document = activeItem is null
-                    ? CreateLegacyMigrationProfile()
-                    : LyricEffectPresets.CreateDefaultProfile();
+                document = LyricEffectPresets.CreateDefaultProfile();
                 await PersistAsync(folder, document, keepBackup: false);
             }
             else if (recoveredFromBackup)
             {
                 await PersistAsync(folder, document, keepBackup: false);
-            }
-
-            if (!GetFocusedTextMigrationMarker())
-            {
-                ApplyLegacyFocusedSettings(document);
-                await PersistAsync(folder, document, keepBackup: false);
-                ApplicationData.Current.LocalSettings.Values[FocusedTextMigrationMarker] = true;
             }
 
             var compiled = CompileOrThrow(document);
@@ -305,58 +292,6 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
         await FileIO.WriteTextAsync(temporary, json, Windows.Storage.Streams.UnicodeEncoding.Utf8);
         var target = await folder.CreateFileAsync(ActiveFileName, CreationCollisionOption.OpenIfExists);
         await temporary.MoveAndReplaceAsync(target);
-    }
-
-    private LyricEffectProfileDocument CreateLegacyMigrationProfile()
-    {
-        var profile = LyricEffectPresets.CreateDefaultProfile();
-        SetEnabled(profile, LyricBuiltInOperationTypes.Glow, _settings.lyricRenderFocusHighlighting);
-        SetEnabled(profile, LyricBuiltInOperationTypes.Opacity, _settings.lyricRenderFade);
-        SetEnabled(profile, LyricBuiltInOperationTypes.GaussianBlur, _settings.lyricRenderBlur);
-        SetEnabled(profile, LyricBuiltInOperationTypes.Transform2D, _settings.lyricRenderScaleWhenFocusing);
-        SetEnabled(profile, LyricBuiltInOperationTypes.Transform3D, _settings.lyricRenderTransform3D);
-
-        var ratio = _settings.lyricFadingRatio.ToString(CultureInfo.InvariantCulture);
-        var distance = $"fx.Clamp(0.6 - line.IndexDistance / (10 - {ratio} / 10), 0, 1)";
-        var opacity = profile.Operations.First(item => item.TypeId == LyricBuiltInOperationTypes.Opacity);
-        opacity.Parameters["opacity"].Expression =
-            $"line.IsActive ? 1 : (frame.IsScrolling ? fx.Max({distance}, 0.5) : {distance})";
-        ApplyLegacyFocusedSettings(profile);
-        return profile;
-    }
-
-    private bool GetFocusedTextMigrationMarker() =>
-        ApplicationData.Current.LocalSettings.Values.TryGetValue(FocusedTextMigrationMarker, out var value) &&
-        value is true;
-
-    private void ApplyLegacyFocusedSettings(LyricEffectProfileDocument profile)
-    {
-        profile.FocusedText ??= LyricEffectPresets.CreateDefaultFocusedText();
-        profile.FocusedText.UntimedLineMode = _settings.lyricRenderSimpleLineScanning
-            ? UntimedLyricLineMode.InferWords
-            : UntimedLyricLineMode.DirectHighlight;
-        profile.FocusedText.HighlightRevealMode = _settings.lyricRenderScanStyle == HyPlayer.Domain.LyricScanStyle.TokenOpacity
-            ? HighlightRevealMode.GlyphStep
-            : HighlightRevealMode.RectangleClip;
-        profile.FocusedText.TransliterationMode = _settings.lyricRenderTransliterationScanning
-            ? TransliterationProgressMode.FollowMain
-            : TransliterationProgressMode.WholeLine;
-        if (profile.FocusedText.Operations.Count == 0)
-        {
-            var untimed = profile.FocusedText.UntimedLineMode;
-            var reveal = profile.FocusedText.HighlightRevealMode;
-            var transliteration = profile.FocusedText.TransliterationMode;
-            profile.FocusedText = LyricEffectPresets.CreateDefaultFocusedText();
-            profile.FocusedText.UntimedLineMode = untimed;
-            profile.FocusedText.HighlightRevealMode = reveal;
-            profile.FocusedText.TransliterationMode = transliteration;
-        }
-    }
-
-    private static void SetEnabled(LyricEffectProfileDocument profile, string typeId, bool isEnabled)
-    {
-        var operation = profile.Operations.FirstOrDefault(item => item.TypeId == typeId);
-        if (operation is not null) operation.IsEnabled = isEnabled;
     }
 
     private void Publish(CompiledLyricEffectProfile profile, bool isPreview) =>

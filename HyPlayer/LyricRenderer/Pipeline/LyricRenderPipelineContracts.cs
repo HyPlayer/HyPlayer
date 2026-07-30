@@ -179,6 +179,8 @@ public sealed class LyricRenderOperationContext
 
     public required bool DebugEnabled { get; init; }
 
+    public Windows.Foundation.Rect GeometryBounds { get; set; }
+
     public LyricExpressionFunctions Functions => LyricExpressionFunctions.Instance;
 }
 

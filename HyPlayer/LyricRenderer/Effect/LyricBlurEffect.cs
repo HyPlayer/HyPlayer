@@ -12,7 +12,7 @@ public class LyricBlurEffect : LyricEffect<GaussianBlurEffect>
 
     public EffectProperty Amount { get; set; } = new((lyricLine, context) =>
     {
-        var gap = lyricLine.IsActive ? 0 : Math.Clamp(Math.Abs(lyricLine.Id - context.CurrentLyricLineIndex), 1, 250);
+        var gap = lyricLine.IsActive ? 0 : Math.Clamp(Math.Abs(lyricLine.RuntimeIndex - context.CurrentLyricLineIndex), 1, 250);
         var blur = (context.IsScrolling) ? 0 : Math.Clamp(gap, 0, 250);
         return blur;
     });

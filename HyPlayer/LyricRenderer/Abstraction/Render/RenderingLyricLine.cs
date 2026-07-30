@@ -1,5 +1,5 @@
 ﻿#nullable enable
-using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
+using ALRC.Abstraction;
 using HyPlayer.LyricEffects.Expressions;
 using HyPlayer.LyricRenderer.Pipeline;
 using Microsoft.Graphics.Canvas;
@@ -12,7 +12,24 @@ namespace HyPlayer.LyricRenderer.Abstraction.Render;
 
 public abstract class RenderingLyricLine : IDisposable
 {
-    public int Id { get; set; }
+    public int RuntimeIndex { get; set; }
+
+    public int FactoIndex { get; set; }
+
+    public int GroupIndex { get; set; }
+
+    public long GroupStartTime { get; set; }
+
+    public long GroupEndTime { get; set; }
+
+    public ALRCLine? SourceLine { get; set; }
+
+    public ALRCStyle? SourceStyle { get; set; }
+
+    public IReadOnlyDictionary<string, ALRCStyle> StyleTable { get; set; } =
+        new Dictionary<string, ALRCStyle>(StringComparer.Ordinal);
+
+    public Color? SourceStyleColor { get; set; }
 
     public RenderTypography? Typography { get; set; }
 
@@ -26,6 +43,8 @@ public abstract class RenderingLyricLine : IDisposable
 
     public bool Hidden { get; set; }
 
+    public bool HiddenOnBlur { get; set; }
+
     public List<long>? KeyFrames { get; set; }
 
     public long StartTime { get; set; }
@@ -34,7 +53,9 @@ public abstract class RenderingLyricLine : IDisposable
 
     public bool IsActive { get; private set; }
 
-    public bool IsPlayed { get; private set; }
+    public bool IsStarted { get; private set; }
+
+    public bool IsFinished { get; private set; }
 
     private LyricRenderPipelineInstance? _renderPipeline;
 
@@ -75,7 +96,8 @@ public abstract class RenderingLyricLine : IDisposable
                 Frame = CreateExpressionFrame(context),
                 OffsetX = offset.X,
                 OffsetY = offset.Y,
-                DebugEnabled = context.Debug
+                DebugEnabled = context.Debug,
+                GeometryBounds = new Windows.Foundation.Rect(0, 0, RenderingWidth, RenderingHeight)
             });
             session.DrawImage(finalImage, offset.X, offset.Y);
         }
@@ -85,7 +107,7 @@ public abstract class RenderingLyricLine : IDisposable
             // 配置服务尚未初始化时保留调试回退绘制。
             if (!context.Debug) return result;
             session.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})", offset.X, offset.Y, Colors.Red);
-            session.DrawText(Id.ToString(), offset.X, offset.Y + 15, Colors.Red);
+            session.DrawText(RuntimeIndex.ToString(), offset.X, offset.Y + 15, Colors.Red);
             session.DrawRectangle(offset.X, offset.Y, RenderingWidth, RenderingHeight, Colors.Yellow);
         }
 
@@ -103,7 +125,9 @@ public abstract class RenderingLyricLine : IDisposable
     public void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
     {
         IsActive = context.CurrentKeyframe >= StartTime && context.CurrentKeyframe < EndTime;
-        IsPlayed = context.CurrentKeyframe >= StartTime;
+        IsStarted = context.CurrentKeyframe >= StartTime;
+        IsFinished = context.CurrentKeyframe >= EndTime;
+        Hidden = HiddenOnBlur && !IsActive;
         OnKeyFrameCore(session, context);
     }
     protected virtual void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
@@ -126,7 +150,10 @@ public abstract class RenderingLyricLine : IDisposable
 
     protected LyricExpressionLine CreateExpressionLine(RenderContext context, LineRenderOffset offset)
     {
-        var relativeIndex = Id - context.CurrentLyricLineIndex;
+        var currentGroupIndex = context.CurrentLyricLine?.GroupIndex ?? GroupIndex;
+        var relativeIndex = GroupIndex - currentGroupIndex;
+        var currentFactoIndex = context.CurrentLyricLine?.FactoIndex ?? FactoIndex;
+        var factoRelativeIndex = FactoIndex - currentFactoIndex;
         var currentOffsetY = context.RenderOffsets.TryGetValue(context.CurrentLyricLineIndex, out var currentOffset)
             ? currentOffset.Y
             : offset.Y;
@@ -137,7 +164,7 @@ public abstract class RenderingLyricLine : IDisposable
 
         var duration = EndTime - StartTime;
         var progress = duration <= 0
-            ? (IsPlayed ? 1f : 0f)
+            ? (IsStarted ? 1f : 0f)
             : Math.Clamp((context.CurrentLyricTime - StartTime) / (float)duration, 0, 1);
         var alignment = TypographySelector(t => t?.Alignment, context)!.Value;
         var anchorX = alignment switch
@@ -147,15 +174,20 @@ public abstract class RenderingLyricLine : IDisposable
             _ => 0
         };
         var idle = TypographySelector(t => t?.IdleColor, context)!.Value;
-        var accent = TypographySelector(t => t?.FocusingColor, context)!.Value;
+        var focusing = TypographySelector(t => t?.FocusingColor, context)!.Value;
+        var source = SourceLine;
+        var style = SourceStyle;
+        var styleColor = SourceStyleColor ?? default;
 
         return new LyricExpressionLine(
-            Id,
+            GroupIndex,
             relativeIndex,
             Math.Abs(relativeIndex),
+            new LyricExpressionLineFacto(FactoIndex, factoRelativeIndex, Math.Abs(factoRelativeIndex)),
             viewportDistance,
             IsActive,
-            IsPlayed,
+            IsStarted,
+            IsFinished,
             ReactionState == ReactionState.Enter,
             Hidden,
             IsTextLine,
@@ -168,12 +200,26 @@ public abstract class RenderingLyricLine : IDisposable
             RenderingHeight / 2,
             ExpressionText,
             ToExpressionColor(idle),
-            ToExpressionColor(accent));
+            ToExpressionColor(focusing),
+            source?.Id ?? string.Empty,
+            source?.ParentLineId ?? string.Empty,
+            source?.LineStyle ?? string.Empty,
+            source?.Comment ?? string.Empty,
+            source?.RawText ?? string.Empty,
+            source?.Transliteration ?? string.Empty,
+            source?.Translation ?? string.Empty,
+            new LyricExpressionLineStyle(
+                style is not null,
+                style?.Position?.ToString() ?? "Undefined",
+                SourceStyleColor.HasValue,
+                ToExpressionColor(styleColor),
+                style?.Type?.ToString() ?? "Normal",
+                style?.HiddenOnBlur == true));
     }
 
     protected static LyricExpressionFrame CreateExpressionFrame(RenderContext context) =>
         new(
-            context.CurrentLyricLineIndex,
+            context.CurrentLyricLine?.GroupIndex ?? 0,
             context.CurrentLyricTime,
             context.RenderTick / TimeSpan.TicksPerMillisecond,
             context.IsPlaying,

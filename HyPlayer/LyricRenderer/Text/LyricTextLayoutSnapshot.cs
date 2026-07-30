@@ -12,6 +12,8 @@ public sealed class LyricTextLayoutSnapshot : IDisposable
 {
     public required string Text { get; init; }
     public required IReadOnlyList<LyricTextToken> Tokens { get; init; }
+    public required IReadOnlyList<LyricTextToken> InferredTransliterationTokens { get; init; }
+    public required IReadOnlyList<LyricTextToken> InferredTranslationTokens { get; init; }
     public required CanvasTextLayout TextLayout { get; init; }
     public CanvasTextLayout? TranslationLayout { get; init; }
     public CanvasTextLayout? TransliterationLayout { get; init; }

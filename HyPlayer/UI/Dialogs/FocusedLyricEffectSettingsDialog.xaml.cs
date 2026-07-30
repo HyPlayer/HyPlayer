@@ -11,14 +11,10 @@ using HyPlayer.LyricRenderer.Pipeline;
 using HyPlayer.LyricRenderer.RollingCalculators;
 using HyPlayer.LyricRenderer.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
-using NumberBox = Microsoft.UI.Xaml.Controls.NumberBox;
-using NumberBoxSpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode;
-using NumberBoxValueChangedEventArgs = Microsoft.UI.Xaml.Controls.NumberBoxValueChangedEventArgs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -27,7 +23,9 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Automation;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Media;
 using WinRT;
 
@@ -50,8 +48,11 @@ public partial class FocusedTextOperationItem : INotifyPropertyChanged
     public FocusedTextOperationDescriptor? Descriptor => _descriptor;
     public string InstanceId => Definition.InstanceId;
     public string DisplayName => Definition.DisplayName;
+    public string ToggleAutomationId => $"FocusedEffectEnabled_{InstanceId}";
+    public bool IsRequired => Descriptor?.IsRequired == true;
+    public bool CanToggle => !IsRequired;
     public string TargetSummary => Definition.Targets.Count == 0
-        ? "未选择目标"
+        ? IsRequired ? "必需结构节点" : "未选择目标"
         : $"{Definition.Targets.Count} 个目标";
 
     public bool IsEnabled
@@ -59,6 +60,7 @@ public partial class FocusedTextOperationItem : INotifyPropertyChanged
         get => Definition.IsEnabled;
         set
         {
+            if (IsRequired) return;
             if (Definition.IsEnabled == value) return;
             Definition.IsEnabled = value;
             OnPropertyChanged();
@@ -113,7 +115,9 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
 
     private void InitializeAddMenu()
     {
-        foreach (var descriptor in _profiles.FocusedTextDescriptors.OrderBy(item => item.DisplayName))
+        foreach (var descriptor in _profiles.FocusedTextDescriptors
+                     .Where(item => !item.IsRequired)
+                     .OrderBy(item => item.DisplayName))
         {
             var menuItem = new MenuFlyoutItem { Text = descriptor.DisplayName, Tag = descriptor };
             menuItem.Click += AddOperation_Click;
@@ -159,9 +163,6 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
         }
         _preview.SetLyricLines([line]);
 
-        if (mode == "Inferred") _draft.FocusedText.UntimedLineMode = UntimedLyricLineMode.InferWords;
-        else if (mode == "Direct") _draft.FocusedText.UntimedLineMode = UntimedLyricLineMode.DirectHighlight;
-        SelectEnum(UntimedModeCombo, _draft.FocusedText.UntimedLineMode.ToString());
         MarkDirtyAndPreview();
     }
 
@@ -173,16 +174,7 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
         _draft.FocusedText = LyricEffectPresets.CloneFocusedText(definition);
         foreach (var operation in _draft.FocusedText.Operations)
             Operations.Add(CreateItem(operation));
-        SelectEnum(UntimedModeCombo, _draft.FocusedText.UntimedLineMode.ToString());
-        SelectEnum(RevealModeCombo, _draft.FocusedText.HighlightRevealMode.ToString());
-        SelectEnum(TransliterationModeCombo, _draft.FocusedText.TransliterationMode.ToString());
         _loading = false;
-    }
-
-    private static void SelectEnum(ComboBox combo, string value)
-    {
-        combo.SelectedItem = combo.Items.OfType<ComboBoxItem>()
-            .FirstOrDefault(item => string.Equals(item.Tag as string, value, StringComparison.Ordinal));
     }
 
     private FocusedTextOperationItem CreateItem(FocusedTextOperationDefinition definition)
@@ -206,6 +198,7 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
     {
         if (_loading || _closed) return;
         _previewDebounce?.Cancel();
+        _previewDebounce?.Dispose();
         var cancellation = _previewDebounce = new CancellationTokenSource();
         _ = PreviewAfterDelayAsync(cancellation.Token);
     }
@@ -244,41 +237,42 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
             return;
         }
 
-        var targets = new SettingsExpander
+        if (item.Descriptor?.SupportsTargets != false)
         {
-            Header = "作用目标",
-            Description = "同一节点可以同时作用于多个文本状态",
-            IsExpanded = true,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch
-        };
-        foreach (var (target, label) in TargetOptions)
-        {
-            var checkBox = new CheckBox
+            var targetPanel = new WrapPanel
             {
-                Content = label,
-                Tag = target,
-                IsChecked = item.Definition.Targets.Contains(target),
-                HorizontalAlignment = HorizontalAlignment.Left
+                Orientation = Orientation.Horizontal,
+                HorizontalSpacing = 6,
+                VerticalSpacing = 6
             };
-            checkBox.Checked += TargetCheckBox_Changed;
-            checkBox.Unchecked += TargetCheckBox_Changed;
-            targets.Items.Add(new SettingsCard
+            foreach (var (target, label) in TargetOptions)
             {
-                Header = label,
-                Content = checkBox,
-                ContentAlignment = ContentAlignment.Right,
+                var toggle = new ToggleButton
+                {
+                    Content = label,
+                    Tag = target,
+                    IsChecked = item.Definition.Targets.Contains(target),
+                    Padding = new Thickness(10, 5, 10, 5)
+                };
+                AutomationProperties.SetAutomationId(toggle, $"FocusedTarget_{target}");
+                toggle.Click += TargetToggle_Click;
+                targetPanel.Children.Add(toggle);
+            }
+            EditorPanel.Children.Add(new SettingsCard
+            {
+                Header = "作用目标",
+                Description = "可同时选择多个 TargetState",
+                Content = targetPanel,
+                ContentAlignment = ContentAlignment.Vertical,
                 HorizontalAlignment = HorizontalAlignment.Stretch
             });
         }
-        EditorPanel.Children.Add(targets);
 
         if (item.Descriptor is { } descriptor)
         {
+            AddOperationOptions(item);
             foreach (var parameterDescriptor in descriptor.Parameters)
                 AddParameterEditor(item, parameterDescriptor);
-            if (item.Definition.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift)
-                AddMotionEditor(item);
             if (descriptor.SupportsScript)
                 AddScriptEditor(item);
         }
@@ -296,71 +290,73 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
     {
         if (!item.Definition.Parameters.TryGetValue(descriptor.Key, out var parameter))
         {
-            parameter = new LyricOperationParameterDefinition { Expression = descriptor.DefaultExpression };
+            parameter = new LyricOperationParameterDefinition
+            {
+                Expression = descriptor.DefaultExpression
+            };
             item.Definition.Parameters[descriptor.Key] = parameter;
         }
 
-        var expander = new SettingsExpander
-        {
-            Header = descriptor.DisplayName,
-            Description = $"默认值：{descriptor.DefaultExpression}",
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch
-        };
-        if (descriptor.ValueType == LyricExpressionValueType.Scalar &&
-            double.TryParse(parameter.Expression, NumberStyles.Float, CultureInfo.InvariantCulture, out var literal))
-        {
-            var number = new NumberBox
-            {
-                Value = literal,
-                Minimum = descriptor.Minimum ?? double.MinValue,
-                Maximum = descriptor.Maximum ?? double.MaxValue,
-                SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
-                Tag = descriptor.Key,
-                MinWidth = 180
-            };
-            number.ValueChanged += ParameterNumber_ValueChanged;
-            expander.Items.Add(new SettingsCard
-            {
-                Header = "常用数值",
-                Description = "修改后写入字面量表达式",
-                Content = number,
-                HorizontalAlignment = HorizontalAlignment.Stretch
-            });
-        }
-
-        var expression = new TextBox
-        {
-            Text = parameter.Expression,
-            Tag = descriptor.Key,
-            FontFamily = new FontFamily("Consolas"),
-            HorizontalAlignment = HorizontalAlignment.Stretch
-        };
-        expression.TextChanged += ParameterExpression_TextChanged;
-        expander.Items.Add(new SettingsCard
-        {
-            Header = "高级表达式",
-            Description = descriptor.ValueType == LyricExpressionValueType.Color
-                ? "可自定义颜色：rgba(红, 绿, 蓝, 透明度)，透明度支持 0–1 或 0–255；也可读取 line/frame/text/word/glyph/fx"
-                : "可读取 line/frame/text/word/glyph/fx",
-            Content = expression,
-            ContentAlignment = ContentAlignment.Vertical,
-            HorizontalAlignment = HorizontalAlignment.Stretch
-        });
-        EditorPanel.Children.Add(expander);
+        EditorPanel.Children.Add(LyricParameterEditorFactory.Create(
+            descriptor,
+            parameter,
+            MarkDirtyAndPreview,
+            RebuildEditor));
     }
 
-    private void AddMotionEditor(FocusedTextOperationItem item)
+    private void AddOperationOptions(FocusedTextOperationItem item)
     {
-        var combo = new ComboBox { MinWidth = 180, Tag = "motion" };
-        combo.Items.Add("Hold");
-        combo.Items.Add("Pulse");
-        combo.SelectedItem = item.Definition.Options.TryGetValue("motion", out var motion) ? motion : "Hold";
-        combo.SelectionChanged += Motion_SelectionChanged;
+        if (item.Definition.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal)
+        {
+            AddOption(item, "无 Word 高亮", "决定不含真实 Word 时间戳时如何处理", "untimedMode",
+                nameof(UntimedHighlightMode.WholeLine),
+                [nameof(UntimedHighlightMode.DoNotHighlight), nameof(UntimedHighlightMode.WholeLine), nameof(UntimedHighlightMode.InferWords)]);
+            AddOption(item, "推进方式", "矩形裁切、逐 GlyphUnit 或整 Word", "revealMode",
+                nameof(HighlightRevealMode.RectangleClip),
+                [nameof(HighlightRevealMode.RectangleClip), nameof(HighlightRevealMode.GlyphStep), nameof(HighlightRevealMode.WholeWord)]);
+            AddOption(item, "音译推进", "跟随正文 Word 映射或整行显示", "transliterationMode",
+                nameof(TransliterationProgressMode.FollowMain),
+                [nameof(TransliterationProgressMode.FollowMain), nameof(TransliterationProgressMode.WholeLine)]);
+        }
+        else if (item.Definition.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift)
+        {
+            AddOption(item, "无 Word 抬升", "不抬升、整行抬升或自动拆词", "untimedMode",
+                nameof(UntimedLiftMode.DoNotLift),
+                [nameof(UntimedLiftMode.DoNotLift), nameof(UntimedLiftMode.WholeLine), nameof(UntimedLiftMode.InferWords)]);
+            AddOption(item, "抬升单元", "Auto 按 Word Duration 与阈值选择", "liftUnit",
+                nameof(GlyphLiftUnit.Auto),
+                [nameof(GlyphLiftUnit.Auto), nameof(GlyphLiftUnit.Glyph), nameof(GlyphLiftUnit.Word)]);
+            AddOption(item, "抬升运动", "Hold 保持；Pulse 抬起后回落", "motion",
+                nameof(GlyphLiftMotion.Hold), [nameof(GlyphLiftMotion.Hold), nameof(GlyphLiftMotion.Pulse)]);
+            AddOption(item, "抬升曲线", "作用于当前 GlyphLift 的 LiftProgress", "easingId", "linear",
+                ["linear", "circle", "sine", "exponential", "elastic", "bounce"]);
+            AddOption(item, "曲线模式", "EaseIn、EaseOut 或 EaseInOut", "easingMode", "in",
+                ["in", "out", "inout"]);
+        }
+    }
+
+    private void AddOption(
+        FocusedTextOperationItem item,
+        string header,
+        string description,
+        string key,
+        string fallback,
+        string[] values)
+    {
+        var combo = new ComboBox { MinWidth = 220, HorizontalAlignment = HorizontalAlignment.Stretch };
+        AutomationProperties.SetAutomationId(combo, $"FocusedOption_{key}");
+        foreach (var value in values) combo.Items.Add(value);
+        combo.SelectedItem = item.Definition.Options.GetValueOrDefault(key, fallback);
+        combo.SelectionChanged += (_, _) =>
+        {
+            if (_loading || combo.SelectedItem is not string selected) return;
+            item.Definition.Options[key] = selected;
+            MarkDirtyAndPreview();
+        };
         EditorPanel.Children.Add(new SettingsCard
         {
-            Header = "抬升运动",
-            Description = "Hold 抬起并保持；Pulse 抬起后回落",
+            Header = header,
+            Description = description,
             Content = combo,
             HorizontalAlignment = HorizontalAlignment.Stretch
         });
@@ -369,6 +365,7 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
     private void AddScriptEditor(FocusedTextOperationItem item)
     {
         var placement = new ComboBox { MinWidth = 180 };
+        AutomationProperties.SetAutomationId(placement, "FocusedScriptPlacement");
         placement.Items.Add("BehindGlyph");
         placement.Items.Add("AboveGlyph");
         placement.SelectedItem = item.Definition.Options.TryGetValue("placement", out var currentPlacement)
@@ -397,6 +394,7 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
             MinHeight = 160,
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
+        AutomationProperties.SetAutomationId(box, "FocusedGlyphScript");
         box.TextChanged += (_, _) =>
         {
             item.Definition.Script = box.Text;
@@ -412,53 +410,17 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
         });
     }
 
-    private void TargetCheckBox_Changed(object sender, RoutedEventArgs e)
+    private void TargetToggle_Click(object sender, RoutedEventArgs e)
     {
         if (_loading || OperationList.SelectedItem is not FocusedTextOperationItem item) return;
-        var checkBox = (CheckBox)sender;
-        var target = (string)checkBox.Tag;
-        if (checkBox.IsChecked == true)
+        var toggle = (ToggleButton)sender;
+        var target = (string)toggle.Tag;
+        if (toggle.IsChecked == true)
         {
             if (!item.Definition.Targets.Contains(target)) item.Definition.Targets.Add(target);
         }
         else item.Definition.Targets.Remove(target);
         item.NotifyTargetsChanged();
-        MarkDirtyAndPreview();
-    }
-
-    private void ParameterNumber_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
-    {
-        if (_loading || OperationList.SelectedItem is not FocusedTextOperationItem item || double.IsNaN(args.NewValue)) return;
-        item.Definition.Parameters[(string)sender.Tag].Expression = args.NewValue.ToString(CultureInfo.InvariantCulture);
-        RebuildEditor();
-        MarkDirtyAndPreview();
-    }
-
-    private void ParameterExpression_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (_loading || OperationList.SelectedItem is not FocusedTextOperationItem item) return;
-        var box = (TextBox)sender;
-        item.Definition.Parameters[(string)box.Tag].Expression = box.Text;
-        MarkDirtyAndPreview();
-    }
-
-    private void Motion_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_loading || OperationList.SelectedItem is not FocusedTextOperationItem item ||
-            ((ComboBox)sender).SelectedItem is not string motion) return;
-        item.Definition.Options["motion"] = motion;
-        MarkDirtyAndPreview();
-    }
-
-    private void GlobalMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_loading) return;
-        if (UntimedModeCombo.SelectedItem is ComboBoxItem { Tag: string untimed })
-            _draft.FocusedText.UntimedLineMode = Enum.Parse<UntimedLyricLineMode>(untimed);
-        if (RevealModeCombo.SelectedItem is ComboBoxItem { Tag: string reveal })
-            _draft.FocusedText.HighlightRevealMode = Enum.Parse<HighlightRevealMode>(reveal);
-        if (TransliterationModeCombo.SelectedItem is ComboBoxItem { Tag: string transliteration })
-            _draft.FocusedText.TransliterationMode = Enum.Parse<TransliterationProgressMode>(transliteration);
         MarkDirtyAndPreview();
     }
 
@@ -485,7 +447,10 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
                 Targets = [FocusedTextTargets.LyricCurrentHighlighted],
                 Parameters = descriptor.Parameters.ToDictionary(
                     parameter => parameter.Key,
-                    parameter => new LyricOperationParameterDefinition { Expression = parameter.DefaultExpression })
+                    parameter => new LyricOperationParameterDefinition
+                    {
+                        Expression = parameter.DefaultExpression
+                    })
             };
         }
         var item = CreateItem(definition);
@@ -496,7 +461,7 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
 
     private void DeleteOperation_Click(object sender, RoutedEventArgs e)
     {
-        if (OperationList.SelectedItem is not FocusedTextOperationItem item) return;
+        if (OperationList.SelectedItem is not FocusedTextOperationItem item || item.IsRequired) return;
         var index = Operations.IndexOf(item);
         item.PropertyChanged -= Operation_PropertyChanged;
         Operations.Remove(item);
@@ -524,6 +489,13 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
     private void ResetPreset_Click(object sender, RoutedEventArgs e)
     {
         LoadFocusedText(LyricEffectPresets.CreateDefaultFocusedText());
+        if (Operations.Count > 0) OperationList.SelectedIndex = 0;
+        MarkDirtyAndPreview();
+    }
+
+    private void SoftLiftPreset_Click(object sender, RoutedEventArgs e)
+    {
+        LoadFocusedText(LyricEffectPresets.CreateSoftLiftFocusedText());
         if (Operations.Count > 0) OperationList.SelectedIndex = 0;
         MarkDirtyAndPreview();
     }
@@ -618,6 +590,8 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
         if (_closed) return;
         _closed = true;
         _previewDebounce?.Cancel();
+        _previewDebounce?.Dispose();
+        _previewDebounce = null;
         if (!_saved) _profiles.CancelPreview();
         foreach (var item in Operations) item.PropertyChanged -= Operation_PropertyChanged;
         _preview.Clear();

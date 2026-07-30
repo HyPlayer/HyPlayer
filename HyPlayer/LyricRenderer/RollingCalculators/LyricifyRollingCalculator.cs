@@ -36,7 +36,7 @@ namespace HyPlayer.LyricRenderer.RollingCalculators
         public override float CalculateCurrentY(float fromY, float targetY, RenderingLyricLine currentLine, RenderContext context)
         {
             var progress = 1.0f;
-            var gap = currentLine.Id - context.CurrentLyricLineIndex;
+            var gap = currentLine.RuntimeIndex - context.CurrentLyricLineIndex;
             if (!(fromY < targetY) && gap >= 0)
             {
                 var theoryDuration = ((float)duration /* * (Math.Log10(Math.Max(gap, 0.9)) + 1)*/);

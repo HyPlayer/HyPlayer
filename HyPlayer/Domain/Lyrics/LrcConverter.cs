@@ -6,116 +6,60 @@ using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.Text;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using Windows.UI.Text;
-using Color = System.Drawing.Color;
 using Windows.UI.Xaml;
 
 namespace HyPlayer.Domain.Lyrics;
 
 public static class LrcConverter
 {
-    private static readonly ColorConverter ColorConverter = new();
-    public static readonly List<ILyricEnhancer<bool>> LyricEnhancers = [
+    private static readonly ConcurrentDictionary<string, byte> ReportedInvalidStyleColors =
+        new(StringComparer.Ordinal);
+
+    public static readonly List<ILyricEnhancer<bool>> LyricEnhancers =
+    [
         new BreathLineEnhancer(),
         new NearbyLineAlignmentEnhancer(),
-        new SublineAlignmentEnhancer(),
+        new SublineAlignmentEnhancer()
     ];
 
     public static List<RenderingLyricLine> Convert(
         ALRCFile alrc,
-        List<LyricInfoMetadata> lyricMetadata = null,
-        List<LyricInfoMetadata> songMetadata = null,
+        List<LyricInfoMetadata>? lyricMetadata = null,
+        List<LyricInfoMetadata>? songMetadata = null,
         bool optimizeLyric = false)
     {
-        var result = new List<RenderingLyricLine>();
+        ArgumentNullException.ThrowIfNull(alrc);
         if (optimizeLyric)
-            foreach (var lyricEnhancer in LyricEnhancers)
-            {
-                alrc = lyricEnhancer.Enhance(true, alrc);
-            }
-        foreach (var alrcLine in alrc.Lines)
         {
-            if (string.IsNullOrWhiteSpace(alrcLine.RawText) && alrcLine.Words is not { Count: > 0 } &&
-                alrcLine.End - alrcLine.Start >= 1500)
-            {
-                // Empty Line
-                result.Add(new ProgressBarRenderingLyricLine
-                {
-                    KeyFrames =
-                    [
-                        alrcLine.Start ?? 0,
-                        alrcLine.End ?? 0
-                    ],
-                    StartTime = alrcLine.Start ?? 0,
-                    EndTime = alrcLine.End ?? 0,
-                });
-                continue;
-            }
-
-
-            var line = new TextRenderingLyricLine
-            {
-                KeyFrames =
-                [
-                    alrcLine.Start ?? 0,
-                    alrcLine.End ?? 0
-                ],
-                StartTime = alrcLine.Start ?? 0,
-                EndTime = alrcLine.End ?? 0,
-                Text = alrcLine.RawText,
-                Transliteration = alrcLine.Transliteration,
-                Translation = alrcLine.Translation
-            };
-            if (alrcLine.Words is { Count: > 0 })
-            {
-                line.Tokens = alrcLine.Words
-                    .Select(w => new LyricTextToken(w.Word, w.Start, w.End, w.Transliteration)).ToList();
-            }
-
-            if (alrc.Header?.Styles?.FirstOrDefault(t => t.Id == alrcLine.LineStyle) is { } style)
-            {
-                line.Typography = new RenderTypography
-                {
-                    Alignment = style.Position switch
-                    {
-                        ALRCStylePosition.Left => TextAlignment.Left,
-                        ALRCStylePosition.Center => TextAlignment.Center,
-                        ALRCStylePosition.Right => TextAlignment.Right,
-                        _ => null
-                    },
-                    FontWeight = style.Type == ALRCStyleAccent.Emphasise ? FontWeights.Bold : FontWeights.Normal,
-                };
-                line.HiddenOnBlur = style.HiddenOnBlur || style.Type == ALRCStyleAccent.Background;
-                if (style.Color is not null)
-                {
-                    var colorRet = ColorConverter.ConvertFromString(style.Color);
-                    if (colorRet is Color color)
-                    {
-                        line.Typography.FocusingColor = new Windows.UI.Color()
-                        {
-                            A = color.A,
-                            R = color.R,
-                            G = color.G,
-                            B = color.B
-                        };
-                    }
-                }
-            }
-
-            result.Add(line);
+            foreach (var lyricEnhancer in LyricEnhancers)
+                alrc = lyricEnhancer.Enhance(true, alrc);
         }
+
+        var styles = BuildStyleTable(alrc);
+        var resolved = ResolveLines(alrc);
+        var grouped = GroupLines(resolved);
+        var result = new List<RenderingLyricLine>(grouped.Count + (lyricMetadata?.Count ?? 0));
+
+        foreach (var item in grouped)
+            result.Add(CreateRenderingLine(item, styles));
 
         if (lyricMetadata is { Count: > 0 })
         {
-            foreach (var lyricInfoMetadata in lyricMetadata)
+            var nextGroupIndex = grouped.Select(item => item.GroupIndex).DefaultIfEmpty(-1).Max() + 1;
+            foreach (var metadata in lyricMetadata)
             {
-                result.Add(new ActionLyricLine()
+                result.Add(new ActionLyricLine
                 {
-                    Text = $"{lyricInfoMetadata.DisplayName}: {lyricInfoMetadata.Value}",
-                    ActionUri = lyricInfoMetadata.ActionUri
+                    Text = $"{metadata.DisplayName}: {metadata.Value}",
+                    ActionUri = metadata.ActionUri,
+                    FactoIndex = result.Count,
+                    GroupIndex = nextGroupIndex++
                 });
             }
         }
@@ -123,4 +67,180 @@ public static class LrcConverter
         return result;
     }
 
+    private static IReadOnlyDictionary<string, ALRCStyle> BuildStyleTable(ALRCFile alrc)
+    {
+        var result = new Dictionary<string, ALRCStyle>(StringComparer.Ordinal);
+        foreach (var style in alrc.Header?.Styles ?? [])
+        {
+            if (!string.IsNullOrEmpty(style.Id)) result[style.Id] = style;
+        }
+        return result;
+    }
+
+    private static List<ResolvedLine> ResolveLines(ALRCFile alrc)
+    {
+        var result = new List<ResolvedLine>(alrc.Lines.Count);
+        for (var index = 0; index < alrc.Lines.Count; index++)
+        {
+            var line = alrc.Lines[index];
+            var words = line.Words is { Count: > 0 } ? line.Words : null;
+            var start = line.Start ?? words?.First().Start ?? 0;
+            var nextStart = index + 1 < alrc.Lines.Count
+                ? alrc.Lines[index + 1].Start ?? alrc.Lines[index + 1].Words?.FirstOrDefault()?.Start
+                : null;
+            var end = line.End ?? words?.Last().End ?? nextStart ?? alrc.LyricInfo?.Duration ?? start;
+            result.Add(new ResolvedLine(line, index, start, end));
+        }
+        return result;
+    }
+
+    private static List<ResolvedLine> GroupLines(IReadOnlyList<ResolvedLine> lines)
+    {
+        var ids = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (var index = 0; index < lines.Count; index++)
+        {
+            if (!string.IsNullOrEmpty(lines[index].Line.Id)) ids[lines[index].Line.Id!] = index;
+        }
+
+        var roots = new int[lines.Count];
+        for (var index = 0; index < lines.Count; index++)
+            roots[index] = ResolveRoot(index, lines, ids);
+
+        var groups = Enumerable.Range(0, lines.Count)
+            .GroupBy(index => roots[index])
+            .OrderBy(group => group.Key)
+            .ToList();
+        var result = new List<ResolvedLine>(lines.Count);
+        for (var groupIndex = 0; groupIndex < groups.Count; groupIndex++)
+        {
+            var group = groups[groupIndex];
+            var members = group.OrderBy(index => index == group.Key ? int.MinValue : index).ToList();
+            var groupStart = members.Min(index => lines[index].Start);
+            var groupEnd = members.Max(index => lines[index].End);
+            foreach (var member in members)
+            {
+                result.Add(lines[member] with
+                {
+                    GroupIndex = groupIndex,
+                    GroupStart = groupStart,
+                    GroupEnd = groupEnd
+                });
+            }
+        }
+        return result;
+    }
+
+    private static int ResolveRoot(
+        int start,
+        IReadOnlyList<ResolvedLine> lines,
+        IReadOnlyDictionary<string, int> ids)
+    {
+        var visited = new HashSet<int>();
+        var current = start;
+        while (true)
+        {
+            if (!visited.Add(current)) return start;
+            var parentId = lines[current].Line.ParentLineId;
+            if (string.IsNullOrEmpty(parentId)) return current;
+            if (!ids.TryGetValue(parentId, out var parent)) return start;
+            current = parent;
+        }
+    }
+
+    private static RenderingLyricLine CreateRenderingLine(
+        ResolvedLine item,
+        IReadOnlyDictionary<string, ALRCStyle> styles)
+    {
+        var source = item.Line;
+        styles.TryGetValue(source.LineStyle ?? string.Empty, out var style);
+        var styleColor = TryParseColor(style?.Color, source.LineStyle);
+        var words = source.Words is { Count: > 0 } ? source.Words : null;
+        var text = words is null ? source.RawText ?? string.Empty : string.Concat(words.Select(word => word.Word));
+        var transliteration = words?.Any(word => !string.IsNullOrEmpty(word.Transliteration)) == true
+            ? string.Concat(words.Select(word => word.Transliteration ?? string.Empty))
+            : source.Transliteration;
+        var typography = style is null && styleColor is null
+            ? null
+            : new RenderTypography
+            {
+                Alignment = style?.Position switch
+                {
+                    ALRCStylePosition.Left => TextAlignment.Left,
+                    ALRCStylePosition.Center => TextAlignment.Center,
+                    ALRCStylePosition.Right => TextAlignment.Right,
+                    _ => null
+                },
+                FocusingColor = styleColor
+            };
+
+        RenderingLyricLine line;
+        if (string.IsNullOrWhiteSpace(text) && item.End - item.Start >= 1500)
+        {
+            line = new ProgressBarRenderingLyricLine { Typography = typography };
+        }
+        else
+        {
+            line = new TextRenderingLyricLine
+            {
+                Text = text,
+                Transliteration = transliteration,
+                Translation = source.Translation,
+                Tokens = words?.Select(word => new LyricTextToken(
+                    word.Word,
+                    word.Start,
+                    word.End,
+                    word.Transliteration)).ToList() ?? [],
+                Typography = typography
+            };
+        }
+
+        line.SourceLine = source;
+        line.SourceStyle = style;
+        line.StyleTable = styles;
+        line.SourceStyleColor = styleColor;
+        line.HiddenOnBlur = style?.HiddenOnBlur == true;
+        line.FactoIndex = item.OriginalIndex;
+        line.GroupIndex = item.GroupIndex;
+        line.GroupStartTime = item.GroupStart;
+        line.GroupEndTime = item.GroupEnd;
+        line.StartTime = item.Start;
+        line.EndTime = item.End;
+        line.KeyFrames = [item.Start, item.End];
+        return line;
+    }
+
+    private static Windows.UI.Color? TryParseColor(string? source, string? styleId)
+    {
+        if (string.IsNullOrWhiteSpace(source)) return null;
+        var text = source.Trim();
+        if (text.StartsWith('#')) text = text[1..];
+        try
+        {
+            var value = text.Length switch
+            {
+                6 => uint.Parse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture) | 0xFF000000u,
+                8 => uint.Parse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture),
+                _ => throw new FormatException()
+            };
+            return Windows.UI.Color.FromArgb(
+                (byte)(value >> 24),
+                (byte)(value >> 16),
+                (byte)(value >> 8),
+                (byte)value);
+        }
+        catch (FormatException)
+        {
+            var key = $"{styleId}\u001f{source}";
+            if (ReportedInvalidStyleColors.TryAdd(key, 0))
+                Debug.WriteLine($"ALRC style '{styleId}' contains invalid color '{source}'.");
+            return null;
+        }
+    }
+
+    private sealed record ResolvedLine(ALRCLine Line, int OriginalIndex, long Start, long End)
+    {
+        public int GroupIndex { get; init; }
+        public long GroupStart { get; init; }
+        public long GroupEnd { get; init; }
+    }
 }

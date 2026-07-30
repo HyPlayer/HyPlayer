@@ -36,6 +36,7 @@
             <TextBlock Margin="4,0,0,10" FontSize="18" FontWeight="SemiBold" Text="聚焦操作链" />
             <ListView
                 x:Name="OperationList"
+                AutomationProperties.AutomationId="FocusedOperationList"
                 Grid.Row="1"
                 AllowDrop="True"
                 CanReorderItems="True"
@@ -52,13 +53,15 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <ToggleSwitch
+                                AutomationProperties.AutomationId="{x:Bind ToggleAutomationId, Mode=OneWay}"
                                 VerticalAlignment="Center"
-                                IsOn="{Binding IsEnabled, Mode=TwoWay}"
+                                IsEnabled="{x:Bind CanToggle, Mode=OneWay}"
+                                IsOn="{x:Bind IsEnabled, Mode=TwoWay}"
                                 OffContent=""
                                 OnContent="" />
                             <StackPanel Grid.Column="1" Margin="4,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
-                                <TextBlock FontSize="11" Opacity="0.65" Text="{Binding TargetSummary}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock FontSize="11" Opacity="0.65" Text="{x:Bind TargetSummary, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
                             </StackPanel>
                         </Grid>
                     </DataTemplate>
@@ -66,71 +69,32 @@
             </ListView>
             <StackPanel Grid.Row="2" Margin="0,10,0,0" Spacing="8">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Content="添加节点">
+                    <Button AutomationProperties.AutomationId="AddFocusedEffect" Content="添加节点">
                         <Button.Flyout>
                             <MenuFlyout x:Name="AddOperationFlyout" />
                         </Button.Flyout>
                     </Button>
-                    <Button Click="DeleteOperation_Click" Content="删除" />
-                    <Button Click="MoveUp_Click" Content="上移" />
-                    <Button Click="MoveDown_Click" Content="下移" />
+                    <Button AutomationProperties.AutomationId="DeleteFocusedEffect" Click="DeleteOperation_Click" Content="删除" />
+                    <Button AutomationProperties.AutomationId="MoveFocusedEffectUp" Click="MoveUp_Click" Content="上移" />
+                    <Button AutomationProperties.AutomationId="MoveFocusedEffectDown" Click="MoveDown_Click" Content="下移" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Click="ResetPreset_Click" Content="恢复默认聚焦链" />
-                    <Button Click="Import_Click" Content="导入完整配置" />
-                    <Button Click="Export_Click" Content="导出" />
-                </StackPanel>
-                <TextBlock x:Name="StatusText" Foreground="OrangeRed" TextWrapping="Wrap" />
+                <controls:WrapPanel HorizontalSpacing="8" VerticalSpacing="8">
+                    <Button AutomationProperties.AutomationId="ResetFocusedEffects" Click="ResetPreset_Click" Content="恢复默认聚焦链" />
+                    <Button AutomationProperties.AutomationId="UseSoftLiftPreset" Click="SoftLiftPreset_Click" Content="柔和抬升" />
+                    <Button AutomationProperties.AutomationId="ImportFocusedEffects" Click="Import_Click" Content="导入完整配置" />
+                    <Button AutomationProperties.AutomationId="ExportFocusedEffects" Click="Export_Click" Content="导出" />
+                </controls:WrapPanel>
+                <TextBlock x:Name="StatusText" TextWrapping="Wrap" />
             </StackPanel>
         </Grid>
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="220" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Grid Margin="0,0,0,10" ColumnSpacing="12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Margin="0,0,0,4" Text="非逐词行" />
-                    <ComboBox x:Name="UntimedModeCombo" HorizontalAlignment="Stretch" SelectionChanged="GlobalMode_SelectionChanged">
-                        <ComboBoxItem Content="整行直接高亮" Tag="DirectHighlight" />
-                        <ComboBoxItem Content="自动推断 Word" Tag="InferWords" />
-                    </ComboBox>
-                </StackPanel>
-                <StackPanel Grid.Column="1">
-                    <TextBlock Margin="0,0,0,4" Text="高亮推进" />
-                    <ComboBox x:Name="RevealModeCombo" HorizontalAlignment="Stretch" SelectionChanged="GlobalMode_SelectionChanged">
-                        <ComboBoxItem Content="矩形裁切" Tag="RectangleClip" />
-                        <ComboBoxItem Content="逐 Glyph" Tag="GlyphStep" />
-                        <ComboBoxItem Content="整 Word" Tag="WholeWord" />
-                    </ComboBox>
-                </StackPanel>
-                <StackPanel Grid.Column="2">
-                    <TextBlock Margin="0,0,0,4" Text="音译推进" />
-                    <ComboBox x:Name="TransliterationModeCombo" HorizontalAlignment="Stretch" SelectionChanged="GlobalMode_SelectionChanged">
-                        <ComboBoxItem Content="跟随正文" Tag="FollowMain" />
-                        <ComboBoxItem Content="整行显示" Tag="WholeLine" />
-                    </ComboBox>
-                </StackPanel>
-                <StackPanel Grid.Column="3">
-                    <TextBlock Margin="0,0,0,4" Text="预览歌词" />
-                    <ComboBox x:Name="PreviewModeCombo" HorizontalAlignment="Stretch" SelectionChanged="PreviewMode_SelectionChanged">
-                        <ComboBoxItem Content="真实逐词" Tag="Timed" />
-                        <ComboBoxItem Content="推断 Word" Tag="Inferred" />
-                        <ComboBoxItem Content="直接高亮" Tag="Direct" />
-                    </ComboBox>
-                </StackPanel>
-            </Grid>
-
             <Border
-                Grid.Row="1"
+                Grid.Row="0"
                 Margin="0,0,0,12"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -141,11 +105,21 @@
                         x:Name="PreviewCanvas"
                         Draw="PreviewCanvas_Draw"
                         SizeChanged="PreviewCanvas_SizeChanged" />
-                    <TextBlock Margin="12" HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="12" Opacity="0.65" Text="Reveal 与 Motion 独立预览" />
+                    <StackPanel Margin="12" HorizontalAlignment="Right" VerticalAlignment="Top" Spacing="6">
+                        <ComboBox
+                            x:Name="PreviewModeCombo"
+                            AutomationProperties.AutomationId="FocusedPreviewMode"
+                            SelectionChanged="PreviewMode_SelectionChanged">
+                            <ComboBoxItem Content="真实 Word" Tag="Timed" />
+                            <ComboBoxItem Content="推断 Word" Tag="Inferred" />
+                            <ComboBoxItem Content="无 Word" Tag="Direct" />
+                        </ComboBox>
+                        <TextBlock HorizontalAlignment="Right" FontSize="12" Opacity="0.65" Text="Reveal 与 GlyphLift 正交预览" />
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                 <StackPanel x:Name="EditorPanel" Padding="4,8,12,20" Spacing="10" />
             </ScrollViewer>
         </Grid>

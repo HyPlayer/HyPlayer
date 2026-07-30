@@ -17,6 +17,8 @@ public sealed class FocusedTextOperationDescriptor
     public required string Description { get; init; }
     public required IReadOnlyList<LyricOperationParameterDescriptor> Parameters { get; init; }
     public bool SupportsScript { get; init; }
+    public bool IsRequired { get; init; }
+    public bool SupportsTargets { get; init; } = true;
 }
 
 public sealed class CompiledFocusedTextEffectProfile
@@ -37,10 +39,26 @@ internal sealed class CompiledFocusedTextOperation
 {
     public required FocusedTextOperationDefinition Definition { get; init; }
     public required IReadOnlySet<string> Targets { get; init; }
-    public required IReadOnlyDictionary<string, FocusedTextScalarExpression> Scalars { get; init; }
-    public required IReadOnlyDictionary<string, FocusedTextColorExpression> Colors { get; init; }
+    public required IReadOnlyDictionary<string, CompiledFocusedScalarParameter> Scalars { get; init; }
+    public required IReadOnlyDictionary<string, CompiledFocusedColorParameter> Colors { get; init; }
     public CompiledFocusedDrawScript? DrawScript { get; init; }
 }
+
+internal sealed record CompiledFocusedTransition(
+    FocusedTextScalarExpression Duration,
+    string EasingId,
+    string Mode,
+    IReadOnlyDictionary<string, FocusedTextScalarExpression> Arguments);
+
+internal sealed record CompiledFocusedScalarParameter(
+    FocusedTextScalarExpression Expression,
+    CompiledFocusedTransition? Transition,
+    float? Minimum,
+    float? Maximum);
+
+internal sealed record CompiledFocusedColorParameter(
+    FocusedTextColorExpression Expression,
+    CompiledFocusedTransition? Transition);
 
 internal enum FocusedDrawScriptPlacement
 {
@@ -160,43 +178,59 @@ internal sealed class FocusedTextEffectCompiler
 
     public static IReadOnlyList<FocusedTextOperationDescriptor> Descriptors { get; } = (FocusedTextOperationDescriptor[])
     [
+        new FocusedTextOperationDescriptor
+        {
+            TypeId = FocusedTextBuiltInOperationTypes.HighlightReveal,
+            DisplayName = "高亮推进",
+            Description = "把当前 Word 的已高亮与未高亮贡献按配置互补展开。",
+            Parameters = (LyricOperationParameterDescriptor[])
+            [
+                Scalar("revealTimeOffsetMs", "推进时间偏移", "0"),
+                Scalar("featherDip", "羽化宽度", "0")
+            ],
+            IsRequired = true,
+            SupportsTargets = false
+        },
         Descriptor(FocusedTextBuiltInOperationTypes.Color, "颜色", "设置所选文本贡献的颜色。",
-            Color("color", "颜色", "line.AccentColor")),
+            Color("color", "颜色", "line.FocusingColor")),
         Descriptor(FocusedTextBuiltInOperationTypes.Opacity, "透明度", "乘算所选文本贡献的透明度。",
             Scalar("opacity", "透明度", "1", 0, 1)),
         Descriptor(FocusedTextBuiltInOperationTypes.Transform2D, "逐字 2D 变换", "对每个 GlyphUnit 应用位移、缩放和旋转。",
             Scalar("x", "X 位移", "0"), Scalar("y", "Y 位移", "0"),
             Scalar("scaleX", "X 缩放", "1", -10, 10), Scalar("scaleY", "Y 缩放", "1", -10, 10),
-            Scalar("rotation", "旋转角度", "0")),
+            Scalar("rotation", "旋转角度", "0"), Scalar("anchorX", "X 锚点", "0"), Scalar("anchorY", "Y 锚点", "0")),
         Descriptor(FocusedTextBuiltInOperationTypes.Transform3D, "逐字 3D 变换", "对每个 GlyphUnit 应用三轴旋转与透视深度。",
             Scalar("angleX", "X 角度", "0"), Scalar("angleY", "Y 角度", "0"),
-            Scalar("angleZ", "Z 角度", "0"), Scalar("depth", "景深", "3000", 1, 100000)),
+            Scalar("angleZ", "Z 角度", "0"), Scalar("depth", "景深", "3000", 1, 100000),
+            Scalar("anchorX", "X 锚点", "0"), Scalar("anchorY", "Y 锚点", "0")),
         Descriptor(FocusedTextBuiltInOperationTypes.GaussianBlur, "逐字模糊", "模糊所选 GlyphUnit。",
             Scalar("amount", "模糊量", "0", 0, 250)),
         Descriptor(FocusedTextBuiltInOperationTypes.Glow, "逐字辉光", "在所选 GlyphUnit 后绘制辉光。",
+            Scalar("x", "X 偏移", "0"), Scalar("y", "Y 偏移", "0"),
             Scalar("blur", "辉光半径", "4", 0, 250), Scalar("opacity", "辉光透明度", "0.4", 0, 1),
-            Color("color", "辉光颜色", "line.AccentColor")),
+            Color("color", "辉光颜色", "line.FocusingColor")),
         Descriptor(FocusedTextBuiltInOperationTypes.Stroke, "逐字描边", "为所选 GlyphUnit 绘制描边。",
-            Scalar("width", "描边宽度", "1", 0, 32), Color("color", "描边颜色", "line.AccentColor")),
-        Descriptor(FocusedTextBuiltInOperationTypes.Shadow, "逐字阴影", "为所选 GlyphUnit 绘制可偏移阴影。",
-            Scalar("x", "X 偏移", "0"), Scalar("y", "Y 偏移", "2"), Scalar("blur", "模糊量", "4", 0, 250),
-            Scalar("opacity", "阴影透明度", "0.5", 0, 1), Color("color", "阴影颜色", "fx.Rgba(0, 0, 0, 1)")),
-        Descriptor(FocusedTextBuiltInOperationTypes.GlyphLift, "逐字抬升", "使用独立 MotionProgress 抬升 GlyphUnit。",
+            Scalar("width", "描边宽度", "1", 0, 8), Color("color", "描边颜色", "line.FocusingColor")),
+        Descriptor(FocusedTextBuiltInOperationTypes.GlyphLift, "Glyph 抬升", "使用当前 GlyphLift 节点的 glyph.LiftProgress 抬升 GlyphUnit 或 Word。",
             Scalar("height", "抬升高度", "3"), Scalar("overlap", "Glyph 黏连度", "0", 0, 1),
-            Scalar("wholeWordThresholdMs", "整词阈值", "1000", 0, 60000)),
+            Scalar("wholeWordThresholdMs", "整词阈值", "1000"),
+            Scalar("liftTimeOffsetMs", "抬升时间偏移", "0"), Scalar("liftFinishDurationMs", "结束延长", "0"),
+            Scalar("exponent", "指数", "2"), Scalar("springiness", "弹性强度", "3"),
+            Scalar("oscillations", "振荡次数", "3"), Scalar("bounces", "回弹次数", "2"),
+            Scalar("bounciness", "回弹强度", "2")),
         new FocusedTextOperationDescriptor
         {
             TypeId = FocusedTextBuiltInOperationTypes.DrawScript,
             DisplayName = "Glyph 绘图脚本",
             Description = "在 GlyphUnit 局部坐标中执行受限绘图脚本。",
-            Parameters = [],
+            Parameters = Array.Empty<LyricOperationParameterDescriptor>(),
             SupportsScript = true
         }
     ];
 
     public CompiledFocusedTextEffectProfile? Compile(
         FocusedTextEffectDefinition definition,
-        ICollection<LyricProfileDiagnostic> diagnostics)
+        List<LyricProfileDiagnostic> diagnostics)
     {
         var descriptors = Descriptors.ToDictionary(item => item.TypeId, StringComparer.OrdinalIgnoreCase);
         var operations = new List<CompiledFocusedTextOperation>();
@@ -211,8 +245,8 @@ internal sealed class FocusedTextEffectCompiler
                 continue;
             }
 
-            var scalars = new Dictionary<string, FocusedTextScalarExpression>(StringComparer.Ordinal);
-            var colors = new Dictionary<string, FocusedTextColorExpression>(StringComparer.Ordinal);
+            var scalars = new Dictionary<string, CompiledFocusedScalarParameter>(StringComparer.Ordinal);
+            var colors = new Dictionary<string, CompiledFocusedColorParameter>(StringComparer.Ordinal);
             CompiledFocusedDrawScript? drawScript = null;
             foreach (var parameterDescriptor in descriptor.Parameters)
             {
@@ -222,13 +256,18 @@ internal sealed class FocusedTextEffectCompiler
                 if (parameterDescriptor.ValueType == LyricExpressionValueType.Color)
                 {
                     var result = _expressions.CompileFocusedColor(source);
-                    if (result.IsSuccess) colors[parameterDescriptor.Key] = result.Expression!;
+                    if (result.IsSuccess)
+                        colors[parameterDescriptor.Key] = new CompiledFocusedColorParameter(
+                            result.Expression!, CompileTransition(operation, parameterDescriptor.Key, parameter?.Transition, diagnostics));
                     else diagnostics.Add(ToDiagnostic(operation, parameterDescriptor.Key, result.Diagnostic!));
                 }
                 else
                 {
                     var result = _expressions.CompileFocusedScalar(source);
-                    if (result.IsSuccess) scalars[parameterDescriptor.Key] = result.Expression!;
+                    if (result.IsSuccess)
+                        scalars[parameterDescriptor.Key] = new CompiledFocusedScalarParameter(
+                            result.Expression!, CompileTransition(operation, parameterDescriptor.Key, parameter?.Transition, diagnostics),
+                            parameterDescriptor.Minimum, parameterDescriptor.Maximum);
                     else diagnostics.Add(ToDiagnostic(operation, parameterDescriptor.Key, result.Diagnostic!));
                 }
             }
@@ -237,7 +276,19 @@ internal sealed class FocusedTextEffectCompiler
                 drawScript = CompileDrawScript(operation, diagnostics);
 
             if (diagnostics.Any(item => item.InstanceId == operation.InstanceId && item.Severity == LyricProfileDiagnosticSeverity.Error))
+            {
+                for (var index = 0; index < diagnostics.Count; index++)
+                {
+                    if (diagnostics[index].InstanceId == operation.InstanceId &&
+                        diagnostics[index].Severity == LyricProfileDiagnosticSeverity.Error)
+                        diagnostics[index] = diagnostics[index] with
+                        {
+                            Severity = LyricProfileDiagnosticSeverity.Warning,
+                            Message = $"节点已跳过：{diagnostics[index].Message}"
+                        };
+                }
                 continue;
+            }
             if (!operation.IsEnabled) continue;
             operations.Add(new CompiledFocusedTextOperation
             {
@@ -249,10 +300,8 @@ internal sealed class FocusedTextEffectCompiler
             });
         }
 
-        return diagnostics.Any(item => item.Severity == LyricProfileDiagnosticSeverity.Error)
-            ? null
-            : new CompiledFocusedTextEffectProfile(
-                LyricEffectPresets.CloneFocusedText(definition), operations);
+        return new CompiledFocusedTextEffectProfile(
+            LyricEffectPresets.CloneFocusedText(definition), operations);
     }
 
     private CompiledFocusedDrawScript? CompileDrawScript(
@@ -330,6 +379,30 @@ internal sealed class FocusedTextEffectCompiler
             ? FocusedDrawScriptPlacement.BehindGlyph
             : FocusedDrawScriptPlacement.AboveGlyph;
         return new CompiledFocusedDrawScript { Placement = placement, Commands = commands };
+    }
+
+    private CompiledFocusedTransition? CompileTransition(
+        FocusedTextOperationDefinition operation,
+        string parameter,
+        LyricTransitionDefinition? transition,
+        ICollection<LyricProfileDiagnostic> diagnostics)
+    {
+        if (transition is null) return null;
+        var duration = _expressions.CompileFocusedScalar(transition.DurationMs);
+        if (!duration.IsSuccess)
+        {
+            diagnostics.Add(ToDiagnostic(operation, $"{parameter}.transition.durationMs", duration.Diagnostic!));
+            return null;
+        }
+
+        var arguments = new Dictionary<string, FocusedTextScalarExpression>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (key, source) in transition.Arguments)
+        {
+            var result = _expressions.CompileFocusedScalar(source);
+            if (result.IsSuccess) arguments[key] = result.Expression!;
+            else diagnostics.Add(ToDiagnostic(operation, $"{parameter}.transition.arguments.{key}", result.Diagnostic!));
+        }
+        return new CompiledFocusedTransition(duration.Expression!, transition.EasingId, transition.Mode, arguments);
     }
 
     private CompiledFocusedDrawArgument? CompileDrawArgument(
@@ -419,6 +492,7 @@ internal sealed class FocusedTextEffectCompiler
         DisplayName = name,
         ValueType = LyricExpressionValueType.Scalar,
         DefaultExpression = expression,
+        SupportsTransition = true,
         Minimum = minimum,
         Maximum = maximum
     };
@@ -428,6 +502,7 @@ internal sealed class FocusedTextEffectCompiler
         Key = key,
         DisplayName = name,
         ValueType = LyricExpressionValueType.Color,
-        DefaultExpression = expression
+        DefaultExpression = expression,
+        SupportsTransition = true
     };
 }

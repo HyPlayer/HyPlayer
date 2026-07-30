@@ -395,7 +395,7 @@ public static class FocusedTextExpressionSamples
     private static FocusedTextExpressionSample Create(
         bool wordExists,
         float reveal,
-        float motion,
+        float lift,
         bool translation)
     {
         var sample = LyricExpressionSamples.All[0];
@@ -404,7 +404,7 @@ public static class FocusedTextExpressionSamples
             sample.Frame,
             new FocusedTextExpressionText(!translation, false, translation),
             new FocusedTextExpressionWord(wordExists, 1, 4, 1000, 2000, 0.5f, true),
-            new FocusedTextExpressionGlyph(2, 10, 1, 3, reveal, motion));
+            new FocusedTextExpressionGlyph(2, 10, 1, 3, reveal, lift, 12, -20, 32, 4, 20, 24));
     }
 }
 
@@ -428,9 +428,11 @@ public static class LyricExpressionSamples
             index,
             index - current,
             Math.Abs(index - current),
+            new LyricExpressionLineFacto(index, index - current, Math.Abs(index - current)),
             Math.Abs(index - current) * 0.18f,
             active,
             index <= current,
+            index < current,
             false,
             false,
             true,
@@ -443,7 +445,15 @@ public static class LyricExpressionSamples
             48,
             "示例歌词",
             Idle,
-            Accent);
+            Accent,
+            $"line-{index}",
+            string.Empty,
+            "main",
+            string.Empty,
+            "示例歌词",
+            string.Empty,
+            string.Empty,
+            new LyricExpressionLineStyle(true, "Left", true, Accent, "Normal", false));
         var frame = new LyricExpressionFrame(current, 12_000, 12_000, true, scrolling, false, 0, 1280, 720, 96, 120);
         return new LyricExpressionSample(line, frame);
     }

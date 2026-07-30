@@ -16,7 +16,7 @@ public abstract class EaseRollingCalculator : LineRollingCalculator
         RenderContext context)
     {
         float progress = 1;
-        var gap = currentLine.Id - context.CurrentLyricLineIndex;
+        var gap = currentLine.RuntimeIndex - context.CurrentLyricLineIndex;
         if (!(fromY < targetY) && gap >= 0)
         {
             var theoryTime = AnimationDuration * ((float)Math.Log10(Math.Max(gap, MaxEasingPercent)) + 1);
@@ -39,5 +39,4 @@ public abstract class EaseRollingCalculator : LineRollingCalculator
         }
     }
 }
-
 

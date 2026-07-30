@@ -57,7 +57,7 @@ public class LyricExpressionCompilerTests
     [Test]
     public async Task ColorAndTextExpressions_ShouldBeStronglyTyped()
     {
-        var color = _compiler.CompileColor("fx.LerpColor(line.IdleColor, line.AccentColor, line.Progress)");
+        var color = _compiler.CompileColor("fx.LerpColor(line.IdleColor, line.FocusingColor, line.Progress)");
         var text = _compiler.CompileText("line.Text");
         color.IsSuccess.Should().BeTrue();
         text.IsSuccess.Should().BeTrue();
@@ -81,10 +81,10 @@ public class LyricExpressionCompilerTests
     }
 
     [Test]
-    public async Task FocusedExpressions_ShouldKeepRevealAndMotionIndependent()
+    public async Task FocusedExpressions_ShouldKeepRevealAndLiftIndependent()
     {
         var reveal = _compiler.CompileFocusedScalar("glyph.RevealProgress");
-        var motion = _compiler.CompileFocusedScalar("glyph.MotionProgress");
+        var motion = _compiler.CompileFocusedScalar("glyph.LiftProgress");
         var sample = FocusedTextExpressionSamples.All[0];
 
         reveal.IsSuccess.Should().BeTrue();
@@ -96,15 +96,28 @@ public class LyricExpressionCompilerTests
         await Task.CompletedTask;
     }
 
+    [Test]
+    public async Task RemovedV2Names_ShouldNotCompile()
+    {
+        _compiler.CompileScalar("line.AccentColor.A").IsSuccess.Should().BeFalse();
+        _compiler.CompileFocusedScalar("glyph.MotionProgress").IsSuccess.Should().BeFalse();
+        _compiler.CompileScalar("line.IsPlayed ? 1 : 0").IsSuccess.Should().BeFalse();
+        await Task.CompletedTask;
+    }
+
     private static LyricExpressionLine Line(
         bool isActive = true,
         float viewportDistance = 0,
         float progress = 0,
         string text = "line") =>
-        new(1, 0, 0, viewportDistance, isActive, false, false, false, true,
+        new(1, 0, 0, new LyricExpressionLineFacto(1, 0, 0), viewportDistance,
+            isActive, isActive, false, false, false, true,
             0, 1000, progress, 300, 50, 150, 25, text,
             new LyricColorValue(255, 255, 255, 255),
-            new LyricColorValue(255, 255, 210, 80));
+            new LyricColorValue(255, 255, 210, 80),
+            "1", "", "main", "", text, "", "",
+            new LyricExpressionLineStyle(true, "Center", true,
+                new LyricColorValue(255, 255, 210, 80), "Normal", false));
 
     private static LyricExpressionFrame Frame() =>
         new(1, 500, 500, true, false, false, 0, 800, 600, 96, 120);

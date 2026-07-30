@@ -11,11 +11,13 @@ public static class LyricBuiltInOperationTypes
     public const string GaussianBlur = "hyplayer.effect.gaussian-blur";
     public const string Transform2D = "hyplayer.effect.transform-2d";
     public const string Transform3D = "hyplayer.effect.transform-3d";
+    public const string Background = "hyplayer.draw.background";
     public const string DrawScript = "hyplayer.draw.script";
 }
 
 public static class FocusedTextBuiltInOperationTypes
 {
+    public const string HighlightReveal = "hyplayer.focus.highlight-reveal";
     public const string Color = "hyplayer.focus.color";
     public const string Opacity = "hyplayer.focus.opacity";
     public const string Transform2D = "hyplayer.focus.transform-2d";
@@ -23,7 +25,6 @@ public static class FocusedTextBuiltInOperationTypes
     public const string GaussianBlur = "hyplayer.focus.gaussian-blur";
     public const string Glow = "hyplayer.focus.glow";
     public const string Stroke = "hyplayer.focus.stroke";
-    public const string Shadow = "hyplayer.focus.shadow";
     public const string GlyphLift = "hyplayer.focus.glyph-lift";
     public const string DrawScript = "hyplayer.focus.draw-script";
 }
@@ -58,6 +59,8 @@ public sealed record LyricOperationPreset(string Name, string Description, Lyric
 
 public sealed record LyricProfilePreset(string Name, string Description, LyricEffectProfileDocument Profile);
 
+public sealed record FocusedTextProfilePreset(string Name, string Description, FocusedTextEffectDefinition Profile);
+
 public static class LyricEffectPresets
 {
     public static IReadOnlyList<LyricOperationPreset> OperationPresets { get; } =
@@ -67,6 +70,7 @@ public static class LyricEffectPresets
         new("距离模糊", "滚动停止后模糊远离当前行的歌词。", CreateBlur()),
         new("焦点缩放", "当前行保持原尺寸，远处歌词逐渐缩小。", CreateScale()),
         new("3D 扇形", "非当前行沿 Y 轴形成扇形透视。", CreateTransform3D(true)),
+        new("行背景", "在当前链位置把圆角背景绘制到现有内容后方。", CreateBackground()),
         new("圆角悬停背景", "绘制歌词行的指针悬停背景。", CreateHoverBackground()),
         new("进度下划线", "在当前歌词下方绘制随进度增长的线条。", CreateProgressUnderline())
     ];
@@ -78,6 +82,12 @@ public static class LyricEffectPresets
         new("柔和景深", "增强模糊与距离渐隐。", CreateDepthProfile()),
         new("立体层叠", "启用 3D 扇形和轻微景深。", CreateThreeDimensionalProfile()),
         new("无特效", "仅保留基础歌词与调试绘制节点。", CreateNoEffectsProfile())
+    ];
+
+    public static IReadOnlyList<FocusedTextProfilePreset> FocusedTextProfilePresets { get; } =
+    [
+        new("HyPlayer 默认", "矩形硬边高亮，真实 Word 自动选择整词或逐 GlyphUnit 抬升。", CreateDefaultFocusedText()),
+        new("柔和抬升", "自动拆词、柔和高亮边缘和 Elastic 抬升。", CreateSoftLiftFocusedText())
     ];
 
     public static LyricEffectProfileDocument CreateDefaultProfile() => new()
@@ -99,14 +109,47 @@ public static class LyricEffectPresets
 
     public static FocusedTextEffectDefinition CreateDefaultFocusedText() => new()
     {
-        UntimedLineMode = UntimedLyricLineMode.DirectHighlight,
-        HighlightRevealMode = HighlightRevealMode.RectangleClip,
-        TransliterationMode = TransliterationProgressMode.FollowMain,
         Operations =
         [
             CreateFocusedOpacity(),
+            CreateHighlightReveal(),
             CreateFocusedGlyphLift()
         ]
+    };
+
+    public static FocusedTextEffectDefinition CreateSoftLiftFocusedText()
+    {
+        var definition = CreateDefaultFocusedText();
+        var reveal = definition.Operations.Single(item => item.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal);
+        reveal.Options["untimedMode"] = nameof(UntimedHighlightMode.InferWords);
+        reveal.Parameters["featherDip"].Expression = "40";
+        var lift = definition.Operations.Single(item => item.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift);
+        lift.Options["untimedMode"] = nameof(UntimedLiftMode.InferWords);
+        lift.Options["easingId"] = "elastic";
+        lift.Options["easingMode"] = "out";
+        lift.Parameters["height"].Expression = "2";
+        lift.Parameters["springiness"].Expression = "6";
+        lift.Parameters["oscillations"].Expression = "1";
+        lift.Parameters["liftFinishDurationMs"].Expression = "250";
+        return definition;
+    }
+
+    public static FocusedTextOperationDefinition CreateHighlightReveal() => new()
+    {
+        TypeId = FocusedTextBuiltInOperationTypes.HighlightReveal,
+        DisplayName = "高亮推进",
+        IsEnabled = true,
+        Parameters =
+        {
+            ["revealTimeOffsetMs"] = Scalar("0"),
+            ["featherDip"] = Scalar("0")
+        },
+        Options =
+        {
+            ["untimedMode"] = nameof(UntimedHighlightMode.WholeLine),
+            ["revealMode"] = nameof(HighlightRevealMode.RectangleClip),
+            ["transliterationMode"] = nameof(TransliterationProgressMode.FollowMain)
+        }
     };
 
     public static FocusedTextOperationDefinition CreateFocusedOpacity() => new()
@@ -140,9 +183,23 @@ public static class LyricEffectPresets
         {
             ["height"] = Scalar("3"),
             ["overlap"] = Scalar("0"),
-            ["wholeWordThresholdMs"] = Scalar("1000")
+            ["wholeWordThresholdMs"] = Scalar("1000"),
+            ["liftTimeOffsetMs"] = Scalar("0"),
+            ["liftFinishDurationMs"] = Scalar("0"),
+            ["exponent"] = Scalar("2"),
+            ["springiness"] = Scalar("3"),
+            ["oscillations"] = Scalar("3"),
+            ["bounces"] = Scalar("2"),
+            ["bounciness"] = Scalar("2")
         },
-        Options = { ["motion"] = "Hold" }
+        Options =
+        {
+            ["untimedMode"] = nameof(UntimedLiftMode.DoNotLift),
+            ["liftUnit"] = nameof(GlyphLiftUnit.Auto),
+            ["motion"] = nameof(GlyphLiftMotion.Hold),
+            ["easingId"] = "linear",
+            ["easingMode"] = "in"
+        }
     };
 
     public static LyricRenderOperationDefinition CloneOperation(LyricRenderOperationDefinition source)
@@ -165,7 +222,7 @@ public static class LyricEffectPresets
                             DurationMs = pair.Value.Transition.DurationMs,
                             EasingId = pair.Value.Transition.EasingId,
                             Mode = pair.Value.Transition.Mode,
-                            Arguments = new Dictionary<string, double>(pair.Value.Transition.Arguments)
+                            Arguments = new Dictionary<string, string>(pair.Value.Transition.Arguments)
                         }
                 }),
             Options = new Dictionary<string, string>(source.Options),
@@ -199,9 +256,6 @@ public static class LyricEffectPresets
         FocusedTextEffectDefinition source,
         bool renewInstanceIds = false) => new()
     {
-        UntimedLineMode = source.UntimedLineMode,
-        HighlightRevealMode = source.HighlightRevealMode,
-        TransliterationMode = source.TransliterationMode,
         Operations = source.Operations.Select(operation => CloneFocusedOperation(operation, renewInstanceIds)).ToList(),
         ExtensionData = source.ExtensionData?.ToDictionary(pair => pair.Key, pair => pair.Value.Clone())
     };
@@ -227,7 +281,7 @@ public static class LyricEffectPresets
                         DurationMs = pair.Value.Transition.DurationMs,
                         EasingId = pair.Value.Transition.EasingId,
                         Mode = pair.Value.Transition.Mode,
-                        Arguments = new Dictionary<string, double>(pair.Value.Transition.Arguments)
+                        Arguments = new Dictionary<string, string>(pair.Value.Transition.Arguments)
                     }
             }),
         Options = new Dictionary<string, string>(source.Options),
@@ -256,9 +310,26 @@ public static class LyricEffectPresets
         IsEnabled = enabled,
         Parameters =
         {
+            ["x"] = Scalar("0"),
+            ["y"] = Scalar("0"),
             ["blur"] = Scalar("line.IsText && line.IsActive ? 6 : 0"),
             ["opacity"] = Scalar("line.IsText && line.IsActive ? 0.4 : 0"),
-            ["color"] = Color("line.AccentColor")
+            ["color"] = Color("line.FocusingColor")
+        }
+    };
+
+    public static LyricRenderOperationDefinition CreateBackground(bool enabled = true) => new()
+    {
+        TypeId = LyricBuiltInOperationTypes.Background,
+        DisplayName = "行背景",
+        IsEnabled = enabled,
+        Parameters =
+        {
+            ["color"] = Color("fx.Rgba(255, 255, 255, 0.04)"),
+            ["opacity"] = Scalar("1"),
+            ["marginX"] = Scalar("0"),
+            ["marginY"] = Scalar("0"),
+            ["cornerRadius"] = Scalar("6")
         }
     };
 
@@ -390,7 +461,10 @@ public static class LyricEffectPresets
     private static LyricOperationParameterDefinition Scalar(string expression, double durationMs = 500) => new()
     {
         Expression = expression,
-        Transition = new LyricTransitionDefinition { DurationMs = durationMs }
+        Transition = new LyricTransitionDefinition
+        {
+            DurationMs = durationMs.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        }
     };
 
     private static LyricOperationParameterDefinition Color(string expression) => new() { Expression = expression };

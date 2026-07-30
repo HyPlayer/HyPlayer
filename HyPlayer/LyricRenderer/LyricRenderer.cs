@@ -130,7 +130,7 @@ namespace HyPlayer.LyricRenderer
             // 将 Id 换为 Index, 方便后续读取
             for (var i = 0; i < Context.LyricLines.Count; i++)
             {
-                Context.LyricLines[i].Id = i;
+                Context.LyricLines[i].RuntimeIndex = i;
             }
 
             _keyFrameRendered.Clear();
@@ -147,8 +147,8 @@ namespace HyPlayer.LyricRenderer
                     X = 4,
                     Y = topleftPosition
                 };
-                Context.RenderOffsets[renderingLyricLine.Id] = offset;
-                Context.SnapshotRenderOffsets[renderingLyricLine.Id] = new LineRenderOffset();
+                Context.RenderOffsets[renderingLyricLine.RuntimeIndex] = offset;
+                Context.SnapshotRenderOffsets[renderingLyricLine.RuntimeIndex] = new LineRenderOffset();
                 topleftPosition += renderingLyricLine.RenderingHeight + Context.LineSpacing;
                 // 获取 Keyframe
                 _keyFrameRendered[renderingLyricLine.StartTime] = false;
@@ -207,7 +207,7 @@ namespace HyPlayer.LyricRenderer
             foreach (var renderingLyricLine in Context.LyricLines)
             {
                 renderingLyricLine.OnRenderSizeChanged(session, Context);
-                Context.RenderOffsets[renderingLyricLine.Id].X = CalculateRenderX(renderingLyricLine);
+                Context.RenderOffsets[renderingLyricLine.RuntimeIndex].X = CalculateRenderX(renderingLyricLine);
             }
 
         }
@@ -223,14 +223,23 @@ namespace HyPlayer.LyricRenderer
         private void RecalculateRenderOffset(CanvasDrawingSession session)
         {
             if (Context.LyricLines is { Count: <= 0 }) return;
-            Context.CurrentLyricLineIndex =
-                Context.LyricLines.FindIndex(x =>
-                    x.StartTime != -1 && x.StartTime <= Context.CurrentLyricTime &&
-                    x.EndTime >= Context.CurrentLyricTime);
-            if (Context.CurrentLyricLineIndex < 0)
-                Context.CurrentLyricLineIndex =
-                    Context.LyricLines.FindIndex(x => x.StartTime >= Context.CurrentLyricTime);
-            if (Context.CurrentLyricLineIndex < 0) Context.CurrentLyricLineIndex = Context.LyricLines.Count - 1;
+            var groups = Context.LyricLines
+                .GroupBy(line => line.GroupIndex)
+                .Select(group => group.First())
+                .ToList();
+            var currentGroup = groups
+                .Where(line => line.GroupStartTime <= Context.CurrentLyricTime &&
+                               Context.CurrentLyricTime < line.GroupEndTime)
+                .OrderBy(line => line.GroupStartTime)
+                .ThenBy(line => line.GroupIndex)
+                .FirstOrDefault()
+                ?? groups.Where(line => line.GroupStartTime >= Context.CurrentLyricTime)
+                    .OrderBy(line => line.GroupStartTime)
+                    .ThenBy(line => line.GroupIndex)
+                    .FirstOrDefault()
+                ?? groups[^1];
+            Context.CurrentLyricLineIndex = Context.LyricLines.FindIndex(line =>
+                line.GroupIndex == currentGroup.GroupIndex);
             Context.CurrentLyricLine = Context.LyricLines[Context.CurrentLyricLineIndex];
             Context.RenderingLyricLines.Clear();
             var theoryRenderAfterPosition = Context.LyricPaddingTopRatio * Context.ViewHeight + _scrollTranslation.Animate(Context.CurrentLyricTime,Context.ScrollingDelta);
@@ -243,7 +252,7 @@ namespace HyPlayer.LyricRenderer
                 var currentLine = Context.LyricLines[i];
                 if (currentLine.Hidden || Context.CurrentKeyframe == 0)
                 {
-                    Context.RenderOffsets[currentLine.Id].Y = theoryRenderAfterPosition;
+                    Context.RenderOffsets[currentLine.RuntimeIndex].Y = theoryRenderAfterPosition;
                 }
 
                 if (currentLine.Hidden)
@@ -254,12 +263,12 @@ namespace HyPlayer.LyricRenderer
 
                 if (renderedAfterStartPosition <= Context.ViewHeight && (Context.IsPlaying || !Context.IsScrolling) &&
                     !Context.IsSeek) // 在可视区域, 需要缓动
-                    if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.Id) &&
-                        Math.Abs(theoryRenderAfterPosition - Context.RenderOffsets[currentLine.Id].Y) >
+                    if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.RuntimeIndex) &&
+                        Math.Abs(theoryRenderAfterPosition - Context.RenderOffsets[currentLine.RuntimeIndex].Y) >
                         Epsilon)
                     {
                         renderedAfterStartPosition = Context.LineRollingEaseCalculator.CalculateCurrentY(
-                            Context.SnapshotRenderOffsets[currentLine.Id].Y, theoryRenderAfterPosition,
+                            Context.SnapshotRenderOffsets[currentLine.RuntimeIndex].Y, theoryRenderAfterPosition,
                             currentLine, Context);
                         if (Context.Debug)
                         {
@@ -270,7 +279,7 @@ namespace HyPlayer.LyricRenderer
                         _needRecalculate = true; // 滚动中, 下一帧继续渲染
                     }
 
-                Context.RenderOffsets[currentLine.Id].Y = renderedAfterStartPosition;
+                Context.RenderOffsets[currentLine.RuntimeIndex].Y = renderedAfterStartPosition;
                 if (renderedAfterStartPosition + currentLine.RenderingHeight + Context.LineSpacing > 0 &&
                     renderedAfterStartPosition <= Context.ViewHeight)
                 {
@@ -291,7 +300,7 @@ namespace HyPlayer.LyricRenderer
                 var currentLine = Context.LyricLines[i];
                 if (currentLine.Hidden || Context.CurrentKeyframe == 0)
                 {
-                    Context.RenderOffsets[currentLine.Id].Y = renderedBeforeStartPosition;
+                    Context.RenderOffsets[currentLine.RuntimeIndex].Y = renderedBeforeStartPosition;
                     renderedBeforeStartPosition -= currentLine.Hidden ? 0 : currentLine.RenderingHeight;
                     theoryRenderBeforePosition -= currentLine.Hidden ? 0 : currentLine.RenderingHeight;
                 }
@@ -303,15 +312,15 @@ namespace HyPlayer.LyricRenderer
                     theoryRenderBeforePosition -= currentLine.RenderingHeight + Context.LineSpacing;
                     if (renderedBeforeStartPosition + currentLine.RenderingHeight > 0) // 可见区域, 需要判断缓动
                     {
-                        if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.Id) &&
-                            Math.Abs(Context.RenderOffsets[currentLine.Id].Y - theoryRenderBeforePosition) >
+                        if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.RuntimeIndex) &&
+                            Math.Abs(Context.RenderOffsets[currentLine.RuntimeIndex].Y - theoryRenderBeforePosition) >
                             Epsilon &&
                             (Context.IsPlaying ||
                              !Context.IsScrolling)
                             && !Context.IsSeek)
                         {
                             renderedBeforeStartPosition = Context.LineRollingEaseCalculator.CalculateCurrentY(
-                                Context.SnapshotRenderOffsets[currentLine.Id].Y, theoryRenderBeforePosition,
+                                Context.SnapshotRenderOffsets[currentLine.RuntimeIndex].Y, theoryRenderBeforePosition,
                                 currentLine, Context);
                             if (Context.Debug)
                             {
@@ -340,7 +349,7 @@ namespace HyPlayer.LyricRenderer
                 }
 
 
-                Context.RenderOffsets[currentLine.Id].Y = renderedBeforeStartPosition;
+                Context.RenderOffsets[currentLine.RuntimeIndex].Y = renderedBeforeStartPosition;
             }
         }
 
@@ -383,7 +392,7 @@ namespace HyPlayer.LyricRenderer
                     foreach (var renderingLyricLine in Context.LyricLines)
                     {
                         renderingLyricLine.OnTypographyChanged(session, Context);
-                        Context.RenderOffsets[renderingLyricLine.Id].X = CalculateRenderX(renderingLyricLine);
+                        Context.RenderOffsets[renderingLyricLine.RuntimeIndex].X = CalculateRenderX(renderingLyricLine);
                     }
                 }
 
@@ -427,7 +436,7 @@ namespace HyPlayer.LyricRenderer
 
                 foreach (var renderingLyricLine in Context.RenderingLyricLines)
                 {
-                    if (Context.RenderOffsets.GetValueOrDefault(renderingLyricLine.Id) is { } offset)
+                    if (Context.RenderOffsets.GetValueOrDefault(renderingLyricLine.RuntimeIndex) is { } offset)
                     {
                         var doRender = renderingLyricLine.Render(session, offset, Context);
                         if (doRender == false) break;
@@ -457,12 +466,12 @@ namespace HyPlayer.LyricRenderer
             switch ((renderingLyricLine.Typography?.Alignment ?? Context.PreferTypography?.Alignment))
             {
                 case TextAlignment.Center:
-                    return Context.RenderOffsets[renderingLyricLine.Id].X =
+                    return Context.RenderOffsets[renderingLyricLine.RuntimeIndex].X =
                         (Context.ViewWidth - renderingLyricLine.RenderingWidth) / 2;
                 case TextAlignment.Right:
                     return Context.ViewWidth - renderingLyricLine.RenderingWidth;
                 default:
-                    return Context.RenderOffsets[renderingLyricLine.Id].X = 0;
+                    return Context.RenderOffsets[renderingLyricLine.RuntimeIndex].X = 0;
             }
         }
 

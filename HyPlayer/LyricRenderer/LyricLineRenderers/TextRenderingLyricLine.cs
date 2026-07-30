@@ -62,7 +62,6 @@ public class TextRenderingLyricLine : RenderingLyricLine
     public List<LyricTextToken> Tokens { get; set; } = [];
     public string? Transliteration { get; set; }
     public string? Translation { get; set; }
-    public bool HiddenOnBlur { get; set; }
     public EaseFunctionBase EaseFunction { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
 
 
@@ -78,7 +77,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
             if (IsActive && context.EffectProfile is { } effectProfile)
             {
                 var frame = _progressResolver.Resolve(context.CurrentLyricTime, StartTime, EndTime, _layout);
-                var offset = context.RenderOffsets.TryGetValue(Id, out var currentOffset)
+                var offset = context.RenderOffsets.TryGetValue(RuntimeIndex, out var currentOffset)
                     ? currentOffset
                     : new LineRenderOffset();
                 _focusedTextRenderer.Render(
@@ -131,8 +130,6 @@ public class TextRenderingLyricLine : RenderingLyricLine
 
     protected override void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
     {
-        Hidden = HiddenOnBlur && !IsActive;
-
         if (_canvasWidth == 0.0f) return;
         if (_layout is null)
             OnTypographyChanged(session, context);

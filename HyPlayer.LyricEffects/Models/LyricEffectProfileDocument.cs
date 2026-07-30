@@ -6,8 +6,8 @@ namespace HyPlayer.LyricEffects.Models;
 public sealed class LyricEffectProfileDocument
 {
     public const string CurrentFormat = "hyplayer.lyric-effects";
-    public const int CurrentSchemaVersion = 2;
-    public const int CurrentExpressionApiVersion = 2;
+    public const int CurrentSchemaVersion = 3;
+    public const int CurrentExpressionApiVersion = 3;
 
     public string Format { get; set; } = CurrentFormat;
 
@@ -25,10 +25,11 @@ public sealed class LyricEffectProfileDocument
     public Dictionary<string, JsonElement>? ExtensionData { get; set; }
 }
 
-[JsonConverter(typeof(JsonStringEnumConverter<UntimedLyricLineMode>))]
-public enum UntimedLyricLineMode
+[JsonConverter(typeof(JsonStringEnumConverter<UntimedHighlightMode>))]
+public enum UntimedHighlightMode
 {
-    DirectHighlight,
+    DoNotHighlight,
+    WholeLine,
     InferWords
 }
 
@@ -47,14 +48,24 @@ public enum TransliterationProgressMode
     WholeLine
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter<UntimedLiftMode>))]
+public enum UntimedLiftMode
+{
+    DoNotLift,
+    WholeLine,
+    InferWords
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<GlyphLiftUnit>))]
+public enum GlyphLiftUnit
+{
+    Auto,
+    Glyph,
+    Word
+}
+
 public sealed class FocusedTextEffectDefinition
 {
-    public UntimedLyricLineMode UntimedLineMode { get; set; } = UntimedLyricLineMode.DirectHighlight;
-
-    public HighlightRevealMode HighlightRevealMode { get; set; } = HighlightRevealMode.RectangleClip;
-
-    public TransliterationProgressMode TransliterationMode { get; set; } = TransliterationProgressMode.FollowMain;
-
     public List<FocusedTextOperationDefinition> Operations { get; set; } = [];
 
     [JsonExtensionData]
@@ -112,13 +123,13 @@ public sealed class LyricOperationParameterDefinition
 
 public sealed class LyricTransitionDefinition
 {
-    public double DurationMs { get; set; } = 500;
+    public string DurationMs { get; set; } = "500";
 
     public string EasingId { get; set; } = "circle";
 
     public string Mode { get; set; } = "out";
 
-    public Dictionary<string, double> Arguments { get; set; } = [];
+    public Dictionary<string, string> Arguments { get; set; } = [];
 }
 
 public enum LyricExpressionValueType

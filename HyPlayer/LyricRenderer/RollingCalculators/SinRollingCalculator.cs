@@ -11,7 +11,7 @@ public class SinRollingCalculator : LineRollingCalculator
 
     public override float CalculateCurrentY(float fromY, float targetY, RenderingLyricLine currentLine, RenderContext context)
     {
-        var gap = currentLine.Id - context.CurrentLyricLineIndex;
+        var gap = currentLine.RuntimeIndex - context.CurrentLyricLineIndex;
         var progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) * 1.0f / AnimationDuration, 0, 1);
 
         if (!(fromY < targetY) && gap >= 0)

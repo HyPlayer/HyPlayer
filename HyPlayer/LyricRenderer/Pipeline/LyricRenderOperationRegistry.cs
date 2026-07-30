@@ -26,6 +26,7 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
         _focusedTextCompiler = new FocusedTextEffectCompiler(expressionCompiler, drawScriptParser, drawCommands);
         Register(new SourceDrawOperationFactory());
         Register(new DebugDrawOperationFactory());
+        Register(new BackgroundDrawOperationFactory(expressionCompiler));
         Register(new GlowOperationFactory(expressionCompiler));
         Register(new OpacityOperationFactory(expressionCompiler));
         Register(new BlurOperationFactory(expressionCompiler));
@@ -50,10 +51,10 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
         var diagnostics = new List<LyricProfileDiagnostic>();
         if (!string.Equals(document.Format, LyricEffectProfileDocument.CurrentFormat, StringComparison.Ordinal))
             diagnostics.Add(Error("不是有效的 HyPlayer 歌词特效文件。"));
-        if (document.SchemaVersion > LyricEffectProfileDocument.CurrentSchemaVersion)
-            diagnostics.Add(Error("该配置需要更高版本的 HyPlayer。"));
-        if (document.ExpressionApiVersion > LyricEffectProfileDocument.CurrentExpressionApiVersion)
-            diagnostics.Add(Error("该配置使用了更高版本的歌词表达式 API。"));
+        if (document.SchemaVersion != LyricEffectProfileDocument.CurrentSchemaVersion)
+            diagnostics.Add(Error($"仅支持 schemaVersion {LyricEffectProfileDocument.CurrentSchemaVersion}。"));
+        if (document.ExpressionApiVersion != LyricEffectProfileDocument.CurrentExpressionApiVersion)
+            diagnostics.Add(Error($"仅支持 expressionApiVersion {LyricEffectProfileDocument.CurrentExpressionApiVersion}。"));
         if (document.Operations.Count > MaximumOperationCount)
             diagnostics.Add(Error($"歌词特效链最多允许 {MaximumOperationCount} 个节点。"));
 
@@ -78,7 +79,15 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
             }
 
             var result = factory.Compile(definition);
-            diagnostics.AddRange(result.Diagnostics);
+            diagnostics.AddRange(result.Diagnostics.Select(item => item with
+            {
+                Severity = item.Severity == LyricProfileDiagnosticSeverity.Error
+                    ? LyricProfileDiagnosticSeverity.Warning
+                    : item.Severity,
+                Message = item.Severity == LyricProfileDiagnosticSeverity.Error
+                    ? $"节点已跳过：{item.Message}"
+                    : item.Message
+            }));
             if (definition.IsEnabled && result.Operation is not null) compiled.Add(result.Operation);
         }
 

@@ -15,7 +15,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -210,6 +209,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         _hasUnsavedChanges = true;
         _pendingProfileReplacement = null;
         _previewDebounce?.Cancel();
+        _previewDebounce?.Dispose();
         var cancellation = _previewDebounce = new CancellationTokenSource();
         _ = PreviewAfterDelayAsync(cancellation.Token);
     }
@@ -381,48 +381,19 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
     private static LyricOperationParameterDefinition CreateParameterDefinition(
         LyricOperationParameterDescriptor descriptor) => new()
         {
-            Expression = descriptor.DefaultExpression,
-            Transition = descriptor.SupportsTransition ? new LyricTransitionDefinition() : null
+            Expression = descriptor.DefaultExpression
         };
 
     private void AddExpressionEditor(
         LyricOperationParameterDescriptor descriptor,
         LyricOperationParameterDefinition parameter)
     {
-        var description = string.IsNullOrWhiteSpace(descriptor.Description)
-            ? $"默认值：{descriptor.DefaultExpression}"
-            : $"{descriptor.Description} 默认值：{descriptor.DefaultExpression}";
-        var expander = new SettingsExpander
-        {
-            Header = descriptor.DisplayName,
-            Description = description,
-            IsExpanded = false,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch
-        };
-
-        var expressionBox = ExpressionBox(parameter.Expression);
-        expressionBox.Tag = descriptor.Key;
-        expressionBox.PlaceholderText = descriptor.DefaultExpression;
-        expressionBox.TextChanged += ParameterExpression_TextChanged;
-        expander.Items.Add(CreateSettingsCard(
-            "表达式",
-            $"值类型：{descriptor.ValueType}",
-            expressionBox,
-            ContentAlignment.Vertical));
-
-        if (descriptor.SupportsTransition)
-            AddTransitionEditor(expander, descriptor.Key, parameter);
-
-        EditorPanel.Children.Add(expander);
+        EditorPanel.Children.Add(LyricParameterEditorFactory.Create(
+            descriptor,
+            parameter,
+            MarkDirtyAndPreview,
+            RebuildEditor));
     }
-
-    private static TextBox ExpressionBox(string value) => new()
-    {
-        Text = value,
-        FontFamily = new FontFamily("Consolas"),
-        HorizontalAlignment = HorizontalAlignment.Stretch
-    };
 
     private void EffectType_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -455,110 +426,6 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         MarkDirtyAndPreview();
     }
 
-    private void ParameterExpression_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (_loading || OperationList.SelectedItem is not LyricEffectOperationItem item) return;
-        var textBox = (TextBox)sender;
-        var key = (string)textBox.Tag;
-        item.Definition.Parameters[key].Expression = textBox.Text;
-        MarkDirtyAndPreview();
-    }
-
-    private void AddTransitionEditor(
-        SettingsExpander expander,
-        string key,
-        LyricOperationParameterDefinition parameter)
-    {
-        var enabled = new ToggleSwitch
-        {
-            IsOn = parameter.Transition is not null,
-            Tag = key
-        };
-        enabled.Toggled += TransitionEnabled_Toggled;
-        expander.Items.Add(CreateSettingsCard(
-            "启用缓动",
-            "表达式结果变化时平滑过渡到新值",
-            enabled));
-
-        if (parameter.Transition is not { } transition) return;
-
-        var duration = ExpressionBox(transition.DurationMs.ToString(CultureInfo.InvariantCulture));
-        duration.MinWidth = 140;
-        duration.Tag = new TransitionTag(key, TransitionProperty.Duration);
-        duration.TextChanged += TransitionText_TextChanged;
-        expander.Items.Add(CreateSettingsCard(
-            "缓动时长",
-            "单位：毫秒，范围 0–60000",
-            duration));
-
-        expander.Items.Add(CreateSettingsCard(
-            "缓动函数",
-            "控制过渡速度曲线",
-            TransitionCombo(
-                key,
-                TransitionProperty.Easing,
-                transition.EasingId,
-                (string[])["linear", "circle", "sine", "exponential", "elastic", "bounce"])));
-        expander.Items.Add(CreateSettingsCard(
-            "缓动模式",
-            "控制曲线作用于进入、退出或两端",
-            TransitionCombo(
-                key,
-                TransitionProperty.Mode,
-                transition.Mode,
-                (string[])["in", "out", "inout"])));
-    }
-
-    private ComboBox TransitionCombo(
-        string key,
-        TransitionProperty property,
-        string selected,
-        IReadOnlyList<string> values)
-    {
-        var combo = new ComboBox
-        {
-            MinWidth = 180,
-            Tag = new TransitionTag(key, property),
-            HorizontalAlignment = HorizontalAlignment.Stretch
-        };
-        foreach (var value in values)
-            combo.Items.Add(value);
-        combo.SelectedItem = selected;
-        combo.SelectionChanged += TransitionCombo_SelectionChanged;
-        return combo;
-    }
-
-    private void TransitionEnabled_Toggled(object sender, RoutedEventArgs e)
-    {
-        if (_loading || OperationList.SelectedItem is not LyricEffectOperationItem item) return;
-        var toggle = (ToggleSwitch)sender;
-        var parameter = item.Definition.Parameters[(string)toggle.Tag];
-        parameter.Transition = toggle.IsOn ? new LyricTransitionDefinition() : null;
-        RebuildEditor();
-        MarkDirtyAndPreview();
-    }
-
-    private void TransitionText_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (OperationList.SelectedItem is not LyricEffectOperationItem item) return;
-        var textBox = (TextBox)sender;
-        var tag = (TransitionTag)textBox.Tag;
-        if (double.TryParse(textBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var duration))
-            item.Definition.Parameters[tag.Key].Transition!.DurationMs = Math.Clamp(duration, 0, 60_000);
-        MarkDirtyAndPreview();
-    }
-
-    private void TransitionCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (OperationList.SelectedItem is not LyricEffectOperationItem item) return;
-        var combo = (ComboBox)sender;
-        if (combo.SelectedItem is not string value) return;
-        var tag = (TransitionTag)combo.Tag;
-        var transition = item.Definition.Parameters[tag.Key].Transition!;
-        if (tag.Property == TransitionProperty.Easing) transition.EasingId = value;
-        else transition.Mode = value;
-        MarkDirtyAndPreview();
-    }
 
     private void AddScriptEditor(LyricRenderOperationDefinition definition)
     {
@@ -610,7 +477,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         };
         expander.Items.Add(CreateSettingsCard(
             "脚本内容",
-            "使用 Expression API v1 绘制当前歌词行",
+            "使用 Expression API v3 绘制当前歌词行",
             _scriptEditor,
             ContentAlignment.Vertical));
 
@@ -820,26 +687,19 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         if (_closed) return;
         _closed = true;
         _previewDebounce?.Cancel();
+        _previewDebounce?.Dispose();
+        _previewDebounce = null;
         if (!_saved) _profiles.CancelPreview();
         foreach (var item in Operations) item.PropertyChanged -= Operation_PropertyChanged;
         _preview.Clear();
         PreviewCanvas.RemoveFromVisualTree();
     }
 
-    private sealed record TransitionTag(string Key, TransitionProperty Property);
-
-    private enum TransitionProperty
-    {
-        Duration,
-        Easing,
-        Mode
-    }
-
     private static readonly (string Name, string Source)[] ScriptInsertions =
     [
         ("矩形", "FillRectangle(0, 0, line.Width, line.Height, fx.Rgba(255, 255, 255, 0.08));"),
-        ("圆角", "FillRoundedRectangle(0, 0, line.Width, line.Height, 6, line.AccentColor);"),
-        ("线条", "DrawLine(0, line.Height, line.Width * line.Progress, line.Height, line.AccentColor, 2);"),
+        ("圆角", "FillRoundedRectangle(0, 0, line.Width, line.Height, 6, line.FocusingColor);"),
+        ("线条", "DrawLine(0, line.Height, line.Width * line.Progress, line.Height, line.FocusingColor, 2);"),
         ("文本", "DrawText(line.Text, 0, 0, 16, line.IdleColor);"),
         ("变换", "Save(); Translate(line.AnchorX, line.AnchorY); Rotate(5, 0, 0); Restore();")
     ];
