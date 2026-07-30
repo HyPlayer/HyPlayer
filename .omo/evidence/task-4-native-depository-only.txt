@@ -1,8 +1,0 @@
-Forbidden production DI token grep (2026-05-23T04:25:56.5462059+08:00)
-
-## HyPlayer/App.xaml.cs bootstrap
-rg exit code: 1
-
-## Production forbidden MSDI bridge tokens
-rg exit code: 1
-
