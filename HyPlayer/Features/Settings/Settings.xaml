@@ -8,11 +8,25 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    FontFamily="{ThemeResource ContentControlThemeFontFamily}"
+    FontSize="14"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
+    <Page.Resources>
+        <Thickness x:Key="PivotItemMargin">0</Thickness>
+        <DataTemplate x:Key="SettingsPivotHeaderTemplate">
+            <TextBlock
+                Margin="4,0"
+                VerticalAlignment="Center"
+                FontFamily="{ThemeResource ContentControlThemeFontFamily}"
+                FontSize="15"
+                FontWeight="SemiBold"
+                Text="{Binding}" />
+        </DataTemplate>
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="75" />
+            <RowDefinition Height="64" />
             <RowDefinition />
         </Grid.RowDefinitions>
 
@@ -33,21 +47,24 @@
 
         <TextBlock
             Grid.Row="0"
-            Margin="24,24,24,0"
-            CharacterSpacing="80"
-            FontSize="40"
-            FontWeight="Bold"
+            Margin="16,16,24,8"
+            VerticalAlignment="Center"
+            CharacterSpacing="0"
+            FontSize="28"
+            FontWeight="SemiBold"
             Text="设置" />
-        <Pivot Grid.Row="1">
-            <PivotItem FontFamily="Thick" Header="歌词设置">
+        <Pivot
+            Grid.Row="1"
+            HeaderTemplate="{StaticResource SettingsPivotHeaderTemplate}">
+            <PivotItem Header="歌词设置">
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel
                             x:Name="StackPanelLyricSet"
-                            Margin="20,0,20,150"
+                            Margin="0,8,12,150"
                             HorizontalAlignment="Stretch"
                             Orientation="Vertical"
-                            Spacing="20">
+                            Spacing="12">
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
@@ -434,13 +451,13 @@
                     </ScrollViewer>
                 </Grid>
             </PivotItem>
-            <PivotItem FontFamily="Thick" Header="播放设置">
+            <PivotItem Header="播放设置">
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="20,0,20,150"
+                            Margin="0,8,12,150"
                             Orientation="Vertical"
-                            Spacing="20">
+                            Spacing="12">
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
@@ -671,11 +688,11 @@
                     </ScrollViewer>
                 </Grid>
             </PivotItem>
-            <PivotItem FontFamily="Thick" Header="显示设置">
+            <PivotItem Header="显示设置">
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
 
-                        <StackPanel Margin="20,0,20,160" Spacing="20">
+                        <StackPanel Margin="0,8,12,150" Spacing="12">
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
@@ -937,13 +954,13 @@
                     </ScrollViewer>
                 </Grid>
             </PivotItem>
-            <PivotItem FontFamily="Thick" Header="存储设置">
+            <PivotItem Header="存储设置">
                 <ScrollViewer VerticalScrollMode="Enabled">
                     <Grid>
                         <StackPanel
-                            Margin="20,0,20,150"
+                            Margin="0,8,12,150"
                             Orientation="Vertical"
-                            Spacing="20">
+                            Spacing="12">
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
@@ -1138,11 +1155,11 @@
                     </Grid>
                 </ScrollViewer>
             </PivotItem>
-            <PivotItem FontFamily="Thick" Header="实验室🧪">
+            <PivotItem Header="实验室">
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="20,0,20,150"
+                            Margin="0,8,12,150"
                             Orientation="Vertical"
                             Spacing="12">
                             <controls:InfoBar
@@ -1267,10 +1284,10 @@
                     </ScrollViewer>
                 </Grid>
             </PivotItem>
-            <PivotItem FontFamily="Thick" Header="关于">
+            <PivotItem Header="关于">
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
-                        <Grid Margin="0,0,0,150">
+                        <Grid Margin="0,8,12,150">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -1310,10 +1327,7 @@
                                         <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
                                             GitHub
                                         </Hyperlink>
-                                        |<Hyperlink NavigateUri="https://notabug.org/HyPlayer/HyPlayer">
-                                            NotABug
-                                        </Hyperlink>
-                                        |<Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
+                                        | <Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
                                             Gitee
                                         </Hyperlink>
                                     </Paragraph>
@@ -1419,7 +1433,7 @@
                                 </Grid>
                                 <Grid
                                     MaxWidth="800"
-                                    Margin="10,8,8,0"
+                                    Margin="8,8,8,0"
                                     HorizontalAlignment="Stretch"
                                     ColumnSpacing="8">
                                     <Grid.ColumnDefinitions>
@@ -1514,7 +1528,7 @@
                                 <Border
                                     Height="80"
                                     MaxWidth="800"
-                                    Margin="9,8,9,0"
+                                    Margin="8,8,8,0"
                                     Padding="13,10"
                                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{StaticResource CardBorderBrush}"
@@ -1619,7 +1633,7 @@
                                             </StackPanel>
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                                            <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/aaaaaaccd" />
+                                            <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/Aesthed" />
                                             <HyperlinkButton Content="酷安@Aesthed" NavigateUri="https://www.coolapk.com/u/2409682" />
 
                                         </StackPanel>
