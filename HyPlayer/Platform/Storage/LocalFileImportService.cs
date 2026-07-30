@@ -132,24 +132,24 @@ public sealed class LocalFileImportService : ILocalFileImportService
             };
         }
 
-        if (string.IsNullOrEmpty(mi.musicName))
+        if (string.IsNullOrEmpty(mi.MusicName))
             return await LoadStorageFileAsync(sf, true);
 
-        var artists = mi.artist
+        var artists = mi.Artist
             .Select(t => new LocalArtist { Name = t[0].ToString(), ActualId = t[1].ToString() })
             .ToList();
 
         return new LocalSong
         {
-            Album = new LocalAlbum { Name = mi.album, ActualId = mi.albumId.ToString() },
+            Album = new LocalAlbum { Name = mi.Album, ActualId = mi.AlbumId.ToString() },
             ActualId = sf.Path,
             ExtensionName = sf.FileType,
             FileTag = tagFile.Tag,
-            Bitrate = mi.bitrate,
+            Bitrate = mi.Bitrate,
             Duration = (long)tagFile.Properties.Duration.TotalMilliseconds,
             CreatorList = artists.Select(t => t.Name ?? string.Empty).ToList(),
             Artists = artists,
-            Name = mi.musicName,
+            Name = mi.MusicName,
             StorageFile = sf,
             TrackNumber = (int)tagFile.Tag.Track,
             CdName = "01",
@@ -165,24 +165,24 @@ public sealed class LocalFileImportService : ILocalFileImportService
             throw new InvalidDataException("不是有效的 NCM 文件");
 
         var info = NCMFile.GetNCMMusicInfo(stream);
-        var artists = info.artist
+        var artists = info.Artist
             .Select(t => new LocalArtist { Name = t[0].ToString(), ActualId = t[1].ToString() })
             .ToList();
 
         return new LocalSong
         {
             IsNcm = true,
-            Album = new LocalAlbum { Name = info.album, ActualId = info.albumId.ToString() },
+            Album = new LocalAlbum { Name = info.Album, ActualId = info.AlbumId.ToString() },
             StorageFile = file,
             ActualId = file.Path,
-            ExtensionName = info.format,
-            Bitrate = info.bitrate,
-            Duration = (long)info.duration,
+            ExtensionName = info.Format,
+            Bitrate = info.Bitrate,
+            Duration = (long)info.Duration,
             TrackNumber = -1,
             CdName = "01",
             CreatorList = artists.Select(t => t.Name ?? string.Empty).ToList(),
             Artists = artists,
-            Name = info.musicName,
+            Name = info.MusicName,
             InfoTag = file.Provider.DisplayName + " NCM",
             Available = true
         };

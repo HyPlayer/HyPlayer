@@ -4,6 +4,8 @@ using System;
 using Windows.Media;
 using Windows.Storage.Streams;
 
+#nullable enable
+
 namespace HyPlayer.UWP.Chopin
 {
     public class SMTCManager : ISMTCManager
@@ -35,13 +37,18 @@ namespace HyPlayer.UWP.Chopin
             _smtc.UpdateTimelineProperties(properties);
         }
 
-        public void UpdateDisplayInfo(string title, string artist, string albumTitle)
+        public void UpdateDisplayInfo(string title, string artist, string albumTitle, string? trackIdentity)
         {
             var updater = _smtc.DisplayUpdater;
             updater.Type = MediaPlaybackType.Music;
             updater.MusicProperties.Title = title ?? string.Empty;
             updater.MusicProperties.Artist = artist ?? string.Empty;
             updater.MusicProperties.AlbumTitle = albumTitle ?? string.Empty;
+            updater.MusicProperties.Genres.Clear();
+            if (!string.IsNullOrWhiteSpace(trackIdentity))
+            {
+                updater.MusicProperties.Genres.Add(trackIdentity);
+            }
 
             updater.Update();
         }

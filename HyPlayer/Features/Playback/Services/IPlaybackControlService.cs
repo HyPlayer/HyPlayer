@@ -23,6 +23,12 @@ public interface IPlaybackControlService
     /// </summary>
     double Volume { get; set; }
 
+    Task SetTransitionAsync(string transitionId, CancellationToken ct = default);
+
+    Task SetPlayModeAsync(string playModeId, CancellationToken ct = default);
+
+    Task ClearQueueAsync(CancellationToken ct = default);
+
     /// <summary>跳转到指定位置</summary>
     Task SeekAsync(TimeSpan target);
 

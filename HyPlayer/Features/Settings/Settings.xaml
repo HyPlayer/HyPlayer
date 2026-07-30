@@ -466,19 +466,25 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="启用交叉淡化">
-                                        <ToggleSwitch
-                                            x:Name="FadePause"
-                                            MinWidth="10"
+                                    <controls3:SettingsCard Header="曲目过渡">
+                                        <ComboBox
+                                            x:Name="TransitionMode"
+                                            MinWidth="180"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:XamlHelpers.Setting.CrossFade, Mode=TwoWay}" />
+                                            SelectedValue="{x:Bind hyplayer:XamlHelpers.Setting.TransitionId, Mode=OneWay}"
+                                            SelectedValuePath="Tag"
+                                            SelectionChanged="TransitionMode_SelectionChanged">
+                                            <ComboBoxItem Content="直接切换" Tag="dir" />
+                                            <ComboBoxItem Content="提前准备" Tag="gap" />
+                                            <ComboBoxItem Content="交叉淡化" Tag="xfd" />
+                                        </ComboBox>
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="交叉淡化渐入渐出时间 单位: s" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.CrossFade, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="交叉淡化渐入渐出时间 单位: s" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.IsCrossFadeTransition, Mode=OneWay}">
                                         <Slider
                                             x:Name="CrossFadeTime"
                                             Width="256"
                                             HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:XamlHelpers.Setting.CrossFade, Mode=OneWay}"
+                                            IsEnabled="{x:Bind hyplayer:XamlHelpers.Setting.IsCrossFadeTransition, Mode=OneWay}"
                                             Maximum="10"
                                             Minimum="3"
                                             StepFrequency="1"

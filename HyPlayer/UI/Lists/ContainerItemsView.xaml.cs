@@ -56,7 +56,9 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using WinRT;
-using muxc = Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls;
+using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
+using NavigationViewItemInvokedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;
 
 namespace HyPlayer.UI.Lists;
 
@@ -234,7 +236,7 @@ public sealed partial class ContainerItemsView : UserControl
     public Visibility IsLoadingMoreVisible => IsLoadingMore ? Visibility.Visible : Visibility.Collapsed;
     public Visibility CanLoadMoreVisible => CanLoadMore ? Visibility.Visible : Visibility.Collapsed;
     public object ActiveItemsSource => GroupedItems.Count > 0 ? GroupedItemsViewSource.View : VisibleRows;
-    public IReadOnlyList<SingleSongBase> LoadedProviderSongs => Rows.Select(row => row.AsPlayableSong).OfType<SingleSongBase>().ToList();
+    public IReadOnlyList<SingleSongBase> LoadedProviderSongs => (SingleSongBase[])[.. Rows.Select(row => row.AsPlayableSong)];
 
     public void ResetAndLoad()
     {
@@ -258,7 +260,7 @@ public sealed partial class ContainerItemsView : UserControl
         if (songs.Count == 0) return;
 
         await _control.StopAsync();
-        await _playCore.RemoveAllSongAsync();
+        await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(songs);
         await _control.MoveNextAndPlayAsync(userInitiated: true);
     }
@@ -527,7 +529,7 @@ public sealed partial class ContainerItemsView : UserControl
             await _queueBuilder.BuildAndPlayAsync(
                 clickedSong,
                 GetEffectiveQueueScope(),
-                VisibleRows.Select(visibleRow => visibleRow.AsPlayableSong).OfType<SingleSongBase>().ToList());
+                (SingleSongBase[])[.. VisibleRows.Select(visibleRow => visibleRow.AsPlayableSong)]);
             return;
         }
 
@@ -612,7 +614,7 @@ public sealed partial class ContainerItemsView : UserControl
     {
         for (var i = flyout.Items.Count - 1; i >= 0; i--)
         {
-            if (flyout.Items[i] is MenuFlyoutItem { Tag: ProvidableItemAction or ProvidableSelectionAction } injected)
+            if (flyout.Items[i] is MenuFlyoutItem { Tag: ProvidableItemAction or ProvidableSelectionAction })
             {
                 flyout.Items.RemoveAt(i);
             }
@@ -655,7 +657,7 @@ public sealed partial class ContainerItemsView : UserControl
     {
         if (!TryGetSelectedRow(out var row) || row.Creators.Count == 0) return;
         if (row.Creators.Count > 1)
-            await new UI.Dialogs.ArtistSelectDialog(row.Creators.ToList()).ShowAsync();
+            await new Dialogs.ArtistSelectDialog([.. row.Creators]).ShowAsync();
         else
             _navigation.Navigate(typeof(ArtistPage), row.Creators[0].ActualId);
     }
@@ -696,7 +698,7 @@ public sealed partial class ContainerItemsView : UserControl
             await new UI.Dialogs.SongListSelect(row.ActualId).ShowAsync();
     }
 
-    private void ToolbarNavigationView_ItemInvoked(muxc.NavigationView sender, muxc.NavigationViewItemInvokedEventArgs args)
+    private void ToolbarNavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
         var item = args.InvokedItemContainer;
         switch (item.Tag)
@@ -858,7 +860,7 @@ public sealed partial class ContainerItemsView : UserControl
         _isStateSubscribed = false;
     }
 
-    private IReadOnlyList<ProvidableItemRowViewModel> GetSelectedRows()
+    private List<ProvidableItemRowViewModel> GetSelectedRows()
     {
         var rows = ItemList.SelectedItems
             .Select(item => TryGetRow(item, out var row) ? row : null)

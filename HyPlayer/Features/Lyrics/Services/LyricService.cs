@@ -3,6 +3,7 @@ using ALRC.Converters.Enhancers;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Lyric;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -14,7 +15,6 @@ using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Widgets.Services;
@@ -39,41 +39,25 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using LrcConverter = ALRC.Converters.LrcConverter;
 
-namespace HyPlayer.Features.Playback.Services;
+namespace HyPlayer.Features.Lyrics.Services;
 
 /// <summary>
 /// 歌词服务 — 负责歌词加载、缓存查询和逐行同步。
 /// </summary>
-public sealed class LyricService : ILyricService
+public sealed class LyricService(
+    ILyricProvidable lyricProvider,
+    PlaybackStateService state,
+    Setting setting,
+    HttpClient httpClient,
+    IBackgroundTaskRunner taskRunner,
+    IKawazuStateService kawazuState) : ILyricService
 {
-    private readonly ILyricProvidable _lyricProvider;
-    private readonly PlaybackStateService _state;
-    private readonly Setting _setting;
-    private readonly HttpClient _httpClient;
-    private readonly IBackgroundTaskRunner _taskRunner;
-    private readonly IKawazuStateService _kawazuState;
-
-    public LyricService(
-        ILyricProvidable lyricProvider,
-        PlaybackStateService state,
-        Setting setting,
-        HttpClient httpClient,
-        IBackgroundTaskRunner taskRunner,
-        IKawazuStateService kawazuState)
-    {
-        _lyricProvider = lyricProvider;
-        _state = state;
-        _setting = setting;
-        _httpClient = httpClient;
-        _taskRunner = taskRunner;
-        _kawazuState = kawazuState;
-    }
 
     /// <inheritdoc />
-    public HyLyricInfo CurrentLyricInfo => _state.LyricInfo;
+    public HyLyricInfo CurrentLyricInfo => state.LyricInfo;
 
     /// <inheritdoc />
-    public int CurrentLyricIndex => _state.LyricIndex;
+    public int CurrentLyricIndex => state.LyricIndex;
 
     /// <inheritdoc />
     public TimeSpan LyricOffset { get; set; }
@@ -83,6 +67,7 @@ public sealed class LyricService : ILyricService
     {
         var cacheId = providerItem.ActualId;
         var canUseHyLyricInfoCache = !string.IsNullOrWhiteSpace(cacheId);
+        var forceRefreshHyLyricInfoCache = false;
         if (canUseHyLyricInfoCache)
         {
             var cached = await SimpleCacher.GetOrCreateCacheAsync(
@@ -92,9 +77,14 @@ public sealed class LyricService : ILyricService
 
             if (cached is not null && HasDisplayableLyrics(cached, providerItem))
             {
-                _state.LyricInfo = cached;
-                _state.LyricIndex = 0;
-                return;
+                if (!HasLegacyNeteaseSourceMetadata(cached))
+                {
+                    state.LyricInfo = cached;
+                    state.LyricIndex = 0;
+                    return;
+                }
+
+                forceRefreshHyLyricInfoCache = true;
             }
         }
 
@@ -105,32 +95,33 @@ public sealed class LyricService : ILyricService
         };
         var lyricInfo = await ConvertPureLyricInfoAsync(pureLyricInfo, GetArtistText(providerItem));
 
-        _state.LyricInfo = lyricInfo;
-        _state.LyricIndex = 0;
+        state.LyricInfo = lyricInfo;
+        state.LyricIndex = 0;
 
         if (canUseHyLyricInfoCache && HasCacheableLyrics(lyricInfo, providerItem))
         {
-            _taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
+            taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
                 CacheType.HyLyricInfo, cacheId,
                 () => Task.FromResult(lyricInfo),
+                forceRefresh: forceRefreshHyLyricInfoCache,
                 cancellationToken: ct),
                 "cache provider lyric info");
         }
 
-        await TryLoadAmllTtmlAsync(providerItem, lyricInfo, ct);
+        await TryLoadAmllTtmlAsync(providerItem, ct);
     }
 
     /// <inheritdoc />
     public void Tick(TimeSpan position)
     {
-        var lyrics = _state.LyricInfo.Lyrics;
+        var lyrics = state.LyricInfo.Lyrics;
         if (lyrics == null || lyrics.Count == 0)
         {
-            _state.LyricIndex = 0;
+            state.LyricIndex = 0;
             return;
         }
 
-        var idx = _state.LyricIndex;
+        var idx = state.LyricIndex;
         if (idx >= lyrics.Count || idx < 0) idx = 0;
 
         var realPos = position - LyricOffset;
@@ -162,7 +153,7 @@ public sealed class LyricService : ILyricService
 
         if (changed)
         {
-            _state.LyricIndex = idx;
+            state.LyricIndex = idx;
         }
     }
 
@@ -170,13 +161,13 @@ public sealed class LyricService : ILyricService
     {
         var content = await FileIO.ReadTextAsync(lyricFile).AsTask(ct);
         var lyricInfo = await ConvertAlrcLyricAsync(content, lyricFile.FileType, "本地歌词", lyricFile.Path);
-        _state.LyricInfo = lyricInfo;
-        _state.LyricIndex = 0;
+        state.LyricInfo = lyricInfo;
+        state.LyricIndex = 0;
 
         var cacheSongId = currentSong?.ActualId;
         if (!string.IsNullOrEmpty(cacheSongId))
         {
-            _taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
+            taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
                 CacheType.HyLyricInfo,
                 cacheSongId,
                 () => Task.FromResult(lyricInfo),
@@ -197,7 +188,7 @@ public sealed class LyricService : ILyricService
             if (string.IsNullOrWhiteSpace(providerItem.ActualId))
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
 
-            var lyricResult = await _lyricProvider.GetLyricInfoAsync(providerItem, ct);
+            var lyricResult = await lyricProvider.GetLyricInfoAsync(providerItem, ct);
 
             if (lyricResult is null)
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 歌词获取失败" };
@@ -223,7 +214,7 @@ public sealed class LyricService : ILyricService
 
         if (hasKaraokeLyrics)
         {
-            lyricInfo.Lyrics = Utils.ConvertKaraok(pureLyricInfo, _setting.MigrateLyrics);
+            lyricInfo.Lyrics = Utils.ConvertKaraok(pureLyricInfo, setting.MigrateLyrics);
         }
         else
         {
@@ -232,7 +223,7 @@ public sealed class LyricService : ILyricService
 
         if (lyricInfo.Lyrics.Count == 0)
         {
-            if (_setting.showComposerInLyric)
+            if (setting.showComposerInLyric)
             {
                 lyricInfo.Lyrics.Add(new SongLyric
                 {
@@ -245,15 +236,15 @@ public sealed class LyricService : ILyricService
             if (karaokeLyricInfo is null)
                 Utils.ConvertTranslation(pureLyricInfo.TrLyrics, lyricInfo.Lyrics);
             else
-                Utils.ConvertYrcTranslation(karaokeLyricInfo, lyricInfo.Lyrics, _setting.MigrateLyrics);
+                Utils.ConvertYrcTranslation(karaokeLyricInfo, lyricInfo.Lyrics, setting.MigrateLyrics);
 
             await Utils.ConvertRomaji(
                 pureLyricInfo,
                 lyricInfo.Lyrics,
                 new Utils.LyricConversionOptions(
-                    _setting.MigrateLyrics,
-                    _setting.LyricRomajiSource,
-                    _kawazuState.Converter));
+                    setting.MigrateLyrics,
+                    setting.LyricRomajiSource,
+                    kawazuState.Converter));
 
             if (lyricInfo.Lyrics.Count != 0 && lyricInfo.Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
             {
@@ -346,18 +337,46 @@ public sealed class LyricService : ILyricService
                 YrNeteaseRomaji = CleanLyric(wordRomaji?.Text),
             };
 
-        AddLyricMetadata(result, original?.Info.Source, "source", "歌词来源");
+        var displayedOriginal = wordOriginal ?? original;
+        var displayedTranslation = wordTranslation ?? translation;
+        AddProviderContributorMetadata(result, displayedOriginal?.Info, "lyric_user", "歌词贡献者");
+        AddProviderContributorMetadata(result, displayedTranslation?.Info, "translation_user", "翻译贡献者");
+
+        if (result.LyricMetadata.Count == 0)
+        {
+            AddLyricMetadata(
+                result,
+                displayedOriginal?.Info.Source ?? displayedTranslation?.Info.Source ?? wordRomaji?.Info.Source ?? romaji?.Info.Source,
+                "source",
+                "歌词来源");
+        }
+
         return result;
     }
 
-    private static void AddLyricMetadata(PureLyricInfo result, string? value, string key, string displayName)
+    private static void AddProviderContributorMetadata(PureLyricInfo result, RawLyricInfo? lyric, string key, string displayName)
+    {
+        if (lyric is not NeteaseRawLyricInfo { Author: { } author } ||
+            string.IsNullOrWhiteSpace(author.Name))
+        {
+            return;
+        }
+
+        var actionUri = string.IsNullOrWhiteSpace(author.ActualId)
+            ? null
+            : $"hyplayer://us{author.ActualId}";
+        AddLyricMetadata(result, author.Name, key, displayName, actionUri);
+    }
+
+    private static void AddLyricMetadata(PureLyricInfo result, string? value, string key, string displayName, string? actionUri = null)
     {
         if (string.IsNullOrWhiteSpace(value)) return;
         result.LyricMetadata.Add(new LyricInfoMetadata
         {
             Key = key,
             Value = value,
-            DisplayName = displayName
+            DisplayName = displayName,
+            ActionUri = actionUri
         });
     }
 
@@ -384,15 +403,15 @@ public sealed class LyricService : ILyricService
         }
     }
 
-    private async Task TryLoadAmllTtmlAsync(SingleSongBase item, HyLyricInfo lyricInfo, CancellationToken ct)
+    private async Task TryLoadAmllTtmlAsync(SingleSongBase item, CancellationToken ct)
     {
         try
         {
-            if (!_setting.enableAmllTtmlDb || string.IsNullOrWhiteSpace(item.ActualId)) return;
+            if (!setting.enableAmllTtmlDb || string.IsNullOrWhiteSpace(item.ActualId)) return;
 
-            using var message = new HttpRequestMessage(HttpMethod.Get, _setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", item.ActualId));
+            using var message = new HttpRequestMessage(HttpMethod.Get, setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", item.ActualId));
             message.Headers.Add("User-Agent", "HyPlayer LyricsClient");
-            using var ttml = await _httpClient.SendAsync(message, ct);
+            using var ttml = await httpClient.SendAsync(message, ct);
             var ttmlContent = await ttml.Content.ReadAsStringAsync(ct);
             var importedLyric = await ConvertAlrcLyricAsync(
                 ttmlContent,
@@ -400,12 +419,12 @@ public sealed class LyricService : ILyricService
                 "amll-ttml-db",
                 $"https://github.com/amll-dev/amll-ttml-db/blob/main/ncm-lyrics/{item.ActualId}.ttml",
                 includeAuthorMetadata: true);
-            _state.LyricInfo = importedLyric;
-            _state.LyricIndex = 0;
+            state.LyricInfo = importedLyric;
+            state.LyricIndex = 0;
 
             if (HasCacheableLyrics(importedLyric, item))
             {
-                _taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
+                taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
                     CacheType.HyLyricInfo, item.ActualId,
                     () => Task.FromResult(importedLyric),
                     forceRefresh: true,
@@ -478,20 +497,13 @@ public sealed class LyricService : ILyricService
         return fileType switch
         {
             ".qrc" => new QQLyricConverter(),
-            ".yrc" => CreateYrcConverter(),
+            ".yrc" => new NeteaseYrcConverter(),
             ".lrc" => new LrcConverter(),
             ".alrc" => new ALRCConverter(),
             ".ttml" => new AppleSyllableConverter(),
             ".lys" => new LyricifySyllableConverter(),
             _ => throw new NotImplementedException()
         };
-    }
-
-    private static ILyricConverter<string> CreateYrcConverter()
-    {
-        var type = typeof(QQLyricConverter).Assembly.GetType("ALRC.Converters." + "Netease" + "YrcConverter")
-                   ?? throw new NotImplementedException();
-        return (ILyricConverter<string>)Activator.CreateInstance(type);
     }
 
     private static bool HasDisplayableLyrics(HyLyricInfo lyricInfo, SingleSongBase providerItem)
@@ -505,6 +517,13 @@ public sealed class LyricService : ILyricService
     private static bool HasCacheableLyrics(HyLyricInfo lyricInfo, SingleSongBase providerItem)
     {
         return HasDisplayableLyrics(lyricInfo, providerItem);
+    }
+
+    private static bool HasLegacyNeteaseSourceMetadata(HyLyricInfo lyricInfo)
+    {
+        return lyricInfo.LyricMetadata.Any(t =>
+            string.Equals(t.Key, "source", StringComparison.Ordinal) &&
+            t.Value?.StartsWith("netease:", StringComparison.OrdinalIgnoreCase) is true);
     }
 
     #endregion

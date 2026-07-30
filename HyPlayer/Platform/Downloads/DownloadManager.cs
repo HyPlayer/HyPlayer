@@ -609,7 +609,7 @@ internal static class DownloadManager
     private static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
     private static HttpClient HttpClient => Ioc.Default.GetRequiredService<HttpClient>();
     private static ILyricProvidable LyricProvider => Ioc.Default.GetRequiredService<ILyricProvidable>();
-    private static IReadOnlyList<IMusicResourceProvidable> MusicResourceProviders => global::HyPlayer.AppDepository.ResolveMultiple<IMusicResourceProvidable>();
+    private static IReadOnlyList<IMusicResourceProvidable> MusicResourceProviders => global::HyPlayer.Application.AppDepository.ResolveMultiple<IMusicResourceProvidable>();
     private static IResourceQualityTagProvidable QualityTagProvider => Ioc.Default.GetRequiredService<IResourceQualityTagProvidable>();
     private static IDiagnosticsStateService Diagnostics => Ioc.Default.GetRequiredService<IDiagnosticsStateService>();
     public static ObservableCollection<DownloadObject> DownloadLists = [];

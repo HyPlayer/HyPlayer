@@ -14,14 +14,14 @@ using Windows.UI.Xaml;
 
 namespace HyPlayer.UI.Lists;
 
-[ObservableObject]
-public sealed partial class ProvidableItemRowViewModel
+public sealed partial class ProvidableItemRowViewModel : ObservableObject
 {
     private const string DefaultCoverUrl = "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg";
 
     public required ProvidableItemBase Item { get; init; }
     public required int Order { get; init; }
     public required string Title { get; init; }
+    public required string Translation { get; init; }
     public required string LineOne { get; init; }
     public required string LineTwo { get; init; }
     public required string LineThree { get; init; }
@@ -54,13 +54,15 @@ public sealed partial class ProvidableItemRowViewModel
     public bool HasLineOne => !string.IsNullOrWhiteSpace(LineOne);
     public bool HasLineTwo => !string.IsNullOrWhiteSpace(LineTwo);
     public bool HasLineThree => !string.IsNullOrWhiteSpace(LineThree);
+    public bool HasTranslation => !string.IsNullOrWhiteSpace(Translation);
     public SingleSongBase? AsPlayableSong => Item as SingleSongBase;
     public Visibility CurrentVisible => IsCurrent ? Visibility.Visible : Visibility.Collapsed;
     public Visibility LineOneVisible => HasLineOne ? Visibility.Visible : Visibility.Collapsed;
     public Visibility LineTwoVisible => HasLineTwo ? Visibility.Visible : Visibility.Collapsed;
     public Visibility LineThreeVisible => HasLineThree ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility TranslationVisible => HasTranslation ? Visibility.Visible : Visibility.Collapsed;
 
-    public Uri? Cover => new Uri((string.IsNullOrEmpty(CoverUrl) ? DefaultCoverUrl : CoverUrl) + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER);
+    public Uri? Cover => new((string.IsNullOrEmpty(CoverUrl) ? DefaultCoverUrl : CoverUrl) + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER);
 
     public bool MatchesFilter(string filterText)
     {

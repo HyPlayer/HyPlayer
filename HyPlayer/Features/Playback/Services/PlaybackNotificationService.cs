@@ -136,11 +136,13 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
                 ? string.Join(" / ", creators)
                 : string.Empty;
             var album = providerItem.Album?.Name ?? string.Empty;
+            var trackIdentity = SmtcTrackIdentity.Create(providerItem.ProviderId, providerItem.ActualId);
 
             graphPlayer.SMTCManager.UpdateDisplayInfo(
                 title,
                 artist,
-                album);
+                album,
+                trackIdentity);
         }
     }
 

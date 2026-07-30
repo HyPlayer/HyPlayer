@@ -170,20 +170,23 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
 
         if (!string.IsNullOrWhiteSpace(memory.ActiveStrategyId))
         {
-            await _playCore.SetPlayModeAsync(memory.ActiveStrategyId).ConfigureAwait(false);
-            _state.ActiveStrategyId = memory.ActiveStrategyId;
+            await _control.SetPlayModeAsync(memory.ActiveStrategyId).ConfigureAwait(false);
             _setting.ActiveStrategyId = memory.ActiveStrategyId;
         }
 
-        var index = FindQueueIndex(queue, memory.CurrentItem);
-        if (index < 0 && memory.CurrentIndex >= 0 && memory.CurrentIndex < queue.Count)
+        var playbackQueue = await _playCore.GetOrderedPlaylistAsync().ConfigureAwait(false);
+        if (playbackQueue.Count == 0)
+            playbackQueue = queue;
+
+        var index = FindQueueIndex(playbackQueue, memory.CurrentItem);
+        if (index < 0 && memory.CurrentIndex >= 0 && memory.CurrentIndex < playbackQueue.Count)
             index = memory.CurrentIndex;
         if (index < 0)
             index = 0;
 
         await _playCore.MovePointerToIndexAsync(index).ConfigureAwait(false);
         if (_playCore.CurrentSong is not { } currentSong)
-            currentSong = queue[index];
+            currentSong = playbackQueue[index];
 
         await _control.LoadAndPlayAsync(currentSong, autoPlay: false, removeCurrentSongs: false).ConfigureAwait(false);
         await _playCore.MovePointerToIndexAsync(index).ConfigureAwait(false);
@@ -198,7 +201,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
         if (!TryParseSource(memory, out var kind, out var id))
             return false;
 
-        await _playCore.RemoveAllSongAsync().ConfigureAwait(false);
+        await _control.ClearQueueAsync().ConfigureAwait(false);
         var success = await _queueLoader.AppendSourceByKindAsync(kind, id).ConfigureAwait(false);
         if (!success)
             return false;
@@ -209,7 +212,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
 
     private async Task RestoreQueueFromSnapshotAsync(IReadOnlyList<PlaybackItemIdentity> queue)
     {
-        await _playCore.RemoveAllSongAsync().ConfigureAwait(false);
+        await _control.ClearQueueAsync().ConfigureAwait(false);
         var songs = await LoadSnapshotSongsAsync(queue).ConfigureAwait(false);
         if (songs.Count > 0)
             await _playCore.InsertSongRangeAsync(songs).ConfigureAwait(false);

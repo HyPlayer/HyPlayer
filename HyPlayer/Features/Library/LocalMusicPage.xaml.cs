@@ -114,7 +114,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private async void Playall_Click(object sender, RoutedEventArgs e)
     {
         await _control.StopAsync();
-        await _playCore.RemoveAllSongAsync();
+        await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(localHyItems.Cast<SingleSongBase>().ToList());
         if (localHyItems.Count > 0)
         {
@@ -198,17 +198,13 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     {
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
         await _control.StopAsync();
-        await _playCore.RemoveAllSongAsync();
+        await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(localHyItems.Cast<SingleSongBase>().ToList());
         if (ListBoxLocalMusicContainer.SelectedItem is LocalSong selectedItem)
         {
-            var index = localHyItems.IndexOf(selectedItem);
-            if (index >= 0)
-            {
-                await _playCore.MovePointerToIndexAsync(index);
-                if (_playCore.CurrentSong is { } song)
-                    await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
-            }
+            await _playCore.MovePointerToAsync(selectedItem);
+            if (_playCore.CurrentSong is { } song)
+                await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
         }
     }
 
@@ -230,8 +226,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
             return;
 
         await _playCore.InsertSongRangeAsync(items.Cast<SingleSongBase>().ToList());
-        var queueCount = (await _playCore.GetPlaylistAsync()).Count;
-        await _playCore.MovePointerToIndexAsync(queueCount - 1);
+        await _playCore.MovePointerToAsync(items[items.Count - 1]);
         if (_playCore.CurrentSong is { } song)
             await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
     }

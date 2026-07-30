@@ -137,7 +137,7 @@ internal class Api
                 PersonalFM.ExitFm(clearPlaylist: false);
 
             await control.StopAsync(cancellationToken);
-            await playCore.RemoveAllSongAsync(cancellationToken);
+            await control.ClearQueueAsync(cancellationToken);
             state.IsInFm = false;
 
             await playCore.InsertSongRangeAsync(songs, ctk: cancellationToken);

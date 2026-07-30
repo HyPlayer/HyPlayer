@@ -1,40 +1,55 @@
 <Solution>
   <Configurations>
-    <Platform Name="arm64" />
+    <Platform Name="ARM64" />
     <Platform Name="x64" />
   </Configurations>
   <Project Path="HyPlayer.Frieren/HyPlayer.Frieren.csproj">
-    <Platform Solution="*|arm64" Project="arm64" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="HyPlayer.LyricEffects/HyPlayer.LyricEffects.csproj" />
   <Project Path="HyPlayer.LyricEffects.Tests/HyPlayer.LyricEffects.Tests.csproj" />
   <Project Path="HyPlayer.NeteaseProvider/HyPlayer.NeteaseApi/HyPlayer.NeteaseApi.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="HyPlayer.NeteaseProvider/HyPlayer.NeteaseProvider/HyPlayer.NeteaseProvider.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="HyPlayer.Package/HyPlayer.Package.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" Id="4a6ea262-870a-44ee-9777-87691d25b32c">
     <Deploy />
   </Project>
-  <Project Path="HyPlayer.PlayCore/HyPlayer.PlayCore.Abstraction/HyPlayer.PlayCore.Abstraction.csproj" />
-  <Project Path="HyPlayer.PlayCore/HyPlayer.PlayCore/HyPlayer.PlayCore.csproj" />
+  <Project Path="HyPlayer.Playback.Tests/HyPlayer.Playback.Tests.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="HyPlayer.PlayCore/HyPlayer.PlayCore.Abstraction/HyPlayer.PlayCore.Abstraction.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="HyPlayer.PlayCore/HyPlayer.PlayCore/HyPlayer.PlayCore.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
   <Project Path="HyPlayer.UWP.Chopin/HyPlayer.UWP.Chopin.csproj">
-    <Platform Solution="*|arm64" Project="arm64" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="HyPlayer/HyPlayer.csproj">
-    <Platform Solution="*|arm64" Project="arm64" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="Impressionist/Impressionist.csproj" />
+  <Project Path="Impressionist/Impressionist.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
   <Project Path="Kawazu/Kawazu/Kawazu.csproj">
-    <Platform Solution="*|arm64" Project="arm64" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="Microsoft.Gaming.XboxGameBar.Projection/Microsoft.Gaming.XboxGameBar.Projection.csproj">
-    <Platform Solution="*|arm64" Project="arm64" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
 </Solution>

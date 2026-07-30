@@ -54,7 +54,9 @@ public sealed class PlayBarQueueItem : ObservableObject
         set => SetProperty(ref _isCurrent, value);
     }
 
-    public static PlayBarQueueItem FromSnapshot(PlaybackQueueItemSnapshot snapshot, int nowPlayingIndex)
+    public static PlayBarQueueItem FromSnapshot(
+        PlaybackQueueItemSnapshot snapshot,
+        SingleSongBase? nowPlayingItem)
     {
         return new PlayBarQueueItem(
             snapshot.QueueIndex,
@@ -62,6 +64,14 @@ public sealed class PlayBarQueueItem : ObservableObject
             snapshot.Translation,
             snapshot.ArtistText,
             snapshot.ProviderItem,
-            snapshot.QueueIndex == nowPlayingIndex);
+            IsSameSong(snapshot.ProviderItem, nowPlayingItem));
     }
+
+    private static bool IsSameSong(SingleSongBase? left, SingleSongBase? right) =>
+        ReferenceEquals(left, right)
+        || (left is not null
+            && right is not null
+            && left.ProviderId == right.ProviderId
+            && left.TypeId == right.TypeId
+            && left.ActualId == right.ActualId);
 }

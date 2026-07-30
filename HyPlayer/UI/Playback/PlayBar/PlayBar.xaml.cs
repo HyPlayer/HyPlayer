@@ -477,8 +477,7 @@ DoubleAnimation verticalAnimation;
             return;
 
         await _playCore.InsertSongRangeAsync(items.Cast<SingleSongBase>().ToList());
-        var queueCount = (await _playCore.GetPlaylistAsync()).Count;
-        await _playCore.MovePointerToIndexAsync(queueCount - 1);
+        await _playCore.MovePointerToAsync(items[items.Count - 1]);
         if (_playCore.CurrentSong is { } song)
             await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
     }

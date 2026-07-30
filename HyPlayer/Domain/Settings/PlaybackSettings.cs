@@ -63,16 +63,36 @@ namespace HyPlayer.Domain.Settings
             }
         }
 
-        /// <summary>
-        /// Whether crossfade between tracks is enabled.
-        /// </summary>
-        public bool CrossFade
+        /// <summary>Current track transition identifier (dir/gap/xfd).</summary>
+        public string TransitionId
         {
-            get => GetSettings(nameof(CrossFade), false);
+            get
+            {
+                var values = ApplicationData.Current.LocalSettings.Values;
+                if (values.TryGetValue(nameof(TransitionId), out var stored)
+                    && stored is string id
+                    && id is "dir" or "gap" or "xfd")
+                {
+                    values.Remove("CrossFade");
+                    return id;
+                }
+
+                var migrated = values.TryGetValue("CrossFade", out var legacy)
+                               && legacy is true
+                    ? "xfd"
+                    : "dir";
+                values[nameof(TransitionId)] = migrated;
+                values.Remove("CrossFade");
+                return migrated;
+            }
             set
             {
-                ApplicationData.Current.LocalSettings.Values["CrossFade"] = value;
-                Ioc.Default.GetService<PlayCoreBase>()?.SetTransitionAsync(value ? "xfd" : "dir");
+                if (value is not ("dir" or "gap" or "xfd"))
+                    throw new ArgumentOutOfRangeException(nameof(value));
+
+                var values = ApplicationData.Current.LocalSettings.Values;
+                values[nameof(TransitionId)] = value;
+                values.Remove("CrossFade");
             }
         }
 
@@ -84,7 +104,7 @@ namespace HyPlayer.Domain.Settings
             get => GetSettings(nameof(CrossFadeTime), 3d);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(CrossFadeTime)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(CrossFadeTime)] = Math.Clamp(value, 3d, 10d);
             }
         }
 
@@ -277,7 +297,7 @@ namespace HyPlayer.Domain.Settings
         }
 
         // TODO(settings-applier): PlaybackSettings still applies several playback side effects directly
-        // (CrossFade, EnableAudioGain, ABRepeatStatus, AudioRenderDevice, EnableFFT).
+        // (EnableAudioGain, ABRepeatStatus, AudioRenderDevice, EnableFFT).
         // Keep the current behavior for compatibility; migrate these setters behind a dedicated
         // PlaybackSettingsApplier in a separate high-risk pass so import/reset settings can be made side-effect safe.
     }

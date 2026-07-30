@@ -89,7 +89,7 @@ internal sealed class SongListQueueBuilder(
                 if (!shiftSong)
                     await control.StopAsync().ConfigureAwait(false);
 
-                await playCore.RemoveAllSongAsync().ConfigureAwait(false);
+                await control.ClearQueueAsync().ConfigureAwait(false);
                 await playCore.InsertSongRangeAsync(visibleSongs.ToList()).ConfigureAwait(false);
             }
             finally
@@ -102,13 +102,7 @@ internal sealed class SongListQueueBuilder(
             playCore.PlaySourceId = playSourceId;
 
         notification.ShowMessage("无感歌单切换", "成功无感切换到歌单");
-        var nowPlayingIndex = state.NowPlayingIndex >= 0
-            ? state.NowPlayingIndex
-            : await playCore.GetCurrentIndexAsync().ConfigureAwait(false);
-        if (nowPlayingIndex >= 0)
-        {
-            await playCore.MovePointerToIndexAsync(nowPlayingIndex).ConfigureAwait(false);
-        }
+        await playCore.MovePointerToAsync(clickedSong).ConfigureAwait(false);
     }
 
     private async Task LoadClickedSongFirstAsync(SingleSongBase clickedSong, string? playSourceId)
@@ -117,9 +111,9 @@ internal sealed class SongListQueueBuilder(
         try
         {
             await control.StopAsync().ConfigureAwait(false);
-            await playCore.RemoveAllSongAsync().ConfigureAwait(false);
+            await control.ClearQueueAsync().ConfigureAwait(false);
             await playCore.InsertSongAsync(clickedSong).ConfigureAwait(false);
-            await playCore.MovePointerToIndexAsync(0).ConfigureAwait(false);
+            await playCore.MovePointerToAsync(clickedSong).ConfigureAwait(false);
             if (playSourceId != null)
                 playCore.PlaySourceId = playSourceId;
         }
@@ -153,7 +147,7 @@ internal sealed class SongListQueueBuilder(
 
             await _queueMutationLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             lockTaken = true;
-            await playCore.RemoveAllSongAsync(cancellationToken).ConfigureAwait(false);
+            await control.ClearQueueAsync(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
             await playCore.InsertSongRangeAsync(songs, ctk: cancellationToken).ConfigureAwait(false);
 
@@ -165,7 +159,7 @@ internal sealed class SongListQueueBuilder(
             var targetIndex = FindSongIndex(songs, targetSong);
             cancellationToken.ThrowIfCancellationRequested();
             if (targetIndex >= 0)
-                await playCore.MovePointerToIndexAsync(targetIndex, cancellationToken).ConfigureAwait(false);
+                await playCore.MovePointerToAsync(targetSong, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -246,7 +240,7 @@ internal sealed class SongListQueueBuilder(
         {
             if (stopBeforeClear)
                 await control.StopAsync(cancellationToken).ConfigureAwait(false);
-            await playCore.RemoveAllSongAsync(cancellationToken).ConfigureAwait(false);
+            await control.ClearQueueAsync(cancellationToken).ConfigureAwait(false);
         }
 
         await queueLoader.AppendSourceByKindAsync(scope.Kind, scope.Id, cancellationToken).ConfigureAwait(false);
@@ -262,7 +256,7 @@ internal sealed class SongListQueueBuilder(
             if (targetIndex < 0)
                 return false;
 
-            await playCore.MovePointerToIndexAsync(targetIndex).ConfigureAwait(false);
+            await playCore.MovePointerToAsync(clickedSong).ConfigureAwait(false);
         }
         finally
         {
@@ -292,7 +286,7 @@ internal sealed class SongListQueueBuilder(
             }
 
             if (targetIndex >= 0)
-                await playCore.MovePointerToIndexAsync(targetIndex).ConfigureAwait(false);
+                await playCore.MovePointerToAsync(clickedSong).ConfigureAwait(false);
         }
         finally
         {

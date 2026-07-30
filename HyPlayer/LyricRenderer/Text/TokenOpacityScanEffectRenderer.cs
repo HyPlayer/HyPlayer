@@ -7,18 +7,11 @@ using System.Collections.Generic;
 
 namespace HyPlayer.LyricRenderer.Text;
 
-public sealed class TokenOpacityScanEffectRenderer : ITextHighlightEffectRenderer
+public sealed class TokenOpacityScanEffectRenderer(IReadOnlyList<ILyricGlyphEffect> effects) : ITextHighlightEffectRenderer
 {
-    private readonly IReadOnlyList<ILyricGlyphEffect> _effects;
-
     public TokenOpacityScanEffectRenderer()
-        : this([new TokenLiftGlyphEffect(), new TokenOpacityGlyphEffect()])
+        : this((ILyricGlyphEffect[])[new TokenLiftGlyphEffect(), new TokenOpacityGlyphEffect()])
     {
-    }
-
-    public TokenOpacityScanEffectRenderer(IReadOnlyList<ILyricGlyphEffect> effects)
-    {
-        _effects = effects;
     }
 
     public void Render(
@@ -48,9 +41,9 @@ public sealed class TokenOpacityScanEffectRenderer : ITextHighlightEffectRendere
             var cluster = clusters[i];
             var state = LyricGlyphDrawState.FromCluster(cluster, layout.FocusingColor);
             var effectContext = new LyricGlyphEffectContext(context, layout, frame, cluster);
-            for (var effectIndex = 0; effectIndex < _effects.Count; effectIndex++)
+            for (var effectIndex = 0; effectIndex < effects.Count; effectIndex++)
             {
-                _effects[effectIndex].Apply(effectContext, ref state);
+                effects[effectIndex].Apply(effectContext, ref state);
             }
 
             GlyphRunDrawHelper.DrawCluster(session, brush, state);

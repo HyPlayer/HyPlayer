@@ -18,6 +18,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces
         void PlayPlaybackSource(IPlaybackSource playbackSource);
         void SetPlaybackSourceSpeed(double speed, IPlaybackSource playbackSource);
         double GetPlaybackSourceSpeed(IPlaybackSource playbackSource);
+        void SetPrimaryPlaybackSource(IPlaybackSource playbackSource);
         void SetOutputVolume(double volume);
         void SetPlaybackSourceOutputVolume(double volume, IPlaybackSource playbackSource);
         Task ChangePlayerServiceImplementation(IAudioSettings settings);
