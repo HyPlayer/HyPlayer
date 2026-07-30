@@ -4,7 +4,7 @@ using Depository.Extensions;
 using System;
 using System.Collections.Generic;
 
-namespace HyPlayer;
+namespace HyPlayer.Application;
 
 /// <summary>
 /// Provides the application-owned native Depository root used by XAML code-behind.

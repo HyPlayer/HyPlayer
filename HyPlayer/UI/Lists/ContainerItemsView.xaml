@@ -12,8 +12,8 @@
     x:Name="Root"
     d:DesignHeight="300"
     Loaded="ContainerItemsView_Loaded"
-    mc:Ignorable="d"
-    Unloaded="ContainerItemsView_Unloaded">
+    Unloaded="ContainerItemsView_Unloaded"
+    mc:Ignorable="d">
     <UserControl.Resources>
         <CollectionViewSource
             x:Name="GroupedItemsViewSource"
@@ -25,8 +25,8 @@
             x:Name="ItemList"
             IsItemClickEnabled="True"
             ItemClick="ItemList_ItemClick"
-            ItemsSource="{x:Bind ActiveItemsSource, Mode=OneWay}"
-            SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}"
+            ItemsSource="{x:Bind ActiveItemsSource}"
+            SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}}"
             ShowsScrollingPlaceholders="True">
             <interactivity:Interaction.Behaviors>
                 <behaviors:QuickReturnHeaderBehavior />
@@ -47,7 +47,7 @@
                         x:Name="Toolbar"
                         Margin="0,0,0,-16"
                         ColumnSpacing="12"
-                        Visibility="{x:Bind IsSearchVisible, Mode=OneWay}">
+                        Visibility="{x:Bind IsSearchVisible}">
                         <muxc:NavigationView
                             x:Name="ToolbarNavigationView"
                             Margin="16,4,16,0"
@@ -73,7 +73,7 @@
                                     Content="评论"
                                     SelectsOnInvoked="False"
                                     Tag="Comments"
-                                    Visibility="{x:Bind CommentsVisible, Mode=OneWay}">
+                                    Visibility="{x:Bind CommentsVisible}">
                                     <muxc:NavigationViewItem.Icon>
                                         <FontIcon Glyph="&#xE8F2;" />
                                     </muxc:NavigationViewItem.Icon>
@@ -265,11 +265,11 @@
                                     VerticalAlignment="Top"
                                     FontSize="16"
                                     FontWeight="Bold"
-                                    Visibility="{x:Bind IsCurrent, Mode=OneWay, Converter={StaticResource ReversedBooleanToVisibilityConverter}}"
-                                    Text="{x:Bind DisplayOrder}" />
+                                    Text="{x:Bind DisplayOrder}"
+                                    Visibility="{x:Bind IsCurrent, Mode=OneWay, Converter={StaticResource ReversedBooleanToVisibilityConverter}}" />
                                 <FontIcon
-                                    Margin="-46,6,30,0"
                                     Width="24"
+                                    Margin="-46,6,30,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
                                     FontSize="16"
@@ -292,11 +292,11 @@
                                             <TextBlock
                                                 x:Name="TranslationText"
                                                 FontSize="19"
-                                                Foreground="Gray"
                                                 FontWeight="Bold"
+                                                Foreground="Gray"
                                                 Style="{ThemeResource SubtitleTextBlockStyle}"
-                                                Visibility="{x:Bind TranslationVisible, Mode=OneWay}"
-                                                Text="{x:Bind Translation, Mode=OneWay}" />
+                                                Text="{x:Bind Translation, Mode=OneWay}"
+                                                Visibility="{x:Bind TranslationVisible, Mode=OneWay}" />
                                         </StackPanel>
                                         <TextBlock
                                             x:Name="LineOneText"
@@ -354,7 +354,7 @@
             Height="100"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            IsActive="{x:Bind IsInitialLoading, Mode=OneWay}"
-            Visibility="{x:Bind IsInitialLoadingVisible, Mode=OneWay}" />
+            IsActive="{x:Bind IsInitialLoading}"
+            Visibility="{x:Bind IsInitialLoadingVisible}" />
     </Grid>
 </UserControl>

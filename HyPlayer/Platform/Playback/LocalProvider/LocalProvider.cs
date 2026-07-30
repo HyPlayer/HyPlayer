@@ -105,7 +105,7 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
                 var playableStream = new InMemoryRandomAccessStream();
                 await NCMFile.CopyDecryptedContentToAsync(stream, playableStream.AsStreamForWrite(), ctk);
                 playableStream.Seek(0);
-                mediaSource = MediaSource.CreateFromStream(playableStream, MIMEHelper.GetNCMFileMimeType(info.format));
+                mediaSource = MediaSource.CreateFromStream(playableStream, MIMEHelper.GetNCMFileMimeType(info.Format));
             }
             else
             {

@@ -14,8 +14,7 @@ using Windows.UI.Xaml;
 
 namespace HyPlayer.UI.Lists;
 
-[ObservableObject]
-public sealed partial class ProvidableItemRowViewModel
+public sealed partial class ProvidableItemRowViewModel : ObservableObject
 {
     private const string DefaultCoverUrl = "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg";
 
@@ -63,7 +62,7 @@ public sealed partial class ProvidableItemRowViewModel
     public Visibility LineThreeVisible => HasLineThree ? Visibility.Visible : Visibility.Collapsed;
     public Visibility TranslationVisible => HasTranslation ? Visibility.Visible : Visibility.Collapsed;
 
-    public Uri? Cover => new Uri((string.IsNullOrEmpty(CoverUrl) ? DefaultCoverUrl : CoverUrl) + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER);
+    public Uri? Cover => new((string.IsNullOrEmpty(CoverUrl) ? DefaultCoverUrl : CoverUrl) + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER);
 
     public bool MatchesFilter(string filterText)
     {

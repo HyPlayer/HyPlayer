@@ -43,6 +43,7 @@ using Windows.UI.Xaml.Navigation;
 using WinRT;
 using WidgetPage = HyPlayer.Features.Widgets.WidgetPage;
 using WidgetSettingsPage = HyPlayer.Features.Widgets.WidgetSettingsPage;
+using HyPlayer.Application;
 
 #endregion
 

@@ -224,14 +224,13 @@ public partial class PlayBarViewModel : ObservableObject
     [RelayCommand]
     private async Task MoveToItemAsync(PlayBarQueueItem item)
     {
-        if (item == null || item.QueueIndex == NowPlayingIndex) return;
-        var queue = PlayCoreQueueSnapshot.GetPlaylist(_playCore);
-        if (item.QueueIndex >= 0 && item.QueueIndex < queue.Count)
-        {
-            await _playCore.MovePointerToIndexAsync(item.QueueIndex);
-            if (_playCore.CurrentSong is { } song)
-                await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
-        }
+        if (item?.ProviderItem is not { } selectedSong
+            || SameSong(selectedSong, NowPlayingProviderItem))
+            return;
+
+        await _playCore.MovePointerToAsync(selectedSong);
+        if (_playCore.CurrentSong is { } currentSong && SameSong(currentSong, selectedSong))
+            await _control.LoadAndPlayAsync(currentSong, removeCurrentSongs: false);
     }
 
     private void OnPlaybackStatePropertyChanged(string? propertyName)
@@ -385,15 +384,16 @@ public partial class PlayBarViewModel : ObservableObject
                 AddPlaylistRow(idx, queueSnapshot);
             }
         }
+
+        UpdateCurrentPlaylistItem();
     }
 
     private void UpdateCurrentPlaylistItem()
     {
-        var currentIndex = NowPlayingIndex;
         PlayBarQueueItem? currentItem = null;
         foreach (var item in PlaylistItems)
         {
-            var isCurrent = item.QueueIndex == currentIndex;
+            var isCurrent = SameSong(item.ProviderItem, NowPlayingProviderItem);
             if (item.IsCurrent != isCurrent)
                 item.IsCurrent = isCurrent;
             if (isCurrent)
@@ -408,7 +408,7 @@ public partial class PlayBarViewModel : ObservableObject
         if (queueIndex < 0 || queueIndex >= queueSnapshot.Count)
             return;
 
-        var row = PlayBarQueueItem.FromSnapshot(queueSnapshot[queueIndex], NowPlayingIndex);
+        var row = PlayBarQueueItem.FromSnapshot(queueSnapshot[queueIndex], NowPlayingProviderItem);
         PlaylistItems.Add(row);
         if (row.IsCurrent)
             CurrentPlaylistItem = row;
@@ -418,7 +418,7 @@ public partial class PlayBarViewModel : ObservableObject
     {
         for (var i = 0; i < queue.Count; i++)
         {
-            if (Equals(queue[i], item))
+            if (SameSong(queue[i], item))
                 return i;
         }
 
@@ -440,12 +440,22 @@ public partial class PlayBarViewModel : ObservableObject
     /// </summary>
     public int GetTargetingIndex()
     {
-        if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
-            return _state.NowPlayingProviderItem is { } providerItem
-                ? IndexOfQueueItem(PlayCoreQueueSnapshot.GetOrderedPlaylist(_playCore), providerItem)
-                : -1;
-        return _state.NowPlayingIndex;
+        for (var index = 0; index < PlaylistItems.Count; index++)
+        {
+            if (SameSong(PlaylistItems[index].ProviderItem, NowPlayingProviderItem))
+                return index;
+        }
+
+        return -1;
     }
+
+    private static bool SameSong(SingleSongBase? left, SingleSongBase? right) =>
+        ReferenceEquals(left, right)
+        || (left is not null
+            && right is not null
+            && left.ProviderId == right.ProviderId
+            && left.TypeId == right.TypeId
+            && left.ActualId == right.ActualId);
 
     public void SyncFromState()
     {

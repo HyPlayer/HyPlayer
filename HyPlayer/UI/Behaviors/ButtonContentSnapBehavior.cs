@@ -25,10 +25,11 @@ namespace HyPlayer.UI.Behaviors
         private ContentPresenter? contentPresenter;
         private Visual? contentVisual;
 
-        private Compositor compositor;
-        private CompositionPropertySet propSet;
-        private Vector3KeyFrameAnimation translationAnimation1;
-        private Vector3KeyFrameAnimation translationAnimation2;
+        private readonly Compositor compositor;
+        private readonly CompositionPropertySet propSet;
+        private readonly Vector3KeyFrameAnimation translationAnimation1;
+        private readonly Vector3KeyFrameAnimation translationAnimation2;
+        private readonly Version SupportedVersion = new(10, 0, 20348, 0);
 
         public ButtonContentSnapBehavior()
         {
@@ -109,10 +110,7 @@ namespace HyPlayer.UI.Behaviors
             paddingChangedEventToken = button.RegisterPropertyChangedCallback(Control.PaddingProperty, OnPaddingPropertyChanged);
             visualStateGroup = VisualStateManager.GetVisualStateGroups((FrameworkElement)VisualTreeHelper.GetChild(button, 0)).FirstOrDefault(c => c.Name == "CommonStates");
 
-            if (visualStateGroup != null)
-            {
-                visualStateGroup.CurrentStateChanging += VisualStateGroup_CurrentStateChanging;
-            }
+            visualStateGroup?.CurrentStateChanging += VisualStateGroup_CurrentStateChanging;
 
             contentPresenter = FindChild<ContentPresenter>(button);
 
@@ -124,7 +122,10 @@ namespace HyPlayer.UI.Behaviors
                 if (actualContent != null)
                 {
                     contentVisual = ElementCompositionPreview.GetElementVisual(actualContent);
-                    contentVisual.IsPixelSnappingEnabled = true;
+                    if (Environment.OSVersion.Version >= SupportedVersion)
+#pragma warning disable CA1416 // 验证平台兼容性
+                        contentVisual.IsPixelSnappingEnabled = true;
+#pragma warning restore CA1416 // 验证平台兼容性
                     ElementCompositionPreview.SetIsTranslationEnabled(actualContent, true);
                 }
             }
@@ -144,10 +145,7 @@ namespace HyPlayer.UI.Behaviors
             button.UnregisterPropertyChangedCallback(Control.PaddingProperty, paddingChangedEventToken);
             paddingChangedEventToken = 0;
 
-            if (visualStateGroup != null)
-            {
-                visualStateGroup.CurrentStateChanging -= VisualStateGroup_CurrentStateChanging;
-            }
+            visualStateGroup?.CurrentStateChanging -= VisualStateGroup_CurrentStateChanging;
             visualStateGroup = null;
 
             if (contentPresenter != null)
@@ -157,11 +155,8 @@ namespace HyPlayer.UI.Behaviors
                 contentPresenter = null;
             }
 
-            if (contentVisual != null)
-            {
-                contentVisual.StopAnimation("Translation");
-                contentVisual = null;
-            }
+            contentVisual?.StopAnimation("Translation");
+            contentVisual = null;
 
             propSet.InsertVector3("Offset", Vector3.Zero);
         }
@@ -195,18 +190,18 @@ namespace HyPlayer.UI.Behaviors
         {
             if (attached && contentPresenter != null)
             {
-                if (contentVisual != null)
-                {
-                    contentVisual.StopAnimation("Translation");
-                    contentVisual = null;
-                }
+                contentVisual?.StopAnimation("Translation");
+                contentVisual = null;
 
                 var actualContent = VisualTreeHelper.GetChild(contentPresenter, 0)?.As<UIElement>();
 
                 if (actualContent != null)
                 {
                     contentVisual = ElementCompositionPreview.GetElementVisual(actualContent);
-                    contentVisual.IsPixelSnappingEnabled = true;
+                    if (Environment.OSVersion.Version >= SupportedVersion)
+#pragma warning disable CA1416 // 验证平台兼容性
+                        contentVisual.IsPixelSnappingEnabled = true;
+#pragma warning restore CA1416 // 验证平台兼容性
                     ElementCompositionPreview.SetIsTranslationEnabled(actualContent, true);
                 }
             }

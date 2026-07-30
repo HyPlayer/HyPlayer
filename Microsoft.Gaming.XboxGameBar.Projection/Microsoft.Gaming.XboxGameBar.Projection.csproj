@@ -8,6 +8,9 @@
 		<IsAotCompatible>true</IsAotCompatible>
 		<Platforms>ARM64;x64</Platforms>
 		<Configurations>Debug;Release</Configurations>
+		<WindowsSdkPackageVersion>10.0.26100.87</WindowsSdkPackageVersion>
+		<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
+		<UseRidGraph>true</UseRidGraph>
 		<UseUwp>true</UseUwp>
 
 	</PropertyGroup>
@@ -24,7 +27,7 @@
 	
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Gaming.XboxGameBar" Version="7.3.2607010" GeneratePathProperty="true">
-			<ExcludeAssets>all</ExcludeAssets>
+			<ExcludeAssets>compile;runtime</ExcludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.1" />
 	</ItemGroup>
@@ -39,7 +42,7 @@
 		</None>
 		<None Include="$(PkgMicrosoft_Gaming_XboxGameBar)\private\Microsoft.Gaming.XboxGameBar.Private.winmd">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<Implementation>Microsoft.Gaming.XboxGameBar.Private.dll</Implementation>
+			<SkipHarvestingWinmdRegistration>true</SkipHarvestingWinmdRegistration>
 		</None>
 		<Content Include="$(PkgMicrosoft_Gaming_XboxGameBar)\runtimes\win10-$(Platform)\native\Microsoft.Gaming.XboxGameBar.pri" />
 	</ItemGroup>

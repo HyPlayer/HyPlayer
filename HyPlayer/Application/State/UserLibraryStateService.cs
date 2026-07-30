@@ -27,25 +27,17 @@ using System.Linq;
 
 namespace HyPlayer.Application.State;
 
-public sealed class UserLibraryStateService : IUserLibraryStateService
+public sealed class UserLibraryStateService(
+    IUserLibraryTypeIds userLibraryTypeIds,
+    IProviderKnownTypeIds knownTypeIds) : IUserLibraryStateService
 {
-    private readonly IUserLibraryTypeIds _userLibraryTypeIds;
-    private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly List<ContainerBase> _ownedPlaylists = [];
     private readonly List<ContainerBase> _subscribedPlaylists = [];
-
-    public UserLibraryStateService(
-        IUserLibraryTypeIds userLibraryTypeIds,
-        IProviderKnownTypeIds knownTypeIds)
-    {
-        _userLibraryTypeIds = userLibraryTypeIds;
-        _knownTypeIds = knownTypeIds;
-    }
 
     public ContainerBase? LikedSongsPlaylist { get; private set; }
     public IReadOnlyList<ContainerBase> OwnedPlaylists => _ownedPlaylists;
     public IReadOnlyList<ContainerBase> SubscribedPlaylists => _subscribedPlaylists;
-    public IReadOnlyList<ContainerBase> UserPlaylists => [.. _ownedPlaylists, .. _subscribedPlaylists];
+    public IReadOnlyList<ContainerBase> UserPlaylists => (List<ContainerBase>)[.. _ownedPlaylists, .. _subscribedPlaylists];
 
     public void Clear()
     {
@@ -62,12 +54,12 @@ public sealed class UserLibraryStateService : IUserLibraryStateService
         var subscribedIds = new HashSet<string>();
         foreach (var group in groups.OrderBy(group => group.DisplayOrder))
         {
-            foreach (var item in group.Items.Where(item => item.TypeId == _knownTypeIds.PlaylistTypeId))
+            foreach (var item in group.Items.Where(item => item.TypeId == knownTypeIds.PlaylistTypeId))
             {
                 if (string.IsNullOrWhiteSpace(item.ActualId))
                     continue;
 
-                if (group.Id == _userLibraryTypeIds.LikedSongsTypeId)
+                if (group.Id == userLibraryTypeIds.LikedSongsTypeId)
                 {
                     LikedSongsPlaylist ??= item;
                     AddUnique(_ownedPlaylists, ownedIds, item);

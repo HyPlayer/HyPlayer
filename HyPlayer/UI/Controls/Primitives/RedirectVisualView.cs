@@ -33,7 +33,9 @@ public partial class RedirectVisualView : Control
         redirectVisual.Brush = childVisualBrush;
         if (Environment.OSVersion.Version >= SupportedVersion)
         {
+#pragma warning disable CA1416 // 验证平台兼容性
             redirectVisual.IsPixelSnappingEnabled = UseLayoutRounding;
+#pragma warning restore CA1416 // 验证平台兼容性
         }
 
         if (childVisualBrushOffsetEnabled)
@@ -49,7 +51,7 @@ public partial class RedirectVisualView : Control
 
     protected virtual bool ChildVisualBrushOffsetEnabled => true;
 
-    private readonly Version SupportedVersion = new Version(10, 0, 20348, 0);
+    private readonly Version SupportedVersion = new(10, 0, 20348, 0);
 
     private bool measureChildInBoundingBox = true;
 
@@ -95,7 +97,7 @@ public partial class RedirectVisualView : Control
 
     private bool attached;
     private bool redirectVisualEnabled = true;
-    private bool childVisualBrushOffsetEnabled;
+    private readonly bool childVisualBrushOffsetEnabled;
 #nullable enable
     private Grid? layoutRoot;
     private ContentPresenter? childPresenter;
@@ -115,15 +117,9 @@ public partial class RedirectVisualView : Control
 
                 layoutRoot = value;
 
-                if (old != null)
-                {
-                    old.SizeChanged -= LayoutRoot_SizeChanged;
-                }
+                old?.SizeChanged -= LayoutRoot_SizeChanged;
 
-                if (layoutRoot != null)
-                {
-                    layoutRoot.SizeChanged += LayoutRoot_SizeChanged;
-                }
+                layoutRoot?.SizeChanged += LayoutRoot_SizeChanged;
             }
         }
     }
@@ -139,15 +135,9 @@ public partial class RedirectVisualView : Control
 
                 childPresenter = value;
 
-                if (old != null)
-                {
-                    old.SizeChanged -= ChildPresenter_SizeChanged;
-                }
+                old?.SizeChanged -= ChildPresenter_SizeChanged;
 
-                if (childPresenter != null)
-                {
-                    childPresenter.SizeChanged += ChildPresenter_SizeChanged;
-                }
+                childPresenter?.SizeChanged += ChildPresenter_SizeChanged;
             }
         }
     }
@@ -173,14 +163,14 @@ public partial class RedirectVisualView : Control
         private set => opacityMaskContainer = value;
     }
 
-    private Visual hostVisual;
-    private Compositor compositor;
+    private readonly Visual hostVisual;
+    private readonly Compositor compositor;
 
-    private CompositionVisualSurface childVisualSurface;
-    private CompositionSurfaceBrush childVisualBrush;
+    private readonly CompositionVisualSurface childVisualSurface;
+    private readonly CompositionSurfaceBrush childVisualBrush;
 
     private SpriteVisual redirectVisual;
-    private ExpressionAnimation? offsetBind;
+    private readonly ExpressionAnimation? offsetBind;
 
     protected CompositionBrush ChildVisualBrush => childVisualBrush;
 
@@ -324,7 +314,11 @@ public partial class RedirectVisualView : Control
 
     protected virtual void OnUseLayoutRoundingChanged()
     {
-        redirectVisual.IsPixelSnappingEnabled = UseLayoutRounding;
+
+        if (Environment.OSVersion.Version >= SupportedVersion)
+#pragma warning disable CA1416 // 验证平台兼容性
+            redirectVisual.IsPixelSnappingEnabled = UseLayoutRounding;
+#pragma warning restore CA1416 // 验证平台兼容性
     }
 
     private void LayoutRoot_SizeChanged(object sender, SizeChangedEventArgs e)

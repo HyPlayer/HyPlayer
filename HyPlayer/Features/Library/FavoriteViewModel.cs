@@ -38,30 +38,17 @@ using Windows.UI.Xaml.Controls;
 
 namespace HyPlayer.Features.Library
 {
-    public partial class FavoriteViewModel : ObservableRecipient
+    public partial class FavoriteViewModel(
+        IUserLibraryProvidable userLibraryProvider,
+        IProviderKnownTypeIds knownTypeIds) : ObservableRecipient
     {
-        private readonly IUserLibraryProvidable _userLibraryProvider;
-        private readonly IProviderKnownTypeIds _knownTypeIds;
-        private readonly INotificationService _notification;
-
-        public FavoriteViewModel(
-            IUserLibraryProvidable userLibraryProvider,
-            IProviderKnownTypeIds knownTypeIds,
-            INotificationService notification)
-        {
-            _userLibraryProvider = userLibraryProvider;
-            _knownTypeIds = knownTypeIds;
-            _notification = notification;
-        }
-
-        private readonly ObservableCollection<ProvidableItemBase> _content = new();
+        private readonly ObservableCollection<ProvidableItemBase> _content = [];
         [ObservableProperty]
         public partial int CurrentPage { get; set; }
         [ObservableProperty]
         public partial bool HasMore { get; set; }
         [ObservableProperty]
         public partial ContainerBase ContentContainer { get; set; }
-        private int _currentIndex = 1;
         private string _currentTag;
         private Task _loadPageTask;
         private readonly HashSet<string> _loadedPages = [];
@@ -87,7 +74,7 @@ namespace HyPlayer.Features.Library
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"djchannel_subscribed_{page}",
                     async () =>
                     {
-                        return await LoadUserLibraryPageAsync(_knownTypeIds.RadioChannelTypeId!, page * 200, 200);
+                        return await LoadUserLibraryPageAsync(knownTypeIds.RadioChannelTypeId!, page * 200, 200);
                     });
 
 
@@ -104,7 +91,7 @@ namespace HyPlayer.Features.Library
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"artist_sublist_{page}",
                     async () =>
                     {
-                        return await LoadUserLibraryPageAsync(_knownTypeIds.ArtistTypeId, page * 25, 25);
+                        return await LoadUserLibraryPageAsync(knownTypeIds.ArtistTypeId, page * 25, 25);
                     });
 
             HasMore = jv.HasMore;
@@ -120,7 +107,7 @@ namespace HyPlayer.Features.Library
             var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, $"album_sublist_{page}",
                     async () =>
                     {
-                        return await LoadUserLibraryPageAsync(_knownTypeIds.AlbumTypeId, page * 25, 25);
+                        return await LoadUserLibraryPageAsync(knownTypeIds.AlbumTypeId, page * 25, 25);
                     });
 
             HasMore = json.HasMore;
@@ -133,7 +120,7 @@ namespace HyPlayer.Features.Library
 
         private async Task<UserLibraryPage> LoadUserLibraryPageAsync(string kind, int offset, int count)
         {
-            if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(kind) is not IProgressiveLoadingContainer container)
+            if (await userLibraryProvider.GetCurrentUserLibraryContainerAsync(kind) is not IProgressiveLoadingContainer container)
                 return new UserLibraryPage();
 
             var (hasMore, items) = await container.GetProgressiveItemsListAsync(offset, count);
@@ -160,7 +147,6 @@ namespace HyPlayer.Features.Library
                 return;
 
             CurrentPage = 0;
-            _currentIndex = 1;
             _currentTag = tag;
             _loadedPages.Clear();
             _loadPageTask = null;
