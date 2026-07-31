@@ -112,7 +112,22 @@ namespace HyPlayer.Domain.Settings
         /// </summary>
         public BackgroundType expandedPlayerBackgroundType
         {
-            get => GetSettings(nameof(expandedPlayerBackgroundType), BackgroundType.CoverBlur);
+            get
+            {
+                var value = GetSettings(nameof(expandedPlayerBackgroundType), (int)BackgroundType.Isolation);
+                var backgroundType = value switch
+                {
+                    4 => BackgroundType.Isolation,
+                    _ when System.Enum.IsDefined(typeof(BackgroundType), value) => (BackgroundType)value,
+                    _ => BackgroundType.Isolation
+                };
+
+                if (value != (int)backgroundType)
+                    ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerBackgroundType)] =
+                        (int)backgroundType;
+
+                return backgroundType;
+            }
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerBackgroundType)] = (int)value;
