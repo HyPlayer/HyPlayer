@@ -8,23 +8,23 @@ namespace HyPlayer.LyricRenderer.RollingCalculators;
 
 internal class LyricifyRollingCalculator : LineRollingCalculator
 {
-    private const double duration = 620;
+    private const double Duration = 620;
 
-    private const double a = 0.882;
-    private const double k = 0.836;
-    private const double m = 3.08;
-    private const double n = 3.14;
+    private const double A = 0.882;
+    private const double K = 0.836;
+    private const double M = 3.08;
+    private const double N = 3.14;
 
     protected static double f(double x)
     {
-        if (x >= 0 && x <= a) return Math.Pow(x / a, m) * k / g(1);
+        if (x >= 0 && x <= A) return Math.Pow(x / A, M) * K / g(1);
 
         return g(x) / g(1);
     }
 
     protected static double g(double x)
     {
-        return 1 - Math.Pow((1 - x) * 3 / 4 / (1 - a) + 1.0 / 4, n) * (1 - k);
+        return 1 - Math.Pow((1 - x) * 3 / 4 / (1 - A) + 1.0 / 4, N) * (1 - K);
     }
 
 
@@ -35,7 +35,7 @@ internal class LyricifyRollingCalculator : LineRollingCalculator
         var gap = currentLine.Id - context.CurrentLyricLineIndex;
         if (!(fromY < targetY) && gap >= 0)
         {
-            var theoryDuration = (float)duration /* * (Math.Log10(Math.Max(gap, 0.9)) + 1)*/;
+            var theoryDuration = (float)Duration /* * (Math.Log10(Math.Max(gap, 0.9)) + 1)*/;
             progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryDuration, 0, 1);
             progress = 1 - progress;
             progress = (float)f(progress);

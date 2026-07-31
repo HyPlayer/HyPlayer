@@ -281,7 +281,7 @@ public sealed partial class DownloadObject : ObservableObject
                     else
                     {
                         using var responseMessage = await _httpClient.GetAsync(new Uri(AlbumCover + "?param=" +
-                            StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
+                            StaticSource.PicSizeDownloadAlbumCover));
                         using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
                         using var stream = await responseMessage.Content.ReadAsStreamAsync();
                         using var inputStream = stream.AsRandomAccessStream();
@@ -400,9 +400,9 @@ public sealed partial class DownloadObject : ObservableObject
         if (HadSize == TotalSize && Status == DownloadStatus.Finished) return;
     }
 
-    public void DownloadStartToast(string SongName)
+    public void DownloadStartToast(string songName)
     {
-        _notification.ShowMessage("下载开始", "歌曲" + SongName + "下载开始");
+        _notification.ShowMessage("下载开始", "歌曲" + songName + "下载开始");
     }
 
     public async Task StartDownload()
@@ -571,11 +571,11 @@ public sealed partial class DownloadObject : ObservableObject
 internal static class DownloadManager
 {
     private const int MaxAlbumPicturesCacheSize = 64;
-    private static bool Timered;
-    public static ObservableCollection<DownloadObject> DownloadLists = [];
-    public static BackgroundDownloader Downloader = new();
-    public static List<Task> WritingTasks = [];
-    public static Dictionary<string, Picture> AlbumPicturesCache = [];
+    private static bool _timerStarted;
+    public static ObservableCollection<DownloadObject> DownloadLists { get; } = [];
+    public static BackgroundDownloader Downloader { get; } = new();
+    public static List<Task> WritingTasks { get; } = [];
+    public static Dictionary<string, Picture> AlbumPicturesCache { get; } = [];
     private static IGlobalTimerService GlobalTimer => Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private static INotificationService Notification => Ioc.Default.GetRequiredService<INotificationService>();
     private static IUIThreadDispatcher UIThreadDispatcher => Ioc.Default.GetRequiredService<IUIThreadDispatcher>();
@@ -600,19 +600,19 @@ internal static class DownloadManager
 
     private static void EnsureTimerStarted()
     {
-        if (!Timered)
+        if (!_timerStarted)
         {
             GlobalTimer.SecondTick += Timer_Elapsed;
-            Timered = true;
+            _timerStarted = true;
         }
     }
 
     public static void StopTimer()
     {
-        if (Timered)
+        if (_timerStarted)
         {
             GlobalTimer.SecondTick -= Timer_Elapsed;
-            Timered = false;
+            _timerStarted = false;
         }
 
         WritingTasks.RemoveAll(t => t.IsCompleted);

@@ -10,26 +10,26 @@ namespace HyPlayer.Platform.Network;
 
 public static class MIMEHelper
 {
-    public static Dictionary<string, string> NCMFileMIMEType = new()
+    public static Dictionary<string, string> NcmFileMimeTypes { get; } = new()
     {
         { "mp3", "audio/mpeg" },
         { "flac", "audio/x-flac" }
     };
 
-    public static readonly uint PICTURE_FILE_HEADER_CAPACITY = 10;
+    public const uint PictureFileHeaderCapacity = 10;
 
     public static string GetNCMFileMimeType(string fileExtension)
     {
-        if (NCMFileMIMEType.TryGetValue(fileExtension, out var mimeType)) return mimeType;
+        if (NcmFileMimeTypes.TryGetValue(fileExtension, out var mimeType)) return mimeType;
 
         throw new ArgumentException();
     }
 
     public static async Task<Guid> GetPictureCodecFromStream(IRandomAccessStream pictureStream)
     {
-        var buffer = new Buffer(PICTURE_FILE_HEADER_CAPACITY);
-        await pictureStream.ReadAsync(buffer, PICTURE_FILE_HEADER_CAPACITY, InputStreamOptions.None);
-        if (buffer.Length < PICTURE_FILE_HEADER_CAPACITY) throw new ArgumentOutOfRangeException();
+        var buffer = new Buffer(PictureFileHeaderCapacity);
+        await pictureStream.ReadAsync(buffer, PictureFileHeaderCapacity, InputStreamOptions.None);
+        if (buffer.Length < PictureFileHeaderCapacity) throw new ArgumentOutOfRangeException();
         var byteArray = buffer.ToArray();
         if (byteArray[0] == 0x89 && byteArray[1] == 0x50 && byteArray[2] == 0x4e &&
             byteArray[3] == 0x47)
@@ -51,7 +51,7 @@ public static class MIMEHelper
 
     public static Guid GetPictureCodecFromBuffer(Buffer buffer)
     {
-        if (buffer.Length < PICTURE_FILE_HEADER_CAPACITY) throw new ArgumentOutOfRangeException();
+        if (buffer.Length < PictureFileHeaderCapacity) throw new ArgumentOutOfRangeException();
         var byteArray = buffer.ToArray();
         if (byteArray[0] == 0x89 && byteArray[1] == 0x50 && byteArray[2] == 0x4e &&
             byteArray[3] == 0x47)

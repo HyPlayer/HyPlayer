@@ -8,7 +8,7 @@ namespace HyPlayer.Features.Playback.Transitions;
 
 public sealed class CrossFadeTransition : ITrackTransition
 {
-    private static readonly TimeSpan PreloadWindow = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan _preloadWindow = TimeSpan.FromSeconds(30);
     private long _fadeStartedAt;
     private TransitionPreparedTrack? _prepared;
     private PreparedPlaybackPromotion? _promotion;
@@ -23,11 +23,11 @@ public sealed class CrossFadeTransition : ITrackTransition
             return;
         }
 
-        if (!context.CanPreload || context.Duration < PreloadWindow)
+        if (!context.CanPreload || context.Duration < _preloadWindow)
             return;
 
         var remaining = context.Duration - context.Position;
-        if (_prepared is null && remaining <= PreloadWindow)
+        if (_prepared is null && remaining <= _preloadWindow)
         {
             var prepared = await context.Host.PrepareNextAsync(context, ct).ConfigureAwait(false);
             if (prepared is not null)

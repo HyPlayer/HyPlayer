@@ -70,8 +70,8 @@ public sealed partial class CompactPlayerPage : Page
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
 
 
-    private readonly HyPlayer.Domain.Settings.UISettings _setting =
-        Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
+    private readonly Domain.Settings.UISettings _setting =
+        Ioc.Default.GetRequiredService<Domain.Settings.UISettings>();
 
     private readonly WeakEventListener<CompactPlayerPage, object?, SongLikeStatusChangedEventArgs>
         _songLikeStatusChangedListener;
@@ -79,9 +79,7 @@ public sealed partial class CompactPlayerPage : Page
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly WeakEventListener<CompactPlayerPage, object?, PropertyChangedEventArgs> _stateChangedListener;
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
-    private readonly SolidColorBrush TransparentBrush = new(Colors.Transparent);
-    public bool _lyricIsKaraokeLyric;
-    public SongLyric Lrc;
+    private readonly SolidColorBrush _transparentBrush = new(Colors.Transparent);
 
     public CompactPlayerPage()
     {
@@ -244,7 +242,7 @@ public sealed partial class CompactPlayerPage : Page
         {
             PointerInAni.SkipToFill();
             if (!_setting.CompactPlayerPageBlurStatus)
-                ControlHover = TransparentBrush;
+                ControlHover = _transparentBrush;
             PointerOutAni.Begin();
         }
     }

@@ -19,9 +19,9 @@ public class HistoryManagement
         Ioc.Default.GetRequiredService<IHistoryService>().AddNCSongHistory(songid);
     }
 
-    public static void AddSearchHistory(string Text)
+    public static void AddSearchHistory(string text)
     {
-        Ioc.Default.GetRequiredService<IHistoryService>().AddSearchHistory(Text);
+        Ioc.Default.GetRequiredService<IHistoryService>().AddSearchHistory(text);
     }
 
     public static void AddSonglistHistory(string playListid)

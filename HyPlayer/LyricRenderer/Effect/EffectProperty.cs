@@ -9,7 +9,7 @@ namespace HyPlayer.LyricRenderer.Effect;
 
 public class EffectProperty
 {
-    public CanvasTransition Transition = new()
+    public CanvasTransition Transition { get; set; } = new()
     {
         Duration = TimeSpan.FromSeconds(0.5),
         Easing = new CustomCircleEase { EasingMode = EasingMode.EaseOut }

@@ -34,7 +34,7 @@ public sealed class LastFmService : ILastFmService
     public Uri CreateLoginUri()
     {
         return new Uri(
-            "https://www.last.fm/api/auth/?api_key=" + LastFMConstants.APIKEY + "&cb=hyplayer://link.last.fm");
+            "https://www.last.fm/api/auth/?api_key=" + LastFMConstants.ApiKey + "&cb=hyplayer://link.last.fm");
     }
 
     public async Task CompleteBrowserLoginAsync(string token)

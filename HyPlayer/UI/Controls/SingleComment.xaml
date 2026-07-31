@@ -124,7 +124,7 @@
                         Content="回复"
                         Style="{StaticResource AccentButtonStyle}" />
                 </Grid>
-                <controls:CommentsList Comments="{x:Bind floorComments, Mode=OneWay}" />
+                <controls:CommentsList Comments="{x:Bind _floorComments, Mode=OneWay}" />
                 <Button
                     x:Name="LoadMore"
                     HorizontalAlignment="Stretch"

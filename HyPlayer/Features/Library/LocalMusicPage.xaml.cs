@@ -33,7 +33,7 @@ namespace HyPlayer.Features.Library;
 /// </summary>
 public sealed partial class LocalMusicPage : Page
 {
-    private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
+    private static readonly string[] _supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
     private readonly CancellationToken _cancellationToken;
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
 
@@ -43,34 +43,34 @@ public sealed partial class LocalMusicPage : Page
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly LocalLibrarySettings _setting = Ioc.Default.GetRequiredService<LocalLibrarySettings>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
-    private readonly CancellationTokenSource cancellationTokenSource = new();
-    private Task CurrentFileScanTask;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private Task _currentFileScanTask;
 
     public LocalMusicPageViewModel ViewModel { get; } = new();
 
     public LocalMusicPage()
     {
         InitializeComponent();
-        _cancellationToken = cancellationTokenSource.Token;
+        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        if (CurrentFileScanTask != null && !CurrentFileScanTask.IsCompleted)
+        if (_currentFileScanTask != null && !_currentFileScanTask.IsCompleted)
             try
             {
                 ViewModel.NotificationText = "正在等待本地扫描进程结束...";
-                cancellationTokenSource.Cancel();
-                await CurrentFileScanTask;
+                _cancellationTokenSource.Cancel();
+                await _currentFileScanTask;
             }
             catch
             {
-                CurrentFileScanTask = null;
+                _currentFileScanTask = null;
             }
 
         ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
-        cancellationTokenSource.Dispose();
+        _cancellationTokenSource.Dispose();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -94,7 +94,7 @@ public sealed partial class LocalMusicPage : Page
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        if (CurrentFileScanTask == null || CurrentFileScanTask.IsCompleted) CurrentFileScanTask = LoadLocalMusic();
+        if (_currentFileScanTask == null || _currentFileScanTask.IsCompleted) _currentFileScanTask = LoadLocalMusic();
     }
 
     private async Task LoadLocalMusic()
@@ -108,7 +108,7 @@ public sealed partial class LocalMusicPage : Page
         // Use Query to boost? maybe?
         FileLoadingIndicateRing.Visibility = Visibility.Visible;
         FileLoadingIndicateRing.IsActive = true;
-        var queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, supportedFormats);
+        var queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, _supportedFormats);
         queryOptions.FolderDepth = FolderDepth.Deep;
         var files = await folder.CreateFileQueryWithOptions(queryOptions).GetFilesAsync();
 

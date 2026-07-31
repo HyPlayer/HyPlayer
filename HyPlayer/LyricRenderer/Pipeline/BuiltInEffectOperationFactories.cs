@@ -40,7 +40,7 @@ internal abstract class ExpressionOperationFactoryBase(ILyricExpressionCompiler 
 internal sealed partial class OpacityOperationFactory(ILyricExpressionCompiler compiler)
     : ExpressionOperationFactoryBase(compiler)
 {
-    private static readonly LyricOperationParameterDescriptor Opacity = new()
+    private static readonly LyricOperationParameterDescriptor _opacity = new()
     {
         Key = "opacity",
         DisplayName = "透明度",
@@ -56,13 +56,13 @@ internal sealed partial class OpacityOperationFactory(ILyricExpressionCompiler c
         TypeId = LyricBuiltInOperationTypes.Opacity,
         DisplayName = "透明度",
         Description = "改变当前歌词行合成结果的透明度。",
-        Parameters = (LyricOperationParameterDescriptor[])[Opacity]
+        Parameters = (LyricOperationParameterDescriptor[])[_opacity]
     };
 
     public override LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
     {
         var diagnostics = new List<LyricProfileDiagnostic>();
-        var opacity = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, Opacity, diagnostics);
+        var opacity = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, _opacity, diagnostics);
         return Result(definition, diagnostics,
             opacity is null ? null : () => new OpacityOperation(opacity.CreateRuntime()));
     }
@@ -88,7 +88,7 @@ internal sealed partial class OpacityOperationFactory(ILyricExpressionCompiler c
 internal sealed partial class BlurOperationFactory(ILyricExpressionCompiler compiler)
     : ExpressionOperationFactoryBase(compiler)
 {
-    private static readonly LyricOperationParameterDescriptor Amount = new()
+    private static readonly LyricOperationParameterDescriptor _amount = new()
     {
         Key = "amount",
         DisplayName = "模糊量",
@@ -104,13 +104,13 @@ internal sealed partial class BlurOperationFactory(ILyricExpressionCompiler comp
         TypeId = LyricBuiltInOperationTypes.GaussianBlur,
         DisplayName = "高斯模糊",
         Description = "对当前合成图像应用 Win2D 高斯模糊。",
-        Parameters = (LyricOperationParameterDescriptor[])[Amount]
+        Parameters = (LyricOperationParameterDescriptor[])[_amount]
     };
 
     public override LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
     {
         var diagnostics = new List<LyricProfileDiagnostic>();
-        var amount = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, Amount, diagnostics);
+        var amount = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, _amount, diagnostics);
         return Result(definition, diagnostics, amount is null ? null : () => new BlurOperation(amount.CreateRuntime()));
     }
 
@@ -135,7 +135,7 @@ internal sealed partial class BlurOperationFactory(ILyricExpressionCompiler comp
 internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler compiler)
     : ExpressionOperationFactoryBase(compiler)
 {
-    private static readonly LyricOperationParameterDescriptor Blur = new()
+    private static readonly LyricOperationParameterDescriptor _blur = new()
     {
         Key = "blur",
         DisplayName = "辉光半径",
@@ -146,7 +146,7 @@ internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler comp
         Maximum = 250
     };
 
-    private static readonly LyricOperationParameterDescriptor Opacity = new()
+    private static readonly LyricOperationParameterDescriptor _opacity = new()
     {
         Key = "opacity",
         DisplayName = "辉光透明度",
@@ -157,7 +157,7 @@ internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler comp
         Maximum = 1
     };
 
-    private static readonly LyricOperationParameterDescriptor Color = new()
+    private static readonly LyricOperationParameterDescriptor _color = new()
     {
         Key = "color",
         DisplayName = "辉光颜色",
@@ -170,15 +170,15 @@ internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler comp
         TypeId = LyricBuiltInOperationTypes.Glow,
         DisplayName = "整体辉光",
         Description = "在歌词图像后合成带颜色的阴影辉光。",
-        Parameters = (LyricOperationParameterDescriptor[])[Blur, Opacity, Color]
+        Parameters = (LyricOperationParameterDescriptor[])[_blur, _opacity, _color]
     };
 
     public override LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
     {
         var diagnostics = new List<LyricProfileDiagnostic>();
-        var blur = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, Blur, diagnostics);
-        var opacity = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, Opacity, diagnostics);
-        var color = LyricOperationCompilerHelpers.CompileColor(Compiler, definition, Color, diagnostics);
+        var blur = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, _blur, diagnostics);
+        var opacity = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, _opacity, diagnostics);
+        var color = LyricOperationCompilerHelpers.CompileColor(Compiler, definition, _color, diagnostics);
         return Result(
             definition,
             diagnostics,
@@ -232,7 +232,7 @@ internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler comp
 internal sealed partial class Transform2DOperationFactory(ILyricExpressionCompiler compiler)
     : ExpressionOperationFactoryBase(compiler)
 {
-    private static readonly LyricOperationParameterDescriptor[] ParameterDescriptors =
+    private static readonly LyricOperationParameterDescriptor[] _parameterDescriptors =
     [
         Scalar("x", "X 位移", "0"),
         Scalar("y", "Y 位移", "0"),
@@ -248,13 +248,13 @@ internal sealed partial class Transform2DOperationFactory(ILyricExpressionCompil
         TypeId = LyricBuiltInOperationTypes.Transform2D,
         DisplayName = "2D 变换",
         Description = "围绕可配置锚点平移、缩放和旋转。",
-        Parameters = ParameterDescriptors
+        Parameters = _parameterDescriptors
     };
 
     public override LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
     {
         var diagnostics = new List<LyricProfileDiagnostic>();
-        var parameters = ParameterDescriptors
+        var parameters = _parameterDescriptors
             .Select(item => LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, item, diagnostics))
             .ToArray();
         return Result(
@@ -311,7 +311,7 @@ internal sealed partial class Transform2DOperationFactory(ILyricExpressionCompil
 internal sealed partial class Transform3DOperationFactory(ILyricExpressionCompiler compiler)
     : ExpressionOperationFactoryBase(compiler)
 {
-    private static readonly LyricOperationParameterDescriptor[] ParameterDescriptors =
+    private static readonly LyricOperationParameterDescriptor[] _parameterDescriptors =
     [
         Scalar("angleX", "X 角度", "0"),
         Scalar("angleY", "Y 角度", "0"),
@@ -326,13 +326,13 @@ internal sealed partial class Transform3DOperationFactory(ILyricExpressionCompil
         TypeId = LyricBuiltInOperationTypes.Transform3D,
         DisplayName = "3D 变换",
         Description = "围绕锚点应用三轴旋转和透视。",
-        Parameters = ParameterDescriptors
+        Parameters = _parameterDescriptors
     };
 
     public override LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
     {
         var diagnostics = new List<LyricProfileDiagnostic>();
-        var parameters = ParameterDescriptors
+        var parameters = _parameterDescriptors
             .Select(item => LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, item, diagnostics))
             .ToArray();
         return Result(

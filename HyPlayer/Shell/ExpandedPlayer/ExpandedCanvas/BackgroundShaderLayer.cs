@@ -20,8 +20,8 @@ public sealed class BackgroundShaderLayer : IExpandedCanvasLayer
     private readonly ExpandedCanvasState _state;
 
     private Vector2 _canvasSize;
-    private float3 color1, color2, color3, color4;
-    private float random1, random2, random3;
+    private float3 _color1, _color2, _color3, _color4;
+    private float _random1, _random2, _random3;
 
     public BackgroundShaderLayer(ExpandedCanvasState state, LyricSettings setting)
     {
@@ -48,13 +48,13 @@ public sealed class BackgroundShaderLayer : IExpandedCanvasLayer
         _state.IsolationEffect?.ConstantBuffer = new IsolationEffect(
             _canvasSize,
             (float)args.Timing.TotalTime.TotalSeconds,
-            color1,
-            color2,
-            color3,
-            color4,
-            random1,
-            random2,
-            random3,
+            _color1,
+            _color2,
+            _color3,
+            _color4,
+            _random1,
+            _random2,
+            _random3,
             _enableLightWave,
             _enableDithering);
     }
@@ -86,12 +86,12 @@ public sealed class BackgroundShaderLayer : IExpandedCanvasLayer
         if (shader is null) return;
 
         var colors = _state.AlbumColorVectors;
-        color1 = colors[0];
-        color2 = colors[1];
-        color3 = colors[2];
-        color4 = colors[3];
-        random1 = Random.Shared.NextSingle();
-        random2 = Random.Shared.NextSingle();
-        random3 = Random.Shared.NextSingle();
+        _color1 = colors[0];
+        _color2 = colors[1];
+        _color3 = colors[2];
+        _color4 = colors[3];
+        _random1 = Random.Shared.NextSingle();
+        _random2 = Random.Shared.NextSingle();
+        _random3 = Random.Shared.NextSingle();
     }
 }

@@ -16,11 +16,11 @@ namespace HyPlayer.UI.Dialogs;
 
 public sealed partial class ArtistSelectDialog : ContentDialog
 {
-    private readonly List<PersonBase> aartists;
+    private readonly List<PersonBase> _artists;
 
     public ArtistSelectDialog(List<PersonBase> artists)
     {
-        aartists = artists;
+        _artists = artists;
         InitializeComponent();
         ListViewArtists.Items?.Clear();
         artists.ForEach(t => ListViewArtists.Items?.Add(t.Name));
@@ -30,7 +30,7 @@ public sealed partial class ArtistSelectDialog : ContentDialog
     private void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         Ioc.Default.GetRequiredService<INavigationService>()
-            .Navigate(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].ActualId);
+            .Navigate(typeof(ArtistPage), _artists[ListViewArtists.SelectedIndex].ActualId);
         var surfaceCoordinator = Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
         if (surfaceCoordinator.IsExpanded) surfaceCoordinator.Collapse();
 

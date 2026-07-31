@@ -2,6 +2,6 @@
 
 public static class LastFMConstants
 {
-    public const string APIKEY = "LAST_FM_APIKEY";
-    public const string SECRET = "LAST_FM_SECRET";
+    public const string ApiKey = "LAST_FM_APIKEY";
+    public const string Secret = "LAST_FM_SECRET";
 }

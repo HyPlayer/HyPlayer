@@ -56,8 +56,8 @@ public sealed partial class RadioPage : Page
     private PersonBase _host;
     private IProgressiveLoadingContainer _progressiveRadioChannel;
 
-    private bool asc;
-    private ContainerBase RadioChannel;
+    private bool _asc;
+    private ContainerBase _radioChannel;
 
     public RadioPage()
     {
@@ -89,30 +89,30 @@ public sealed partial class RadioPage : Page
         base.OnNavigatedTo(e);
         if (e.Parameter is string rid)
         {
-            RadioChannel = await GetRadioChannelAsync(rid);
-            if (RadioChannel is null)
+            _radioChannel = await GetRadioChannelAsync(rid);
+            if (_radioChannel is null)
             {
                 _notification.ShowMessage("获取电台信息失败", "未知错误");
                 return;
             }
         }
 
-        if (e.Parameter is ContainerBase radio) RadioChannel = radio;
+        if (e.Parameter is ContainerBase radio) _radioChannel = radio;
 
-        _progressiveRadioChannel = RadioChannel as IProgressiveLoadingContainer;
+        _progressiveRadioChannel = _radioChannel as IProgressiveLoadingContainer;
         if (_progressiveRadioChannel is null)
         {
             _notification.ShowMessage("获取电台信息失败", "提供程序未返回可分页电台容器");
             return;
         }
 
-        TextBoxRadioName.Text = RadioChannel.Name;
-        var creators = RadioChannel is IHasCreators creatorsProvider
+        TextBoxRadioName.Text = _radioChannel.Name;
+        var creators = _radioChannel is IHasCreators creatorsProvider
             ? await creatorsProvider.GetCreatorsAsync(_cancellationToken)
             : null;
         _host = creators?.FirstOrDefault();
         TextBoxDJ.Content = _host?.Name;
-        TextBlockDesc.Text = RadioChannel is IHasDescription descriptionProvider
+        TextBlockDesc.Text = _radioChannel is IHasDescription descriptionProvider
             ? descriptionProvider.Description
             : string.Empty;
         if (_uiSettings.NoImage)
@@ -123,13 +123,13 @@ public sealed partial class RadioPage : Page
         {
             var img = new BitmapImage();
             ImageRect.ImageSource = img;
-            img.UriSource = await GetCoverUriAsync(RadioChannel);
+            img.UriSource = await GetCoverUriAsync(_radioChannel);
         }
 
         _ascendingPrograms = null;
         _allPrograms = null;
-        CurrentQueueScope = SongListQueueScope.Radio(RadioChannel.ActualId);
-        CurrentContainer = RadioChannel;
+        CurrentQueueScope = SongListQueueScope.Radio(_radioChannel.ActualId);
+        CurrentContainer = _radioChannel;
         SongContainer.GreedyLoad = _apiSettings.GreedilyLoadPlayContainerItems;
     }
 
@@ -146,14 +146,14 @@ public sealed partial class RadioPage : Page
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
-        asc = !asc;
+        _asc = !_asc;
         _ascendingPrograms = null;
-        CurrentContainer = asc ? new ReorderedContainer(RadioChannel, true) : RadioChannel;
+        CurrentContainer = _asc ? new ReorderedContainer(_radioChannel, true) : _radioChannel;
     }
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        var programs = asc
+        var programs = _asc
             ? await LoadAscendingProgramsAsync()
             : await LoadAllProgramsAsync();
         await _queueLoader.AppendSongsAsync(programs);
@@ -161,7 +161,7 @@ public sealed partial class RadioPage : Page
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        var programs = asc
+        var programs = _asc
             ? await LoadAscendingProgramsAsync()
             : await LoadAllProgramsAsync();
 
@@ -191,7 +191,7 @@ public sealed partial class RadioPage : Page
     {
         if (_allPrograms is not null) return _allPrograms;
 
-        var programs = RadioChannel is LinerContainerBase liner
+        var programs = _radioChannel is LinerContainerBase liner
             ? await liner.GetAllItemsAsync(_cancellationToken)
             : (await _progressiveRadioChannel.GetProgressiveItemsListAsync(0,
                 _progressiveRadioChannel.MaxProgressiveCount, _cancellationToken)).Item2;

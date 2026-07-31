@@ -7,7 +7,7 @@ namespace HyPlayer.LyricRenderer.Abstraction;
 
 public class RenderTypography
 {
-    public static RenderTypography Default = new()
+    public static RenderTypography Default { get; } = new()
     {
         Alignment = TextAlignment.Center,
         IdleColor = Colors.White,

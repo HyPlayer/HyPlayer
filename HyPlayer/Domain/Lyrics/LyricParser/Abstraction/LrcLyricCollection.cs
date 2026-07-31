@@ -5,7 +5,7 @@ namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 
 public sealed class LrcLyricCollection : ILyricCollection
 {
-    private bool disposedValue;
+    private bool _disposedValue;
 
     public LrcLyricCollection(IList<LyricLine> lines, IList<KeyValuePair<string, string>> attributes)
     {
@@ -18,7 +18,7 @@ public sealed class LrcLyricCollection : ILyricCollection
 
     private void Dispose(bool disposing)
     {
-        if (!disposedValue)
+        if (!_disposedValue)
         {
             if (disposing)
             {
@@ -26,7 +26,7 @@ public sealed class LrcLyricCollection : ILyricCollection
                 Attributes.Clear();
             }
 
-            disposedValue = true;
+            _disposedValue = true;
         }
     }
 

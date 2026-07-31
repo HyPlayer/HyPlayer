@@ -38,25 +38,25 @@ public sealed partial class Comments : Page
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
 
 #nullable enable
-    private ScrollViewer? MainScroll, HotCommentsScroll;
+    private ScrollViewer? _mainScroll, _hotCommentsScroll;
 #nullable restore
     private readonly CancellationToken _cancellationToken;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly Dictionary<string, Task> _commentLoadTasks = [];
-    private readonly ObservableCollection<CommentBase> hotComments = new();
-    private readonly ObservableCollection<CommentBase> normalComments = new();
+    private readonly ObservableCollection<CommentBase> _hotComments = new();
+    private readonly ObservableCollection<CommentBase> _normalComments = new();
     private Task _commentLoaderTask;
     private int _delayedUiVersion;
     private Task _hotCommentLoaderTask;
     private int _hotCommentsLoadVersion;
     private bool _isUnloaded;
     private int _normalCommentsLoadVersion;
-    private string cursor;
-    private bool IsShiftingPage;
-    private int page = 1;
-    private string resourceid;
-    private string resourcetype;
-    private int sortType = 1;
+    private string _cursor;
+    private bool _isShiftingPage;
+    private int _page = 1;
+    private string _resourceId;
+    private string _resourceType;
+    private int _sortType = 1;
 
     public Comments()
     {
@@ -71,17 +71,17 @@ public sealed partial class Comments : Page
         _delayedUiVersion++;
         if (e.Parameter is CommentTarget target)
         {
-            resourceid = target.ResourceId;
-            resourcetype = target.TypeId;
+            _resourceId = target.ResourceId;
+            _resourceType = target.TypeId;
         }
         else if (e.Parameter is string resstr && CommentTarget.TryParseExternalResource(resstr, out target))
         {
-            resourceid = target.ResourceId;
-            resourcetype = target.TypeId;
+            _resourceId = target.ResourceId;
+            _resourceType = target.TypeId;
         }
 
         LoadHotComments();
-        _commentLoaderTask = StartLoadComments(sortType);
+        _commentLoaderTask = StartLoadComments(_sortType);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -118,8 +118,8 @@ public sealed partial class Comments : Page
 
     private async Task LoadComments(int type)
     {
-        if (string.IsNullOrEmpty(resourceid)) return;
-        if (IsShiftingPage) return;
+        if (string.IsNullOrEmpty(_resourceId)) return;
+        if (_isShiftingPage) return;
         _cancellationToken.ThrowIfCancellationRequested();
         var isHotCommentsPage = HotCommentsContainer.Visibility == Visibility.Visible;
         var targetHotComments = type == 2 && isHotCommentsPage;
@@ -127,9 +127,9 @@ public sealed partial class Comments : Page
             ? ++_hotCommentsLoadVersion
             : ++_normalCommentsLoadVersion;
 
-        var offset = type == 3 && page != 1 && int.TryParse(cursor, out var cursorOffset)
+        var offset = type == 3 && _page != 1 && int.TryParse(_cursor, out var cursorOffset)
             ? cursorOffset
-            : (page - 1) * 20;
+            : (_page - 1) * 20;
         var result = await LoadProviderCommentsAsync(offset, type);
         if (targetHotComments
                 ? requestVersion != _hotCommentsLoadVersion
@@ -137,35 +137,35 @@ public sealed partial class Comments : Page
             return;
 
         if (targetHotComments)
-            hotComments.Clear();
-        else normalComments.Clear();
+            _hotComments.Clear();
+        else _normalComments.Clear();
 
         foreach (var comment in result.Items)
         {
             _cancellationToken.ThrowIfCancellationRequested();
             var cmt = comment;
-            cmt.ProvidableItemId = CreateProvidableItemId(resourcetype, resourceid);
+            cmt.ProvidableItemId = CreateProvidableItemId(_resourceType, _resourceId);
             if (targetHotComments)
-                hotComments.Add(cmt);
-            else normalComments.Add(cmt);
+                _hotComments.Add(cmt);
+            else _normalComments.Add(cmt);
         }
 
         if (type == 3)
-            cursor = result.NextOffset?.ToString();
+            _cursor = result.NextOffset?.ToString();
 
         NextPage.IsEnabled = result.HasMore;
-        PrevPage.IsEnabled = page > 1;
+        PrevPage.IsEnabled = _page > 1;
     }
 
     private Task StartLoadComments(int type)
     {
-        if (string.IsNullOrEmpty(resourceid))
+        if (string.IsNullOrEmpty(_resourceId))
             return Task.CompletedTask;
 
-        var offset = type == 3 && page != 1 && int.TryParse(cursor, out var cursorOffset)
+        var offset = type == 3 && _page != 1 && int.TryParse(_cursor, out var cursorOffset)
             ? cursorOffset
-            : (page - 1) * 20;
-        var key = $"{resourceid}:{resourcetype}:{page}:{offset}:{type}";
+            : (_page - 1) * 20;
+        var key = $"{_resourceId}:{_resourceType}:{_page}:{offset}:{type}";
         if (_commentLoadTasks.TryGetValue(key, out var runningTask) && !runningTask.IsCompleted)
             return runningTask;
 
@@ -195,8 +195,8 @@ public sealed partial class Comments : Page
         try
         {
             return await _commentProvider.GetCommentsAsync(
-                resourceid,
-                resourcetype,
+                _resourceId,
+                _resourceType,
                 offset,
                 20,
                 type,
@@ -225,15 +225,15 @@ public sealed partial class Comments : Page
 
     private void NextPage_Click(object sender, RoutedEventArgs e)
     {
-        page++;
-        _commentLoaderTask = StartLoadComments(sortType);
+        _page++;
+        _commentLoaderTask = StartLoadComments(_sortType);
         ScrollTop();
     }
 
     private void PrevPage_Click(object sender, RoutedEventArgs e)
     {
-        page--;
-        _commentLoaderTask = StartLoadComments(sortType);
+        _page--;
+        _commentLoaderTask = StartLoadComments(_sortType);
         ScrollTop();
     }
 
@@ -245,17 +245,17 @@ public sealed partial class Comments : Page
 
     private void ComboBoxSortType_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        sortType = ComboBoxSortType.SelectedIndex + 1;
-        page = 1;
-        cursor = null;
-        _commentLoaderTask = StartLoadComments(sortType);
+        _sortType = ComboBoxSortType.SelectedIndex + 1;
+        _page = 1;
+        _cursor = null;
+        _commentLoaderTask = StartLoadComments(_sortType);
     }
 
     private void SkipPage_Click(object sender, RoutedEventArgs e)
     {
-        if (int.TryParse(PageSelect.Text, out page))
+        if (int.TryParse(PageSelect.Text, out _page))
         {
-            _commentLoaderTask = StartLoadComments(sortType);
+            _commentLoaderTask = StartLoadComments(_sortType);
             ScrollTop();
         }
     }
@@ -263,20 +263,20 @@ public sealed partial class Comments : Page
     private void ScrollTop()
     {
         var delayedUiVersion = _delayedUiVersion;
-        var transform = AllCmtsTB.TransformToVisual(MainScroll);
+        var transform = AllCmtsTB.TransformToVisual(_mainScroll);
         var point = transform.TransformPoint(new Point(0, -1000000)); //一定要这么大
-        var y = point.Y + MainScroll.VerticalOffset;
-        MainScroll.ChangeView(null, y, null, false);
+        var y = point.Y + _mainScroll.VerticalOffset;
+        _mainScroll.ChangeView(null, y, null, false);
         var delay = TimeSpan.FromMilliseconds(320); //稍微等等再滚回去，免得回到热评区域
-        var DelayTimer = ThreadPoolTimer.CreateTimer(
+        var delayTimer = ThreadPoolTimer.CreateTimer(
             source =>
             {
                 _ = this.RunOnUIThreadAsync(() =>
                 {
                     if (!IsCurrentDelayedUi(delayedUiVersion)) return;
                     point = transform.TransformPoint(new Point(0, 25)); //要超过判定区域，还要预留一点
-                    y = point.Y + MainScroll.VerticalOffset;
-                    MainScroll.ChangeView(null, y, null, false);
+                    y = point.Y + _mainScroll.VerticalOffset;
+                    _mainScroll.ChangeView(null, y, null, false);
                 });
             }, delay);
     }
@@ -288,9 +288,9 @@ public sealed partial class Comments : Page
 
     private void MainScroll_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
     {
-        var transform = AllCmtsTB.TransformToVisual(MainScroll);
+        var transform = AllCmtsTB.TransformToVisual(_mainScroll);
         var point = transform.TransformPoint(new Point(0, 0));
-        var y = point.Y + MainScroll.VerticalOffset;
+        var y = point.Y + _mainScroll.VerticalOffset;
         if ((sender?.As<ScrollViewer>()).VerticalOffset > y + 25)
             BackToTop.Visibility = Visibility.Visible;
         else BackToTop.Visibility = Visibility.Collapsed;
@@ -298,7 +298,7 @@ public sealed partial class Comments : Page
         {
             var delayedUiVersion = _delayedUiVersion;
             var delay = TimeSpan.FromMilliseconds(90); //先别急，如果是回到顶部触发的会滚回去一点
-            var DelayTimer = ThreadPoolTimer.CreateTimer(
+            var delayTimer = ThreadPoolTimer.CreateTimer(
                 source =>
                 {
                     _ = this.RunOnUIThreadAsync(() =>
@@ -313,9 +313,9 @@ public sealed partial class Comments : Page
 
     private void PageSelect_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        if (int.TryParse(PageSelect.Text, out page))
+        if (int.TryParse(PageSelect.Text, out _page))
         {
-            _commentLoaderTask = StartLoadComments(sortType);
+            _commentLoaderTask = StartLoadComments(_sortType);
             ScrollTop();
         }
     }
@@ -324,7 +324,7 @@ public sealed partial class Comments : Page
     {
         var delayedUiVersion = _delayedUiVersion;
         var delay = TimeSpan.FromMilliseconds(500);
-        var DelayTimer = ThreadPoolTimer.CreateTimer(
+        var delayTimer = ThreadPoolTimer.CreateTimer(
             source =>
             {
                 _ = this.RunOnUIThreadAsync(() =>
@@ -337,7 +337,7 @@ public sealed partial class Comments : Page
 
     private void HotCommentsScroll_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
     {
-        if (HotCommentsScroll.ScrollableHeight - HotCommentsScroll.VerticalOffset <= 14)
+        if (_hotCommentsScroll.ScrollableHeight - _hotCommentsScroll.VerticalOffset <= 14)
             ShiftCommentList(true);
     }
 
@@ -351,35 +351,35 @@ public sealed partial class Comments : Page
 
     private void AttachHotCommentsScroll(ScrollViewer? scrollViewer)
     {
-        if (ReferenceEquals(HotCommentsScroll, scrollViewer))
+        if (ReferenceEquals(_hotCommentsScroll, scrollViewer))
             return;
 
-        if (HotCommentsScroll is not null)
-            HotCommentsScroll.ViewChanged -= HotCommentsScroll_ViewChanged;
+        if (_hotCommentsScroll is not null)
+            _hotCommentsScroll.ViewChanged -= HotCommentsScroll_ViewChanged;
 
-        HotCommentsScroll = scrollViewer;
+        _hotCommentsScroll = scrollViewer;
 
-        if (HotCommentsScroll is not null)
-            HotCommentsScroll.ViewChanged += HotCommentsScroll_ViewChanged;
+        if (_hotCommentsScroll is not null)
+            _hotCommentsScroll.ViewChanged += HotCommentsScroll_ViewChanged;
     }
 
     private void AttachMainScroll(ScrollViewer? scrollViewer)
     {
-        if (ReferenceEquals(MainScroll, scrollViewer))
+        if (ReferenceEquals(_mainScroll, scrollViewer))
             return;
 
-        if (MainScroll is not null)
-            MainScroll.ViewChanged -= MainScroll_ViewChanged;
+        if (_mainScroll is not null)
+            _mainScroll.ViewChanged -= MainScroll_ViewChanged;
 
-        MainScroll = scrollViewer;
+        _mainScroll = scrollViewer;
 
-        if (MainScroll is not null)
-            MainScroll.ViewChanged += MainScroll_ViewChanged;
+        if (_mainScroll is not null)
+            _mainScroll.ViewChanged += MainScroll_ViewChanged;
     }
 
     private void ShiftCommentList(bool direction)
     {
-        IsShiftingPage = true;
+        _isShiftingPage = true;
         if (direction)
         {
             AllCommentsContainer.Visibility = Visibility.Visible;
@@ -388,17 +388,17 @@ public sealed partial class Comments : Page
             HotCommentsContainer.Visibility = Visibility.Collapsed;
             var delayedUiVersion = _delayedUiVersion;
             var delay = TimeSpan.FromMilliseconds(500);
-            var DelayTimer = ThreadPoolTimer.CreateTimer(
+            var delayTimer = ThreadPoolTimer.CreateTimer(
                 source =>
                 {
                     _ = this.RunOnUIThreadAsync(() =>
                     {
                         if (!IsCurrentDelayedUi(delayedUiVersion)) return;
                         AttachMainScroll(NormalComments.CommentPresentScrollViewer);
-                        var transform = AllCmtsTB.TransformToVisual(MainScroll);
+                        var transform = AllCmtsTB.TransformToVisual(_mainScroll);
                         var point = transform.TransformPoint(new Point(0, 25)); //要超过判定区域，还要预留一点
-                        var y = point.Y + MainScroll.VerticalOffset;
-                        MainScroll.ChangeView(null, y, null, false);
+                        var y = point.Y + _mainScroll.VerticalOffset;
+                        _mainScroll.ChangeView(null, y, null, false);
                     });
                 }, delay);
         }
@@ -411,7 +411,7 @@ public sealed partial class Comments : Page
             BackToTop.Visibility = Visibility.Collapsed;
         }
 
-        IsShiftingPage = false;
+        _isShiftingPage = false;
     }
 
     private bool IsCurrentDelayedUi(int version)

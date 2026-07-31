@@ -108,7 +108,7 @@ public partial class LyricEffectOperationItem(
 
 public sealed partial class LyricEffectSettingsDialog : ContentDialog
 {
-    private static readonly (string Name, string Source)[] ScriptInsertions =
+    private static readonly (string Name, string Source)[] _scriptInsertions =
     [
         ("矩形", "FillRectangle(0, 0, line.Width, line.Height, fx.Rgba(255, 255, 255, 0.08));"),
         ("圆角", "FillRoundedRectangle(0, 0, line.Width, line.Height, 6, line.AccentColor);"),
@@ -640,7 +640,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
             ContentAlignment.Vertical));
 
         var insertPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        foreach (var (name, source) in ScriptInsertions)
+        foreach (var (name, source) in _scriptInsertions)
         {
             var button = new Button { Content = name, Tag = source, Padding = new Thickness(7, 3, 7, 3) };
             button.Click += InsertScript_Click;

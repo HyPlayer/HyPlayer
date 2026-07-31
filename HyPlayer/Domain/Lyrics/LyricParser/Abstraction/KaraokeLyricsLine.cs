@@ -19,19 +19,19 @@ public sealed class KaraokeLyricsLine : LyricLine
 
     [JsonConstructor]
     public KaraokeLyricsLine(
-        List<KaraokeWordInfo> WordInfos,
-        TimeSpan Duration,
-        string CurrentLyric,
-        string LyricWithoutPunc,
-        TimeSpan StartTime,
-        TimeSpan? PossibleStartTime)
+        List<KaraokeWordInfo> wordInfos,
+        TimeSpan duration,
+        string currentLyric,
+        string lyricWithoutPunc,
+        TimeSpan startTime,
+        TimeSpan? possibleStartTime)
     {
-        this.WordInfos = WordInfos;
-        this.StartTime = StartTime;
-        this.PossibleStartTime = PossibleStartTime;
-        this.Duration = Duration;
-        this.LyricWithoutPunc = LyricWithoutPunc;
-        this.CurrentLyric = CurrentLyric;
+        this.WordInfos = wordInfos;
+        this.StartTime = startTime;
+        this.PossibleStartTime = possibleStartTime;
+        this.Duration = duration;
+        this.LyricWithoutPunc = lyricWithoutPunc;
+        this.CurrentLyric = currentLyric;
     }
 
     public List<KaraokeWordInfo> WordInfos { get; set; }

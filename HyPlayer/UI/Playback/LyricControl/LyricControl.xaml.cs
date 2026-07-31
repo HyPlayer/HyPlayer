@@ -13,7 +13,7 @@ namespace HyPlayer.UI.Playback.LyricControl;
 
 public sealed partial class LyricControl : UserControl
 {
-    public LyricRenderOption? LyricRenderOption;
+    public LyricRenderOption? LyricRenderOption { get; set; }
 
     public LyricControl()
     {

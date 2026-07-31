@@ -29,6 +29,7 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
         _stateChangedListener;
 
     private readonly IUIThreadDispatcher _uiThreadDispatcher;
+    private bool _disposedValue;
 
     public ExpandedPlayerViewModel(
         PlayCoreBase playCore,
@@ -126,12 +127,6 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
     public UISettings UISettings { get; }
 
     public LyricSettings LyricSettings { get; }
-
-    public void Dispose()
-    {
-        _stateChangedListener.Detach();
-        _songLikeStatusChangedListener.Detach();
-    }
 
     // ── Commands ──────────────────────────────────────────────
 
@@ -248,5 +243,25 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
     private void RunOnUIThread(Action action)
     {
         _ = _uiThreadDispatcher.TryRunAsync(action);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _stateChangedListener.Detach();
+                _songLikeStatusChangedListener.Detach();
+            }
+
+            _disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

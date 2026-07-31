@@ -130,7 +130,7 @@ internal static class HyPlayerComposition
 
         depository.AddSingleton<LastFMClient>(
             new LastFMClient(
-                new LastFMOptions { ApiKey = LastFMConstants.APIKEY, ApiSecret = LastFMConstants.SECRET },
+                new LastFMOptions { ApiKey = LastFMConstants.ApiKey, ApiSecret = LastFMConstants.Secret },
                 client));
         depository.AddSingleton<AudioGraphPlayer>();
         depository.Add(

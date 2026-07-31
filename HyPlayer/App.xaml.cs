@@ -53,7 +53,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
     ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
     ///     已执行，逻辑上等同于 main() 或 WinMain()。
     /// </summary>
-    private Frame rootFrame;
+    private Frame _rootFrame;
 
     public App()
     {
@@ -149,7 +149,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
             if (widgetArgs.IsLaunchActivation)
             {
                 var widgetFrame = new Frame();
-                rootFrame = widgetFrame;
+                _rootFrame = widgetFrame;
                 widgetFrame.NavigationFailed += OnNavigationFailed;
                 Window.Current.Content = widgetFrame;
 
@@ -181,14 +181,14 @@ public sealed partial class App : Windows.UI.Xaml.Application
         base.OnActivated(args);
         if (args.Kind == ActivationKind.ToastNotification)
         {
-            rootFrame = Window.Current.Content?.As<Frame>();
-            if (rootFrame == null)
+            _rootFrame = Window.Current.Content?.As<Frame>();
+            if (_rootFrame == null)
             {
-                rootFrame = new Frame();
-                Window.Current.Content = rootFrame;
+                _rootFrame = new Frame();
+                Window.Current.Content = _rootFrame;
             }
 
-            rootFrame.Navigate(typeof(MainPage));
+            _rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
             if (AppDepository.Resolve<IPlaybackSurfaceCoordinator>().IsExpanded) return;
             var settings = AppDepository.Resolve<UISettings>();
@@ -235,23 +235,23 @@ public sealed partial class App : Windows.UI.Xaml.Application
     {
         base.OnActivated(args);
 
-        rootFrame = Window.Current.Content?.As<Frame>();
-        if (rootFrame == null)
+        _rootFrame = Window.Current.Content?.As<Frame>();
+        if (_rootFrame == null)
         {
-            rootFrame = new Frame();
-            rootFrame.NavigationFailed += OnNavigationFailed;
+            _rootFrame = new Frame();
+            _rootFrame.NavigationFailed += OnNavigationFailed;
 
             if (args.PreviousExecutionState == ApplicationExecutionState.Terminated)
             {
             }
 
-            Window.Current.Content = rootFrame;
+            Window.Current.Content = _rootFrame;
         }
 
         // 直接启动
         if (args is LaunchActivatedEventArgs)
         {
-            if (rootFrame.Content == null)
+            if (_rootFrame.Content == null)
             {
                 NavigateToRootPage(args);
                 Window.Current.Activate();
@@ -300,7 +300,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
     private void NavigateToRootPage(IActivatedEventArgs args = null)
     {
-        rootFrame.Navigate(typeof(MainPage), args?.As<LaunchActivatedEventArgs>()?.Arguments);
+        _rootFrame.Navigate(typeof(MainPage), args?.As<LaunchActivatedEventArgs>()?.Arguments);
     }
 
     /// <summary>

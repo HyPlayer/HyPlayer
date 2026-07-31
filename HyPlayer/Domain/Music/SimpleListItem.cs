@@ -23,7 +23,7 @@ public class SimpleListItem
                           ? "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg"
                           : CoverLink) +
                       "?param=" +
-                      StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM);
+                      StaticSource.PicSizeSimpleLinerListItem);
 
     public int DisplayOrder => Order + 1;
 }

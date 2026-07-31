@@ -25,36 +25,36 @@ public class ButtonContentSnapBehavior : Behavior<ButtonBase>
                 if (s is ButtonContentSnapBehavior sender && !Equals(a.NewValue, a.OldValue)) sender.UpdateSnapType();
             }));
 
-    private readonly Compositor compositor;
-    private readonly CompositionPropertySet propSet;
-    private readonly Version SupportedVersion = new(10, 0, 20348, 0);
-    private readonly Vector3KeyFrameAnimation translationAnimation1;
-    private readonly Vector3KeyFrameAnimation translationAnimation2;
+    private readonly Compositor _compositor;
+    private readonly CompositionPropertySet _propSet;
+    private readonly Version _supportedVersion = new(10, 0, 20348, 0);
+    private readonly Vector3KeyFrameAnimation _translationAnimation1;
+    private readonly Vector3KeyFrameAnimation _translationAnimation2;
 
-    private bool attached;
-    private long contentChangedEventToken;
-    private ContentPresenter? contentPresenter;
-    private Visual? contentVisual;
-    private long paddingChangedEventToken;
-    private VisualStateGroup? visualStateGroup;
+    private bool _attached;
+    private long _contentChangedEventToken;
+    private ContentPresenter? _contentPresenter;
+    private Visual? _contentVisual;
+    private long _paddingChangedEventToken;
+    private VisualStateGroup? _visualStateGroup;
 
     public ButtonContentSnapBehavior()
     {
-        compositor = Window.Current.Compositor;
+        _compositor = Window.Current.Compositor;
 
-        propSet = compositor.CreatePropertySet();
-        propSet.InsertVector3("Offset", Vector3.Zero);
+        _propSet = _compositor.CreatePropertySet();
+        _propSet.InsertVector3("Offset", Vector3.Zero);
 
-        translationAnimation1 = compositor.CreateVector3KeyFrameAnimation();
-        translationAnimation1.InsertKeyFrame(1, Vector3.Zero);
-        translationAnimation1.Duration = TimeSpan.FromSeconds(DurationSeconds);
-        translationAnimation1.StopBehavior = AnimationStopBehavior.LeaveCurrentValue;
+        _translationAnimation1 = _compositor.CreateVector3KeyFrameAnimation();
+        _translationAnimation1.InsertKeyFrame(1, Vector3.Zero);
+        _translationAnimation1.Duration = TimeSpan.FromSeconds(DurationSeconds);
+        _translationAnimation1.StopBehavior = AnimationStopBehavior.LeaveCurrentValue;
 
-        translationAnimation2 = compositor.CreateVector3KeyFrameAnimation();
-        translationAnimation2.InsertExpressionKeyFrame(1, "propSet.Offset");
-        translationAnimation2.Duration = TimeSpan.FromSeconds(DurationSeconds);
-        translationAnimation2.SetReferenceParameter("propSet", propSet);
-        translationAnimation2.StopBehavior = AnimationStopBehavior.LeaveCurrentValue;
+        _translationAnimation2 = _compositor.CreateVector3KeyFrameAnimation();
+        _translationAnimation2.InsertExpressionKeyFrame(1, "propSet.Offset");
+        _translationAnimation2.Duration = TimeSpan.FromSeconds(DurationSeconds);
+        _translationAnimation2.SetReferenceParameter("propSet", _propSet);
+        _translationAnimation2.StopBehavior = AnimationStopBehavior.LeaveCurrentValue;
     }
 
     public ButtonContentSnapType SnapType
@@ -99,65 +99,65 @@ public class ButtonContentSnapBehavior : Behavior<ButtonBase>
 
     private void LoadContent(ButtonBase button)
     {
-        if (attached) return;
+        if (_attached) return;
 
-        paddingChangedEventToken =
+        _paddingChangedEventToken =
             button.RegisterPropertyChangedCallback(Control.PaddingProperty, OnPaddingPropertyChanged);
-        visualStateGroup = VisualStateManager
+        _visualStateGroup = VisualStateManager
             .GetVisualStateGroups((FrameworkElement)VisualTreeHelper.GetChild(button, 0))
             .FirstOrDefault(c => c.Name == "CommonStates");
 
-        visualStateGroup?.CurrentStateChanging += VisualStateGroup_CurrentStateChanging;
+        _visualStateGroup?.CurrentStateChanging += VisualStateGroup_CurrentStateChanging;
 
-        contentPresenter = FindChild<ContentPresenter>(button);
+        _contentPresenter = FindChild<ContentPresenter>(button);
 
-        if (contentPresenter != null)
+        if (_contentPresenter != null)
         {
-            contentChangedEventToken =
-                contentPresenter.RegisterPropertyChangedCallback(ContentPresenter.ContentProperty, OnContentChanged);
-            var actualContent = VisualTreeHelper.GetChild(contentPresenter, 0)?.As<UIElement>();
+            _contentChangedEventToken =
+                _contentPresenter.RegisterPropertyChangedCallback(ContentPresenter.ContentProperty, OnContentChanged);
+            var actualContent = VisualTreeHelper.GetChild(_contentPresenter, 0)?.As<UIElement>();
 
             if (actualContent != null)
             {
-                contentVisual = ElementCompositionPreview.GetElementVisual(actualContent);
-                if (Environment.OSVersion.Version >= SupportedVersion)
+                _contentVisual = ElementCompositionPreview.GetElementVisual(actualContent);
+                if (Environment.OSVersion.Version >= _supportedVersion)
 #pragma warning disable CA1416 // 验证平台兼容性
-                    contentVisual.IsPixelSnappingEnabled = true;
+                    _contentVisual.IsPixelSnappingEnabled = true;
 #pragma warning restore CA1416 // 验证平台兼容性
                 ElementCompositionPreview.SetIsTranslationEnabled(actualContent, true);
             }
         }
 
-        attached = true;
+        _attached = true;
         UpdateSnapType();
     }
 
     private void UnloadContent(ButtonBase button)
     {
-        if (!attached) return;
+        if (!_attached) return;
 
-        attached = false;
+        _attached = false;
 
         button.LayoutUpdated -= AssociatedObject_LayoutUpdated;
 
-        button.UnregisterPropertyChangedCallback(Control.PaddingProperty, paddingChangedEventToken);
-        paddingChangedEventToken = 0;
+        button.UnregisterPropertyChangedCallback(Control.PaddingProperty, _paddingChangedEventToken);
+        _paddingChangedEventToken = 0;
 
-        visualStateGroup?.CurrentStateChanging -= VisualStateGroup_CurrentStateChanging;
-        visualStateGroup = null;
+        _visualStateGroup?.CurrentStateChanging -= VisualStateGroup_CurrentStateChanging;
+        _visualStateGroup = null;
 
-        if (contentPresenter != null)
+        if (_contentPresenter != null)
         {
-            contentPresenter.UnregisterPropertyChangedCallback(ContentPresenter.ContentProperty,
-                contentChangedEventToken);
-            contentChangedEventToken = 0;
-            contentPresenter = null;
+            _contentPresenter.UnregisterPropertyChangedCallback(ContentPresenter.ContentProperty,
+                _contentChangedEventToken);
+            _contentChangedEventToken = 0;
+            _contentPresenter = null;
         }
 
-        contentVisual?.StopAnimation("Translation");
-        contentVisual = null;
+        _contentVisual?.StopAnimation("Translation");
+        _contentVisual = null;
 
-        propSet.InsertVector3("Offset", Vector3.Zero);
+        _propSet.InsertVector3("Offset", Vector3.Zero);
     }
 
     protected override void OnAttached()
@@ -187,19 +187,19 @@ public class ButtonContentSnapBehavior : Behavior<ButtonBase>
 
     private void OnContentChanged(DependencyObject sender, DependencyProperty dp)
     {
-        if (attached && contentPresenter != null)
+        if (_attached && _contentPresenter != null)
         {
-            contentVisual?.StopAnimation("Translation");
-            contentVisual = null;
+            _contentVisual?.StopAnimation("Translation");
+            _contentVisual = null;
 
-            var actualContent = VisualTreeHelper.GetChild(contentPresenter, 0)?.As<UIElement>();
+            var actualContent = VisualTreeHelper.GetChild(_contentPresenter, 0)?.As<UIElement>();
 
             if (actualContent != null)
             {
-                contentVisual = ElementCompositionPreview.GetElementVisual(actualContent);
-                if (Environment.OSVersion.Version >= SupportedVersion)
+                _contentVisual = ElementCompositionPreview.GetElementVisual(actualContent);
+                if (Environment.OSVersion.Version >= _supportedVersion)
 #pragma warning disable CA1416 // 验证平台兼容性
-                    contentVisual.IsPixelSnappingEnabled = true;
+                    _contentVisual.IsPixelSnappingEnabled = true;
 #pragma warning restore CA1416 // 验证平台兼容性
                 ElementCompositionPreview.SetIsTranslationEnabled(actualContent, true);
             }
@@ -208,12 +208,12 @@ public class ButtonContentSnapBehavior : Behavior<ButtonBase>
 
     private void VisualStateGroup_CurrentStateChanging(object sender, VisualStateChangedEventArgs e)
     {
-        if (!attached || contentVisual == null) return;
+        if (!_attached || _contentVisual == null) return;
 
         if (e.NewState?.Name == "PointerOver" || e.NewState?.Name == "Pressed")
-            contentVisual.StartAnimation("Translation", translationAnimation1);
+            _contentVisual.StartAnimation("Translation", _translationAnimation1);
         else
-            contentVisual.StartAnimation("Translation", translationAnimation2);
+            _contentVisual.StartAnimation("Translation", _translationAnimation2);
     }
 
 
@@ -222,13 +222,13 @@ public class ButtonContentSnapBehavior : Behavior<ButtonBase>
         var button = AssociatedObject;
         if (button == null) return;
 
-        if (attached)
+        if (_attached)
         {
             var hover = false;
 
-            if (visualStateGroup != null)
-                hover = visualStateGroup.CurrentState?.Name == "PointerOver"
-                        || visualStateGroup.CurrentState?.Name == "Pressed";
+            if (_visualStateGroup != null)
+                hover = _visualStateGroup.CurrentState?.Name == "PointerOver"
+                        || _visualStateGroup.CurrentState?.Name == "Pressed";
 
             var padding = button.Padding;
 
@@ -241,16 +241,16 @@ public class ButtonContentSnapBehavior : Behavior<ButtonBase>
                 _ => Vector3.Zero
             };
 
-            propSet.InsertVector3("Offset", offset);
+            _propSet.InsertVector3("Offset", offset);
 
-            if (contentVisual != null)
+            if (_contentVisual != null)
             {
-                contentVisual.StopAnimation("Translation");
+                _contentVisual.StopAnimation("Translation");
 
                 if (hover)
-                    contentVisual.Properties.InsertVector3("Translation", Vector3.Zero);
+                    _contentVisual.Properties.InsertVector3("Translation", Vector3.Zero);
                 else
-                    contentVisual.Properties.InsertVector3("Translation", offset);
+                    _contentVisual.Properties.InsertVector3("Translation", offset);
             }
         }
     }

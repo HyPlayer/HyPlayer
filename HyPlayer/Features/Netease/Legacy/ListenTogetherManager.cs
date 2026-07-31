@@ -372,11 +372,11 @@ public class RoomInfo
         SingleLoop
     }
 
-    public int ClientSeq;
-    public string CurrentSongId = "";
-    public RoomInfoPlayMode PlayMode;
-    public required string RoomId;
-    public List<UserInfo> Users = [];
+    public int ClientSeq { get; set; }
+    public string CurrentSongId { get; set; } = "";
+    public RoomInfoPlayMode PlayMode { get; set; }
+    public required string RoomId { get; set; }
+    public List<UserInfo> Users { get; set; } = [];
     public string[] DisplaySongList { get; set; } = [];
     public string[] RandomSongList { get; set; } = [];
 

@@ -40,7 +40,7 @@ public sealed partial class MVPage : Page
     private readonly IProviderSearchCategoryTypeIds _searchCategoryTypeIds =
         Ioc.Default.GetRequiredService<IProviderSearchCategoryTypeIds>();
 
-    private readonly List<RichMediaCardViewModel> sources = new();
+    private readonly List<RichMediaCardViewModel> _sources = new();
     private MediaSource _currentMediaSource;
     private bool _isUnloaded;
     private Task _relateiveLoaderTask;
@@ -49,9 +49,9 @@ public sealed partial class MVPage : Page
     private CancellationTokenSource _videoLoadCancellationTokenSource = new();
     private Task _videoLoaderTask;
     private int _videoLoadVersion;
-    private string MVId;
-    private string mvquality = "1080";
-    private string songid;
+    private string _mvId;
+    private string _mvQuality = "1080";
+    private string _songId;
 
     public MVPage()
     {
@@ -64,19 +64,19 @@ public sealed partial class MVPage : Page
         base.OnNavigatedTo(e);
         if (e.Parameter is ProvidableItemRowViewModel row)
         {
-            MVId = row.RichMediaId;
-            songid = row.ActualId;
+            _mvId = row.RichMediaId;
+            _songId = row.ActualId;
             _relateiveLoaderTask = LoadRelateive();
         }
         else if (e.Parameter is SingleSongBase providerSong)
         {
-            MVId = e.Parameter.ToString();
-            songid = providerSong.ActualId;
+            _mvId = e.Parameter.ToString();
+            _songId = providerSong.ActualId;
             LoadThings();
         }
         else
         {
-            MVId = e.Parameter.ToString();
+            _mvId = e.Parameter.ToString();
             LoadThings();
         }
     }
@@ -95,20 +95,20 @@ public sealed partial class MVPage : Page
     private async Task LoadRelateive()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        var result = await _richMediaProvider.GetRichMediaFeedAsync($"song:{songid}", 0, 10, _cancellationToken);
-        foreach (var item in result.Items) sources.Add(await MapRichMediaToCardAsync(item));
+        var result = await _richMediaProvider.GetRichMediaFeedAsync($"song:{_songId}", 0, 10, _cancellationToken);
+        foreach (var item in result.Items) _sources.Add(await MapRichMediaToCardAsync(item));
 
-        RelativeList.ItemsSource = sources;
+        RelativeList.ItemsSource = _sources;
 
         RelativeList.SelectedIndex = 0;
     }
 
     private void LoadComment()
     {
-        if (Regex.IsMatch(MVId, "^[0-9]*$"))
-            CommentFrame.Navigate(typeof(Comments.Comments), CommentTarget.MV(MVId));
+        if (Regex.IsMatch(_mvId, "^[0-9]*$"))
+            CommentFrame.Navigate(typeof(Comments.Comments), CommentTarget.MV(_mvId));
         else
-            CommentFrame.Navigate(typeof(Comments.Comments), CommentTarget.MLog(MVId));
+            CommentFrame.Navigate(typeof(Comments.Comments), CommentTarget.MLog(_mvId));
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -153,8 +153,8 @@ public sealed partial class MVPage : Page
     {
         try
         {
-            var mvId = MVId;
-            var quality = mvquality;
+            var mvId = _mvId;
+            var quality = _mvQuality;
             cancellationToken.ThrowIfCancellationRequested();
             LoadingControl.IsLoading = true;
             var resource = await _richMediaProvider.GetRichMediaResourceAsync(
@@ -198,7 +198,7 @@ public sealed partial class MVPage : Page
     {
         try
         {
-            var mvId = MVId;
+            var mvId = _mvId;
             cancellationToken.ThrowIfCancellationRequested();
             if (MvIdRegex().IsMatch(mvId))
             {
@@ -237,8 +237,8 @@ public sealed partial class MVPage : Page
         if (_updatingQualitySelection)
             return;
 
-        mvquality = VideoQualityBox.SelectedItem?.ToString();
-        if (_isUnloaded || string.IsNullOrEmpty(MVId)) return;
+        _mvQuality = VideoQualityBox.SelectedItem?.ToString();
+        if (_isUnloaded || string.IsNullOrEmpty(_mvId)) return;
 
         var token = ResetVideoLoad(out var loadVersion);
         _videoLoaderTask = LoadVideo(loadVersion, token);
@@ -248,7 +248,7 @@ public sealed partial class MVPage : Page
     {
         if (RelativeList.SelectedItem is not RichMediaCardViewModel item) return;
 
-        MVId = item.ActualId;
+        _mvId = item.ActualId;
         LoadThings();
     }
 
@@ -278,9 +278,9 @@ public sealed partial class MVPage : Page
         _updatingQualitySelection = true;
         try
         {
-            if (!VideoQualityBox.Items.Contains(mvquality))
-                VideoQualityBox.Items.Add(mvquality);
-            VideoQualityBox.SelectedItem = mvquality;
+            if (!VideoQualityBox.Items.Contains(_mvQuality))
+                VideoQualityBox.Items.Add(_mvQuality);
+            VideoQualityBox.SelectedItem = _mvQuality;
         }
         finally
         {

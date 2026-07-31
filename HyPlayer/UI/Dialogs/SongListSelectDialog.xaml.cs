@@ -16,12 +16,12 @@ public sealed partial class SongListSelect : ContentDialog
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly IProvableItemLikable _likableProvider;
     private readonly IReadOnlyList<ContainerBase> _songLists;
-    private readonly string SongId;
+    private readonly string _songId;
 
     public SongListSelect(string songid)
     {
         InitializeComponent();
-        SongId = songid;
+        _songId = songid;
         _songLists = Ioc.Default.GetRequiredService<IUserLibraryStateService>().OwnedPlaylists;
         _likableProvider = Ioc.Default.GetRequiredService<IProvableItemLikable>();
         _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
@@ -35,9 +35,9 @@ public sealed partial class SongListSelect : ContentDialog
             return;
 
         var selectedSongList = _songLists[ListViewSongList.SelectedIndex];
-        var itemId = SongId.StartsWith(_knownTypeIds.SingleSongTypeId)
-            ? SongId
-            : _knownTypeIds.SingleSongTypeId + SongId;
+        var itemId = _songId.StartsWith(_knownTypeIds.SingleSongTypeId)
+            ? _songId
+            : _knownTypeIds.SingleSongTypeId + _songId;
         await _likableProvider.LikeProvidableItemAsync(itemId, selectedSongList.ActualId);
         Hide();
     }

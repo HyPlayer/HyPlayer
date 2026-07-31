@@ -224,21 +224,21 @@ public static class LyricRenderComposer
     {
         var matrix = new Matrix5x4();
 
-        var R = ((float)color.R - 128) / 128;
-        var G = ((float)color.G - 128) / 128;
-        var B = ((float)color.B - 128) / 128;
+        var r = ((float)color.R - 128) / 128;
+        var g = ((float)color.G - 128) / 128;
+        var b = ((float)color.B - 128) / 128;
 
-        matrix.M11 = R;
-        matrix.M12 = G;
-        matrix.M13 = B;
+        matrix.M11 = r;
+        matrix.M12 = g;
+        matrix.M13 = b;
 
-        matrix.M21 = R;
-        matrix.M22 = G;
-        matrix.M23 = B;
+        matrix.M21 = r;
+        matrix.M22 = g;
+        matrix.M23 = b;
 
-        matrix.M31 = R;
-        matrix.M32 = G;
-        matrix.M33 = B;
+        matrix.M31 = r;
+        matrix.M32 = g;
+        matrix.M33 = b;
 
         matrix.M44 = 1;
 

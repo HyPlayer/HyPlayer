@@ -60,8 +60,8 @@ public sealed partial class Search : Page
     private List<string> _lastSuggestions = [];
     private Task _loadResultTask;
 
-    private int page;
-    private string searchText = "";
+    private int _page;
+    private string _searchText = "";
 
     public Search()
     {
@@ -92,7 +92,7 @@ public sealed partial class Search : Page
     {
         if ((string)e.Parameter != null)
         {
-            searchText = (string)e.Parameter;
+            _searchText = (string)e.Parameter;
             _loadResultTask = LoadResult();
         }
 
@@ -119,16 +119,16 @@ public sealed partial class Search : Page
     private async Task LoadResult()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        if (string.IsNullOrEmpty(searchText)) return;
+        if (string.IsNullOrEmpty(_searchText)) return;
         ResetSearchCachesIfKeywordChanged();
-        if (Convert.ToBase64String(searchText.ToByteArrayUtf8()) == "6Ieq5p2A")
+        if (Convert.ToBase64String(_searchText.ToByteArrayUtf8()) == "6Ieq5p2A")
         {
             _ = Launcher.LaunchUriAsync(new Uri(@"http://music.163.com/m/topic/18926801"));
             return;
         }
 
         TBNoRes.Visibility = Visibility.Collapsed;
-        _history.AddSearchHistory(searchText);
+        _history.AddSearchHistory(_searchText);
 
         CurrentResultContainer = null;
         try
@@ -155,7 +155,7 @@ public sealed partial class Search : Page
             return;
         }
 
-        CurrentResultContainer = new StaticItemsContainer(items, searchText, $"{typeId}:{page}", typeId);
+        CurrentResultContainer = new StaticItemsContainer(items, _searchText, $"{typeId}:{_page}", typeId);
         UpdatePageState(hasMore);
     }
 
@@ -179,10 +179,10 @@ public sealed partial class Search : Page
     private async Task<(bool HasMore, List<ProvidableItemBase> Items)> LoadSearchItemsAsync(string typeId)
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        var cacheKey = $"{searchText}\u001f{typeId}";
+        var cacheKey = $"{_searchText}\u001f{typeId}";
         if (!_searchContainers.TryGetValue(cacheKey, out var container))
         {
-            container = await _searchProvider.SearchProvidableItemsAsync(searchText, typeId, _cancellationToken);
+            container = await _searchProvider.SearchProvidableItemsAsync(_searchText, typeId, _cancellationToken);
             _searchContainers[cacheKey] = container;
         }
 
@@ -191,12 +191,12 @@ public sealed partial class Search : Page
 
     private void ResetSearchCachesIfKeywordChanged()
     {
-        if (string.Equals(_cachedSearchText, searchText, StringComparison.Ordinal))
+        if (string.Equals(_cachedSearchText, _searchText, StringComparison.Ordinal))
             return;
 
         _searchContainers.Clear();
         _linerSearchItems.Clear();
-        _cachedSearchText = searchText;
+        _cachedSearchText = _searchText;
     }
 
     private async Task<(bool HasMore, List<ProvidableItemBase> Items)> GetPagedItemsAsync(ContainerBase container)
@@ -204,7 +204,7 @@ public sealed partial class Search : Page
         _cancellationToken.ThrowIfCancellationRequested();
         if (container is IProgressiveLoadingContainer progressive)
         {
-            var (hasMore, items) = await progressive.GetProgressiveItemsListAsync(page * 30, 30, _cancellationToken);
+            var (hasMore, items) = await progressive.GetProgressiveItemsListAsync(_page * 30, 30, _cancellationToken);
             return (hasMore, items ?? []);
         }
 
@@ -216,7 +216,7 @@ public sealed partial class Search : Page
                 _linerSearchItems[container] = items;
             }
 
-            return (items.Count > (page + 1) * 30, items.Skip(page * 30).Take(30).ToList());
+            return (items.Count > (_page + 1) * 30, items.Skip(_page * 30).Take(30).ToList());
         }
 
         return (false, []);
@@ -225,25 +225,25 @@ public sealed partial class Search : Page
     private void UpdatePageState(bool hasMore)
     {
         HasNextPage = hasMore;
-        HasPreviousPage = page > 0;
+        HasPreviousPage = _page > 0;
     }
 
     private void PrevPage_OnClick(object sender, RoutedEventArgs e)
     {
-        page--;
+        _page--;
         _loadResultTask = LoadResult();
     }
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
-        page++;
+        _page++;
         _loadResultTask = LoadResult();
     }
 
     private void NavigationView_OnSelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
-        page = 0;
+        _page = 0;
         _loadResultTask = LoadResult();
     }
 
@@ -254,8 +254,8 @@ public sealed partial class Search : Page
 
     private void SearchKeywordBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        searchText = sender.Text;
-        page = 0;
+        _searchText = sender.Text;
+        _page = 0;
         _loadResultTask = LoadResult();
     }
 
@@ -299,7 +299,7 @@ public sealed partial class Search : Page
         var item = sender?.As<ComboBox>()?.SelectedItem;
         if (item is not null)
         {
-            searchText = item.ToString();
+            _searchText = item.ToString();
             _loadResultTask = LoadResult();
         }
     }

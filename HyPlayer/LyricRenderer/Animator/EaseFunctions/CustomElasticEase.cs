@@ -4,8 +4,8 @@ namespace HyPlayer.LyricRenderer.Animator.EaseFunctions;
 
 public class CustomElasticEase : EaseFunctionBase
 {
-    public float Oscillations = 1;
-    public float Springiness = 6;
+    public float Oscillations { get; set; } = 1;
+    public float Springiness { get; set; } = 6;
 
     protected override double EaseInCore(double normalizedTime)
     {

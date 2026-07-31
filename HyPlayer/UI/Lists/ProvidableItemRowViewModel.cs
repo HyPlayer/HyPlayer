@@ -53,7 +53,7 @@ public sealed partial class ProvidableItemRowViewModel : ObservableObject
     public Visibility TranslationVisible => HasTranslation ? Visibility.Visible : Visibility.Collapsed;
 
     public Uri? Cover => new((string.IsNullOrEmpty(CoverUrl) ? DefaultCoverUrl : CoverUrl) + "?param=" +
-                             StaticSource.PICSIZE_SINGLENCSONG_COVER);
+                             StaticSource.PicSizeSingleNcSongCover);
 
     partial void OnIsCurrentChanged(bool value)
     {

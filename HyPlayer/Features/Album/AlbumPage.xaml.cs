@@ -24,7 +24,7 @@ public sealed partial class AlbumPage : Page
 {
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
 
-    private readonly AlbumPageViewModel ViewModel;
+    public AlbumPageViewModel ViewModel { get; }
 
     public AlbumPage()
     {

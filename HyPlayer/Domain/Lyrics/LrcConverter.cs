@@ -16,9 +16,9 @@ namespace HyPlayer.Domain.Lyrics;
 
 public static class LrcConverter
 {
-    private static readonly ColorConverter ColorConverter = new();
+    private static readonly ColorConverter _colorConverter = new();
 
-    public static readonly List<ILyricEnhancer<bool>> LyricEnhancers =
+    public static List<ILyricEnhancer<bool>> LyricEnhancers { get; } =
     [
         new BreathLineEnhancer(),
         new NearbyLineAlignmentEnhancer(),
@@ -88,7 +88,7 @@ public static class LrcConverter
                 line.HiddenOnBlur = style.HiddenOnBlur || style.Type == ALRCStyleAccent.Background;
                 if (style.Color is not null)
                 {
-                    var colorRet = ColorConverter.ConvertFromString(style.Color);
+                    var colorRet = _colorConverter.ConvertFromString(style.Color);
                     if (colorRet is Color color)
                         line.Typography.FocusingColor = new Windows.UI.Color
                         {

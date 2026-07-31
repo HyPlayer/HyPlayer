@@ -107,9 +107,9 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         return LoadPageData(playlist.ActualId);
     }
 
-    public async Task LoadPageData(string PlaylistId, bool loadPlaylist = false)
+    public async Task LoadPageData(string playlistId, bool loadPlaylist = false)
     {
-        var playlistChanged = !string.Equals(_loadedPlaylistId, PlaylistId, StringComparison.Ordinal)
+        var playlistChanged = !string.Equals(_loadedPlaylistId, playlistId, StringComparison.Ordinal)
                               || _loadedDailyRecommend != IsDailyRecommend;
         if (playlistChanged)
         {
@@ -122,12 +122,12 @@ public partial class SongListViewModel : ObservableObject, IDisposable
             IsMySongList = false;
         }
 
-        _loadedPlaylistId = PlaylistId;
+        _loadedPlaylistId = playlistId;
 
-        if (loadPlaylist && (playlistChanged || PlayList?.ActualId != PlaylistId ||
-                             _playlistContainer?.ActualId != PlaylistId))
+        if (loadPlaylist && (playlistChanged || PlayList?.ActualId != playlistId ||
+                             _playlistContainer?.ActualId != playlistId))
         {
-            _playlistContainer = await LoadProviderPlaylistAsync(PlaylistId);
+            _playlistContainer = await LoadProviderPlaylistAsync(playlistId);
             if (_playlistContainer is null)
             {
                 _notification.ShowMessage("加载歌单出错", "未找到歌单信息");

@@ -55,7 +55,7 @@ public sealed partial class MainPage : Page
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private bool _playBarAutoHideSubscribed;
     private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
-    private bool IsPlaybarOnShow = true;
+    private bool _isPlaybarOnShow = true;
 
     public HyPlayer.Domain.Settings.UISettings UISettings { get; } =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
@@ -75,8 +75,8 @@ public sealed partial class MainPage : Page
         MainFrame.Navigate(typeof(BasePage));
         AttachPlayBarAutoHideListener();
         AttachSurfaceStoreListener();
-        UIElement PlayBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
-        SetPlayBarMarginBlurEffect(PlayBarMarginRect);
+        UIElement playBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
+        SetPlayBarMarginBlurEffect(playBarMarginRect);
         if (UISettings.DisplayMaintain) Ioc.Default.GetRequiredService<IDisplayKeepAwakeService>().RequestActive();
     }
 
@@ -224,45 +224,45 @@ public sealed partial class MainPage : Page
 
     private void ShowBar()
     {
-        if (!IsPlaybarOnShow)
+        if (!_isPlaybarOnShow)
         {
             PointerInAni.Begin();
-            IsPlaybarOnShow = true;
+            _isPlaybarOnShow = true;
         }
     }
 
     private Task CollapseBar()
     {
-        IsPlaybarOnShow = false;
-        var PlayBarAni = new DoubleAnimation
+        _isPlaybarOnShow = false;
+        var playBarAni = new DoubleAnimation
         {
             To = 0,
             EnableDependentAnimation = true,
             EasingFunction = new PowerEase { EasingMode = EasingMode.EaseInOut }
         };
-        var PlayBarTransAni = new DoubleAnimation
+        var playBarTransAni = new DoubleAnimation
         {
             To = 20,
             EnableDependentAnimation = true,
             EasingFunction = new PowerEase { EasingMode = EasingMode.EaseInOut }
         };
-        var PlayBarBlurTransAni = new DoubleAnimation
+        var playBarBlurTransAni = new DoubleAnimation
         {
             To = 0,
             EnableDependentAnimation = true,
             EasingFunction = new PowerEase { EasingMode = EasingMode.EaseInOut }
         };
-        var PointerOutAni = new Storyboard();
-        Storyboard.SetTarget(PlayBarAni, GridPlayBar);
-        Storyboard.SetTarget(PlayBarTransAni, PlayBarTrans);
-        Storyboard.SetTarget(PlayBarBlurTransAni, GridPlayBarMarginBlur);
-        Storyboard.SetTargetProperty(PlayBarAni, "Opacity");
-        Storyboard.SetTargetProperty(PlayBarBlurTransAni, "Opacity");
-        Storyboard.SetTargetProperty(PlayBarTransAni, "Y");
-        PointerOutAni.Children.Add(PlayBarAni);
-        PointerOutAni.Children.Add(PlayBarTransAni);
-        PointerOutAni.Children.Add(PlayBarBlurTransAni);
-        PointerOutAni.Begin();
+        var pointerOutAni = new Storyboard();
+        Storyboard.SetTarget(playBarAni, GridPlayBar);
+        Storyboard.SetTarget(playBarTransAni, PlayBarTrans);
+        Storyboard.SetTarget(playBarBlurTransAni, GridPlayBarMarginBlur);
+        Storyboard.SetTargetProperty(playBarAni, "Opacity");
+        Storyboard.SetTargetProperty(playBarBlurTransAni, "Opacity");
+        Storyboard.SetTargetProperty(playBarTransAni, "Y");
+        pointerOutAni.Children.Add(playBarAni);
+        pointerOutAni.Children.Add(playBarTransAni);
+        pointerOutAni.Children.Add(playBarBlurTransAni);
+        pointerOutAni.Begin();
         return Task.CompletedTask;
     }
 
@@ -280,26 +280,26 @@ public sealed partial class MainPage : Page
 
     internal class LinearGradientBlurVisualHelper
     {
-        private const float maxBlurAmount = 64f;
-        private readonly ColorStop[][] colorStops;
-        private readonly Compositor compositor;
-        private readonly SpriteVisual rootVisual;
-        private readonly SpriteVisual tintColorVisual;
-        private readonly SpriteVisual[] visuals;
+        private const float DefaultMaxBlurAmount = 64f;
+        private readonly ColorStop[][] _colorStops;
+        private readonly Compositor _compositor;
+        private readonly SpriteVisual _rootVisual;
+        private readonly SpriteVisual _tintColorVisual;
+        private readonly SpriteVisual[] _visuals;
 
-        private Color tintColor;
+        private Color _tintColor;
 
         public LinearGradientBlurVisualHelper(Compositor compositor)
         {
-            this.compositor = compositor;
+            this._compositor = compositor;
 
-            tintColor = Color.FromArgb(0, 0, 0, 0);
+            _tintColor = Color.FromArgb(0, 0, 0, 0);
 
             var dColor = Color.FromArgb(255, 0, 0, 0);
             var hColor = Color.FromArgb(0, 0, 0, 0);
 
-            visuals = new SpriteVisual[8];
-            colorStops =
+            _visuals = new SpriteVisual[8];
+            _colorStops =
             [
                 [(0f, dColor), (0.125f, hColor)],
                 [(0f, dColor), (0.125f, dColor), (0.25f, hColor)],
@@ -311,30 +311,30 @@ public sealed partial class MainPage : Page
                 [(0.625f, dColor), (0.75f, hColor), (0.875f, dColor), (1, hColor)]
             ];
 
-            rootVisual = compositor.CreateSpriteVisual();
-            rootVisual.RelativeSizeAdjustment = Vector2.One;
+            _rootVisual = compositor.CreateSpriteVisual();
+            _rootVisual.RelativeSizeAdjustment = Vector2.One;
 
-            for (var i = 0; i < visuals.Length; i++)
+            for (var i = 0; i < _visuals.Length; i++)
             {
-                var blurAmount = maxBlurAmount;
+                var blurAmount = DefaultMaxBlurAmount;
                 for (var j = 0; j < i; j++) blurAmount /= 2;
-                rootVisual.Children.InsertAtTop(visuals[i] = CreateVisual(compositor, blurAmount, colorStops[i]));
+                _rootVisual.Children.InsertAtTop(_visuals[i] = CreateVisual(compositor, blurAmount, _colorStops[i]));
             }
 
-            rootVisual.Children.InsertAtTop(tintColorVisual = CreateTintColorVisual(compositor, tintColor));
+            _rootVisual.Children.InsertAtTop(_tintColorVisual = CreateTintColorVisual(compositor, _tintColor));
         }
 
-        public Visual RootVisual => rootVisual;
+        public Visual RootVisual => _rootVisual;
 
         public Color TintColor
         {
-            get => tintColor;
+            get => _tintColor;
             set
             {
-                if (tintColor != value)
+                if (_tintColor != value)
                 {
-                    tintColor = value;
-                    if (tintColorVisual.Brush is CompositionLinearGradientBrush brush
+                    _tintColor = value;
+                    if (_tintColorVisual.Brush is CompositionLinearGradientBrush brush
                         && brush.ColorStops.Count == 2)
                     {
                         brush.ColorStops[0].Color = value;
@@ -346,15 +346,15 @@ public sealed partial class MainPage : Page
 
         public float MaxBlurAmount
         {
-            get => maxBlurAmount;
+            get => DefaultMaxBlurAmount;
             set
             {
-                if (maxBlurAmount != value)
-                    for (var i = 0; i < visuals.Length; i++)
+                if (DefaultMaxBlurAmount != value)
+                    for (var i = 0; i < _visuals.Length; i++)
                     {
-                        var blurAmount = maxBlurAmount;
+                        var blurAmount = DefaultMaxBlurAmount;
                         for (var j = 0; j < i; j++) blurAmount /= 2;
-                        visuals[i].Brush.Properties.InsertScalar("BlurEffect.BlurAmount", blurAmount);
+                        _visuals[i].Brush.Properties.InsertScalar("BlurEffect.BlurAmount", blurAmount);
                     }
             }
         }

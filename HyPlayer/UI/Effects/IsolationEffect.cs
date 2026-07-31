@@ -152,31 +152,31 @@ public readonly partial struct IsolationEffect(
 
     private float3 OkLab2OkLch(float3 lab)
     {
-        var L = lab.X;
+        var l = lab.X;
         var a = lab.Y;
         var b = lab.Z;
 
-        var C = Hlsl.Sqrt(a * a + b * b);
+        var c = Hlsl.Sqrt(a * a + b * b);
 
-        var H = Hlsl.Atan2(b, a) * RAD_TO_DEG;
-        H = NormalizeHueDegrees(H);
+        var h = Hlsl.Atan2(b, a) * RAD_TO_DEG;
+        h = NormalizeHueDegrees(h);
 
         // 无彩度颜色没有实际 hue
-        if (C <= 1e-6f) H = 0.0f;
+        if (c <= 1e-6f) h = 0.0f;
 
-        return new float3(L, C, H);
+        return new float3(l, c, h);
     }
 
     private float3 OkLch2OkLab(float3 lch)
     {
-        var L = lch.X;
-        var C = lch.Y;
-        var H = lch.Z * DEG_TO_RAD;
+        var l = lch.X;
+        var c = lch.Y;
+        var h = lch.Z * DEG_TO_RAD;
 
-        var a = C * Hlsl.Cos(H);
-        var b = C * Hlsl.Sin(H);
+        var a = c * Hlsl.Cos(h);
+        var b = c * Hlsl.Sin(h);
 
-        return new float3(L, a, b);
+        return new float3(l, a, b);
     }
 
     //Effect Utilities
@@ -220,11 +220,11 @@ public readonly partial struct IsolationEffect(
             )
         );
 
-        var L = lch.X * (1.1f - 0.1f * c3);
+        var l = lch.X * (1.1f - 0.1f * c3);
 
-        L = Hlsl.Clamp(L, 0.0f, 1.0f);
+        l = Hlsl.Clamp(l, 0.0f, 1.0f);
 
-        var lab = OkLch2OkLab(new float3(L, lch.Y, lch.Z));
+        var lab = OkLch2OkLab(new float3(l, lch.Y, lch.Z));
         return OkLab2Srgb(lab);
     }
 

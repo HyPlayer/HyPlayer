@@ -24,9 +24,9 @@ public sealed partial class ThirdPartyLogin : Page
 {
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
-    private string LoginType = "5";
+    private string _loginType = "5";
 
-    public bool Navigated;
+    private bool _navigated;
 
     public ThirdPartyLogin()
     {
@@ -47,27 +47,27 @@ public sealed partial class ThirdPartyLogin : Page
         switch (e.Parameter as string)
         {
             case "QQ":
-                LoginType = "5";
+                _loginType = "5";
                 break;
             case "WX":
-                LoginType = "10";
+                _loginType = "10";
                 break;
             case "WB":
-                LoginType = "2";
+                _loginType = "2";
                 break;
         }
 
-        Navigated = false;
+        _navigated = false;
     }
 
     private void ThirdPartyLoginWebview_Loaded(object sender, RoutedEventArgs e)
     {
         // 10 - 微信    5 - QQ     2 - 微博
-        if (!Navigated)
+        if (!_navigated)
         {
-            ThirdPartyLoginWebview.Source = new Uri("http://music.163.com/api/sns/authorize?snsType=" + LoginType +
+            ThirdPartyLoginWebview.Source = new Uri("http://music.163.com/api/sns/authorize?snsType=" + _loginType +
                                                     "&clientType=mobile&callbackType=Login");
-            Navigated = true;
+            _navigated = true;
             LoadingRingContainer.Visibility = Visibility.Collapsed;
         }
     }

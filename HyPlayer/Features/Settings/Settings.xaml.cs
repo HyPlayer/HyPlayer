@@ -58,7 +58,7 @@ public sealed partial class Settings : Page
     public static readonly DependencyProperty IsAdvancedLyricColorSettingsShowProperty = DependencyProperty.Register(
         "IsAdvancedLyricColorSettingsShow", typeof(bool), typeof(Settings), new PropertyMetadata(default(bool)));
 
-    private static readonly string[] localeList = ["zh-cn"];
+    private static readonly string[] _localeList = ["zh-cn"];
     private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
@@ -75,7 +75,7 @@ public sealed partial class Settings : Page
     private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
     private int _elapse = 10;
 
-    private bool isbyprogram;
+    private bool _isUpdatingControls;
 
     public PlaybackSettings Playback { get; } = Ioc.Default.GetRequiredService<PlaybackSettings>();
     public UISettings UI { get; } = Ioc.Default.GetRequiredService<UISettings>();
@@ -87,7 +87,7 @@ public sealed partial class Settings : Page
 
     public Settings()
     {
-        isbyprogram = true;
+        _isUpdatingControls = true;
         InitializeComponent();
     }
 
@@ -137,7 +137,7 @@ public sealed partial class Settings : Page
             $"Version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}  (#{BuildInfo.CommitSha[..7]}@{BuildInfo.BuildBranchId})";
         var deviceInfo = new EasClientDeviceInformation();
         DeviceInfo.Text = deviceInfo.Id.ToString();
-        isbyprogram = false;
+        _isUpdatingControls = false;
 #if DEBUG
         VersionCode.Text += " Debug";
 #endif
@@ -147,7 +147,7 @@ public sealed partial class Settings : Page
     private static List<FontInfo> GetAllFonts()
     {
         var names = CanvasTextFormat.GetSystemFontFamilies();
-        var displayNames = CanvasTextFormat.GetSystemFontFamilies(localeList);
+        var displayNames = CanvasTextFormat.GetSystemFontFamilies(_localeList);
         var models = new List<FontInfo>();
         for (var i = 0; i < names.Length; i++)
             models.Add(new FontInfo
@@ -288,7 +288,7 @@ public sealed partial class Settings : Page
 
     private void ControlSoundChecked(object sender, RoutedEventArgs e)
     {
-        if (isbyprogram) return;
+        if (_isUpdatingControls) return;
         UI.UISound = true;
         ElementSoundPlayer.State = ElementSoundPlayerState.On;
         ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.On;
@@ -296,7 +296,7 @@ public sealed partial class Settings : Page
 
     private void ControlSoundUnChecked(object sender, RoutedEventArgs e)
     {
-        if (isbyprogram) return;
+        if (_isUpdatingControls) return;
         UI.UISound = false;
         ElementSoundPlayer.State = ElementSoundPlayerState.Off;
         ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
@@ -319,7 +319,7 @@ public sealed partial class Settings : Page
 
     private void NBShadowDepth_OnValueChanged(object o, RangeBaseValueChangedEventArgs rangeBaseValueChangedEventArgs)
     {
-        if (isbyprogram) return;
+        if (_isUpdatingControls) return;
         var size = (int)SliderAlbumShadowDepth.Value;
         UI.ExpandedCoverShadowDepth = Math.Max(0, size);
     }
@@ -416,14 +416,14 @@ public sealed partial class Settings : Page
 
     private void ComboBoxSongBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (isbyprogram) return;
+        if (_isUpdatingControls) return;
         var selectedItem = sender?.As<ComboBox>().SelectedItem?.As<ComboBoxItem>();
         Playback.AudioRate = selectedItem.Tag.ToString();
     }
 
     private void ComboBoxSongDownloadBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (isbyprogram) return;
+        if (_isUpdatingControls) return;
         var selectedItem = sender?.As<ComboBox>().SelectedItem?.As<ComboBoxItem>();
         Download.DownloadAudioRate = selectedItem.Tag.ToString();
     }

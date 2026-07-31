@@ -12,6 +12,8 @@ public sealed class TokenLiftGlyphEffect : ILyricGlyphEffect
             !context.RenderContext.Effects.TransliterationScanning)
             return;
 
-        state.Origin.Y -= LiftAmount * TokenGlyphProgress.GetLiftProgress(context.Cluster, context.Frame);
+        var origin = state.Origin;
+        origin.Y -= LiftAmount * TokenGlyphProgress.GetLiftProgress(context.Cluster, context.Frame);
+        state.Origin = origin;
     }
 }

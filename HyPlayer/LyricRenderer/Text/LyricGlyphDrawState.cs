@@ -8,24 +8,24 @@ namespace HyPlayer.LyricRenderer.Text;
 
 public struct LyricGlyphDrawState
 {
-    public LyricTextLayer Layer;
-    public CanvasFontFace FontFace;
-    public float FontSize;
-    public CanvasGlyph[] Glyphs;
-    public Vector2 Origin;
-    public bool IsSideways;
-    public uint BidiLevel;
-    public CanvasTextMeasuringMode MeasuringMode;
-    public string LocaleName;
-    public string TextString;
-    public int[] ClusterMap;
-    public uint CharacterIndex;
-    public CanvasGlyphOrientation GlyphOrientation;
-    public float Opacity;
-    public float BlurRadius;
-    public float Scale;
-    public Color Color;
-    public bool SkipDraw;
+    public LyricTextLayer Layer { get; set; }
+    public CanvasFontFace FontFace { get; set; }
+    public float FontSize { get; set; }
+    public CanvasGlyph[] Glyphs { get; set; }
+    public Vector2 Origin { get; set; }
+    public bool IsSideways { get; set; }
+    public uint BidiLevel { get; set; }
+    public CanvasTextMeasuringMode MeasuringMode { get; set; }
+    public string LocaleName { get; set; }
+    public string TextString { get; set; }
+    public int[] ClusterMap { get; set; }
+    public uint CharacterIndex { get; set; }
+    public CanvasGlyphOrientation GlyphOrientation { get; set; }
+    public float Opacity { get; set; }
+    public float BlurRadius { get; set; }
+    public float Scale { get; set; }
+    public Color Color { get; set; }
+    public bool SkipDraw { get; set; }
 
     public static LyricGlyphDrawState FromCluster(LyricGlyphCluster cluster, Color color)
     {

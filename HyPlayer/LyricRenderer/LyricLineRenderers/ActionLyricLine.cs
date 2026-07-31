@@ -19,8 +19,8 @@ public class ActionLyricLine : RenderingLyricLine
     private bool _sizeChanged;
 
     private ICanvasImage _staticPersistCache;
-    private CanvasTextFormat textFormat;
-    private CanvasTextLayout textLayout;
+    private CanvasTextFormat _textFormat;
+    private CanvasTextLayout _textLayout;
 
     public string Text { get; set; }
     public string ActionUri { get; set; }
@@ -29,7 +29,7 @@ public class ActionLyricLine : RenderingLyricLine
 
     protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
-        if (textLayout is null) return true;
+        if (_textLayout is null) return true;
         session.DrawImage(_staticPersistCache, 0, 0);
         return true;
     }
@@ -37,7 +37,7 @@ public class ActionLyricLine : RenderingLyricLine
     protected override void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
     {
         if (_canvasWidth == 0.0f) return;
-        if (textFormat is null)
+        if (_textFormat is null)
             OnTypographyChanged(session, context);
     }
 
@@ -51,7 +51,7 @@ public class ActionLyricLine : RenderingLyricLine
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
-        textFormat = new CanvasTextFormat
+        _textFormat = new CanvasTextFormat
         {
             FontSize = TypographySelector(t => t?.LyricFontSize, context)!.Value / 2,
             HorizontalAlignment =
@@ -68,17 +68,17 @@ public class ActionLyricLine : RenderingLyricLine
             FontWeight = FontWeights.Normal
         };
 
-        if (textLayout is null || _sizeChanged)
+        if (_textLayout is null || _sizeChanged)
         {
             _sizeChanged = false;
-            textLayout = new CanvasTextLayout(session, Text, textFormat,
+            _textLayout = new CanvasTextLayout(session, Text, _textFormat,
                 Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
 
-            _renderStartX = (float)textLayout.LayoutBounds.X;
+            _renderStartX = (float)_textLayout.LayoutBounds.X;
         }
 
-        RenderingHeight = (float)(textLayout?.LayoutBounds.Height ?? 0);
-        RenderingWidth = (float)(textLayout?.LayoutBounds.Width ?? 0) + 32; // 加上 32 作为左右各 16 的 Padding 留白
+        RenderingHeight = (float)(_textLayout?.LayoutBounds.Height ?? 0);
+        RenderingWidth = (float)(_textLayout?.LayoutBounds.Width ?? 0) + 32; // 加上 32 作为左右各 16 的 Padding 留白
 
         _staticPersistCache?.Dispose();
         CanvasDrawingSession pstDs;
@@ -100,18 +100,18 @@ public class ActionLyricLine : RenderingLyricLine
         using (pstDs)
         {
             pstDs.Clear(Colors.Transparent);
-            pstDs.DrawTextLayout(textLayout, -_renderStartX + 16, 0,
+            pstDs.DrawTextLayout(_textLayout, -_renderStartX + 16, 0,
                 TypographySelector(t => t?.IdleColor, context)!.Value);
         }
     }
 
     public override void Dispose()
     {
-        textFormat?.Dispose();
-        textLayout?.Dispose();
+        _textFormat?.Dispose();
+        _textLayout?.Dispose();
         _staticPersistCache?.Dispose();
-        textFormat = null;
-        textLayout = null;
+        _textFormat = null;
+        _textLayout = null;
         _staticPersistCache = null;
         base.Dispose();
     }

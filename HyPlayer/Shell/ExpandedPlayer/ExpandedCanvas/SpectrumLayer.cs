@@ -13,8 +13,8 @@ namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 /// </summary>
 public sealed class SpectrumLayer : IExpandedCanvasLayer
 {
-    private static readonly Color DarkSpectrumColor = Color.FromArgb(32, 0, 0, 0);
-    private static readonly Color LightSpectrumColor = Color.FromArgb(32, 255, 255, 255);
+    private static readonly Color _darkSpectrumColor = Color.FromArgb(32, 0, 0, 0);
+    private static readonly Color _lightSpectrumColor = Color.FromArgb(32, 255, 255, 255);
     private readonly AudioGraphPlayer _player;
     private readonly ExpandedCanvasState _state;
 
@@ -51,7 +51,7 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
         var barWidth = width / FFTProcessor.DisplayBandCount;
         var scaleFactor = height / 80.0f;
 
-        var color = _state.IsBrightTheme ? DarkSpectrumColor : LightSpectrumColor;
+        var color = _state.IsBrightTheme ? _darkSpectrumColor : _lightSpectrumColor;
 
         for (var i = 0; i < FFTProcessor.DisplayBandCount; i++)
         {

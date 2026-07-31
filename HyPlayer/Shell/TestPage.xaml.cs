@@ -52,9 +52,9 @@ public sealed partial class TestPage : Page
     public static readonly DependencyProperty ResourceIdProperty =
         DependencyProperty.Register(nameof(ResourceId), typeof(string), typeof(TestPage), new PropertyMetadata(""));
 
-    private static readonly List<KeyValuePair<string, WeakReference<FrameworkElement>>> controlsReferences = [];
+    private static readonly List<KeyValuePair<string, WeakReference<FrameworkElement>>> _controlsReferences = [];
 
-    private static readonly Dictionary<Type, object> typeParams = new()
+    private static readonly Dictionary<Type, object> _typeParams = new()
     {
         [typeof(AlbumPage)] = "97767168",
         [typeof(ArtistPage)] = "159692",
@@ -118,12 +118,12 @@ public sealed partial class TestPage : Page
         };
         MainStackPanel.Children.Insert(0, leakCheckFrame);
         leakCheckFrame.Visibility = Visibility.Visible;
-        foreach (var (type, param) in typeParams)
+        foreach (var (type, param) in _typeParams)
         {
             leakCheckFrame.Navigate(type, param);
             await Task.Delay(500);
             var page = leakCheckFrame.Content as Page;
-            controlsReferences.Add(
+            _controlsReferences.Add(
                 new KeyValuePair<string, WeakReference<FrameworkElement>>(type.Name,
                     new WeakReference<FrameworkElement>(page)));
             GC.Collect();
@@ -136,7 +136,7 @@ public sealed partial class TestPage : Page
         await Task.Delay(5000);
         GC.Collect();
         var resultSb = new StringBuilder();
-        foreach (var (name, reference) in controlsReferences)
+        foreach (var (name, reference) in _controlsReferences)
             resultSb.AppendLine(name + ": " + (reference.TryGetTarget(out _) ? "Alive" : "Collected"));
         var result = resultSb.ToString();
         var contentDialog = new ContentDialog

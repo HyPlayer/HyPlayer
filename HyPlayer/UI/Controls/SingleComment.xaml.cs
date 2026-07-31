@@ -39,8 +39,8 @@ public sealed partial class SingleComment : UserControl
 
     private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
 
-    private readonly ObservableCollection<CommentBase> floorComments = new();
-    private string time = "0";
+    private readonly ObservableCollection<CommentBase> _floorComments = new();
+    private string _time = "0";
 
     public SingleComment()
     {
@@ -66,10 +66,10 @@ public sealed partial class SingleComment : UserControl
         }
     }
 
-    private async Task LoadFloorComments(bool IsLoadMoreComments)
+    private async Task LoadFloorComments(bool isLoadMoreComments)
     {
-        if (!IsLoadMoreComments) floorComments.Clear();
-        var offset = !IsLoadMoreComments ? 0 : int.Parse(time ?? "0");
+        if (!isLoadMoreComments) _floorComments.Clear();
+        var offset = !isLoadMoreComments ? 0 : int.Parse(_time ?? "0");
         const int count = 20;
         if (!TryResolveCommentTarget(MainComment, out var itemId, out var typeId))
             return;
@@ -91,10 +91,10 @@ public sealed partial class SingleComment : UserControl
             var floorComment = floorcomment;
             floorComment.ProvidableItemId = MainComment.ProvidableItemId;
             floorComment.IsMainComment = false;
-            floorComments.Add(floorComment);
+            _floorComments.Add(floorComment);
         }
 
-        time = (result?.NextOffset ?? 0).ToString();
+        _time = (result?.NextOffset ?? 0).ToString();
         LoadMore.Visibility = result?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -191,7 +191,7 @@ public sealed partial class SingleComment : UserControl
     private void FloorCommentsExpander_Collapsed(Expander sender,
         ExpanderCollapsedEventArgs args)
     {
-        floorComments.Clear();
+        _floorComments.Clear();
     }
 
     private static async Task<string?> GetCommentAvatarUrlAsync(CommentBase comment)

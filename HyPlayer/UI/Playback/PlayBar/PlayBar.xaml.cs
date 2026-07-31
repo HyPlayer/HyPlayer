@@ -95,9 +95,9 @@ public sealed partial class PlayBar
     private WeakEventListener<PlayBar, object?, EventArgs>? _loginCompletedListener;
     private DataTransferManager? _dataTransferManager;
 
-    private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
+    private SolidColorBrush _backgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding;
-    private TimeSpan StartingTimeSpan = TimeSpan.Zero;
+    private TimeSpan _startingTimeSpan = TimeSpan.Zero;
     public HyPlayer.Domain.Settings.UISettings UISettings { get; } =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
     public ObservableCollection<PlayBarQueueItem> PlayItems => ViewModel.PlaylistItems;
@@ -252,7 +252,7 @@ DoubleAnimation verticalAnimation;
     {
         var color = colorBrush.Color;
         color.A = 80;
-        BackgroundElayBrush = new SolidColorBrush(color);
+        _backgroundElayBrush = new SolidColorBrush(color);
     }
 
     public void LoadPlayingFile()
@@ -799,7 +799,7 @@ DoubleAnimation verticalAnimation;
     {
         _slidingEventArgs = null;
         var value = TimeSpan.FromMilliseconds(SliderProgress.Value);
-        if (Math.Abs((value - StartingTimeSpan).TotalMilliseconds) > 250d) ViewModel.SeekCommand.Execute(value);
+        if (Math.Abs((value - _startingTimeSpan).TotalMilliseconds) > 250d) ViewModel.SeekCommand.Execute(value);
 
         _isSliding = false;
     }
@@ -813,7 +813,7 @@ DoubleAnimation verticalAnimation;
     private void SliderProgress_OnManipulationStarting(object sender, ManipulationStartingRoutedEventArgs e)
     {
         var value = TimeSpan.FromMilliseconds(SliderProgress.Value);
-        StartingTimeSpan = value;
+        _startingTimeSpan = value;
         ViewModel.SeekCommand.Execute(value);
     }
 

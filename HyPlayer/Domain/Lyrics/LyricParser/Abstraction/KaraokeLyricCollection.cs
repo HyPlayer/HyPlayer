@@ -5,7 +5,7 @@ namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 
 public sealed class KaraokeLyricCollection : ILyricCollection
 {
-    private bool disposedValue;
+    private bool _disposedValue;
 
     public KaraokeLyricCollection(IList<LyricLine> lines)
     {
@@ -16,10 +16,10 @@ public sealed class KaraokeLyricCollection : ILyricCollection
 
     private void Dispose(bool disposing)
     {
-        if (!disposedValue)
+        if (!_disposedValue)
         {
             if (disposing) Lines.Clear();
-            disposedValue = true;
+            _disposedValue = true;
         }
     }
 

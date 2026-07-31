@@ -16,12 +16,12 @@ public sealed class KaraokeWordInfo
     }
 
     [JsonConstructor]
-    public KaraokeWordInfo(string CurrentWords, TimeSpan StartTime, TimeSpan Duration, string? Transliteration)
+    public KaraokeWordInfo(string currentWords, TimeSpan startTime, TimeSpan duration, string? transliteration)
     {
-        this.CurrentWords = CurrentWords;
-        this.StartTime = StartTime;
-        this.Duration = Duration;
-        this.Transliteration = Transliteration;
+        this.CurrentWords = currentWords;
+        this.StartTime = startTime;
+        this.Duration = duration;
+        this.Transliteration = transliteration;
     }
 
     public string CurrentWords { get; set; }

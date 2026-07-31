@@ -31,13 +31,13 @@ public class PureLyricInfo
 
 public class SongLyric
 {
-    public static SongLyric PureSong = new()
+    public static SongLyric PureSong { get; } = new()
         { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", TimeSpan.Zero) };
 
-    public static SongLyric NoLyric = new()
+    public static SongLyric NoLyric { get; } = new()
         { LyricLine = new LrcLyricsLine("无歌词 请欣赏", TimeSpan.Zero) };
 
-    public static SongLyric LoadingLyric = new()
+    public static SongLyric LoadingLyric { get; } = new()
         { LyricLine = new LrcLyricsLine("加载歌词中...", TimeSpan.Zero) };
 
     public LyricLine LyricLine { get; set; }
