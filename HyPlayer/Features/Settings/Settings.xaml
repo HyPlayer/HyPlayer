@@ -41,7 +41,8 @@
                     &#x27A4; 网易云音乐: 网易云音乐提供的罗马字歌词<LineBreak />
                     &#x27A4; Kawazu: 内置罗马字转换器 (需下载资源包)<LineBreak />
                     &#x27A4; 自动选择：优先使用网易云音乐提供的罗马字<LineBreak />
-                    如当前歌词网易云音乐没有提供罗马字，则使用 Kawazu 进行转换</Paragraph>
+                    如当前歌词网易云音乐没有提供罗马字，则使用 Kawazu 进行转换
+                </Paragraph>
             </RichTextBlock>
         </ContentDialog>
 
@@ -186,10 +187,12 @@
                                         Description=" [NCM_ID] 为网易云音乐 ID 占位符"
                                         Header="AMLL TTML 镜像地址"
                                         Visibility="{x:Bind hyplayer:XamlHelpers.Setting.enableAmllTtmlDb, Mode=OneWay}">
-                                        <TextBox HorizontalAlignment="Left" Text="{x:Bind hyplayer:XamlHelpers.Setting.amllTtmlMirrorUrl, Mode=TwoWay}" />
+                                        <TextBox HorizontalAlignment="Left"
+                                                 Text="{x:Bind hyplayer:XamlHelpers.Setting.amllTtmlMirrorUrl, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="歌词主色调">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.lyricColor, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right"
+                                                  SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.lyricColor, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="自动" />
                                             <ComboBoxItem Content="白色" />
                                             <ComboBoxItem Content="黑色" />
@@ -204,7 +207,8 @@
                                             IsOn="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
-                                    <controls3:SettingsCard Header="非焦点歌词颜色 (普通歌词)" Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="非焦点歌词颜色 (普通歌词)"
+                                                            Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
                                         <Grid MinWidth="10" HorizontalAlignment="Right">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
@@ -228,7 +232,8 @@
                                         </Grid>
 
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="焦点歌词颜色 (普通歌词)" Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="焦点歌词颜色 (普通歌词)"
+                                                            Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
                                         <Grid MinWidth="10" HorizontalAlignment="Right">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
@@ -252,7 +257,8 @@
                                         </Grid>
 
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="焦点歌词颜色 (逐字歌词)" Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="焦点歌词颜色 (逐字歌词)"
+                                                            Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
                                         <Grid MinWidth="10" HorizontalAlignment="Right">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
@@ -387,7 +393,8 @@
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderSimpleLineScanning, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="扫词样式">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderScanStyle, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right"
+                                                  SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.lyricRenderScanStyle, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="矩形显露" />
                                             <ComboBoxItem Content="逐字透明度" />
                                         </ComboBox>
@@ -400,7 +407,8 @@
                                     </controls3:SettingsCard>
 
                                     <controls3:SettingsCard Description="不同函数有不同的效果" Header="行滚动函数">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.LineRollingCalculator, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right"
+                                                  SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.LineRollingCalculator, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="弹簧函数" />
                                             <ComboBoxItem Content="三角函数" />
                                             <ComboBoxItem Content="Lyricify 函数" />
@@ -496,7 +504,8 @@
                                             <ComboBoxItem Content="交叉淡化" Tag="xfd" />
                                         </ComboBox>
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="交叉淡化渐入渐出时间 单位: s" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.IsCrossFadeTransition, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="交叉淡化渐入渐出时间 单位: s"
+                                                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.IsCrossFadeTransition, Mode=OneWay}">
                                         <Slider
                                             x:Name="CrossFadeTime"
                                             Width="256"
@@ -625,13 +634,15 @@
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
-                                            <Grid Grid.Row="0" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityConverter}}">
+                                            <Grid Grid.Row="0"
+                                                  Visibility="{x:Bind hyplayer:XamlHelpers.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityConverter}}">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Grid.Column="0" Text="已登录账号：" />
-                                                <TextBlock Grid.Column="1" Text="{x:Bind hyplayer:XamlHelpers.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToStringConverter}}" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{x:Bind hyplayer:XamlHelpers.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToStringConverter}}" />
                                             </Grid>
                                             <Grid Grid.Row="1">
                                                 <Button
@@ -677,7 +688,8 @@
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
                                     <controls3:SettingsCard Header="主题色">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.themeRequest, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right"
+                                                  SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.themeRequest, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="跟随系统" />
                                             <ComboBoxItem Content="亮色" />
                                             <ComboBoxItem Content="暗色" />
@@ -699,7 +711,8 @@
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
                                     <controls3:SettingsCard Header="背景显示设置">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.expandedPlayerBackgroundType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right"
+                                                  SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.expandedPlayerBackgroundType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="专辑封面模糊" />
                                             <ComboBoxItem Content="跟随唱片主色调" />
                                             <ComboBoxItem Content="流光溢彩" />
@@ -707,7 +720,8 @@
                                         </ComboBox>
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="背景取色设置">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.ColorGeneratorType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right"
+                                                  SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.ColorGeneratorType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="KMeans" />
                                             <ComboBoxItem Content="OctTree" />
                                             <ComboBoxItem Content="Auto" />
@@ -780,7 +794,8 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.animationAdaptBPM, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="轻柔动效" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.animationAdaptBPM, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="轻柔动效"
+                                                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.animationAdaptBPM, Mode=OneWay}">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -839,7 +854,8 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.AutoHidePlaybar, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="自动隐藏PlayBar时间" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.AutoHidePlaybar, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="自动隐藏PlayBar时间"
+                                                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.AutoHidePlaybar, Mode=OneWay}">
                                         <Slider
                                             x:Name="AutoHidePlayBarTime"
                                             Width="256"
@@ -855,7 +871,8 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.EnableTile, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="启用磁贴背景" Visibility="{x:Bind hyplayer:XamlHelpers.Setting.EnableTile, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="启用磁贴背景"
+                                                            Visibility="{x:Bind hyplayer:XamlHelpers.Setting.EnableTile, Mode=OneWay}">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -910,7 +927,8 @@
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.enableTouchGestureAction, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="触摸手势模式">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.gestureMode, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right"
+                                                  SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.gestureMode, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="基本手势" />
                                             <ComboBoxItem Content="平移" />
                                             <ComboBoxItem Content="搓碟" />
@@ -1018,7 +1036,8 @@
                                             HorizontalAlignment="Right"
                                             Orientation="Horizontal"
                                             Spacing="8">
-                                            <TextBox Width="256" Text="{x:Bind hyplayer:XamlHelpers.Setting.downloadFileName, Mode=TwoWay}" />
+                                            <TextBox Width="256"
+                                                     Text="{x:Bind hyplayer:XamlHelpers.Setting.downloadFileName, Mode=TwoWay}" />
                                             <Button>
                                                 <Button.Flyout>
                                                     <Flyout>
@@ -1040,13 +1059,15 @@
                                                         </RichTextBlock>
                                                     </Flyout>
                                                 </Button.Flyout>
-                                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE946;" />
+                                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                          Glyph="&#xE946;" />
                                             </Button>
 
                                         </StackPanel>
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="下载重名解决方法">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.downloadNameOccupySolution, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                        <ComboBox HorizontalAlignment="Right"
+                                                  SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.downloadNameOccupySolution, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                             <ComboBoxItem Content="跳过" />
                                             <ComboBoxItem Content="覆盖" />
                                             <ComboBoxItem Content="追加 ID" />
@@ -1166,7 +1187,8 @@
                                                             <LineBreak />
                                                             <Bold>同时建议开启降级 HTTP</Bold>
                                                             <LineBreak />
-                                                            请注意: 更改此选项之后需要重启 HyPlayer</Paragraph>
+                                                            请注意: 更改此选项之后需要重启 HyPlayer
+                                                        </Paragraph>
                                                     </RichTextBlock>
                                                 </Flyout>
                                             </Button.Flyout>
@@ -1193,10 +1215,12 @@
                                     IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.UseHttp, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="自动加载更多内容, 3 秒一次请求, 可能会导致风控" Header="使用贪婪加载">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.greedlyLoadPlayContainerItems, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0"
+                                          IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.greedlyLoadPlayContainerItems, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="贪婪加载完成时自动将加载到的歌曲添加到播放列表">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.AutoAddGreedilyLoadedSongsToPlayList, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0"
+                                          IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.AutoAddGreedilyLoadedSongsToPlayList, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="在播放时才获取播放链接">
                                 <CheckBox
@@ -1205,19 +1229,24 @@
                                     IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.songUrlLazyGet, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="开启高级音乐历史存储 (超过 100 首)">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0"
+                                          IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="将会在第二次请求时加速请求, 离线时从本地缓存获取" Header="开启请求数据缓存">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.enableApiCache, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0"
+                                          IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.enableApiCache, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="开启播放音频缓存">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.enableCache, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0"
+                                          IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.enableCache, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="本地文件扫描渐进式加载 (Progressive Loading)">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.localProgressiveLoad, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0"
+                                          IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.localProgressiveLoad, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="私人 FM 时使用 私人 DJ">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.useAiDj, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0"
+                                          IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.useAiDj, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="保持屏幕常亮">
                                 <CheckBox
@@ -1235,10 +1264,12 @@
                                     Unchecked="ControlSoundUnChecked" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="尝试绕过 CheckToken 接口 (可能被检测)">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.EnableCheckTokenApi, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0"
+                                          IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.EnableCheckTokenApi, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="歌词控件Debug模式">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.LyricRendererDebugMode, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0"
+                                          IsChecked="{x:Bind hyplayer:XamlHelpers.Setting.LyricRendererDebugMode, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Click="RestartBtn_Click" IsClickEnabled="True">
                                 <controls3:SettingsCard.Header>
@@ -1298,7 +1329,8 @@
                                         <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
                                             GitHub
                                         </Hyperlink>
-                                        |<Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
+                                        |
+                                        <Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
                                             Gitee
                                         </Hyperlink>
                                     </Paragraph>
@@ -1481,7 +1513,8 @@
                                                     SelectedIndex="{x:Bind hyplayer:XamlHelpers.Setting.UpdateSource, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                                     <ComboBoxItem Content="Microsoft Store" />
                                                     <ComboBoxItem Content="Release" />
-                                                    <ComboBoxItem Content="Canary" IsEnabled="{x:Bind hyplayer:XamlHelpers.Setting.canaryChannelAvailability, Mode=OneWay}" />
+                                                    <ComboBoxItem Content="Canary"
+                                                                  IsEnabled="{x:Bind hyplayer:XamlHelpers.Setting.canaryChannelAvailability, Mode=OneWay}" />
                                                     <ComboBoxItem Content="GitHub" />
                                                     <ComboBoxItem Content="Countinous Integration" />
                                                 </ComboBox>
@@ -1559,7 +1592,8 @@
 
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture Height="44" ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
+                                            <PersonPicture Height="44"
+                                                           ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
                                             <StackPanel>
                                                 <TextBlock
                                                     Margin="1,0,0,0"
@@ -1567,14 +1601,17 @@
                                                     Text="Kengwang" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="Developer" />
-                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="Stay Cool~" />
+                                                    <TextBlock
+                                                        Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                                        Text="Stay Cool~" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                             <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/kengwang" />
                                             <HyperlinkButton Content="博客" NavigateUri="https://blog.kengwang.com.cn" />
-                                            <HyperlinkButton Content="酷安@kengwang" NavigateUri="http://www.coolapk.com/u/1683034" />
+                                            <HyperlinkButton Content="酷安@kengwang"
+                                                             NavigateUri="http://www.coolapk.com/u/1683034" />
                                             <HyperlinkButton Content="爱发电打赏" NavigateUri="https://afdian.net/@kengwang" />
                                         </StackPanel>
                                     </Grid>
@@ -1588,7 +1625,8 @@
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture Height="44" ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
+                                            <PersonPicture Height="44"
+                                                           ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
                                             <StackPanel>
                                                 <TextBlock
                                                     Margin="1,0,0,0"
@@ -1605,7 +1643,8 @@
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                             <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/Aesthed" />
-                                            <HyperlinkButton Content="酷安@Aesthed" NavigateUri="https://www.coolapk.com/u/2409682" />
+                                            <HyperlinkButton Content="酷安@Aesthed"
+                                                             NavigateUri="https://www.coolapk.com/u/2409682" />
 
                                         </StackPanel>
                                     </Grid>
@@ -1619,7 +1658,8 @@
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture Height="44" ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
+                                            <PersonPicture Height="44"
+                                                           ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
                                             <StackPanel>
                                                 <TextBlock
                                                     Margin="1,0,0,0"
@@ -1627,7 +1667,9 @@
                                                     Text="EP012014" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="Developer" />
-                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="Solidarity Forever~" />
+                                                    <TextBlock
+                                                        Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                                        Text="Solidarity Forever~" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
@@ -1645,7 +1687,8 @@
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture Height="44" ProfilePicture="https://q1.qlogo.cn/g?b=qq&amp;k=L3T8OPGiblT0IMjCLUH3GKA&amp;s=100" />
+                                            <PersonPicture Height="44"
+                                                           ProfilePicture="https://q1.qlogo.cn/g?b=qq&amp;k=L3T8OPGiblT0IMjCLUH3GKA&amp;s=100" />
                                             <StackPanel>
                                                 <TextBlock
                                                     Margin="1,0,0,0"
@@ -1653,7 +1696,9 @@
                                                     Text="Raspberry Monster" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="Developer" />
-                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="僕が夢を捨てて大人になるまで" />
+                                                    <TextBlock
+                                                        Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                                        Text="僕が夢を捨てて大人になるまで" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
@@ -1661,7 +1706,8 @@
                                             HorizontalAlignment="Right"
                                             Orientation="Horizontal"
                                             Tapped="UIElement_OnTapped">
-                                            <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/Raspberry-Monster" />
+                                            <HyperlinkButton Content="GitHub"
+                                                             NavigateUri="https://github.com/Raspberry-Monster" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -1674,7 +1720,8 @@
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture Height="44" ProfilePicture="http://avatar.coolapk.com/data/001/87/30/68_avatar_middle.jpg" />
+                                            <PersonPicture Height="44"
+                                                           ProfilePicture="http://avatar.coolapk.com/data/001/87/30/68_avatar_middle.jpg" />
                                             <StackPanel>
                                                 <TextBlock
                                                     Margin="1,0,0,0"
@@ -1682,13 +1729,17 @@
                                                     Text="DYNAMIC-CHIN" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="新版图标提供 + 新版 UI 设计" />
-                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="Being Dynamic！" />
+                                                    <TextBlock
+                                                        Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                                        Text="Being Dynamic！" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                                            <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/FunnyTHEWorld" />
-                                            <HyperlinkButton Content="酷安" NavigateUri="https://www.coolapk.com/u/1873068" />
+                                            <HyperlinkButton Content="GitHub"
+                                                             NavigateUri="https://github.com/FunnyTHEWorld" />
+                                            <HyperlinkButton Content="酷安"
+                                                             NavigateUri="https://www.coolapk.com/u/1873068" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -1701,7 +1752,8 @@
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture Height="44" ProfilePicture="https://cn.gravatar.com/avatar/e14c9eb2a52ddb20a3ea5c72766eeffb?s=100" />
+                                            <PersonPicture Height="44"
+                                                           ProfilePicture="https://cn.gravatar.com/avatar/e14c9eb2a52ddb20a3ea5c72766eeffb?s=100" />
                                             <StackPanel>
                                                 <TextBlock
                                                     Margin="1,0,0,0"
@@ -1709,12 +1761,15 @@
                                                     Text="叫我蓝火火" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="热词开发者 + 部分功能实现" />
-                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="太阳在晒你的同时，你也在晒太阳" />
+                                                    <TextBlock
+                                                        Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                                        Text="太阳在晒你的同时，你也在晒太阳" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                                            <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/cnbluefire" />
+                                            <HyperlinkButton Content="GitHub"
+                                                             NavigateUri="https://github.com/cnbluefire" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -1727,7 +1782,8 @@
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture Height="44" ProfilePicture="https://discuss.flarum.org.cn/assets/avatars/MfhtDgaco3bsFR6D.png" />
+                                            <PersonPicture Height="44"
+                                                           ProfilePicture="https://discuss.flarum.org.cn/assets/avatars/MfhtDgaco3bsFR6D.png" />
                                             <StackPanel>
                                                 <TextBlock
                                                     Margin="1,0,0,0"
@@ -1735,13 +1791,17 @@
                                                     Text="Betta_Fish" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="部分UI更新" />
-                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="???" />
+                                                    <TextBlock
+                                                        Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                                        Text="???" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                                            <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/zxbmmmmmmmmm" />
-                                            <HyperlinkButton Content="酷安" NavigateUri="http://www.coolapk.com/u/6052095" />
+                                            <HyperlinkButton Content="GitHub"
+                                                             NavigateUri="https://github.com/zxbmmmmmmmmm" />
+                                            <HyperlinkButton Content="酷安"
+                                                             NavigateUri="http://www.coolapk.com/u/6052095" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -1754,7 +1814,8 @@
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture Height="44" ProfilePicture="https://qlogo4.store.qq.com/qzone/2318678921/2318678921/100" />
+                                            <PersonPicture Height="44"
+                                                           ProfilePicture="https://qlogo4.store.qq.com/qzone/2318678921/2318678921/100" />
                                             <StackPanel>
                                                 <TextBlock
                                                     Margin="1,0,0,0"
@@ -1762,7 +1823,9 @@
                                                     Text="Claris" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="Developer" />
-                                                    <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="Confident, Lively And Really ImpreSsive" />
+                                                    <TextBlock
+                                                        Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                                        Text="Confident, Lively And Really ImpreSsive" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
@@ -1771,7 +1834,8 @@
                                             Orientation="Horizontal"
                                             Tapped="UIElement_OnTapped">
                                             <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/Clrs17" />
-                                            <HyperlinkButton Content="知乎" NavigateUri="https://www.zhihu.com/people/ClarisS01017" />
+                                            <HyperlinkButton Content="知乎"
+                                                             NavigateUri="https://www.zhihu.com/people/ClarisS01017" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>

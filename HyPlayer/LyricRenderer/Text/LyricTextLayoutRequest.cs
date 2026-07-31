@@ -1,12 +1,10 @@
 #nullable enable
 
-using HyPlayer.LyricRenderer.Abstraction;
-using HyPlayer.LyricRenderer.Abstraction.Render;
-using Microsoft.Graphics.Canvas;
 using System.Collections.Generic;
 using Windows.UI;
-using Windows.UI.Text;
 using Windows.UI.Xaml;
+using HyPlayer.LyricRenderer.Abstraction;
+using Microsoft.Graphics.Canvas;
 
 namespace HyPlayer.LyricRenderer.Text;
 

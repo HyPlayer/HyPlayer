@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using HyPlayer.LyricEffects.Expressions;
 using HyPlayer.LyricEffects.Models;
 using HyPlayer.LyricEffects.Presets;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
 
 namespace HyPlayer.LyricRenderer.Pipeline;
 
@@ -37,7 +37,8 @@ internal abstract class ExpressionOperationFactoryBase(ILyricExpressionCompiler 
     }
 }
 
-internal sealed partial class OpacityOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
+internal sealed partial class OpacityOperationFactory(ILyricExpressionCompiler compiler)
+    : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor Opacity = new()
     {
@@ -62,7 +63,8 @@ internal sealed partial class OpacityOperationFactory(ILyricExpressionCompiler c
     {
         var diagnostics = new List<LyricProfileDiagnostic>();
         var opacity = LyricOperationCompilerHelpers.CompileScalar(Compiler, definition, Opacity, diagnostics);
-        return Result(definition, diagnostics, opacity is null ? null : () => new OpacityOperation(opacity.CreateRuntime()));
+        return Result(definition, diagnostics,
+            opacity is null ? null : () => new OpacityOperation(opacity.CreateRuntime()));
     }
 
     private sealed partial class OpacityOperation(ScalarParameterRuntime opacity) : ILyricRenderOperation
@@ -76,11 +78,15 @@ internal sealed partial class OpacityOperationFactory(ILyricExpressionCompiler c
             return _effect;
         }
 
-        public void Dispose() => _effect.Dispose();
+        public void Dispose()
+        {
+            _effect.Dispose();
+        }
     }
 }
 
-internal sealed partial class BlurOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
+internal sealed partial class BlurOperationFactory(ILyricExpressionCompiler compiler)
+    : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor Amount = new()
     {
@@ -119,11 +125,15 @@ internal sealed partial class BlurOperationFactory(ILyricExpressionCompiler comp
             return _effect;
         }
 
-        public void Dispose() => _effect.Dispose();
+        public void Dispose()
+        {
+            _effect.Dispose();
+        }
     }
 }
 
-internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
+internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler compiler)
+    : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor Blur = new()
     {
@@ -180,8 +190,8 @@ internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler comp
     private sealed partial class GlowOperation : ILyricRenderOperation
     {
         private readonly ScalarParameterRuntime _blur;
-        private readonly ScalarParameterRuntime _opacity;
         private readonly CompiledColorParameter _color;
+        private readonly ScalarParameterRuntime _opacity;
         private readonly ShadowEffect _shadow = new();
         private readonly OpacityEffect _shadowOpacity = new();
 
@@ -219,7 +229,8 @@ internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler comp
     }
 }
 
-internal sealed partial class Transform2DOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
+internal sealed partial class Transform2DOperationFactory(ILyricExpressionCompiler compiler)
+    : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor[] ParameterDescriptors =
     [
@@ -259,16 +270,19 @@ internal sealed partial class Transform2DOperationFactory(ILyricExpressionCompil
         string name,
         string expression,
         float? minimum = null,
-        float? maximum = null) => new()
+        float? maximum = null)
     {
-        Key = key,
-        DisplayName = name,
-        ValueType = LyricExpressionValueType.Scalar,
-        DefaultExpression = expression,
-        SupportsTransition = true,
-        Minimum = minimum,
-        Maximum = maximum
-    };
+        return new LyricOperationParameterDescriptor
+        {
+            Key = key,
+            DisplayName = name,
+            ValueType = LyricExpressionValueType.Scalar,
+            DefaultExpression = expression,
+            SupportsTransition = true,
+            Minimum = minimum,
+            Maximum = maximum
+        };
+    }
 
     private sealed partial class Transform2DOperation(ScalarParameterRuntime[] parameters) : ILyricRenderOperation
     {
@@ -287,11 +301,15 @@ internal sealed partial class Transform2DOperationFactory(ILyricExpressionCompil
             return _effect;
         }
 
-        public void Dispose() => _effect.Dispose();
+        public void Dispose()
+        {
+            _effect.Dispose();
+        }
     }
 }
 
-internal sealed partial class Transform3DOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
+internal sealed partial class Transform3DOperationFactory(ILyricExpressionCompiler compiler)
+    : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor[] ParameterDescriptors =
     [
@@ -330,16 +348,19 @@ internal sealed partial class Transform3DOperationFactory(ILyricExpressionCompil
         string name,
         string expression,
         float? minimum = null,
-        float? maximum = null) => new()
+        float? maximum = null)
     {
-        Key = key,
-        DisplayName = name,
-        ValueType = LyricExpressionValueType.Scalar,
-        DefaultExpression = expression,
-        SupportsTransition = true,
-        Minimum = minimum,
-        Maximum = maximum
-    };
+        return new LyricOperationParameterDescriptor
+        {
+            Key = key,
+            DisplayName = name,
+            ValueType = LyricExpressionValueType.Scalar,
+            DefaultExpression = expression,
+            SupportsTransition = true,
+            Minimum = minimum,
+            Maximum = maximum
+        };
+    }
 
     private sealed partial class Transform3DOperation(ScalarParameterRuntime[] parameters) : ILyricRenderOperation
     {
@@ -362,6 +383,9 @@ internal sealed partial class Transform3DOperationFactory(ILyricExpressionCompil
             return _effect;
         }
 
-        public void Dispose() => _effect.Dispose();
+        public void Dispose()
+        {
+            _effect.Dispose();
+        }
     }
 }

@@ -1,11 +1,11 @@
 #nullable enable
 
-using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Brushes;
 using System;
 using System.Numerics;
 using Windows.Foundation;
 using Windows.UI;
+using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Brushes;
 
 namespace HyPlayer.LyricRenderer.Text;
 
@@ -17,16 +17,10 @@ public static class GlyphRunDrawHelper
         LyricGlyphDrawState state,
         Rect? clipRect = null)
     {
-        if (state.SkipDraw)
-        {
-            return;
-        }
+        if (state.SkipDraw) return;
 
         var alpha = (byte)Math.Round(state.Color.A * Math.Clamp(state.Opacity, 0, 1));
-        if (alpha == 0)
-        {
-            return;
-        }
+        if (alpha == 0) return;
 
         brush.Color = Color.FromArgb(alpha, state.Color.R, state.Color.G, state.Color.B);
         var originalTransform = session.Transform;
@@ -34,9 +28,7 @@ public static class GlyphRunDrawHelper
         try
         {
             if (Math.Abs(state.Scale - 1) > 0.001f)
-            {
                 session.Transform = Matrix3x2.CreateScale(state.Scale, state.Origin) * originalTransform;
-            }
 
             if (clipRect is { } rect)
             {
@@ -59,10 +51,7 @@ public static class GlyphRunDrawHelper
         CanvasSolidColorBrush brush,
         LyricGlyphDrawState state)
     {
-        if (state.BlurRadius > 0.001f)
-        {
-            DrawBlurApproximation(session, brush, state);
-        }
+        if (state.BlurRadius > 0.001f) DrawBlurApproximation(session, brush, state);
 
         DrawGlyphRun(session, state, brush);
     }
@@ -74,10 +63,7 @@ public static class GlyphRunDrawHelper
     {
         var originalColor = brush.Color;
         var blurAlpha = (byte)Math.Round(originalColor.A * 0.25f);
-        if (blurAlpha == 0)
-        {
-            return;
-        }
+        if (blurAlpha == 0) return;
 
         brush.Color = Color.FromArgb(blurAlpha, originalColor.R, originalColor.G, originalColor.B);
         var offset = Math.Clamp(state.BlurRadius, 0.5f, 3f);

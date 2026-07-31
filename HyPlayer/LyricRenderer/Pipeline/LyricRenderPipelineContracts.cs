@@ -1,11 +1,12 @@
-using HyPlayer.LyricEffects.Drawing;
-using HyPlayer.LyricEffects.Expressions;
-using HyPlayer.LyricEffects.Models;
-using Microsoft.Graphics.Canvas;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
+using HyPlayer.LyricEffects.Drawing;
+using HyPlayer.LyricEffects.Expressions;
+using HyPlayer.LyricEffects.Models;
+using Microsoft.Graphics.Canvas;
 
 namespace HyPlayer.LyricRenderer.Pipeline;
 
@@ -29,7 +30,8 @@ public sealed class LyricProfileCompileResult
 
     public CompiledLyricEffectProfile? Profile { get; init; }
 
-    public bool IsSuccess => Profile is not null && Diagnostics.All(item => item.Severity != LyricProfileDiagnosticSeverity.Error);
+    public bool IsSuccess => Profile is not null &&
+                             Diagnostics.All(item => item.Severity != LyricProfileDiagnosticSeverity.Error);
 }
 
 public sealed class CompiledLyricEffectProfile
@@ -50,8 +52,10 @@ public sealed class CompiledLyricEffectProfile
 
     internal IReadOnlyList<CompiledLyricRenderOperation> Operations { get; }
 
-    internal LyricRenderPipelineInstance CreatePipeline() =>
-        new(Version, Operations.Select(operation => operation.Create()).ToList());
+    internal LyricRenderPipelineInstance CreatePipeline()
+    {
+        return new LyricRenderPipelineInstance(Version, Operations.Select(operation => operation.Create()).ToList());
+    }
 }
 
 public sealed class CompiledLyricRenderOperation
@@ -67,7 +71,8 @@ public sealed class LyricOperationCompileResult
 
     public IReadOnlyList<LyricProfileDiagnostic> Diagnostics { get; init; } = [];
 
-    public bool IsSuccess => Operation is not null && Diagnostics.All(item => item.Severity != LyricProfileDiagnosticSeverity.Error);
+    public bool IsSuccess => Operation is not null &&
+                             Diagnostics.All(item => item.Severity != LyricProfileDiagnosticSeverity.Error);
 }
 
 public interface ILyricRenderOperation : IDisposable
@@ -97,14 +102,20 @@ public readonly record struct LyricDrawValue(
     LyricColorValue Color,
     string? Text)
 {
-    public static LyricDrawValue FromScalar(float value) =>
-        new(LyricExpressionValueType.Scalar, value, default, null);
+    public static LyricDrawValue FromScalar(float value)
+    {
+        return new LyricDrawValue(LyricExpressionValueType.Scalar, value, default, null);
+    }
 
-    public static LyricDrawValue FromColor(LyricColorValue value) =>
-        new(LyricExpressionValueType.Color, 0, value, null);
+    public static LyricDrawValue FromColor(LyricColorValue value)
+    {
+        return new LyricDrawValue(LyricExpressionValueType.Color, 0, value, null);
+    }
 
-    public static LyricDrawValue FromText(string value) =>
-        new(LyricExpressionValueType.Text, 0, default, value);
+    public static LyricDrawValue FromText(string value)
+    {
+        return new LyricDrawValue(LyricExpressionValueType.Text, 0, default, value);
+    }
 }
 
 public interface ILyricDrawCommandFactory
@@ -116,7 +127,7 @@ public interface ILyricDrawCommandFactory
 
 public sealed class LyricDrawExecutionContext
 {
-    private readonly Stack<System.Numerics.Matrix3x2> _transforms = new();
+    private readonly Stack<Matrix3x2> _transforms = new();
 
     internal LyricDrawExecutionContext(CanvasDrawingSession session)
     {
@@ -125,7 +136,10 @@ public sealed class LyricDrawExecutionContext
 
     public CanvasDrawingSession Session { get; }
 
-    public void Save() => _transforms.Push(Session.Transform);
+    public void Save()
+    {
+        _transforms.Push(Session.Transform);
+    }
 
     public void Restore()
     {
@@ -143,17 +157,17 @@ public sealed class LyricRenderFrameResourceScope : IDisposable
 {
     private readonly List<IDisposable> _resources = [];
 
-    public T Track<T>(T resource) where T : IDisposable
-    {
-        _resources.Add(resource);
-        return resource;
-    }
-
     public void Dispose()
     {
         for (var index = _resources.Count - 1; index >= 0; index--)
             _resources[index].Dispose();
         _resources.Clear();
+    }
+
+    public T Track<T>(T resource) where T : IDisposable
+    {
+        _resources.Add(resource);
+        return resource;
     }
 }
 
@@ -191,11 +205,15 @@ internal sealed class LyricRenderPipelineInstance : IDisposable
 
     public int Version { get; }
 
+    public void Dispose()
+    {
+        foreach (var operation in _operations) operation.Dispose();
+    }
+
     public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
     {
         var result = source;
         foreach (var operation in _operations)
-        {
             try
             {
                 result = operation.Apply(result, context);
@@ -205,13 +223,7 @@ internal sealed class LyricRenderPipelineInstance : IDisposable
                 if (_reportedFailures.Add(operation))
                     Debug.WriteLine($"Lyric render operation {operation.GetType().Name} failed: {exception}");
             }
-        }
 
         return result;
-    }
-
-    public void Dispose()
-    {
-        foreach (var operation in _operations) operation.Dispose();
     }
 }

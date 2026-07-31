@@ -21,9 +21,7 @@ internal static class TokenGlyphProgress
             if (cluster.TokenEndIndexExclusive <= frame.CurrentTokenIndex) return 1;
             if (cluster.TokenStartIndex > frame.CurrentTokenIndex) return 0;
             if (frame.CurrentTokenDuration < WholeTokenLiftDurationThreshold)
-            {
                 return Math.Clamp(frame.CurrentTokenProgress, 0, 1);
-            }
 
             return GetSourceRangeProgress(cluster, frame);
         }
@@ -51,9 +49,7 @@ internal static class TokenGlyphProgress
     public static float GetSourceRangeProgress(LyricGlyphCluster cluster, TextRenderFrame frame)
     {
         if (cluster.SourceStart < 0 || cluster.SourceEnd <= cluster.SourceStart)
-        {
             return Math.Clamp(frame.CurrentTokenProgress, 0, 1);
-        }
 
         var sourcePosition = cluster.Layer == LyricTextLayer.Transliteration
             ? frame.CurrentTransliterationSourcePosition

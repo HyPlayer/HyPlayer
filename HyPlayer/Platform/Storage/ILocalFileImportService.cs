@@ -1,12 +1,12 @@
-using HyPlayer.Platform.Playback.LocalProvider;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.Storage;
+using HyPlayer.Platform.Playback.LocalProvider;
 
 namespace HyPlayer.Platform.Storage;
 
 /// <summary>
-/// Handles local file picking and metadata extraction for playlist imports.
+///     Handles local file picking and metadata extraction for playlist imports.
 /// </summary>
 public interface ILocalFileImportService
 {

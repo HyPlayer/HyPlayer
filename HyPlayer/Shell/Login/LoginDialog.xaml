@@ -96,7 +96,8 @@
                     Click="ThirdPartyLogin_Click"
                     Tag="QQ"
                     ToolTipService.ToolTip="使用QQ登录">
-                    <BitmapIcon Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" UriSource="/Assets/ThirdPartyIcons/QQ.png" />
+                    <BitmapIcon Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                UriSource="/Assets/ThirdPartyIcons/QQ.png" />
                 </Button>
                 <Button
                     x:Name="WXLogin"
@@ -107,7 +108,8 @@
                     Click="ThirdPartyLogin_Click"
                     Tag="WX"
                     ToolTipService.ToolTip="使用微信登录">
-                    <BitmapIcon Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" UriSource="/Assets/ThirdPartyIcons/WX.png" />
+                    <BitmapIcon Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                UriSource="/Assets/ThirdPartyIcons/WX.png" />
                 </Button>
                 <Button
                     x:Name="WBLogin"
@@ -120,7 +122,8 @@
                     Tag="WB"
                     ToolTipService.ToolTip="使用微博登录">
                     <Button.Content>
-                        <BitmapIcon Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" UriSource="/Assets/ThirdPartyIcons/SinaWB.png" />
+                        <BitmapIcon Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                    UriSource="/Assets/ThirdPartyIcons/SinaWB.png" />
                     </Button.Content>
                 </Button>
             </StackPanel>

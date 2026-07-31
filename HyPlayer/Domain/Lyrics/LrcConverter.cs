@@ -1,3 +1,8 @@
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using Windows.UI.Text;
+using Windows.UI.Xaml;
 using ALRC.Abstraction;
 using ALRC.Converters;
 using HyPlayer.Domain.Lyrics.LyricEnhancers;
@@ -5,23 +10,19 @@ using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.Text;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using Windows.UI.Text;
 using Color = System.Drawing.Color;
-using Windows.UI.Xaml;
 
 namespace HyPlayer.Domain.Lyrics;
 
 public static class LrcConverter
 {
     private static readonly ColorConverter ColorConverter = new();
-    public static readonly List<ILyricEnhancer<bool>> LyricEnhancers = [
+
+    public static readonly List<ILyricEnhancer<bool>> LyricEnhancers =
+    [
         new BreathLineEnhancer(),
         new NearbyLineAlignmentEnhancer(),
-        new SublineAlignmentEnhancer(),
+        new SublineAlignmentEnhancer()
     ];
 
     public static List<RenderingLyricLine> Convert(
@@ -33,9 +34,7 @@ public static class LrcConverter
         var result = new List<RenderingLyricLine>();
         if (optimizeLyric)
             foreach (var lyricEnhancer in LyricEnhancers)
-            {
                 alrc = lyricEnhancer.Enhance(true, alrc);
-            }
         foreach (var alrcLine in alrc.Lines)
         {
             if (string.IsNullOrWhiteSpace(alrcLine.RawText) && alrcLine.Words is not { Count: > 0 } &&
@@ -50,7 +49,7 @@ public static class LrcConverter
                         alrcLine.End ?? 0
                     ],
                     StartTime = alrcLine.Start ?? 0,
-                    EndTime = alrcLine.End ?? 0,
+                    EndTime = alrcLine.End ?? 0
                 });
                 continue;
             }
@@ -70,10 +69,8 @@ public static class LrcConverter
                 Translation = alrcLine.Translation
             };
             if (alrcLine.Words is { Count: > 0 })
-            {
                 line.Tokens = alrcLine.Words
                     .Select(w => new LyricTextToken(w.Word, w.Start, w.End, w.Transliteration)).ToList();
-            }
 
             if (alrc.Header?.Styles?.FirstOrDefault(t => t.Id == alrcLine.LineStyle) is { } style)
             {
@@ -86,22 +83,20 @@ public static class LrcConverter
                         ALRCStylePosition.Right => TextAlignment.Right,
                         _ => null
                     },
-                    FontWeight = style.Type == ALRCStyleAccent.Emphasise ? FontWeights.Bold : FontWeights.Normal,
+                    FontWeight = style.Type == ALRCStyleAccent.Emphasise ? FontWeights.Bold : FontWeights.Normal
                 };
                 line.HiddenOnBlur = style.HiddenOnBlur || style.Type == ALRCStyleAccent.Background;
                 if (style.Color is not null)
                 {
                     var colorRet = ColorConverter.ConvertFromString(style.Color);
                     if (colorRet is Color color)
-                    {
-                        line.Typography.FocusingColor = new Windows.UI.Color()
+                        line.Typography.FocusingColor = new Windows.UI.Color
                         {
                             A = color.A,
                             R = color.R,
                             G = color.G,
                             B = color.B
                         };
-                    }
                 }
             }
 
@@ -109,18 +104,13 @@ public static class LrcConverter
         }
 
         if (lyricMetadata is { Count: > 0 })
-        {
             foreach (var lyricInfoMetadata in lyricMetadata)
-            {
-                result.Add(new ActionLyricLine()
+                result.Add(new ActionLyricLine
                 {
                     Text = $"{lyricInfoMetadata.DisplayName}: {lyricInfoMetadata.Value}",
                     ActionUri = lyricInfoMetadata.ActionUri
                 });
-            }
-        }
 
         return result;
     }
-
 }

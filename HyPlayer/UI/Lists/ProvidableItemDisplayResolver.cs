@@ -1,17 +1,14 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace HyPlayer.UI.Lists;
 
@@ -26,7 +23,8 @@ public sealed class ProvidableItemDisplayResolver
         _setting = setting;
     }
 
-    public async Task<ProvidableItemRowViewModel> CreateRowAsync(ProvidableItemBase item, int order, CancellationToken cancellationToken = default)
+    public async Task<ProvidableItemRowViewModel> CreateRowAsync(ProvidableItemBase item, int order,
+        CancellationToken cancellationToken = default)
     {
         var creators = item is IHasCreators creatorsProvider
             ? await creatorsProvider.GetCreatorsAsync(cancellationToken) ?? []
@@ -44,7 +42,7 @@ public sealed class ProvidableItemDisplayResolver
             Order = order,
             Translation = string.IsNullOrEmpty(translation) ? null : $"({translation})",
             Title = item.Name ?? item.ActualId ?? string.Empty,
-            LineOne = string.Join(" / ",creators.Select(t=>t.Name) ?? []),
+            LineOne = string.Join(" / ", creators.Select(t => t.Name) ?? []),
             LineTwo = album,
             LineThree = string.Join(" / ", aliases),
             CoverUrl = coverUrl,

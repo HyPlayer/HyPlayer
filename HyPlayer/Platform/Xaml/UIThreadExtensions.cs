@@ -7,7 +7,7 @@ using Windows.UI.Xaml;
 namespace HyPlayer.Platform.Xaml;
 
 /// <summary>
-/// Helpers for dispatching work to the UI thread that owns a XAML object.
+///     Helpers for dispatching work to the UI thread that owns a XAML object.
 /// </summary>
 public static class UIThreadExtensions
 {
@@ -29,7 +29,6 @@ public static class UIThreadExtensions
         ArgumentNullException.ThrowIfNull(action);
 
         if (dispatcher.HasThreadAccess)
-        {
             try
             {
                 action();
@@ -39,7 +38,6 @@ public static class UIThreadExtensions
             {
                 return Task.FromException(ex);
             }
-        }
 
         return dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => action()).AsTask();
     }
@@ -50,7 +48,6 @@ public static class UIThreadExtensions
         ArgumentNullException.ThrowIfNull(action);
 
         if (dispatcher.HasThreadAccess)
-        {
             try
             {
                 return action() ?? Task.FromException(
@@ -60,7 +57,6 @@ public static class UIThreadExtensions
             {
                 return Task.FromException(ex);
             }
-        }
 
         var completion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
         IAsyncAction dispatchOperation;

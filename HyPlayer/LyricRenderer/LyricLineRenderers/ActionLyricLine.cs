@@ -1,29 +1,29 @@
-﻿using HyPlayer.LyricRenderer.Abstraction;
-using HyPlayer.LyricRenderer.Abstraction.Render;
-using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Text;
-using System;
+﻿using System;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
+using HyPlayer.LyricRenderer.Abstraction;
+using HyPlayer.LyricRenderer.Abstraction.Render;
+using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Text;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
 public class ActionLyricLine : RenderingLyricLine
 {
+    private float _canvasHeight;
     private float _canvasWidth;
+
+    // 新增：用于记录文本排版的实际起始 X 坐标
+    private float _renderStartX;
+    private bool _sizeChanged;
+
+    private ICanvasImage _staticPersistCache;
     private CanvasTextFormat textFormat;
     private CanvasTextLayout textLayout;
-    private bool _sizeChanged;
-    private float _canvasHeight;
-
-    private ICanvasImage _staticPersistCache = null;
 
     public string Text { get; set; }
     public string ActionUri { get; set; }
-
-    // 新增：用于记录文本排版的实际起始 X 坐标
-    private float _renderStartX = 0f;
     public override string ExpressionText => Text ?? string.Empty;
 
 
@@ -90,7 +90,8 @@ public class ActionLyricLine : RenderingLyricLine
         }
         else
         {
-            var staticPersistCacheTarget = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+            var staticPersistCacheTarget =
+                new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
             _staticPersistCache = staticPersistCacheTarget;
             pstDs = staticPersistCacheTarget.CreateDrawingSession();
         }
@@ -99,7 +100,8 @@ public class ActionLyricLine : RenderingLyricLine
         using (pstDs)
         {
             pstDs.Clear(Colors.Transparent);
-            pstDs.DrawTextLayout(textLayout, -_renderStartX + 16, 0, TypographySelector(t => t?.IdleColor, context)!.Value);
+            pstDs.DrawTextLayout(textLayout, -_renderStartX + 16, 0,
+                TypographySelector(t => t?.IdleColor, context)!.Value);
         }
     }
 
@@ -107,7 +109,7 @@ public class ActionLyricLine : RenderingLyricLine
     {
         textFormat?.Dispose();
         textLayout?.Dispose();
-        (_staticPersistCache as IDisposable)?.Dispose();
+        _staticPersistCache?.Dispose();
         textFormat = null;
         textLayout = null;
         _staticPersistCache = null;

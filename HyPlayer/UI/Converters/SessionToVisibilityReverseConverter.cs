@@ -1,7 +1,6 @@
-namespace HyPlayer.UI.Converters
+namespace HyPlayer.UI.Converters;
+
+public partial class SessionToVisibilityReverseConverter : SessionToVisibilityConverterBase
 {
-    public partial class SessionToVisibilityReverseConverter : SessionToVisibilityConverterBase
-    {
-        protected override bool Negate => true;
-    }
+    protected override bool Negate => true;
 }

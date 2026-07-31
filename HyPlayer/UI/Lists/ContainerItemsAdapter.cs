@@ -1,11 +1,10 @@
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 
 namespace HyPlayer.UI.Lists;
 
@@ -13,7 +12,8 @@ public sealed class StaticItemsContainer : LinerContainerBase
 {
     private readonly IReadOnlyList<ProvidableItemBase> _items;
 
-    public StaticItemsContainer(IEnumerable<ProvidableItemBase> items, string name = "", string actualId = "static", string typeId = "static")
+    public StaticItemsContainer(IEnumerable<ProvidableItemBase> items, string name = "", string actualId = "static",
+        string typeId = "static")
     {
         _items = items.ToList();
         Name = name;
@@ -31,11 +31,10 @@ public sealed class StaticItemsContainer : LinerContainerBase
     }
 }
 
-
 public sealed class ReorderedContainer : LinerContainerBase
 {
-    private readonly ContainerBase _source;
     private readonly bool _reverse;
+    private readonly ContainerBase _source;
 
     public ReorderedContainer(ContainerBase source, bool reverse)
     {
@@ -61,7 +60,8 @@ public sealed class ReorderedContainer : LinerContainerBase
         return source switch
         {
             LinerContainerBase liner => await liner.GetAllItemsAsync(ctk),
-            IProgressiveLoadingContainer progressive => (await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount, ctk)).Item2,
+            IProgressiveLoadingContainer progressive => (await progressive.GetProgressiveItemsListAsync(0,
+                progressive.MaxProgressiveCount, ctk)).Item2,
             UndeterminedContainerBase undetermined => await undetermined.GetNextItemsRangeAsync(ctk),
             _ => []
         };

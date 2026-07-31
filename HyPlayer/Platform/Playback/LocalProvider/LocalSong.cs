@@ -1,11 +1,11 @@
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using TagLib;
 using Windows.Storage;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using TagLib;
 
 namespace HyPlayer.Platform.Playback.LocalProvider;
 
@@ -29,8 +29,6 @@ public sealed class LocalSong : SingleSongBase, IHasTranslation
 
     public string? CdName { get; init; }
 
-    public string? Translation { get; set; }
-
     public bool IsNcm { get; init; }
 
     public IReadOnlyList<PersonBase>? Artists { get; init; }
@@ -38,6 +36,8 @@ public sealed class LocalSong : SingleSongBase, IHasTranslation
     public string ArtistText => CreatorList is { Count: > 0 } creators
         ? string.Join("; ", creators)
         : "未知歌手";
+
+    public string? Translation { get; set; }
 
     public override Task<List<PersonBase>?> GetCreatorsAsync(CancellationToken ctk = default)
     {

@@ -34,18 +34,6 @@ public sealed partial class ExpandableTextBox : UserControl
         ExpandButton.Visibility = Visibility.Collapsed;
     }
 
-    private void MyTextBlock_IsTextTrimmedChanged(TextBlock sender, IsTextTrimmedChangedEventArgs args)
-    {
-        if (MyTextBlock.IsTextTrimmed || _isExpanded)
-        {
-            ExpandButton.Visibility = Visibility.Visible;
-        }
-        else
-        {
-            ExpandButton.Visibility = Visibility.Collapsed;
-        }
-    }
-
     public string ButtonText
     {
         get => (string)GetValue(ButtonTextProperty);
@@ -61,10 +49,7 @@ public sealed partial class ExpandableTextBox : UserControl
     public string Text
     {
         get => (string)GetValue(TextProperty);
-        set
-        {
-            SetValue(TextProperty, value);
-        }
+        set => SetValue(TextProperty, value);
     }
 
 
@@ -84,6 +69,14 @@ public sealed partial class ExpandableTextBox : UserControl
     {
         get => (int)GetValue(ActualMaxLineProperty);
         set => SetValue(ActualMaxLineProperty, value);
+    }
+
+    private void MyTextBlock_IsTextTrimmedChanged(TextBlock sender, IsTextTrimmedChangedEventArgs args)
+    {
+        if (MyTextBlock.IsTextTrimmed || _isExpanded)
+            ExpandButton.Visibility = Visibility.Visible;
+        else
+            ExpandButton.Visibility = Visibility.Collapsed;
     }
 
     private void ExpandOrCollapseText(object sender, RoutedEventArgs e)

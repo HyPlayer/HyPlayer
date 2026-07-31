@@ -1,11 +1,11 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace HyPlayer.UI.Lists;
 
 /// <summary>
-/// Observable presentation state owned by <see cref="ContainerItemsView"/>.
-/// The control's dependency properties remain its external XAML contract.
+///     Observable presentation state owned by <see cref="ContainerItemsView" />.
+///     The control's dependency properties remain its external XAML contract.
 /// </summary>
 public sealed partial class ContainerItemsViewState : ObservableObject
 {
@@ -28,11 +28,9 @@ public sealed partial class ContainerItemsViewState : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanLoadMore))]
     public partial bool HasMore { get; set; }
 
-    [ObservableProperty]
-    public partial bool MultiSelect { get; set; }
+    [ObservableProperty] public partial bool MultiSelect { get; set; }
 
-    [ObservableProperty]
-    public partial object? ActiveItemsSource { get; set; }
+    [ObservableProperty] public partial object? ActiveItemsSource { get; set; }
 
     public ObservableCollection<ProvidableItemRowViewModel> Rows { get; } = [];
     public ObservableCollection<ProvidableItemRowViewModel> VisibleRows { get; } = [];

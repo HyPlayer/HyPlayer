@@ -1,13 +1,12 @@
 using System;
 
-namespace HyPlayer.Platform.Storage.Audio
+namespace HyPlayer.Platform.Storage.Audio;
+
+public static class AudioUtils
 {
-    public static class AudioUtils
+    public static double DbToVolumePercent(double db)
     {
-        public static double DbToVolumePercent(double db)
-        {
-            var normalizedDb = Math.Min(db, 0.0);
-            return Math.Pow(10, normalizedDb / 20.0);
-        }
+        var normalizedDb = Math.Min(db, 0.0);
+        return Math.Pow(10, normalizedDb / 20.0);
     }
 }

@@ -1,17 +1,24 @@
 #nullable enable
 
 using System;
+
 namespace HyPlayer.LyricRenderer.Text;
 
 public sealed class DefaultTextProgressResolver : ITextProgressResolver
 {
-    public TextRenderFrame Resolve(long currentTime, long lineStartTime, long lineEndTime, LyricTextLayoutSnapshot layout)
+    public TextRenderFrame Resolve(long currentTime, long lineStartTime, long lineEndTime,
+        LyricTextLayoutSnapshot layout)
     {
         var currentTokenIndex = FindCurrentTokenIndex(layout, currentTime);
-        var currentProgress = GetCurrentTokenProgress(currentTime, lineStartTime, lineEndTime, layout, currentTokenIndex);
+        var currentProgress =
+            GetCurrentTokenProgress(currentTime, lineStartTime, lineEndTime, layout, currentTokenIndex);
         var lineProgress = GetLineProgress(currentTime, lineStartTime, lineEndTime);
-        var currentToken = (uint)currentTokenIndex < (uint)layout.Tokens.Count ? layout.Tokens[currentTokenIndex] : null;
-        var currentTokenDuration = currentToken is null ? lineEndTime - lineStartTime : currentToken.EndTime - currentToken.StartTime;
+        var currentToken = (uint)currentTokenIndex < (uint)layout.Tokens.Count
+            ? layout.Tokens[currentTokenIndex]
+            : null;
+        var currentTokenDuration = currentToken is null
+            ? lineEndTime - lineStartTime
+            : currentToken.EndTime - currentToken.StartTime;
 
         return new TextRenderFrame
         {
@@ -19,8 +26,10 @@ public sealed class DefaultTextProgressResolver : ITextProgressResolver
             CurrentTokenProgress = currentProgress,
             CurrentTokenDuration = currentTokenDuration,
             LineProgress = lineProgress,
-            CurrentLyricSourcePosition = GetCurrentSourcePosition(layout, currentTokenIndex, currentProgress, t => t.Text),
-            CurrentTransliterationSourcePosition = GetCurrentSourcePosition(layout, currentTokenIndex, currentProgress, t => t.Transliteration ?? string.Empty),
+            CurrentLyricSourcePosition =
+                GetCurrentSourcePosition(layout, currentTokenIndex, currentProgress, t => t.Text),
+            CurrentTransliterationSourcePosition = GetCurrentSourcePosition(layout, currentTokenIndex, currentProgress,
+                t => t.Transliteration ?? string.Empty),
             CurrentToken = currentToken
         };
     }
@@ -28,12 +37,8 @@ public sealed class DefaultTextProgressResolver : ITextProgressResolver
     private static int FindCurrentTokenIndex(LyricTextLayoutSnapshot layout, long currentTime)
     {
         for (var i = layout.Tokens.Count - 1; i >= 0; i--)
-        {
             if (layout.Tokens[i].StartTime <= currentTime)
-            {
                 return i;
-            }
-        }
 
         return -1;
     }
@@ -72,18 +77,13 @@ public sealed class DefaultTextProgressResolver : ITextProgressResolver
         float currentProgress,
         Func<LyricTextToken, string> textSelector)
     {
-        if (layout.Tokens.Count <= 0)
-        {
-            return layout.Text.Length * Math.Clamp(currentProgress, 0, 1);
-        }
+        if (layout.Tokens.Count <= 0) return layout.Text.Length * Math.Clamp(currentProgress, 0, 1);
 
         if (currentTokenIndex < 0) return 0;
 
         var position = 0;
         for (var i = 0; i < currentTokenIndex && i < layout.Tokens.Count; i++)
-        {
             position += textSelector(layout.Tokens[i]).Length;
-        }
 
         return position + textSelector(layout.Tokens[currentTokenIndex]).Length * Math.Clamp(currentProgress, 0, 1);
     }

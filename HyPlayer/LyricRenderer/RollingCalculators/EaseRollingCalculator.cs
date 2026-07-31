@@ -1,7 +1,7 @@
-﻿using HyPlayer.LyricRenderer.Abstraction;
+﻿using System;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
-using System;
 
 namespace HyPlayer.LyricRenderer.RollingCalculators;
 
@@ -29,15 +29,9 @@ public abstract class EaseRollingCalculator : LineRollingCalculator
             progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
             progress = (float)EaseFunction.Ease(progress);
         }
-        if (progress != 0)
-        {
-            return fromY + (targetY - fromY) * progress;
-        }
-        else
-        {
-            return targetY; //弄个Fallback，如果progress是0那就直接返回它应到的目标位置
-        }
+
+        if (progress != 0) return fromY + (targetY - fromY) * progress;
+
+        return targetY; //弄个Fallback，如果progress是0那就直接返回它应到的目标位置
     }
 }
-
-

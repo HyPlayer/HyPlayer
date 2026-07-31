@@ -6,4 +6,7 @@ public sealed record AuthQrKeyResult(bool IsSuccess, string? Key = null, string?
 
 public sealed record AuthQrCheckResult(int Code = 0, string? ErrorMessage = null);
 
-public sealed record AuthDeviceRegisterResult(bool IsSuccess, string? TemporaryUserId = null, string? ErrorMessage = null);
+public sealed record AuthDeviceRegisterResult(
+    bool IsSuccess,
+    string? TemporaryUserId = null,
+    string? ErrorMessage = null);

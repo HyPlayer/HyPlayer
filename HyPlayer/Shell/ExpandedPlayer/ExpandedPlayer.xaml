@@ -141,7 +141,8 @@
             SizeChanged="LuminousBackgroundContainer_SizeChanged">
             <Grid.RenderTransform>
                 <TransformGroup>
-                    <RotateTransform x:Name="BgRotate" CenterX="{x:Bind BgScale.CenterX, Mode=OneWay}" CenterY="{x:Bind BgScale.CenterY, Mode=OneWay}" />
+                    <RotateTransform x:Name="BgRotate" CenterX="{x:Bind BgScale.CenterX, Mode=OneWay}"
+                                     CenterY="{x:Bind BgScale.CenterY, Mode=OneWay}" />
                     <ScaleTransform x:Name="BgScale" />
                 </TransformGroup>
             </Grid.RenderTransform>

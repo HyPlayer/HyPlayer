@@ -1,35 +1,5 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Comments;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.Resources;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +9,16 @@ using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.UI.Lists;
 
 #endregion
 
@@ -51,25 +31,27 @@ namespace HyPlayer.Features.Video;
 /// </summary>
 public sealed partial class MVPage : Page
 {
-    private readonly IRichMediaProvidable _richMediaProvider = Ioc.Default.GetRequiredService<IRichMediaProvidable>();
+    private readonly CancellationToken _cancellationToken;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
-    private readonly IProviderSearchCategoryTypeIds _searchCategoryTypeIds = Ioc.Default.GetRequiredService<IProviderSearchCategoryTypeIds>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IRichMediaProvidable _richMediaProvider = Ioc.Default.GetRequiredService<IRichMediaProvidable>();
+
+    private readonly IProviderSearchCategoryTypeIds _searchCategoryTypeIds =
+        Ioc.Default.GetRequiredService<IProviderSearchCategoryTypeIds>();
 
     private readonly List<RichMediaCardViewModel> sources = new();
+    private MediaSource _currentMediaSource;
+    private bool _isUnloaded;
+    private Task _relateiveLoaderTask;
+    private bool _updatingQualitySelection;
+    private Task _videoInfoLoaderTask;
+    private CancellationTokenSource _videoLoadCancellationTokenSource = new();
+    private Task _videoLoaderTask;
+    private int _videoLoadVersion;
     private string MVId;
     private string mvquality = "1080";
     private string songid;
-    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-    private CancellationTokenSource _videoLoadCancellationTokenSource = new CancellationTokenSource();
-    private CancellationToken _cancellationToken;
-    private Task _relateiveLoaderTask;
-    private Task _videoLoaderTask;
-    private Task _videoInfoLoaderTask;
-    private MediaSource _currentMediaSource;
-    private int _videoLoadVersion;
-    private bool _isUnloaded;
-    private bool _updatingQualitySelection;
 
     public MVPage()
     {
@@ -114,10 +96,7 @@ public sealed partial class MVPage : Page
     {
         _cancellationToken.ThrowIfCancellationRequested();
         var result = await _richMediaProvider.GetRichMediaFeedAsync($"song:{songid}", 0, 10, _cancellationToken);
-        foreach (var item in result.Items)
-        {
-            sources.Add(await MapRichMediaToCardAsync(item));
-        }
+        foreach (var item in result.Items) sources.Add(await MapRichMediaToCardAsync(item));
 
         RelativeList.ItemsSource = sources;
 
@@ -140,7 +119,6 @@ public sealed partial class MVPage : Page
         _videoLoadCancellationTokenSource.Cancel();
         ReleaseCurrentMediaSource();
         if (_relateiveLoaderTask != null && !_relateiveLoaderTask.IsCompleted)
-        {
             try
             {
                 await _relateiveLoaderTask;
@@ -148,10 +126,8 @@ public sealed partial class MVPage : Page
             catch
             {
             }
-        }
 
         if (_videoLoaderTask != null && !_videoLoaderTask.IsCompleted)
-        {
             try
             {
                 await _videoLoaderTask;
@@ -159,10 +135,8 @@ public sealed partial class MVPage : Page
             catch
             {
             }
-        }
 
         if (_videoInfoLoaderTask != null && !_videoInfoLoaderTask.IsCompleted)
-        {
             try
             {
                 await _videoInfoLoaderTask;
@@ -170,7 +144,6 @@ public sealed partial class MVPage : Page
             catch
             {
             }
-        }
 
         _cancellationTokenSource?.Dispose();
         _videoLoadCancellationTokenSource?.Dispose();
@@ -229,7 +202,8 @@ public sealed partial class MVPage : Page
             cancellationToken.ThrowIfCancellationRequested();
             if (MvIdRegex().IsMatch(mvId))
             {
-                var richMedia = await _richMediaProvider.GetRichMediaAsync(mvId, GetRichMediaTypeId(mvId), cancellationToken);
+                var richMedia =
+                    await _richMediaProvider.GetRichMediaAsync(mvId, GetRichMediaTypeId(mvId), cancellationToken);
                 if (!IsCurrentVideoLoad(loadVersion, cancellationToken)) return;
                 if (richMedia is null)
                 {
@@ -241,7 +215,8 @@ public sealed partial class MVPage : Page
             }
             else
             {
-                var richMedia = await _richMediaProvider.GetRichMediaAsync(mvId, GetRichMediaTypeId(mvId), cancellationToken);
+                var richMedia =
+                    await _richMediaProvider.GetRichMediaAsync(mvId, GetRichMediaTypeId(mvId), cancellationToken);
                 if (!IsCurrentVideoLoad(loadVersion, cancellationToken)) return;
                 if (richMedia is null)
                 {
@@ -293,9 +268,12 @@ public sealed partial class MVPage : Page
         cancellationToken.ThrowIfCancellationRequested();
         TextBoxVideoName.Text = richMedia.Name;
         TextBoxSinger.Text = richMedia is IHasCreators creatorsProvider
-            ? string.Join(" / ", (await creatorsProvider.GetCreatorsAsync(cancellationToken))?.Select(creator => creator.Name) ?? [])
+            ? string.Join(" / ",
+                (await creatorsProvider.GetCreatorsAsync(cancellationToken))?.Select(creator => creator.Name) ?? [])
             : string.Empty;
-        TextBoxDesc.Text = richMedia is IHasDescription descriptionProvider ? descriptionProvider.Description : string.Empty;
+        TextBoxDesc.Text = richMedia is IHasDescription descriptionProvider
+            ? descriptionProvider.Description
+            : string.Empty;
         TextBoxOtherInfo.Text = string.Empty;
         _updatingQualitySelection = true;
         try
@@ -331,7 +309,7 @@ public sealed partial class MVPage : Page
     {
         MediaPlayerElement.MediaPlayer?.Pause();
         MediaPlayerElement.Source = null;
-        (_currentMediaSource as IDisposable)?.Dispose();
+        _currentMediaSource?.Dispose();
         _currentMediaSource = null;
     }
 
@@ -353,10 +331,9 @@ public sealed partial class MVPage : Page
             CoverUrl = coverUri?.ToString() ?? string.Empty
         };
     }
-
 }
 
-public sealed partial class RichMediaCardViewModel
+public sealed class RichMediaCardViewModel
 {
     public string ActualId { get; init; } = string.Empty;
     public string? Name { get; init; }

@@ -1,9 +1,9 @@
-using HyPlayer.Domain;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Playback.Services;
 using System;
 using Windows.UI;
 using Windows.UI.Xaml.Media;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Playback.Services;
 
 namespace HyPlayer.Shell.Playback;
 
@@ -12,11 +12,9 @@ public static class ExpandedPlayerThemeFactory
     public static PlaybackThemeSnapshot Create(Setting settings, Color? albumMainColor, bool isBright)
     {
         if (settings.lyricColor != LyricColor.FollowCover || albumMainColor is null)
-        {
             return isBright
                 ? Create(settings, Color.FromArgb(255, 0, 0, 0), Color.FromArgb(114, 0, 0, 0), isBright)
                 : Create(settings, Color.FromArgb(255, 255, 255, 255), Color.FromArgb(66, 255, 255, 255), isBright);
-        }
 
         if (settings.expandedPlayerBackgroundType == BackgroundType.CoverBlur || isBright)
         {

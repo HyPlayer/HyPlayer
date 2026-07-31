@@ -1,19 +1,15 @@
 #nullable enable
 
+using System.Collections.Generic;
+using Windows.UI;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Media.Animation;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using HyPlayer.LyricRenderer.Text;
 using Microsoft.Graphics.Canvas;
-using System;
-using System.Collections.Generic;
-using System.Numerics;
-using Windows.Foundation;
-using Windows.UI;
-using Windows.UI.Text;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
@@ -21,21 +17,24 @@ public class TextRenderingLyricLine : RenderingLyricLine
 {
     private const long ScaleAnimationDuration = 500;
 
+    public const float TextPadding = 16;
+    public const float LiftAmount = 3;
+
     private readonly CustomElasticEase _elasticEase = new() { Springiness = 6 };
+    private readonly ITextHighlightEffectRenderer _highlightEffectRenderer;
     private readonly ILyricTextLayouter _layouter;
     private readonly ITextProgressResolver _progressResolver;
-    private readonly ITextHighlightEffectRenderer _highlightEffectRenderer;
-
-    private float _canvasWidth;
-    private float _canvasHeight;
-    private LyricTextLayoutSnapshot? _layout;
 
     private TextAlignment _cachedAlignment;
-    private float _cachedLyricFontSize;
-    private float _cachedTransliterationFontSize;
-    private float _cachedTranslationFontSize;
-    private string? _cachedFontFamily;
     private Color _cachedFocusingColor;
+    private string? _cachedFontFamily;
+    private float _cachedLyricFontSize;
+    private float _cachedTranslationFontSize;
+    private float _cachedTransliterationFontSize;
+    private float _canvasHeight;
+
+    private float _canvasWidth;
+    private LyricTextLayoutSnapshot? _layout;
 
     public TextRenderingLyricLine()
         : this(new Win2DLyricTextLayouter(), new DefaultTextProgressResolver(), new DefaultTokenScanEffectRenderer())
@@ -51,9 +50,6 @@ public class TextRenderingLyricLine : RenderingLyricLine
         _progressResolver = progressResolver;
         _highlightEffectRenderer = highlightEffectRenderer;
     }
-
-    public const float TextPadding = 16;
-    public const float LiftAmount = 3;
 
     public string? Text { get; set; }
     public override string ExpressionText => Text ?? string.Empty;
@@ -86,11 +82,11 @@ public class TextRenderingLyricLine : RenderingLyricLine
             else
             {
                 if (_layout.DefaultTransliterationPersistCache is not null)
-                {
-                    textDrawingSession.DrawImage(_layout.DefaultTransliterationPersistCache, 0, 0, _layout.SizePixelRect, 1);
-                }
+                    textDrawingSession.DrawImage(_layout.DefaultTransliterationPersistCache, 0, 0,
+                        _layout.SizePixelRect, 1);
 
-                textDrawingSession.DrawImage(_layout.DefaultTextPersistCache, 0, _layout.TextRenderActualTop, _layout.SizePixelRect, 1);
+                textDrawingSession.DrawImage(_layout.DefaultTextPersistCache, 0, _layout.TextRenderActualTop,
+                    _layout.SizePixelRect, 1);
             }
         }
 
@@ -110,10 +106,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
 
     public override void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context)
     {
-        if (HiddenOnBlur && !IsActive)
-        {
-            Hidden = true;
-        }
+        if (HiddenOnBlur && !IsActive) Hidden = true;
 
         _canvasWidth = context.ItemWidth;
         _canvasHeight = context.ViewHeight;

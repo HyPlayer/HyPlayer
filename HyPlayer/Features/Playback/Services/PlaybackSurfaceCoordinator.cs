@@ -1,43 +1,22 @@
 #nullable enable
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Features.Playback.Services;
 
 /// <summary>
-/// Concrete implementation of <see cref="IPlaybackSurfaceCoordinator"/>.
-/// Coordinates playback surface state without holding UI element references.
-///
-/// Expand/collapse intent flows through <see cref="PlaybackShellStateMachine"/> which guards transitions
-/// and updates <see cref="PlaybackSurfaceStore"/>. The coordinator then performs frame-level operations.
-/// <see cref="IsExpanded"/> is sourced from the store.
+///     Concrete implementation of <see cref="IPlaybackSurfaceCoordinator" />.
+///     Coordinates playback surface state without holding UI element references.
+///     Expand/collapse intent flows through <see cref="PlaybackShellStateMachine" /> which guards transitions
+///     and updates <see cref="PlaybackSurfaceStore" />. The coordinator then performs frame-level operations.
+///     <see cref="IsExpanded" /> is sourced from the store.
 /// </summary>
 public sealed class PlaybackSurfaceCoordinator : IPlaybackSurfaceCoordinator
 {
+    private readonly PlaybackStateService _playbackState;
+    private readonly AudioGraphPlayer _player;
     private readonly PlaybackShellStateMachine _stateMachine;
     private readonly PlaybackSurfaceStore _surfaceStore;
-    private readonly AudioGraphPlayer _player;
-    private readonly PlaybackStateService _playbackState;
 
     public PlaybackSurfaceCoordinator(
         PlaybackShellStateMachine stateMachine,

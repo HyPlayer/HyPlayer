@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace HyPlayer.Platform.Serialization;
 
-public sealed partial class NumberToStringConverter : JsonConverter<string>
+public sealed class NumberToStringConverter : JsonConverter<string>
 {
     public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -19,7 +19,8 @@ public sealed partial class NumberToStringConverter : JsonConverter<string>
         };
     }
 
-    public override string ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override string ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert,
+        JsonSerializerOptions options)
     {
         return reader.GetString() ?? string.Empty;
     }
@@ -35,7 +36,7 @@ public sealed partial class NumberToStringConverter : JsonConverter<string>
     }
 }
 
-public sealed partial class JsonBooleanConverter : JsonConverter<bool>
+public sealed class JsonBooleanConverter : JsonConverter<bool>
 {
     public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -48,7 +49,8 @@ public sealed partial class JsonBooleanConverter : JsonConverter<bool>
         };
     }
 
-    public override bool ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override bool ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert,
+        JsonSerializerOptions options)
     {
         return Read(ref reader, typeToConvert, options);
     }
@@ -64,21 +66,24 @@ public sealed partial class JsonBooleanConverter : JsonConverter<bool>
     }
 }
 
-public sealed partial class JsonObjectStringConverter : JsonConverter<JsonObjectStringWrapper>
+public sealed class JsonObjectStringConverter : JsonConverter<JsonObjectStringWrapper>
 {
-    public override JsonObjectStringWrapper? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override JsonObjectStringWrapper? Read(ref Utf8JsonReader reader, Type typeToConvert,
+        JsonSerializerOptions options)
     {
         return reader.TokenType switch
         {
             JsonTokenType.String => new JsonObjectStringWrapper(reader.GetString()),
-            JsonTokenType.StartObject => new JsonObjectStringWrapper(JsonDocument.ParseValue(ref reader).RootElement.ToString()),
+            JsonTokenType.StartObject => new JsonObjectStringWrapper(JsonDocument.ParseValue(ref reader).RootElement
+                .ToString()),
             JsonTokenType.Number => new JsonObjectStringWrapper(reader.GetInt64().ToString()),
             JsonTokenType.Null => new JsonObjectStringWrapper(null),
             _ => throw new JsonException($"Unexpected token type: {reader.TokenType}")
         };
     }
 
-    public override JsonObjectStringWrapper ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override JsonObjectStringWrapper ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert,
+        JsonSerializerOptions options)
     {
         return Read(ref reader, typeToConvert, options) ?? new JsonObjectStringWrapper(null);
     }
@@ -91,13 +96,14 @@ public sealed partial class JsonObjectStringConverter : JsonConverter<JsonObject
             writer.WriteStringValue(value.Value);
     }
 
-    public override void WriteAsPropertyName(Utf8JsonWriter writer, JsonObjectStringWrapper value, JsonSerializerOptions options)
+    public override void WriteAsPropertyName(Utf8JsonWriter writer, JsonObjectStringWrapper value,
+        JsonSerializerOptions options)
     {
         writer.WritePropertyName(value.Value ?? string.Empty);
     }
 }
 
-public sealed partial class JsonObjectStringWrapper(string? value)
+public sealed class JsonObjectStringWrapper(string? value)
 {
     public string? Value { get; set; } = value;
 }

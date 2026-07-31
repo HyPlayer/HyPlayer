@@ -1,108 +1,108 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<OutputType>WinExe</OutputType>
-		<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
-		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
-		<Nullable>annotations</Nullable>
-		<UseUwp>true</UseUwp>
-		<RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
-		<DefaultLanguage>zh-CN</DefaultLanguage>
-		<LangVersion>preview</LangVersion>
-		<EnableMsixTooling>true</EnableMsixTooling>
-		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<PublishAot>true</PublishAot>
-		<DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
-		<NoWarn>IL2026;IL3050</NoWarn>
-		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
-		<Platforms>ARM64;x64</Platforms>
-		<Configurations>Debug;Release</Configurations>
-		<WindowsSdkPackageVersion>10.0.26100.87</WindowsSdkPackageVersion>
-	</PropertyGroup>
-	<ItemGroup>
-	  <Content Include="Shaders\BackgroundShader.bin">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </Content>
-	</ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="ALRC.Abstraction">
-      <Version>1.3.0</Version>
-    </PackageReference>
-    <PackageReference Include="ALRC.Converters">
-      <Version>1.3.2</Version>
-    </PackageReference>
-    <PackageReference Include="AsyncAwaitBestPractices">
-      <Version>10.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="CommunityToolkit.Labs.Uwp.Controls.TitleBar" Version="0.1.251217-build.2433" />
-    <PackageReference Include="CommunityToolkit.Mvvm">
-      <Version>8.4.2</Version>
-    </PackageReference>
-    <PackageReference Include="CommunityToolkit.Uwp.Animations">
-      <Version>8.2.251219</Version>
-    </PackageReference>
-    <PackageReference Include="CommunityToolkit.Uwp.Behaviors">
-      <Version>8.2.251219</Version>
-    </PackageReference>
-    <PackageReference Include="CommunityToolkit.Uwp.Controls.ColorPicker">
-      <Version>8.2.251219</Version>
-    </PackageReference>
-    <PackageReference Include="CommunityToolkit.Uwp.Controls.Primitives">
-      <Version>8.2.251219</Version>
-    </PackageReference>
-    <PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls">
-      <Version>8.2.251219</Version>
-    </PackageReference>
-    <PackageReference Include="CommunityToolkit.Uwp.Converters">
-      <Version>8.2.251219</Version>
-    </PackageReference>
-    <PackageReference Include="CommunityToolkit.Uwp.Extensions">
-      <Version>8.2.251219</Version>
-    </PackageReference>
-    <PackageReference Include="CommunityToolkit.Uwp.Helpers" Version="8.2.251219" />
-    <PackageReference Include="CommunityToolkit.Uwp.Media">
-      <Version>8.2.251219</Version>
-    </PackageReference>
-    <PackageReference Include="ComputeSharp.D2D1.Uwp" Version="3.2.0" />
-    <PackageReference Include="F23.StringSimilarity">
-      <Version>7.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="LiteFM" Version="1.0.3" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection">
-      <Version>10.0.10</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.UI.Xaml">
-      <Version>2.8.7</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Uwp.Managed">
-      <Version>3.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="QRCoder">
-      <Version>1.8.0</Version>
-    </PackageReference>
-    <PackageReference Include="TagLibSharp">
-      <Version>2.3.0</Version>
-    </PackageReference>
-    <PackageReference Include="Polly">
-      <Version>8.7.0</Version>
-    </PackageReference>
-    <PackageReference Include="Depository">
-      <Version>4.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="Depository.Extensions.DependencyInjection">
-      <Version>4.0.1</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\HyPlayer.LyricEffects\HyPlayer.LyricEffects.csproj" />
-    <ProjectReference Include="..\HyPlayer.Frieren\HyPlayer.Frieren.csproj" />
-    <ProjectReference Include="..\HyPlayer.PlayCore\HyPlayer.PlayCore.Abstraction\HyPlayer.PlayCore.Abstraction.csproj" />
-    <ProjectReference Include="..\HyPlayer.PlayCore\HyPlayer.PlayCore\HyPlayer.PlayCore.csproj" />
-    <ProjectReference Include="..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseProvider\HyPlayer.NeteaseProvider.csproj" />
-    <ProjectReference Include="..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\HyPlayer.NeteaseApi.csproj" />
-    <ProjectReference Include="..\HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj" />
-    <ProjectReference Include="..\Impressionist\Impressionist.csproj" />
-    <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj" />
-    <ProjectReference Include="..\Microsoft.Gaming.XboxGameBar.Projection\Microsoft.Gaming.XboxGameBar.Projection.csproj" />
-  </ItemGroup>
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+        <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+        <Nullable>annotations</Nullable>
+        <UseUwp>true</UseUwp>
+        <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+        <DefaultLanguage>zh-CN</DefaultLanguage>
+        <LangVersion>preview</LangVersion>
+        <EnableMsixTooling>true</EnableMsixTooling>
+        <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PublishAot>true</PublishAot>
+        <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+        <NoWarn>IL2026;IL3050</NoWarn>
+        <PublishProfile>win-$(Platform).pubxml</PublishProfile>
+        <Platforms>ARM64;x64</Platforms>
+        <Configurations>Debug;Release</Configurations>
+        <WindowsSdkPackageVersion>10.0.26100.87</WindowsSdkPackageVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="Shaders\BackgroundShader.bin">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="ALRC.Abstraction">
+            <Version>1.3.0</Version>
+        </PackageReference>
+        <PackageReference Include="ALRC.Converters">
+            <Version>1.3.2</Version>
+        </PackageReference>
+        <PackageReference Include="AsyncAwaitBestPractices">
+            <Version>10.0.0</Version>
+        </PackageReference>
+        <PackageReference Include="CommunityToolkit.Labs.Uwp.Controls.TitleBar" Version="0.1.251217-build.2433"/>
+        <PackageReference Include="CommunityToolkit.Mvvm">
+            <Version>8.4.2</Version>
+        </PackageReference>
+        <PackageReference Include="CommunityToolkit.Uwp.Animations">
+            <Version>8.2.251219</Version>
+        </PackageReference>
+        <PackageReference Include="CommunityToolkit.Uwp.Behaviors">
+            <Version>8.2.251219</Version>
+        </PackageReference>
+        <PackageReference Include="CommunityToolkit.Uwp.Controls.ColorPicker">
+            <Version>8.2.251219</Version>
+        </PackageReference>
+        <PackageReference Include="CommunityToolkit.Uwp.Controls.Primitives">
+            <Version>8.2.251219</Version>
+        </PackageReference>
+        <PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls">
+            <Version>8.2.251219</Version>
+        </PackageReference>
+        <PackageReference Include="CommunityToolkit.Uwp.Converters">
+            <Version>8.2.251219</Version>
+        </PackageReference>
+        <PackageReference Include="CommunityToolkit.Uwp.Extensions">
+            <Version>8.2.251219</Version>
+        </PackageReference>
+        <PackageReference Include="CommunityToolkit.Uwp.Helpers" Version="8.2.251219"/>
+        <PackageReference Include="CommunityToolkit.Uwp.Media">
+            <Version>8.2.251219</Version>
+        </PackageReference>
+        <PackageReference Include="ComputeSharp.D2D1.Uwp" Version="3.2.0"/>
+        <PackageReference Include="F23.StringSimilarity">
+            <Version>7.0.1</Version>
+        </PackageReference>
+        <PackageReference Include="LiteFM" Version="1.0.3"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection">
+            <Version>10.0.10</Version>
+        </PackageReference>
+        <PackageReference Include="Microsoft.UI.Xaml">
+            <Version>2.8.7</Version>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Xaml.Behaviors.Uwp.Managed">
+            <Version>3.0.1</Version>
+        </PackageReference>
+        <PackageReference Include="QRCoder">
+            <Version>1.8.0</Version>
+        </PackageReference>
+        <PackageReference Include="TagLibSharp">
+            <Version>2.3.0</Version>
+        </PackageReference>
+        <PackageReference Include="Polly">
+            <Version>8.7.0</Version>
+        </PackageReference>
+        <PackageReference Include="Depository">
+            <Version>4.0.1</Version>
+        </PackageReference>
+        <PackageReference Include="Depository.Extensions.DependencyInjection">
+            <Version>4.0.1</Version>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\HyPlayer.LyricEffects\HyPlayer.LyricEffects.csproj"/>
+        <ProjectReference Include="..\HyPlayer.Frieren\HyPlayer.Frieren.csproj"/>
+        <ProjectReference Include="..\HyPlayer.PlayCore\HyPlayer.PlayCore.Abstraction\HyPlayer.PlayCore.Abstraction.csproj"/>
+        <ProjectReference Include="..\HyPlayer.PlayCore\HyPlayer.PlayCore\HyPlayer.PlayCore.csproj"/>
+        <ProjectReference Include="..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseProvider\HyPlayer.NeteaseProvider.csproj"/>
+        <ProjectReference Include="..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\HyPlayer.NeteaseApi.csproj"/>
+        <ProjectReference Include="..\HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj"/>
+        <ProjectReference Include="..\Impressionist\Impressionist.csproj"/>
+        <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj"/>
+        <ProjectReference Include="..\Microsoft.Gaming.XboxGameBar.Projection\Microsoft.Gaming.XboxGameBar.Projection.csproj"/>
+    </ItemGroup>
 </Project>

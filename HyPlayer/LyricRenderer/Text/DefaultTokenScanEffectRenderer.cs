@@ -1,7 +1,7 @@
 #nullable enable
 
-using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.Domain;
+using HyPlayer.LyricRenderer.Abstraction;
 using Microsoft.Graphics.Canvas;
 
 namespace HyPlayer.LyricRenderer.Text;

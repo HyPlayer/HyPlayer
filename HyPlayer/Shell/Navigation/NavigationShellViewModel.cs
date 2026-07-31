@@ -1,33 +1,3 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using HyPlayer.Domain;
-using HyPlayer.Domain.Navigation;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.Resources;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -37,47 +7,33 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
 
 namespace HyPlayer.Shell.Navigation;
 
 /// <summary>
-/// 导航侧边栏 ViewModel — 管理所有导航节点（静态页 + 动态歌单 + 底部项）。
-/// 替代 PageToNavigationViewIndicatorConverter 的反射方案，NativeAOT 安全。
+///     导航侧边栏 ViewModel — 管理所有导航节点（静态页 + 动态歌单 + 底部项）。
+///     替代 PageToNavigationViewIndicatorConverter 的反射方案，NativeAOT 安全。
 /// </summary>
 public partial class NavigationShellViewModel : ObservableObject
 {
     private readonly IAuthService _auth;
-    private readonly INotificationService _notification;
-    private readonly IUserLibraryTypeIds _userLibraryTypeIds;
-    private readonly IUserLibraryNavigationProvidable _userLibraryNavigationProvider;
-    private readonly IUserLibraryStateService _userLibraryState;
     private readonly IProviderKnownTypeIds _knownTypeIds;
-    private Task? _loadPlaylistsTask;
-
-    public ObservableCollection<NavigationNode> MenuItems { get; } = [];
-
-    [ObservableProperty]
-    public partial bool IsLoading { get; set; }
-
-    [ObservableProperty]
-    public partial ImageSource? AccountAvatarSource { get; set; }
-
-    [ObservableProperty]
-    public partial string AccountInitials { get; set; } = "HP";
-
-    [ObservableProperty]
-    public partial string AccountName { get; set; } = "未登录";
-
-    [ObservableProperty]
-    public partial string AccountSubtitle { get; set; } = "登录以同步歌单与收藏";
-
-    [ObservableProperty]
-    public partial string AccountProfileButtonText { get; set; } = "登录";
-
-    [ObservableProperty]
-    public partial Visibility AccountSignOutVisibility { get; set; } = Visibility.Collapsed;
+    private readonly INotificationService _notification;
 
     private readonly List<NavigationNode> _providerLibraryNodes = [];
+    private readonly IUserLibraryNavigationProvidable _userLibraryNavigationProvider;
+    private readonly IUserLibraryStateService _userLibraryState;
+    private readonly IUserLibraryTypeIds _userLibraryTypeIds;
+    private Task? _loadPlaylistsTask;
 
     public NavigationShellViewModel(
         IAuthService auth,
@@ -101,22 +57,56 @@ public partial class NavigationShellViewModel : ObservableObject
         playlistCollectionChangeNotifier.Changed += (_, _) => LoadPlaylistsCommand.Execute(null);
     }
 
+    public ObservableCollection<NavigationNode> MenuItems { get; } = [];
+
+    [ObservableProperty] public partial bool IsLoading { get; set; }
+
+    [ObservableProperty] public partial ImageSource? AccountAvatarSource { get; set; }
+
+    [ObservableProperty] public partial string AccountInitials { get; set; } = "HP";
+
+    [ObservableProperty] public partial string AccountName { get; set; } = "未登录";
+
+    [ObservableProperty] public partial string AccountSubtitle { get; set; } = "登录以同步歌单与收藏";
+
+    [ObservableProperty] public partial string AccountProfileButtonText { get; set; } = "登录";
+
+    [ObservableProperty] public partial Visibility AccountSignOutVisibility { get; set; } = Visibility.Collapsed;
+
     private void BuildMenuItems()
     {
         MenuItems.Add(new NavigationNode { Title = "发现", IsHeader = true });
-        MenuItems.Add(new NavigationNode { Title = "主页", Icon = new FontIcon { Glyph = "\uE80F" }, Route = new AppRoute.Home() });
-        MenuItems.Add(new NavigationNode { Title = "每日推荐", Icon = new FontIcon { Glyph = "\uE787" }, Route = new AppRoute.DailyRecommend() });
-        MenuItems.Add(new NavigationNode { Title = "私人FM", Icon = new FontIcon { Glyph = "\uF12E" }, Action = AppNavigationAction.PersonalFM, SelectsOnInvoked = false });
-        MenuItems.Add(new NavigationNode { Title = "心动模式", Icon = new FontIcon { Glyph = "\uEB51" }, Action = AppNavigationAction.HeartBeat, SelectsOnInvoked = false });
+        MenuItems.Add(new NavigationNode
+            { Title = "主页", Icon = new FontIcon { Glyph = "\uE80F" }, Route = new AppRoute.Home() });
+        MenuItems.Add(new NavigationNode
+            { Title = "每日推荐", Icon = new FontIcon { Glyph = "\uE787" }, Route = new AppRoute.DailyRecommend() });
+        MenuItems.Add(new NavigationNode
+        {
+            Title = "私人FM", Icon = new FontIcon { Glyph = "\uF12E" }, Action = AppNavigationAction.PersonalFM,
+            SelectsOnInvoked = false
+        });
+        MenuItems.Add(new NavigationNode
+        {
+            Title = "心动模式", Icon = new FontIcon { Glyph = "\uEB51" }, Action = AppNavigationAction.HeartBeat,
+            SelectsOnInvoked = false
+        });
         MenuItems.Add(new NavigationNode { IsSeparator = true });
         MenuItems.Add(new NavigationNode { Title = "音乐", IsHeader = true });
-        MenuItems.Add(new NavigationNode { Title = "离线音乐", Icon = new FontIcon { Glyph = "\uEC50" }, Route = new AppRoute.LocalMusic() });
-        MenuItems.Add(new NavigationNode { Title = "播放历史", Icon = new FontIcon { Glyph = "\uE81C" }, Route = new AppRoute.History() });
-        MenuItems.Add(new NavigationNode { Title = "我的收藏", Icon = new FontIcon { Glyph = "\uE728" }, Route = new AppRoute.Favorite() });
-        MenuItems.Add(new NavigationNode { Title = "我的云盘", Icon = new FontIcon { Glyph = "\uE753" }, Route = new AppRoute.MusicCloud() });
+        MenuItems.Add(new NavigationNode
+            { Title = "离线音乐", Icon = new FontIcon { Glyph = "\uEC50" }, Route = new AppRoute.LocalMusic() });
+        MenuItems.Add(new NavigationNode
+            { Title = "播放历史", Icon = new FontIcon { Glyph = "\uE81C" }, Route = new AppRoute.History() });
+        MenuItems.Add(new NavigationNode
+            { Title = "我的收藏", Icon = new FontIcon { Glyph = "\uE728" }, Route = new AppRoute.Favorite() });
+        MenuItems.Add(new NavigationNode
+            { Title = "我的云盘", Icon = new FontIcon { Glyph = "\uE753" }, Route = new AppRoute.MusicCloud() });
         MenuItems.Add(new NavigationNode { IsSeparator = true });
         MenuItems.Add(new NavigationNode { Title = "资料库", IsHeader = true });
-        MenuItems.Add(new NavigationNode { Title = "创建歌单", Icon = new SymbolIcon { Symbol = Symbol.Add }, Action = AppNavigationAction.CreatePlaylist, SelectsOnInvoked = false });
+        MenuItems.Add(new NavigationNode
+        {
+            Title = "创建歌单", Icon = new SymbolIcon { Symbol = Symbol.Add }, Action = AppNavigationAction.CreatePlaylist,
+            SelectsOnInvoked = false
+        });
     }
 
     /// <summary>根据导航后的页面类型和参数找到对应的 NavigationNode</summary>
@@ -141,6 +131,7 @@ public partial class NavigationShellViewModel : ObservableObject
             var found = FindInChildren(child, route);
             if (found is not null) return found;
         }
+
         return null;
     }
 
@@ -178,7 +169,9 @@ public partial class NavigationShellViewModel : ObservableObject
             AccountAvatarSource = await TryCreateAvatarSourceAsync(user);
             AccountInitials = GetUserInitials(user.Name);
             AccountName = string.IsNullOrEmpty(user.Name) ? "已登录" : user.Name;
-            AccountSubtitle = user is IHasDescription { Description: { Length: > 0 } description } ? description : "查看个人主页";
+            AccountSubtitle = user is IHasDescription { Description: { Length: > 0 } description }
+                ? description
+                : "查看个人主页";
             AccountProfileButtonText = "个人资料";
             AccountSignOutVisibility = Visibility.Visible;
             return;
@@ -302,7 +295,7 @@ public partial class NavigationShellViewModel : ObservableObject
         if (string.IsNullOrEmpty(item.ActualId) || string.IsNullOrEmpty(item.Name))
             return null;
 
-        var route = isLikedSongs ? (AppRoute)new AppRoute.LikedSongs() : TryCreateContainerRoute(item);
+        var route = isLikedSongs ? new AppRoute.LikedSongs() : TryCreateContainerRoute(item);
         if (route is null)
             return null;
 
@@ -327,5 +320,4 @@ public partial class NavigationShellViewModel : ObservableObject
 
         return null;
     }
-
 }

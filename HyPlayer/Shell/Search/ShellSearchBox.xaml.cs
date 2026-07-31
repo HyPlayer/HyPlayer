@@ -1,7 +1,6 @@
-using CommunityToolkit.Mvvm.DependencyInjection;
-using System.Collections.Generic;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using CommunityToolkit.Mvvm.DependencyInjection;
 
 namespace HyPlayer.Shell.Search;
 
@@ -18,7 +17,7 @@ public sealed partial class ShellSearchBox : UserControl
     {
         if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
 
-        IReadOnlyList<string>? suggestions = await _viewModel.GetSuggestionsAsync(sender.Text);
+        var suggestions = await _viewModel.GetSuggestionsAsync(sender.Text);
         sender.ItemsSource = suggestions;
     }
 
@@ -33,7 +32,7 @@ public sealed partial class ShellSearchBox : UserControl
     }
 
     private void SearchBox_SuggestionChosen(AutoSuggestBox sender,
-                                                       AutoSuggestBoxSuggestionChosenEventArgs args)
+        AutoSuggestBoxSuggestionChosenEventArgs args)
     {
         sender.Text = (string)args.SelectedItem;
     }

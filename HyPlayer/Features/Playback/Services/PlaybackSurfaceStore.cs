@@ -3,8 +3,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace HyPlayer.Features.Playback.Services;
 
 /// <summary>
-/// Centralized playback surface state for compact/expanded shell presentation.
-/// Playback state itself remains owned by <see cref="PlaybackStateService"/>.
+///     Centralized playback surface state for compact/expanded shell presentation.
+///     Playback state itself remains owned by <see cref="PlaybackStateService" />.
 /// </summary>
 public partial class PlaybackSurfaceStore : ObservableObject
 {
@@ -12,23 +12,17 @@ public partial class PlaybackSurfaceStore : ObservableObject
     [ObservableProperty]
     public partial PlaybackSurfaceMode SurfaceMode { get; set; }
 
-    [ObservableProperty]
-    public partial PlaybackThemeSnapshot Theme { get; set; } = PlaybackThemeSnapshot.Default;
+    [ObservableProperty] public partial PlaybackThemeSnapshot Theme { get; set; } = PlaybackThemeSnapshot.Default;
 
-    [ObservableProperty]
-    public partial ExpandedPlayerTransition RequestedTransition { get; set; }
+    [ObservableProperty] public partial ExpandedPlayerTransition RequestedTransition { get; set; }
 
-    [ObservableProperty]
-    public partial long TransitionRequestId { get; set; }
+    [ObservableProperty] public partial long TransitionRequestId { get; set; }
 
-    [ObservableProperty]
-    public partial double ExpandedFrameOffsetY { get; set; }
+    [ObservableProperty] public partial double ExpandedFrameOffsetY { get; set; }
 
-    [ObservableProperty]
-    public partial long ExpandedFrameResetRequestId { get; set; }
+    [ObservableProperty] public partial long ExpandedFrameResetRequestId { get; set; }
 
-    [ObservableProperty]
-    public partial long ExpandedSurfaceRestoreRequestId { get; set; }
+    [ObservableProperty] public partial long ExpandedSurfaceRestoreRequestId { get; set; }
 
     /// <summary>Convenience: true when the surface is in Expanded mode.</summary>
     public bool IsExpanded => SurfaceMode == PlaybackSurfaceMode.Expanded;
@@ -53,8 +47,8 @@ public partial class PlaybackSurfaceStore : ObservableObject
     }
 
     /// <summary>
-    /// Reset all projections to collapsed/compact defaults.
-    /// Call when the playback surface is torn down.
+    ///     Reset all projections to collapsed/compact defaults.
+    ///     Call when the playback surface is torn down.
     /// </summary>
     public void ResetToCompact()
     {
@@ -63,7 +57,7 @@ public partial class PlaybackSurfaceStore : ObservableObject
     }
 
     /// <summary>
-    /// Remember that activation wants the expanded surface once a host and playable item are ready.
+    ///     Remember that activation wants the expanded surface once a host and playable item are ready.
     /// </summary>
     public void RestoreExpandedIntent()
     {
@@ -98,16 +92,16 @@ public enum PlaybackSurfaceMode
 }
 
 /// <summary>
-/// Projection of PlayBar-specific visibility booleans derived from <see cref="PlaybackSurfaceStore"/>.
+///     Projection of PlayBar-specific visibility booleans derived from <see cref="PlaybackSurfaceStore" />.
 /// </summary>
 public sealed class PlayBarSurfaceProjection : ObservableObject
 {
     private bool _isExpanded;
 
     /// <summary>
-    /// True when the playback surface is in Expanded mode.
-    /// When true: expand button hidden, collapse button visible,
-    /// song info hidden, advanced operations visible.
+    ///     True when the playback surface is in Expanded mode.
+    ///     When true: expand button hidden, collapse button visible,
+    ///     song info hidden, advanced operations visible.
     /// </summary>
     public bool IsExpanded
     {
@@ -138,7 +132,7 @@ public sealed class PlayBarSurfaceProjection : ObservableObject
 }
 
 /// <summary>
-/// Projection of expanded-player-specific state derived from <see cref="PlaybackSurfaceStore"/>.
+///     Projection of expanded-player-specific state derived from <see cref="PlaybackSurfaceStore" />.
 /// </summary>
 public sealed class ExpandedPlayerSurfaceProjection : ObservableObject
 {

@@ -1,17 +1,67 @@
-﻿using HyPlayer.UI.Controls.Primitives;
-using System;
+﻿using System;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Hosting;
+using HyPlayer.UI.Controls.Primitives;
 
 namespace HyPlayer.UI.Controls;
 
 /// <summary>
-/// Marquee effect for UIElement
+///     Marquee effect for UIElement
 /// </summary>
 public partial class AutoScrollView : RedirectVisualView
 {
+    public static readonly DependencyProperty SpacingProperty =
+        DependencyProperty.Register("Spacing", typeof(double), typeof(AutoScrollView), new PropertyMetadata(20d,
+            (s, a) =>
+            {
+                if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue))
+                {
+                    var value = Convert.ToSingle(a.NewValue);
+                    if (value < 0) throw new ArgumentException(nameof(Spacing));
+
+                    sender.propSet.InsertScalar(nameof(Spacing), value);
+                }
+            }));
+
+
+    public static readonly DependencyProperty IsPlayingProperty =
+        DependencyProperty.Register("IsPlaying", typeof(bool), typeof(AutoScrollView), new PropertyMetadata(true,
+            (s, a) =>
+            {
+                if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue)) sender.UpdateAnimationState();
+            }));
+
+
+    public static readonly DependencyProperty ScrollingPixelsPreSecondProperty =
+        DependencyProperty.Register("ScrollingPixelsPreSecond", typeof(double), typeof(AutoScrollView),
+            new PropertyMetadata(30d, (s, a) =>
+            {
+                if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue))
+                {
+                    var value = Convert.ToSingle(a.NewValue);
+                    if (value <= 0) throw new ArgumentException(nameof(ScrollingPixelsPreSecondProperty));
+
+                    sender.UpdateAnimationSpeed();
+                }
+            }));
+
+    private readonly ScalarKeyFrameAnimation animation;
+
+    private readonly Compositor compositor;
+
+    private readonly LinearEasingFunction linearEasingFunc;
+
+    private readonly ExpressionAnimation offsetBind1;
+    private readonly ExpressionAnimation offsetBind2;
+
+    private readonly CompositionPropertySet propSet;
+    private readonly ExpressionAnimation sizeBind;
+
+    private readonly SpriteVisual visual1;
+    private readonly SpriteVisual visual2;
+
     public AutoScrollView()
     {
         RedirectVisualEnabled = false;
@@ -28,7 +78,9 @@ public partial class AutoScrollView : RedirectVisualView
         visual2.Brush = ChildVisualBrush;
 
         offsetBind1 = compositor.CreateExpressionAnimation("Vector3(visual.Offset.X, visual.Offset.Y, 0)");
-        offsetBind2 = compositor.CreateExpressionAnimation("Vector3(visual.Offset.X + visual.Size.X + propSet.Spacing, visual.Offset.Y, 0)");
+        offsetBind2 =
+            compositor.CreateExpressionAnimation(
+                "Vector3(visual.Offset.X + visual.Size.X + propSet.Spacing, visual.Offset.Y, 0)");
 
         offsetBind2.SetReferenceParameter("propSet", propSet);
 
@@ -49,87 +101,38 @@ public partial class AutoScrollView : RedirectVisualView
 
         MeasureChildInBoundingBox = IsPlaying;
 
-        this.Loaded += AutoScrollView_Loaded;
-        this.Unloaded += OnUnloaded;
+        Loaded += AutoScrollView_Loaded;
+        Unloaded += OnUnloaded;
     }
-
-    private Compositor compositor;
-
-    private CompositionPropertySet propSet;
-
-    private SpriteVisual visual1;
-    private SpriteVisual visual2;
-
-    private ExpressionAnimation offsetBind1;
-    private ExpressionAnimation offsetBind2;
-    private ExpressionAnimation sizeBind;
-
-    private LinearEasingFunction linearEasingFunc;
-    private ScalarKeyFrameAnimation animation;
 
     protected override bool ChildVisualBrushOffsetEnabled => false;
 
     /// <summary>
-    /// Space between each element. Default value is 20.
+    ///     Space between each element. Default value is 20.
     /// </summary>
     public double Spacing
     {
-        get { return (double)GetValue(SpacingProperty); }
-        set { SetValue(SpacingProperty, value); }
+        get => (double)GetValue(SpacingProperty);
+        set => SetValue(SpacingProperty, value);
     }
 
     /// <summary>
-    /// Play the animation when IsPlaying is true. Default value is true.
+    ///     Play the animation when IsPlaying is true. Default value is true.
     /// </summary>
     public bool IsPlaying
     {
-        get { return (bool)GetValue(IsPlayingProperty); }
-        set { SetValue(IsPlayingProperty, value); }
+        get => (bool)GetValue(IsPlayingProperty);
+        set => SetValue(IsPlayingProperty, value);
     }
 
     /// <summary>
-    /// The pixels of the animation scroll per second. Default value is 30.
+    ///     The pixels of the animation scroll per second. Default value is 30.
     /// </summary>
     public double ScrollingPixelsPreSecond
     {
-        get { return (double)GetValue(ScrollingPixelsPreSecondProperty); }
-        set { SetValue(ScrollingPixelsPreSecondProperty, value); }
+        get => (double)GetValue(ScrollingPixelsPreSecondProperty);
+        set => SetValue(ScrollingPixelsPreSecondProperty, value);
     }
-
-    public static readonly DependencyProperty SpacingProperty =
-        DependencyProperty.Register("Spacing", typeof(double), typeof(AutoScrollView), new PropertyMetadata(20d, (s, a) =>
-        {
-            if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue))
-            {
-                var value = Convert.ToSingle(a.NewValue);
-                if (value < 0) throw new ArgumentException(nameof(Spacing));
-
-                sender.propSet.InsertScalar(nameof(Spacing), value);
-            }
-        }));
-
-
-    public static readonly DependencyProperty IsPlayingProperty =
-        DependencyProperty.Register("IsPlaying", typeof(bool), typeof(AutoScrollView), new PropertyMetadata(true, (s, a) =>
-        {
-            if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue))
-            {
-                sender.UpdateAnimationState();
-            }
-        }));
-
-
-    public static readonly DependencyProperty ScrollingPixelsPreSecondProperty =
-        DependencyProperty.Register("ScrollingPixelsPreSecond", typeof(double), typeof(AutoScrollView), new PropertyMetadata(30d, (s, a) =>
-        {
-            if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue))
-            {
-                var value = Convert.ToSingle(a.NewValue);
-                if (value <= 0) throw new ArgumentException(nameof(ScrollingPixelsPreSecondProperty));
-
-                sender.UpdateAnimationSpeed();
-            }
-        }));
 
 
     private void AutoScrollView_Loaded(object sender, RoutedEventArgs e)
@@ -207,13 +210,9 @@ public partial class AutoScrollView : RedirectVisualView
             var rootWidth = LayoutRoot.ActualWidth - Padding.Left - Padding.Right;
 
             if (childWidth > rootWidth)
-            {
                 RedirectVisualEnabled = true;
-            }
             else
-            {
                 RedirectVisualEnabled = false;
-            }
         }
         else
         {
@@ -232,6 +231,7 @@ public partial class AutoScrollView : RedirectVisualView
                 animationController.Pause();
                 progress = animationController.Progress;
             }
+
             RootVisual.StopAnimation("Offset.X");
 
             animation.Duration = TimeSpan.FromSeconds(ChildPresenter.ActualWidth / ScrollingPixelsPreSecond);
@@ -275,4 +275,3 @@ public partial class AutoScrollView : RedirectVisualView
         propSet.Dispose();
     }
 }
-

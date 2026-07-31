@@ -1,12 +1,11 @@
 ﻿using Windows.UI.Xaml.Controls.Primitives;
 
-namespace HyPlayer.UI.Controls.CardButton
+namespace HyPlayer.UI.Controls.CardButton;
+
+public sealed partial class CardButton : ButtonBase
 {
-    public sealed partial class CardButton : ButtonBase
+    public CardButton()
     {
-        public CardButton()
-        {
-            DefaultStyleKey = typeof(CardButton);
-        }
+        DefaultStyleKey = typeof(CardButton);
     }
 }

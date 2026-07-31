@@ -13,7 +13,8 @@
     mc:Ignorable="d">
     <Page.Resources>
         <LinearGradientBrush x:Key="OpacityGradientBrush" StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Offset="0" Color="{Binding Source={ThemeResource GradientColor}, Converter={StaticResource TransparentColorConverter}}" />
+            <GradientStop Offset="0"
+                          Color="{Binding Source={ThemeResource GradientColor}, Converter={StaticResource TransparentColorConverter}}" />
             <GradientStop Offset="1" Color="{ThemeResource GradientColor}" />
         </LinearGradientBrush>
         <Storyboard

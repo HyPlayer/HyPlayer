@@ -1,38 +1,7 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Music;
-using HyPlayer.Platform.Xaml;
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,6 +9,15 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Platform.Xaml;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.UI.Lists;
 using WinRT;
 
 #endregion
@@ -53,12 +31,6 @@ namespace HyPlayer.Features.Search;
 /// </summary>
 public sealed partial class Search : Page
 {
-    private readonly ISearchableProvider _searchProvider = Ioc.Default.GetRequiredService<ISearchableProvider>();
-    private readonly IProviderSearchCategoryTypeIds _searchTypeIds = Ioc.Default.GetRequiredService<IProviderSearchCategoryTypeIds>();
-    private readonly ISearchSuggestionProvidable _suggestionProvider = Ioc.Default.GetService<ISearchSuggestionProvidable>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
-
     public static readonly DependencyProperty HasNextPageProperty = DependencyProperty.Register(
         "HasNextPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
 
@@ -66,18 +38,30 @@ public sealed partial class Search : Page
         "HasPreviousPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
 
     public static readonly DependencyProperty CurrentResultContainerProperty = DependencyProperty.Register(
-        nameof(CurrentResultContainer), typeof(ContainerBase), typeof(Search), new PropertyMetadata(default(ContainerBase)));
+        nameof(CurrentResultContainer), typeof(ContainerBase), typeof(Search),
+        new PropertyMetadata(default(ContainerBase)));
+
+    private readonly CancellationToken _cancellationToken;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
+    private readonly Dictionary<ContainerBase, List<ProvidableItemBase>> _linerSearchItems = new();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly Dictionary<string, ContainerBase> _searchContainers = new(StringComparer.Ordinal);
+    private readonly ISearchableProvider _searchProvider = Ioc.Default.GetRequiredService<ISearchableProvider>();
+
+    private readonly IProviderSearchCategoryTypeIds _searchTypeIds =
+        Ioc.Default.GetRequiredService<IProviderSearchCategoryTypeIds>();
+
+    private readonly ISearchSuggestionProvidable _suggestionProvider =
+        Ioc.Default.GetService<ISearchSuggestionProvidable>();
+
+    private string _cachedSearchText = string.Empty;
+    private string _lastSuggestionKeyword = string.Empty;
+    private List<string> _lastSuggestions = [];
+    private Task _loadResultTask;
 
     private int page;
     private string searchText = "";
-    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-    private CancellationToken _cancellationToken;
-    private Task _loadResultTask;
-    private readonly Dictionary<string, ContainerBase> _searchContainers = new(StringComparer.Ordinal);
-    private readonly Dictionary<ContainerBase, List<ProvidableItemBase>> _linerSearchItems = new();
-    private string _lastSuggestionKeyword = string.Empty;
-    private List<string> _lastSuggestions = [];
-    private string _cachedSearchText = string.Empty;
 
     public Search()
     {
@@ -119,7 +103,6 @@ public sealed partial class Search : Page
     {
         base.OnNavigatedFrom(e);
         if (_loadResultTask != null && !_loadResultTask.IsCompleted)
-        {
             try
             {
                 _cancellationTokenSource.Cancel();
@@ -129,7 +112,6 @@ public sealed partial class Search : Page
             {
                 //Ignore
             }
-        }
 
         _cancellationTokenSource?.Dispose();
     }
@@ -280,10 +262,7 @@ public sealed partial class Search : Page
     private async void SearchKeywordBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
         var keyword = sender.Text;
-        if (string.IsNullOrEmpty(keyword) || args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
-        {
-            return;
-        }
+        if (string.IsNullOrEmpty(keyword) || args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
 
         try
         {
@@ -301,8 +280,8 @@ public sealed partial class Search : Page
                     : [];
                 _lastSuggestionKeyword = keyword;
                 _lastSuggestions = items.Select(t => !string.IsNullOrWhiteSpace(t.Name) ? t.Name : t.ActualId)
-                                        .Where(t => !string.IsNullOrWhiteSpace(t))
-                                        .ToList();
+                    .Where(t => !string.IsNullOrWhiteSpace(t))
+                    .ToList();
             }
 
             if (sender.Text == keyword)

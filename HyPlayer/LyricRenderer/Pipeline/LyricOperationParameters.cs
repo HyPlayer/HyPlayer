@@ -1,19 +1,19 @@
+using System;
+using System.Collections.Generic;
+using Windows.UI.Xaml.Media.Animation;
 using HyPlayer.LyricEffects.Expressions;
 using HyPlayer.LyricEffects.Models;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
-using System;
-using System.Collections.Generic;
-using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.Pipeline;
 
 internal sealed class CompiledScalarParameter
 {
     private readonly LyricScalarExpression _expression;
-    private readonly LyricTransitionDefinition? _transition;
-    private readonly float? _minimum;
     private readonly float? _maximum;
+    private readonly float? _minimum;
+    private readonly LyricTransitionDefinition? _transition;
 
     public CompiledScalarParameter(
         LyricScalarExpression expression,
@@ -27,15 +27,18 @@ internal sealed class CompiledScalarParameter
         _maximum = maximum;
     }
 
-    public ScalarParameterRuntime CreateRuntime() => new(_expression, _transition, _minimum, _maximum);
+    public ScalarParameterRuntime CreateRuntime()
+    {
+        return new ScalarParameterRuntime(_expression, _transition, _minimum, _maximum);
+    }
 }
 
 internal sealed class ScalarParameterRuntime
 {
     private readonly LyricScalarExpression _expression;
-    private readonly CanvasTransition? _transition;
-    private readonly float? _minimum;
     private readonly float? _maximum;
+    private readonly float? _minimum;
+    private readonly CanvasTransition? _transition;
 
     public ScalarParameterRuntime(
         LyricScalarExpression expression,
@@ -74,8 +77,10 @@ internal sealed class CompiledColorParameter
         _expression = expression;
     }
 
-    public LyricColorValue Evaluate(LyricRenderOperationContext context) =>
-        _expression(context.Line, context.Frame, context.Functions);
+    public LyricColorValue Evaluate(LyricRenderOperationContext context)
+    {
+        return _expression(context.Line, context.Frame, context.Functions);
+    }
 }
 
 internal sealed class CompiledTextParameter
@@ -87,8 +92,10 @@ internal sealed class CompiledTextParameter
         _expression = expression;
     }
 
-    public string Evaluate(LyricRenderOperationContext context) =>
-        _expression(context.Line, context.Frame, context.Functions) ?? string.Empty;
+    public string Evaluate(LyricRenderOperationContext context)
+    {
+        return _expression(context.Line, context.Frame, context.Functions) ?? string.Empty;
+    }
 }
 
 internal static class LyricOperationCompilerHelpers
@@ -107,7 +114,8 @@ internal static class LyricOperationCompilerHelpers
             return null;
         }
 
-        return new CompiledScalarParameter(result.Expression!, parameter.Transition, descriptor.Minimum, descriptor.Maximum);
+        return new CompiledScalarParameter(result.Expression!, parameter.Transition, descriptor.Minimum,
+            descriptor.Maximum);
     }
 
     public static CompiledColorParameter? CompileColor(
@@ -160,14 +168,16 @@ internal static class LyricOperationCompilerHelpers
     private static LyricProfileDiagnostic ToDiagnostic(
         LyricRenderOperationDefinition definition,
         string parameter,
-        LyricExpressionDiagnostic diagnostic) =>
-        new(
+        LyricExpressionDiagnostic diagnostic)
+    {
+        return new LyricProfileDiagnostic(
             LyricProfileDiagnosticSeverity.Error,
             diagnostic.Message,
             definition.InstanceId,
             parameter,
             diagnostic.Line,
             diagnostic.Column);
+    }
 }
 
 internal static class LyricEasingFactory
@@ -203,11 +213,16 @@ internal static class LyricEasingFactory
         return easing;
     }
 
-    private static double GetArgument(LyricTransitionDefinition transition, string key, double fallback) =>
-        transition.Arguments.TryGetValue(key, out var value) ? value : fallback;
+    private static double GetArgument(LyricTransitionDefinition transition, string key, double fallback)
+    {
+        return transition.Arguments.TryGetValue(key, out var value) ? value : fallback;
+    }
 }
 
 internal sealed class LinearEase : EaseFunctionBase
 {
-    protected override double EaseInCore(double normalizedTime) => normalizedTime;
+    protected override double EaseInCore(double normalizedTime)
+    {
+        return normalizedTime;
+    }
 }

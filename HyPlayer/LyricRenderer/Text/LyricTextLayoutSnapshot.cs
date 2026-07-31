@@ -1,10 +1,11 @@
 #nullable enable
 
-using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
 using Windows.Foundation;
+using Windows.UI;
+using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Text;
 
 namespace HyPlayer.LyricRenderer.Text;
 
@@ -24,7 +25,7 @@ public sealed class LyricTextLayoutSnapshot : IDisposable
     public required float RenderingWidth { get; init; }
     public required float RenderingHeight { get; init; }
     public required float ScalingCenterX { get; init; }
-    public required Windows.UI.Color FocusingColor { get; init; }
+    public required Color FocusingColor { get; init; }
     public required IReadOnlyList<LyricGlyphCluster> LyricGlyphClusters { get; init; }
     public required IReadOnlyList<LyricGlyphCluster> TransliterationGlyphClusters { get; init; }
 
@@ -33,8 +34,8 @@ public sealed class LyricTextLayoutSnapshot : IDisposable
         TextLayout.Dispose();
         TranslationLayout?.Dispose();
         TransliterationLayout?.Dispose();
-        (StaticPersistCache as IDisposable)?.Dispose();
-        (DefaultTextPersistCache as IDisposable)?.Dispose();
-        (DefaultTransliterationPersistCache as IDisposable)?.Dispose();
+        StaticPersistCache?.Dispose();
+        DefaultTextPersistCache?.Dispose();
+        DefaultTransliterationPersistCache?.Dispose();
     }
 }

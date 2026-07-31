@@ -1,22 +1,21 @@
 using System;
 using Windows.UI.Xaml.Data;
 
-namespace HyPlayer.UI.Converters
+namespace HyPlayer.UI.Converters;
+
+public abstract class PlayBarValueConverter : IValueConverter
 {
-    public abstract class PlayBarValueConverter : IValueConverter
+    protected abstract object ExpandedValue { get; }
+
+    protected abstract object CompactValue { get; }
+
+    public object Convert(object value, Type targetType, object parameter, string language)
     {
-        protected abstract object ExpandedValue { get; }
+        return value is true ? ExpandedValue : CompactValue;
+    }
 
-        protected abstract object CompactValue { get; }
-
-        public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            return value is true ? ExpandedValue : CompactValue;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
     }
 }

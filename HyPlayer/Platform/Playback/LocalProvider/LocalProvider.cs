@@ -1,22 +1,20 @@
-using HyPlayer.Domain.Music;
-using HyPlayer.Platform.Network;
-using HyPlayer.NeteaseProvider.LocalMusic;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Resources;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Platform.Playback.AudioServices;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using HyPlayer.NeteaseProvider.LocalMusic;
+using HyPlayer.Platform.Network;
+using HyPlayer.Platform.Playback.AudioServices;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Platform.Playback.LocalProvider;
 
@@ -32,8 +30,8 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
     public override List<ProvidableTypeId> ProvidableTypeIds =>
         new()
         {
-            new(LocalSongTypeId, "本地歌曲", true),
-            new(LocalNcmSongTypeId, "NCM 歌曲", true),
+            new ProvidableTypeId(LocalSongTypeId, "本地歌曲", true),
+            new ProvidableTypeId(LocalNcmSongTypeId, "NCM 歌曲", true)
         };
 
     public Task<MusicResourceBase?> GetMusicResourceAsync(
@@ -56,10 +54,10 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
                 ResourceName = song.Name,
                 HasContent = true,
                 ExtensionName = Path.GetExtension(path),
-                TypeId = song.TypeId,
+                TypeId = song.TypeId
             };
 
-            return Task.FromResult<MusicResourceBase?>(resource);
+            return Task.FromResult(resource);
         }
         catch (Exception)
         {
@@ -72,20 +70,6 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
         public required string TypeId { get; init; }
 
         public double? SuggestedVolume => 1d;
-
-        public override Task<ResourceResultBase> GetResourceAsync(
-            ResourceQualityTag? qualityTag = null,
-            CancellationToken ctk = default)
-        {
-            ctk.ThrowIfCancellationRequested();
-
-            var exists = Uri?.IsFile == true && File.Exists(Uri.LocalPath);
-            return Task.FromResult<ResourceResultBase>(new LocalMusicResourceResult
-            {
-                ExternalException = exists ? null : new FileNotFoundException("Local music file was not found.", Uri?.LocalPath),
-                ResourceStatus = exists ? ResourceStatus.Success : ResourceStatus.Fail,
-            });
-        }
 
         public async Task<AudioGraphPlaybackSource?> CreatePlaybackSourceAsync(CancellationToken ctk = default)
         {
@@ -113,6 +97,21 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
             }
 
             return new AudioGraphPlaybackSource(mediaSource);
+        }
+
+        public override Task<ResourceResultBase> GetResourceAsync(
+            ResourceQualityTag? qualityTag = null,
+            CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+
+            var exists = Uri?.IsFile == true && File.Exists(Uri.LocalPath);
+            return Task.FromResult<ResourceResultBase>(new LocalMusicResourceResult
+            {
+                ExternalException =
+                    exists ? null : new FileNotFoundException("Local music file was not found.", Uri?.LocalPath),
+                ResourceStatus = exists ? ResourceStatus.Success : ResourceStatus.Fail
+            });
         }
     }
 

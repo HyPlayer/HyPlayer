@@ -1,8 +1,8 @@
 #nullable enable
 
-using Microsoft.Graphics.Canvas.Text;
 using System.Numerics;
 using Windows.UI;
+using Microsoft.Graphics.Canvas.Text;
 
 namespace HyPlayer.LyricRenderer.Text;
 

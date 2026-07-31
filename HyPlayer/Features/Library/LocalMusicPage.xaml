@@ -65,7 +65,8 @@
                                                 Margin="10"
                                                 HorizontalAlignment="Left"
                                                 Orientation="Vertical">
-                                                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind Name}" />
+                                                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}"
+                                                           Text="{x:Bind Name}" />
                                                 <TextBlock
                                                     Foreground="Gray"
                                                     Style="{StaticResource BodyTextBlockStyle}"

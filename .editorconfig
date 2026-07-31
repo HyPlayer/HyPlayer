@@ -1,2 +1,2 @@
 [*.cs]
-resharper_heuristic_unreachable_code_highlighting=none
+resharper_heuristic_unreachable_code_highlighting = none

@@ -1,31 +1,3 @@
-using HyPlayer.Domain.Settings;
-using HyPlayer.Platform.Network;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Storage.Cache;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,29 +5,38 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Platform.Network;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 
 namespace HyPlayer.Features.Account.Services;
 
 /// <summary>
-/// 认证服务实现，管理用户登录状态与收藏数据
+///     认证服务实现，管理用户登录状态与收藏数据
 /// </summary>
 public class AuthService : IAuthService
 {
-    public event EventHandler? LoginCompleted;
-    public event EventHandler<SongLikeStatusChangedEventArgs>? SongLikeStatusChanged;
+    private readonly IProviderAdditionalConfigurationProvidable _additionalConfigurationProvider;
+    private readonly IAuthenticationProvidable _authenticationProvider;
+    private readonly IProvidableItemProvidable _itemProvider;
+    private readonly IProviderKnownTypeIds _knownTypeIds;
+    private readonly IProvableItemLikable _likableProvider;
+    private readonly SemaphoreSlim _likeSongGate = new(1, 1);
+    private readonly INotificationService _notification;
+    private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier;
+    private readonly IQrAuthenticationProvidable _qrAuthenticationProvider;
 
     private readonly PlaybackStateService _state;
-    private readonly IAuthenticationProvidable _authenticationProvider;
-    private readonly IQrAuthenticationProvidable _qrAuthenticationProvider;
-    private readonly IProvableItemLikable _likableProvider;
-    private readonly IProviderAdditionalConfigurationProvidable _additionalConfigurationProvider;
-    private readonly IProviderKnownTypeIds _knownTypeIds;
-    private readonly IProvidableItemProvidable _itemProvider;
-    private readonly INotificationService _notification;
     private readonly IBackgroundTaskRunner _taskRunner;
-    private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier;
     private readonly IUserLibraryStateService _userLibraryState;
-    private readonly SemaphoreSlim _likeSongGate = new(1, 1);
 
     public AuthService(
         PlaybackStateService state,
@@ -82,6 +63,9 @@ public class AuthService : IAuthService
         _playlistCollectionChangeNotifier = playlistCollectionChangeNotifier;
         _userLibraryState = userLibraryState;
     }
+
+    public event EventHandler? LoginCompleted;
+    public event EventHandler<SongLikeStatusChangedEventArgs>? SongLikeStatusChanged;
 
     /// <inheritdoc />
     public bool IsLoggedIn { get; set; }
@@ -128,13 +112,14 @@ public class AuthService : IAuthService
     {
         try
         {
-            string countryCode = string.Empty;
+            var countryCode = string.Empty;
             if (account.StartsWith('+'))
             {
-                int spaceIdx = account.IndexOf(' ');
+                var spaceIdx = account.IndexOf(' ');
                 countryCode = account[1..spaceIdx];
                 account = account[(spaceIdx + 1)..];
             }
+
             if (!string.IsNullOrEmpty(countryCode) && countryCode != "86")
                 return new AuthResult(false, "Provider login currently supports the default phone country code only.");
 
@@ -309,8 +294,6 @@ public class AuthService : IAuthService
                 if (isLiked) LikedSongs.Remove(songId);
                 else LikedSongs.Add(songId);
                 SongLikeStatusChanged?.Invoke(this, new SongLikeStatusChangedEventArgs(!isLiked));
-                return;
-
             });
         }
         catch (Exception ex)

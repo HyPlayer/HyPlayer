@@ -1,10 +1,10 @@
-using HyPlayer.Application.State;
-using HyPlayer.Application.Threading;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
+using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
 
 namespace HyPlayer.Platform.Xaml;
 
@@ -18,9 +18,15 @@ public sealed class UIThreadDispatcher : IUIThreadDispatcher
         _lifecycle = lifecycle;
     }
 
-    public Task<bool> TryRunAsync(Action action) => TryRunCoreAsync(action);
+    public Task<bool> TryRunAsync(Action action)
+    {
+        return TryRunCoreAsync(action);
+    }
 
-    public Task<bool> TryRunAsync(Func<Task> action) => TryRunCoreAsync(action);
+    public Task<bool> TryRunAsync(Func<Task> action)
+    {
+        return TryRunCoreAsync(action);
+    }
 
     private async Task<bool> TryRunCoreAsync(Action action)
     {

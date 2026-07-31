@@ -1,35 +1,15 @@
 #region
 
-using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Features.Artist;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.UI.Dialogs;
 using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Features.Artist;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.UI.Dialogs;
 
 #endregion
 
@@ -44,7 +24,8 @@ public sealed partial class AlbumPage : Page
 {
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
 
-    private AlbumPageViewModel ViewModel;
+    private readonly AlbumPageViewModel ViewModel;
+
     public AlbumPage()
     {
         InitializeComponent();
@@ -64,9 +45,11 @@ public sealed partial class AlbumPage : Page
                 albumId = e.Parameter.ToString();
                 break;
         }
+
         ViewModel.LoadAlbumInfo(albumId).SafeFireAndForget();
         ViewModel.LoadAlbumDynamic(albumId).SafeFireAndForget();
     }
+
     private async void TextBoxAuthor_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
         if (ViewModel.Artists.Count > 1)

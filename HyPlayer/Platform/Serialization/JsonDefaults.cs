@@ -1,12 +1,12 @@
-using HyPlayer.Classes;
-using LiteFM;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using HyPlayer.Classes;
+using LiteFM;
 
 namespace HyPlayer.Platform.Serialization;
 
 /// <summary>
-/// 全局 JSON 序列化选项
+///     全局 JSON 序列化选项
 /// </summary>
 public static class JsonDefaults
 {

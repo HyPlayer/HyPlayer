@@ -1,40 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction
+namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
+
+public sealed class LrcLyricCollection : ILyricCollection
 {
-    public sealed class LrcLyricCollection : ILyricCollection
+    private bool disposedValue;
+
+    public LrcLyricCollection(IList<LyricLine> lines, IList<KeyValuePair<string, string>> attributes)
     {
-        private bool disposedValue;
-        public IList<LyricLine> Lines { get; }
-        public IList<KeyValuePair<string, string>> Attributes { get; }
-        public LrcLyricCollection(IList<LyricLine> lines, IList<KeyValuePair<string, string>> attributes)
+        Lines = lines;
+        Attributes = attributes;
+    }
+
+    public IList<KeyValuePair<string, string>> Attributes { get; }
+    public IList<LyricLine> Lines { get; }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
         {
-            Lines = lines;
-            Attributes = attributes;
-        }
-        private void Dispose(bool disposing)
-        {
-            if (!disposedValue)
+            if (disposing)
             {
-                if (disposing)
-                {
-                    Lines.Clear();
-                    Attributes.Clear();
-                }
-                disposedValue = true;
+                Lines.Clear();
+                Attributes.Clear();
             }
-        }
 
-        ~LrcLyricCollection()
-        {
-            Dispose(disposing: false);
+            disposedValue = true;
         }
+    }
 
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
+    ~LrcLyricCollection()
+    {
+        Dispose(false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }

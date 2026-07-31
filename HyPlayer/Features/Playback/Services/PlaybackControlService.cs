@@ -1,93 +1,74 @@
-using AsyncAwaitBestPractices;
-using Depository.Abstraction.Interfaces;
-using Depository.Abstraction.Interfaces.NotificationHub;
-using HyPlayer;
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Settings;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models.Notifications;
-using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Features.Netease.Legacy;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Application.Threading;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Playback.Transitions;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Playback.AudioServices;
-using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media;
+using AsyncAwaitBestPractices;
+using Depository.Abstraction.Interfaces;
+using Depository.Abstraction.Interfaces.NotificationHub;
+using HyPlayer.Application.Threading;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Netease.Legacy;
+using HyPlayer.Features.Playback.Transitions;
+using HyPlayer.Platform.Playback.AudioServices;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
+using HyPlayer.PlayCore.Abstraction.Models.Notifications;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.UWP.Chopin;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Features.Playback.Services;
 
 /// <summary>
-/// 播放控制服务 — 封装底层 <see cref="IPlayer"/> 操作，协调播放状态更新。
-/// <para>
-/// 通过 <see cref="PlaybackStateService"/> 写入播放状态，并通过 owner service events 发布业务事件。
-/// </para>
+///     播放控制服务 — 封装底层 <see cref="IPlayer" /> 操作，协调播放状态更新。
+///     <para>
+///         通过 <see cref="PlaybackStateService" /> 写入播放状态，并通过 owner service events 发布业务事件。
+///     </para>
 /// </summary>
 public sealed partial class PlaybackControlService : IPlaybackControlService,
-                                                     INotificationSubscriber<PlaybackRequestFailedNotification>,
-                                                     IDisposable,
-                                                     IAsyncDisposable
+    INotificationSubscriber<PlaybackRequestFailedNotification>,
+    IDisposable,
+    IAsyncDisposable
 {
-    public event EventHandler<SeekRequestedEventArgs>? SeekRequested;
-
-    private readonly IPlayer _player;
-    private readonly PlayCoreBase _playCore;
-    private readonly INotificationHub _playCoreNotificationHub;
-    private readonly PlaybackStateService _state;
-    private readonly Setting _setting;
-    private readonly ILyricService _lyricService;
-    private readonly IUIThreadDispatcher _uiThreadDispatcher;
-    private readonly IPlaybackNotificationService _playbackNotification;
-    private readonly IBackgroundTaskRunner _taskRunner;
-    private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
     private readonly ChopinAudioService _audioService;
-    private readonly SmtcPlaybackCommandDispatcher _smtcCommandDispatcher;
-    private SystemMediaTransportControls? _smtc;
 
     private readonly SemaphoreSlim _autoSkipLock = new(1, 1);
-    private readonly SemaphoreSlim _transitionGate = new(1, 1);
     private readonly SemaphoreSlim _initializeGate = new(1, 1);
+    private readonly ILyricService _lyricService;
+    private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
+    private readonly IPlaybackNotificationService _playbackNotification;
+    private readonly PlayCoreBase _playCore;
+    private readonly INotificationHub _playCoreNotificationHub;
+
+    private readonly IPlayer _player;
+    private readonly Setting _setting;
+    private readonly SmtcPlaybackCommandDispatcher _smtcCommandDispatcher;
+    private readonly PlaybackStateService _state;
+    private readonly IBackgroundTaskRunner _taskRunner;
+    private readonly SemaphoreSlim _transitionGate = new(1, 1);
     private readonly IReadOnlyDictionary<string, ITrackTransition> _transitions;
+    private readonly IUIThreadDispatcher _uiThreadDispatcher;
     private ITrackTransition _activeTransition;
-    private CancellationTokenSource? _playbackCts;
-    private CancellationTokenSource? _lyricCts;
     private IPlaybackSource? _currentSource;
-    private long _playbackGeneration;
-    private long _lastScrobbledGeneration = -1;
     private bool _disposed;
     private bool _initialized;
+    private long _lastScrobbledGeneration = -1;
+    private CancellationTokenSource? _lyricCts;
+    private CancellationTokenSource? _playbackCts;
+    private long _playbackGeneration;
+    private SystemMediaTransportControls? _smtc;
     private bool _smtcSubscribed;
 
     /// <summary>
-    /// 创建 <see cref="PlaybackControlService"/> 实例。
+    ///     创建 <see cref="PlaybackControlService" /> 实例。
     /// </summary>
     /// <param name="player">底层音频播放器（AudioGraphPlayer）</param>
     /// <param name="mediaSourceService">媒体源路由服务</param>
@@ -109,14 +90,16 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     {
         _player = player ?? throw new ArgumentNullException(nameof(player));
         _playCore = playCore ?? throw new ArgumentNullException(nameof(playCore));
-        _playCoreNotificationHub = playCoreNotificationHub ?? throw new ArgumentNullException(nameof(playCoreNotificationHub));
+        _playCoreNotificationHub =
+            playCoreNotificationHub ?? throw new ArgumentNullException(nameof(playCoreNotificationHub));
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _setting = setting ?? throw new ArgumentNullException(nameof(setting));
         _lyricService = lyricService ?? throw new ArgumentNullException(nameof(lyricService));
         _uiThreadDispatcher = uiThreadDispatcher ?? throw new ArgumentNullException(nameof(uiThreadDispatcher));
         _playbackNotification = playbackNotification ?? throw new ArgumentNullException(nameof(playbackNotification));
         _taskRunner = taskRunner ?? throw new ArgumentNullException(nameof(taskRunner));
-        _musicResourceProviders = musicResourceProviders?.ToList() ?? throw new ArgumentNullException(nameof(musicResourceProviders));
+        _musicResourceProviders = musicResourceProviders?.ToList() ??
+                                  throw new ArgumentNullException(nameof(musicResourceProviders));
         _audioService = audioService ?? throw new ArgumentNullException(nameof(audioService));
         _transitions = transitions?.ToDictionary(transition => transition.Id)
                        ?? throw new ArgumentNullException(nameof(transitions));
@@ -126,7 +109,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         _smtcCommandDispatcher = new SmtcPlaybackCommandDispatcher(
             PlayCoreAfterInitializationAsync,
             PauseCoreAsync,
-            () => MoveNextAndPlayAsync(userInitiated: true),
+            () => MoveNextAndPlayAsync(true),
             MovePreviousAndPlayAsync);
         _state.ActiveTransitionId = _activeTransition.Id;
 
@@ -137,7 +120,291 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             graphPlayer.OnPositionChanged += OnPositionChanged;
             graphPlayer.OnPrimaryPlaybackSourceChanged += OnPrimaryPlaybackSourceChanged;
         }
+
         _state.PropertyChanged += OnPlaybackStatePropertyChanged;
+    }
+
+    public event EventHandler<SeekRequestedEventArgs>? SeekRequested;
+
+    public async Task MoveNextAndPlayAsync(bool userInitiated)
+    {
+        await MoveNextAndPlayAsync(userInitiated, true).ConfigureAwait(false);
+    }
+
+    public async Task MovePreviousAndPlayAsync()
+    {
+        await _transitionGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+            if ((await _playCore.GetPlaylistAsync().ConfigureAwait(false)).Count == 0)
+                return;
+
+            await _playCore.MovePreviousAsync().ConfigureAwait(false);
+            if (_playCore.CurrentSong is { } song)
+                await LoadAndPlayCoreAsync(song, true, false, CancellationToken.None).ConfigureAwait(false);
+        }
+        finally
+        {
+            _transitionGate.Release();
+        }
+    }
+
+    private async Task MoveNextAndPlayAsync(bool userInitiated, bool repeatSingleOnAutoAdvance)
+    {
+        await _transitionGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+            await MoveNextAndPlayCoreAsync(
+                    userInitiated,
+                    repeatSingleOnAutoAdvance,
+                    CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            _transitionGate.Release();
+        }
+    }
+
+    private async Task MoveNextAndPlayCoreAsync(
+        bool userInitiated,
+        bool repeatSingleOnAutoAdvance,
+        CancellationToken ct)
+    {
+        var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
+        if (queue.Count == 0)
+            return;
+
+        if (_playCore.ActivePlayModeId == "pfm")
+        {
+            var currentIndex = _state.NowPlayingIndex >= 0
+                ? _state.NowPlayingIndex
+                : await _playCore.GetCurrentIndexAsync().ConfigureAwait(false);
+            if (currentIndex + 1 >= queue.Count)
+                await PersonalFM.AppendMoreTracksAsync().ConfigureAwait(false);
+        }
+
+        if (_playCore.ActivePlayModeId == "ltg" && ListenTogetherManager.Instance?.ServerNextIndex is { } serverIndex)
+        {
+            ListenTogetherManager.Instance.ServerNextIndex = null;
+            await _playCore.MovePointerToIndexAsync(serverIndex).ConfigureAwait(false);
+        }
+        else if (repeatSingleOnAutoAdvance
+                 && _playCore.ActivePlayModeId == "sgl"
+                 && _state.NowPlayingProviderItem is not null
+                 && !userInitiated)
+        {
+            await _playCore.SeekAsync(0, ct).ConfigureAwait(false);
+            SeekRequested?.Invoke(this, new SeekRequestedEventArgs(TimeSpan.Zero));
+            await _playCore.PlayAsync(ct).ConfigureAwait(false);
+            CaptureCurrentPlaybackIdentity();
+            return;
+        }
+        else
+        {
+            await _playCore.MoveNextAsync().ConfigureAwait(false);
+        }
+
+        if (_playCore.CurrentSong is { } song)
+            await LoadAndPlayCoreAsync(song, true, false, ct).ConfigureAwait(false);
+    }
+
+    private async Task<TransitionPreparedTrack?> PrepareNextCoreAsync(
+        TrackTransitionContext context,
+        CancellationToken ct)
+    {
+        if (!IsCurrentGeneration(context.Source, context.Generation)
+            || !context.CanPreload)
+            return null;
+
+        var queue = await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false);
+        var currentIndex = await _playCore.GetCurrentIndexAsync(ct).ConfigureAwait(false);
+        if (_playCore.ActivePlayModeId == "pfm" && currentIndex + 1 >= queue.Count)
+        {
+            await PersonalFM.AppendMoreTracksAsync().ConfigureAwait(false);
+            queue = await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false);
+        }
+
+        if (queue.Count == 0 || currentIndex < 0)
+            return null;
+
+        var queueRevision = _state.QueueRevision;
+        var nextIndex = (currentIndex + 1) % queue.Count;
+        var nextSong = await _playCore.GetSongAtAsync(nextIndex, ct).ConfigureAwait(false);
+        if (nextSong is null)
+            return null;
+
+        var ticket = await _playCore.PreparePlaybackAsync(nextSong, ct).ConfigureAwait(false);
+        if (ticket is null)
+            return null;
+        if (queueRevision != _state.QueueRevision
+            || !IsCurrentGeneration(context.Source, context.Generation))
+        {
+            await ticket.DisposeAsync().ConfigureAwait(false);
+            return null;
+        }
+
+        return new TransitionPreparedTrack
+        {
+            Song = nextSong,
+            Ticket = ticket,
+            Generation = context.Generation,
+            Source = context.Source,
+            CurrentIndex = currentIndex,
+            QueueRevision = queueRevision
+        };
+    }
+
+    private async Task<PreparedPlaybackPromotion?> PromoteCoreAsync(
+        TransitionPreparedTrack prepared,
+        CancellationToken ct)
+    {
+        if (!IsCurrentGeneration(prepared.Source, prepared.Generation)
+            || prepared.QueueRevision != _state.QueueRevision
+            || await _playCore.GetCurrentIndexAsync(ct).ConfigureAwait(false) != prepared.CurrentIndex)
+            return null;
+
+        var queue = await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false);
+        if (queue.Count == 0)
+            return null;
+
+        var nextIndex = (prepared.CurrentIndex + 1) % queue.Count;
+        var nextSong = await _playCore.GetSongAtAsync(nextIndex, ct).ConfigureAwait(false);
+        if (!SameSong(nextSong, prepared.Song))
+            return null;
+
+        var oldSong = _state.NowPlayingProviderItem;
+        await _playCore.MoveNextAsync(ct).ConfigureAwait(false);
+        if (!SameSong(_playCore.CurrentSong, prepared.Song))
+        {
+            await _playCore.MovePointerToIndexAsync(prepared.CurrentIndex, ct).ConfigureAwait(false);
+            return null;
+        }
+
+        await SetCurrentSongAsync(prepared.Song, ct).ConfigureAwait(false);
+        PreparedPlaybackPromotion? promotion;
+        try
+        {
+            promotion = await _playCore
+                .PromotePreparedPlaybackAsync(prepared.Ticket, ct)
+                .ConfigureAwait(false);
+        }
+        catch
+        {
+            promotion = null;
+        }
+
+        if (promotion is null)
+        {
+            await _playCore.MovePointerToIndexAsync(prepared.CurrentIndex, ct).ConfigureAwait(false);
+            if (oldSong is not null)
+                await SetCurrentSongAsync(oldSong, ct).ConfigureAwait(false);
+            return null;
+        }
+
+        CaptureCurrentPlaybackIdentity();
+        _state.IsPlaying = true;
+
+        if (_setting.LastFMScrobble
+            && oldSong is not null
+            && _lastScrobbledGeneration != prepared.Generation)
+        {
+            _lastScrobbledGeneration = prepared.Generation;
+            _taskRunner.Forget(
+                ScrobbleSafeAsync(oldSong),
+                "scrobble cross-faded track");
+        }
+
+        return promotion;
+    }
+
+    private async Task ScrobbleSafeAsync(SingleSongBase song)
+    {
+        try
+        {
+            await _playbackNotification.ScrobbleAsync(song).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Debug.WriteLine($"Last.fm scrobble failed: {ex}");
+        }
+    }
+
+    private static bool SameSong(SingleSongBase? left, SingleSongBase? right)
+    {
+        return ReferenceEquals(left, right)
+               || (left is not null
+                   && right is not null
+                   && left.ProviderId == right.ProviderId
+                   && left.TypeId == right.TypeId
+                   && left.ActualId == right.ActualId);
+    }
+
+    private static int FindSongIndex(IReadOnlyList<SingleSongBase> songs, SingleSongBase targetSong)
+    {
+        for (var i = 0; i < songs.Count; i++)
+            if (SameSong(songs[i], targetSong))
+                return i;
+
+        return -1;
+    }
+
+    internal static bool CanReplaceQueueForCurrentSong(
+        SingleSongBase? nowPlayingSong,
+        SingleSongBase? currentQueueSong,
+        SingleSongBase expectedCurrentSong)
+    {
+        return SameSong(nowPlayingSong, expectedCurrentSong)
+               && SameSong(currentQueueSong, expectedCurrentSong);
+    }
+
+    internal static List<SingleSongBase> CreateQueuePreservingCurrentSong(
+        IReadOnlyList<SingleSongBase> songs,
+        SingleSongBase currentSong)
+    {
+        var replacementSongs = songs.ToList();
+        var currentIndex = FindSongIndex(replacementSongs, currentSong);
+        if (currentIndex >= 0)
+            replacementSongs[currentIndex] = currentSong;
+
+        return replacementSongs;
+    }
+
+    private sealed class TransitionHost : ITrackTransitionHost
+    {
+        private readonly PlaybackControlService _owner;
+
+        public TransitionHost(PlaybackControlService owner)
+        {
+            _owner = owner;
+        }
+
+        public Task<TransitionPreparedTrack?> PrepareNextAsync(
+            TrackTransitionContext context,
+            CancellationToken ct)
+        {
+            return _owner.PrepareNextCoreAsync(context, ct);
+        }
+
+        public Task<PreparedPlaybackPromotion?> PromoteAsync(
+            TransitionPreparedTrack prepared,
+            CancellationToken ct)
+        {
+            return _owner.PromoteCoreAsync(prepared, ct);
+        }
+
+        public Task AdvanceDirectAsync(TrackTransitionContext context, CancellationToken ct)
+        {
+            if (!_owner.IsCurrentGeneration(context.Source, context.Generation))
+                return Task.CompletedTask;
+
+            return _owner.MoveNextAndPlayCoreAsync(
+                false,
+                true,
+                ct);
+        }
     }
 
     #region IPlaybackControlService
@@ -280,15 +547,15 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 SystemMediaTransportControls? smtc = null;
                 var uiInitialized = await _uiThreadDispatcher.TryRunAsync(() =>
                 {
-                    smtc = Windows.Media.SystemMediaTransportControls.GetForCurrentView();
+                    smtc = SystemMediaTransportControls.GetForCurrentView();
                     smtc.IsPlayEnabled = true;
                     smtc.IsPauseEnabled = true;
                     smtc.IsNextEnabled = true;
                     smtc.IsPreviousEnabled = true;
                     smtc.IsEnabled = true;
-                    smtc.DisplayUpdater.Type = Windows.Media.MediaPlaybackType.Music;
-                    smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Closed;
-                    graphPlayer.SMTCManager = new UWP.Chopin.SMTCManager(smtc);
+                    smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
+                    smtc.PlaybackStatus = MediaPlaybackStatus.Closed;
+                    graphPlayer.SMTCManager = new SMTCManager(smtc);
                     _smtc = smtc;
 
                     if (!_smtcSubscribed)
@@ -313,12 +580,14 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
     }
 
-    private void SMTC_PlaybackPositionChangeRequested(SystemMediaTransportControls sender, PlaybackPositionChangeRequestedEventArgs args)
+    private void SMTC_PlaybackPositionChangeRequested(SystemMediaTransportControls sender,
+        PlaybackPositionChangeRequestedEventArgs args)
     {
         SeekAsync(args.RequestedPlaybackPosition).SafeFireAndForget();
     }
 
-    private void SMTC_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args)
+    private void SMTC_ButtonPressed(SystemMediaTransportControls sender,
+        SystemMediaTransportControlsButtonPressedEventArgs args)
     {
         var button = args.Button;
         _taskRunner.Forget(
@@ -478,7 +747,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     #region Player Event Handlers
 
     /// <summary>
-    /// 播放位置更新回调
+    ///     播放位置更新回调
     /// </summary>
     private void OnPositionChanged(TimeSpan position)
     {
@@ -494,19 +763,17 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     }
 
     /// <summary>
-    /// 全局播放状态变化回调
+    ///     全局播放状态变化回调
     /// </summary>
     private void OnGlobalPlaybackStatusChanged(PlaybackStatus status)
     {
         var playing = status == PlaybackStatus.Playing;
-        _taskRunner.Forget(_uiThreadDispatcher.TryRunAsync(() =>
-        {
-            _state.IsPlaying = playing;
-        }), "publish playback status changed");
+        _taskRunner.Forget(_uiThreadDispatcher.TryRunAsync(() => { _state.IsPlaying = playing; }),
+            "publish playback status changed");
     }
 
     /// <summary>
-    /// 曲目自然播放结束回调
+    ///     曲目自然播放结束回调
     /// </summary>
     private void OnTrackReachesEnd(IPlaybackSource source)
     {
@@ -518,7 +785,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             "handle track ended");
     }
 
-    private void OnPlaybackStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnPlaybackStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(PlaybackStateService.QueueRevision))
             return;
@@ -542,7 +809,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     }
 
     /// <summary>
-    /// 主播放源切换回调
+    ///     主播放源切换回调
     /// </summary>
     private void OnPrimaryPlaybackSourceChanged(IPlaybackSource source)
     {
@@ -554,10 +821,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             _lyricCts?.Cancel();
             _lyricCts?.Dispose();
             _lyricCts = new CancellationTokenSource();
-            _taskRunner.Forget(LoadLyricsSafeAsync(_state.NowPlayingProviderItem, _lyricCts.Token), "load lyrics for primary source");
+            _taskRunner.Forget(LoadLyricsSafeAsync(_state.NowPlayingProviderItem, _lyricCts.Token),
+                "load lyrics for primary source");
 
             if (_state.NowPlayingProviderItem is not null)
-                _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(_state.NowPlayingProviderItem), "update playback notification on track changed");
+                _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(_state.NowPlayingProviderItem),
+                    "update playback notification on track changed");
         }
     }
 
@@ -570,7 +839,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            System.Diagnostics.Debug.WriteLine($"Load lyrics failed: {ex.Message}");
+            Debug.WriteLine($"Load lyrics failed: {ex.Message}");
         }
     }
 
@@ -593,7 +862,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            System.Diagnostics.Debug.WriteLine($"Track transition update failed: {ex}");
+            Debug.WriteLine($"Track transition update failed: {ex}");
         }
         finally
         {
@@ -628,7 +897,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            System.Diagnostics.Debug.WriteLine($"Track end handling failed: {ex}");
+            Debug.WriteLine($"Track end handling failed: {ex}");
         }
         finally
         {
@@ -654,10 +923,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         CaptureCurrentPlaybackIdentity();
     }
 
-    private bool IsCurrentGeneration(IPlaybackSource source, long generation) =>
-        generation == _playbackGeneration
-        && ReferenceEquals(source, _currentSource)
-        && ReferenceEquals(source, _player.PrimaryPlaybackSource);
+    private bool IsCurrentGeneration(IPlaybackSource source, long generation)
+    {
+        return generation == _playbackGeneration
+               && ReferenceEquals(source, _currentSource)
+               && ReferenceEquals(source, _player.PrimaryPlaybackSource);
+    }
 
     private void CaptureCurrentPlaybackIdentity()
     {
@@ -718,7 +989,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             var failuresObserved = 1;
             while (failuresObserved < queue.Count)
             {
-                await MoveNextAndPlayAsync(userInitiated: false, repeatSingleOnAutoAdvance: false).ConfigureAwait(false);
+                await MoveNextAndPlayAsync(false, false).ConfigureAwait(false);
 
                 if (_playCore.CurrentPlayingTicket is not null)
                     return;
@@ -733,14 +1004,14 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             }
 
             _state.IsPlaying = false;
-            System.Diagnostics.Debug.WriteLine("Playback auto-skip stopped because every queued song failed to resolve.");
+            Debug.WriteLine("Playback auto-skip stopped because every queued song failed to resolve.");
         }
         catch (OperationCanceledException)
         {
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Playback failure auto-skip failed: {ex.Message}");
+            Debug.WriteLine($"Playback failure auto-skip failed: {ex.Message}");
         }
         finally
         {
@@ -761,282 +1032,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
     #endregion
 
-    public async Task MoveNextAndPlayAsync(bool userInitiated)
-        => await MoveNextAndPlayAsync(userInitiated, repeatSingleOnAutoAdvance: true).ConfigureAwait(false);
-
-    private async Task MoveNextAndPlayAsync(bool userInitiated, bool repeatSingleOnAutoAdvance)
-    {
-        await _transitionGate.WaitAsync().ConfigureAwait(false);
-        try
-        {
-            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
-            await MoveNextAndPlayCoreAsync(
-                    userInitiated,
-                    repeatSingleOnAutoAdvance,
-                    CancellationToken.None)
-                .ConfigureAwait(false);
-        }
-        finally
-        {
-            _transitionGate.Release();
-        }
-    }
-
-    private async Task MoveNextAndPlayCoreAsync(
-        bool userInitiated,
-        bool repeatSingleOnAutoAdvance,
-        CancellationToken ct)
-    {
-        var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
-        if (queue.Count == 0)
-            return;
-
-        if (_playCore.ActivePlayModeId == "pfm")
-        {
-            var currentIndex = _state.NowPlayingIndex >= 0
-                ? _state.NowPlayingIndex
-                : await _playCore.GetCurrentIndexAsync().ConfigureAwait(false);
-            if (currentIndex + 1 >= queue.Count)
-                await PersonalFM.AppendMoreTracksAsync().ConfigureAwait(false);
-        }
-
-        if (_playCore.ActivePlayModeId == "ltg" && ListenTogetherManager.Instance?.ServerNextIndex is { } serverIndex)
-        {
-            ListenTogetherManager.Instance.ServerNextIndex = null;
-            await _playCore.MovePointerToIndexAsync(serverIndex).ConfigureAwait(false);
-        }
-        else if (repeatSingleOnAutoAdvance
-                 && _playCore.ActivePlayModeId == "sgl"
-                 && _state.NowPlayingProviderItem is not null
-                 && !userInitiated)
-        {
-            await _playCore.SeekAsync(0, ct).ConfigureAwait(false);
-            SeekRequested?.Invoke(this, new SeekRequestedEventArgs(TimeSpan.Zero));
-            await _playCore.PlayAsync(ct).ConfigureAwait(false);
-            CaptureCurrentPlaybackIdentity();
-            return;
-        }
-        else
-        {
-            await _playCore.MoveNextAsync().ConfigureAwait(false);
-        }
-
-        if (_playCore.CurrentSong is { } song)
-            await LoadAndPlayCoreAsync(song, true, false, ct).ConfigureAwait(false);
-    }
-
-    public async Task MovePreviousAndPlayAsync()
-    {
-        await _transitionGate.WaitAsync().ConfigureAwait(false);
-        try
-        {
-            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
-            if ((await _playCore.GetPlaylistAsync().ConfigureAwait(false)).Count == 0)
-                return;
-
-            await _playCore.MovePreviousAsync().ConfigureAwait(false);
-            if (_playCore.CurrentSong is { } song)
-                await LoadAndPlayCoreAsync(song, true, false, CancellationToken.None).ConfigureAwait(false);
-        }
-        finally
-        {
-            _transitionGate.Release();
-        }
-    }
-
-    private async Task<TransitionPreparedTrack?> PrepareNextCoreAsync(
-        TrackTransitionContext context,
-        CancellationToken ct)
-    {
-        if (!IsCurrentGeneration(context.Source, context.Generation)
-            || !context.CanPreload)
-            return null;
-
-        var queue = await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false);
-        var currentIndex = await _playCore.GetCurrentIndexAsync(ct).ConfigureAwait(false);
-        if (_playCore.ActivePlayModeId == "pfm" && currentIndex + 1 >= queue.Count)
-        {
-            await PersonalFM.AppendMoreTracksAsync().ConfigureAwait(false);
-            queue = await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false);
-        }
-
-        if (queue.Count == 0 || currentIndex < 0)
-            return null;
-
-        var queueRevision = _state.QueueRevision;
-        var nextIndex = (currentIndex + 1) % queue.Count;
-        var nextSong = await _playCore.GetSongAtAsync(nextIndex, ct).ConfigureAwait(false);
-        if (nextSong is null)
-            return null;
-
-        var ticket = await _playCore.PreparePlaybackAsync(nextSong, ct).ConfigureAwait(false);
-        if (ticket is null)
-            return null;
-        if (queueRevision != _state.QueueRevision
-            || !IsCurrentGeneration(context.Source, context.Generation))
-        {
-            await ticket.DisposeAsync().ConfigureAwait(false);
-            return null;
-        }
-
-        return new TransitionPreparedTrack
-        {
-            Song = nextSong,
-            Ticket = ticket,
-            Generation = context.Generation,
-            Source = context.Source,
-            CurrentIndex = currentIndex,
-            QueueRevision = queueRevision
-        };
-    }
-
-    private async Task<PreparedPlaybackPromotion?> PromoteCoreAsync(
-        TransitionPreparedTrack prepared,
-        CancellationToken ct)
-    {
-        if (!IsCurrentGeneration(prepared.Source, prepared.Generation)
-            || prepared.QueueRevision != _state.QueueRevision
-            || await _playCore.GetCurrentIndexAsync(ct).ConfigureAwait(false) != prepared.CurrentIndex)
-            return null;
-
-        var queue = await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false);
-        if (queue.Count == 0)
-            return null;
-
-        var nextIndex = (prepared.CurrentIndex + 1) % queue.Count;
-        var nextSong = await _playCore.GetSongAtAsync(nextIndex, ct).ConfigureAwait(false);
-        if (!SameSong(nextSong, prepared.Song))
-            return null;
-
-        var oldSong = _state.NowPlayingProviderItem;
-        await _playCore.MoveNextAsync(ct).ConfigureAwait(false);
-        if (!SameSong(_playCore.CurrentSong, prepared.Song))
-        {
-            await _playCore.MovePointerToIndexAsync(prepared.CurrentIndex, ct).ConfigureAwait(false);
-            return null;
-        }
-
-        await SetCurrentSongAsync(prepared.Song, ct).ConfigureAwait(false);
-        PreparedPlaybackPromotion? promotion;
-        try
-        {
-            promotion = await _playCore
-                .PromotePreparedPlaybackAsync(prepared.Ticket, ct)
-                .ConfigureAwait(false);
-        }
-        catch
-        {
-            promotion = null;
-        }
-        if (promotion is null)
-        {
-            await _playCore.MovePointerToIndexAsync(prepared.CurrentIndex, ct).ConfigureAwait(false);
-            if (oldSong is not null)
-                await SetCurrentSongAsync(oldSong, ct).ConfigureAwait(false);
-            return null;
-        }
-
-        CaptureCurrentPlaybackIdentity();
-        _state.IsPlaying = true;
-
-        if (_setting.LastFMScrobble
-            && oldSong is not null
-            && _lastScrobbledGeneration != prepared.Generation)
-        {
-            _lastScrobbledGeneration = prepared.Generation;
-            _taskRunner.Forget(
-                ScrobbleSafeAsync(oldSong),
-                "scrobble cross-faded track");
-        }
-
-        return promotion;
-    }
-
-    private async Task ScrobbleSafeAsync(SingleSongBase song)
-    {
-        try
-        {
-            await _playbackNotification.ScrobbleAsync(song).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            System.Diagnostics.Debug.WriteLine($"Last.fm scrobble failed: {ex}");
-        }
-    }
-
-    private static bool SameSong(SingleSongBase? left, SingleSongBase? right) =>
-        ReferenceEquals(left, right)
-        || (left is not null
-            && right is not null
-            && left.ProviderId == right.ProviderId
-            && left.TypeId == right.TypeId
-            && left.ActualId == right.ActualId);
-
-    private static int FindSongIndex(IReadOnlyList<SingleSongBase> songs, SingleSongBase targetSong)
-    {
-        for (var i = 0; i < songs.Count; i++)
-        {
-            if (SameSong(songs[i], targetSong))
-                return i;
-        }
-
-        return -1;
-    }
-
-    internal static bool CanReplaceQueueForCurrentSong(
-        SingleSongBase? nowPlayingSong,
-        SingleSongBase? currentQueueSong,
-        SingleSongBase expectedCurrentSong) =>
-        SameSong(nowPlayingSong, expectedCurrentSong)
-        && SameSong(currentQueueSong, expectedCurrentSong);
-
-    internal static List<SingleSongBase> CreateQueuePreservingCurrentSong(
-        IReadOnlyList<SingleSongBase> songs,
-        SingleSongBase currentSong)
-    {
-        var replacementSongs = songs.ToList();
-        var currentIndex = FindSongIndex(replacementSongs, currentSong);
-        if (currentIndex >= 0)
-            replacementSongs[currentIndex] = currentSong;
-
-        return replacementSongs;
-    }
-
-    private sealed class TransitionHost : ITrackTransitionHost
-    {
-        private readonly PlaybackControlService _owner;
-
-        public TransitionHost(PlaybackControlService owner)
-        {
-            _owner = owner;
-        }
-
-        public Task<TransitionPreparedTrack?> PrepareNextAsync(
-            TrackTransitionContext context,
-            CancellationToken ct) =>
-            _owner.PrepareNextCoreAsync(context, ct);
-
-        public Task<PreparedPlaybackPromotion?> PromoteAsync(
-            TransitionPreparedTrack prepared,
-            CancellationToken ct) =>
-            _owner.PromoteCoreAsync(prepared, ct);
-
-        public Task AdvanceDirectAsync(TrackTransitionContext context, CancellationToken ct)
-        {
-            if (!_owner.IsCurrentGeneration(context.Source, context.Generation))
-                return Task.CompletedTask;
-
-            return _owner.MoveNextAndPlayCoreAsync(
-                userInitiated: false,
-                repeatSingleOnAutoAdvance: true,
-                ct);
-        }
-    }
-
     #region IDisposable
 
     /// <summary>
-    /// 释放资源，取消订阅播放器事件
+    ///     释放资源，取消订阅播放器事件
     /// </summary>
     public void Dispose()
     {
@@ -1056,6 +1055,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             graphPlayer.OnPositionChanged -= OnPositionChanged;
             graphPlayer.OnPrimaryPlaybackSourceChanged -= OnPrimaryPlaybackSourceChanged;
         }
+
         _state.PropertyChanged -= OnPlaybackStatePropertyChanged;
         _smtc?.ButtonPressed -= SMTC_ButtonPressed;
         _smtc?.PlaybackPositionChangeRequested -= SMTC_PlaybackPositionChangeRequested;

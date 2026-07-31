@@ -1,10 +1,10 @@
-using Depository.Abstraction.Interfaces;
-using Depository.Abstraction.Interfaces.NotificationHub;
-using Depository.Abstraction.Exceptions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Depository.Abstraction.Exceptions;
+using Depository.Abstraction.Interfaces;
+using Depository.Abstraction.Interfaces.NotificationHub;
 
 namespace HyPlayer.Features.Playback.Services;
 

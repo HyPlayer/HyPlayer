@@ -1,30 +1,22 @@
-﻿using CommunityToolkit.WinUI.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using CommunityToolkit.WinUI.Controls;
 
 namespace HyPlayer.UI.Controls.AlignableWrapPanel;
 
 /// <summary>
-/// WrapPanel is a panel that position child control vertically or horizontally based on the orientation and when max width / max height is reached a new row (in case of horizontal) or column (in case of vertical) is created to fit new controls.
+///     WrapPanel is a panel that position child control vertically or horizontally based on the orientation and when max
+///     width / max height is reached a new row (in case of horizontal) or column (in case of vertical) is created to fit
+///     new controls.
 /// </summary>
 public partial class AlignableWrapPanel : Panel
 {
     /// <summary>
-    /// Gets or sets a uniform Horizontal distance (in pixels) between items when <see cref="Orientation"/> is set to Horizontal,
-    /// or between columns of items when <see cref="Orientation"/> is set to Vertical.
-    /// </summary>
-    public double HorizontalSpacing
-    {
-        get => (double)GetValue(HorizontalSpacingProperty);
-        set => SetValue(HorizontalSpacingProperty, value);
-    }
-
-    /// <summary>
-    /// Identifies the <see cref="HorizontalSpacing"/> dependency property.
+    ///     Identifies the <see cref="HorizontalSpacing" /> dependency property.
     /// </summary>
     public static readonly DependencyProperty HorizontalSpacingProperty =
         DependencyProperty.Register(
@@ -34,17 +26,7 @@ public partial class AlignableWrapPanel : Panel
             new PropertyMetadata(0d, LayoutPropertyChanged));
 
     /// <summary>
-    /// Gets or sets a uniform Vertical distance (in pixels) between items when <see cref="Orientation"/> is set to Vertical,
-    /// or between rows of items when <see cref="Orientation"/> is set to Horizontal.
-    /// </summary>
-    public double VerticalSpacing
-    {
-        get => (double)GetValue(VerticalSpacingProperty);
-        set => SetValue(VerticalSpacingProperty, value);
-    }
-
-    /// <summary>
-    /// Identifies the <see cref="VerticalSpacing"/> dependency property.
+    ///     Identifies the <see cref="VerticalSpacing" /> dependency property.
     /// </summary>
     public static readonly DependencyProperty VerticalSpacingProperty =
         DependencyProperty.Register(
@@ -54,18 +36,7 @@ public partial class AlignableWrapPanel : Panel
             new PropertyMetadata(0d, LayoutPropertyChanged));
 
     /// <summary>
-    /// Gets or sets the orientation of the WrapPanel.
-    /// Horizontal means that child controls will be added horizontally until the width of the panel is reached, then a new row is added to add new child controls.
-    /// Vertical means that children will be added vertically until the height of the panel is reached, then a new column is added.
-    /// </summary>
-    public Orientation Orientation
-    {
-        get => (Orientation)GetValue(OrientationProperty);
-        set => SetValue(OrientationProperty, value);
-    }
-
-    /// <summary>
-    /// Identifies the <see cref="Orientation"/> dependency property.
+    ///     Identifies the <see cref="Orientation" /> dependency property.
     /// </summary>
     public static readonly DependencyProperty OrientationProperty =
         DependencyProperty.Register(
@@ -74,30 +45,14 @@ public partial class AlignableWrapPanel : Panel
             typeof(WrapPanel),
             new PropertyMetadata(Orientation.Horizontal, LayoutPropertyChanged));
 
-    public HorizontalAlignment HorizontalContentAlignment
-    {
-        get => (HorizontalAlignment)GetValue(HorizontalContentAlignmentProperty);
-        set => SetValue(HorizontalContentAlignmentProperty, value);
-    }
     public static readonly DependencyProperty HorizontalContentAlignmentProperty =
-        DependencyProperty.Register(nameof(HorizontalContentAlignment), typeof(HorizontalAlignment), typeof(AlignableWrapPanel), new PropertyMetadata(HorizontalAlignment.Stretch));
-    /// <summary>
-    /// Gets or sets the distance between the border and its child object.
-    /// </summary>
-    /// <returns>
-    /// The dimensions of the space between the border and its child as a Thickness value.
-    /// Thickness is a structure that stores dimension values using pixel measures.
-    /// </returns>
-    public Thickness Padding
-    {
-        get => (Thickness)GetValue(PaddingProperty);
-        set => SetValue(PaddingProperty, value);
-    }
+        DependencyProperty.Register(nameof(HorizontalContentAlignment), typeof(HorizontalAlignment),
+            typeof(AlignableWrapPanel), new PropertyMetadata(HorizontalAlignment.Stretch));
 
     /// <summary>
-    /// Identifies the Padding dependency property.
+    ///     Identifies the Padding dependency property.
     /// </summary>
-    /// <returns>The identifier for the <see cref="Padding"/> dependency property.</returns>
+    /// <returns>The identifier for the <see cref="Padding" /> dependency property.</returns>
     public static readonly DependencyProperty PaddingProperty =
         DependencyProperty.Register(
             nameof(Padding),
@@ -106,24 +61,80 @@ public partial class AlignableWrapPanel : Panel
             new PropertyMetadata(default(Thickness), LayoutPropertyChanged));
 
     /// <summary>
-    /// Gets or sets a value indicating how to arrange child items
+    ///     Identifies the <see cref="StretchChild" /> dependency property.
     /// </summary>
-    public StretchChild StretchChild
-    {
-        get => (StretchChild)GetValue(StretchChildProperty);
-        set => SetValue(StretchChildProperty, value);
-    }
-
-    /// <summary>
-    /// Identifies the <see cref="StretchChild"/> dependency property.
-    /// </summary>
-    /// <returns>The identifier for the <see cref="StretchChild"/> dependency property.</returns>
+    /// <returns>The identifier for the <see cref="StretchChild" /> dependency property.</returns>
     public static readonly DependencyProperty StretchChildProperty =
         DependencyProperty.Register(
             nameof(StretchChild),
             typeof(StretchChild),
             typeof(WrapPanel),
             new PropertyMetadata(StretchChild.None, LayoutPropertyChanged));
+
+    private readonly List<Row> _rows = new();
+
+    /// <summary>
+    ///     Gets or sets a uniform Horizontal distance (in pixels) between items when <see cref="Orientation" /> is set to
+    ///     Horizontal,
+    ///     or between columns of items when <see cref="Orientation" /> is set to Vertical.
+    /// </summary>
+    public double HorizontalSpacing
+    {
+        get => (double)GetValue(HorizontalSpacingProperty);
+        set => SetValue(HorizontalSpacingProperty, value);
+    }
+
+    /// <summary>
+    ///     Gets or sets a uniform Vertical distance (in pixels) between items when <see cref="Orientation" /> is set to
+    ///     Vertical,
+    ///     or between rows of items when <see cref="Orientation" /> is set to Horizontal.
+    /// </summary>
+    public double VerticalSpacing
+    {
+        get => (double)GetValue(VerticalSpacingProperty);
+        set => SetValue(VerticalSpacingProperty, value);
+    }
+
+    /// <summary>
+    ///     Gets or sets the orientation of the WrapPanel.
+    ///     Horizontal means that child controls will be added horizontally until the width of the panel is reached, then a new
+    ///     row is added to add new child controls.
+    ///     Vertical means that children will be added vertically until the height of the panel is reached, then a new column
+    ///     is added.
+    /// </summary>
+    public Orientation Orientation
+    {
+        get => (Orientation)GetValue(OrientationProperty);
+        set => SetValue(OrientationProperty, value);
+    }
+
+    public HorizontalAlignment HorizontalContentAlignment
+    {
+        get => (HorizontalAlignment)GetValue(HorizontalContentAlignmentProperty);
+        set => SetValue(HorizontalContentAlignmentProperty, value);
+    }
+
+    /// <summary>
+    ///     Gets or sets the distance between the border and its child object.
+    /// </summary>
+    /// <returns>
+    ///     The dimensions of the space between the border and its child as a Thickness value.
+    ///     Thickness is a structure that stores dimension values using pixel measures.
+    /// </returns>
+    public Thickness Padding
+    {
+        get => (Thickness)GetValue(PaddingProperty);
+        set => SetValue(PaddingProperty, value);
+    }
+
+    /// <summary>
+    ///     Gets or sets a value indicating how to arrange child items
+    /// </summary>
+    public StretchChild StretchChild
+    {
+        get => (StretchChild)GetValue(StretchChildProperty);
+        set => SetValue(StretchChildProperty, value);
+    }
 
     private static void LayoutPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -134,18 +145,13 @@ public partial class AlignableWrapPanel : Panel
         }
     }
 
-    private readonly List<Row> _rows = new List<Row>();
-
     /// <inheritdoc />
     protected override Size MeasureOverride(Size availableSize)
     {
         var childAvailableSize = new Size(
             availableSize.Width - Padding.Left - Padding.Right,
             availableSize.Height - Padding.Top - Padding.Bottom);
-        foreach (var child in Children)
-        {
-            child.Measure(childAvailableSize);
-        }
+        foreach (var child in Children) child.Measure(childAvailableSize);
 
         var requiredSize = UpdateRows(availableSize);
         return requiredSize;
@@ -156,10 +162,8 @@ public partial class AlignableWrapPanel : Panel
     {
         if ((Orientation == Orientation.Horizontal && finalSize.Width < DesiredSize.Width) ||
             (Orientation == Orientation.Vertical && finalSize.Height < DesiredSize.Height))
-        {
             // We haven't received our desired size. We need to refresh the rows.
             UpdateRows(finalSize);
-        }
 
         if (_rows.Count > 0)
         {
@@ -169,13 +173,9 @@ public partial class AlignableWrapPanel : Panel
             {
                 var pos = row.ChildrenRects[0].Position;
                 if (HorizontalContentAlignment is HorizontalAlignment.Center)
-                {
                     pos.U = (finalSize.Width - row.Rect.Size.U) / 2 + Padding.Left;
-                }
                 else if (HorizontalContentAlignment is HorizontalAlignment.Right)
-                {
                     pos.U = finalSize.Width - row.Rect.Size.U - Padding.Left;
-                }
 
                 foreach (var rect in row.ChildrenRects)
                 {
@@ -183,16 +183,14 @@ public partial class AlignableWrapPanel : Panel
 
 
                     while (child.Visibility == Visibility.Collapsed)
-                    {
                         // Collapsed children are not added into the rows,
                         // we skip them.
                         child = Children[childIndex++];
-                    }
 
                     var arrangeRect = new UvRect
                     {
                         Position = pos,
-                        Size = new UvMeasure { U = rect.Size.U, V = row.Size.V },
+                        Size = new UvMeasure { U = rect.Size.U, V = row.Size.V }
                     };
 
                     var finalRect = arrangeRect.ToRect(Orientation);
@@ -223,16 +221,14 @@ public partial class AlignableWrapPanel : Panel
         var position = new UvMeasure(Orientation, Padding.Left, Padding.Top);
 
         var currentRow = new Row(new List<UvRect>(), default);
-        var finalMeasure = new UvMeasure(Orientation, width: 0.0, height: 0.0);
+        var finalMeasure = new UvMeasure(Orientation, 0.0, 0.0);
+
         void Arrange(UIElement child, bool isLast = false)
         {
-            if (child.Visibility == Visibility.Collapsed)
-            {
-                return; // if an item is collapsed, avoid adding the spacing
-            }
+            if (child.Visibility == Visibility.Collapsed) return; // if an item is collapsed, avoid adding the spacing
 
             var desiredMeasure = new UvMeasure(Orientation, child.DesiredSize);
-            if ((desiredMeasure.U + position.U + paddingEnd.U) > parentMeasure.U)
+            if (desiredMeasure.U + position.U + paddingEnd.U > parentMeasure.U)
             {
                 // next row!
                 position.U = paddingStart.U;
@@ -243,10 +239,7 @@ public partial class AlignableWrapPanel : Panel
             }
 
             // Stretch the last item to fill the available space
-            if (isLast)
-            {
-                desiredMeasure.U = parentMeasure.U - position.U;
-            }
+            if (isLast) desiredMeasure.U = parentMeasure.U - position.U;
 
             currentRow.Add(position, desiredMeasure);
 
@@ -256,16 +249,10 @@ public partial class AlignableWrapPanel : Panel
         }
 
         var lastIndex = Children.Count - 1;
-        for (var i = 0; i < lastIndex; i++)
-        {
-            Arrange(Children[i]);
-        }
+        for (var i = 0; i < lastIndex; i++) Arrange(Children[i]);
 
         Arrange(Children[lastIndex], StretchChild == StretchChild.Last);
-        if (currentRow.ChildrenRects.Count > 0)
-        {
-            _rows.Add(currentRow);
-        }
+        if (currentRow.ChildrenRects.Count > 0) _rows.Add(currentRow);
 
         if (_rows.Count == 0)
         {

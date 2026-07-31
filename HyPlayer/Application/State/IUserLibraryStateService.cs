@@ -1,6 +1,5 @@
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
 using System.Collections.Generic;
+using HyPlayer.PlayCore.Abstraction.Models;
 
 namespace HyPlayer.Application.State;
 

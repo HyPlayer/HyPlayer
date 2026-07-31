@@ -1,7 +1,5 @@
-using HyPlayer.Domain.Lyrics;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Features.Playback.Services;
 using System;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 namespace HyPlayer.Features.Playback.Services;
 

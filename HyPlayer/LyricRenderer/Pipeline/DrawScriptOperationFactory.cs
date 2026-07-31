@@ -1,15 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using Windows.UI;
 using HyPlayer.LyricEffects.Drawing;
 using HyPlayer.LyricEffects.Expressions;
 using HyPlayer.LyricEffects.Models;
 using HyPlayer.LyricEffects.Presets;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Windows.Foundation;
-using Windows.UI;
 
 namespace HyPlayer.LyricRenderer.Pipeline;
 
@@ -24,7 +23,8 @@ public sealed class LyricDrawCommandRegistry
     }
 
     public IReadOnlyList<LyricDrawCommandSignature> Signatures =>
-        (LyricDrawCommandSignature[])[.. _factories.Values.Select(factory => factory.Signature).OrderBy(signature => signature.Name)];
+        (LyricDrawCommandSignature[])
+        [.. _factories.Values.Select(factory => factory.Signature).OrderBy(signature => signature.Name)];
 
     public void Register(ILyricDrawCommandFactory factory)
     {
@@ -33,8 +33,10 @@ public sealed class LyricDrawCommandRegistry
             throw new InvalidOperationException($"绘图命令“{factory.Signature.Name}”已注册。");
     }
 
-    internal bool TryGet(string name, out ILyricDrawCommandFactory factory) =>
-        _factories.TryGetValue(name, out factory!);
+    internal bool TryGet(string name, out ILyricDrawCommandFactory factory)
+    {
+        return _factories.TryGetValue(name, out factory!);
+    }
 }
 
 internal sealed partial class DrawScriptOperationFactory(
@@ -113,7 +115,10 @@ internal sealed partial class DrawScriptOperationFactory(
             if (arguments.Count == command.Arguments.Count)
                 commands.Add(new CompiledDrawCommand(factory, arguments));
 
-            if (command.Name.Equals("Save", StringComparison.OrdinalIgnoreCase)) saveDepth++;
+            if (command.Name.Equals("Save", StringComparison.OrdinalIgnoreCase))
+            {
+                saveDepth++;
+            }
             else if (command.Name.Equals("Restore", StringComparison.OrdinalIgnoreCase))
             {
                 saveDepth--;
@@ -132,13 +137,11 @@ internal sealed partial class DrawScriptOperationFactory(
         }
 
         if (saveDepth != 0)
-        {
             diagnostics.Add(new LyricProfileDiagnostic(
                 LyricProfileDiagnosticSeverity.Error,
                 "绘图脚本中的 Save/Restore 不平衡。",
                 definition.InstanceId,
                 "script"));
-        }
 
         if (diagnostics.Any(item => item.Severity == LyricProfileDiagnosticSeverity.Error))
             return new LyricOperationCompileResult { Diagnostics = diagnostics };
@@ -214,7 +217,9 @@ internal sealed partial class DrawScriptOperationFactory(
         AboveSource
     }
 
-    private sealed partial class DrawScriptOperation(IReadOnlyList<DrawScriptOperationFactory.CompiledDrawCommand> commands, DrawScriptOperationFactory.DrawScriptPlacement placement) : ILyricRenderOperation
+    private sealed partial class DrawScriptOperation(
+        IReadOnlyList<CompiledDrawCommand> commands,
+        DrawScriptPlacement placement) : ILyricRenderOperation
     {
         private readonly IReadOnlyList<CompiledDrawCommand> _commands = commands;
 
@@ -235,7 +240,9 @@ internal sealed partial class DrawScriptOperationFactory(
         }
     }
 
-    private sealed class CompiledDrawCommand(ILyricDrawCommandFactory factory, IReadOnlyList<DrawScriptOperationFactory.CompiledDrawArgument> arguments)
+    private sealed class CompiledDrawCommand(
+        ILyricDrawCommandFactory factory,
+        IReadOnlyList<CompiledDrawArgument> arguments)
     {
         public void Execute(LyricDrawExecutionContext executionContext, LyricRenderOperationContext renderContext)
         {
@@ -246,8 +253,8 @@ internal sealed partial class DrawScriptOperationFactory(
 
     private sealed class CompiledDrawArgument
     {
-        private readonly LyricScalarExpression? _scalar;
         private readonly LyricColorExpression? _color;
+        private readonly LyricScalarExpression? _scalar;
         private readonly LyricTextExpression? _text;
 
         private CompiledDrawArgument(
@@ -264,14 +271,20 @@ internal sealed partial class DrawScriptOperationFactory(
 
         public LyricExpressionValueType Type { get; }
 
-        public static CompiledDrawArgument Scalar(LyricScalarExpression expression) =>
-            new(LyricExpressionValueType.Scalar, expression, null, null);
+        public static CompiledDrawArgument Scalar(LyricScalarExpression expression)
+        {
+            return new CompiledDrawArgument(LyricExpressionValueType.Scalar, expression, null, null);
+        }
 
-        public static CompiledDrawArgument Color(LyricColorExpression expression) =>
-            new(LyricExpressionValueType.Color, null, expression, null);
+        public static CompiledDrawArgument Color(LyricColorExpression expression)
+        {
+            return new CompiledDrawArgument(LyricExpressionValueType.Color, null, expression, null);
+        }
 
-        public static CompiledDrawArgument Text(LyricTextExpression expression) =>
-            new(LyricExpressionValueType.Text, null, null, expression);
+        public static CompiledDrawArgument Text(LyricTextExpression expression)
+        {
+            return new CompiledDrawArgument(LyricExpressionValueType.Text, null, null, expression);
+        }
 
         public LyricDrawValue Evaluate(LyricRenderOperationContext context)
         {
@@ -301,47 +314,64 @@ internal static class BuiltInDrawCommandFactories
     private static readonly LyricExpressionValueType C = LyricExpressionValueType.Color;
     private static readonly LyricExpressionValueType T = LyricExpressionValueType.Text;
 
-    public static IReadOnlyList<ILyricDrawCommandFactory> CreateAll() =>
-    (ILyricDrawCommandFactory[])[
-        Command("FillRectangle", (LyricExpressionValueType[]) [S, S, S, S, C], (context, value) =>
-            context.Session.FillRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, Color(value[4]))),
-        Command("StrokeRectangle", (LyricExpressionValueType[]) [S, S, S, S, C, S], (context, value) =>
-            context.Session.DrawRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, Color(value[4]), value[5].Scalar)),
-        Command("FillRoundedRectangle", (LyricExpressionValueType[]) [S, S, S, S, S, C], (context, value) =>
-            context.Session.FillRoundedRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, value[4].Scalar, value[4].Scalar, Color(value[5]))),
-        Command("StrokeRoundedRectangle", (LyricExpressionValueType[]) [S, S, S, S, S, C, S], (context, value) =>
-            context.Session.DrawRoundedRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, value[4].Scalar, value[4].Scalar, Color(value[5]), value[6].Scalar)),
-        Command("FillEllipse", (LyricExpressionValueType[]) [S, S, S, S, C], (context, value) =>
-            context.Session.FillEllipse(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, Color(value[4]))),
-        Command("StrokeEllipse", (LyricExpressionValueType[]) [S, S, S, S, C, S], (context, value) =>
-            context.Session.DrawEllipse(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, Color(value[4]), value[5].Scalar)),
-        Command("DrawLine", (LyricExpressionValueType[]) [S, S, S, S, C, S], (context, value) =>
-            context.Session.DrawLine(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar, Color(value[4]), value[5].Scalar)),
-        Command("DrawText", (LyricExpressionValueType[]) [T, S, S, S, C], DrawText),
-        Command("Save", [], (context, _) => context.Save()),
-        Command("Restore", [], (context, _) => context.Restore()),
-        Command("Translate", (LyricExpressionValueType[]) [S, S], (context, value) =>
-            context.Session.Transform *= Matrix3x2.CreateTranslation(value[0].Scalar, value[1].Scalar)),
-        Command("Scale", (LyricExpressionValueType[]) [S, S, S, S], (context, value) =>
-            context.Session.Transform *= Matrix3x2.CreateScale(value[0].Scalar, value[1].Scalar, new Vector2(value[2].Scalar, value[3].Scalar))),
-        Command("Rotate", (LyricExpressionValueType[]) [S, S, S], (context, value) =>
-            context.Session.Transform *= Matrix3x2.CreateRotation(MathF.PI * value[0].Scalar / 180f, new Vector2(value[1].Scalar, value[2].Scalar)))
-    ];
+    public static IReadOnlyList<ILyricDrawCommandFactory> CreateAll()
+    {
+        return (ILyricDrawCommandFactory[])
+        [
+            Command("FillRectangle", (LyricExpressionValueType[])[S, S, S, S, C], (context, value) =>
+                context.Session.FillRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar,
+                    Color(value[4]))),
+            Command("StrokeRectangle", (LyricExpressionValueType[])[S, S, S, S, C, S], (context, value) =>
+                context.Session.DrawRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar,
+                    Color(value[4]), value[5].Scalar)),
+            Command("FillRoundedRectangle", (LyricExpressionValueType[])[S, S, S, S, S, C], (context, value) =>
+                context.Session.FillRoundedRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar,
+                    value[4].Scalar, value[4].Scalar, Color(value[5]))),
+            Command("StrokeRoundedRectangle", (LyricExpressionValueType[])[S, S, S, S, S, C, S], (context, value) =>
+                context.Session.DrawRoundedRectangle(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar,
+                    value[4].Scalar, value[4].Scalar, Color(value[5]), value[6].Scalar)),
+            Command("FillEllipse", (LyricExpressionValueType[])[S, S, S, S, C], (context, value) =>
+                context.Session.FillEllipse(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar,
+                    Color(value[4]))),
+            Command("StrokeEllipse", (LyricExpressionValueType[])[S, S, S, S, C, S], (context, value) =>
+                context.Session.DrawEllipse(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar,
+                    Color(value[4]), value[5].Scalar)),
+            Command("DrawLine", (LyricExpressionValueType[])[S, S, S, S, C, S], (context, value) =>
+                context.Session.DrawLine(value[0].Scalar, value[1].Scalar, value[2].Scalar, value[3].Scalar,
+                    Color(value[4]), value[5].Scalar)),
+            Command("DrawText", (LyricExpressionValueType[])[T, S, S, S, C], DrawText),
+            Command("Save", [], (context, _) => context.Save()),
+            Command("Restore", [], (context, _) => context.Restore()),
+            Command("Translate", (LyricExpressionValueType[])[S, S], (context, value) =>
+                context.Session.Transform *= Matrix3x2.CreateTranslation(value[0].Scalar, value[1].Scalar)),
+            Command("Scale", (LyricExpressionValueType[])[S, S, S, S], (context, value) =>
+                context.Session.Transform *= Matrix3x2.CreateScale(value[0].Scalar, value[1].Scalar,
+                    new Vector2(value[2].Scalar, value[3].Scalar))),
+            Command("Rotate", (LyricExpressionValueType[])[S, S, S], (context, value) =>
+                context.Session.Transform *= Matrix3x2.CreateRotation(MathF.PI * value[0].Scalar / 180f,
+                    new Vector2(value[1].Scalar, value[2].Scalar)))
+        ];
+    }
 
     private static DelegateDrawCommandFactory Command(
         string name,
         IReadOnlyList<LyricExpressionValueType> arguments,
-        Action<LyricDrawExecutionContext, IReadOnlyList<LyricDrawValue>> execute) =>
-        new(new LyricDrawCommandSignature(name, arguments), execute);
+        Action<LyricDrawExecutionContext, IReadOnlyList<LyricDrawValue>> execute)
+    {
+        return new DelegateDrawCommandFactory(new LyricDrawCommandSignature(name, arguments), execute);
+    }
 
     private static void DrawText(LyricDrawExecutionContext context, IReadOnlyList<LyricDrawValue> values)
     {
         using var format = new CanvasTextFormat { FontSize = Math.Max(values[3].Scalar, 1) };
-        context.Session.DrawText(values[0].Text ?? string.Empty, new Vector2(values[1].Scalar, values[2].Scalar), Color(values[4]), format);
+        context.Session.DrawText(values[0].Text ?? string.Empty, new Vector2(values[1].Scalar, values[2].Scalar),
+            Color(values[4]), format);
     }
 
-    private static Color Color(LyricDrawValue value) =>
-        Windows.UI.Color.FromArgb(value.Color.A, value.Color.R, value.Color.G, value.Color.B);
+    private static Color Color(LyricDrawValue value)
+    {
+        return Windows.UI.Color.FromArgb(value.Color.A, value.Color.R, value.Color.G, value.Color.B);
+    }
 
     private sealed class DelegateDrawCommandFactory(
         LyricDrawCommandSignature signature,
@@ -349,7 +379,9 @@ internal static class BuiltInDrawCommandFactories
     {
         public LyricDrawCommandSignature Signature { get; } = signature;
 
-        public void Execute(LyricDrawExecutionContext context, IReadOnlyList<LyricDrawValue> arguments) =>
+        public void Execute(LyricDrawExecutionContext context, IReadOnlyList<LyricDrawValue> arguments)
+        {
             execute(context, arguments);
+        }
     }
 }

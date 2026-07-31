@@ -1,39 +1,24 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.NeteaseProvider.Models;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 #endregion
 
@@ -54,11 +39,13 @@ internal class Api
             {
                 var libraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
                 var itemManagement = Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
-                await itemManagement.RemoveItemFromContainerAsync(libraryTypeIds.LikedSongsTypeId, NormalizeProviderItemId(songid));
+                await itemManagement.RemoveItemFromContainerAsync(libraryTypeIds.LikedSongsTypeId,
+                    NormalizeProviderItemId(songid));
             }
+
             return true;
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             notification.ShowMessage(ex.Message);
             return false;
@@ -126,7 +113,8 @@ internal class Api
             : randomSongId;
         try
         {
-            var songs = await GetIntelligenceSongsAsync(itemProvider, specialTypeIds, seedPlaylist.ActualId, seedSong, cancellationToken);
+            var songs = await GetIntelligenceSongsAsync(itemProvider, specialTypeIds, seedPlaylist.ActualId, seedSong,
+                cancellationToken);
             if (songs.Count == 0)
             {
                 notification.ShowMessage("无法进入心动模式", "没有获取到推荐歌曲");
@@ -134,7 +122,7 @@ internal class Api
             }
 
             if (state.IsInFm)
-                PersonalFM.ExitFm(clearPlaylist: false);
+                PersonalFM.ExitFm(false);
 
             await control.StopAsync(cancellationToken);
             await control.ClearQueueAsync(cancellationToken);
@@ -144,7 +132,7 @@ internal class Api
             await playCore.MovePointerToAsync(songs[0], cancellationToken);
             await control.LoadAndPlayAsync(songs[0], removeCurrentSongs: false);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             notification.ShowMessage("加载心动模式列表出错", ex.Message);
         }
@@ -157,11 +145,13 @@ internal class Api
         string seedSong,
         CancellationToken cancellationToken)
     {
-        if (!specialTypeIds.SpecialContainerTypeIds.TryGetValue(SpecialContainerType.ContextRecommendation, out var typeId))
+        if (!specialTypeIds.SpecialContainerTypeIds.TryGetValue(SpecialContainerType.ContextRecommendation,
+                out var typeId))
             return [];
 
         var contextRecommendationId = NeteaseContextRecommendationContainer.CreateActualId(playlistId, seedSong);
-        return await itemProvider.GetProvidableItemByIdAsync(typeId + contextRecommendationId, cancellationToken) is LinerContainerBase container
+        return await itemProvider.GetProvidableItemByIdAsync(typeId + contextRecommendationId, cancellationToken) is
+            LinerContainerBase container
             ? (await container.GetAllItemsAsync(cancellationToken)).OfType<SingleSongBase>().ToList()
             : [];
     }
@@ -173,7 +163,8 @@ internal class Api
         if (playlist is not IProgressiveLoadingContainer progressive)
             return [];
 
-        var (_, items) = await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount, cancellationToken);
+        var (_, items) =
+            await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount, cancellationToken);
         return items.OfType<SingleSongBase>()
             .Select(song => NormalizeProviderItemId(song.ActualId))
             .Where(id => !string.IsNullOrWhiteSpace(id))
@@ -187,10 +178,7 @@ internal class Api
         string? playlistId,
         CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(playlistId))
-        {
-            return userLibrary.FindUserPlaylist(playlistId);
-        }
+        if (!string.IsNullOrWhiteSpace(playlistId)) return userLibrary.FindUserPlaylist(playlistId);
 
         var cached = userLibrary.LikedSongsPlaylist;
         if (cached is not null)
@@ -205,7 +193,8 @@ internal class Api
 
     private static ContainerBase? FindLikedMusicPlaylist(IEnumerable<ContainerBase> containers)
     {
-        return containers.FirstOrDefault(container => container is not HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem.IHasLibraryState state || state.IsOwnedByCurrentUser);
+        return containers.FirstOrDefault(container =>
+            container is not IHasLibraryState state || state.IsOwnedByCurrentUser);
     }
 
     private static string? NormalizeProviderItemId(string? songId)

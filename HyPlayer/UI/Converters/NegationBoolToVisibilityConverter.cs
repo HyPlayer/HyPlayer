@@ -1,14 +1,13 @@
-using CommunityToolkit.WinUI.Converters;
 using Windows.UI.Xaml;
+using CommunityToolkit.WinUI.Converters;
 
-namespace HyPlayer.UI.Converters
+namespace HyPlayer.UI.Converters;
+
+public partial class NegationBoolToVisibilityConverter : BoolToObjectConverter
 {
-    public partial class NegationBoolToVisibilityConverter : BoolToObjectConverter
+    public NegationBoolToVisibilityConverter()
     {
-        public NegationBoolToVisibilityConverter()
-        {
-            base.TrueValue = Visibility.Visible;
-            base.FalseValue = Visibility.Collapsed;
-        }
+        TrueValue = Visibility.Visible;
+        FalseValue = Visibility.Collapsed;
     }
 }

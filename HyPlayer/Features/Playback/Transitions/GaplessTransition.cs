@@ -1,7 +1,7 @@
-using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
 
 namespace HyPlayer.Features.Playback.Transitions;
 

@@ -1,8 +1,7 @@
+using Windows.UI;
 using HyPlayer.LyricEffects.Models;
 using HyPlayer.LyricEffects.Presets;
 using Microsoft.Graphics.Canvas;
-using System;
-using Windows.UI;
 
 namespace HyPlayer.LyricRenderer.Pipeline;
 
@@ -19,14 +18,17 @@ internal sealed class SourceDrawOperationFactory : ILyricRenderOperationFactory
         IsRequired = true
     };
 
-    public LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition) => new()
+    public LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
     {
-        Operation = new CompiledLyricRenderOperation
+        return new LyricOperationCompileResult
         {
-            Definition = definition,
-            Create = static () => new SourceDrawOperation()
-        }
-    };
+            Operation = new CompiledLyricRenderOperation
+            {
+                Definition = definition,
+                Create = static () => new SourceDrawOperation()
+            }
+        };
+    }
 
     private sealed class SourceDrawOperation : ILyricRenderOperation
     {
@@ -58,14 +60,17 @@ internal sealed class DebugDrawOperationFactory : ILyricRenderOperationFactory
         IsRequired = true
     };
 
-    public LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition) => new()
+    public LyricOperationCompileResult Compile(LyricRenderOperationDefinition definition)
     {
-        Operation = new CompiledLyricRenderOperation
+        return new LyricOperationCompileResult
         {
-            Definition = definition,
-            Create = static () => new DebugDrawOperation()
-        }
-    };
+            Operation = new CompiledLyricRenderOperation
+            {
+                Definition = definition,
+                Create = static () => new DebugDrawOperation()
+            }
+        };
+    }
 
     private sealed class DebugDrawOperation : ILyricRenderOperation
     {

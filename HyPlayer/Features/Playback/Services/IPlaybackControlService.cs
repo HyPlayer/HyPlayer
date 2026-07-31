@@ -1,18 +1,16 @@
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 namespace HyPlayer.Features.Playback.Services;
 
 /// <summary>
-/// 播放控制服务，封装底层 IPlayer 操作，协调播放状态更新
+///     播放控制服务，封装底层 IPlayer 操作，协调播放状态更新
 /// </summary>
 public interface IPlaybackControlService
 {
-    event EventHandler<SeekRequestedEventArgs>? SeekRequested;
-
     /// <summary>是否正在播放</summary>
     bool IsPlaying { get; }
 
@@ -20,9 +18,11 @@ public interface IPlaybackControlService
     TimeSpan Position { get; }
 
     /// <summary>
-    /// 音量 (0.0 ~ 1.0)
+    ///     音量 (0.0 ~ 1.0)
     /// </summary>
     double Volume { get; set; }
+
+    event EventHandler<SeekRequestedEventArgs>? SeekRequested;
 
     Task SetTransitionAsync(string transitionId, CancellationToken ct = default);
 
@@ -31,8 +31,8 @@ public interface IPlaybackControlService
     Task ClearQueueAsync(CancellationToken ct = default);
 
     /// <summary>
-    /// Replaces the queue without stopping or reloading the currently playing audio source.
-    /// The replacement is rejected if <paramref name="expectedCurrentSong"/> is no longer playing.
+    ///     Replaces the queue without stopping or reloading the currently playing audio source.
+    ///     The replacement is rejected if <paramref name="expectedCurrentSong" /> is no longer playing.
     /// </summary>
     Task<bool> ReplaceQueueKeepingPlaybackAsync(
         IReadOnlyList<SingleSongBase> songs,
@@ -56,7 +56,7 @@ public interface IPlaybackControlService
     void TogglePlayPause();
 
     /// <summary>
-    /// 加载 Provider 曲目媒体源并播放
+    ///     加载 Provider 曲目媒体源并播放
     /// </summary>
     /// <param name="song">要播放的 Provider 曲目</param>
     /// <param name="autoPlay">是否自动开始播放</param>
@@ -68,8 +68,7 @@ public interface IPlaybackControlService
     Task MovePreviousAndPlayAsync();
 
     /// <summary>
-    /// 初始化播放器（AudioGraph 等底层资源）
+    ///     初始化播放器（AudioGraph 等底层资源）
     /// </summary>
     Task InitializeAsync();
-
 }

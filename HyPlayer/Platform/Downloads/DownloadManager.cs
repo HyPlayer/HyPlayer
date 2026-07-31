@@ -1,42 +1,5 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain;
-using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Platform.Storage.Audio;
-using HyPlayer.Platform.Xaml;
-using HyPlayer.NeteaseProvider.LocalMusic;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Lyric;
-using HyPlayer.PlayCore.Abstraction.Models.Resources;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Application.Threading;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using Microsoft.Toolkit.Uwp.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -47,11 +10,29 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using TagLib;
 using Windows.Graphics.Imaging;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.Threading;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.LocalMusic;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Storage.Audio;
+using HyPlayer.Platform.Xaml;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Lyric;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using Microsoft.Toolkit.Uwp.Helpers;
+using TagLib;
 using UwpStorageFileAbstraction = HyPlayer.Platform.Storage.Audio.UwpStorageFileAbstraction;
 
 #endregion
@@ -60,59 +41,44 @@ namespace HyPlayer.Features.Downloads.Services;
 
 public sealed partial class DownloadObject : INotifyPropertyChanged
 {
-    private DownloadOperation _downloadOperation;
-    private readonly INotificationService _notification;
-    private readonly IUIThreadDispatcher _uiThreadDispatcher;
-    private readonly Setting _setting;
+    public enum DownloadStatus
+    {
+        Queueing,
+        Downloading,
+        Finished,
+        Paused,
+        Error
+    }
+
+    private readonly IDiagnosticsStateService _diagnostics;
+    private readonly string? _downloadAlbumId;
+    private readonly string[] _downloadArtistNames;
+    private readonly string? _downloadCdName;
+    private readonly int _downloadOrder;
+    private readonly string _downloadSongId;
+    private readonly int _downloadTrackId;
     private readonly HttpClient _httpClient;
     private readonly ILyricProvidable _lyricProvider;
     private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
-    private readonly IResourceQualityTagProvidable _qualityTagProvider;
-    private readonly IDiagnosticsStateService _diagnostics;
+    private readonly INotificationService _notification;
     private readonly SingleSongBase _providerSong;
-    private readonly string _downloadAlbumName;
-    private readonly string[] _downloadArtistNames;
-    private readonly string _downloadSongName;
-    private readonly int _downloadOrder;
-    private readonly int _downloadTrackId;
-    private readonly string? _downloadCdName;
-    private readonly string _downloadSongId;
-    private readonly string? _downloadAlbumId;
-    private readonly string? _downloadAlbumCover;
+    private readonly IResourceQualityTagProvidable _qualityTagProvider;
+    private readonly Setting _setting;
+    private readonly IUIThreadDispatcher _uiThreadDispatcher;
     private int _downloadBitrate;
     private string _downloadFormat;
+    private DownloadOperation _downloadOperation;
+    private string _fileName;
+    private ulong _hadSize;
+    private bool _hasError;
+    private bool _hasPaused;
+    private string _message;
+    private int _progress;
 
     private IStorageFile _resultFileBackingField;
-    public IStorageFile ResultFile
-    {
-        get => _resultFileBackingField ?? _downloadOperation.ResultFile;
-        set
-        {
-            _resultFileBackingField = value;
-        }
-    }
 
-    public string FileName
-    {
-        get => _fileName;
-        set => SetField(ref _fileName, value);
-    }
 
-    public string FullPath { get; set; }
-
-    public string SongName => _downloadSongName;
-
-    public string ArtistText => string.Join(';', _downloadArtistNames);
-
-    public string AlbumName => _downloadAlbumName;
-
-    public string? AlbumCover => _downloadAlbumCover;
-
-    public ulong HadSize
-    {
-        get => _hadSize;
-        set => SetField(ref _hadSize, value);
-    }
+    private ulong _totalSize;
 
     public DownloadObject(
         SingleSongBase song,
@@ -130,35 +96,55 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         _setting = setting;
         _httpClient = httpClient;
         _lyricProvider = lyricProvider;
-        _musicResourceProviders = musicResourceProviders?.ToList() ?? throw new ArgumentNullException(nameof(musicResourceProviders));
+        _musicResourceProviders = musicResourceProviders?.ToList() ??
+                                  throw new ArgumentNullException(nameof(musicResourceProviders));
         _qualityTagProvider = qualityTagProvider;
         _diagnostics = diagnostics;
         _providerSong = song;
-        _downloadAlbumName = song.Album?.Name ?? string.Empty;
+        AlbumName = song.Album?.Name ?? string.Empty;
         _downloadArtistNames = GetProviderArtistNames(song);
-        _downloadSongName = song.Name ?? string.Empty;
+        SongName = song.Name ?? string.Empty;
         _downloadOrder = 0;
         var trackMetadata = song as IHasTrackMetadata;
         _downloadTrackId = trackMetadata?.TrackNumber ?? 0;
         _downloadCdName = trackMetadata?.DiscName;
         _downloadSongId = song.ActualId ?? string.Empty;
         _downloadAlbumId = song.Album?.ActualId;
-        _downloadAlbumCover = GetProviderAlbumCover(song);
+        AlbumCover = GetProviderAlbumCover(song);
+    }
+
+    public IStorageFile ResultFile
+    {
+        get => _resultFileBackingField ?? _downloadOperation.ResultFile;
+        set => _resultFileBackingField = value;
+    }
+
+    public string FileName
+    {
+        get => _fileName;
+        set => SetField(ref _fileName, value);
+    }
+
+    public string FullPath { get; set; }
+
+    public string SongName { get; }
+
+    public string ArtistText => string.Join(';', _downloadArtistNames);
+
+    public string AlbumName { get; }
+
+    public string? AlbumCover { get; }
+
+    public ulong HadSize
+    {
+        get => _hadSize;
+        set => SetField(ref _hadSize, value);
     }
 
     public int Progress
     {
         get => _progress;
         set => SetField(ref _progress, value);
-    }
-
-    public enum DownloadStatus
-    {
-        Queueing,
-        Downloading,
-        Finished,
-        Paused,
-        Error
     }
 
     // 0 - 排队 1 - 下载中 2 - 下载完成  3 - 暂停
@@ -182,20 +168,13 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         set => SetField(ref _message, value);
     }
 
-
-    private ulong _totalSize;
-    private int _progress;
-    private ulong _hadSize;
-    private string _fileName;
-    private string _message;
-    private bool _hasError;
-    private bool _hasPaused;
-
     public ulong TotalSize
     {
         get => _totalSize;
         set => SetField(ref _totalSize, value);
     }
+
+    public event PropertyChangedEventHandler PropertyChanged;
 
     public void Pause()
     {
@@ -277,26 +256,22 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
                 if (_setting.write163Info)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, _providerSong, _downloadBitrate, _downloadFormat);
                 //写相关信息
-                file.Tag.Album = _downloadAlbumName;
+                file.Tag.Album = AlbumName;
                 file.Tag.Performers = _downloadArtistNames;
-                file.Tag.Title = _downloadSongName;
+                file.Tag.Title = SongName;
                 file.Tag.Track = (uint)(_downloadTrackId == -1 ? _downloadOrder + 1 : _downloadTrackId);
 
                 // 获取 Disc Id
                 var regexRet = DiscInfoRegex().Match(_downloadCdName ?? "01");
                 if (regexRet.Success)
-                {
                     file.Tag.Disc = uint.Parse(regexRet.Value);
-                }
                 else
-                {
                     file.Tag.Disc = 1;
-                }
 
                 //file.Save();
 
                 Picture pic;
-                if (!string.IsNullOrWhiteSpace(_downloadAlbumCover))
+                if (!string.IsNullOrWhiteSpace(AlbumCover))
                 {
                     if (!string.IsNullOrWhiteSpace(_downloadAlbumId)
                         && DownloadManager.AlbumPicturesCache.TryGetValue(_downloadAlbumId, out var cachedPic))
@@ -305,15 +280,15 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
                     }
                     else
                     {
-                        using var responseMessage = await _httpClient.GetAsync(new Uri(_downloadAlbumCover + "?param=" +
-                                                                                StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
+                        using var responseMessage = await _httpClient.GetAsync(new Uri(AlbumCover + "?param=" +
+                            StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
                         using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
                         using var stream = await responseMessage.Content.ReadAsStreamAsync();
                         using var inputStream = stream.AsRandomAccessStream();
                         SoftwareBitmap softwareBitmap;
-                        BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
+                        var decoder = await BitmapDecoder.CreateAsync(inputStream);
                         softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-                        BitmapEncoder encoder =
+                        var encoder =
                             await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
                         encoder.SetSoftwareBitmap(softwareBitmap);
                         await encoder.FlushAsync();
@@ -330,6 +305,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
                     file.Tag.Pictures[0].MimeType = "image/jpeg";
                     file.Tag.Pictures[0].Description = "Cover.jpg";
                 }
+
                 file.Save();
             }
             catch (Exception ex)
@@ -357,19 +333,18 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
             try
             {
                 var lyrics = await _lyricProvider.GetLyricInfoAsync(_providerSong);
-                var original = await GetLyricTextAsync(lyrics, LyricType.Original, word: false);
+                var original = await GetLyricTextAsync(lyrics, LyricType.Original, false);
                 if (string.IsNullOrWhiteSpace(original)) return;
                 if (original == "[99:00.00]纯音乐，请欣赏") return;
                 var lrc = Utils.ConvertPureLyric(original);
-                var translation = await GetLyricTextAsync(lyrics, LyricType.Translation, word: false);
+                var translation = await GetLyricTextAsync(lyrics, LyricType.Translation, false);
                 if (_setting.downloadTranslation && !string.IsNullOrWhiteSpace(translation))
-                {
                     Utils.ConvertTranslation(translation, lrc);
-                }
                 var lrctxt = string.Join("\r\n", lrc.Select(t =>
                 {
                     if (t.HaveTranslation && !string.IsNullOrWhiteSpace(t.Translation))
-                        return "[" + t.LyricLine.StartTime.ToString(@"mm\:ss\.ff") + "]" + t.LyricLine.CurrentLyric + " 「" +
+                        return "[" + t.LyricLine.StartTime.ToString(@"mm\:ss\.ff") + "]" + t.LyricLine.CurrentLyric +
+                               " 「" +
                                t.Translation + "」";
                     return "[" + t.LyricLine.StartTime.ToString(@"mm\:ss\.ff") + "]" + t.LyricLine.CurrentLyric;
                 }));
@@ -414,13 +389,13 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         if (obj.Progress.TotalBytesToReceive == 0) return;
         if (Status != DownloadStatus.Downloading) return;
 
-        _ = _uiThreadDispatcher.TryRunAsync((() =>
+        _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
             TotalSize = obj.Progress.TotalBytesToReceive;
             HadSize = obj.Progress.BytesReceived;
             Progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
             Message = $"下载中: {GetSize(obj.Progress.BytesReceived)} / {GetSize(obj.Progress.TotalBytesToReceive)}";
-        }));
+        });
 
         if (HadSize == TotalSize && Status == DownloadStatus.Finished) return;
     }
@@ -432,7 +407,12 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
 
     public async Task StartDownload()
     {
-        if (_downloadOperation != null) { Resume(); return; }
+        if (_downloadOperation != null)
+        {
+            Resume();
+            return;
+        }
+
         Status = DownloadStatus.Downloading;
         _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
@@ -444,8 +424,8 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         {
             FileName = _setting.downloadFileName
                 .Replace("{$SINGER}", string.Join(';', _downloadArtistNames).EscapeForPath())
-                .Replace("{$SONGNAME}", _downloadSongName.EscapeForPath())
-                .Replace("{$ALBUM}", _downloadAlbumName.EscapeForPath())
+                .Replace("{$SONGNAME}", SongName.EscapeForPath())
+                .Replace("{$ALBUM}", AlbumName.EscapeForPath())
                 .Replace("{$INDEX}",
                     (_downloadTrackId > 0 ? _downloadTrackId : _downloadOrder + 1).ToString().EscapeForPath())
                 .Replace("{$CDNAME}", _downloadCdName?.EscapeForPath())
@@ -476,17 +456,14 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
                         break;
                     case OccupySolution.UpdateInfo:
                         if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".mp3")))
-                        {
                             ResultFile = await nowFolder.GetFileAsync(Path.GetFileName(FileName + ".mp3"));
-                        }
                         if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".flac")))
-                        {
                             ResultFile = await nowFolder.GetFileAsync(Path.GetFileName(FileName + ".flac"));
-                        }
                         FullPath = ResultFile.Path;
                         Wc_DownloadFileCompleted();
                         return;
                 }
+
             _ = _uiThreadDispatcher.TryRunAsync(() =>
             {
                 HasError = false;
@@ -495,7 +472,8 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
             });
             var qualityTags = await _qualityTagProvider.GetAvailableQualityTagsAsync(ResourceType.Audio);
             qualityTags.TryGetValue(_setting.downloadAudioRate, out var qualityTag);
-            var musicResourceProvider = _musicResourceProviders.FirstOrDefault(provider => provider.Id == _providerSong.ProviderId);
+            var musicResourceProvider =
+                _musicResourceProviders.FirstOrDefault(provider => provider.Id == _providerSong.ProviderId);
             if (musicResourceProvider is null)
             {
                 Status = DownloadStatus.Error;
@@ -545,7 +523,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         {
             Status = DownloadStatus.Error;
             _ = _uiThreadDispatcher.TryRunAsync(() => { Message = "下载错误: " + ex.Message; });
-            _diagnostics.ErrorMessages.Add("无法下载歌曲 " + _downloadSongName + "\n已自动将其从下载列表中移除" + ex.Message);
+            _diagnostics.ErrorMessages.Add("无法下载歌曲 " + SongName + "\n已自动将其从下载列表中移除" + ex.Message);
         }
     }
 
@@ -586,8 +564,6 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         return null;
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
-
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -607,21 +583,26 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
 
 internal static class DownloadManager
 {
+    private const int MaxAlbumPicturesCacheSize = 64;
     private static bool Timered;
+    public static ObservableCollection<DownloadObject> DownloadLists = [];
+    public static BackgroundDownloader Downloader = new();
+    public static List<Task> WritingTasks = [];
+    public static Dictionary<string, Picture> AlbumPicturesCache = [];
     private static IGlobalTimerService GlobalTimer => Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private static INotificationService Notification => Ioc.Default.GetRequiredService<INotificationService>();
     private static IUIThreadDispatcher UIThreadDispatcher => Ioc.Default.GetRequiredService<IUIThreadDispatcher>();
     private static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
     private static HttpClient HttpClient => Ioc.Default.GetRequiredService<HttpClient>();
     private static ILyricProvidable LyricProvider => Ioc.Default.GetRequiredService<ILyricProvidable>();
-    private static IReadOnlyList<IMusicResourceProvidable> MusicResourceProviders => global::HyPlayer.Application.AppDepository.ResolveMultiple<IMusicResourceProvidable>();
-    private static IResourceQualityTagProvidable QualityTagProvider => Ioc.Default.GetRequiredService<IResourceQualityTagProvidable>();
+
+    private static IReadOnlyList<IMusicResourceProvidable> MusicResourceProviders =>
+        AppDepository.ResolveMultiple<IMusicResourceProvidable>();
+
+    private static IResourceQualityTagProvidable QualityTagProvider =>
+        Ioc.Default.GetRequiredService<IResourceQualityTagProvidable>();
+
     private static IDiagnosticsStateService Diagnostics => Ioc.Default.GetRequiredService<IDiagnosticsStateService>();
-    public static ObservableCollection<DownloadObject> DownloadLists = [];
-    public static BackgroundDownloader Downloader = new();
-    public static List<Task> WritingTasks = [];
-    public static Dictionary<string, Picture> AlbumPicturesCache = [];
-    private const int MaxAlbumPicturesCacheSize = 64;
 
     public static bool CheckDownloadAbilityAndToast()
     {
@@ -645,6 +626,7 @@ internal static class DownloadManager
             GlobalTimer.SecondTick -= Timer_Elapsed;
             Timered = false;
         }
+
         WritingTasks.RemoveAll(t => t.IsCompleted);
         if (DownloadLists.Count == 0)
             AlbumPicturesCache.Clear();
@@ -681,9 +663,9 @@ internal static class DownloadManager
             StopTimer();
             return;
         }
+
         var maxDownloadCount = Setting.maxDownloadCount;
         for (var i = 0; i < DownloadLists.Count; i++)
-        {
             switch (DownloadLists[i].Status)
             {
                 case DownloadObject.DownloadStatus.Downloading:
@@ -706,7 +688,6 @@ internal static class DownloadManager
                 case DownloadObject.DownloadStatus.Error:
                     break;
             }
-        }
     }
 
     private static DownloadObject CreateDownloadObject(SingleSongBase song)

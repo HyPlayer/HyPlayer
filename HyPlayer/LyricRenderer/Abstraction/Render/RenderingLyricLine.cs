@@ -1,17 +1,17 @@
 ﻿#nullable enable
-using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
-using HyPlayer.LyricEffects.Expressions;
-using HyPlayer.LyricRenderer.Pipeline;
-using Microsoft.Graphics.Canvas;
 using System;
 using System.Collections.Generic;
 using Windows.UI;
 using Windows.UI.Xaml;
+using HyPlayer.LyricEffects.Expressions;
+using HyPlayer.LyricRenderer.Pipeline;
+using Microsoft.Graphics.Canvas;
 
 namespace HyPlayer.LyricRenderer.Abstraction.Render;
 
 public abstract class RenderingLyricLine : IDisposable
 {
+    private LyricRenderPipelineInstance? _renderPipeline;
     public int Id { get; set; }
 
     public RenderTypography? Typography { get; set; }
@@ -36,11 +36,15 @@ public abstract class RenderingLyricLine : IDisposable
 
     public bool IsPlayed { get; private set; }
 
-    private LyricRenderPipelineInstance? _renderPipeline;
-
     public virtual string ExpressionText => string.Empty;
 
     public virtual bool IsTextLine => false;
+
+    public virtual void Dispose()
+    {
+        _renderPipeline?.Dispose();
+        _renderPipeline = null;
+    }
 
     public bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
@@ -84,7 +88,8 @@ public abstract class RenderingLyricLine : IDisposable
             session.DrawImage(commandList, offset.X, offset.Y);
             // 配置服务尚未初始化时保留调试回退绘制。
             if (!context.Debug) return result;
-            session.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})", offset.X, offset.Y, Colors.Red);
+            session.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})", offset.X, offset.Y,
+                Colors.Red);
             session.DrawText(Id.ToString(), offset.X, offset.Y + 15, Colors.Red);
             session.DrawRectangle(offset.X, offset.Y, RenderingWidth, RenderingHeight, Colors.Yellow);
         }
@@ -93,11 +98,11 @@ public abstract class RenderingLyricLine : IDisposable
     }
 
 
-
     public void GoToReactionState(ReactionState state, RenderContext context)
     {
         ReactionState = state;
     }
+
     protected abstract bool RenderCore(CanvasDrawingSession session, RenderContext context);
 
     public void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
@@ -106,22 +111,17 @@ public abstract class RenderingLyricLine : IDisposable
         IsPlayed = context.CurrentKeyframe >= StartTime;
         OnKeyFrameCore(session, context);
     }
+
     protected virtual void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
     {
-
     }
+
     public virtual void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context)
     {
-
     }
+
     public virtual void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
-
-    }
-    public virtual void Dispose()
-    {
-        _renderPipeline?.Dispose();
-        _renderPipeline = null;
     }
 
     private LyricExpressionLine CreateExpressionLine(RenderContext context, LineRenderOffset offset)
@@ -137,7 +137,7 @@ public abstract class RenderingLyricLine : IDisposable
 
         var duration = EndTime - StartTime;
         var progress = duration <= 0
-            ? (IsPlayed ? 1f : 0f)
+            ? IsPlayed ? 1f : 0f
             : Math.Clamp((context.CurrentLyricTime - StartTime) / (float)duration, 0, 1);
         var alignment = TypographySelector(t => t?.Alignment, context)!.Value;
         var anchorX = alignment switch
@@ -171,8 +171,9 @@ public abstract class RenderingLyricLine : IDisposable
             ToExpressionColor(accent));
     }
 
-    private static LyricExpressionFrame CreateExpressionFrame(RenderContext context) =>
-        new(
+    private static LyricExpressionFrame CreateExpressionFrame(RenderContext context)
+    {
+        return new LyricExpressionFrame(
             context.CurrentLyricLineIndex,
             context.CurrentLyricTime,
             context.RenderTick / TimeSpan.TicksPerMillisecond,
@@ -184,9 +185,12 @@ public abstract class RenderingLyricLine : IDisposable
             context.ViewHeight,
             context.Dpi,
             context.BeatPerMinute);
+    }
 
-    private static LyricColorValue ToExpressionColor(Color color) =>
-        new(color.A, color.R, color.G, color.B);
+    private static LyricColorValue ToExpressionColor(Color color)
+    {
+        return new LyricColorValue(color.A, color.R, color.G, color.B);
+    }
 
     public T TypographySelector<T>(Func<RenderTypography?, T?> expression, RenderContext context)
     {
@@ -194,6 +198,7 @@ public abstract class RenderingLyricLine : IDisposable
                 expression(context.PreferTypography) ?? expression(RenderTypography.Default))!;
     }
 }
+
 public enum ReactionState
 {
     Leave,

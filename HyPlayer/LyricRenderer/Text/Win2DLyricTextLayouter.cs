@@ -1,7 +1,5 @@
 #nullable enable
 
-using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +8,8 @@ using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
+using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Text;
 
 namespace HyPlayer.LyricRenderer.Text;
 
@@ -34,7 +34,8 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         var additionalHeight = 0.0f;
         var requestedWidth = Math.Clamp(request.Context.ItemWidth - request.TextPadding, 0, int.MaxValue);
 
-        if ((!string.IsNullOrWhiteSpace(transliterationActual) || !string.IsNullOrWhiteSpace(request.Translation) || hasTokenTransliteration) &&
+        if ((!string.IsNullOrWhiteSpace(transliterationActual) || !string.IsNullOrWhiteSpace(request.Translation) ||
+             hasTokenTransliteration) &&
             !string.IsNullOrWhiteSpace(transliterationActual) &&
             request.Context.EnableTransliteration)
         {
@@ -76,7 +77,8 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             ? string.Join("", request.Tokens.Select(t => t.Text))
             : request.Text;
         var wrappedText = WrapText(request.Session, actualText, textFormat, requestedWidth, request.CanvasHeight);
-        var textLayout = new CanvasTextLayout(request.Session, wrappedText, textFormat, requestedWidth, request.CanvasHeight);
+        var textLayout = new CanvasTextLayout(request.Session, wrappedText, textFormat, requestedWidth,
+            request.CanvasHeight);
         var lyricSourceIndexMap = CreateSourceIndexMap(wrappedText, actualText);
         var lyricTokenIndexMap = CreateTokenIndexMap(request.Tokens, t => t.Text);
         var transliterationSourceIndexMap = transliterationActual is not null
@@ -95,12 +97,13 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         var renderingWidth = Math.Max(1, renderEndX - renderStartX + request.TextPadding * 2);
         var useDynamicTransliteration = hasTokenTransliteration && transliterationLayout is not null;
 
-        var staticPersistCache = CreatePersistCache(request.Session, renderingWidth, renderingHeight, request.Context.Dpi, request.Context.Effects.CacheRenderTarget, out var staticSession);
-        var defaultTextPersistCache = CreatePersistCache(request.Session, renderingWidth, renderingHeight, request.Context.Dpi, request.Context.Effects.CacheRenderTarget, out var defaultTextSession);
+        var staticPersistCache = CreatePersistCache(request.Session, renderingWidth, renderingHeight,
+            request.Context.Dpi, request.Context.Effects.CacheRenderTarget, out var staticSession);
+        var defaultTextPersistCache = CreatePersistCache(request.Session, renderingWidth, renderingHeight,
+            request.Context.Dpi, request.Context.Effects.CacheRenderTarget, out var defaultTextSession);
         ICanvasImage? defaultTransliterationPersistCache = null;
         CanvasDrawingSession? transliterationSessionToDispose = null;
         if (useDynamicTransliteration)
-        {
             defaultTransliterationPersistCache = CreatePersistCache(
                 request.Session,
                 renderingWidth,
@@ -108,10 +111,9 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                 request.Context.Dpi,
                 request.Context.Effects.CacheRenderTarget,
                 out transliterationSessionToDispose);
-        }
         var sizePixelRect = new Rect(0, 0, renderingWidth, renderingHeight);
         float textRenderActualTop;
-        float transliterationRenderTop = drawingOffsetY;
+        var transliterationRenderTop = drawingOffsetY;
         IReadOnlyList<LyricGlyphCluster> lyricGlyphClusters;
         IReadOnlyList<LyricGlyphCluster> transliterationGlyphClusters = [];
 
@@ -127,13 +129,10 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             if (transliterationLayout is not null)
             {
                 if (useDynamicTransliteration)
-                {
-                    transliterationSessionToDispose!.DrawTextLayout(transliterationLayout, drawOffsetX, actualTop, request.FocusingColor);
-                }
+                    transliterationSessionToDispose!.DrawTextLayout(transliterationLayout, drawOffsetX, actualTop,
+                        request.FocusingColor);
                 else
-                {
                     staticSession.DrawTextLayout(transliterationLayout, drawOffsetX, actualTop, request.FocusingColor);
-                }
 
                 actualTop += (float)transliterationLayout.LayoutBounds.Height;
             }
@@ -143,9 +142,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             actualTop += (float)textLayout.LayoutBounds.Height;
 
             if (translationLayout is not null)
-            {
                 staticSession.DrawTextLayout(translationLayout, drawOffsetX, actualTop, request.FocusingColor);
-            }
 
             lyricGlyphClusters = CollectGlyphClusters(
                 defaultTextSession,
@@ -158,7 +155,6 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                 request.Context.Dpi,
                 request.Tokens.Count);
             if (useDynamicTransliteration)
-            {
                 transliterationGlyphClusters = CollectGlyphClusters(
                     transliterationSessionToDispose!,
                     LyricTextLayer.Transliteration,
@@ -169,7 +165,6 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                     transliterationTokenIndexMap,
                     request.Context.Dpi,
                     request.Tokens.Count);
-            }
         }
 
         return new LyricTextLayoutSnapshot
@@ -237,10 +232,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
 
             var region = tmpTextLayout.GetCharacterRegions(lastSpaceIndex, i - lastSpaceIndex);
             var length = 0.0;
-            if (region.Length > 0)
-            {
-                length += region[0].LayoutBounds.Width;
-            }
+            if (region.Length > 0) length += region[0].LayoutBounds.Width;
 
             if (currentLineLength + length > requestedWidth)
             {
@@ -338,16 +330,10 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                 continue;
             }
 
-            while (sourceIndex < sourceText.Length && sourceText[sourceIndex] != layoutText[i])
-            {
-                sourceIndex++;
-            }
+            while (sourceIndex < sourceText.Length && sourceText[sourceIndex] != layoutText[i]) sourceIndex++;
 
             map[i] = sourceIndex < sourceText.Length ? sourceIndex : -1;
-            if (sourceIndex < sourceText.Length)
-            {
-                sourceIndex++;
-            }
+            if (sourceIndex < sourceText.Length) sourceIndex++;
         }
 
         return map;
@@ -360,20 +346,14 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         if (tokens.Count == 0) return [];
 
         var totalLength = 0;
-        for (var i = 0; i < tokens.Count; i++)
-        {
-            totalLength += textSelector(tokens[i]).Length;
-        }
+        for (var i = 0; i < tokens.Count; i++) totalLength += textSelector(tokens[i]).Length;
 
         var map = new int[totalLength];
         var position = 0;
         for (var i = 0; i < tokens.Count; i++)
         {
             var text = textSelector(tokens[i]);
-            for (var j = 0; j < text.Length && position < map.Length; j++)
-            {
-                map[position++] = i;
-            }
+            for (var j = 0; j < text.Length && position < map.Length; j++) map[position++] = i;
         }
 
         return map;

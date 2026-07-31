@@ -18,45 +18,43 @@ public class CustomBounceEase : EaseFunctionBase
         //
 
         // Constants
-        double bounces = Math.Max(0.0, (double)Bounces);
-        double bounciness = Bounciness;
+        var bounces = Math.Max(0.0, Bounces);
+        var bounciness = Bounciness;
 
         // Clamp the bounciness so we dont hit a divide by zero
         if (bounciness < 1.0 || Math.Abs(bounciness - 1) < 2.2204460492503131e-016)
-        {
             // Make it just over one.  In practice, this will look like 1.0 but avoid divide by zeros.
             bounciness = 1.001;
-        }
 
-        double pow = Math.Pow(bounciness, bounces);
-        double oneMinusBounciness = 1.0 - bounciness;
+        var pow = Math.Pow(bounciness, bounces);
+        var oneMinusBounciness = 1.0 - bounciness;
 
         // 'unit' space calculations.
         // Our bounces grow in the x axis exponentially.  we define the first bounce as having a 'unit' width of 1.0 and compute
         // the total number of 'units' using a geometric series.
         // We then compute which 'unit' the current time is in.
-        double sumOfUnits = (1.0 - pow) / oneMinusBounciness + pow * 0.5; // geometric series with only half the last sum
-        double unitAtT = normalizedTime * sumOfUnits;
+        var sumOfUnits = (1.0 - pow) / oneMinusBounciness + pow * 0.5; // geometric series with only half the last sum
+        var unitAtT = normalizedTime * sumOfUnits;
 
         // 'bounce' space calculations.
         // Now that we know which 'unit' the current time is in, we can determine which bounce we're in by solving the geometric equation:
         // unitAtT = (1 - bounciness^bounce) / (1 - bounciness), for bounce.
-        double bounceAtT = Math.Log(-unitAtT * (1.0 - bounciness) + 1.0, bounciness);
-        double start = Math.Floor(bounceAtT);
-        double end = start + 1.0;
+        var bounceAtT = Math.Log(-unitAtT * (1.0 - bounciness) + 1.0, bounciness);
+        var start = Math.Floor(bounceAtT);
+        var end = start + 1.0;
 
         // 'time' space calculations.
         // We then project the start and end of the bounce into 'time' space
-        double startTime = (1.0 - Math.Pow(bounciness, start)) / (oneMinusBounciness * sumOfUnits);
-        double endTime = (1.0 - Math.Pow(bounciness, end)) / (oneMinusBounciness * sumOfUnits);
+        var startTime = (1.0 - Math.Pow(bounciness, start)) / (oneMinusBounciness * sumOfUnits);
+        var endTime = (1.0 - Math.Pow(bounciness, end)) / (oneMinusBounciness * sumOfUnits);
 
         // Curve fitting for bounce.
-        double midTime = (startTime + endTime) * 0.5;
-        double timeRelativeToPeak = normalizedTime - midTime;
-        double radius = midTime - startTime;
-        double amplitude = Math.Pow(1.0 / bounciness, (bounces - start));
+        var midTime = (startTime + endTime) * 0.5;
+        var timeRelativeToPeak = normalizedTime - midTime;
+        var radius = midTime - startTime;
+        var amplitude = Math.Pow(1.0 / bounciness, bounces - start);
 
         // Evaluate a quadratic that hits (startTime,0), (endTime, 0), and peaks at amplitude.
-        return (-amplitude / (radius * radius)) * (timeRelativeToPeak - radius) * (timeRelativeToPeak + radius);
+        return -amplitude / (radius * radius) * (timeRelativeToPeak - radius) * (timeRelativeToPeak + radius);
     }
 }

@@ -1,36 +1,5 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Storage.Cache;
-using HyPlayer.Features.Settings.Services;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.Shell;
-using Kawazu;
-using LiteFM;
-using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -53,6 +22,25 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Classes;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Settings.Services;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.Shell;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.UI.Dialogs;
+using Kawazu;
+using LiteFM;
+using Microsoft.Graphics.Canvas.Text;
 using WinRT;
 using Point = Windows.Foundation.Point;
 
@@ -67,33 +55,39 @@ namespace HyPlayer.Features.Settings;
 /// </summary>
 public sealed partial class Settings : Page
 {
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IProviderNetworkConfigurationProvidable _providerNetworkConfiguration = Ioc.Default.GetRequiredService<IProviderNetworkConfigurationProvidable>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
-    private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
-    private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
-    private readonly IPlaybackMemoryService _playbackMemory = Ioc.Default.GetRequiredService<IPlaybackMemoryService>();
-    private readonly IPlaybackControlService _playbackControl = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
-
-    private bool isbyprogram;
-    private int _elapse = 10;
-
-
     public static readonly DependencyProperty IsAdvancedLyricColorSettingsShowProperty = DependencyProperty.Register(
         "IsAdvancedLyricColorSettingsShow", typeof(bool), typeof(Settings), new PropertyMetadata(default(bool)));
 
-    public bool IsAdvancedLyricColorSettingsShow
-    {
-        get => (bool)GetValue(IsAdvancedLyricColorSettingsShowProperty);
-        set => SetValue(IsAdvancedLyricColorSettingsShowProperty, value);
-    }
+    private static readonly string[] localeList = ["zh-cn"];
+    private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+
+    private readonly IPlaybackControlService _playbackControl =
+        Ioc.Default.GetRequiredService<IPlaybackControlService>();
+
+    private readonly IPlaybackMemoryService _playbackMemory = Ioc.Default.GetRequiredService<IPlaybackMemoryService>();
+
+    private readonly IProviderNetworkConfigurationProvidable _providerNetworkConfiguration =
+        Ioc.Default.GetRequiredService<IProviderNetworkConfigurationProvidable>();
+
+    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
+    private int _elapse = 10;
+
+    private bool isbyprogram;
 
     public Settings()
     {
         isbyprogram = true;
         InitializeComponent();
+    }
+
+    public bool IsAdvancedLyricColorSettingsShow
+    {
+        get => (bool)GetValue(IsAdvancedLyricColorSettingsShowProperty);
+        set => SetValue(IsAdvancedLyricColorSettingsShowProperty, value);
     }
 
     private void TransitionMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -112,7 +106,7 @@ public sealed partial class Settings : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>();
-        RomajiStatus.Header = (kawazu.Converter == null ? "请下载Kawazu资源文件" : "可以转换");
+        RomajiStatus.Header = kawazu.Converter == null ? "请下载Kawazu资源文件" : "可以转换";
         ButtonDownloadRomaji.Visibility = kawazu.Converter == null ? Visibility.Visible : Visibility.Collapsed;
         if (_setting.audioRate.EndsWith('0') || _setting.downloadAudioRate.EndsWith('0'))
         {
@@ -150,21 +144,13 @@ public sealed partial class Settings : Page
         var displayNames = CanvasTextFormat.GetSystemFontFamilies(localeList);
         var models = new List<FontInfo>();
         for (var i = 0; i < names.Length; i++)
-        {
             models.Add(new FontInfo
             {
                 Name = displayNames[i],
                 Value = names[i]
             });
-        }
 
         return [.. models.OrderBy(t => t.Name)];
-    }
-    [GeneratedBindableCustomProperty]
-    public partial class FontInfo
-    {
-        public string Name { get; set; }
-        public string Value { get; set; }
     }
 
     private async Task GetRomaji()
@@ -240,12 +226,10 @@ public sealed partial class Settings : Page
         {
             var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>();
             RomajiStatus.Header =
-                (kawazu.Converter == null ? "请重新下载资源文件" : "可以转换");
+                kawazu.Converter == null ? "请重新下载资源文件" : "可以转换";
             ButtonDownloadRomaji.Visibility = kawazu.Converter == null ? Visibility.Visible : Visibility.Collapsed;
         }
     }
-
-    private static readonly string[] localeList = ["zh-cn"];
 
     private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
     {
@@ -349,6 +333,7 @@ public sealed partial class Settings : Page
             _setting.cacheDir = folder.Path;
         }
     }
+
     private void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         _elapse -= 2;
@@ -493,12 +478,8 @@ public sealed partial class Settings : Page
         var folder = await StorageFolder.GetFolderFromPathAsync(_setting!.cacheDir);
         var files = await folder.GetFilesAsync();
         foreach (var file in files)
-        {
             if (file.FileType == ".flac" || file.FileType == ".mp3")
-            {
                 await file.DeleteAsync();
-            }
-        }
     }
 
     private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
@@ -508,7 +489,8 @@ public sealed partial class Settings : Page
 
     private void LoginLastFMAccount_Click(object sender, RoutedEventArgs e)
     {
-        _ = Launcher.LaunchUriAsync(new Uri($"https://www.last.fm/api/auth?api_key={Ioc.Default.GetRequiredService<LastFMClient>().Options.ApiKey}&cb=hyplayer://link.last.fm"));
+        _ = Launcher.LaunchUriAsync(new Uri(
+            $"https://www.last.fm/api/auth?api_key={Ioc.Default.GetRequiredService<LastFMClient>().Options.ApiKey}&cb=hyplayer://link.last.fm"));
     }
 
     private void BtnClearTileCache_Click(object sender, RoutedEventArgs e)
@@ -518,6 +500,13 @@ public sealed partial class Settings : Page
 
     private async void OpenLyricEffectSettings_Click(object sender, RoutedEventArgs e)
     {
-        await new HyPlayer.UI.Dialogs.LyricEffectSettingsDialog().ShowAsync();
+        await new LyricEffectSettingsDialog().ShowAsync();
+    }
+
+    [GeneratedBindableCustomProperty]
+    public partial class FontInfo
+    {
+        public string Name { get; set; }
+        public string Value { get; set; }
     }
 }

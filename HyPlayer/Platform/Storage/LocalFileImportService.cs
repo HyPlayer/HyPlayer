@@ -1,29 +1,3 @@
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Platform.Storage.Audio;
-using HyPlayer.NeteaseProvider.LocalMusic;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Playback.LocalProvider;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,6 +6,12 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.LocalMusic;
+using HyPlayer.Platform.Playback.LocalProvider;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.Storage.Audio;
 using UwpStorageFileAbstraction = HyPlayer.Platform.Storage.Audio.UwpStorageFileAbstraction;
 
 namespace HyPlayer.Features.Playback.Services;
@@ -65,7 +45,6 @@ public sealed class LocalFileImportService : ILocalFileImportService
 
         var items = new List<LocalSong>();
         foreach (var file in files)
-        {
             try
             {
                 await RegisterFutureAccessAsync(file);
@@ -75,7 +54,6 @@ public sealed class LocalFileImportService : ILocalFileImportService
             {
                 _notification.ShowMessage($"加载文件 {file.Name} 失败", ex.Message);
             }
-        }
 
         return items;
     }

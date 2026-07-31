@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace HyPlayer.LyricRenderer.Text;
 
 public enum LyricTextLayer

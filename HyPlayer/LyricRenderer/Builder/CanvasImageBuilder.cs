@@ -1,8 +1,8 @@
-﻿using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Effects;
-using System.Numerics;
+﻿using System.Numerics;
 using Windows.Foundation;
 using Windows.UI;
+using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Effects;
 
 namespace HyPlayer.LyricRenderer.Builder;
 
@@ -15,7 +15,7 @@ public class CanvasImageBuilder(ICanvasImage source)
         _source = new OpacityEffect
         {
             Source = _source,
-            Opacity = opacity,
+            Opacity = opacity
         };
         return this;
     }
@@ -25,7 +25,7 @@ public class CanvasImageBuilder(ICanvasImage source)
         _source = new Transform2DEffect
         {
             Source = _source,
-            TransformMatrix = transformMatrix,
+            TransformMatrix = transformMatrix
         };
         return this;
     }
@@ -35,7 +35,7 @@ public class CanvasImageBuilder(ICanvasImage source)
         _source = new Transform3DEffect
         {
             Source = _source,
-            TransformMatrix = transformMatrix,
+            TransformMatrix = transformMatrix
         };
         return this;
     }
@@ -45,7 +45,7 @@ public class CanvasImageBuilder(ICanvasImage source)
         _source = new GaussianBlurEffect
         {
             Source = _source,
-            BlurAmount = blurAmount,
+            BlurAmount = blurAmount
         };
         return this;
     }
@@ -56,7 +56,7 @@ public class CanvasImageBuilder(ICanvasImage source)
         {
             Source = _source,
             BlurAmount = blurAmount,
-            ShadowColor = color,
+            ShadowColor = color
         };
         return this;
     }
@@ -83,6 +83,7 @@ public class CanvasImageBuilder(ICanvasImage source)
         };
         return this;
     }
+
     public ICanvasImage Build()
     {
         return _source;

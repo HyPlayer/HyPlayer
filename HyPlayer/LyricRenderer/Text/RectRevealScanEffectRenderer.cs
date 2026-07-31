@@ -1,10 +1,9 @@
 #nullable enable
 
+using System.Collections.Generic;
 using HyPlayer.LyricRenderer.Abstraction;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Brushes;
-using System.Collections.Generic;
-using Windows.UI;
 
 namespace HyPlayer.LyricRenderer.Text;
 
@@ -22,9 +21,7 @@ public sealed class RectRevealScanEffectRenderer : ITextHighlightEffectRenderer
         using var brush = new CanvasSolidColorBrush(session, layout.FocusingColor);
         DrawClusters(session, brush, layout.LyricGlyphClusters, layout, frame, context);
         if (context.EnableTransliteration && layout.TransliterationGlyphClusters.Count > 0)
-        {
             DrawClusters(session, brush, layout.TransliterationGlyphClusters, layout, frame, context);
-        }
     }
 
     private void DrawClusters(
@@ -46,16 +43,10 @@ public sealed class RectRevealScanEffectRenderer : ITextHighlightEffectRenderer
             baseState.Opacity = transliterationScanDisabled ? 1 : 0.3f;
             GlyphRunDrawHelper.DrawCluster(session, brush, baseState);
 
-            if (transliterationScanDisabled)
-            {
-                continue;
-            }
+            if (transliterationScanDisabled) continue;
 
             var revealProgress = _revealCalculator.GetRevealProgress(cluster, frame);
-            if (revealProgress <= 0)
-            {
-                continue;
-            }
+            if (revealProgress <= 0) continue;
 
             var highlightState = baseState;
             highlightState.Opacity = 1;

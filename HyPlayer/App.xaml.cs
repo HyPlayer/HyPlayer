@@ -1,38 +1,5 @@
 #region
 
-using Depository.Extensions.DependencyInjection;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Composition;
-using HyPlayer.Classes;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Domain;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Application.Threading;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Storage.Cache;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
-using Kawazu;
-using Microsoft.Gaming.XboxGameBar;
 using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
@@ -41,10 +8,35 @@ using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Depository.Extensions.DependencyInjection;
+using HyPlayer.Application;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
+using HyPlayer.Composition;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Effects;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.Shell.Playback;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
+using Kawazu;
+using Microsoft.Gaming.XboxGameBar;
 using WinRT;
+using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 using WidgetPage = HyPlayer.Features.Widgets.WidgetPage;
 using WidgetSettingsPage = HyPlayer.Features.Widgets.WidgetSettingsPage;
-using HyPlayer.Application;
 
 #endregion
 
@@ -55,12 +47,13 @@ namespace HyPlayer;
 /// </summary>
 public sealed partial class App : Windows.UI.Xaml.Application
 {
+    private bool _playbackMemoryRestoreRequested;
+
     /// <summary>
     ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
     ///     已执行，逻辑上等同于 main() 或 WinMain()。
     /// </summary>
     private Frame rootFrame;
-    private bool _playbackMemoryRestoreRequested;
 
     public App()
     {
@@ -74,9 +67,10 @@ public sealed partial class App : Windows.UI.Xaml.Application
         AppDepository.Resolve<IHistoryService>().InitializeHistoryTrack();
         _ = AppDepository.Resolve<IPlaybackMemoryService>().InitializeAsync();
         if (AppDepository.Resolve<Setting>().themeRequest != ThemeRequest.Auto)
-            RequestedTheme = AppDepository.Resolve<Setting>().themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
+            RequestedTheme = AppDepository.Resolve<Setting>().themeRequest == ThemeRequest.Light
+                ? ApplicationTheme.Light
+                : ApplicationTheme.Dark;
         AppDepository.Resolve<IBackgroundTaskRunner>().Forget(InitializeThings, "initialize app cache and converters");
-        
     }
 
     private static void InitializeServices()
@@ -89,7 +83,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
     private static void InitializeCommonServices()
     {
         var setting = AppDepository.Resolve<Setting>();
-        var neteaseProvider = AppDepository.Resolve<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
+        var neteaseProvider = AppDepository.Resolve<NeteaseProvider.NeteaseProvider>();
         neteaseProvider.ImportAdditionalConfiguration(setting.ApiAdditionalParametersJson);
         neteaseProvider.ConfigureFakeCheckToken(setting.EnableCheckTokenApi);
         var globalTimer = AppDepository.Resolve<IGlobalTimerService>();
@@ -100,7 +94,6 @@ public sealed partial class App : Windows.UI.Xaml.Application
             teachingTip.Roll();
             playBarAutoHide.Tick();
         };
-        
     }
 
     private static async Task InitializeThings()
@@ -108,7 +101,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
         try
         {
             await SimpleCacher.InitializeAsync();
-            await AppDepository.Resolve<HyPlayer.Features.Lyrics.Effects.ILyricEffectProfileService>().InitializeAsync();
+            await AppDepository.Resolve<ILyricEffectProfileService>().InitializeAsync();
             var sf = await ApplicationData.Current.LocalFolder.TryGetItemAsync("Romaji");
             if (sf != null) AppDepository.Resolve<IKawazuStateService>().Converter = new KawazuConverter(sf.Path);
         }
@@ -147,23 +140,20 @@ public sealed partial class App : Windows.UI.Xaml.Application
         if (args.Kind == ActivationKind.Protocol)
         {
             var protocolArgs = args?.As<IProtocolActivatedEventArgs>();
-            string scheme = protocolArgs.Uri.Scheme;
-            if (scheme.Equals("ms-gamebarwidget"))
-            {
-                widgetArgs = args.As<XboxGameBarWidgetActivatedEventArgs>();
-            }
+            var scheme = protocolArgs.Uri.Scheme;
+            if (scheme.Equals("ms-gamebarwidget")) widgetArgs = args.As<XboxGameBarWidgetActivatedEventArgs>();
         }
+
         if (widgetArgs != null)
-        {
             if (widgetArgs.IsLaunchActivation)
             {
                 var widgetFrame = new Frame();
                 rootFrame = widgetFrame;
                 widgetFrame.NavigationFailed += OnNavigationFailed;
                 Window.Current.Content = widgetFrame;
+
+
                 // Create Game Bar widget object which bootstraps the connection with Game Bar
-
-
                 if (widgetArgs.AppExtensionId == "SettingWidget")
                 {
                     var settingsWidget = new XboxGameBarWidget(
@@ -180,17 +170,13 @@ public sealed partial class App : Windows.UI.Xaml.Application
                         widgetFrame);
                     AppDepository.Resolve<IGameBarWidgetService>().Widget = gameBarWidget;
                     widgetFrame.Navigate(typeof(WidgetPage), gameBarWidget);
-
                 }
+
                 OnLaunchedOrActivatedAsync(args);
                 Window.Current.Activate();
             }
-            else
-            {
-                // You can perform whatever behavior you need based on the URI payload.
-            }
-        }
 
+        // You can perform whatever behavior you need based on the URI payload.
         base.OnActivated(args);
         if (args.Kind == ActivationKind.ToastNotification)
         {
@@ -216,25 +202,33 @@ public sealed partial class App : Windows.UI.Xaml.Application
                 setting.expandAnimation = animation;
             }
         }
+
         if (args.Kind == ActivationKind.Protocol)
         {
-            var launchUri = (args?.As<IProtocolActivatedEventArgs>())?.Uri;
+            var launchUri = args?.As<IProtocolActivatedEventArgs>()?.Uri;
             if (launchUri?.Host == "link.last.fm")
                 AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
-                    AppDepository.Resolve<ILastFmService>().CompleteBrowserLoginAsync(launchUri.Query.Replace("?token=", string.Empty)),
+                    AppDepository.Resolve<ILastFmService>()
+                        .CompleteBrowserLoginAsync(launchUri.Query.Replace("?token=", string.Empty)),
                     "complete Last.FM browser login");
         }
     }
 
-    private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+    private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         AppDepository.Resolve<IDiagnosticsStateService>().ErrorMessages.Add(e.Exception.ToString());
         e.Handled = true;
     }
 
-    protected override void OnFileActivated(FileActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
+    protected override void OnFileActivated(FileActivatedEventArgs args)
+    {
+        OnLaunchedOrActivatedAsync(args);
+    }
 
-    protected override void OnLaunched(LaunchActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
+    protected override void OnLaunched(LaunchActivatedEventArgs args)
+    {
+        OnLaunchedOrActivatedAsync(args);
+    }
 
     private async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
     {
@@ -248,7 +242,6 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
             if (args.PreviousExecutionState == ApplicationExecutionState.Terminated)
             {
-
             }
 
             Window.Current.Content = rootFrame;
@@ -302,13 +295,11 @@ public sealed partial class App : Windows.UI.Xaml.Application
                     await control.LoadAndPlayAsync(song, removeCurrentSongs: false);
             }
         }
-
-
     }
 
     private void NavigateToRootPage(IActivatedEventArgs args = null)
     {
-        rootFrame.Navigate(typeof(MainPage), (args?.As<LaunchActivatedEventArgs>())?.Arguments);
+        rootFrame.Navigate(typeof(MainPage), args?.As<LaunchActivatedEventArgs>()?.Arguments);
     }
 
     /// <summary>

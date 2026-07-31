@@ -1,10 +1,10 @@
 #nullable enable
 
-using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Text;
 
 namespace HyPlayer.LyricRenderer.Text;
 
@@ -40,10 +40,7 @@ internal sealed partial class LyricGlyphPlanCollector(
         uint characterIndex,
         CanvasGlyphOrientation glyphOrientation)
     {
-        if (glyphs is null || glyphs.Length == 0 || textString.Length == 0 || clusterMap.Length == 0)
-        {
-            return;
-        }
+        if (glyphs is null || glyphs.Length == 0 || textString.Length == 0 || clusterMap.Length == 0) return;
 
         var advanceOrigins = CreateAdvanceOrigins(glyphs);
         var consumedCharacters = 0;
@@ -56,24 +53,17 @@ internal sealed partial class LyricGlyphPlanCollector(
             while (consumedCharacters < textString.Length &&
                    consumedCharacters < clusterMap.Length &&
                    clusterMap[consumedCharacters] == glyphStart)
-            {
                 consumedCharacters++;
-            }
 
             var charEnd = consumedCharacters;
             var glyphEnd = FindNextGlyphStart(clusterMap, charEnd, glyphStart, glyphs.Length);
-            if (glyphEnd <= glyphStart)
-            {
-                glyphEnd = Math.Min(glyphStart + 1, glyphs.Length);
-            }
+            if (glyphEnd <= glyphStart) glyphEnd = Math.Min(glyphStart + 1, glyphs.Length);
 
             var clusterGlyphs = new CanvasGlyph[glyphEnd - glyphStart];
             Array.Copy(glyphs, glyphStart, clusterGlyphs, 0, clusterGlyphs.Length);
             var advanceWidth = 0f;
             for (var glyphIndex = 0; glyphIndex < clusterGlyphs.Length; glyphIndex++)
-            {
                 advanceWidth += clusterGlyphs[glyphIndex].Advance;
-            }
 
             var sourceStart = int.MaxValue;
             var sourceEnd = -1;
@@ -83,16 +73,10 @@ internal sealed partial class LyricGlyphPlanCollector(
             var layoutCharacterEnd = (int)characterIndex + charEnd;
             for (var layoutIndex = layoutCharacterStart; layoutIndex < layoutCharacterEnd; layoutIndex++)
             {
-                if ((uint)layoutIndex >= (uint)sourceIndexMap.Count)
-                {
-                    continue;
-                }
+                if ((uint)layoutIndex >= (uint)sourceIndexMap.Count) continue;
 
                 var sourceIndex = sourceIndexMap[layoutIndex];
-                if (sourceIndex < 0)
-                {
-                    continue;
-                }
+                if (sourceIndex < 0) continue;
 
                 sourceStart = Math.Min(sourceStart, sourceIndex);
                 sourceEnd = Math.Max(sourceEnd, sourceIndex + 1);
@@ -250,10 +234,7 @@ internal sealed partial class LyricGlyphPlanCollector(
     {
         var fallbackLeft = origin.X;
         var fallbackRight = fallbackLeft;
-        for (var i = 0; i < glyphs.Length; i++)
-        {
-            fallbackRight += Math.Max(0, glyphs[i].Advance);
-        }
+        for (var i = 0; i < glyphs.Length; i++) fallbackRight += Math.Max(0, glyphs[i].Advance);
 
         var (fallbackTop, fallbackBottom) = GetRunVerticalBounds(origin.Y, fontFace, fontSize);
         var bounds = fontFace.GetGlyphRunBounds(
@@ -275,15 +256,14 @@ internal sealed partial class LyricGlyphPlanCollector(
             !float.IsFinite(bottom) ||
             right <= left ||
             bottom <= top)
-        {
             return (fallbackLeft, fallbackTop, Math.Max(fallbackRight, fallbackLeft + 1), fallbackBottom);
-        }
 
         const float boundsPadding = 1;
         return (left - boundsPadding, top - boundsPadding, right + boundsPadding, bottom + boundsPadding);
     }
 
-    private static (float Top, float Bottom) GetRunVerticalBounds(float baselineY, CanvasFontFace fontFace, float fontSize)
+    private static (float Top, float Bottom) GetRunVerticalBounds(float baselineY, CanvasFontFace fontFace,
+        float fontSize)
     {
         var scale = GetFontDesignUnitScale(fontFace, fontSize);
         var ascent = fontFace.Ascent * scale;
@@ -316,10 +296,7 @@ internal sealed partial class LyricGlyphPlanCollector(
         for (var i = charStart; i < clusterMap.Count; i++)
         {
             var candidate = clusterMap[i];
-            if (candidate > glyphStart && candidate < next)
-            {
-                next = candidate;
-            }
+            if (candidate > glyphStart && candidate < next) next = candidate;
         }
 
         return next;
@@ -328,10 +305,7 @@ internal sealed partial class LyricGlyphPlanCollector(
     private static int[] CreateClusterMap(IReadOnlyList<int> clusterMap, int charStart, int charEnd, int glyphStart)
     {
         var result = new int[charEnd - charStart];
-        for (var i = 0; i < result.Length; i++)
-        {
-            result[i] = Math.Max(0, clusterMap[charStart + i] - glyphStart);
-        }
+        for (var i = 0; i < result.Length; i++) result[i] = Math.Max(0, clusterMap[charStart + i] - glyphStart);
 
         return result;
     }

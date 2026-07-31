@@ -1,37 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction
+namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
+
+public sealed class MigrateCollection : ILyricCollection
 {
-    public sealed class MigrateCollection : ILyricCollection
+    private bool disposedValue;
+
+    public MigrateCollection(IList<LyricLine> lines)
     {
-        private bool disposedValue;
-        public IList<LyricLine> Lines { get; }
-        public MigrateCollection(IList<LyricLine> lines)
-        {
-            Lines = lines;
-        }
-        private void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    Lines.Clear();
-                }
-                disposedValue = true;
-            }
-        }
+        Lines = lines;
+    }
 
-        ~MigrateCollection()
-        {
-            Dispose(disposing: false);
-        }
+    public IList<LyricLine> Lines { get; }
 
-        public void Dispose()
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
         {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            if (disposing) Lines.Clear();
+            disposedValue = true;
         }
+    }
+
+    ~MigrateCollection()
+    {
+        Dispose(false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }

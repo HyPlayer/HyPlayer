@@ -3,30 +3,29 @@ using System;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 
-namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction
+namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
+
+[DebuggerDisplay("Word = {CurrentWords}, Transliteration = {Transliteration}")]
+public sealed class KaraokeWordInfo
 {
-    [DebuggerDisplay("Word = {CurrentWords}, Transliteration = {Transliteration}")]
-    public sealed class KaraokeWordInfo
+    public KaraokeWordInfo(string currentWords, TimeSpan startTime, TimeSpan duration)
     {
-        public string CurrentWords { get; set; }
-        public TimeSpan StartTime { get; set; }
-        public TimeSpan Duration { get; set; }
-        public string? Transliteration { get; set; }
-
-        public KaraokeWordInfo(string currentWords, TimeSpan startTime, TimeSpan duration)
-        {
-            CurrentWords = currentWords;
-            StartTime = startTime;
-            Duration = duration;
-        }
-
-        [JsonConstructor]
-        public KaraokeWordInfo(string CurrentWords, TimeSpan StartTime, TimeSpan Duration, string? Transliteration)
-        {
-            this.CurrentWords = CurrentWords;
-            this.StartTime = StartTime;
-            this.Duration = Duration;
-            this.Transliteration = Transliteration;
-        }
+        CurrentWords = currentWords;
+        StartTime = startTime;
+        Duration = duration;
     }
+
+    [JsonConstructor]
+    public KaraokeWordInfo(string CurrentWords, TimeSpan StartTime, TimeSpan Duration, string? Transliteration)
+    {
+        this.CurrentWords = CurrentWords;
+        this.StartTime = StartTime;
+        this.Duration = Duration;
+        this.Transliteration = Transliteration;
+    }
+
+    public string CurrentWords { get; set; }
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan Duration { get; set; }
+    public string? Transliteration { get; set; }
 }

@@ -1,11 +1,11 @@
-using HyPlayer.LyricEffects.Drawing;
-using HyPlayer.LyricEffects.Expressions;
-using HyPlayer.LyricEffects.Models;
-using HyPlayer.LyricEffects.Presets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using HyPlayer.LyricEffects.Drawing;
+using HyPlayer.LyricEffects.Expressions;
+using HyPlayer.LyricEffects.Models;
+using HyPlayer.LyricEffects.Presets;
 
 namespace HyPlayer.LyricRenderer.Pipeline;
 
@@ -15,6 +15,7 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
 
     private readonly Dictionary<string, ILyricRenderOperationFactory> _factories =
         new(StringComparer.OrdinalIgnoreCase);
+
     private int _version;
 
     public LyricRenderOperationRegistry(
@@ -93,6 +94,8 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
         };
     }
 
-    private static LyricProfileDiagnostic Error(string message, string? instanceId = null) =>
-        new(LyricProfileDiagnosticSeverity.Error, message, instanceId);
+    private static LyricProfileDiagnostic Error(string message, string? instanceId = null)
+    {
+        return new LyricProfileDiagnostic(LyricProfileDiagnosticSeverity.Error, message, instanceId);
+    }
 }

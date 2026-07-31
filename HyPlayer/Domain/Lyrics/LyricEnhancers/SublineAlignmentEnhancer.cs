@@ -1,7 +1,7 @@
-﻿using ALRC.Abstraction;
-using ALRC.Converters;
-using System;
+﻿using System;
 using System.Linq;
+using ALRC.Abstraction;
+using ALRC.Converters;
 
 namespace HyPlayer.Domain.Lyrics.LyricEnhancers;
 
@@ -24,30 +24,26 @@ public class SublineAlignmentEnhancer : ILyricEnhancer<bool>
             var maxEnd = Math.Max(line.End ?? 0, parentLine.End ?? 0);
 
             if (line.Words is { Count: 0 })
-            {
                 line.Words =
                 [
                     new ALRCWord
                     {
                         Start = line.Start ?? 0,
                         End = line.End ?? 0,
-                        Word = line.RawText ?? "",
+                        Word = line.RawText ?? ""
                     }
                 ];
-            }
 
             if (parentLine.Words is { Count: 0 })
-            {
                 parentLine.Words =
                 [
                     new ALRCWord
                     {
                         Start = parentLine.Start ?? 0,
                         End = parentLine.End ?? 0,
-                        Word = parentLine.RawText ?? "",
+                        Word = parentLine.RawText ?? ""
                     }
                 ];
-            }
 
             line.Start = minStart;
             line.End = maxEnd;

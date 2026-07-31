@@ -1,20 +1,16 @@
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 
 namespace HyPlayer.Features.Account.Services;
 
 /// <summary>
-/// 认证服务，管理用户登录状态与收藏数据
+///     认证服务，管理用户登录状态与收藏数据
 /// </summary>
 public interface IAuthService
 {
-    event EventHandler? LoginCompleted;
-    event EventHandler<SongLikeStatusChangedEventArgs>? SongLikeStatusChanged;
-
     /// <summary>是否已登录</summary>
     bool IsLoggedIn { get; set; }
 
@@ -23,6 +19,9 @@ public interface IAuthService
 
     /// <summary>喜欢的歌曲 ID 列表</summary>
     List<string> LikedSongs { get; }
+
+    event EventHandler? LoginCompleted;
+    event EventHandler<SongLikeStatusChangedEventArgs>? SongLikeStatusChanged;
 
     /// <summary>清理运行时 Cookie。</summary>
     Task ClearRuntimeCookiesAsync();

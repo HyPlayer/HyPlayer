@@ -3,7 +3,7 @@ using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 namespace HyPlayer.Features.Playback.Services;
 
 /// <summary>
-/// Playback queue row projection for UI surfaces that need display text and queue index.
+///     Playback queue row projection for UI surfaces that need display text and queue index.
 /// </summary>
 public sealed class PlaybackQueueItemSnapshot
 {

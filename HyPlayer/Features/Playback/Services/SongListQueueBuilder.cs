@@ -1,31 +1,13 @@
-using HyPlayer.Domain.Music;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Music;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 namespace HyPlayer.Features.Playback.Services;
 
@@ -38,13 +20,14 @@ internal sealed class SongListQueueBuilder(
     IBackgroundTaskRunner taskRunner) : ISongListQueueBuilder
 {
     private readonly object _queueBuildLock = new();
-    private readonly SemaphoreSlim _queueRequestLock = new(1, 1);
     private readonly SemaphoreSlim _queueMutationLock = new(1, 1);
+    private readonly SemaphoreSlim _queueRequestLock = new(1, 1);
     private CancellationTokenSource? _queueBuildCts;
     private string? _queueBuildSourceId;
     private SingleSongBase? _queueBuildTargetSong;
 
-    public async Task BuildAndPlayAsync(SingleSongBase clickedSong, SongListQueueScope scope, IReadOnlyList<SingleSongBase> visibleSongs)
+    public async Task BuildAndPlayAsync(SingleSongBase clickedSong, SongListQueueScope scope,
+        IReadOnlyList<SingleSongBase> visibleSongs)
     {
         if (visibleSongs.Count == 0) return;
 
@@ -193,7 +176,8 @@ internal sealed class SongListQueueBuilder(
         if (scope.Id == null)
             return [];
 
-        var result = await queueLoader.LoadSourceByKindAsync(scope.Kind, scope.Id, cancellationToken).ConfigureAwait(false);
+        var result = await queueLoader.LoadSourceByKindAsync(scope.Kind, scope.Id, cancellationToken)
+            .ConfigureAwait(false);
         if (!result.Success)
             return [];
 
@@ -276,7 +260,7 @@ internal sealed class SongListQueueBuilder(
         {
             oldCts?.Cancel();
         }
-        catch (System.ObjectDisposedException)
+        catch (ObjectDisposedException)
         {
         }
     }

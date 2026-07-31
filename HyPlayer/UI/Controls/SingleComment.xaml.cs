@@ -1,36 +1,5 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Features.User;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Storage.Cache;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -38,6 +7,19 @@ using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.User;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Shell.Navigation.Services;
+using Microsoft.UI.Xaml.Controls;
 
 #endregion
 
@@ -55,15 +37,17 @@ public sealed partial class SingleComment : UserControl
         DependencyProperty.Register("MainComment", typeof(CommentBase), typeof(SingleComment),
             new PropertyMetadata(null)); //主评论
 
-    private ObservableCollection<CommentBase> floorComments = new ObservableCollection<CommentBase>();
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    public SingleCommentState State { get; } = new();
+
+    private readonly ObservableCollection<CommentBase> floorComments = new();
     private string time = "0";
 
     public SingleComment()
     {
         InitializeComponent();
     }
+
+    public SingleCommentState State { get; } = new();
 
     public BitmapImage AvatarSource
     {
@@ -90,20 +74,18 @@ public sealed partial class SingleComment : UserControl
         if (!TryResolveCommentTarget(MainComment, out var itemId, out var typeId))
             return;
 
-        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ProvidableItemId}_{MainComment.ActualId}_{offset}_{count}", async () =>
-        {
-            return await Ioc.Default.GetRequiredService<ICommentProvidable>()
-                .GetThreadedCommentsAsync(
-                    itemId,
-                    typeId,
-                    MainComment.ActualId,
-                    offset,
-                    count);
-        }, TimeSpan.FromMinutes(5));
-        if (result == null)
-        {
-            return;
-        }
+        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments,
+            $"{MainComment.ProvidableItemId}_{MainComment.ActualId}_{offset}_{count}", async () =>
+            {
+                return await Ioc.Default.GetRequiredService<ICommentProvidable>()
+                    .GetThreadedCommentsAsync(
+                        itemId,
+                        typeId,
+                        MainComment.ActualId,
+                        offset,
+                        count);
+            }, TimeSpan.FromMinutes(5));
+        if (result == null) return;
         foreach (var floorcomment in result.Items)
         {
             var floorComment = floorcomment;
@@ -193,21 +175,21 @@ public sealed partial class SingleComment : UserControl
             {
                 ActualId = MainComment.Sender?.ActualId ?? string.Empty,
                 Name = MainComment.Sender?.Name ?? string.Empty,
-                AvatarUrl = await GetCommentAvatarUrlAsync(MainComment),
+                AvatarUrl = await GetCommentAvatarUrlAsync(MainComment)
             },
             _setting.noImage);
         ReplyBtn.Visibility = Visibility.Visible;
         FloorCommentsExpander.Visibility = MainComment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void FloorCommentsExpander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender,
-        Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs args)
+    private void FloorCommentsExpander_Expanding(Expander sender,
+        ExpanderExpandingEventArgs args)
     {
         _ = LoadFloorComments(false);
     }
 
-    private void FloorCommentsExpander_Collapsed(Microsoft.UI.Xaml.Controls.Expander sender,
-        Microsoft.UI.Xaml.Controls.ExpanderCollapsedEventArgs args)
+    private void FloorCommentsExpander_Collapsed(Expander sender,
+        ExpanderCollapsedEventArgs args)
     {
         floorComments.Clear();
     }

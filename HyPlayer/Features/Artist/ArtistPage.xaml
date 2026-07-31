@@ -126,10 +126,12 @@
             SelectedIndex="{x:Bind ViewModel.CurrentPivotIndex, Mode=TwoWay}"
             SelectionChanged="Pivot_SelectionChanged">
             <PivotItem Header="热门50首">
-                <controls1:ContainerItemsView x:Name="HotSongContainer" Container="{x:Bind ViewModel.HotSongsContainer, Mode=OneWay}" />
+                <controls1:ContainerItemsView x:Name="HotSongContainer"
+                                              Container="{x:Bind ViewModel.HotSongsContainer, Mode=OneWay}" />
             </PivotItem>
             <PivotItem Header="全部歌曲">
-                <controls1:ContainerItemsView x:Name="AllSongContainer" Container="{x:Bind ViewModel.AllSongsContainer, Mode=OneWay}">
+                <controls1:ContainerItemsView x:Name="AllSongContainer"
+                                              Container="{x:Bind ViewModel.AllSongsContainer, Mode=OneWay}">
                     <controls1:ContainerItemsView.Footer>
                         <StackPanel
                             Grid.Row="3"
@@ -145,7 +147,8 @@
                 </controls1:ContainerItemsView>
             </PivotItem>
             <PivotItem Header="专辑">
-                <controls1:ContainerItemsView x:Name="AlbumContainer" Container="{x:Bind ViewModel.AlbumsContainer, Mode=OneWay}">
+                <controls1:ContainerItemsView x:Name="AlbumContainer"
+                                              Container="{x:Bind ViewModel.AlbumsContainer, Mode=OneWay}">
                     <controls1:ContainerItemsView.Footer>
                         <StackPanel
                             Grid.Row="3"

@@ -1,34 +1,3 @@
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.WinUI.Media;
-using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
-using HyPlayer.Domain.Settings;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Platform.Xaml;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using CommunityToolkit.WinUI.Helpers;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
 using System.ComponentModel;
 using Windows.UI;
@@ -39,6 +8,20 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI.Helpers;
+using CommunityToolkit.WinUI.Media;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Xaml;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using WinRT;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -80,17 +63,21 @@ public sealed partial class CompactPlayerPage : Page
         DependencyProperty.Register("NowPlayingArtists", typeof(string), typeof(CompactPlayerPage),
             new PropertyMetadata(string.Empty));
 
+    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+    private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+    private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
+    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+    private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+
 
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
-    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
-    private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+
+    private readonly WeakEventListener<CompactPlayerPage, object?, SongLikeStatusChangedEventArgs>
+        _songLikeStatusChangedListener;
+
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-    private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
-    private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
-    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly WeakEventListener<CompactPlayerPage, object?, PropertyChangedEventArgs> _stateChangedListener;
-    private readonly WeakEventListener<CompactPlayerPage, object?, SongLikeStatusChangedEventArgs> _songLikeStatusChangedListener;
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly SolidColorBrush TransparentBrush = new(Colors.Transparent);
     public bool _lyricIsKaraokeLyric;
     public SongLyric Lrc;
@@ -104,14 +91,66 @@ public sealed partial class CompactPlayerPage : Page
             OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
         };
         _state.PropertyChanged += _stateChangedListener.OnEvent;
-        _songLikeStatusChangedListener = new WeakEventListener<CompactPlayerPage, object?, SongLikeStatusChangedEventArgs>(this)
-        {
-            OnEventAction = static (instance, _, args) => instance.HyPlayList_OnSongLikeStatusChange(args.IsLiked),
-            OnDetachAction = weakEventListener => { _auth.SongLikeStatusChanged -= weakEventListener.OnEvent; }
-        };
+        _songLikeStatusChangedListener =
+            new WeakEventListener<CompactPlayerPage, object?, SongLikeStatusChangedEventArgs>(this)
+            {
+                OnEventAction = static (instance, _, args) => instance.HyPlayList_OnSongLikeStatusChange(args.IsLiked),
+                OnDetachAction = weakEventListener => { _auth.SongLikeStatusChanged -= weakEventListener.OnEvent; }
+            };
         _auth.SongLikeStatusChanged += _songLikeStatusChangedListener.OnEvent;
         Unloaded += CompactPlayerPage_Unloaded;
         //CompactPlayerAni.Begin();
+    }
+
+    public double NowProgress
+    {
+        get => (double)GetValue(NowProgressProperty);
+        set => SetValue(NowProgressProperty, value);
+    }
+
+    public double TotalProgress
+    {
+        get => (double)GetValue(TotalProgressProperty);
+        set => SetValue(TotalProgressProperty, value);
+    }
+
+    public Brush ControlHover
+    {
+        get => (Brush)GetValue(ControlHoverProperty);
+        set => SetValue(ControlHoverProperty, value);
+    }
+
+
+    public string LyricText
+    {
+        get => (string)GetValue(LyricTextProperty);
+        set => SetValue(LyricTextProperty, value);
+    }
+
+
+    public string LyricTranslation
+    {
+        get => (string)GetValue(LyricTranslationProperty);
+        set => SetValue(LyricTranslationProperty, value);
+    }
+
+    public string LyricSound
+    {
+        get => (string)GetValue(LyricSoundProperty);
+        set => SetValue(LyricSoundProperty, value);
+    }
+
+    public string NowPlayingName
+    {
+        get => (string)GetValue(NowPlayingNameProperty);
+        set => SetValue(NowPlayingNameProperty, value);
+    }
+
+
+    public string NowPlayingArtists
+    {
+        get => (string)GetValue(NowPlayingArtistsProperty);
+        set => SetValue(NowPlayingArtistsProperty, value);
     }
 
     private void CompactPlayerPage_Unloaded(object sender, RoutedEventArgs e)
@@ -155,18 +194,18 @@ public sealed partial class CompactPlayerPage : Page
         {
             PlayStateIcon.Glyph =
                 _state.IsPlaying
-                    ? "\uF8AE" :
-                    "\uF5B0";
+                    ? "\uF8AE"
+                    : "\uF5B0";
         });
     }
 
-    private async void HyPlayList_OnSongCoverChanged(SingleSongBase? providerItem, PlaybackCurrentItemSnapshot? snapshot)
+    private async void HyPlayList_OnSongCoverChanged(SingleSongBase? providerItem,
+        PlaybackCurrentItemSnapshot? snapshot)
     {
         if (_state.CoverStream == null) return;
         _taskRunner.Forget(this.RunOnUIThreadAsync(async () =>
         {
             if (!_setting.noImage)
-            {
                 try
                 {
                     if (!ReferenceEquals(providerItem, _state.NowPlayingProviderItem) ||
@@ -176,19 +215,15 @@ public sealed partial class CompactPlayerPage : Page
                 }
                 catch
                 {
-
                 }
-            }
         }), "refresh compact player cover");
     }
 
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        RunOnUIThread(() =>
-        {
-            NowProgress = position.TotalMilliseconds;
-        });
+        RunOnUIThread(() => { NowProgress = position.TotalMilliseconds; });
     }
+
     /*
     private void LeaveAnimation_Completed(object sender, object e)
     {
@@ -211,7 +246,6 @@ public sealed partial class CompactPlayerPage : Page
                 ControlHover = TransparentBrush;
             PointerOutAni.Begin();
         }
-
     }
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
@@ -227,56 +261,6 @@ public sealed partial class CompactPlayerPage : Page
         });
     }
 
-    public double NowProgress
-    {
-        get => (double)GetValue(NowProgressProperty);
-        set => SetValue(NowProgressProperty, value);
-    }
-
-    public double TotalProgress
-    {
-        get => (double)GetValue(TotalProgressProperty);
-        set => SetValue(TotalProgressProperty, value);
-    }
-
-    public Brush ControlHover
-    {
-        get => (Brush)GetValue(ControlHoverProperty);
-        set => SetValue(ControlHoverProperty, value);
-    }
-
-
-    public string LyricText
-    {
-        get => (string)GetValue(LyricTextProperty);
-        set => SetValue(LyricTextProperty, value);
-    }
-
-
-    public string LyricTranslation
-    {
-        get => (string)GetValue(LyricTranslationProperty);
-        set => SetValue(LyricTranslationProperty, value);
-    }
-    public string LyricSound
-    {
-        get => (string)GetValue(LyricSoundProperty);
-        set => SetValue(LyricSoundProperty, value);
-    }
-
-    public string NowPlayingName
-    {
-        get => (string)GetValue(NowPlayingNameProperty);
-        set => SetValue(NowPlayingNameProperty, value);
-    }
-
-
-    public string NowPlayingArtists
-    {
-        get => (string)GetValue(NowPlayingArtistsProperty);
-        set => SetValue(NowPlayingArtistsProperty, value);
-    }
-
     private void OnLyricChanged()
     {
         if (_lyricService.CurrentLyricIndex == -1) return;
@@ -290,32 +274,32 @@ public sealed partial class CompactPlayerPage : Page
                 return;
             }
         }
-        else if (_lyricService.CurrentLyricIndex < _lyricService.CurrentLyricInfo.Lyrics.Count - 1 && _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex + 1].LyricLine is LrcLyricsLine lrcLine)
+        else if (_lyricService.CurrentLyricIndex < _lyricService.CurrentLyricInfo.Lyrics.Count - 1 &&
+                 _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex + 1].LyricLine is LrcLyricsLine
+                     lrcLine)
         {
-            if (lrcLine.StartTime.TotalSeconds - _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].LyricLine.StartTime.TotalSeconds > 1)
+            if (lrcLine.StartTime.TotalSeconds - _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex]
+                    .LyricLine.StartTime.TotalSeconds > 1)
             {
                 LyricControl.QuickRenderMode = false;
                 RunOnUIThread(() => { ChangeLyric(); });
                 return;
             }
-            else
-            {
-                LyricControl.QuickRenderMode = true;
-            }
+
+            LyricControl.QuickRenderMode = true;
         }
+
         ChangeLyric();
     }
 
 
     private void ChangeLyric()
     {
-
         RunOnUIThread(() =>
         {
             LyricText = _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].LyricLine.CurrentLyric;
             LyricControl.Lyric = _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex];
         });
-
     }
 
     private void OnChangePlayItem(SingleSongBase? providerItem)
@@ -388,7 +372,8 @@ public sealed partial class CompactPlayerPage : Page
 
     private void ExitButton_Click(object sender, RoutedEventArgs e)
     {
-        _taskRunner.Forget(ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default).AsTask(),
+        _taskRunner.Forget(
+            ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default).AsTask(),
             "exit compact overlay mode");
     }
 
@@ -400,7 +385,6 @@ public sealed partial class CompactPlayerPage : Page
     private void Grid_PointerEntered(object sender, PointerRoutedEventArgs e)
     {
         OnPlaybarVisibilityChanged(true);
-
     }
 
     private void Grid_PointerExited(object sender, PointerRoutedEventArgs e)

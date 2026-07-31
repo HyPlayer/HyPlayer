@@ -1,4 +1,3 @@
-using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +5,7 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using CommunityToolkit.WinUI.Helpers;
 using WinRT;
 using InfoBarSeverity = Microsoft.UI.Xaml.Controls.InfoBarSeverity;
 
@@ -15,9 +15,9 @@ public sealed partial class LoginDialog : ContentDialog
 {
     private readonly ShellLoginService _loginService;
     private readonly WeakEventListener<LoginDialog, object?, QrLoginStatusChangedEventArgs> _qrLoginStatusListener;
+    private bool _isPasswordLoginRunning;
     private CancellationTokenSource? _qrLoginCts;
     private Guid? _qrLoginStatusSessionId;
-    private bool _isPasswordLoginRunning;
 
     public LoginDialog(ShellLoginService loginService)
     {
@@ -94,7 +94,9 @@ public sealed partial class LoginDialog : ContentDialog
     private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if ((sender?.As<Pivot>()).SelectedIndex == 1)
+        {
             StartQrLoginPolling();
+        }
         else
         {
             StopQrLoginPolling();
@@ -125,12 +127,12 @@ public sealed partial class LoginDialog : ContentDialog
         try
         {
             await _loginService.StartQrLoginAsync(statusSessionId,
-            async key =>
-            {
-                var img = await ShellLoginService.GenerateQrImageAsync(key);
-                if (cts.IsCancellationRequested) return;
-                QrContainer.Source = img;
-            }, cts.Token);
+                async key =>
+                {
+                    var img = await ShellLoginService.GenerateQrImageAsync(key);
+                    if (cts.IsCancellationRequested) return;
+                    QrContainer.Source = img;
+                }, cts.Token);
         }
         finally
         {

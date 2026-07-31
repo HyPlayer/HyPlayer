@@ -6,10 +6,10 @@ namespace HyPlayer.Features.Playback.Services;
 
 internal sealed class SmtcPlaybackCommandDispatcher
 {
-    private readonly Func<Task> _playAsync;
-    private readonly Func<Task> _pauseAsync;
     private readonly Func<Task> _moveNextAsync;
     private readonly Func<Task> _movePreviousAsync;
+    private readonly Func<Task> _pauseAsync;
+    private readonly Func<Task> _playAsync;
 
     public SmtcPlaybackCommandDispatcher(
         Func<Task> playAsync,
@@ -23,8 +23,9 @@ internal sealed class SmtcPlaybackCommandDispatcher
         _movePreviousAsync = movePreviousAsync ?? throw new ArgumentNullException(nameof(movePreviousAsync));
     }
 
-    public Task DispatchAsync(SystemMediaTransportControlsButton button) =>
-        button switch
+    public Task DispatchAsync(SystemMediaTransportControlsButton button)
+    {
+        return button switch
         {
             SystemMediaTransportControlsButton.Play => _playAsync(),
             SystemMediaTransportControlsButton.Pause => _pauseAsync(),
@@ -32,6 +33,7 @@ internal sealed class SmtcPlaybackCommandDispatcher
             SystemMediaTransportControlsButton.Previous => _movePreviousAsync(),
             _ => Task.CompletedTask
         };
+    }
 }
 
 internal static class SmtcTrackIdentity

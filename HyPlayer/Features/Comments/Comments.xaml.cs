@@ -1,31 +1,5 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Comments;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Platform.Xaml;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -36,6 +10,13 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Platform.Xaml;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using WinRT;
 using Point = Windows.Foundation.Point;
 
@@ -50,30 +31,32 @@ namespace HyPlayer.Features.Comments;
 /// </summary>
 public sealed partial class Comments : Page
 {
-    private readonly IProvidableItemCommentProvidable _commentProvider = Ioc.Default.GetRequiredService<IProvidableItemCommentProvidable>();
+    private readonly IProvidableItemCommentProvidable _commentProvider =
+        Ioc.Default.GetRequiredService<IProvidableItemCommentProvidable>();
+
     private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
 
 #nullable enable
     private ScrollViewer? MainScroll, HotCommentsScroll;
 #nullable restore
+    private readonly CancellationToken _cancellationToken;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private readonly Dictionary<string, Task> _commentLoadTasks = [];
+    private readonly ObservableCollection<CommentBase> hotComments = new();
+    private readonly ObservableCollection<CommentBase> normalComments = new();
+    private Task _commentLoaderTask;
+    private int _delayedUiVersion;
+    private Task _hotCommentLoaderTask;
+    private int _hotCommentsLoadVersion;
+    private bool _isUnloaded;
+    private int _normalCommentsLoadVersion;
     private string cursor;
+    private bool IsShiftingPage;
     private int page = 1;
     private string resourceid;
     private string resourcetype;
     private int sortType = 1;
-    private bool IsShiftingPage = false;
-    private ObservableCollection<CommentBase> hotComments = new ObservableCollection<CommentBase>();
-    private ObservableCollection<CommentBase> normalComments = new ObservableCollection<CommentBase>();
-    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-    private CancellationToken _cancellationToken;
-    private Task _commentLoaderTask;
-    private Task _hotCommentLoaderTask;
-    private int _normalCommentsLoadVersion;
-    private int _hotCommentsLoadVersion;
-    private int _delayedUiVersion;
-    private bool _isUnloaded;
-    private readonly Dictionary<string, Task> _commentLoadTasks = [];
 
     public Comments()
     {
@@ -105,7 +88,6 @@ public sealed partial class Comments : Page
     {
         base.OnNavigatedFrom(e);
         if (_commentLoaderTask != null && !_commentLoaderTask.IsCompleted)
-        {
             try
             {
                 _cancellationTokenSource.Cancel();
@@ -114,9 +96,8 @@ public sealed partial class Comments : Page
             catch
             {
             }
-        }
+
         if (_hotCommentLoaderTask != null && !_hotCommentLoaderTask.IsCompleted)
-        {
             try
             {
                 _cancellationTokenSource.Cancel();
@@ -125,7 +106,7 @@ public sealed partial class Comments : Page
             catch
             {
             }
-        }
+
         _cancellationTokenSource?.Dispose();
     }
 
@@ -209,7 +190,7 @@ public sealed partial class Comments : Page
             _commentLoadTasks.Remove(key);
     }
 
-    private async Task<HyPlayer.PlayCore.Abstraction.Models.ProviderPageResult<CommentBase>> LoadProviderCommentsAsync(int offset, int type)
+    private async Task<ProviderPageResult<CommentBase>> LoadProviderCommentsAsync(int offset, int type)
     {
         try
         {
@@ -228,7 +209,7 @@ public sealed partial class Comments : Page
         catch (Exception ex)
         {
             _notification.ShowMessage("加载评论时出错", ex.Message);
-            return new HyPlayer.PlayCore.Abstraction.Models.ProviderPageResult<CommentBase>
+            return new ProviderPageResult<CommentBase>
             {
                 Items = [],
                 HasMore = false
@@ -283,25 +264,21 @@ public sealed partial class Comments : Page
     {
         var delayedUiVersion = _delayedUiVersion;
         var transform = AllCmtsTB.TransformToVisual(MainScroll);
-        var point = transform.TransformPoint(new Point(0, -1000000));//一定要这么大
+        var point = transform.TransformPoint(new Point(0, -1000000)); //一定要这么大
         var y = point.Y + MainScroll.VerticalOffset;
         MainScroll.ChangeView(null, y, null, false);
-        TimeSpan delay = TimeSpan.FromMilliseconds(320);//稍微等等再滚回去，免得回到热评区域
-        ThreadPoolTimer DelayTimer = ThreadPoolTimer.CreateTimer(
-    (source) =>
-
-    {
-        _ = this.RunOnUIThreadAsync(
-        () =>
-        {
-            if (!IsCurrentDelayedUi(delayedUiVersion)) return;
-            point = transform.TransformPoint(new Point(0, 25));//要超过判定区域，还要预留一点
-            y = point.Y + MainScroll.VerticalOffset;
-            MainScroll.ChangeView(null, y, null, false);
-        });
-
-    }, delay);
-
+        var delay = TimeSpan.FromMilliseconds(320); //稍微等等再滚回去，免得回到热评区域
+        var DelayTimer = ThreadPoolTimer.CreateTimer(
+            source =>
+            {
+                _ = this.RunOnUIThreadAsync(() =>
+                {
+                    if (!IsCurrentDelayedUi(delayedUiVersion)) return;
+                    point = transform.TransformPoint(new Point(0, 25)); //要超过判定区域，还要预留一点
+                    y = point.Y + MainScroll.VerticalOffset;
+                    MainScroll.ChangeView(null, y, null, false);
+                });
+            }, delay);
     }
 
     private void BackToTop_Click(object sender, RoutedEventArgs e)
@@ -320,20 +297,17 @@ public sealed partial class Comments : Page
         if ((sender?.As<ScrollViewer>()).VerticalOffset < 15)
         {
             var delayedUiVersion = _delayedUiVersion;
-            TimeSpan delay = TimeSpan.FromMilliseconds(90);//先别急，如果是回到顶部触发的会滚回去一点
-            ThreadPoolTimer DelayTimer = ThreadPoolTimer.CreateTimer(
-        (source) =>
-
-        {
-            _ = this.RunOnUIThreadAsync(
-            () =>
-            {
-                if (!IsCurrentDelayedUi(delayedUiVersion)) return;
-                if ((sender?.As<ScrollViewer>()).VerticalOffset < 15)
-                    ShiftCommentList(false);//回到热评
-            });
-
-        }, delay);
+            var delay = TimeSpan.FromMilliseconds(90); //先别急，如果是回到顶部触发的会滚回去一点
+            var DelayTimer = ThreadPoolTimer.CreateTimer(
+                source =>
+                {
+                    _ = this.RunOnUIThreadAsync(() =>
+                    {
+                        if (!IsCurrentDelayedUi(delayedUiVersion)) return;
+                        if ((sender?.As<ScrollViewer>()).VerticalOffset < 15)
+                            ShiftCommentList(false); //回到热评
+                    });
+                }, delay);
         }
     }
 
@@ -349,20 +323,16 @@ public sealed partial class Comments : Page
     private void HotComments_Loaded(object sender, RoutedEventArgs e)
     {
         var delayedUiVersion = _delayedUiVersion;
-        TimeSpan delay = TimeSpan.FromMilliseconds(500);
-        ThreadPoolTimer DelayTimer = ThreadPoolTimer.CreateTimer(
-    (source) =>
-
-        {
-            _ = this.RunOnUIThreadAsync(
-       () =>
-       {
-           if (!IsCurrentDelayedUi(delayedUiVersion)) return;
-           AttachHotCommentsScroll(HotComments.CommentPresentScrollViewer);
-       });
-
-        }, delay);//缓一会再加载，要不然获取不到
-
+        var delay = TimeSpan.FromMilliseconds(500);
+        var DelayTimer = ThreadPoolTimer.CreateTimer(
+            source =>
+            {
+                _ = this.RunOnUIThreadAsync(() =>
+                {
+                    if (!IsCurrentDelayedUi(delayedUiVersion)) return;
+                    AttachHotCommentsScroll(HotComments.CommentPresentScrollViewer);
+                });
+            }, delay); //缓一会再加载，要不然获取不到
     }
 
     private void HotCommentsScroll_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
@@ -417,23 +387,20 @@ public sealed partial class Comments : Page
             animation.Begin();
             HotCommentsContainer.Visibility = Visibility.Collapsed;
             var delayedUiVersion = _delayedUiVersion;
-            TimeSpan delay = TimeSpan.FromMilliseconds(500);
-            ThreadPoolTimer DelayTimer = ThreadPoolTimer.CreateTimer(
-            (source) =>
-
-            {
-                _ = this.RunOnUIThreadAsync(
-                () =>
+            var delay = TimeSpan.FromMilliseconds(500);
+            var DelayTimer = ThreadPoolTimer.CreateTimer(
+                source =>
                 {
-                    if (!IsCurrentDelayedUi(delayedUiVersion)) return;
-                    AttachMainScroll(NormalComments.CommentPresentScrollViewer);
-                    var transform = AllCmtsTB.TransformToVisual(MainScroll);
-                    var point = transform.TransformPoint(new Point(0, 25));//要超过判定区域，还要预留一点
-                    var y = point.Y + MainScroll.VerticalOffset;
-                    MainScroll.ChangeView(null, y, null, false);
-                });
-
-            }, delay);
+                    _ = this.RunOnUIThreadAsync(() =>
+                    {
+                        if (!IsCurrentDelayedUi(delayedUiVersion)) return;
+                        AttachMainScroll(NormalComments.CommentPresentScrollViewer);
+                        var transform = AllCmtsTB.TransformToVisual(MainScroll);
+                        var point = transform.TransformPoint(new Point(0, 25)); //要超过判定区域，还要预留一点
+                        var y = point.Y + MainScroll.VerticalOffset;
+                        MainScroll.ChangeView(null, y, null, false);
+                    });
+                }, delay);
         }
         else
         {
@@ -443,6 +410,7 @@ public sealed partial class Comments : Page
             AllCommentsContainer.Visibility = Visibility.Collapsed;
             BackToTop.Visibility = Visibility.Collapsed;
         }
+
         IsShiftingPage = false;
     }
 

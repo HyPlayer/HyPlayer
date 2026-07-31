@@ -1,16 +1,16 @@
-﻿using HyPlayer.LyricRenderer.Animator.EaseFunctions;
-using System;
+﻿using System;
 using Windows.UI.Xaml.Media.Animation;
+using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 
 namespace HyPlayer.LyricRenderer.Animator;
 
 public class CanvasTransition
 {
-    public TimeSpan Duration { get; set; }
-    public EaseFunctionBase Easing { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
+    private double _startTime = double.MinValue;
     private double _startValue;
     private double _targetValue = double.NaN;
-    private double _startTime = double.MinValue;
+    public TimeSpan Duration { get; set; }
+    public EaseFunctionBase Easing { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
 
     public virtual float Animate(long currentTime, double value)
     {

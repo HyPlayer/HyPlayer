@@ -1,16 +1,5 @@
 #nullable enable
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.WinUI.Controls;
-using HyPlayer.Features.Lyrics.Effects;
-using HyPlayer.LyricEffects.Models;
-using HyPlayer.LyricEffects.Presets;
-using HyPlayer.LyricRenderer;
-using HyPlayer.LyricRenderer.Abstraction.Render;
-using HyPlayer.LyricRenderer.LyricLineRenderers;
-using HyPlayer.LyricRenderer.RollingCalculators;
-using HyPlayer.LyricRenderer.Pipeline;
-using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,10 +11,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI.Controls;
+using HyPlayer.Features.Lyrics.Effects;
+using HyPlayer.LyricEffects.Models;
+using HyPlayer.LyricEffects.Presets;
+using HyPlayer.LyricRenderer;
+using HyPlayer.LyricRenderer.Abstraction;
+using HyPlayer.LyricRenderer.LyricLineRenderers;
+using HyPlayer.LyricRenderer.Pipeline;
+using HyPlayer.LyricRenderer.RollingCalculators;
+using Microsoft.Graphics.Canvas.UI.Xaml;
 using WinRT;
 
 namespace HyPlayer.UI.Dialogs;
@@ -36,7 +37,6 @@ public partial class LyricEffectOperationItem(
     LyricRenderOperationDescriptor? descriptor) : INotifyPropertyChanged
 {
     private string _status = string.Empty;
-    private LyricRenderOperationDescriptor? _descriptor = descriptor;
 
     public LyricRenderOperationDefinition Definition { get; } = definition;
 
@@ -44,7 +44,7 @@ public partial class LyricEffectOperationItem(
 
     public string TypeId => Definition.TypeId;
 
-    public LyricRenderOperationDescriptor? Descriptor => _descriptor;
+    public LyricRenderOperationDescriptor? Descriptor { get; private set; } = descriptor;
 
     public string Description => Descriptor?.Description ?? TypeId;
 
@@ -97,9 +97,11 @@ public partial class LyricEffectOperationItem(
         }
     }
 
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     public void UpdateDescriptor(LyricRenderOperationDescriptor descriptor)
     {
-        _descriptor = descriptor;
+        Descriptor = descriptor;
         OnPropertyChanged(nameof(TypeId));
         OnPropertyChanged(nameof(Description));
         OnPropertyChanged(nameof(CategoryLabel));
@@ -109,25 +111,36 @@ public partial class LyricEffectOperationItem(
         OnPropertyChanged(nameof(CanDelete));
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 }
 
 public sealed partial class LyricEffectSettingsDialog : ContentDialog
 {
+    private static readonly (string Name, string Source)[] ScriptInsertions =
+    [
+        ("矩形", "FillRectangle(0, 0, line.Width, line.Height, fx.Rgba(255, 255, 255, 0.08));"),
+        ("圆角", "FillRoundedRectangle(0, 0, line.Width, line.Height, 6, line.AccentColor);"),
+        ("线条", "DrawLine(0, line.Height, line.Width * line.Progress, line.Height, line.AccentColor, 2);"),
+        ("文本", "DrawText(line.Text, 0, 0, 16, line.IdleColor);"),
+        ("变换", "Save(); Translate(line.AnchorX, line.AnchorY); Rotate(5, 0, 0); Restore();")
+    ];
+
+    private readonly LyricRenderView _preview = new();
+
     private readonly ILyricEffectProfileService _profiles =
         Ioc.Default.GetRequiredService<ILyricEffectProfileService>();
-    private readonly LyricRenderView _preview = new();
-    private LyricEffectProfileDocument _draft;
-    private CancellationTokenSource? _previewDebounce;
-    private TextBox? _scriptEditor;
-    private bool _loading;
-    private bool _saved;
+
     private bool _closed;
+    private LyricEffectProfileDocument _draft;
     private bool _hasUnsavedChanges;
+    private bool _loading;
     private string? _pendingProfileReplacement;
+    private CancellationTokenSource? _previewDebounce;
+    private bool _saved;
+    private TextBox? _scriptEditor;
 
     public LyricEffectSettingsDialog()
     {
@@ -139,6 +152,8 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         _preview.SetEffectProfile(_profiles.EffectiveProfile);
         if (Operations.Count > 0) OperationList.SelectedIndex = 0;
     }
+
+    public ObservableCollection<LyricEffectOperationItem> Operations { get; } = [];
 
     private void InitializePresetMenus()
     {
@@ -157,8 +172,6 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         }
     }
 
-    public ObservableCollection<LyricEffectOperationItem> Operations { get; } = [];
-
     private void InitializePreview()
     {
         _preview.Context.LineRollingEaseCalculator = new CircleEaseRollingCalculator();
@@ -172,9 +185,22 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         _preview.ChangeRenderColor(Colors.White, Color.FromArgb(255, 255, 213, 79), Colors.Black);
         _preview.SetLyricLines(
         [
-            new TextRenderingLyricLine { Text = "Lorem ipsum dolor sit amet", StartTime = 0, EndTime = 3000, KeyFrames = [0, 3000], Typography = new(){ Alignment  = TextAlignment.Start} },
-            new TextRenderingLyricLine { Text = "consectetur adipisicing elit", Translation = "测试测试测试测试", StartTime = 3000, EndTime = 6000, KeyFrames = [3000, 6000], Typography = new(){ Alignment  = TextAlignment.Start} },
-            new TextRenderingLyricLine { Text = "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua", StartTime = 6000, EndTime = 9000, KeyFrames = [6000, 9000] , Typography = new(){ Alignment  = TextAlignment.Start}}
+            new TextRenderingLyricLine
+            {
+                Text = "Lorem ipsum dolor sit amet", StartTime = 0, EndTime = 3000, KeyFrames = [0, 3000],
+                Typography = new RenderTypography { Alignment = TextAlignment.Start }
+            },
+            new TextRenderingLyricLine
+            {
+                Text = "consectetur adipisicing elit", Translation = "测试测试测试测试", StartTime = 3000, EndTime = 6000,
+                KeyFrames = [3000, 6000], Typography = new RenderTypography { Alignment = TextAlignment.Start }
+            },
+            new TextRenderingLyricLine
+            {
+                Text = "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua", StartTime = 6000,
+                EndTime = 9000, KeyFrames = [6000, 9000],
+                Typography = new RenderTypography { Alignment = TextAlignment.Start }
+            }
         ]);
     }
 
@@ -184,10 +210,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         foreach (var item in Operations) item.PropertyChanged -= Operation_PropertyChanged;
         Operations.Clear();
         _draft = LyricEffectPresets.CloneProfile(profile);
-        foreach (var operation in _draft.Operations)
-        {
-            Operations.Add(CreateOperationItem(operation));
-        }
+        foreach (var operation in _draft.Operations) Operations.Add(CreateOperationItem(operation));
         _loading = false;
     }
 
@@ -237,6 +260,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
                 : string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Message));
             _preview.SetEffectProfile(result.Profile!);
         }
+
         return result;
     }
 
@@ -262,7 +286,10 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
             StatusText.Text = string.Join(Environment.NewLine, errors.Select(item => item.Message));
     }
 
-    private void OperationList_SelectionChanged(object sender, SelectionChangedEventArgs e) => RebuildEditor();
+    private void OperationList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RebuildEditor();
+    }
 
     private void RebuildEditor()
     {
@@ -369,7 +396,9 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         string header,
         string description,
         UIElement content,
-        ContentAlignment contentAlignment = ContentAlignment.Right) => new()
+        ContentAlignment contentAlignment = ContentAlignment.Right)
+    {
+        return new SettingsCard
         {
             Header = header,
             Description = description,
@@ -377,13 +406,17 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
             ContentAlignment = contentAlignment,
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
+    }
 
     private static LyricOperationParameterDefinition CreateParameterDefinition(
-        LyricOperationParameterDescriptor descriptor) => new()
+        LyricOperationParameterDescriptor descriptor)
+    {
+        return new LyricOperationParameterDefinition
         {
             Expression = descriptor.DefaultExpression,
             Transition = descriptor.SupportsTransition ? new LyricTransitionDefinition() : null
         };
+    }
 
     private void AddExpressionEditor(
         LyricOperationParameterDescriptor descriptor,
@@ -417,12 +450,15 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         EditorPanel.Children.Add(expander);
     }
 
-    private static TextBox ExpressionBox(string value) => new()
+    private static TextBox ExpressionBox(string value)
     {
-        Text = value,
-        FontFamily = new FontFamily("Consolas"),
-        HorizontalAlignment = HorizontalAlignment.Stretch
-    };
+        return new TextBox
+        {
+            Text = value,
+            FontFamily = new FontFamily("Consolas"),
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+    }
 
     private void EffectType_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -621,6 +657,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
             button.Click += InsertScript_Click;
             insertPanel.Children.Add(button);
         }
+
         expander.Items.Add(CreateSettingsCard(
             "插入命令",
             "在脚本末尾插入常用绘制命令",
@@ -633,19 +670,32 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
     {
         if (_scriptEditor is null) return;
         var source = (string)((Button)sender).Tag;
-        var prefix = _scriptEditor.Text.Length == 0 || _scriptEditor.Text.EndsWith('\n') ? string.Empty : Environment.NewLine;
+        var prefix = _scriptEditor.Text.Length == 0 || _scriptEditor.Text.EndsWith('\n')
+            ? string.Empty
+            : Environment.NewLine;
         _scriptEditor.Text += prefix + source;
         _scriptEditor.SelectionStart = _scriptEditor.Text.Length;
     }
 
-    private void OperationList_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args) =>
+    private void OperationList_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
+    {
         MarkDirtyAndPreview();
+    }
 
-    private void MoveUp_Click(object sender, RoutedEventArgs e) => Move(OperationInstanceId(sender), -1);
+    private void MoveUp_Click(object sender, RoutedEventArgs e)
+    {
+        Move(OperationInstanceId(sender), -1);
+    }
 
-    private void MoveDown_Click(object sender, RoutedEventArgs e) => Move(OperationInstanceId(sender), 1);
+    private void MoveDown_Click(object sender, RoutedEventArgs e)
+    {
+        Move(OperationInstanceId(sender), 1);
+    }
 
-    private static string OperationInstanceId(object sender) => (string)((FrameworkElement)sender).Tag;
+    private static string OperationInstanceId(object sender)
+    {
+        return (string)((FrameworkElement)sender).Tag;
+    }
 
     private void Move(string instanceId, int direction)
     {
@@ -701,7 +751,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
             return;
         }
 
-        LoadOperations(LyricEffectPresets.CloneProfile(preset.Profile, renewInstanceIds: true));
+        LoadOperations(LyricEffectPresets.CloneProfile(preset.Profile, true));
         _hasUnsavedChanges = true;
         _pendingProfileReplacement = null;
         if (Operations.Count > 0) OperationList.SelectedIndex = 0;
@@ -750,7 +800,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
             picker.FileTypeChoices.Add("HyPlayer 歌词特效", [".hylfx"]);
             var file = await picker.PickSaveFileAsync();
             if (file is null) return;
-            await FileIO.WriteTextAsync(file, json, Windows.Storage.Streams.UnicodeEncoding.Utf8);
+            await FileIO.WriteTextAsync(file, json, UnicodeEncoding.Utf8);
             StatusText.Text = $"已导出到 {file.Name}";
         }
         catch (Exception exception)
@@ -834,13 +884,4 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         Easing,
         Mode
     }
-
-    private static readonly (string Name, string Source)[] ScriptInsertions =
-    [
-        ("矩形", "FillRectangle(0, 0, line.Width, line.Height, fx.Rgba(255, 255, 255, 0.08));"),
-        ("圆角", "FillRoundedRectangle(0, 0, line.Width, line.Height, 6, line.AccentColor);"),
-        ("线条", "DrawLine(0, line.Height, line.Width * line.Progress, line.Height, line.AccentColor, 2);"),
-        ("文本", "DrawText(line.Text, 0, 0, 16, line.IdleColor);"),
-        ("变换", "Save(); Translate(line.AnchorX, line.AnchorY); Rotate(5, 0, 0); Restore();")
-    ];
 }

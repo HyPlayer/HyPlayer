@@ -25,6 +25,12 @@ public sealed partial class UwpStorageFileAbstraction : File.IFileAbstraction, I
         Name = name;
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
     public string Name { get; }
 
     public Stream ReadStream { get; }
@@ -51,11 +57,5 @@ public sealed partial class UwpStorageFileAbstraction : File.IFileAbstraction, I
     ~UwpStorageFileAbstraction()
     {
         Dispose(false);
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 }

@@ -1,8 +1,7 @@
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Features.Downloads.Services;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 namespace HyPlayer.Features.Downloads.Services;
 

@@ -7,7 +7,9 @@ using Windows.UI.Xaml.Controls;
 namespace HyPlayer.UI.Controls.AlignableWrapPanel;
 
 /// <summary>
-/// WrapPanel is a panel that position child control vertically or horizontally based on the orientation and when max width/ max height is received a new row(in case of horizontal) or column (in case of vertical) is created to fit new controls.
+///     WrapPanel is a panel that position child control vertically or horizontally based on the orientation and when max
+///     width/ max height is received a new row(in case of horizontal) or column (in case of vertical) is created to fit
+///     new controls.
 /// </summary>
 public partial class AlignableWrapPanel
 {
@@ -40,13 +42,19 @@ public partial class AlignableWrapPanel
         }
 
         public UvMeasure Add(double u, double v)
-            => new UvMeasure { U = U + u, V = V + v };
+        {
+            return new UvMeasure { U = U + u, V = V + v };
+        }
 
         public UvMeasure Add(UvMeasure measure)
-            => Add(measure.U, measure.V);
+        {
+            return Add(measure.U, measure.V);
+        }
 
         public Size ToSize(Orientation orientation)
-            => orientation == Orientation.Horizontal ? new Size(U, V) : new Size(V, U);
+        {
+            return orientation == Orientation.Horizontal ? new Size(U, V) : new Size(V, U);
+        }
     }
 
     private struct UvRect
@@ -55,14 +63,20 @@ public partial class AlignableWrapPanel
 
         public UvMeasure Size { get; set; }
 
-        public Rect ToRect(Orientation orientation) => orientation switch
+        public Rect ToRect(Orientation orientation)
         {
-            Orientation.Vertical => new Rect(Position.V, Position.U, Size.V, Size.U),
-            Orientation.Horizontal => new Rect(Position.U, Position.V, Size.U, Size.V),
-            _ => ThrowArgumentException()
-        };
+            return orientation switch
+            {
+                Orientation.Vertical => new Rect(Position.V, Position.U, Size.V, Size.U),
+                Orientation.Horizontal => new Rect(Position.U, Position.V, Size.U, Size.V),
+                _ => ThrowArgumentException()
+            };
+        }
 
-        private static Rect ThrowArgumentException() => throw new ArgumentException("The input orientation is not valid.");
+        private static Rect ThrowArgumentException()
+        {
+            throw new ArgumentException("The input orientation is not valid.");
+        }
     }
 
     private struct Row
@@ -77,9 +91,9 @@ public partial class AlignableWrapPanel
 
         public UvMeasure Size { get; set; }
 
-        public UvRect Rect => ChildrenRects.Count > 0 ?
-            new UvRect { Position = ChildrenRects[0].Position, Size = Size } :
-            new UvRect { Position = UvMeasure.Zero, Size = Size };
+        public UvRect Rect => ChildrenRects.Count > 0
+            ? new UvRect { Position = ChildrenRects[0].Position, Size = Size }
+            : new UvRect { Position = UvMeasure.Zero, Size = Size };
 
         public void Add(UvMeasure position, UvMeasure size)
         {
@@ -87,7 +101,7 @@ public partial class AlignableWrapPanel
             Size = new UvMeasure
             {
                 U = position.U + size.U,
-                V = Math.Max(Size.V, size.V),
+                V = Math.Max(Size.V, size.V)
             };
         }
     }

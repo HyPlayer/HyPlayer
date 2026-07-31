@@ -1,39 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction
+namespace HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
+
+public sealed class KaraokeLyricCollection : ILyricCollection
 {
-    public sealed class KaraokeLyricCollection : ILyricCollection
+    private bool disposedValue;
+
+    public KaraokeLyricCollection(IList<LyricLine> lines)
     {
-        private bool disposedValue;
+        Lines = lines;
+    }
 
-        public IList<LyricLine> Lines { get; }
-        public KaraokeLyricCollection(IList<LyricLine> lines)
-        {
-            Lines = lines;
-        }
+    public IList<LyricLine> Lines { get; }
 
-        private void Dispose(bool disposing)
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
         {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    Lines.Clear();
-                }
-                disposedValue = true;
-            }
+            if (disposing) Lines.Clear();
+            disposedValue = true;
         }
+    }
 
-        ~KaraokeLyricCollection()
-        {
-            Dispose(disposing: false);
-        }
+    ~KaraokeLyricCollection()
+    {
+        Dispose(false);
+    }
 
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }

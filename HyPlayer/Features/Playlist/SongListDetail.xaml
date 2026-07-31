@@ -55,7 +55,8 @@
                         Grid.ColumnSpan="2">
                         <Border.Background>
                             <LinearGradientBrush Opacity="0.5" StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop x:Name="AlbumColor" Offset="0" Color="{x:Bind ViewModel.AlbumColor, Mode=OneWay}" />
+                                <GradientStop x:Name="AlbumColor" Offset="0"
+                                              Color="{x:Bind ViewModel.AlbumColor, Mode=OneWay}" />
                                 <GradientStop Offset="1" Color="Transparent" />
                             </LinearGradientBrush>
                         </Border.Background>
@@ -126,7 +127,8 @@
                                             Margin="0,0,8,0"
                                             FontSize="12"
                                             Glyph="{x:Bind ViewModel.Subscribed, Mode=OneWay, Converter={StaticResource BoolToLikeIconConverter}}" />
-                                        <TextBlock x:Name="LikeBtnText" Text="{x:Bind ViewModel.Subscribed, Mode=OneWay, Converter={StaticResource BoolToLikeStringConverter}}" />
+                                        <TextBlock x:Name="LikeBtnText"
+                                                   Text="{x:Bind ViewModel.Subscribed, Mode=OneWay, Converter={StaticResource BoolToLikeStringConverter}}" />
                                     </StackPanel>
                                 </Button>
                                 <Button Margin="0,6,0,0" Click="PlayAll_Click">

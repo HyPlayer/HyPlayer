@@ -1,17 +1,17 @@
-using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
 
 namespace HyPlayer.Features.Playback.Transitions;
 
 public sealed class CrossFadeTransition : ITrackTransition
 {
     private static readonly TimeSpan PreloadWindow = TimeSpan.FromSeconds(30);
+    private long _fadeStartedAt;
     private TransitionPreparedTrack? _prepared;
     private PreparedPlaybackPromotion? _promotion;
-    private long _fadeStartedAt;
 
     public string Id => "xfd";
 
@@ -159,11 +159,9 @@ public sealed class CrossFadeTransition : ITrackTransition
                 .SetVolumeAsync(promotion.Incoming.TargetVolume * Math.Sin(angle), ct)
                 .ConfigureAwait(false);
             if (promotion.Outgoing is not null)
-            {
                 await promotion.Outgoing
                     .SetVolumeAsync(promotion.Outgoing.TargetVolume * Math.Cos(angle), ct)
                     .ConfigureAwait(false);
-            }
         }
         catch (Exception effectException)
         {
