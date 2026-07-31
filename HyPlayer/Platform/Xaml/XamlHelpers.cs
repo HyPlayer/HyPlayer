@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
+using Windows.ApplicationModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
@@ -34,4 +35,9 @@ internal static class XamlHelpers
             flyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
         }
     }
+
+    /// <summary>
+    /// LoopbackCommand内插字符串，自动补全FamilyName
+    /// </summary>
+    public static string LoopbackCommand => $"CheckNetIsolation LoopbackExempt -a -n=\"{Package.Current.Id.FamilyName}\"";
 }

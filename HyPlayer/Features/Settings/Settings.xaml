@@ -53,9 +53,7 @@
             FontSize="28"
             FontWeight="SemiBold"
             Text="设置" />
-        <Pivot
-            Grid.Row="1"
-            HeaderTemplate="{StaticResource SettingsPivotHeaderTemplate}">
+        <Pivot Grid.Row="1" HeaderTemplate="{StaticResource SettingsPivotHeaderTemplate}">
             <PivotItem Header="歌词设置">
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
@@ -742,9 +740,7 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:XamlHelpers.Setting.IsolationLightWave, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard
-                                        Description="0 为无边框"
-                                        Header="唱片边框厚度">
+                                    <controls3:SettingsCard Description="0 为无边框" Header="唱片边框厚度">
                                         <controls:NumberBox
                                             Width="80"
                                             HorizontalAlignment="Right"
@@ -755,9 +751,7 @@
                                             SpinButtonPlacementMode="Compact"
                                             Value="{x:Bind hyplayer:XamlHelpers.Setting.albumBorderLength, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard
-                                        Description="0为无阴影"
-                                        Header="歌词页面封面阴影强度">
+                                    <controls3:SettingsCard Description="0为无阴影" Header="歌词页面封面阴影强度">
                                         <Slider
                                             x:Name="SliderAlbumShadowDepth"
                                             Width="256"
@@ -1190,7 +1184,7 @@
                                 <TextBox
                                     HorizontalAlignment="Left"
                                     IsReadOnly="True"
-                                    Text="CheckNetIsolation LoopbackExempt -a -n=&quot;48848aaaaaaccd.HyPlayer_jdagbttk64fq4&quot;" />
+                                    Text="{x:Bind hyplayer:XamlHelpers.LoopbackCommand}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="请求时降级HTTPS为HTTP">
                                 <CheckBox
@@ -1264,9 +1258,7 @@
             <PivotItem Header="关于">
                 <Grid>
                     <ScrollViewer VerticalScrollMode="Enabled">
-                        <Grid
-                            Margin="0,8,12,0"
-                            Padding="0,0,0,144">
+                        <Grid Margin="0,8,12,0" Padding="0,0,0,144">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -1306,7 +1298,7 @@
                                         <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
                                             GitHub
                                         </Hyperlink>
-                                        | <Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
+                                        |<Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
                                             Gitee
                                         </Hyperlink>
                                     </Paragraph>
