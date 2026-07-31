@@ -70,7 +70,8 @@ public sealed partial class CompactPlayerPage : Page
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
 
 
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly HyPlayer.Domain.Settings.UISettings _setting =
+        Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
 
     private readonly WeakEventListener<CompactPlayerPage, object?, SongLikeStatusChangedEventArgs>
         _songLikeStatusChangedListener;
@@ -205,7 +206,7 @@ public sealed partial class CompactPlayerPage : Page
         if (_state.CoverStream == null) return;
         _taskRunner.Forget(this.RunOnUIThreadAsync(async () =>
         {
-            if (!_setting.noImage)
+            if (!_setting.NoImage)
                 try
                 {
                     if (!ReferenceEquals(providerItem, _state.NowPlayingProviderItem) ||

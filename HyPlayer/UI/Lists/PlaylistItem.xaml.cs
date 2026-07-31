@@ -35,7 +35,7 @@ public sealed partial class PlaylistItem : UserControl
     private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier =
         Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>();
 
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
     private readonly ContainerBase playList;
 
     public PlaylistItem(ContainerBase playList)
@@ -101,7 +101,7 @@ public sealed partial class PlaylistItem : UserControl
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        if (_setting.noImage)
+        if (_setting.NoImage)
         {
             ImageContainer.Source = null;
         }

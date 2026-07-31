@@ -66,8 +66,9 @@ public sealed partial class App : Windows.UI.Xaml.Application
         InitializeCommonServices();
         AppDepository.Resolve<IHistoryService>().InitializeHistoryTrack();
         _ = AppDepository.Resolve<IPlaybackMemoryService>().InitializeAsync();
-        if (AppDepository.Resolve<Setting>().themeRequest != ThemeRequest.Auto)
-            RequestedTheme = AppDepository.Resolve<Setting>().themeRequest == ThemeRequest.Light
+        var uiSettings = AppDepository.Resolve<UISettings>();
+        if (uiSettings.ThemeRequest != ThemeRequest.Auto)
+            RequestedTheme = uiSettings.ThemeRequest == ThemeRequest.Light
                 ? ApplicationTheme.Light
                 : ApplicationTheme.Dark;
         AppDepository.Resolve<IBackgroundTaskRunner>().Forget(InitializeThings, "initialize app cache and converters");
@@ -82,10 +83,10 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
     private static void InitializeCommonServices()
     {
-        var setting = AppDepository.Resolve<Setting>();
+        var settings = AppDepository.Resolve<ApiSettings>();
         var neteaseProvider = AppDepository.Resolve<NeteaseProvider.NeteaseProvider>();
-        neteaseProvider.ImportAdditionalConfiguration(setting.ApiAdditionalParametersJson);
-        neteaseProvider.ConfigureFakeCheckToken(setting.EnableCheckTokenApi);
+        neteaseProvider.ImportAdditionalConfiguration(settings.ApiAdditionalParametersJson);
+        neteaseProvider.ConfigureFakeCheckToken(settings.EnableCheckTokenApi);
         var globalTimer = AppDepository.Resolve<IGlobalTimerService>();
         var teachingTip = AppDepository.Resolve<ITeachingTipService>();
         var playBarAutoHide = AppDepository.Resolve<IPlayBarAutoHideService>();
@@ -190,16 +191,16 @@ public sealed partial class App : Windows.UI.Xaml.Application
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
             if (AppDepository.Resolve<IPlaybackSurfaceCoordinator>().IsExpanded) return;
-            var setting = AppDepository.Resolve<Setting>();
-            var animation = setting.expandAnimation;
+            var settings = AppDepository.Resolve<UISettings>();
+            var animation = settings.ExpandAnimation;
             try
             {
-                setting.expandAnimation = false;
+                settings.ExpandAnimation = false;
                 AppDepository.Resolve<IPlaybackSurfaceCoordinator>().Expand();
             }
             finally
             {
-                setting.expandAnimation = animation;
+                settings.ExpandAnimation = animation;
             }
         }
 

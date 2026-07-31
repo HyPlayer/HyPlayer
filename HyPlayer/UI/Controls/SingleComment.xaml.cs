@@ -37,7 +37,7 @@ public sealed partial class SingleComment : UserControl
         DependencyProperty.Register("MainComment", typeof(CommentBase), typeof(SingleComment),
             new PropertyMetadata(null)); //主评论
 
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
 
     private readonly ObservableCollection<CommentBase> floorComments = new();
     private string time = "0";
@@ -177,7 +177,7 @@ public sealed partial class SingleComment : UserControl
                 Name = MainComment.Sender?.Name ?? string.Empty,
                 AvatarUrl = await GetCommentAvatarUrlAsync(MainComment)
             },
-            _setting.noImage);
+            _setting.NoImage);
         ReplyBtn.Visibility = Visibility.Visible;
         FloorCommentsExpander.Visibility = MainComment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
     }

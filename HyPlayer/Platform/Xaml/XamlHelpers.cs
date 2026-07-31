@@ -2,8 +2,6 @@ using Windows.ApplicationModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Settings;
 using WinRT;
 
 namespace HyPlayer.Platform.Xaml;
@@ -14,11 +12,6 @@ namespace HyPlayer.Platform.Xaml;
 /// </summary>
 internal static class XamlHelpers
 {
-    /// <summary>
-    ///     全局 Setting 实例，供 XAML x:Bind 使用。
-    /// </summary>
-    public static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
-
     /// <summary>
     ///     LoopbackCommand内插字符串，自动补全FamilyName
     /// </summary>

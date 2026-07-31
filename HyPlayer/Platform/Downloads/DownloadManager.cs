@@ -3,11 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
@@ -15,6 +13,7 @@ using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Application;
 using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
@@ -39,7 +38,7 @@ using UwpStorageFileAbstraction = HyPlayer.Platform.Storage.Audio.UwpStorageFile
 
 namespace HyPlayer.Features.Downloads.Services;
 
-public sealed partial class DownloadObject : INotifyPropertyChanged
+public sealed partial class DownloadObject : ObservableObject
 {
     public enum DownloadStatus
     {
@@ -63,7 +62,8 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     private readonly INotificationService _notification;
     private readonly SingleSongBase _providerSong;
     private readonly IResourceQualityTagProvidable _qualityTagProvider;
-    private readonly Setting _setting;
+    private readonly DownloadSettings _downloadSettings;
+    private readonly LyricSettings _lyricSettings;
     private readonly IUIThreadDispatcher _uiThreadDispatcher;
     private int _downloadBitrate;
     private string _downloadFormat;
@@ -84,7 +84,8 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         SingleSongBase song,
         INotificationService notification,
         IUIThreadDispatcher uiThreadDispatcher,
-        Setting setting,
+        DownloadSettings downloadSettings,
+        LyricSettings lyricSettings,
         HttpClient httpClient,
         ILyricProvidable lyricProvider,
         IEnumerable<IMusicResourceProvidable> musicResourceProviders,
@@ -93,7 +94,8 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     {
         _notification = notification;
         _uiThreadDispatcher = uiThreadDispatcher;
-        _setting = setting;
+        _downloadSettings = downloadSettings;
+        _lyricSettings = lyricSettings;
         _httpClient = httpClient;
         _lyricProvider = lyricProvider;
         _musicResourceProviders = musicResourceProviders?.ToList() ??
@@ -122,7 +124,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     public string FileName
     {
         get => _fileName;
-        set => SetField(ref _fileName, value);
+        set => SetProperty(ref _fileName, value);
     }
 
     public string FullPath { get; set; }
@@ -138,13 +140,13 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     public ulong HadSize
     {
         get => _hadSize;
-        set => SetField(ref _hadSize, value);
+        set => SetProperty(ref _hadSize, value);
     }
 
     public int Progress
     {
         get => _progress;
-        set => SetField(ref _progress, value);
+        set => SetProperty(ref _progress, value);
     }
 
     // 0 - 排队 1 - 下载中 2 - 下载完成  3 - 暂停
@@ -153,28 +155,26 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     public bool HasError
     {
         get => _hasError;
-        set => SetField(ref _hasError, value);
+        set => SetProperty(ref _hasError, value);
     }
 
     public bool HasPaused
     {
         get => _hasPaused;
-        set => SetField(ref _hasPaused, value);
+        set => SetProperty(ref _hasPaused, value);
     }
 
     public string Message
     {
         get => _message;
-        set => SetField(ref _message, value);
+        set => SetProperty(ref _message, value);
     }
 
     public ulong TotalSize
     {
         get => _totalSize;
-        set => SetField(ref _totalSize, value);
+        set => SetProperty(ref _totalSize, value);
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 
     public void Pause()
     {
@@ -234,9 +234,9 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     {
         DownloadManager.WritingTasks.Add(Task.Run(async () =>
         {
-            if (_setting.downloadLyric)
+            if (_lyricSettings.DownloadLyric)
                 await DownloadLyric().ConfigureAwait(false);
-            if (_setting.writedownloadFileInfo)
+            if (_downloadSettings.WriteDownloadFileInfo)
                 await WriteInfoToFile().ConfigureAwait(false);
             DownloadManager.WritingTasks.RemoveAll(t => t.IsCompleted);
             Status = DownloadStatus.Finished;
@@ -253,7 +253,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
             using var file = TagLibHelper.Create(streamAbstraction, ResultFile.FileType);
             try
             {
-                if (_setting.write163Info)
+                if (_downloadSettings.Write163Info)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, _providerSong, _downloadBitrate, _downloadFormat);
                 //写相关信息
                 file.Tag.Album = AlbumName;
@@ -338,7 +338,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
                 if (original == "[99:00.00]纯音乐，请欣赏") return;
                 var lrc = Utils.ConvertPureLyric(original);
                 var translation = await GetLyricTextAsync(lyrics, LyricType.Translation, false);
-                if (_setting.downloadTranslation && !string.IsNullOrWhiteSpace(translation))
+                if (_lyricSettings.DownloadTranslation && !string.IsNullOrWhiteSpace(translation))
                     Utils.ConvertTranslation(translation, lrc);
                 var lrctxt = string.Join("\r\n", lrc.Select(t =>
                 {
@@ -422,7 +422,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         });
         try
         {
-            FileName = _setting.downloadFileName
+            FileName = _downloadSettings.DownloadFileName
                 .Replace("{$SINGER}", string.Join(';', _downloadArtistNames).EscapeForPath())
                 .Replace("{$SONGNAME}", SongName.EscapeForPath())
                 .Replace("{$ALBUM}", AlbumName.EscapeForPath())
@@ -430,7 +430,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
                     (_downloadTrackId > 0 ? _downloadTrackId : _downloadOrder + 1).ToString().EscapeForPath())
                 .Replace("{$CDNAME}", _downloadCdName?.EscapeForPath())
                 .Replace("{$SONGID}", _downloadSongId.EscapeForPath());
-            var folderName = _setting.downloadDir;
+            var folderName = _downloadSettings.DownloadDirectory;
             var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
             var ses = FileName.Replace('\\', '/').Split('/');
             for (var index = 0; index < ses.Length - 1; index++)
@@ -442,7 +442,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
 
             if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".mp3")) ||
                 await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".flac")))
-                switch (_setting.downloadNameOccupySolution)
+                switch (_downloadSettings.DownloadNameOccupySolution)
                 {
                     case OccupySolution.Skip:
                         Status = DownloadStatus.Paused;
@@ -471,7 +471,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
                 Message = "正在获取下载链接";
             });
             var qualityTags = await _qualityTagProvider.GetAvailableQualityTagsAsync(ResourceType.Audio);
-            qualityTags.TryGetValue(_setting.downloadAudioRate, out var qualityTag);
+            qualityTags.TryGetValue(_downloadSettings.DownloadAudioRate, out var qualityTag);
             var musicResourceProvider =
                 _musicResourceProviders.FirstOrDefault(provider => provider.Id == _providerSong.ProviderId);
             if (musicResourceProvider is null)
@@ -564,19 +564,6 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         return null;
     }
 
-    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
-    }
-
     [GeneratedRegex("[0-9]+")]
     private static partial Regex DiscInfoRegex();
 }
@@ -592,7 +579,8 @@ internal static class DownloadManager
     private static IGlobalTimerService GlobalTimer => Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private static INotificationService Notification => Ioc.Default.GetRequiredService<INotificationService>();
     private static IUIThreadDispatcher UIThreadDispatcher => Ioc.Default.GetRequiredService<IUIThreadDispatcher>();
-    private static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
+    private static DownloadSettings DownloadSettings => Ioc.Default.GetRequiredService<DownloadSettings>();
+    private static LyricSettings LyricSettings => Ioc.Default.GetRequiredService<LyricSettings>();
     private static HttpClient HttpClient => Ioc.Default.GetRequiredService<HttpClient>();
     private static ILyricProvidable LyricProvider => Ioc.Default.GetRequiredService<ILyricProvidable>();
 
@@ -664,7 +652,7 @@ internal static class DownloadManager
             return;
         }
 
-        var maxDownloadCount = Setting.maxDownloadCount;
+        var maxDownloadCount = DownloadSettings.MaxDownloadCount;
         for (var i = 0; i < DownloadLists.Count; i++)
             switch (DownloadLists[i].Status)
             {
@@ -696,7 +684,8 @@ internal static class DownloadManager
             song,
             Notification,
             UIThreadDispatcher,
-            Setting,
+            DownloadSettings,
+            LyricSettings,
             HttpClient,
             LyricProvider,
             MusicResourceProviders,

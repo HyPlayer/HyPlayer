@@ -64,7 +64,8 @@ public sealed partial class PlayBar
     //  UI-only fields (kept in code-behind)
     // ---------------------------------------------------------------
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly PlaybackSettings _playbackSettings = Ioc.Default.GetRequiredService<PlaybackSettings>();
+    private readonly LyricSettings _lyricSettings = Ioc.Default.GetRequiredService<LyricSettings>();
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
@@ -97,6 +98,8 @@ public sealed partial class PlayBar
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding;
     private TimeSpan StartingTimeSpan = TimeSpan.Zero;
+    public HyPlayer.Domain.Settings.UISettings UISettings { get; } =
+        Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
     public ObservableCollection<PlayBarQueueItem> PlayItems => ViewModel.PlaylistItems;
 
 #nullable enable
@@ -213,7 +216,7 @@ DoubleAnimation verticalAnimation;
 
     private void StartPreparedCollapseAnimations()
     {
-        if (!_setting.expandAnimation || GridSongInfoContainer.Visibility != Visibility.Visible) return;
+        if (!UISettings.ExpandAnimation || GridSongInfoContainer.Visibility != Visibility.Visible) return;
 
         var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
         var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
@@ -397,7 +400,7 @@ DoubleAnimation verticalAnimation;
         if (!_player.PlayerCreated || _player.PrimaryPlaybackSource == null) return;
 
         // Prepare ConnectedAnimations from PlayBar elements before coordinator animates ExpandedPlayer
-        if (_setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
+        if (UISettings.ExpandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
             try
             {
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
@@ -654,8 +657,8 @@ DoubleAnimation verticalAnimation;
         if (!_surfaceStore.IsExpanded)
             ApplyCompactPlaybackTheme();
 
-        ViewModel.SetVolumeCommand.Execute(_setting.Volume);
-        SliderAudioRate.Value = (double)_setting.Volume;
+        ViewModel.SetVolumeCommand.Execute(_playbackSettings.Volume);
+        SliderAudioRate.Value = _playbackSettings.Volume;
         ViewModel.SyncFromState();
         RefreshPlayModeDisplay();
         _enteredForegroundListener?.Detach();
@@ -703,7 +706,7 @@ DoubleAnimation verticalAnimation;
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
         _diagnostics.Logs.Add("Now PlaySource is " + ViewModel.PlaySourceId);
 
-        if (_setting.hotlyricOnStartup)
+        if (_lyricSettings.HotLyricOnStartup)
             try
             {
                 var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");

@@ -21,7 +21,7 @@ namespace HyPlayer.Features.Downloads;
 public sealed partial class DownloadPage : Page
 {
     private readonly IDownloadService _downloadService = Ioc.Default.GetRequiredService<IDownloadService>();
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly DownloadSettings _setting = Ioc.Default.GetRequiredService<DownloadSettings>();
 
     public DownloadPage()
     {
@@ -30,7 +30,7 @@ public sealed partial class DownloadPage : Page
 
     private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
     {
-        await Launcher.LaunchFolderPathAsync(_setting.downloadDir);
+        await Launcher.LaunchFolderPathAsync(_setting.DownloadDirectory);
     }
 
     private void Button_CleanAll_Click(object sender, RoutedEventArgs e)

@@ -37,7 +37,8 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
 
     private readonly PlayCoreBase _playCore;
     private readonly IPlaybackQueueLoader _queueLoader;
-    private readonly Setting _setting;
+    private readonly PlaybackSettings _playbackSettings;
+    private readonly LocalLibrarySettings _localLibrarySettings;
     private readonly PlaybackStateService _state;
     private bool _initialized;
     private int _lastSavedPositionBucket = -1;
@@ -47,7 +48,8 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
     public PlaybackMemoryService(
         PlayCoreBase playCore,
         PlaybackStateService state,
-        Setting setting,
+        PlaybackSettings playbackSettings,
+        LocalLibrarySettings localLibrarySettings,
         IPlaybackQueueLoader queueLoader,
         IPlaybackControlService control,
         IProvidableItemRangeProvidable itemRangeProvider,
@@ -57,7 +59,8 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
     {
         _playCore = playCore;
         _state = state;
-        _setting = setting;
+        _playbackSettings = playbackSettings;
+        _localLibrarySettings = localLibrarySettings;
         _queueLoader = queueLoader;
         _control = control;
         _itemRangeProvider = itemRangeProvider;
@@ -156,7 +159,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
         if (!string.IsNullOrWhiteSpace(memory.ActiveStrategyId))
         {
             await _control.SetPlayModeAsync(memory.ActiveStrategyId).ConfigureAwait(false);
-            _setting.ActiveStrategyId = memory.ActiveStrategyId;
+            _playbackSettings.ActiveStrategyId = memory.ActiveStrategyId;
         }
 
         var playbackQueue = await _playCore.GetOrderedPlaylistAsync().ConfigureAwait(false);
@@ -287,7 +290,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
         await _ioLock.WaitAsync().ConfigureAwait(false);
         try
         {
-            if (_setting.advancedMusicHistoryStorage)
+            if (_localLibrarySettings.AdvancedMusicHistoryStorage)
             {
                 var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(
                     MemoryFileName,
@@ -310,7 +313,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
         try
         {
             string? text;
-            if (_setting.advancedMusicHistoryStorage)
+            if (_localLibrarySettings.AdvancedMusicHistoryStorage)
             {
                 var file = await ApplicationData.Current.LocalCacheFolder.TryGetItemAsync(MemoryFileName);
                 text = file is StorageFile storageFile
@@ -351,7 +354,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
             CreateIdentity(legacy.Songs[currentIndex]),
             currentIndex,
             0,
-            _setting.ActiveStrategyId,
+            _playbackSettings.ActiveStrategyId,
             DateTimeOffset.UtcNow);
     }
 

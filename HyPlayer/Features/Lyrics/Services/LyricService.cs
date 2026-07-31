@@ -31,7 +31,7 @@ namespace HyPlayer.Features.Lyrics.Services;
 public sealed class LyricService(
     ILyricProvidable lyricProvider,
     PlaybackStateService state,
-    Setting setting,
+    LyricSettings setting,
     HttpClient httpClient,
     IBackgroundTaskRunner taskRunner,
     IKawazuStateService kawazuState) : ILyricService
@@ -202,7 +202,7 @@ public sealed class LyricService(
 
         if (lyricInfo.Lyrics.Count == 0)
         {
-            if (setting.showComposerInLyric)
+            if (setting.ShowComposerInLyric)
                 lyricInfo.Lyrics.Add(new SongLyric
                 {
                     LyricLine = new LrcLyricsLine(artistText, TimeSpan.Zero)
@@ -387,10 +387,10 @@ public sealed class LyricService(
     {
         try
         {
-            if (!setting.enableAmllTtmlDb || string.IsNullOrWhiteSpace(item.ActualId)) return;
+            if (!setting.EnableAmllTtmlDb || string.IsNullOrWhiteSpace(item.ActualId)) return;
 
             using var message = new HttpRequestMessage(HttpMethod.Get,
-                setting.amllTtmlMirrorUrl.Replace("[NCM_ID]", item.ActualId));
+                setting.AmllTtmlMirrorUrl.Replace("[NCM_ID]", item.ActualId));
             message.Headers.Add("User-Agent", "HyPlayer LyricsClient");
             using var ttml = await httpClient.SendAsync(message, ct);
             var ttmlContent = await ttml.Content.ReadAsStringAsync(ct);

@@ -29,7 +29,6 @@ public sealed partial class Me : Page
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
     public Me()

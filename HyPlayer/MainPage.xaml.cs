@@ -50,19 +50,21 @@ public sealed partial class MainPage : Page
     private readonly IPlayBarAutoHideService _playBarAutoHide =
         Ioc.Default.GetRequiredService<IPlayBarAutoHideService>();
 
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly ApiSettings _apiSettings = Ioc.Default.GetRequiredService<ApiSettings>();
     private readonly IShellHostStateService _shellHost = Ioc.Default.GetRequiredService<IShellHostStateService>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private bool _playBarAutoHideSubscribed;
     private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
     private bool IsPlaybarOnShow = true;
 
+    public HyPlayer.Domain.Settings.UISettings UISettings { get; } =
+        Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
+
     public MainPage()
     {
         Ioc.Default.GetRequiredService<IProviderNetworkConfigurationProvidable>()
-            .ConfigureClientNetwork(Setting.GetSettings<string>("xRealIp", null),
-                Setting.GetSettings("UseHttp", false));
-        if (_setting.uiSound)
+            .ConfigureClientNetwork(_apiSettings.RealIp, _apiSettings.UseHttp);
+        if (UISettings.UISound)
         {
             ElementSoundPlayer.State = ElementSoundPlayerState.Off;
             ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
@@ -75,8 +77,7 @@ public sealed partial class MainPage : Page
         AttachSurfaceStoreListener();
         UIElement PlayBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
-        ActualThemeChanged += MainPage_ActualThemeChanged;
-        if (_setting.displayMaintain) Ioc.Default.GetRequiredService<IDisplayKeepAwakeService>().RequestActive();
+        if (UISettings.DisplayMaintain) Ioc.Default.GetRequiredService<IDisplayKeepAwakeService>().RequestActive();
     }
 
     private void AttachSurfaceStoreListener()
@@ -170,19 +171,12 @@ public sealed partial class MainPage : Page
         ExpandedPlayer.Content ??= new ExpandedPlayer();
     }
 
-    private void MainPage_ActualThemeChanged(FrameworkElement sender, object args)
-    {
-        _setting.OnPropertyChanged("acrylicBackgroundStatus");
-        _setting.OnPropertyChanged("playbarBackgroundAcrylic");
-    }
-
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         _surfaceStoreChangedListener?.Detach();
         _surfaceStoreChangedListener = null;
         DetachPlayBarAutoHideListener();
-        ActualThemeChanged -= MainPage_ActualThemeChanged;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -213,7 +207,7 @@ public sealed partial class MainPage : Page
 
     internal void OnPlaybarVisibilityChanged(bool isActivated)
     {
-        if (!_setting.AutoHidePlaybar) return;
+        if (!UISettings.AutoHidePlaybar) return;
         _ = this.RunOnUIThreadAsync(() =>
         {
             if (isActivated)

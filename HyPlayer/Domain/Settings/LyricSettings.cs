@@ -7,42 +7,50 @@ namespace HyPlayer.Domain.Settings;
 /// <summary>
 ///     Settings related to lyric display, rendering, and behavior.
 /// </summary>
-public class LyricSettings : SettingsBase
+public partial class LyricSettings : SettingsBase
 {
+    protected override string SectionName => "lyric";
+
+    public string LyricFontFamily
+    {
+        get => GetSettings(nameof(LyricFontFamily), "Microsoft YaHei UI");
+        set => SetSettings(nameof(LyricFontFamily), value);
+    }
+
     /// <summary>
     ///     Romaji source for lyric transliteration.
     /// </summary>
     public RomajiSource LyricRomajiSource
     {
         get => GetSettings(nameof(LyricRomajiSource), RomajiSource.None);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(LyricRomajiSource)] = (int)value;
+        set => SetSettings(nameof(LyricRomajiSource), (int)value);
     }
 
     /// <summary>
     ///     Whether to show composer info in lyrics.
     /// </summary>
-    public bool showComposerInLyric
+    public bool ShowComposerInLyric
     {
-        get => GetSettings(nameof(showComposerInLyric), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(showComposerInLyric)] = value;
+        get => GetSettings(nameof(ShowComposerInLyric), true);
+        set => SetSettings(nameof(ShowComposerInLyric), value);
     }
 
     /// <summary>
     ///     Whether to download lyrics.
     /// </summary>
-    public bool downloadLyric
+    public bool DownloadLyric
     {
-        get => GetSettings(nameof(downloadLyric), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(downloadLyric)] = value;
+        get => GetSettings(nameof(DownloadLyric), true);
+        set => SetSettings(nameof(DownloadLyric), value);
     }
 
     /// <summary>
     ///     Whether to download translations.
     /// </summary>
-    public bool downloadTranslation
+    public bool DownloadTranslation
     {
-        get => GetSettings(nameof(downloadTranslation), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(downloadTranslation)] = value;
+        get => GetSettings(nameof(DownloadTranslation), true);
+        set => SetSettings(nameof(DownloadTranslation), value);
     }
 
     /// <summary>
@@ -51,7 +59,7 @@ public class LyricSettings : SettingsBase
     public bool MigrateLyrics
     {
         get => GetSettings(nameof(MigrateLyrics), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(MigrateLyrics)] = value;
+        set => SetSettings(nameof(MigrateLyrics), value);
     }
 
     /// <summary>
@@ -60,194 +68,194 @@ public class LyricSettings : SettingsBase
     public bool OptimizeLyric
     {
         get => GetSettings(nameof(OptimizeLyric), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(OptimizeLyric)] = value;
+        set => SetSettings(nameof(OptimizeLyric), value);
     }
 
     /// <summary>
     ///     Whether lyric drop shadow is enabled.
     /// </summary>
-    public bool lyricDropshadow
+    public bool LyricDropShadow
     {
-        get => GetSettings(nameof(lyricDropshadow), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricDropshadow)] = value;
+        get => GetSettings(nameof(LyricDropShadow), false);
+        set => SetSettings(nameof(LyricDropShadow), value);
     }
 
     /// <summary>
     ///     Whether lyric render target caching is enabled.
     /// </summary>
-    public bool lyricCacheRenderTarget
+    public bool LyricCacheRenderTarget
     {
-        get => GetSettings(nameof(lyricCacheRenderTarget), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricCacheRenderTarget)] = value;
+        get => GetSettings(nameof(LyricCacheRenderTarget), false);
+        set => SetSettings(nameof(LyricCacheRenderTarget), value);
     }
 
     /// <summary>
     ///     Lyric scale size.
     /// </summary>
-    public int lyricScaleSize
+    public int LyricScaleSize
     {
-        get => GetSettings(nameof(lyricScaleSize), 3);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricScaleSize)] = value;
+        get => GetSettings(nameof(LyricScaleSize), 3);
+        set => SetSettings(nameof(LyricScaleSize), value);
     }
 
     /// <summary>
     ///     Lyric line spacing.
     /// </summary>
-    public int lyricLineSpacing
+    public int LyricLineSpacing
     {
-        get => GetSettings(nameof(lyricLineSpacing), 0);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricLineSpacing)] = value;
+        get => GetSettings(nameof(LyricLineSpacing), 0);
+        set => SetSettings(nameof(LyricLineSpacing), value);
     }
 
     /// <summary>
     ///     Translation font size.
     /// </summary>
-    public int translationSize
+    public int TranslationSize
     {
-        get => GetSettings(nameof(translationSize), 0);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(translationSize)] = value;
+        get => GetSettings(nameof(TranslationSize), 0);
+        set => SetSettings(nameof(TranslationSize), value);
     }
 
     /// <summary>
     ///     Romaji font size.
     /// </summary>
-    public int romajiSize
+    public int RomajiSize
     {
-        get => GetSettings(nameof(romajiSize), 15);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(romajiSize)] = value;
+        get => GetSettings(nameof(RomajiSize), 15);
+        set => SetSettings(nameof(RomajiSize), value);
     }
 
     /// <summary>
     ///     Lyric padding top ratio.
     /// </summary>
-    public int lyricPaddingTopRatio
+    public int LyricPaddingTopRatio
     {
-        get => GetSettings(nameof(lyricPaddingTopRatio), 30);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricPaddingTopRatio)] = value;
+        get => GetSettings(nameof(LyricPaddingTopRatio), 30);
+        set => SetSettings(nameof(LyricPaddingTopRatio), value);
     }
 
     /// <summary>
     ///     Lyric fading ratio.
     /// </summary>
-    public int lyricFadingRatio
+    public int LyricFadingRatio
     {
-        get => GetSettings(nameof(lyricFadingRatio), 5);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricFadingRatio)] = value;
+        get => GetSettings(nameof(LyricFadingRatio), 5);
+        set => SetSettings(nameof(LyricFadingRatio), value);
     }
 
     /// <summary>
     ///     Whether hot lyric starts on startup.
     /// </summary>
-    public bool hotlyricOnStartup
+    public bool HotLyricOnStartup
     {
-        get => GetSettings(nameof(hotlyricOnStartup), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(hotlyricOnStartup)] = value;
+        get => GetSettings(nameof(HotLyricOnStartup), false);
+        set => SetSettings(nameof(HotLyricOnStartup), value);
     }
 
     /// <summary>
     ///     Whether AMLL TTML database is enabled.
     /// </summary>
-    public bool enableAmllTtmlDb
+    public bool EnableAmllTtmlDb
     {
-        get => GetSettings(nameof(enableAmllTtmlDb), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(enableAmllTtmlDb)] = value;
+        get => GetSettings(nameof(EnableAmllTtmlDb), false);
+        set => SetSettings(nameof(EnableAmllTtmlDb), value);
     }
 
     /// <summary>
     ///     AMLL TTML mirror URL.
     /// </summary>
-    public string amllTtmlMirrorUrl
+    public string AmllTtmlMirrorUrl
     {
-        get => GetSettings(nameof(amllTtmlMirrorUrl),
+        get => GetSettings(nameof(AmllTtmlMirrorUrl),
             "https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/[NCM_ID].ttml");
-        set => ApplicationData.Current.LocalSettings.Values[nameof(amllTtmlMirrorUrl)] = value;
+        set => SetSettings(nameof(AmllTtmlMirrorUrl), value);
     }
 
     /// <summary>
     ///     Whether lyric render focus highlighting is enabled.
     /// </summary>
-    public bool lyricRenderFocusHighlighting
+    public bool LyricRenderFocusHighlighting
     {
-        get => GetSettings(nameof(lyricRenderFocusHighlighting), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderFocusHighlighting)] = value;
+        get => GetSettings(nameof(LyricRenderFocusHighlighting), true);
+        set => SetSettings(nameof(LyricRenderFocusHighlighting), value);
     }
 
     /// <summary>
     ///     Lyric render width ratio.
     /// </summary>
-    public int lyricRenderWidthRatio
+    public int LyricRenderWidthRatio
     {
-        get => GetSettings(nameof(lyricRenderWidthRatio), 80);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderWidthRatio)] = value;
+        get => GetSettings(nameof(LyricRenderWidthRatio), 80);
+        set => SetSettings(nameof(LyricRenderWidthRatio), value);
     }
 
     /// <summary>
     ///     Whether lyric render transliteration scanning is enabled.
     /// </summary>
-    public bool lyricRenderTransliterationScanning
+    public bool LyricRenderTransliterationScanning
     {
-        get => GetSettings(nameof(lyricRenderTransliterationScanning), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderTransliterationScanning)] = value;
+        get => GetSettings(nameof(LyricRenderTransliterationScanning), true);
+        set => SetSettings(nameof(LyricRenderTransliterationScanning), value);
     }
 
     /// <summary>
     ///     Whether lyric render simple line scanning is enabled.
     /// </summary>
-    public bool lyricRenderSimpleLineScanning
+    public bool LyricRenderSimpleLineScanning
     {
-        get => GetSettings(nameof(lyricRenderSimpleLineScanning), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderSimpleLineScanning)] = value;
+        get => GetSettings(nameof(LyricRenderSimpleLineScanning), false);
+        set => SetSettings(nameof(LyricRenderSimpleLineScanning), value);
     }
 
     /// <summary>
     ///     Lyric render scan style.
     /// </summary>
-    public LyricScanStyle lyricRenderScanStyle
+    public LyricScanStyle LyricRenderScanStyle
     {
         get
         {
-            var value = GetSettings(nameof(lyricRenderScanStyle), (int)LyricScanStyle.RectReveal);
+            var value = GetSettings(nameof(LyricRenderScanStyle), (int)LyricScanStyle.RectReveal);
             return Enum.IsDefined(typeof(LyricScanStyle), value)
                 ? (LyricScanStyle)value
                 : LyricScanStyle.RectReveal;
         }
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderScanStyle)] = (int)value;
+        set => SetSettings(nameof(LyricRenderScanStyle), (int)value);
     }
 
     /// <summary>
     ///     Whether lyric render scale when focusing is enabled.
     /// </summary>
-    public bool lyricRenderScaleWhenFocusing
+    public bool LyricRenderScaleWhenFocusing
     {
-        get => GetSettings(nameof(lyricRenderScaleWhenFocusing), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderScaleWhenFocusing)] = value;
+        get => GetSettings(nameof(LyricRenderScaleWhenFocusing), true);
+        set => SetSettings(nameof(LyricRenderScaleWhenFocusing), value);
     }
 
     /// <summary>
     ///     Whether lyric render trasnform 3D when focusing is enabled.
     /// </summary>
-    public bool lyricRenderTransform3D
+    public bool LyricRenderTransform3D
     {
-        get => GetSettings(nameof(lyricRenderTransform3D), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderTransform3D)] = value;
+        get => GetSettings(nameof(LyricRenderTransform3D), false);
+        set => SetSettings(nameof(LyricRenderTransform3D), value);
     }
 
     /// <summary>
     ///     Whether lyric render blur is enabled.
     /// </summary>
-    public bool lyricRenderBlur
+    public bool LyricRenderBlur
     {
-        get => GetSettings(nameof(lyricRenderBlur), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderBlur)] = value;
+        get => GetSettings(nameof(LyricRenderBlur), true);
+        set => SetSettings(nameof(LyricRenderBlur), value);
     }
 
     /// <summary>
     ///     Whether lyric render fade is enabled.
     /// </summary>
-    public bool lyricRenderFade
+    public bool LyricRenderFade
     {
-        get => GetSettings(nameof(lyricRenderFade), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderFade)] = value;
+        get => GetSettings(nameof(LyricRenderFade), true);
+        set => SetSettings(nameof(LyricRenderFade), value);
     }
 
     /// <summary>
@@ -256,7 +264,7 @@ public class LyricSettings : SettingsBase
     public RollingCalculator LineRollingCalculator
     {
         get => GetSettings(nameof(LineRollingCalculator), RollingCalculator.ElasticEaseRollingCalculator);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(LineRollingCalculator)] = (int)value;
+        set => SetSettings(nameof(LineRollingCalculator), (int)value);
     }
 
     /// <summary>
@@ -265,64 +273,64 @@ public class LyricSettings : SettingsBase
     public bool LyricRendererDebugMode
     {
         get => GetSettings(nameof(LyricRendererDebugMode), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererDebugMode)] = value;
+        set => SetSettings(nameof(LyricRendererDebugMode), value);
     }
 
 #nullable enable
     /// <summary>
     ///     Pure lyric idle color override.
     /// </summary>
-    public Color? pureLyricIdleColor
+    public Color? PureLyricIdleColor
     {
         get
         {
-            var bytes = GetSettings<byte[]?>(nameof(pureLyricIdleColor), null);
+            var bytes = GetSettings<byte[]?>(nameof(PureLyricIdleColor), null);
             return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
         }
         set
         {
-            if (value.HasValue)
-                ApplicationData.Current.LocalSettings.Values[nameof(pureLyricIdleColor)] = new[]
-                    { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
-            else ApplicationData.Current.LocalSettings.Values[nameof(pureLyricIdleColor)] = null;
+            var bytes = value.HasValue
+                ? new[] { value.Value.A, value.Value.R, value.Value.G, value.Value.B }
+                : null;
+            SetSettings(nameof(PureLyricIdleColor), bytes, nameof(PureLyricIdleColor));
         }
     }
 
     /// <summary>
     ///     Pure lyric focusing color override.
     /// </summary>
-    public Color? pureLyricFocusingColor
+    public Color? PureLyricFocusingColor
     {
         get
         {
-            var bytes = GetSettings<byte[]?>(nameof(pureLyricFocusingColor), null);
+            var bytes = GetSettings<byte[]?>(nameof(PureLyricFocusingColor), null);
             return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
         }
         set
         {
-            if (value.HasValue)
-                ApplicationData.Current.LocalSettings.Values[nameof(pureLyricFocusingColor)] = new[]
-                    { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
-            else ApplicationData.Current.LocalSettings.Values[nameof(pureLyricFocusingColor)] = null;
+            var bytes = value.HasValue
+                ? new[] { value.Value.A, value.Value.R, value.Value.G, value.Value.B }
+                : null;
+            SetSettings(nameof(PureLyricFocusingColor), bytes, nameof(PureLyricFocusingColor));
         }
     }
 
     /// <summary>
     ///     Karaoke lyric focusing color override.
     /// </summary>
-    public Color? karaokLyricFocusingColor
+    public Color? KaraokeLyricFocusingColor
     {
         get
         {
-            var bytes = GetSettings<byte[]?>(nameof(karaokLyricFocusingColor), null);
+            var bytes = GetSettings<byte[]?>(nameof(KaraokeLyricFocusingColor), null);
             return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
         }
         set
         {
-            if (value.HasValue)
-                ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricFocusingColor)] = new[]
-                    { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
-            else ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricFocusingColor)] = null;
+            var bytes = value.HasValue
+                ? new[] { value.Value.A, value.Value.R, value.Value.G, value.Value.B }
+                : null;
+            SetSettings(nameof(KaraokeLyricFocusingColor), bytes, nameof(KaraokeLyricFocusingColor));
         }
     }
 #nullable restore
@@ -333,7 +341,7 @@ public class LyricSettings : SettingsBase
     public bool IsolationFullThrottle
     {
         get => GetSettings(nameof(IsolationFullThrottle), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(IsolationFullThrottle)] = value;
+        set => SetSettings(nameof(IsolationFullThrottle), value);
     }
 
     /// <summary>
@@ -342,7 +350,7 @@ public class LyricSettings : SettingsBase
     public double IsolationFPS
     {
         get => Math.Max(GetSettings(nameof(IsolationFPS), 60d), 60d);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(IsolationFPS)] = value;
+        set => SetSettings(nameof(IsolationFPS), value);
     }
 
     /// <summary>
@@ -351,7 +359,7 @@ public class LyricSettings : SettingsBase
     public float IsolationScale
     {
         get => GetSettings(nameof(IsolationScale), 1f);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(IsolationScale)] = value;
+        set => SetSettings(nameof(IsolationScale), value);
     }
 
     /// <summary>
@@ -360,6 +368,6 @@ public class LyricSettings : SettingsBase
     public bool IsolationLightWave
     {
         get => GetSettings(nameof(IsolationLightWave), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(IsolationLightWave)] = value;
+        set => SetSettings(nameof(IsolationLightWave), value);
     }
 }

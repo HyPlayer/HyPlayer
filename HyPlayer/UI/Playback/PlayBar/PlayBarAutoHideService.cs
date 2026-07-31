@@ -5,9 +5,9 @@ namespace HyPlayer.UI.Playback.PlayBar;
 
 public sealed class PlayBarAutoHideService : IPlayBarAutoHideService
 {
-    private readonly Setting _setting;
+    private readonly UISettings _setting;
 
-    public PlayBarAutoHideService(Setting setting)
+    public PlayBarAutoHideService(UISettings setting)
     {
         _setting = setting;
     }

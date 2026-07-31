@@ -661,7 +661,7 @@
                         CornerRadius="20"
                         IsEnabled="{x:Bind Btn_Share.IsEnabled, Mode=OneWay}"
                         ToolTipService.ToolTip="查看评论"
-                        Visibility="{x:Bind Mode=OneWay, Path=hy:XamlHelpers.Setting.notClearMode}">
+                        Visibility="{x:Bind Mode=OneWay, Path=UISettings.NotClearMode}">
                         <FontIcon Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}" Glyph="&#xE8F2;" />
                     </Button>
                     <Button
@@ -693,7 +693,7 @@
                         Margin="0"
                         HorizontalAlignment="Left"
                         BorderThickness="0"
-                        CornerRadius="{x:Bind hy:XamlHelpers.Setting.playBarMargin, Mode=OneWay, Converter={StaticResource PlayBarImageRadiusConverter}}"
+                        CornerRadius="{x:Bind UISettings.PlayBarMargin, Mode=OneWay, Converter={StaticResource PlayBarImageRadiusConverter}}"
                         IsTapEnabled="True"
                         PointerEntered="ImageContainer_OnPointerEntered"
                         PointerExited="ImageContainer_OnPointerExited"
@@ -1268,7 +1268,7 @@
                             Click="Btn_Comment_OnClick"
                             IsEnabled="{x:Bind Btn_Share.IsEnabled, Mode=OneWay}"
                             Text="查看评论"
-                            Visibility="{x:Bind hy:XamlHelpers.Setting.notClearMode, Mode=OneWay}">
+                            Visibility="{x:Bind UISettings.NotClearMode, Mode=OneWay}">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE8F2;" />
                             </MenuFlyoutItem.Icon>

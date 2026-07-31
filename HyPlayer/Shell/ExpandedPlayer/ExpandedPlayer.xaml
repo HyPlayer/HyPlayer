@@ -81,7 +81,7 @@
             x:Name="AlbumCoverDropShadow"
             BlurRadius="48"
             CornerRadius="16"
-            Opacity="{x:Bind _settings.expandedCoverShadowDepth, Converter={StaticResource ShadowConverter}}"
+            Opacity="{x:Bind _uiSettings.ExpandedCoverShadowDepth, Converter={StaticResource ShadowConverter}}"
             Offset="0, 4"
             Color="Black" />
     </Page.Resources>

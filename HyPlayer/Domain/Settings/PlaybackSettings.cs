@@ -9,8 +9,10 @@ namespace HyPlayer.Domain.Settings;
 /// <summary>
 ///     Settings related to audio playback, caching, and audio device configuration.
 /// </summary>
-public class PlaybackSettings : SettingsBase
+public partial class PlaybackSettings : SettingsBase
 {
+    protected override string SectionName => "playback";
+
     /// <summary>
     ///     Playback volume (0-100).
     /// </summary>
@@ -27,50 +29,33 @@ public class PlaybackSettings : SettingsBase
                 return 50;
             }
         }
-        set => ApplicationData.Current.LocalSettings.Values[nameof(Volume)] = value;
+        set => SetSettings(nameof(Volume), value);
     }
 
     /// <summary>
     ///     Audio quality rate (e.g. "exhigh", "hires").
     /// </summary>
-    public string audioRate
+    public string AudioRate
     {
-        get => GetSettings(nameof(audioRate), "exhigh");
-        set => ApplicationData.Current.LocalSettings.Values[nameof(audioRate)] = value;
+        get => GetSettings(nameof(AudioRate), "exhigh");
+        set => SetSettings(nameof(AudioRate), value);
     }
 
     /// <summary>Current track transition identifier (dir/gap/xfd).</summary>
     public string TransitionId
     {
-        get
-        {
-            var values = ApplicationData.Current.LocalSettings.Values;
-            if (values.TryGetValue(nameof(TransitionId), out var stored)
-                && stored is string id
-                && id is "dir" or "gap" or "xfd")
-            {
-                values.Remove("CrossFade");
-                return id;
-            }
-
-            var migrated = values.TryGetValue("CrossFade", out var legacy)
-                           && legacy is true
-                ? "xfd"
-                : "dir";
-            values[nameof(TransitionId)] = migrated;
-            values.Remove("CrossFade");
-            return migrated;
-        }
+        get => GetSettings(nameof(TransitionId), "dir");
         set
         {
             if (value is not ("dir" or "gap" or "xfd"))
                 throw new ArgumentOutOfRangeException(nameof(value));
 
-            var values = ApplicationData.Current.LocalSettings.Values;
-            values[nameof(TransitionId)] = value;
-            values.Remove("CrossFade");
+            if (SetSettings(nameof(TransitionId), value))
+                OnPropertyChanged(nameof(IsCrossFadeTransition));
         }
     }
+
+    public bool IsCrossFadeTransition => TransitionId == "xfd";
 
     /// <summary>
     ///     Duration of crossfade in seconds.
@@ -78,7 +63,7 @@ public class PlaybackSettings : SettingsBase
     public double CrossFadeTime
     {
         get => GetSettings(nameof(CrossFadeTime), 3d);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(CrossFadeTime)] = Math.Clamp(value, 3d, 10d);
+        set => SetSettings(nameof(CrossFadeTime), Math.Clamp(value, 3d, 10d));
     }
 
     /// <summary>
@@ -89,14 +74,13 @@ public class PlaybackSettings : SettingsBase
         get => GetSettings(nameof(EnableAudioGain), false);
         set
         {
-            ApplicationData.Current.LocalSettings.Values[nameof(EnableAudioGain)] = value;
+            if (!SetSettings(nameof(EnableAudioGain), value))
+                return;
+
             var player = Ioc.Default.GetService<AudioGraphPlayer>();
-            var state = Ioc.Default.GetService<PlaybackStateService>();
             if (player?.PrimaryPlaybackSource != null)
             {
-                if (value)
-                    player.SetPlaybackSourceOutputVolume(1, player.PrimaryPlaybackSource);
-                else player.SetPlaybackSourceOutputVolume(1, player.PrimaryPlaybackSource);
+                player.SetPlaybackSourceOutputVolume(1, player.PrimaryPlaybackSource);
             }
         }
     }
@@ -104,29 +88,29 @@ public class PlaybackSettings : SettingsBase
     /// <summary>
     ///     Whether audio caching is enabled.
     /// </summary>
-    public bool enableCache
+    public bool EnableCache
     {
-        get => GetSettings(nameof(enableCache), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(enableCache)] = value;
+        get => GetSettings(nameof(EnableCache), true);
+        set => SetSettings(nameof(EnableCache), value);
     }
 
     /// <summary>
     ///     Cache directory path.
     /// </summary>
-    public string cacheDir
+    public string CacheDirectory
     {
         get
         {
             try
             {
-                return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder.Path);
+                return GetSettings(nameof(CacheDirectory), ApplicationData.Current.LocalCacheFolder.Path);
             }
             catch
             {
                 return ApplicationData.Current.LocalCacheFolder.Path;
             }
         }
-        set => ApplicationData.Current.LocalSettings.Values[nameof(cacheDir)] = value;
+        set => SetSettings(nameof(CacheDirectory), value);
     }
 
     /// <summary>
@@ -134,11 +118,11 @@ public class PlaybackSettings : SettingsBase
     /// </summary>
     public string AudioRenderDevice
     {
-        get => GetSettings("AudioRenderDeviceID", "");
+        get => GetSettings("audio-render-device", "");
         set
         {
-            ApplicationData.Current.LocalSettings.Values["AudioRenderDeviceID"] = value;
-            _ = Ioc.Default.GetRequiredService<IPlaybackControlService>().InitializeAsync();
+            if (SetSettings("audio-render-device", value, nameof(AudioRenderDevice)))
+                _ = Ioc.Default.GetRequiredService<IPlaybackControlService>().InitializeAsync();
         }
     }
 
@@ -150,9 +134,11 @@ public class PlaybackSettings : SettingsBase
         get => GetSettings(nameof(EnableFFT), false);
         set
         {
-            ApplicationData.Current.LocalSettings.Values[nameof(EnableFFT)] = value;
-            var player = Ioc.Default.GetService<AudioGraphPlayer>();
-            player?.EnableFFTProcessing = value;
+            if (SetSettings(nameof(EnableFFT), value))
+            {
+                var player = Ioc.Default.GetService<AudioGraphPlayer>();
+                player?.EnableFFTProcessing = value;
+            }
         }
     }
 
@@ -162,7 +148,7 @@ public class PlaybackSettings : SettingsBase
     public string ActiveStrategyId
     {
         get => GetSettings(nameof(ActiveStrategyId), "seq");
-        set => ApplicationData.Current.LocalSettings.Values[nameof(ActiveStrategyId)] = value;
+        set => SetSettings(nameof(ActiveStrategyId), value);
     }
 
     // TODO(settings-applier): PlaybackSettings still applies several playback side effects directly

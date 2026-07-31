@@ -47,13 +47,13 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Style="{StaticResource BodyTextBlockStyle}"
-                            Text="{x:Bind NotificationText, Mode=OneWay}" />
+                            Text="{x:Bind ViewModel.NotificationText, Mode=OneWay}" />
                     </StackPanel>
 
                     <Grid Grid.Row="1">
                         <ListView
                             Name="ListBoxLocalMusicContainer"
-                            ItemsSource="{x:Bind localHyItems}"
+                            ItemsSource="{x:Bind ViewModel.LocalItems}"
                             SelectionChanged="ListBoxLocalMusicContainer_SelectionChanged"
                             SelectionMode="Single">
                             <ListView.ItemTemplate>

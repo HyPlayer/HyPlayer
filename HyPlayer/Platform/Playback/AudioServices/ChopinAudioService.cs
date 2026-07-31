@@ -27,11 +27,11 @@ public sealed class ChopinAudioService :
 {
     private readonly SemaphoreSlim _initializeLock = new(1, 1);
     private readonly IPlayer _player;
-    private readonly Setting _setting;
+    private readonly PlaybackSettings _setting;
     private readonly List<ChopinAudioTicket> _tickets = [];
     private readonly object _ticketSyncRoot = new();
 
-    public ChopinAudioService(IPlayer player, Setting setting)
+    public ChopinAudioService(IPlayer player, PlaybackSettings setting)
     {
         _player = player;
         _setting = setting;

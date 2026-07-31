@@ -83,7 +83,8 @@ public sealed partial class TestPage : Page
     private readonly IProviderAdditionalConfigurationProvidable _providerAdditionalConfiguration =
         Ioc.Default.GetRequiredService<IProviderAdditionalConfigurationProvidable>();
 
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly ApiSettings _apiSettings = Ioc.Default.GetRequiredService<ApiSettings>();
+    private readonly UISettings _uiSettings = Ioc.Default.GetRequiredService<UISettings>();
 
     private int _teachingTipIndex;
 
@@ -100,7 +101,7 @@ public sealed partial class TestPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        TbAdditionalApiParameters.Text = _setting.ApiAdditionalParametersJson;
+        TbAdditionalApiParameters.Text = _apiSettings.ApiAdditionalParametersJson;
     }
 
     private void TestTeachingTip_OnClick(object sender, RoutedEventArgs e)
@@ -198,7 +199,7 @@ public sealed partial class TestPage : Page
 
     private void DisablePopUpButton_Click(object sender, RoutedEventArgs e)
     {
-        _setting.DisablePopUp = true;
+        _uiSettings.DisablePopUp = true;
     }
 
     private void ForceGC_Click(object sender, RoutedEventArgs e)
@@ -211,7 +212,7 @@ public sealed partial class TestPage : Page
         try
         {
             using var _ = JsonDocument.Parse(TbAdditionalApiParameters.Text);
-            _setting.ApiAdditionalParametersJson = TbAdditionalApiParameters.Text;
+            _apiSettings.ApiAdditionalParametersJson = TbAdditionalApiParameters.Text;
             _providerAdditionalConfiguration.ImportAdditionalConfiguration(TbAdditionalApiParameters.Text);
             var authService = Ioc.Default.GetRequiredService<IAuthService>();
             authService.NotifyLoginCompleted();

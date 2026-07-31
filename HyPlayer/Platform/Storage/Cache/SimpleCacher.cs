@@ -20,7 +20,8 @@ public static class SimpleCacher
 
     public static async Task InitializeAsync()
     {
-        cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(Ioc.Default.GetRequiredService<Setting>()!.cacheDir);
+        cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(
+            Ioc.Default.GetRequiredService<PlaybackSettings>().CacheDirectory);
         // cacheFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("cache", CreationCollisionOption.OpenIfExists);
     }
 
@@ -28,7 +29,7 @@ public static class SimpleCacher
         TimeSpan? expiration = null, bool forceRefresh = false, bool forceUseCache = false,
         CancellationToken cancellationToken = default) where T : class
     {
-        if (!Ioc.Default.GetRequiredService<Setting>()!.enableApiCache) return await creator();
+        if (!Ioc.Default.GetRequiredService<ApiSettings>().EnableApiCache) return await creator();
 
         if (cacheFolder == null) await InitializeAsync();
         var type = cacheType.ToString();

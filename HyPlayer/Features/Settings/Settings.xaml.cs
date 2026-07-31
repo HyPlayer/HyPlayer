@@ -71,12 +71,19 @@ public sealed partial class Settings : Page
     private readonly IProviderNetworkConfigurationProvidable _providerNetworkConfiguration =
         Ioc.Default.GetRequiredService<IProviderNetworkConfigurationProvidable>();
 
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
     private int _elapse = 10;
 
     private bool isbyprogram;
+
+    public PlaybackSettings Playback { get; } = Ioc.Default.GetRequiredService<PlaybackSettings>();
+    public UISettings UI { get; } = Ioc.Default.GetRequiredService<UISettings>();
+    public ApiSettings Api { get; } = Ioc.Default.GetRequiredService<ApiSettings>();
+    public LyricSettings Lyric { get; } = Ioc.Default.GetRequiredService<LyricSettings>();
+    public LastFMSettings LastFM { get; } = Ioc.Default.GetRequiredService<LastFMSettings>();
+    public DownloadSettings Download { get; } = Ioc.Default.GetRequiredService<DownloadSettings>();
+    public LocalLibrarySettings LocalLibrary { get; } = Ioc.Default.GetRequiredService<LocalLibrarySettings>();
 
     public Settings()
     {
@@ -94,10 +101,10 @@ public sealed partial class Settings : Page
     {
         if (TransitionMode.SelectedValue is not string transitionId
             || transitionId is not ("dir" or "gap" or "xfd")
-            || transitionId == _setting.TransitionId)
+            || transitionId == Playback.TransitionId)
             return;
 
-        _setting.TransitionId = transitionId;
+        Playback.TransitionId = transitionId;
         _taskRunner.Forget(
             _playbackControl.SetTransitionAsync(transitionId),
             "change track transition");
@@ -108,22 +115,21 @@ public sealed partial class Settings : Page
         var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>();
         RomajiStatus.Header = kawazu.Converter == null ? "请下载Kawazu资源文件" : "可以转换";
         ButtonDownloadRomaji.Visibility = kawazu.Converter == null ? Visibility.Visible : Visibility.Collapsed;
-        if (_setting.audioRate.EndsWith('0') || _setting.downloadAudioRate.EndsWith('0'))
+        if (Playback.AudioRate.EndsWith('0') || Download.DownloadAudioRate.EndsWith('0'))
         {
-            _setting.audioRate = "exhigh";
-            _setting.downloadAudioRate = "hires";
+            Playback.AudioRate = "exhigh";
+            Download.DownloadAudioRate = "hires";
         }
         else
         {
             ComboBoxSongBr.SelectedIndex = ComboBoxSongBr.Items.IndexOf(ComboBoxSongBr.Items.First(t =>
-                t?.As<ComboBoxItem>().Tag.ToString() == _setting.audioRate));
+                t?.As<ComboBoxItem>().Tag.ToString() == Playback.AudioRate));
             ComboBoxSongDownloadBr.SelectedIndex = ComboBoxSongDownloadBr.Items.IndexOf(
                 ComboBoxSongDownloadBr.Items.First(t =>
-                    t?.As<ComboBoxItem>().Tag.ToString() == _setting.downloadAudioRate));
+                    t?.As<ComboBoxItem>().Tag.ToString() == Download.DownloadAudioRate));
         }
 
-        var localSettings = ApplicationData.Current.LocalSettings.Values;
-        TextBoxXREALIP.Text = localSettings["xRealIp"]?.ToString() ?? "";
+        TextBoxXREALIP.Text = Api.RealIp ?? "";
         var package = Package.Current;
         var packageId = package.Id;
         var version = packageId.Version;
@@ -239,8 +245,8 @@ public sealed partial class Settings : Page
     private void ButtonXREALIPSave_OnClick(object sender, RoutedEventArgs e)
     {
         var xRealIp = string.IsNullOrEmpty(TextBoxXREALIP.Text) ? null : TextBoxXREALIP.Text;
-        ApplicationData.Current.LocalSettings.Values["xRealIp"] = xRealIp;
-        _providerNetworkConfiguration.ConfigureClientNetwork(xRealIp, Setting.GetSettings("UseHttp", false));
+        Api.RealIp = xRealIp;
+        _providerNetworkConfiguration.ConfigureClientNetwork(xRealIp, Api.UseHttp);
     }
 
     private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)
@@ -254,7 +260,7 @@ public sealed partial class Settings : Page
         if (folder != null)
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("downloadFolder", folder);
-            _setting.downloadDir = folder.Path;
+            Download.DownloadDirectory = folder.Path;
         }
     }
 
@@ -269,7 +275,7 @@ public sealed partial class Settings : Page
         if (folder != null)
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("searchingFolder", folder);
-            _setting.searchingDir = folder.Path;
+            LocalLibrary.SearchDirectory = folder.Path;
         }
     }
 
@@ -283,7 +289,7 @@ public sealed partial class Settings : Page
     private void ControlSoundChecked(object sender, RoutedEventArgs e)
     {
         if (isbyprogram) return;
-        _setting.uiSound = true;
+        UI.UISound = true;
         ElementSoundPlayer.State = ElementSoundPlayerState.On;
         ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.On;
     }
@@ -291,7 +297,7 @@ public sealed partial class Settings : Page
     private void ControlSoundUnChecked(object sender, RoutedEventArgs e)
     {
         if (isbyprogram) return;
-        _setting.uiSound = false;
+        UI.UISound = false;
         ElementSoundPlayer.State = ElementSoundPlayerState.Off;
         ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
     }
@@ -315,7 +321,7 @@ public sealed partial class Settings : Page
     {
         if (isbyprogram) return;
         var size = (int)SliderAlbumShadowDepth.Value;
-        _setting.expandedCoverShadowDepth = Math.Max(0, size);
+        UI.ExpandedCoverShadowDepth = Math.Max(0, size);
     }
 
 
@@ -330,7 +336,7 @@ public sealed partial class Settings : Page
         if (folder != null)
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("cacheFolder", folder);
-            _setting.cacheDir = folder.Path;
+            Playback.CacheDirectory = folder.Path;
         }
     }
 
@@ -373,7 +379,7 @@ public sealed partial class Settings : Page
                     return;
                 }
 
-                _setting.hotlyricOnStartup = false;
+                Lyric.HotLyricOnStartup = false;
             }
             else
             {
@@ -395,12 +401,12 @@ public sealed partial class Settings : Page
             new Point(point.X + BtnChangeAudioRenderDevice.ActualWidth,
                 point.Y + BtnChangeAudioRenderDevice.ActualHeight));
         var device = await devicePicker.PickSingleDeviceAsync(rect);
-        if (device != null) _setting.AudioRenderDevice = device.Id;
+        if (device != null) Playback.AudioRenderDevice = device.Id;
     }
 
     private void BtnChangeToDefaultAudioRenderDevice_Click(object sender, RoutedEventArgs e)
     {
-        _setting.AudioRenderDevice = "";
+        Playback.AudioRenderDevice = "";
     }
 
     private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
@@ -412,14 +418,14 @@ public sealed partial class Settings : Page
     {
         if (isbyprogram) return;
         var selectedItem = sender?.As<ComboBox>().SelectedItem?.As<ComboBoxItem>();
-        _setting.audioRate = selectedItem.Tag.ToString();
+        Playback.AudioRate = selectedItem.Tag.ToString();
     }
 
     private void ComboBoxSongDownloadBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (isbyprogram) return;
         var selectedItem = sender?.As<ComboBox>().SelectedItem?.As<ComboBoxItem>();
-        _setting.downloadAudioRate = selectedItem.Tag.ToString();
+        Download.DownloadAudioRate = selectedItem.Tag.ToString();
     }
 
     private void CheckCanaryChannelButton_Click(object sender, RoutedEventArgs e)
@@ -429,32 +435,32 @@ public sealed partial class Settings : Page
 
     private void ResetPureLyricIdleColor(object sender, RoutedEventArgs e)
     {
-        _setting.pureLyricIdleColor = null;
+        Lyric.PureLyricIdleColor = null;
     }
 
     private void ConfirmPureLyricIdleColor(object sender, RoutedEventArgs e)
     {
-        _setting.pureLyricIdleColor = PureLyricIdle.SelectedColor;
+        Lyric.PureLyricIdleColor = PureLyricIdle.SelectedColor;
     }
 
     private void ResetPureLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        _setting.pureLyricFocusingColor = null;
+        Lyric.PureLyricFocusingColor = null;
     }
 
     private void ConfirmPureLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        _setting.pureLyricFocusingColor = PureLyricFocusing.SelectedColor;
+        Lyric.PureLyricFocusingColor = PureLyricFocusing.SelectedColor;
     }
 
     private void ResetKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        _setting.karaokLyricFocusingColor = null;
+        Lyric.KaraokeLyricFocusingColor = null;
     }
 
     private void ConfirmKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        _setting.karaokLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
+        Lyric.KaraokeLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
     }
 
     private async void AboutRomaji_Click(object sender, RoutedEventArgs e)
@@ -475,7 +481,7 @@ public sealed partial class Settings : Page
     private async void BtnClearCache_Click(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ClearAllCacheAsync();
-        var folder = await StorageFolder.GetFolderFromPathAsync(_setting!.cacheDir);
+        var folder = await StorageFolder.GetFolderFromPathAsync(Playback.CacheDirectory);
         var files = await folder.GetFilesAsync();
         foreach (var file in files)
             if (file.FileType == ".flac" || file.FileType == ".mp3")
@@ -484,7 +490,7 @@ public sealed partial class Settings : Page
 
     private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
     {
-        _setting.LastFMSession = null;
+        LastFM.LastFMSession = null;
     }
 
     private void LoginLastFMAccount_Click(object sender, RoutedEventArgs e)

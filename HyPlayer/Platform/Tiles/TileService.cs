@@ -16,10 +16,10 @@ namespace HyPlayer.Platform.Tiles;
 
 public class TileService : ITileService
 {
-    private readonly Setting _setting;
+    private readonly UISettings _setting;
     private readonly TileUpdater _tileUpdater = TileUpdateManager.CreateTileUpdaterForApplication();
 
-    public TileService(Setting setting)
+    public TileService(UISettings setting)
     {
         _setting = setting;
         _tileUpdater.EnableNotificationQueue(true);

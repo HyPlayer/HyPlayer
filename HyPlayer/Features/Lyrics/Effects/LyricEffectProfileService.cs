@@ -68,14 +68,14 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
     private readonly SemaphoreSlim _initializeLock = new(1, 1);
     private readonly ILyricRenderOperationRegistry _registry;
 
-    private readonly Setting _settings;
+    private readonly LyricSettings _settings;
     private readonly object _stateLock = new();
     private LyricEffectProfileDocument _committedDocument;
     private CompiledLyricEffectProfile _committedProfile;
     private CompiledLyricEffectProfile _effectiveProfile;
     private bool _initialized;
 
-    public LyricEffectProfileService(Setting settings, ILyricRenderOperationRegistry registry)
+    public LyricEffectProfileService(LyricSettings settings, ILyricRenderOperationRegistry registry)
     {
         _settings = settings;
         _registry = registry;
@@ -306,13 +306,13 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
     private LyricEffectProfileDocument CreateLegacyMigrationProfile()
     {
         var profile = LyricEffectPresets.CreateDefaultProfile();
-        SetEnabled(profile, LyricBuiltInOperationTypes.Glow, _settings.lyricRenderFocusHighlighting);
-        SetEnabled(profile, LyricBuiltInOperationTypes.Opacity, _settings.lyricRenderFade);
-        SetEnabled(profile, LyricBuiltInOperationTypes.GaussianBlur, _settings.lyricRenderBlur);
-        SetEnabled(profile, LyricBuiltInOperationTypes.Transform2D, _settings.lyricRenderScaleWhenFocusing);
-        SetEnabled(profile, LyricBuiltInOperationTypes.Transform3D, _settings.lyricRenderTransform3D);
+        SetEnabled(profile, LyricBuiltInOperationTypes.Glow, _settings.LyricRenderFocusHighlighting);
+        SetEnabled(profile, LyricBuiltInOperationTypes.Opacity, _settings.LyricRenderFade);
+        SetEnabled(profile, LyricBuiltInOperationTypes.GaussianBlur, _settings.LyricRenderBlur);
+        SetEnabled(profile, LyricBuiltInOperationTypes.Transform2D, _settings.LyricRenderScaleWhenFocusing);
+        SetEnabled(profile, LyricBuiltInOperationTypes.Transform3D, _settings.LyricRenderTransform3D);
 
-        var ratio = _settings.lyricFadingRatio.ToString(CultureInfo.InvariantCulture);
+        var ratio = _settings.LyricFadingRatio.ToString(CultureInfo.InvariantCulture);
         var distance = $"fx.Clamp(0.6 - line.IndexDistance / (10 - {ratio} / 10), 0, 1)";
         var opacity = profile.Operations.First(item => item.TypeId == LyricBuiltInOperationTypes.Opacity);
         opacity.Parameters["opacity"].Expression =

@@ -40,7 +40,7 @@ public sealed partial class MusicCloudPage : Page
         Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
 
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly ApiSettings _setting = Ioc.Default.GetRequiredService<ApiSettings>();
 
     private readonly IUserLibraryProvidable _userLibraryProvider =
         Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
@@ -67,7 +67,7 @@ public sealed partial class MusicCloudPage : Page
         set => SetValue(CloudContainerProperty, value);
     }
 
-    public bool GreedyLoad => _setting.greedlyLoadPlayContainerItems;
+    public bool GreedyLoad => _setting.GreedilyLoadPlayContainerItems;
     public List<ProvidableItemAction> ItemActions { get; }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)

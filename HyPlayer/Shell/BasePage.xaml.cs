@@ -39,7 +39,8 @@ public sealed partial class BasePage : Page
 
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly IPlaybackControlService _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly HyPlayer.Domain.Settings.UISettings _setting =
+        Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
     private readonly IShellHostStateService _shellHost = Ioc.Default.GetRequiredService<IShellHostStateService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly ITeachingTipService _teachingTip = Ioc.Default.GetRequiredService<ITeachingTipService>();

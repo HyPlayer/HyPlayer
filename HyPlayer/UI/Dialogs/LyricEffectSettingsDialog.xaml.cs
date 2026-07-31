@@ -17,6 +17,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.WinUI.Controls;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.LyricEffects.Models;
@@ -34,7 +35,7 @@ namespace HyPlayer.UI.Dialogs;
 [GeneratedBindableCustomProperty]
 public partial class LyricEffectOperationItem(
     LyricRenderOperationDefinition definition,
-    LyricRenderOperationDescriptor? descriptor) : INotifyPropertyChanged
+    LyricRenderOperationDescriptor? descriptor) : ObservableObject
 {
     private string _status = string.Empty;
 
@@ -89,15 +90,8 @@ public partial class LyricEffectOperationItem(
     public string Status
     {
         get => _status;
-        set
-        {
-            if (_status == value) return;
-            _status = value;
-            OnPropertyChanged();
-        }
+        set => SetProperty(ref _status, value);
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     public void UpdateDescriptor(LyricRenderOperationDescriptor descriptor)
     {
@@ -109,11 +103,6 @@ public partial class LyricEffectOperationItem(
         OnPropertyChanged(nameof(CanToggle));
         OnPropertyChanged(nameof(CanDuplicate));
         OnPropertyChanged(nameof(CanDelete));
-    }
-
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
 

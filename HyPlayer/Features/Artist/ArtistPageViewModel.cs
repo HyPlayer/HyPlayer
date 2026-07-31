@@ -28,7 +28,6 @@ public partial class ArtistPageViewModel : ObservableObject
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
-    private readonly Setting _setting;
     private Task<List<ContainerBase>> _artistSubContainersTask;
     private string _loadedArtistId = string.Empty;
     private PersonBase _providerArtist;
@@ -36,12 +35,10 @@ public partial class ArtistPageViewModel : ObservableObject
     public ArtistPageViewModel(
         IProvidableItemProvidable itemProvider,
         IProviderKnownTypeIds knownTypeIds,
-        Setting setting,
         INotificationService notification)
     {
         _itemProvider = itemProvider;
         _knownTypeIds = knownTypeIds;
-        _setting = setting;
         _notification = notification;
     }
 

@@ -5,15 +5,23 @@ namespace HyPlayer.Domain.Settings;
 /// <summary>
 ///     Settings related to API configuration, proxy, and network options.
 /// </summary>
-public class ApiSettings : SettingsBase
+public partial class ApiSettings : SettingsBase
 {
+    protected override string SectionName => "api";
+
+    public string? RealIp
+    {
+        get => GetSettings<string?>(nameof(RealIp), null);
+        set => SetSettings(nameof(RealIp), value);
+    }
+
     /// <summary>
     ///     Whether proxy is enabled.
     /// </summary>
     public bool EnableProxy
     {
         get => GetSettings(nameof(EnableProxy), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(EnableProxy)] = value;
+        set => SetSettings(nameof(EnableProxy), value);
     }
 
     /// <summary>
@@ -22,8 +30,7 @@ public class ApiSettings : SettingsBase
     public string ApiAdditionalParametersJson
     {
         get => GetSettings("ApiAdditionalParameters", "{}");
-        set => ApplicationData.Current.LocalSettings.Values["ApiAdditionalParameters"] =
-            string.IsNullOrWhiteSpace(value) ? "{}" : value;
+        set => SetSettings("ApiAdditionalParameters", string.IsNullOrWhiteSpace(value) ? "{}" : value);
     }
 
     /// <summary>
@@ -32,7 +39,7 @@ public class ApiSettings : SettingsBase
     public bool UseHttp
     {
         get => GetSettings(nameof(UseHttp), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(UseHttp)] = value;
+        set => SetSettings(nameof(UseHttp), value);
     }
 
     /// <summary>
@@ -41,7 +48,7 @@ public class ApiSettings : SettingsBase
     public bool UseHttpWhenGettingSongs
     {
         get => GetSettings(nameof(UseHttpWhenGettingSongs), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(UseHttpWhenGettingSongs)] = value;
+        set => SetSettings(nameof(UseHttpWhenGettingSongs), value);
     }
 
     /// <summary>
@@ -50,34 +57,34 @@ public class ApiSettings : SettingsBase
     public bool EnableCheckTokenApi
     {
         get => GetSettings(nameof(EnableCheckTokenApi), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(EnableCheckTokenApi)] = value;
+        set => SetSettings(nameof(EnableCheckTokenApi), value);
     }
 
     /// <summary>
     ///     Whether API caching is enabled.
     /// </summary>
-    public bool enableApiCache
+    public bool EnableApiCache
     {
-        get => GetSettings(nameof(enableApiCache), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(enableApiCache)] = value;
+        get => GetSettings(nameof(EnableApiCache), false);
+        set => SetSettings(nameof(EnableApiCache), value);
     }
 
     /// <summary>
     ///     Whether to lazily get song URLs.
     /// </summary>
-    public bool songUrlLazyGet
+    public bool SongUrlLazyGet
     {
-        get => GetSettings(nameof(songUrlLazyGet), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(songUrlLazyGet)] = value;
+        get => GetSettings(nameof(SongUrlLazyGet), true);
+        set => SetSettings(nameof(SongUrlLazyGet), value);
     }
 
     /// <summary>
     ///     Whether to greedily load play container items.
     /// </summary>
-    public bool greedlyLoadPlayContainerItems
+    public bool GreedilyLoadPlayContainerItems
     {
-        get => GetSettings(nameof(greedlyLoadPlayContainerItems), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(greedlyLoadPlayContainerItems)] = value;
+        get => GetSettings(nameof(GreedilyLoadPlayContainerItems), false);
+        set => SetSettings(nameof(GreedilyLoadPlayContainerItems), value);
     }
 
     /// <summary>
@@ -86,24 +93,24 @@ public class ApiSettings : SettingsBase
     public bool AutoAddGreedilyLoadedSongsToPlayList
     {
         get => GetSettings(nameof(AutoAddGreedilyLoadedSongsToPlayList), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(AutoAddGreedilyLoadedSongsToPlayList)] = value;
+        set => SetSettings(nameof(AutoAddGreedilyLoadedSongsToPlayList), value);
     }
 
     /// <summary>
     ///     Whether to skip VIP songs during playback.
     /// </summary>
-    public bool jumpVipSongPlaying
+    public bool JumpVipSongPlaying
     {
-        get => GetSettings(nameof(jumpVipSongPlaying), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(jumpVipSongPlaying)] = value;
+        get => GetSettings(nameof(JumpVipSongPlaying), false);
+        set => SetSettings(nameof(JumpVipSongPlaying), value);
     }
 
     /// <summary>
     ///     Whether to skip VIP songs during download.
     /// </summary>
-    public bool jumpVipSongDownloading
+    public bool JumpVipSongDownloading
     {
-        get => GetSettings(nameof(jumpVipSongDownloading), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(jumpVipSongDownloading)] = value;
+        get => GetSettings(nameof(JumpVipSongDownloading), false);
+        set => SetSettings(nameof(JumpVipSongDownloading), value);
     }
 }

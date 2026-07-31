@@ -9,32 +9,40 @@ namespace HyPlayer.Shell.Playback;
 
 public static class ExpandedPlayerThemeFactory
 {
-    public static PlaybackThemeSnapshot Create(Setting settings, Color? albumMainColor, bool isBright)
+    public static PlaybackThemeSnapshot Create(
+        UISettings uiSettings,
+        LyricSettings lyricSettings,
+        Color? albumMainColor,
+        bool isBright)
     {
-        if (settings.lyricColor != LyricColor.FollowCover || albumMainColor is null)
+        if (uiSettings.LyricColor != LyricColor.FollowCover || albumMainColor is null)
             return isBright
-                ? Create(settings, Color.FromArgb(255, 0, 0, 0), Color.FromArgb(114, 0, 0, 0), isBright)
-                : Create(settings, Color.FromArgb(255, 255, 255, 255), Color.FromArgb(66, 255, 255, 255), isBright);
+                ? Create(lyricSettings, Color.FromArgb(255, 0, 0, 0), Color.FromArgb(114, 0, 0, 0), isBright)
+                : Create(lyricSettings, Color.FromArgb(255, 255, 255, 255), Color.FromArgb(66, 255, 255, 255), isBright);
 
-        if (settings.expandedPlayerBackgroundType == BackgroundType.CoverBlur || isBright)
+        if (uiSettings.ExpandedPlayerBackgroundType == BackgroundType.CoverBlur || isBright)
         {
             var accentColor = AdjustBrightness(albumMainColor.Value, -0.3f);
             var idleColor = accentColor;
             idleColor.A = 150;
-            return Create(settings, accentColor, idleColor, isBright);
+            return Create(lyricSettings, accentColor, idleColor, isBright);
         }
 
         var darkAccentColor = AdjustBrightness(albumMainColor.Value, 0.3f);
         var darkIdleColor = AdjustBrightness(darkAccentColor, -0.15f);
         darkIdleColor.A = 150;
-        return Create(settings, darkAccentColor, darkIdleColor, isBright);
+        return Create(lyricSettings, darkAccentColor, darkIdleColor, isBright);
     }
 
-    private static PlaybackThemeSnapshot Create(Setting settings, Color accentColor, Color idleColor, bool isBright)
+    private static PlaybackThemeSnapshot Create(
+        LyricSettings settings,
+        Color accentColor,
+        Color idleColor,
+        bool isBright)
     {
-        var accentBrush = new SolidColorBrush(settings.pureLyricFocusingColor ?? accentColor);
-        var idleBrush = new SolidColorBrush(settings.pureLyricIdleColor ?? idleColor);
-        var karaokeAccent = settings.karaokLyricFocusingColor ?? accentBrush.Color;
+        var accentBrush = new SolidColorBrush(settings.PureLyricFocusingColor ?? accentColor);
+        var idleBrush = new SolidColorBrush(settings.PureLyricIdleColor ?? idleColor);
+        var karaokeAccent = settings.KaraokeLyricFocusingColor ?? accentBrush.Color;
         return new PlaybackThemeSnapshot(accentBrush, idleBrush, karaokeAccent, isBright);
     }
 

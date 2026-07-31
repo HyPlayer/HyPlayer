@@ -31,7 +31,8 @@ internal sealed class PersonalFM
     private readonly PlaybackStateService _playbackState;
 
     private readonly PlayCoreBase _playCore;
-    private readonly Setting _setting;
+    private readonly PlaybackSettings _playbackSettings;
+    private readonly LastFMSettings _lastFmSettings;
     private readonly IProviderSpecialContainerTypeIds _specialContainerTypeIds;
     private bool _isLoadingNextTrack;
     private string _previousStrategyId = string.Empty;
@@ -43,7 +44,8 @@ internal sealed class PersonalFM
         _itemProvider = Ioc.Default.GetRequiredService<IProvidableItemProvidable>();
         _specialContainerTypeIds = Ioc.Default.GetRequiredService<IProviderSpecialContainerTypeIds>();
         _playbackState = Ioc.Default.GetRequiredService<PlaybackStateService>();
-        _setting = Ioc.Default.GetRequiredService<Setting>();
+        _playbackSettings = Ioc.Default.GetRequiredService<PlaybackSettings>();
+        _lastFmSettings = Ioc.Default.GetRequiredService<LastFMSettings>();
     }
 
     private bool IsActiveSession => ReferenceEquals(_instance, this) && _playbackState.IsInFm;
@@ -58,7 +60,7 @@ internal sealed class PersonalFM
         fm._control.ClearQueueAsync().SafeFireAndForget();
         fm._control.SetPlayModeAsync("pfm").SafeFireAndForget();
         fm._playbackState.ActiveStrategyId = "pfm";
-        fm._setting.ActiveStrategyId = "pfm";
+        fm._playbackSettings.ActiveStrategyId = "pfm";
         fm._playbackState.IsInFm = true;
         fm.LoadNextTrackAsync().SafeFireAndForget();
     }
@@ -114,7 +116,7 @@ internal sealed class PersonalFM
     private async Task AppendMoreTracksCoreAsync()
     {
         var currentSong = _playbackState.NowPlayingProviderItem;
-        var songs = _setting.useAiDj && currentSong is not null
+        var songs = _lastFmSettings.UseAiDj && currentSong is not null
             ? await LoadAiDjAsync(currentSong).ConfigureAwait(false)
             : await LoadPersonalFmAsync().ConfigureAwait(false);
 
@@ -133,7 +135,7 @@ internal sealed class PersonalFM
 
         _instance._control.SetPlayModeAsync(_instance._previousStrategyId).SafeFireAndForget();
         _instance._playbackState.ActiveStrategyId = _instance._previousStrategyId;
-        _instance._setting.ActiveStrategyId = _instance._previousStrategyId;
+        _instance._playbackSettings.ActiveStrategyId = _instance._previousStrategyId;
         _instance = null;
     }
 

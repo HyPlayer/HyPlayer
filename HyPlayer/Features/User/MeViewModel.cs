@@ -21,14 +21,14 @@ public partial class MeViewModel : ObservableObject
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
-    private readonly Setting _settings;
+    private readonly UISettings _settings;
     private Task _initializeTask;
     private string _initializingUserId = string.Empty;
     private string _loadedUserId = string.Empty;
     private Task _loadPlaylistTask;
     private PersonBase _providerUser;
 
-    public MeViewModel(IProvidableItemProvidable itemProvider, IProviderKnownTypeIds knownTypeIds, Setting settings,
+    public MeViewModel(IProvidableItemProvidable itemProvider, IProviderKnownTypeIds knownTypeIds, UISettings settings,
         INotificationService notification)
     {
         _itemProvider = itemProvider;
@@ -111,7 +111,7 @@ public partial class MeViewModel : ObservableObject
                 var description = valuePlaylist is IHasDescription descriptionProvider
                     ? descriptionProvider.Description
                     : null;
-                var coverLink = _settings.noImage ? null : await TryGetCoverLinkAsync(valuePlaylist);
+                var coverLink = _settings.NoImage ? null : await TryGetCoverLinkAsync(valuePlaylist);
                 var isOwned = valuePlaylist is IHasLibraryState libraryState
                     ? libraryState.IsOwnedByCurrentUser
                     : owner?.ActualId == User.ActualId;
@@ -126,7 +126,7 @@ public partial class MeViewModel : ObservableObject
                             Order = subListIdx++,
                             Route = new AppRoute.Playlist($"{valuePlaylist.ActualId}"),
                             PlayResource = new MusicResource.Playlist($"{valuePlaylist.ActualId}"),
-                            ShowCover = !_settings.noImage,
+                            ShowCover = !_settings.NoImage,
                             Title = valuePlaylist.Name,
                             CanPlay = true
                         }
@@ -142,7 +142,7 @@ public partial class MeViewModel : ObservableObject
                             Order = subListIdx++,
                             Route = new AppRoute.Playlist($"{valuePlaylist.ActualId}"),
                             PlayResource = new MusicResource.Playlist($"{valuePlaylist.ActualId}"),
-                            ShowCover = !_settings.noImage,
+                            ShowCover = !_settings.NoImage,
                             Title = valuePlaylist.Name,
                             CanPlay = true
                         }
@@ -176,7 +176,7 @@ public partial class MeViewModel : ObservableObject
             ActualId = user.ActualId,
             Name = user.Name,
             Description = user is IHasDescription descriptionProvider ? descriptionProvider.Description : null,
-            AvatarUrl = _settings.noImage ? null : await TryGetCoverLinkAsync(user)
+            AvatarUrl = _settings.NoImage ? null : await TryGetCoverLinkAsync(user)
         };
     }
 

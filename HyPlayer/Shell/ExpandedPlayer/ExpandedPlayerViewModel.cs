@@ -36,7 +36,9 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
         PlaybackStateService state,
         ILyricService lyricService,
         IUIThreadDispatcher uiThreadDispatcher,
-        Setting settings,
+        PlaybackSettings playbackSettings,
+        UISettings uiSettings,
+        LyricSettings lyricSettings,
         IAuthService authService)
     {
         PlayCore = playCore;
@@ -44,7 +46,9 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
         State = state;
         LyricService = lyricService;
         _uiThreadDispatcher = uiThreadDispatcher;
-        Settings = settings;
+        PlaybackSettings = playbackSettings;
+        UISettings = uiSettings;
+        LyricSettings = lyricSettings;
         _authService = authService;
         SyncFromState();
         _stateChangedListener = new WeakEventListener<ExpandedPlayerViewModel, object?, PropertyChangedEventArgs>(this)
@@ -117,7 +121,11 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
 
     public ILyricService LyricService { get; }
 
-    public Setting Settings { get; }
+    public PlaybackSettings PlaybackSettings { get; }
+
+    public UISettings UISettings { get; }
+
+    public LyricSettings LyricSettings { get; }
 
     public void Dispose()
     {
@@ -156,7 +164,7 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
             _ => "seq"
         };
         await Control.SetPlayModeAsync(next);
-        Settings.ActiveStrategyId = next;
+        PlaybackSettings.ActiveStrategyId = next;
         ActiveStrategyId = next;
     }
 

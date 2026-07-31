@@ -26,6 +26,7 @@ public class AuthService : IAuthService
 {
     private readonly IProviderAdditionalConfigurationProvidable _additionalConfigurationProvider;
     private readonly IAuthenticationProvidable _authenticationProvider;
+    private readonly IAuthSessionStore _authSessionStore;
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly IProvableItemLikable _likableProvider;
@@ -49,7 +50,8 @@ public class AuthService : IAuthService
         INotificationService notification,
         IBackgroundTaskRunner taskRunner,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier,
-        IUserLibraryStateService userLibraryState)
+        IUserLibraryStateService userLibraryState,
+        IAuthSessionStore authSessionStore)
     {
         _state = state;
         _authenticationProvider = authenticationProvider;
@@ -62,6 +64,7 @@ public class AuthService : IAuthService
         _taskRunner = taskRunner;
         _playlistCollectionChangeNotifier = playlistCollectionChangeNotifier;
         _userLibraryState = userLibraryState;
+        _authSessionStore = authSessionStore;
     }
 
     public event EventHandler? LoginCompleted;
@@ -93,7 +96,7 @@ public class AuthService : IAuthService
     {
         try
         {
-            var sessionValues = Setting.LoadCookies();
+            var sessionValues = _authSessionStore.Load();
             if (sessionValues.Count == 0 && !_additionalConfigurationProvider.HasAdditionalConfiguration)
                 return new AuthResult(false);
 
@@ -198,7 +201,7 @@ public class AuthService : IAuthService
         if (result is not { IsAuthenticated: true })
             return new AuthResult(false);
 
-        Setting.SaveCookies(await _authenticationProvider.ExportSessionAsync());
+        _authSessionStore.Save(await _authenticationProvider.ExportSessionAsync());
 
         var providerUser = await TryGetCurrentProviderUserAsync(result);
         CurrentUser = providerUser is not null
@@ -230,7 +233,7 @@ public class AuthService : IAuthService
         if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("Cookies", out var container))
             container.Values.Clear();
         await _authenticationProvider.LogoutAsync();
-        Setting.SaveCookies(await _authenticationProvider.ExportSessionAsync());
+        _authSessionStore.Save(await _authenticationProvider.ExportSessionAsync());
 
         try
         {

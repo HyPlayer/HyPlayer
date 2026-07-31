@@ -49,7 +49,8 @@ public sealed partial class RadioPage : Page
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IPlaybackQueueLoader _queueLoader = Ioc.Default.GetRequiredService<IPlaybackQueueLoader>();
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly ApiSettings _apiSettings = Ioc.Default.GetRequiredService<ApiSettings>();
+    private readonly UISettings _uiSettings = Ioc.Default.GetRequiredService<UISettings>();
     private List<SingleSongBase> _allPrograms;
     private List<SingleSongBase> _ascendingPrograms;
     private PersonBase _host;
@@ -114,7 +115,7 @@ public sealed partial class RadioPage : Page
         TextBlockDesc.Text = RadioChannel is IHasDescription descriptionProvider
             ? descriptionProvider.Description
             : string.Empty;
-        if (_setting.noImage)
+        if (_uiSettings.NoImage)
         {
             ImageRect.ImageSource = null;
         }
@@ -129,7 +130,7 @@ public sealed partial class RadioPage : Page
         _allPrograms = null;
         CurrentQueueScope = SongListQueueScope.Radio(RadioChannel.ActualId);
         CurrentContainer = RadioChannel;
-        SongContainer.GreedyLoad = _setting.greedlyLoadPlayContainerItems;
+        SongContainer.GreedyLoad = _apiSettings.GreedilyLoadPlayContainerItems;
     }
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)

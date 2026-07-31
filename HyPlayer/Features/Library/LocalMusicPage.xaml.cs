@@ -2,10 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -34,7 +31,7 @@ namespace HyPlayer.Features.Library;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
+public sealed partial class LocalMusicPage : Page
 {
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
     private readonly CancellationToken _cancellationToken;
@@ -44,12 +41,12 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         Ioc.Default.GetRequiredService<ILocalFileImportService>();
 
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly LocalLibrarySettings _setting = Ioc.Default.GetRequiredService<LocalLibrarySettings>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly CancellationTokenSource cancellationTokenSource = new();
-    private readonly ObservableCollection<LocalSong> localHyItems = new();
-    private string _notificationText;
     private Task CurrentFileScanTask;
+
+    public LocalMusicPageViewModel ViewModel { get; } = new();
 
     public LocalMusicPage()
     {
@@ -57,25 +54,13 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         _cancellationToken = cancellationTokenSource.Token;
     }
 
-    public string NotificationText
-    {
-        get => _notificationText;
-        set
-        {
-            _notificationText = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         if (CurrentFileScanTask != null && !CurrentFileScanTask.IsCompleted)
             try
             {
-                NotificationText = "正在等待本地扫描进程结束...";
+                ViewModel.NotificationText = "正在等待本地扫描进程结束...";
                 cancellationTokenSource.Cancel();
                 await CurrentFileScanTask;
             }
@@ -98,8 +83,8 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     {
         await _control.StopAsync();
         await _control.ClearQueueAsync();
-        await _playCore.InsertSongRangeAsync(localHyItems.Cast<SingleSongBase>().ToList());
-        if (localHyItems.Count > 0)
+        await _playCore.InsertSongRangeAsync(ViewModel.LocalItems.Cast<SingleSongBase>().ToList());
+        if (ViewModel.LocalItems.Count > 0)
         {
             await _playCore.MovePointerToIndexAsync(0);
             if (_playCore.CurrentSong is { } song)
@@ -115,10 +100,10 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private async Task LoadLocalMusic()
     {
         ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
-        NotificationText = "正在扫描...";
-        localHyItems.Clear();
-        var folder = !string.IsNullOrEmpty(_setting.searchingDir)
-            ? await StorageFolder.GetFolderFromPathAsync(_setting.searchingDir)
+        ViewModel.NotificationText = "正在扫描...";
+        ViewModel.LocalItems.Clear();
+        var folder = !string.IsNullOrEmpty(_setting.SearchDirectory)
+            ? await StorageFolder.GetFolderFromPathAsync(_setting.SearchDirectory)
             : KnownFolders.MusicLibrary;
         // Use Query to boost? maybe?
         FileLoadingIndicateRing.Visibility = Visibility.Visible;
@@ -127,7 +112,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         queryOptions.FolderDepth = FolderDepth.Deep;
         var files = await folder.CreateFileQueryWithOptions(queryOptions).GetFilesAsync();
 
-        if (!_setting.localProgressiveLoad)
+        if (!_setting.LocalProgressiveLoad)
         {
             foreach (var storageFile in files)
             {
@@ -135,7 +120,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                 try
                 {
                     var item = await _localFileImport.LoadStorageFileAsync(storageFile);
-                    localHyItems.Add(item);
+                    ViewModel.LocalItems.Add(item);
                 }
                 catch
                 {
@@ -167,11 +152,11 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                     ActualId = storageFile.Path,
                     Available = true
                 };
-                localHyItems.Add(item);
+                ViewModel.LocalItems.Add(item);
             }
         }
 
-        NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
+        ViewModel.NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
         FileLoadingIndicateRing.IsActive = false;
         FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
         ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
@@ -183,7 +168,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         if (ListBoxLocalMusicContainer.SelectedItem == null) return;
         await _control.StopAsync();
         await _control.ClearQueueAsync();
-        await _playCore.InsertSongRangeAsync(localHyItems.Cast<SingleSongBase>().ToList());
+        await _playCore.InsertSongRangeAsync(ViewModel.LocalItems.Cast<SingleSongBase>().ToList());
         if (ListBoxLocalMusicContainer.SelectedItem is LocalSong selectedItem)
         {
             await _playCore.MovePointerToAsync(selectedItem);
@@ -215,8 +200,4 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
             await _control.LoadAndPlayAsync(song, removeCurrentSongs: false);
     }
 
-    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
 }

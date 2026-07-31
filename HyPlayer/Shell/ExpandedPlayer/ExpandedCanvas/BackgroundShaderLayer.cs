@@ -23,7 +23,7 @@ public sealed class BackgroundShaderLayer : IExpandedCanvasLayer
     private float3 color1, color2, color3, color4;
     private float random1, random2, random3;
 
-    public BackgroundShaderLayer(ExpandedCanvasState state, Setting setting)
+    public BackgroundShaderLayer(ExpandedCanvasState state, LyricSettings setting)
     {
         _state = state;
         _state.IsolationEffect = new PixelShaderEffect<IsolationEffect>();

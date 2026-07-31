@@ -8,8 +8,10 @@ namespace HyPlayer.Domain.Settings;
 /// <summary>
 ///     Settings related to Last.FM integration.
 /// </summary>
-public class LastFMSettings : SettingsBase
+public partial class LastFMSettings : SettingsBase
 {
+    protected override string SectionName => "lastfm";
+
     /// <summary>
     ///     Last.FM session data.
     /// </summary>
@@ -29,11 +31,8 @@ public class LastFMSettings : SettingsBase
         }
         set
         {
-            if (value == null)
-                ApplicationData.Current.LocalSettings.Values[nameof(LastFMSession)] = null;
-            else
-                ApplicationData.Current.LocalSettings.Values[nameof(LastFMSession)] =
-                    JsonSerializer.Serialize(value, JsonDefaults.Options);
+            var serialized = value == null ? null : JsonSerializer.Serialize(value, JsonDefaults.Options);
+            SetSettings(nameof(LastFMSession), serialized, nameof(LastFMSession));
         }
     }
 
@@ -43,7 +42,7 @@ public class LastFMSettings : SettingsBase
     public bool UpdateLastFMNowPlaying
     {
         get => GetSettings(nameof(UpdateLastFMNowPlaying), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(UpdateLastFMNowPlaying)] = value;
+        set => SetSettings(nameof(UpdateLastFMNowPlaying), value);
     }
 
     /// <summary>
@@ -52,15 +51,15 @@ public class LastFMSettings : SettingsBase
     public bool LastFMScrobble
     {
         get => GetSettings(nameof(LastFMScrobble), true);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(LastFMScrobble)] = value;
+        set => SetSettings(nameof(LastFMScrobble), value);
     }
 
     /// <summary>
     ///     Whether AI DJ mode is enabled.
     /// </summary>
-    public bool useAiDj
+    public bool UseAiDj
     {
-        get => GetSettings(nameof(useAiDj), false);
-        set => ApplicationData.Current.LocalSettings.Values[nameof(useAiDj)] = value;
+        get => GetSettings(nameof(UseAiDj), false);
+        set => SetSettings(nameof(UseAiDj), value);
     }
 }

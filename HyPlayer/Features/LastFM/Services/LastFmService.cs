@@ -17,11 +17,11 @@ public sealed class LastFmService : ILastFmService
     private readonly LastFMClient _client;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
-    private readonly Setting _setting;
+    private readonly LastFMSettings _setting;
 
     public LastFmService(
         LastFMClient client,
-        Setting setting,
+        LastFMSettings setting,
         INotificationService notification,
         IProviderKnownTypeIds knownTypeIds)
     {

@@ -18,10 +18,10 @@ public sealed class HistoryService : IHistoryService
     private const string SongPlayHistoryFileName = "songPlayHistory";
     private readonly IProvidableItemRangeProvidable _itemRangeProvider;
     private readonly INotificationService _notification;
-    private readonly Setting _setting;
+    private readonly LocalLibrarySettings _setting;
 
     public HistoryService(
-        Setting setting,
+        LocalLibrarySettings setting,
         IProvidableItemRangeProvidable itemRangeProvider,
         INotificationService notification)
     {
@@ -97,7 +97,7 @@ public sealed class HistoryService : IHistoryService
             songIds,
             currentIndex >= 0 && currentIndex < songIds.Count ? currentIndex : -1);
 
-        if (_setting.advancedMusicHistoryStorage)
+        if (_setting.AdvancedMusicHistoryStorage)
             try
             {
                 var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(
@@ -188,7 +188,7 @@ public sealed class HistoryService : IHistoryService
     private async Task<CurPlayingListHistoryState> ReadCurrentPlayingListHistoryStateAsync()
     {
         string text;
-        if (_setting.advancedMusicHistoryStorage)
+        if (_setting.AdvancedMusicHistoryStorage)
             text = await FileIO.ReadTextAsync(
                 await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(
                     SongPlayHistoryFileName,

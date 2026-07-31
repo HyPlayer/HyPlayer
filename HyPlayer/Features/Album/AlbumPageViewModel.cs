@@ -25,7 +25,7 @@ public partial class AlbumPageViewModel : ObservableObject
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INavigationService _navigation;
     private readonly INotificationService _notification;
-    private readonly Setting _setting;
+    private readonly UISettings _setting;
     private readonly IBackgroundTaskRunner _taskRunner;
     private Task<AlbumBase> _providerAlbumTask;
     private string _providerAlbumTaskId;
@@ -34,7 +34,7 @@ public partial class AlbumPageViewModel : ObservableObject
         IProvidableItemProvidable itemProvider,
         IProviderKnownTypeIds knownTypeIds,
         IContainerItemManagementProvidable containerItemManagement,
-        Setting setting,
+        UISettings setting,
         INotificationService notification,
         INavigationService navigation,
         IBackgroundTaskRunner taskRunner)
@@ -80,7 +80,7 @@ public partial class AlbumPageViewModel : ObservableObject
             if (providerAlbum is null) return;
 
             Album = providerAlbum;
-            if (!_setting.noImage && await GetCoverUriAsync(Album) is { } coverUri)
+            if (!_setting.NoImage && await GetCoverUriAsync(Album) is { } coverUri)
                 SourceImage = new BitmapImage(coverUri);
             else SourceImage = new BitmapImage(new Uri("/Assets/icon.png"));
 

@@ -96,7 +96,7 @@ public sealed partial class ContainerItemsView : UserControl
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly ISongListQueueBuilder _queueBuilder = Ioc.Default.GetRequiredService<ISongListQueueBuilder>();
     private readonly WeakEventListener<ContainerItemsView, object?, EventArgs> _secondTickListener;
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly WeakEventListener<ContainerItemsView, object?, PropertyChangedEventArgs> _stateChangedListener;
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
@@ -164,7 +164,7 @@ public sealed partial class ContainerItemsView : UserControl
 
     public bool CanViewComments
     {
-        get => (bool)GetValue(CanViewCommentsProperty) && _setting.notClearMode;
+        get => (bool)GetValue(CanViewCommentsProperty) && _setting.NotClearMode;
         set => SetValue(CanViewCommentsProperty, value);
     }
 

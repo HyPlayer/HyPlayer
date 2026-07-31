@@ -121,7 +121,7 @@ public static class UpdateManager
     {
         return Task.Run((Func<Task?>)(async () =>
         {
-            var remoteResult = await GetRemoteVersion(Ioc.Default.GetRequiredService<Setting>().UpdateSource);
+            var remoteResult = await GetRemoteVersion(Ioc.Default.GetRequiredService<UISettings>().UpdateSource);
             var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
                 Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
             var title = "发现新版本";
@@ -160,18 +160,18 @@ public static class UpdateManager
     {
         var httpClient = Ioc.Default.GetRequiredService<HttpClient>();
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
-        var setting = Ioc.Default.GetRequiredService<Setting>();
+        var settings = Ioc.Default.GetRequiredService<UISettings>();
         var userResp = await httpClient.GetAsync(new Uri($"https://hyplayer.kengwang.com.cn/user/email/{userEmail}"));
         if (userResp.IsSuccessStatusCode)
         {
             notification.ShowMessage("Canary版本已解锁", "感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新");
-            setting.canaryChannelAvailability = true;
+            settings.CanaryChannelAvailability = true;
         }
         else
         {
-            setting.canaryChannelAvailability = false;
+            settings.CanaryChannelAvailability = false;
             notification.ShowMessage("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
-            if (setting.UpdateSource == UpdateSource.Canary) setting.UpdateSource = UpdateSource.Release;
+            if (settings.UpdateSource == UpdateSource.Canary) settings.UpdateSource = UpdateSource.Release;
         }
     }
 

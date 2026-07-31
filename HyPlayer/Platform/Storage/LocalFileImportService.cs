@@ -20,12 +20,10 @@ namespace HyPlayer.Features.Playback.Services;
 public sealed class LocalFileImportService : ILocalFileImportService
 {
     private readonly INotificationService _notification;
-    private readonly Setting _setting;
 
-    public LocalFileImportService(INotificationService notification, Setting setting)
+    public LocalFileImportService(INotificationService notification)
     {
         _notification = notification;
-        _setting = setting;
     }
 
     /// <inheritdoc />

@@ -49,7 +49,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private readonly INotificationHub _playCoreNotificationHub;
 
     private readonly IPlayer _player;
-    private readonly Setting _setting;
+    private readonly PlaybackSettings _playbackSettings;
+    private readonly LastFMSettings _lastFmSettings;
     private readonly SmtcPlaybackCommandDispatcher _smtcCommandDispatcher;
     private readonly PlaybackStateService _state;
     private readonly IBackgroundTaskRunner _taskRunner;
@@ -79,7 +80,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         PlayCoreBase playCore,
         INotificationHub playCoreNotificationHub,
         PlaybackStateService state,
-        Setting setting,
+        PlaybackSettings playbackSettings,
+        LastFMSettings lastFmSettings,
         ILyricService lyricService,
         IUIThreadDispatcher uiThreadDispatcher,
         IPlaybackNotificationService playbackNotification,
@@ -93,7 +95,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         _playCoreNotificationHub =
             playCoreNotificationHub ?? throw new ArgumentNullException(nameof(playCoreNotificationHub));
         _state = state ?? throw new ArgumentNullException(nameof(state));
-        _setting = setting ?? throw new ArgumentNullException(nameof(setting));
+        _playbackSettings = playbackSettings ?? throw new ArgumentNullException(nameof(playbackSettings));
+        _lastFmSettings = lastFmSettings ?? throw new ArgumentNullException(nameof(lastFmSettings));
         _lyricService = lyricService ?? throw new ArgumentNullException(nameof(lyricService));
         _uiThreadDispatcher = uiThreadDispatcher ?? throw new ArgumentNullException(nameof(uiThreadDispatcher));
         _playbackNotification = playbackNotification ?? throw new ArgumentNullException(nameof(playbackNotification));
@@ -103,7 +106,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         _audioService = audioService ?? throw new ArgumentNullException(nameof(audioService));
         _transitions = transitions?.ToDictionary(transition => transition.Id)
                        ?? throw new ArgumentNullException(nameof(transitions));
-        _activeTransition = _transitions.TryGetValue(_setting.TransitionId, out var transition)
+        _activeTransition = _transitions.TryGetValue(_playbackSettings.TransitionId, out var transition)
             ? transition
             : _transitions["dir"];
         _smtcCommandDispatcher = new SmtcPlaybackCommandDispatcher(
@@ -307,7 +310,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         CaptureCurrentPlaybackIdentity();
         _state.IsPlaying = true;
 
-        if (_setting.LastFMScrobble
+        if (_lastFmSettings.LastFMScrobble
             && oldSong is not null
             && _lastScrobbledGeneration != prepared.Generation)
         {
@@ -517,7 +520,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         {
             var clamped = Math.Clamp(value, 0.0, 1.0);
             _player.SetOutputVolume(clamped);
-            _setting.Volume = (int)(clamped * 100);
+            _playbackSettings.Volume = (int)(clamped * 100);
             _state.Volume = clamped;
         }
     }
@@ -536,10 +539,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
             await _player.InitializePlayer(new AudioGraphAudioSetting
             {
-                DefaultDeviceId = _setting.AudioRenderDevice,
-                OutputVolume = _setting.Volume / 100d,
+                DefaultDeviceId = _playbackSettings.AudioRenderDevice,
+                OutputVolume = _playbackSettings.Volume / 100d,
                 AutoFallback = true,
-                EnableFFTProcessing = _setting.EnableFFT
+                EnableFFTProcessing = _playbackSettings.EnableFFT
             }).ConfigureAwait(false);
 
             if (_player is AudioGraphPlayer graphPlayer)
@@ -571,7 +574,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                     throw new InvalidOperationException("SMTC initialization did not return a control instance.");
             }
 
-            _state.Volume = _setting.Volume / 100d;
+            _state.Volume = _playbackSettings.Volume / 100d;
             _initialized = true;
         }
         finally
@@ -880,7 +883,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 || _playCore.ActivePlayModeId == "ltg")
                 return;
 
-            if (_setting.LastFMScrobble
+            if (_lastFmSettings.LastFMScrobble
                 && _lastScrobbledGeneration != generation)
             {
                 _lastScrobbledGeneration = generation;
@@ -956,7 +959,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             CanPreload = _playCore.ActivePlayModeId is not ("sgl" or "ltg")
                          && duration >= TimeSpan.FromSeconds(30),
             PlaybackRate = _player.GetPlaybackSourceSpeed(source),
-            CrossFadeDuration = TimeSpan.FromSeconds(Math.Clamp(_setting.CrossFadeTime, 3d, 10d))
+            CrossFadeDuration = TimeSpan.FromSeconds(Math.Clamp(_playbackSettings.CrossFadeTime, 3d, 10d))
         };
     }
 

@@ -209,7 +209,7 @@ public sealed class TrackTransitionTests
     {
         var player = new DisposalTrackingPlayer();
         var source = new DisposablePlaybackSource();
-        var service = new ChopinAudioService(player, new Setting());
+        var service = new ChopinAudioService(player, new PlaybackSettings());
         var ticket = new ChopinAudioTicket
         {
             AudioServiceId = service.Id,
@@ -236,7 +236,7 @@ public sealed class TrackTransitionTests
         var promotedSource = new DisposablePlaybackSource();
         var outgoingSource = new DisposablePlaybackSource();
         player.PrimarySource = promotedSource;
-        var service = new ChopinAudioService(player, new Setting());
+        var service = new ChopinAudioService(player, new PlaybackSettings());
         var outgoingTicket = new ChopinAudioTicket
         {
             AudioServiceId = service.Id,
@@ -258,7 +258,7 @@ public sealed class TrackTransitionTests
         var player = new DisposalTrackingPlayer();
         var primarySource = new DisposablePlaybackSource();
         player.PrimarySource = primarySource;
-        var service = new ChopinAudioService(player, new Setting());
+        var service = new ChopinAudioService(player, new PlaybackSettings());
         var primaryTicket = new ChopinAudioTicket
         {
             AudioServiceId = service.Id,

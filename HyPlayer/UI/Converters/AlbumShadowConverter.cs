@@ -9,10 +9,10 @@ public partial class AlbumShadowConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        var setting = Ioc.Default.GetRequiredService<Setting>();
-        return setting.albumRound || setting.expandAlbumBreath
+        var settings = Ioc.Default.GetRequiredService<UISettings>();
+        return settings.AlbumRound || settings.ExpandAlbumBreath
             ? 0
-            : (double)setting.expandedCoverShadowDepth / 10;
+            : (double)settings.ExpandedCoverShadowDepth / 10;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

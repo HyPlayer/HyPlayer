@@ -15,9 +15,9 @@ namespace HyPlayer.UI.Lists;
 public sealed class ProvidableItemDisplayResolver
 {
     private readonly IProviderKnownTypeIds _knownTypeIds;
-    private readonly Setting _setting;
+    private readonly UISettings _setting;
 
-    public ProvidableItemDisplayResolver(IProviderKnownTypeIds knownTypeIds, Setting setting)
+    public ProvidableItemDisplayResolver(IProviderKnownTypeIds knownTypeIds, UISettings setting)
     {
         _knownTypeIds = knownTypeIds;
         _setting = setting;
@@ -34,7 +34,7 @@ public sealed class ProvidableItemDisplayResolver
         var album = item is SingleSongBase sg ? sg.Album?.Name : null;
         var track = item as IHasTrackMetadata;
         var richMedia = item as IHasRichMediaReference;
-        var coverUrl = _setting.noImage ? null : await TryGetCoverUrlAsync(item, cancellationToken);
+        var coverUrl = _setting.NoImage ? null : await TryGetCoverUrlAsync(item, cancellationToken);
 
         return new ProvidableItemRowViewModel
         {
@@ -65,7 +65,7 @@ public sealed class ProvidableItemDisplayResolver
     {
         return new ProvidableItemDisplayResolver(
             Ioc.Default.GetRequiredService<IProviderKnownTypeIds>(),
-            Ioc.Default.GetRequiredService<Setting>());
+            Ioc.Default.GetRequiredService<UISettings>());
     }
 
     private static async Task<string?> TryGetCoverUrlAsync(object? item, CancellationToken cancellationToken)

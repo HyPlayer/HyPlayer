@@ -28,7 +28,8 @@ public partial class SongListViewModel : ObservableObject, IDisposable
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly IContainerItemManagementProvidable _containerItemManagement;
-    private readonly Setting _setting;
+    private readonly ApiSettings _apiSettings;
+    private readonly UISettings _uiSettings;
     private readonly INotificationService _notification;
     private readonly INavigationService _navigation;
     private readonly IUserLibraryStateService _userLibraryState;
@@ -38,7 +39,8 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         IProvidableItemProvidable itemProvider,
         IProviderKnownTypeIds knownTypeIds,
         IContainerItemManagementProvidable containerItemManagement,
-        Setting setting,
+        ApiSettings apiSettings,
+        UISettings uiSettings,
         INotificationService notification,
         INavigationService navigation,
         IUserLibraryStateService userLibraryState,
@@ -47,7 +49,8 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         _itemProvider = itemProvider;
         _knownTypeIds = knownTypeIds;
         _containerItemManagement = containerItemManagement;
-        _setting = setting;
+        _apiSettings = apiSettings;
+        _uiSettings = uiSettings;
         _notification = notification;
         _navigation = navigation;
         _userLibraryState = userLibraryState;
@@ -141,8 +144,8 @@ public partial class SongListViewModel : ObservableObject, IDisposable
             : string.Empty;
         await LoadCreatorAsync(PlayList);
         Subscribed = PlayList is IHasLibraryState { IsInCurrentUserLibrary: true };
-        GreedyLoad = _setting.greedlyLoadPlayContainerItems;
-        if (_setting.noImage)
+        GreedyLoad = _apiSettings.GreedilyLoadPlayContainerItems;
+        if (_uiSettings.NoImage)
             CoverUri = null;
         else
             CoverUri = await GetCoverUriAsync(PlayList);

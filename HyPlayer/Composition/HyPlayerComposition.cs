@@ -62,11 +62,26 @@ internal static class HyPlayerComposition
 {
     public static void ConfigureServices(IDepository depository)
     {
-        var setting = new Setting();
-        var neteaseProvider = new NeteaseProvider.NeteaseProvider();
-        var client = neteaseProvider.ConfigureHttpClient(setting.EnableProxy);
+        var playbackSettings = new PlaybackSettings();
+        var uiSettings = new UISettings();
+        var apiSettings = new ApiSettings();
+        var lyricSettings = new LyricSettings();
+        var lastFmSettings = new LastFMSettings();
+        var downloadSettings = new DownloadSettings();
+        var localLibrarySettings = new LocalLibrarySettings(downloadSettings);
 
-        ConfigureProviders(depository, setting, neteaseProvider, client);
+        depository.AddSingleton<PlaybackSettings>(playbackSettings);
+        depository.AddSingleton<UISettings>(uiSettings);
+        depository.AddSingleton<ApiSettings>(apiSettings);
+        depository.AddSingleton<LyricSettings>(lyricSettings);
+        depository.AddSingleton<LastFMSettings>(lastFmSettings);
+        depository.AddSingleton<DownloadSettings>(downloadSettings);
+        depository.AddSingleton<LocalLibrarySettings>(localLibrarySettings);
+
+        var neteaseProvider = new NeteaseProvider.NeteaseProvider();
+        var client = neteaseProvider.ConfigureHttpClient(apiSettings.EnableProxy);
+
+        ConfigureProviders(depository, neteaseProvider, client);
         ConfigurePlayCore(depository);
         ConfigurePlaybackServices(depository);
         ConfigureApplicationServices(depository);
@@ -76,7 +91,6 @@ internal static class HyPlayerComposition
 
     private static void ConfigureProviders(
         IDepository depository,
-        Setting setting,
         NeteaseProvider.NeteaseProvider neteaseProvider,
         HttpClient client)
     {
@@ -118,7 +132,6 @@ internal static class HyPlayerComposition
             new LastFMClient(
                 new LastFMOptions { ApiKey = LastFMConstants.APIKEY, ApiSecret = LastFMConstants.SECRET },
                 client));
-        depository.AddSingleton<Setting>(setting);
         depository.AddSingleton<AudioGraphPlayer>();
         depository.Add(
             typeof(IPlayer),
@@ -256,6 +269,7 @@ internal static class HyPlayerComposition
     private static void ConfigureApplicationServices(IDepository depository)
     {
         depository.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
+        depository.AddSingleton<IAuthSessionStore, AuthSessionStore>();
         depository.AddSingleton<IAuthService, AuthService>();
         depository.AddSingleton<INavigationService, NavigationService>();
         depository.AddSingleton<IAppNavigator, AppNavigator>();

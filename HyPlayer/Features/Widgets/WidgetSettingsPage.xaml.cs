@@ -8,6 +8,7 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Graphics.Canvas.Text;
 using static HyPlayer.Features.Settings.Settings;
 
@@ -64,7 +65,7 @@ public sealed partial class WidgetSettingsPage : Page
     }
 }
 
-public partial class GameBarSettings(CoreDispatcher dispatcher) : INotifyPropertyChanged
+public partial class GameBarSettings(CoreDispatcher dispatcher) : ObservableObject
 {
     private readonly ApplicationDataContainer _container =
         ApplicationData.Current.LocalSettings.CreateContainer("game-bar", ApplicationDataCreateDisposition.Always);
@@ -83,7 +84,6 @@ public partial class GameBarSettings(CoreDispatcher dispatcher) : INotifyPropert
         set
         {
             SetValue(value);
-            OnPropertyChanged();
         }
     }
 
@@ -93,7 +93,6 @@ public partial class GameBarSettings(CoreDispatcher dispatcher) : INotifyPropert
         set
         {
             SetValue(value);
-            OnPropertyChanged();
         }
     }
 
@@ -103,7 +102,6 @@ public partial class GameBarSettings(CoreDispatcher dispatcher) : INotifyPropert
         set
         {
             SetValue(value);
-            OnPropertyChanged();
         }
     }
 
@@ -113,7 +111,6 @@ public partial class GameBarSettings(CoreDispatcher dispatcher) : INotifyPropert
         set
         {
             SetValue(value);
-            OnPropertyChanged();
         }
     }
 
@@ -123,7 +120,6 @@ public partial class GameBarSettings(CoreDispatcher dispatcher) : INotifyPropert
         set
         {
             SetValue(value);
-            OnPropertyChanged();
         }
     }
 
@@ -134,7 +130,6 @@ public partial class GameBarSettings(CoreDispatcher dispatcher) : INotifyPropert
         set
         {
             SetValue(value);
-            OnPropertyChanged();
         }
     }
 
@@ -144,23 +139,15 @@ public partial class GameBarSettings(CoreDispatcher dispatcher) : INotifyPropert
         set
         {
             SetValue(value);
-            OnPropertyChanged();
         }
     }
 
     private void SetValue<T>(T value, [CallerMemberName] string name = null)
     {
         if (name is null) return;
+        if (_container.Values.TryGetValue(name, out var current) && Equals(current, value)) return;
         _container.Values[name] = value;
-    }
-
-#nullable enable
-    public event PropertyChangedEventHandler? PropertyChanged;
-#nullable restore
-    public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
-    {
-        await _dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-            () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+        _ = _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => OnPropertyChanged(name));
     }
 
     public T GetSettings<T>(string propertyName, T defaultValue)

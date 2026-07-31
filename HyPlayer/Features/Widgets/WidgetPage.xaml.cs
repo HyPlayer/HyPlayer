@@ -41,7 +41,7 @@ public sealed partial class WidgetPage : Page
     private readonly GameBarSettings _gameBarSettings;
     private readonly LyricRenderView LyricBox = new();
 
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
+    private readonly LyricSettings _setting = Ioc.Default.GetRequiredService<LyricSettings>();
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
@@ -304,9 +304,9 @@ public sealed partial class WidgetPage : Page
     {
         LyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         AttachLyricEvents();
-        LyricBox.Context.LyricPaddingTopRatio = _setting.lyricPaddingTopRatio / 100f;
+        LyricBox.Context.LyricPaddingTopRatio = _setting.LyricPaddingTopRatio / 100f;
         LyricBox.Context.Debug = _setting.LyricRendererDebugMode;
-        LyricBox.Context.Effects.CacheRenderTarget = _setting.lyricCacheRenderTarget;
+        LyricBox.Context.Effects.CacheRenderTarget = _setting.LyricCacheRenderTarget;
         LyricBox.Context.LineRollingEaseCalculator = _setting.LineRollingCalculator switch
         {
             RollingCalculator.SinRollingCalculator => new SinRollingCalculator(),
@@ -315,9 +315,9 @@ public sealed partial class WidgetPage : Page
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
-        LyricBox.Context.Effects.TransliterationScanning = _setting.lyricRenderTransliterationScanning;
-        LyricBox.Context.Effects.SimpleLineScanning = _setting.lyricRenderSimpleLineScanning;
-        LyricBox.Context.Effects.ScanStyle = _setting.lyricRenderScanStyle;
+        LyricBox.Context.Effects.TransliterationScanning = _setting.LyricRenderTransliterationScanning;
+        LyricBox.Context.Effects.SimpleLineScanning = _setting.LyricRenderSimpleLineScanning;
+        LyricBox.Context.Effects.ScanStyle = _setting.LyricRenderScanStyle;
         LyricBox.Context.PreferTypography.Font = _gameBarSettings.LyricFontFamily;
         LyricBox.Context.LineSpacing = _gameBarSettings.LyricLineSpacing;
         LyricBox.EnableTranslation = _gameBarSettings.EnableTranslation;
@@ -372,13 +372,13 @@ public sealed partial class WidgetPage : Page
     private void UpdateLyricSize()
     {
         if (!HasCurrentPlayItem()) return;
-        var lyricSize = _gameBarSettings.LyricSize <= 0
+        var LyricSize = _gameBarSettings.LyricSize <= 0
             ? Math.Max(_widget.WindowBounds.Width / 20, 40)
             : _gameBarSettings.LyricSize;
-        var translationSize = _gameBarSettings.TranslationSize > 0 ? _gameBarSettings.TranslationSize : lyricSize / 1.8;
-        var romajiSize = _gameBarSettings.RomajiSize > 0 ? _gameBarSettings.RomajiSize : lyricSize / 2;
+        var TranslationSize = _gameBarSettings.TranslationSize > 0 ? _gameBarSettings.TranslationSize : LyricSize / 1.8;
+        var RomajiSize = _gameBarSettings.RomajiSize > 0 ? _gameBarSettings.RomajiSize : LyricSize / 2;
 
-        LyricBox.ChangeRenderFontSize((float)lyricSize, (float)translationSize, (float)romajiSize);
+        LyricBox.ChangeRenderFontSize((float)LyricSize, (float)TranslationSize, (float)RomajiSize);
         LyricBox.ChangeAlignment(_gameBarSettings.LyricAlignment switch
         {
             1 => TextAlignment.Center,

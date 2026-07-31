@@ -28,7 +28,8 @@ public partial class PlayBarViewModel : ObservableObject
     private readonly IPlaybackControlService _control;
     private readonly ILyricService _lyricService;
     private readonly PlayCoreBase _playCore;
-    private readonly Setting _setting;
+    private readonly PlaybackSettings _playbackSettings;
+    private readonly UISettings _uiSettings;
     private readonly PlaybackStateService _state;
     private readonly WeakEventListener<PlayBarViewModel, object?, PropertyChangedEventArgs> _stateChangedListener;
     private readonly IBackgroundTaskRunner _taskRunner;
@@ -39,7 +40,8 @@ public partial class PlayBarViewModel : ObservableObject
         IPlaybackControlService control,
         PlaybackStateService state,
         ILyricService lyricService,
-        Setting setting,
+        PlaybackSettings playbackSettings,
+        UISettings uiSettings,
         IUIThreadDispatcher uiThreadDispatcher,
         IBackgroundTaskRunner taskRunner,
         IAuthService authService)
@@ -48,7 +50,8 @@ public partial class PlayBarViewModel : ObservableObject
         _control = control;
         _state = state;
         _lyricService = lyricService;
-        _setting = setting;
+        _playbackSettings = playbackSettings;
+        _uiSettings = uiSettings;
         _uiThreadDispatcher = uiThreadDispatcher;
         _taskRunner = taskRunner;
         _authService = authService;
@@ -115,7 +118,7 @@ public partial class PlayBarViewModel : ObservableObject
     public string SongName => NowPlayingSnapshot?.Name ?? string.Empty;
     public string ArtistName => NowPlayingSnapshot?.ArtistText ?? string.Empty;
     public string AlbumName => NowPlayingSnapshot?.AlbumName ?? string.Empty;
-    public string QualityTagText => GetQualityTagText(NowPlayingSnapshot, QualityTag, _setting.audioRate);
+    public string QualityTagText => GetQualityTagText(NowPlayingSnapshot, QualityTag, _playbackSettings.AudioRate);
 
     public string TotalTimeText => FormatTime(Duration != TimeSpan.Zero
         ? Duration
@@ -166,7 +169,7 @@ public partial class PlayBarViewModel : ObservableObject
             _ => "seq"
         };
         await _control.SetPlayModeAsync(nextStrategy);
-        _setting.ActiveStrategyId = nextStrategy;
+        _playbackSettings.ActiveStrategyId = nextStrategy;
         ActiveStrategyId = nextStrategy;
     }
 
@@ -373,7 +376,7 @@ public partial class PlayBarViewModel : ObservableObject
         QueueCount = queueSnapshot.Count;
         OnPropertyChanged(nameof(QueueCount));
 
-        if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
+        if (ActiveStrategyId == "shn" && _uiSettings.DisplayShuffledList)
             foreach (var orderedSong in orderedQueue)
             {
                 var idx = IndexOfQueueItem(queue, orderedSong);
@@ -426,7 +429,7 @@ public partial class PlayBarViewModel : ObservableObject
     /// </summary>
     public string GetPlaylistTitle()
     {
-        if (ActiveStrategyId == "shn" && _setting.displayShuffledList)
+        if (ActiveStrategyId == "shn" && _uiSettings.DisplayShuffledList)
             return $"随机播放列表 (共{QueueCount}首)";
         return $"播放列表 (共{QueueCount}首)";
     }

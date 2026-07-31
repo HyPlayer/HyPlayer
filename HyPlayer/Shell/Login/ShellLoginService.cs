@@ -27,7 +27,7 @@ public sealed class ShellLoginService
     private readonly NavigationShellViewModel _navigationShell;
     private readonly IAppNavigator _navigator;
     private readonly INotificationService _notification;
-    private readonly Setting _setting;
+    private readonly UISettings _setting;
 
     private ContentDialog? _currentLoginDialog;
     private ContentDialog? _currentPreLoginDialog;
@@ -38,7 +38,7 @@ public sealed class ShellLoginService
         INavigationService navigation,
         IAppNavigator navigator,
         NavigationShellViewModel navigationShell,
-        Setting setting)
+        UISettings setting)
     {
         _auth = auth;
         _notification = notification;
@@ -259,7 +259,7 @@ public sealed class ShellLoginService
         _currentLoginDialog?.Hide();
         _currentPreLoginDialog?.Hide();
 
-        if (_setting.noImage)
+        if (_setting.NoImage)
             _navigation.Navigate(typeof(Welcome));
         else
             await _navigator.NavigateAsync(new AppRoute.Me());

@@ -25,14 +25,16 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     private readonly HttpClient _http;
     private readonly ILastFmService _lastFm;
     private readonly IPlayer _player;
-    private readonly Setting _setting;
+    private readonly UISettings _uiSettings;
+    private readonly LastFMSettings _lastFmSettings;
     private readonly PlaybackStateService _state;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly ITileService _tileService;
 
     public PlaybackNotificationService(
         PlaybackStateService state,
-        Setting setting,
+        UISettings uiSettings,
+        LastFMSettings lastFmSettings,
         HttpClient http,
         IPlayer player,
         IBackgroundTaskRunner taskRunner,
@@ -40,7 +42,8 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         ILastFmService lastFm)
     {
         _state = state;
-        _setting = setting;
+        _uiSettings = uiSettings;
+        _lastFmSettings = lastFmSettings;
         _http = http;
         _player = player;
         _taskRunner = taskRunner;
@@ -54,7 +57,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         if (providerItem == null) return;
         UpdateSmtcDisplayInfo(providerItem);
 
-        if (!_setting.noImage)
+        if (!_uiSettings.NoImage)
         {
             await RefreshCoverAsync(providerItem);
             UpdateSmtcThumbnail();
@@ -65,8 +68,8 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
             _state.CoverStreamReference = null;
         }
 
-        await _tileService.UpdateTile(providerItem, _setting.noImage ? null : _state.CoverStream);
-        if (_setting.UpdateLastFMNowPlaying)
+        await _tileService.UpdateTile(providerItem, _uiSettings.NoImage ? null : _state.CoverStream);
+        if (_lastFmSettings.UpdateLastFMNowPlaying)
             _taskRunner.Forget(_lastFm.UpdateNowPlayingAsync(providerItem), "update Last.FM now playing");
     }
 
