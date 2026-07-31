@@ -42,7 +42,7 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Features.Artist
 {
-    public partial class ArtistPageViewModel : ObservableRecipient
+    public partial class ArtistPageViewModel : ObservableObject
     {
         private readonly IProvidableItemProvidable _itemProvider;
         private readonly IProviderKnownTypeIds _knownTypeIds;

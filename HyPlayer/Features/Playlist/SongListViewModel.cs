@@ -47,7 +47,7 @@ using ColorHelper = HyPlayer.Platform.Imaging.ColorHelper;
 
 namespace HyPlayer.Features.Playlist
 {
-    public partial class SongListViewModel : ObservableRecipient, IDisposable
+    public partial class SongListViewModel : ObservableObject, IDisposable
     {
         private readonly IProvidableItemProvidable _itemProvider;
         private readonly IProviderKnownTypeIds _knownTypeIds;

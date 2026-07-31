@@ -39,7 +39,7 @@ using System.Threading.Tasks;
 
 namespace HyPlayer.Features.Home
 {
-    public partial class HomeViewModel : ObservableRecipient
+    public partial class HomeViewModel : ObservableObject
     {
 #nullable enable
         private readonly IProvidableItemProvidable _itemProvider;

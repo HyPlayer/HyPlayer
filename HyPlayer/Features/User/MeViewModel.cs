@@ -38,7 +38,7 @@ using System.Threading.Tasks;
 
 namespace HyPlayer.Features.User
 {
-    public partial class MeViewModel : ObservableRecipient
+    public partial class MeViewModel : ObservableObject
     {
         [ObservableProperty]
         public partial List<SimpleListItem> LikedPlaylist { get; set; }

@@ -40,7 +40,7 @@ namespace HyPlayer.Features.Library
 {
     public partial class FavoriteViewModel(
         IUserLibraryProvidable userLibraryProvider,
-        IProviderKnownTypeIds knownTypeIds) : ObservableRecipient
+        IProviderKnownTypeIds knownTypeIds) : ObservableObject
     {
         private readonly ObservableCollection<ProvidableItemBase> _content = [];
         [ObservableProperty]

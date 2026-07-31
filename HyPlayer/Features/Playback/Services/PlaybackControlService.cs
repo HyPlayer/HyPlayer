@@ -194,6 +194,53 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
     }
 
+    public async Task<bool> ReplaceQueueKeepingPlaybackAsync(
+        IReadOnlyList<SingleSongBase> songs,
+        SingleSongBase expectedCurrentSong,
+        string? playSourceId,
+        CancellationToken ct = default)
+    {
+        if (songs.Count == 0 || _playCore.CurrentPlayList is null)
+            return false;
+
+        if (FindSongIndex(songs, expectedCurrentSong) < 0)
+            return false;
+
+        await _transitionGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            // On a cold start the first PlayAsync can complete before AudioGraph publishes
+            // PrimaryPlaybackSource. The queue itself is already safe to complete at that
+            // point, so validate the logical current item instead of asynchronous player
+            // status/source mirrors. Both identities must still match to prevent an older
+            // background build from replacing a queue after the user selected another song.
+            if (!CanReplaceQueueForCurrentSong(
+                    _state.NowPlayingProviderItem,
+                    _playCore.CurrentSong,
+                    expectedCurrentSong))
+                return false;
+
+            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+            var currentSong = _playCore.CurrentSong!;
+            var replacementSongs = CreateQueuePreservingCurrentSong(songs, currentSong);
+            await _playCore.CurrentPlayList
+                .SetSongListAsync(replacementSongs, ct)
+                .ConfigureAwait(false);
+            // SetSongListAsync may rebuild an ordered/shuffled projection. Locate by identity
+            // in that projection instead of applying an index from the source-order list.
+            // Keeping the exact current-song instance is also essential: PlayCore associates
+            // its active audio ticket with that reference, and changing it would make Seek
+            // dispose the playing ticket and create a paused replacement source.
+            await _playCore.MovePointerToAsync(currentSong, ct).ConfigureAwait(false);
+            _playCore.PlaySourceId = playSourceId ?? string.Empty;
+            return true;
+        }
+        finally
+        {
+            _transitionGate.Release();
+        }
+    }
+
     /// <inheritdoc />
     public double Volume
     {
@@ -289,10 +336,29 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private async Task PlayCoreAfterInitializationAsync()
     {
         await InitializeAsync().ConfigureAwait(false);
-        await _playCore.PlayAsync().ConfigureAwait(false);
+        await _transitionGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+            await _playCore.PlayAsync().ConfigureAwait(false);
 
-        if (_playCore.CurrentPlayingTicket is null)
-            _state.IsPlaying = false;
+            if (_playCore.CurrentPlayingTicket is null)
+            {
+                _state.IsPlaying = false;
+                return;
+            }
+
+            // Playback-memory restore intentionally loads the startup song with
+            // autoPlay:false. The later Play command creates its first audio ticket here,
+            // so this path must establish the same source/generation identity as a normal
+            // LoadAndPlay call; otherwise the first track-end event is rejected as stale.
+            CaptureCurrentPlaybackIdentity();
+            _state.IsPlaying = true;
+        }
+        finally
+        {
+            _transitionGate.Release();
+        }
     }
 
     /// <inheritdoc />
@@ -906,6 +972,36 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             && left.ProviderId == right.ProviderId
             && left.TypeId == right.TypeId
             && left.ActualId == right.ActualId);
+
+    private static int FindSongIndex(IReadOnlyList<SingleSongBase> songs, SingleSongBase targetSong)
+    {
+        for (var i = 0; i < songs.Count; i++)
+        {
+            if (SameSong(songs[i], targetSong))
+                return i;
+        }
+
+        return -1;
+    }
+
+    internal static bool CanReplaceQueueForCurrentSong(
+        SingleSongBase? nowPlayingSong,
+        SingleSongBase? currentQueueSong,
+        SingleSongBase expectedCurrentSong) =>
+        SameSong(nowPlayingSong, expectedCurrentSong)
+        && SameSong(currentQueueSong, expectedCurrentSong);
+
+    internal static List<SingleSongBase> CreateQueuePreservingCurrentSong(
+        IReadOnlyList<SingleSongBase> songs,
+        SingleSongBase currentSong)
+    {
+        var replacementSongs = songs.ToList();
+        var currentIndex = FindSongIndex(replacementSongs, currentSong);
+        if (currentIndex >= 0)
+            replacementSongs[currentIndex] = currentSong;
+
+        return replacementSongs;
+    }
 
     private sealed class TransitionHost : ITrackTransitionHost
     {

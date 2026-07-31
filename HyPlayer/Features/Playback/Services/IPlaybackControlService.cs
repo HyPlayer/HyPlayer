@@ -1,5 +1,6 @@
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,6 +29,16 @@ public interface IPlaybackControlService
     Task SetPlayModeAsync(string playModeId, CancellationToken ct = default);
 
     Task ClearQueueAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Replaces the queue without stopping or reloading the currently playing audio source.
+    /// The replacement is rejected if <paramref name="expectedCurrentSong"/> is no longer playing.
+    /// </summary>
+    Task<bool> ReplaceQueueKeepingPlaybackAsync(
+        IReadOnlyList<SingleSongBase> songs,
+        SingleSongBase expectedCurrentSong,
+        string? playSourceId,
+        CancellationToken ct = default);
 
     /// <summary>跳转到指定位置</summary>
     Task SeekAsync(TimeSpan target);

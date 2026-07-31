@@ -534,7 +534,7 @@ public sealed partial class ContainerItemsView : UserControl
             await _queueBuilder.BuildAndPlayAsync(
                 clickedSong,
                 GetEffectiveQueueScope(),
-                (SingleSongBase[])[.. VisibleRows.Select(visibleRow => visibleRow.AsPlayableSong)]);
+                VisibleRows.Select(visibleRow => visibleRow.AsPlayableSong).OfType<SingleSongBase>().ToList());
             return;
         }
 
@@ -727,8 +727,13 @@ public sealed partial class ContainerItemsView : UserControl
 
     private SongListQueueScope GetEffectiveQueueScope()
     {
-        return Rows.Count == VisibleRows.Count ? QueueScope : SongListQueueScope.Visible;
+        return ResolveEffectiveQueueScope(QueueScope, FilterBox?.Text);
     }
+
+    internal static SongListQueueScope ResolveEffectiveQueueScope(
+        SongListQueueScope queueScope,
+        string? filterText) =>
+        string.IsNullOrWhiteSpace(filterText) ? queueScope : SongListQueueScope.Visible;
 
     private bool CanPlay(ProvidableItemRowViewModel row)
     {
@@ -783,16 +788,16 @@ public sealed partial class ContainerItemsView : UserControl
             return SongListQueueScope.Visible;
 
         if (container.TypeId == _knownTypeIds.AlbumTypeId)
-            return SongListQueueScope.Album(container.ActualId, !HasMore);
+            return SongListQueueScope.Album(container.ActualId);
 
         if (container.TypeId == _knownTypeIds.PlaylistTypeId)
-            return SongListQueueScope.Playlist(container.ActualId, !HasMore);
+            return SongListQueueScope.Playlist(container.ActualId);
 
         if (_knownTypeIds.RadioChannelTypeId is not null && container.TypeId == _knownTypeIds.RadioChannelTypeId)
-            return SongListQueueScope.Radio(container.ActualId, !HasMore);
+            return SongListQueueScope.Radio(container.ActualId);
 
         if (container.TypeId == DailyRecommendContainerTypeId)
-            return SongListQueueScope.DailyRecommend(container.ActualId, !HasMore);
+            return SongListQueueScope.DailyRecommend(container.ActualId);
 
         return SongListQueueScope.Visible;
     }

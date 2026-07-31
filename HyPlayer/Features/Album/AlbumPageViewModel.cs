@@ -37,7 +37,7 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Features.Album
 {
-    public partial class AlbumPageViewModel : ObservableRecipient
+    public partial class AlbumPageViewModel : ObservableObject
     {
         private readonly IProvidableItemProvidable _itemProvider;
         private readonly IProviderKnownTypeIds _knownTypeIds;

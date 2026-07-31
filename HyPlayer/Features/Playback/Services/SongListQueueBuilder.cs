@@ -38,6 +38,7 @@ internal sealed class SongListQueueBuilder(
     IBackgroundTaskRunner taskRunner) : ISongListQueueBuilder
 {
     private readonly object _queueBuildLock = new();
+    private readonly SemaphoreSlim _queueRequestLock = new(1, 1);
     private readonly SemaphoreSlim _queueMutationLock = new(1, 1);
     private CancellationTokenSource? _queueBuildCts;
     private string? _queueBuildSourceId;
@@ -47,9 +48,29 @@ internal sealed class SongListQueueBuilder(
     {
         if (visibleSongs.Count == 0) return;
 
-        var currentSongId = state.NowPlayingProviderItem?.ActualId;
-        var shiftSong = clickedSong.ActualId == currentSongId && state.IsPlaying;
+        await _queueRequestLock.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await BuildAndPlayCoreAsync(clickedSong, scope, visibleSongs).ConfigureAwait(false);
+        }
+        finally
+        {
+            _queueRequestLock.Release();
+        }
+    }
+
+    private async Task BuildAndPlayCoreAsync(
+        SingleSongBase clickedSong,
+        SongListQueueScope scope,
+        IReadOnlyList<SingleSongBase> visibleSongs)
+    {
+        var shiftSong = SameSong(clickedSong, state.NowPlayingProviderItem) && state.IsPlaying;
         var playSourceId = scope.ToPlaySourceId();
+
+        if (shiftSong
+            && playSourceId != null
+            && playCore.PlaySourceId == playSourceId)
+            return;
 
         if (!shiftSong)
         {
@@ -76,33 +97,27 @@ internal sealed class SongListQueueBuilder(
         }
 
         CancelPendingQueueBuild();
+        var replacementSongs = scope.CanLoadCompleteSource
+            ? await LoadCompleteSourceSongsAsync(scope, CancellationToken.None).ConfigureAwait(false)
+            : visibleSongs.ToList();
+        if (replacementSongs.Count == 0)
+            return;
 
-        if (scope.CanLoadCompleteSource)
+        await _queueMutationLock.WaitAsync().ConfigureAwait(false);
+        try
         {
-            await AppendCompleteSourceAsync(scope, visibleSongs.Count, !shiftSong);
+            var replaced = await control
+                .ReplaceQueueKeepingPlaybackAsync(replacementSongs, clickedSong, playSourceId)
+                .ConfigureAwait(false);
+            if (!replaced)
+                return;
         }
-        else
+        finally
         {
-            await _queueMutationLock.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                if (!shiftSong)
-                    await control.StopAsync().ConfigureAwait(false);
-
-                await control.ClearQueueAsync().ConfigureAwait(false);
-                await playCore.InsertSongRangeAsync(visibleSongs.ToList()).ConfigureAwait(false);
-            }
-            finally
-            {
-                _queueMutationLock.Release();
-            }
+            _queueMutationLock.Release();
         }
-
-        if (playSourceId != null)
-            playCore.PlaySourceId = playSourceId;
 
         notification.ShowMessage("无感歌单切换", "成功无感切换到歌单");
-        await playCore.MovePointerToAsync(clickedSong).ConfigureAwait(false);
     }
 
     private async Task LoadClickedSongFirstAsync(SingleSongBase clickedSong, string? playSourceId)
@@ -114,8 +129,7 @@ internal sealed class SongListQueueBuilder(
             await control.ClearQueueAsync().ConfigureAwait(false);
             await playCore.InsertSongAsync(clickedSong).ConfigureAwait(false);
             await playCore.MovePointerToAsync(clickedSong).ConfigureAwait(false);
-            if (playSourceId != null)
-                playCore.PlaySourceId = playSourceId;
+            playCore.PlaySourceId = playSourceId ?? string.Empty;
         }
         finally
         {
@@ -147,19 +161,11 @@ internal sealed class SongListQueueBuilder(
 
             await _queueMutationLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             lockTaken = true;
-            await control.ClearQueueAsync(cancellationToken).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
-            await playCore.InsertSongRangeAsync(songs, ctk: cancellationToken).ConfigureAwait(false);
-
-            cancellationToken.ThrowIfCancellationRequested();
-            if (playSourceId != null)
-                playCore.PlaySourceId = playSourceId;
-
             var targetSong = GetPendingQueueBuildTarget(cancellationTokenSource) ?? clickedSong;
-            var targetIndex = FindSongIndex(songs, targetSong);
             cancellationToken.ThrowIfCancellationRequested();
-            if (targetIndex >= 0)
-                await playCore.MovePointerToAsync(targetSong, cancellationToken).ConfigureAwait(false);
+            await control
+                .ReplaceQueueKeepingPlaybackAsync(songs, targetSong, playSourceId, cancellationToken)
+                .ConfigureAwait(false);
         }
         finally
         {
@@ -199,51 +205,6 @@ internal sealed class SongListQueueBuilder(
         }
 
         return songs;
-    }
-
-    private async Task AppendCompleteSourceAsync(SongListQueueScope scope, int availableVisibleCount, bool clearFirst)
-    {
-        await AppendCompleteSourceAsync(scope, availableVisibleCount, clearFirst, stopBeforeClear: true).ConfigureAwait(false);
-    }
-
-    private async Task AppendCompleteSourceAsync(
-        SongListQueueScope scope,
-        int availableVisibleCount,
-        bool clearFirst,
-        bool stopBeforeClear)
-    {
-        await AppendCompleteSourceAsync(
-            scope,
-            availableVisibleCount,
-            clearFirst,
-            stopBeforeClear,
-            CancellationToken.None).ConfigureAwait(false);
-    }
-
-    private async Task AppendCompleteSourceAsync(
-        SongListQueueScope scope,
-        int availableVisibleCount,
-        bool clearFirst,
-        bool stopBeforeClear,
-        CancellationToken cancellationToken)
-    {
-        if (scope.Id == null) return;
-
-        // Kind-based 路由 — 跳过 string 编码/解码，直接委托给 IQueueSourceProvider
-        var playSourceId = scope.ToPlaySourceId();
-        if (playSourceId != null
-            && playCore.PlaySourceId == playSourceId
-            && (await playCore.GetPlaylistAsync(cancellationToken).ConfigureAwait(false)).Count == availableVisibleCount)
-            return;
-
-        if (clearFirst)
-        {
-            if (stopBeforeClear)
-                await control.StopAsync(cancellationToken).ConfigureAwait(false);
-            await control.ClearQueueAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        await queueLoader.AppendSourceByKindAsync(scope.Kind, scope.Id, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<bool> TryLoadFromCurrentQueueAsync(SingleSongBase clickedSong)
@@ -369,5 +330,15 @@ internal sealed class SongListQueueBuilder(
         }
 
         return -1;
+    }
+
+    private static bool SameSong(SingleSongBase? left, SingleSongBase? right)
+    {
+        return ReferenceEquals(left, right)
+               || (left is not null
+                   && right is not null
+                   && left.ProviderId == right.ProviderId
+                   && left.TypeId == right.TypeId
+                   && left.ActualId == right.ActualId);
     }
 }
