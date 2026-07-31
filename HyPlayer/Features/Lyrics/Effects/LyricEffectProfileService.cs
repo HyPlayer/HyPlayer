@@ -18,47 +18,6 @@ using UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding;
 
 namespace HyPlayer.Features.Lyrics.Effects;
 
-public sealed class LyricEffectProfileChangedEventArgs : EventArgs
-{
-    public required CompiledLyricEffectProfile Profile { get; init; }
-
-    public required bool IsPreview { get; init; }
-}
-
-public sealed class LyricEffectProfileFormatException : Exception
-{
-    public LyricEffectProfileFormatException(string message, Exception? innerException = null)
-        : base(message, innerException)
-    {
-    }
-}
-
-public interface ILyricEffectProfileService
-{
-    LyricEffectProfileDocument CommittedDocument { get; }
-
-    CompiledLyricEffectProfile EffectiveProfile { get; }
-
-    IReadOnlyList<LyricRenderOperationDescriptor> Descriptors { get; }
-    event EventHandler<LyricEffectProfileChangedEventArgs>? ProfileChanged;
-
-    Task InitializeAsync();
-
-    LyricEffectProfileDocument CreateDraft();
-
-    LyricProfileCompileResult Preview(LyricEffectProfileDocument document);
-
-    void CancelPreview();
-
-    Task<LyricProfileCompileResult> CommitAsync(LyricEffectProfileDocument document);
-
-    Task<LyricEffectProfileDocument> ImportAsync(StorageFile file);
-
-    LyricEffectProfileDocument Import(string json);
-
-    string Export(LyricEffectProfileDocument document);
-}
-
 public sealed class LyricEffectProfileService : ILyricEffectProfileService
 {
     public const string FolderName = "LyricEffects";
