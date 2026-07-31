@@ -248,6 +248,51 @@ public sealed class TrackTransitionTests
         Ensure(ticket.Status == AudioTicketStatus.Stopped, "Disposal must mark the ticket stopped.");
     }
 
+    [Test]
+    public async Task Chopin_adapter_pausing_outgoing_ticket_does_not_pause_promoted_source()
+    {
+        var player = new DisposalTrackingPlayer();
+        var promotedSource = new DisposablePlaybackSource();
+        var outgoingSource = new DisposablePlaybackSource();
+        player.PrimarySource = promotedSource;
+        var service = new ChopinAudioService(player, new Setting());
+        var outgoingTicket = new ChopinAudioTicket
+        {
+            AudioServiceId = service.Id,
+            MusicResource = new FakeMusicResource(),
+            PlaybackSource = outgoingSource,
+            Status = AudioTicketStatus.Playing
+        };
+
+        await service.PauseAudioTicketAsync(outgoingTicket);
+
+        Ensure(player.PauseCount == 1, "The outgoing source must be paused.");
+        Ensure(player.PauseAllCount == 0, "Pausing an outgoing source must not pause the promoted source.");
+        Ensure(outgoingTicket.Status == AudioTicketStatus.Paused, "The outgoing ticket must be marked paused.");
+    }
+
+    [Test]
+    public async Task Chopin_adapter_pausing_primary_ticket_still_pauses_graph()
+    {
+        var player = new DisposalTrackingPlayer();
+        var primarySource = new DisposablePlaybackSource();
+        player.PrimarySource = primarySource;
+        var service = new ChopinAudioService(player, new Setting());
+        var primaryTicket = new ChopinAudioTicket
+        {
+            AudioServiceId = service.Id,
+            MusicResource = new FakeMusicResource(),
+            PlaybackSource = primarySource,
+            Status = AudioTicketStatus.Playing
+        };
+
+        await service.PauseAudioTicketAsync(primaryTicket);
+
+        Ensure(player.PauseCount == 1, "The primary source must be paused.");
+        Ensure(player.PauseAllCount == 1, "Pausing the primary source must pause the graph.");
+        Ensure(primaryTicket.Status == AudioTicketStatus.Paused, "The primary ticket must be marked paused.");
+    }
+
     private static TrackTransitionContext CreateContext(
         FakeHost host,
         TimeSpan duration,
@@ -405,18 +450,20 @@ public sealed class TrackTransitionTests
     private sealed class DisposalTrackingPlayer : IPlayer
     {
         public int PauseCount { get; private set; }
+        public int PauseAllCount { get; private set; }
         public int DisconnectCount { get; private set; }
+        public IPlaybackSource PrimarySource { get; set; } = null!;
         public double Volume => 1d;
         public ISMTCManager SMTCManager { get; set; } = null!;
         public int ConnectedPlaybackSourceCount => 0;
         public PlaybackStatus GlobalPlaybackStatus => PlaybackStatus.Paused;
-        public IPlaybackSource PrimaryPlaybackSource => null!;
+        public IPlaybackSource PrimaryPlaybackSource => PrimarySource;
         public Task InitializePlayer(IAudioSettings settings) => Task.CompletedTask;
         public Task ConnectPlaybackSourceAsync(IPlaybackSource playbackSource, PlaybackOptions options) => Task.CompletedTask;
         public void DisconnectPlaybackSource(IPlaybackSource playbackSource) => DisconnectCount++;
         public void RemoveAllPlaybackSource() { }
         public void PlayAll() { }
-        public void PauseAll() { }
+        public void PauseAll() => PauseAllCount++;
         public void SeekPlaybackSource(TimeSpan target, IPlaybackSource playbackSource) { }
         public void PausePlaybackSource(IPlaybackSource playbackSource) => PauseCount++;
         public void PlayPlaybackSource(IPlaybackSource playbackSource) { }

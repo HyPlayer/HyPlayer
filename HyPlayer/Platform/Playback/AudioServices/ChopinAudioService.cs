@@ -204,7 +204,8 @@ public sealed class ChopinAudioService :
         if (ticket is ChopinAudioTicket chopinTicket)
         {
             _player.PausePlaybackSource(chopinTicket.PlaybackSource);
-            _player.PauseAll();
+            if (ReferenceEquals(_player.PrimaryPlaybackSource, chopinTicket.PlaybackSource))
+                _player.PauseAll();
             chopinTicket.Status = AudioTicketStatus.Paused;
         }
 
