@@ -146,7 +146,12 @@ public sealed partial class ContainerItemsView : UserControl
             OnEventAction = static (instance, _, args) =>
             {
                 if (args.PropertyName == nameof(PlaybackStateService.NowPlayingProviderItem))
-                    instance.UpdateCurrentItem(instance._state.NowPlayingProviderItem);
+                {
+                    instance._taskRunner.Forget(
+                        instance._notification.InvokeOnUIThread(
+                            () => instance.UpdateCurrentItem(instance._state.NowPlayingProviderItem)),
+                        "update current container item");
+                }
             },
             OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
         };
