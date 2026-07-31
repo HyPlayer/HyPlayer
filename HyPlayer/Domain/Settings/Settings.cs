@@ -59,11 +59,6 @@ namespace HyPlayer.Domain.Settings
         public bool IsCrossFadeTransition => TransitionId == "xfd";
         public double CrossFadeTime { get => Playback.CrossFadeTime; set { Playback.CrossFadeTime = value; OnPropertyChanged(); } }
         public bool EnableAudioGain { get => Playback.EnableAudioGain; set { Playback.EnableAudioGain = value; OnPropertyChanged(); } }
-        public bool ABRepeatStatus { get => Playback.ABRepeatStatus; set { Playback.ABRepeatStatus = value; OnPropertyChanged(); } }
-        public TimeSpan ABStartPoint { get => Playback.ABStartPoint; set { Playback.ABStartPoint = value; OnPropertyChanged(); } }
-        public string ABStartPointFriendlyValue => Playback.ABStartPointFriendlyValue;
-        public TimeSpan ABEndPoint { get => Playback.ABEndPoint; set { Playback.ABEndPoint = value; OnPropertyChanged(); } }
-        public string ABEndPointFriendlyValue => Playback.ABEndPointFriendlyValue;
         public bool enableCache { get => Playback.enableCache; set { Playback.enableCache = value; OnPropertyChanged(); } }
         public string cacheDir { get => Playback.cacheDir; set { Playback.cacheDir = value; OnPropertyChanged(); } }
         public string AudioRenderDevice { get => Playback.AudioRenderDevice; set { Playback.AudioRenderDevice = value; OnPropertyChanged(); } }

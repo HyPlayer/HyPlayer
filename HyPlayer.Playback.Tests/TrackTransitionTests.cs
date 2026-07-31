@@ -110,25 +110,6 @@ public sealed class TrackTransitionTests
     }
 
     [Test]
-    public async Task Active_ab_loop_cancels_existing_preload()
-    {
-        var host = new FakeHost();
-        var transition = new GaplessTransition();
-        var context = CreateContext(host, TimeSpan.FromMinutes(3), TimeSpan.FromSeconds(155));
-
-        await transition.OnPositionChangedAsync(context, CancellationToken.None);
-        var abContext = CreateContext(
-            host,
-            TimeSpan.FromMinutes(3),
-            TimeSpan.FromSeconds(156),
-            hasActiveAbLoop: true);
-        await transition.OnPositionChangedAsync(abContext, CancellationToken.None);
-
-        Ensure(host.Incoming.DisposeCount == 1, "Enabling AB repeat must release a preload.");
-        Ensure(host.PromoteCount == 0, "AB repeat must not promote a preload.");
-    }
-
-    [Test]
     public async Task Gapless_play_failure_releases_prepared_and_uses_direct_completion()
     {
         var host = new FakeHost();
@@ -297,8 +278,7 @@ public sealed class TrackTransitionTests
         FakeHost host,
         TimeSpan duration,
         TimeSpan position,
-        TimeSpan? crossFade = null,
-        bool hasActiveAbLoop = false) =>
+        TimeSpan? crossFade = null) =>
         new()
         {
             Host = host,
@@ -306,8 +286,7 @@ public sealed class TrackTransitionTests
             Generation = 7,
             Position = position,
             Duration = duration,
-            CanPreload = !hasActiveAbLoop && duration >= TimeSpan.FromSeconds(30),
-            HasActiveAbLoop = hasActiveAbLoop,
+            CanPreload = duration >= TimeSpan.FromSeconds(30),
             PlaybackRate = 1.25,
             CrossFadeDuration = crossFade ?? TimeSpan.FromSeconds(3)
         };

@@ -131,99 +131,6 @@ namespace HyPlayer.Domain.Settings
         }
 
         /// <summary>
-        /// Whether A-B repeat mode is active.
-        /// </summary>
-        public bool ABRepeatStatus
-        {
-            get => _abRepeatStatus;
-            set
-            {
-                _abRepeatStatus = value;
-                if (value)
-                {
-                    Ioc.Default.GetRequiredService<PlaybackStateService>().PropertyChanged += OnPlaybackStatePropertyChanged;
-                }
-                else
-                {
-                    Ioc.Default.GetRequiredService<PlaybackStateService>().PropertyChanged -= OnPlaybackStatePropertyChanged;
-                }
-            }
-        }
-
-        private static void OnPlaybackStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName != nameof(PlaybackStateService.Position)) return;
-            var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-            Ioc.Default.GetRequiredService<IPlaybackControlService>().CheckABTimeRemaining(state.Position);
-        }
-
-        private static bool _abRepeatStatus = false;
-
-        /// <summary>
-        /// A-B repeat start point.
-        /// </summary>
-        public TimeSpan ABStartPoint
-        {
-            get => _abStartPoint;
-            set
-            {
-                _abStartPoint = value;
-            }
-        }
-
-        public string ABStartPointFriendlyValue
-        {
-            get
-            {
-                if (_abStartPoint.Hours == 0)
-                {
-                    if (_abStartPoint.Minutes < 10)
-                        return _abStartPoint.ToString(@"m\:ss") ?? string.Empty;
-                    else
-                        return _abStartPoint.ToString(@"mm\:ss") ?? string.Empty;
-                }
-                else
-                {
-                    return _abStartPoint.ToString(@"hh\:mm\:ss") ?? string.Empty;
-                }
-            }
-        }
-
-        private TimeSpan _abStartPoint = TimeSpan.Zero;
-
-        /// <summary>
-        /// A-B repeat end point.
-        /// </summary>
-        public TimeSpan ABEndPoint
-        {
-            get => _abEndPoint;
-            set
-            {
-                _abEndPoint = value;
-            }
-        }
-
-        private TimeSpan _abEndPoint = TimeSpan.Zero;
-
-        public string ABEndPointFriendlyValue
-        {
-            get
-            {
-                if (_abEndPoint.Hours == 0)
-                {
-                    if (_abEndPoint.Minutes < 10)
-                        return _abStartPoint.ToString(@"m\:ss") ?? string.Empty;
-                    else
-                        return _abStartPoint.ToString(@"mm\:ss") ?? string.Empty;
-                }
-                else
-                {
-                    return _abStartPoint.ToString(@"hh\:mm\:ss") ?? string.Empty;
-                }
-            }
-        }
-
-        /// <summary>
         /// Whether audio caching is enabled.
         /// </summary>
         public bool enableCache
@@ -297,7 +204,7 @@ namespace HyPlayer.Domain.Settings
         }
 
         // TODO(settings-applier): PlaybackSettings still applies several playback side effects directly
-        // (EnableAudioGain, ABRepeatStatus, AudioRenderDevice, EnableFFT).
+        // (EnableAudioGain, AudioRenderDevice, EnableFFT).
         // Keep the current behavior for compatibility; migrate these setters behind a dedicated
         // PlaybackSettingsApplier in a separate high-risk pass so import/reset settings can be made side-effect safe.
     }

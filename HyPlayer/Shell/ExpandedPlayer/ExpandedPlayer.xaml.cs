@@ -931,16 +931,6 @@ public sealed partial class ExpandedPlayer : Page
         expandedPlayerWindow?.Closed -= ExpandedPlayerClosed;
     }
 
-    private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
-    {
-        _settings.ABStartPoint = _player.PrimaryAudioInputNode.Position;
-    }
-
-    private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
-    {
-        _settings.ABEndPoint = _player.PrimaryAudioInputNode.Position;
-    }
-
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
         if (_settings.albumRound) ImageAlbum.CornerRadius = new CornerRadius(300);

@@ -15,12 +15,6 @@ public sealed class GaplessTransition : ITrackTransition
 
     public async Task OnPositionChangedAsync(TrackTransitionContext context, CancellationToken ct)
     {
-        if (context.HasActiveAbLoop)
-        {
-            await CancelAsync(ct).ConfigureAwait(false);
-            return;
-        }
-
         if (_promotion is not null)
         {
             await SettlePromotionAsync().ConfigureAwait(false);

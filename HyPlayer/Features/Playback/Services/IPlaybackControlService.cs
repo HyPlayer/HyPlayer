@@ -61,8 +61,4 @@ public interface IPlaybackControlService
     /// </summary>
     Task InitializeAsync();
 
-    /// <summary>
-    /// 检查 A-B 重复区间，若超出则跳回起点
-    /// </summary>
-    void CheckABTimeRemaining(TimeSpan position);
 }

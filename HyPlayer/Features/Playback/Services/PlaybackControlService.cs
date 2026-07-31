@@ -408,15 +408,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             ct);
     }
 
-    /// <inheritdoc />
-    public void CheckABTimeRemaining(TimeSpan position)
-    {
-        if (_setting.ABRepeatStatus
-            && position >= _setting.ABEndPoint && _setting.ABEndPoint != TimeSpan.Zero &&
-            _setting.ABEndPoint > _setting.ABStartPoint)
-            _taskRunner.Forget(SeekAsync(_setting.ABStartPoint), "seek to AB repeat start");
-    }
-
     #endregion
 
     #region Player Event Handlers
@@ -428,7 +419,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     {
         _state.Position = position;
         _lyricService.Tick(position);
-        CheckABTimeRemaining(position);
         if (_currentSource is { } source)
         {
             var generation = _playbackGeneration;
@@ -620,10 +610,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         var duration = _player is AudioGraphPlayer { PrimaryAudioInputNode.Duration: { } actualDuration }
             ? actualDuration
             : TimeSpan.Zero;
-        var hasAbLoop = _setting.ABRepeatStatus
-                        && _setting.ABEndPoint > _setting.ABStartPoint
-                        && _setting.ABEndPoint != TimeSpan.Zero;
-
         return new TrackTransitionContext
         {
             Host = new TransitionHost(this),
@@ -631,10 +617,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             Generation = generation,
             Position = position,
             Duration = duration,
-            CanPreload = !hasAbLoop
-                         && _playCore.ActivePlayModeId is not ("sgl" or "ltg")
+            CanPreload = _playCore.ActivePlayModeId is not ("sgl" or "ltg")
                          && duration >= TimeSpan.FromSeconds(30),
-            HasActiveAbLoop = hasAbLoop,
             PlaybackRate = _player.GetPlaybackSourceSpeed(source),
             CrossFadeDuration = TimeSpan.FromSeconds(Math.Clamp(_setting.CrossFadeTime, 3d, 10d))
         };

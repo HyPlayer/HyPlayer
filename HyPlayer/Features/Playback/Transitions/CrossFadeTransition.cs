@@ -17,12 +17,6 @@ public sealed class CrossFadeTransition : ITrackTransition
 
     public async Task OnPositionChangedAsync(TrackTransitionContext context, CancellationToken ct)
     {
-        if (context.HasActiveAbLoop)
-        {
-            await CancelAsync(ct).ConfigureAwait(false);
-            return;
-        }
-
         if (_promotion is not null)
         {
             await ApplyFadeAsync(context.CrossFadeDuration, ct).ConfigureAwait(false);

@@ -23,7 +23,6 @@ public sealed class TrackTransitionContext
     public required TimeSpan Position { get; init; }
     public required TimeSpan Duration { get; init; }
     public required bool CanPreload { get; init; }
-    public required bool HasActiveAbLoop { get; init; }
     public required double PlaybackRate { get; init; }
     public required TimeSpan CrossFadeDuration { get; init; }
 }
