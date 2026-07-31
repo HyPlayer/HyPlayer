@@ -21,7 +21,7 @@ namespace HyPlayer.UI.Effects;
 /// <param name="enableDithering"></param>
 [D2DInputCount(0)]
 [D2DRequiresScenePosition]
-[D2DShaderProfile(D2D1ShaderProfile.PixelShader40)]
+[D2DShaderProfile(D2D1ShaderProfile.PixelShader50)]
 [D2DGeneratedPixelShaderDescriptor]
 public readonly partial struct IsolationEffect(
     float2 resolution,
@@ -36,8 +36,8 @@ public readonly partial struct IsolationEffect(
     bool enableLightWave,
     bool enableDithering = true) : ID2D1PixelShader
 {
-    private const float RAD_TO_DEG = 180.0f / 3.1415926f;
-    private const float DEG_TO_RAD = 3.1415926f / 180.0f;
+    const float RAD_TO_DEG = 180.0f / 3.1415926f;
+    const float DEG_TO_RAD = 3.1415926f / 180.0f;
 
     private float2 Rotate(float2 p, float a)
     {
@@ -287,8 +287,13 @@ public readonly partial struct IsolationEffect(
 
         var finalComp = Hlsl.Lerp(layer1, layer2, Hlsl.SmoothStep(0.5f, -0.3f, tuv.Y));
 
-        if (enableLightWave) return new float4(Hlsl.Saturate(LightWave(finalComp, uv) + diter), 1.0f);
-
-        return new float4(Hlsl.Saturate(OkLab2Srgb(finalComp) + diter), 1.0f);
+        if (enableLightWave)
+        {
+            return new float4(Hlsl.Saturate(LightWave(finalComp, uv) + diter), 1.0f);
+        }
+        else
+        {
+            return new float4(Hlsl.Saturate(OkLab2Srgb(finalComp) + diter), 1.0f);
+        }
     }
 }

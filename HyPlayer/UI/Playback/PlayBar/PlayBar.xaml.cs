@@ -45,6 +45,7 @@ using HyPlayer.Shell.Playback;
 using HyPlayer.UI.Dialogs;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using WinRT;
+using HyPlayer.Platform.Xaml;
 
 #endregion
 
@@ -52,7 +53,7 @@ using WinRT;
 
 namespace HyPlayer.UI.Playback.PlayBar;
 
-public sealed class PlayBar
+public sealed partial class PlayBar
 {
     // ---------------------------------------------------------------
     //  ViewModel (resolved from DI; holds all business logic)

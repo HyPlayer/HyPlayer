@@ -8,6 +8,7 @@ using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Media.Animation;
 using CommunityToolkit.WinUI.Animations;
 using Microsoft.Graphics.Canvas.Effects;
+using CommunityToolkit.WinUI;
 
 namespace HyPlayer.UI.Controls;
 #nullable enable
