@@ -7,6 +7,7 @@ using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
@@ -41,7 +42,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
         private readonly IPlaybackControlService _control;
         private readonly PlaybackStateService _state;
         private readonly ILyricService _lyricService;
-        private readonly INotificationService _notification;
+        private readonly IUIThreadDispatcher _uiThreadDispatcher;
         private readonly Setting _settings;
         private readonly IAuthService _authService;
         private readonly WeakEventListener<ExpandedPlayerViewModel, object?, PropertyChangedEventArgs> _stateChangedListener;
@@ -52,7 +53,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
             IPlaybackControlService control,
             PlaybackStateService state,
             ILyricService lyricService,
-            INotificationService notification,
+            IUIThreadDispatcher uiThreadDispatcher,
             Setting settings,
             IAuthService authService)
         {
@@ -60,7 +61,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
             _control = control;
             _state = state;
             _lyricService = lyricService;
-            _notification = notification;
+            _uiThreadDispatcher = uiThreadDispatcher;
             _settings = settings;
             _authService = authService;
             SyncFromState();
@@ -242,7 +243,7 @@ namespace HyPlayer.Shell.ExpandedPlayer
 
         private void RunOnUIThread(Action action)
         {
-            _ = _notification.InvokeOnUIThread(action);
+            _ = _uiThreadDispatcher.TryRunAsync(action);
         }
 
         public void Dispose()

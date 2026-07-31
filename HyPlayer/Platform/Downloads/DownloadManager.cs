@@ -17,6 +17,7 @@ using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
@@ -61,6 +62,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
 {
     private DownloadOperation _downloadOperation;
     private readonly INotificationService _notification;
+    private readonly IUIThreadDispatcher _uiThreadDispatcher;
     private readonly Setting _setting;
     private readonly HttpClient _httpClient;
     private readonly ILyricProvidable _lyricProvider;
@@ -115,6 +117,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     public DownloadObject(
         SingleSongBase song,
         INotificationService notification,
+        IUIThreadDispatcher uiThreadDispatcher,
         Setting setting,
         HttpClient httpClient,
         ILyricProvidable lyricProvider,
@@ -123,6 +126,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         IDiagnosticsStateService diagnostics)
     {
         _notification = notification;
+        _uiThreadDispatcher = uiThreadDispatcher;
         _setting = setting;
         _httpClient = httpClient;
         _lyricProvider = lyricProvider;
@@ -198,7 +202,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
             _downloadOperation?.Pause();
         Status = DownloadStatus.Paused;
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
             Message = "暂停中";
             HasPaused = true;
@@ -210,7 +214,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     {
         _downloadOperation?.Resume();
         Status = DownloadStatus.Downloading;
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
             Message = "下载中";
             HasPaused = false;
@@ -220,7 +224,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     public void Queue()
     {
         Status = DownloadStatus.Queueing;
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
             Message = "排队中";
             HasPaused = false;
@@ -240,7 +244,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
             _downloadOperation?.Pause();
         Status = DownloadStatus.Finished;
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
             Message = "已移除";
             HasPaused = false;
@@ -258,12 +262,12 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
             DownloadManager.WritingTasks.RemoveAll(t => t.IsCompleted);
             Status = DownloadStatus.Finished;
         }));
-        _ = _notification.InvokeOnUIThread(() => Message = "下载完成");
+        _ = _uiThreadDispatcher.TryRunAsync(() => Message = "下载完成");
     }
 
     private Task WriteInfoToFile()
     {
-        _ = _notification.InvokeOnUIThread(() => Message = "正在写文件信息");
+        _ = _uiThreadDispatcher.TryRunAsync(() => Message = "正在写文件信息");
         return Task.Run(async () =>
         {
             using var streamAbstraction = new UwpStorageFileAbstraction(ResultFile);
@@ -331,7 +335,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
             catch (Exception ex)
             {
                 Status = DownloadStatus.Error;
-                _ = _notification.InvokeOnUIThread(() =>
+                _ = _uiThreadDispatcher.TryRunAsync(() =>
                 {
                     HasError = true;
                     HasPaused = true;
@@ -346,7 +350,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
 
     private Task DownloadLyric()
     {
-        _ = _notification.InvokeOnUIThread(() => Message = "下载歌词中");
+        _ = _uiThreadDispatcher.TryRunAsync(() => Message = "下载歌词中");
         //下载歌词
         return Task.Run(async () =>
         {
@@ -379,7 +383,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
             catch (Exception ex)
             {
                 Status = DownloadStatus.Error;
-                _ = _notification.InvokeOnUIThread(() =>
+                _ = _uiThreadDispatcher.TryRunAsync(() =>
                 {
                     Message = "下载歌词错误: " + ex.Message;
                     HasError = true;
@@ -410,7 +414,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         if (obj.Progress.TotalBytesToReceive == 0) return;
         if (Status != DownloadStatus.Downloading) return;
 
-        _ = _notification.InvokeOnUIThread((() =>
+        _ = _uiThreadDispatcher.TryRunAsync((() =>
         {
             TotalSize = obj.Progress.TotalBytesToReceive;
             HadSize = obj.Progress.BytesReceived;
@@ -430,7 +434,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
     {
         if (_downloadOperation != null) { Resume(); return; }
         Status = DownloadStatus.Downloading;
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
             HasError = false;
             HasPaused = false;
@@ -462,7 +466,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
                 {
                     case OccupySolution.Skip:
                         Status = DownloadStatus.Paused;
-                        _ = _notification.InvokeOnUIThread(() => { Message = "歌曲已存在, 跳过"; });
+                        _ = _uiThreadDispatcher.TryRunAsync(() => { Message = "歌曲已存在, 跳过"; });
                         return;
                     case OccupySolution.ReWrite:
                         await (await nowFolder.GetFileAsync(Path.GetFileName(FileName))).DeleteAsync();
@@ -483,7 +487,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
                         Wc_DownloadFileCompleted();
                         return;
                 }
-            _ = _notification.InvokeOnUIThread(() =>
+            _ = _uiThreadDispatcher.TryRunAsync(() =>
             {
                 HasError = false;
                 HasPaused = false;
@@ -495,7 +499,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
             if (musicResourceProvider is null)
             {
                 Status = DownloadStatus.Error;
-                _ = _notification.InvokeOnUIThread(() =>
+                _ = _uiThreadDispatcher.TryRunAsync(() =>
                 {
                     Message = "未找到歌曲下载源";
                     HasError = true;
@@ -510,7 +514,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
             if (musicResource?.Uri is null)
             {
                 Status = DownloadStatus.Error;
-                _ = _notification.InvokeOnUIThread(() =>
+                _ = _uiThreadDispatcher.TryRunAsync(() =>
                 {
                     Message = "获取下载链接错误";
                     HasError = true;
@@ -540,7 +544,7 @@ public sealed partial class DownloadObject : INotifyPropertyChanged
         catch (Exception ex)
         {
             Status = DownloadStatus.Error;
-            _ = _notification.InvokeOnUIThread(() => { Message = "下载错误: " + ex.Message; });
+            _ = _uiThreadDispatcher.TryRunAsync(() => { Message = "下载错误: " + ex.Message; });
             _diagnostics.ErrorMessages.Add("无法下载歌曲 " + _downloadSongName + "\n已自动将其从下载列表中移除" + ex.Message);
         }
     }
@@ -606,6 +610,7 @@ internal static class DownloadManager
     private static bool Timered;
     private static IGlobalTimerService GlobalTimer => Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private static INotificationService Notification => Ioc.Default.GetRequiredService<INotificationService>();
+    private static IUIThreadDispatcher UIThreadDispatcher => Ioc.Default.GetRequiredService<IUIThreadDispatcher>();
     private static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
     private static HttpClient HttpClient => Ioc.Default.GetRequiredService<HttpClient>();
     private static ILyricProvidable LyricProvider => Ioc.Default.GetRequiredService<ILyricProvidable>();
@@ -690,7 +695,7 @@ internal static class DownloadManager
                     return;
                 case DownloadObject.DownloadStatus.Finished:
                     var i1 = i;
-                    _ = Notification.InvokeOnUIThread(() =>
+                    _ = UIThreadDispatcher.TryRunAsync(() =>
                     {
                         DownloadLists.RemoveAt(i1);
                         if (DownloadLists.Count == 0)
@@ -706,7 +711,16 @@ internal static class DownloadManager
 
     private static DownloadObject CreateDownloadObject(SingleSongBase song)
     {
-        return new DownloadObject(song, Notification, Setting, HttpClient, LyricProvider, MusicResourceProviders, QualityTagProvider, Diagnostics);
+        return new DownloadObject(
+            song,
+            Notification,
+            UIThreadDispatcher,
+            Setting,
+            HttpClient,
+            LyricProvider,
+            MusicResourceProviders,
+            QualityTagProvider,
+            Diagnostics);
     }
 
     public static void CacheAlbumPicture(string albumId, Picture picture)

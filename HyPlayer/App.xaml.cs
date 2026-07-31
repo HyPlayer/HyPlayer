@@ -10,6 +10,7 @@ using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
@@ -118,7 +119,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
         if (AppDepository.Resolve<PlaybackSurfaceStore>().IsExpanded)
             AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
-                AppDepository.Resolve<INotificationService>().InvokeOnUIThread(() =>
+                AppDepository.Resolve<IUIThreadDispatcher>().TryRunAsync(() =>
                 {
                     AppDepository.Resolve<IPlaybackSurfaceCoordinator>().RestoreExpandedSurface();
                 }),

@@ -26,6 +26,7 @@ using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Tiles;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
 using HyPlayer.Shell.Services;
@@ -228,7 +229,7 @@ public sealed partial class MainPage : Page
     internal void OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (!_setting.AutoHidePlaybar) return;
-        _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(() =>
+        _ = this.RunOnUIThreadAsync(() =>
         {
             if (isActivated)
             {

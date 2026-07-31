@@ -33,6 +33,7 @@ using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Tiles;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
 using HyPlayer.Shell.Services;
@@ -143,7 +144,7 @@ public sealed partial class ContainerItemsView : UserControl
                 if (args.PropertyName == nameof(PlaybackStateService.NowPlayingProviderItem))
                 {
                     instance._taskRunner.Forget(
-                        instance._notification.InvokeOnUIThread(
+                        instance.RunOnUIThreadAsync(
                             () => instance.UpdateCurrentItem(instance._state.NowPlayingProviderItem)),
                         "update current container item");
                 }

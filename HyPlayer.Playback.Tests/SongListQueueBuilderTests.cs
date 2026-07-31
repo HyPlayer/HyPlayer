@@ -351,11 +351,6 @@ public sealed class SongListQueueBuilderTests
     {
         public List<(string Title, string? Message)> Messages { get; } = [];
         public void ShowMessage(string title, string? message = null) => Messages.Add((title, message));
-        public IAsyncAction? InvokeOnUIThread(Action action)
-        {
-            action();
-            return null;
-        }
     }
 
     private sealed class FakePlayCore : PlayCoreBase

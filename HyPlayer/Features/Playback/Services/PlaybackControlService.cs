@@ -13,6 +13,7 @@ using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
@@ -63,7 +64,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private readonly PlaybackStateService _state;
     private readonly Setting _setting;
     private readonly ILyricService _lyricService;
-    private readonly INotificationService _notification;
+    private readonly IUIThreadDispatcher _uiThreadDispatcher;
     private readonly IPlaybackNotificationService _playbackNotification;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
@@ -99,7 +100,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         PlaybackStateService state,
         Setting setting,
         ILyricService lyricService,
-        INotificationService notification,
+        IUIThreadDispatcher uiThreadDispatcher,
         IPlaybackNotificationService playbackNotification,
         IBackgroundTaskRunner taskRunner,
         IEnumerable<IMusicResourceProvidable> musicResourceProviders,
@@ -112,7 +113,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _setting = setting ?? throw new ArgumentNullException(nameof(setting));
         _lyricService = lyricService ?? throw new ArgumentNullException(nameof(lyricService));
-        _notification = notification ?? throw new ArgumentNullException(nameof(notification));
+        _uiThreadDispatcher = uiThreadDispatcher ?? throw new ArgumentNullException(nameof(uiThreadDispatcher));
         _playbackNotification = playbackNotification ?? throw new ArgumentNullException(nameof(playbackNotification));
         _taskRunner = taskRunner ?? throw new ArgumentNullException(nameof(taskRunner));
         _musicResourceProviders = musicResourceProviders?.ToList() ?? throw new ArgumentNullException(nameof(musicResourceProviders));
@@ -277,7 +278,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             if (_player is AudioGraphPlayer graphPlayer)
             {
                 SystemMediaTransportControls? smtc = null;
-                var uiInitialization = _notification.InvokeOnUIThread(() =>
+                var uiInitialized = await _uiThreadDispatcher.TryRunAsync(() =>
                 {
                     smtc = Windows.Media.SystemMediaTransportControls.GetForCurrentView();
                     smtc.IsPlayEnabled = true;
@@ -297,10 +298,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                         _smtcSubscribed = true;
                     }
                 });
-                if (uiInitialization is null)
+                if (!uiInitialized)
                     throw new InvalidOperationException("SMTC initialization requires an active UI view.");
-
-                await uiInitialization;
                 if (smtc is null)
                     throw new InvalidOperationException("SMTC initialization did not return a control instance.");
             }
@@ -500,7 +499,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private void OnGlobalPlaybackStatusChanged(PlaybackStatus status)
     {
         var playing = status == PlaybackStatus.Playing;
-        _taskRunner.Forget(_notification.InvokeOnUIThread(() =>
+        _taskRunner.Forget(_uiThreadDispatcher.TryRunAsync(() =>
         {
             _state.IsPlaying = playing;
         }), "publish playback status changed");

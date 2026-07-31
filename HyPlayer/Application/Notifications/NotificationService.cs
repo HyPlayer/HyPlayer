@@ -1,6 +1,7 @@
 using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
@@ -22,10 +23,6 @@ using HyPlayer.UI.TeachingTips;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Windows.ApplicationModel.Core;
-using Windows.Foundation;
-using Windows.UI.Core;
 
 namespace HyPlayer.Application.Notifications;
 
@@ -34,12 +31,12 @@ namespace HyPlayer.Application.Notifications;
 /// </summary>
 public class NotificationService : INotificationService
 {
-    private readonly IAppLifecycleStateService _lifecycle;
+    private readonly IUIThreadDispatcher _uiThreadDispatcher;
     private readonly ITeachingTipService _teachingTip;
 
-    public NotificationService(IAppLifecycleStateService lifecycle, ITeachingTipService teachingTip)
+    public NotificationService(IUIThreadDispatcher uiThreadDispatcher, ITeachingTipService teachingTip)
     {
-        _lifecycle = lifecycle;
+        _uiThreadDispatcher = uiThreadDispatcher;
         _teachingTip = teachingTip;
     }
 
@@ -47,7 +44,7 @@ public class NotificationService : INotificationService
     public void ShowMessage(string title, string? message = null)
     {
         _teachingTip.Items.Enqueue(new KeyValuePair<string, string?>(title, message));
-        _ = InvokeOnUIThread(() =>
+        _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
             var tip = _teachingTip.Tip as TeachingTip;
             if (tip != null && !tip.IsOpen)
@@ -55,22 +52,4 @@ public class NotificationService : INotificationService
         });
     }
 
-    /// <inheritdoc />
-    public IAsyncAction? InvokeOnUIThread(Action action)
-    {
-        if (_lifecycle.IsInBackground) return null;
-        try
-        {
-            if (CoreApplication.Views.Count > 0)
-                return CoreApplication.MainView.Dispatcher.RunAsync(
-                    CoreDispatcherPriority.Normal,
-                    () => { action(); });
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Notification dispatch failed: {ex.Message}");
-        }
-
-        return null;
-    }
 }

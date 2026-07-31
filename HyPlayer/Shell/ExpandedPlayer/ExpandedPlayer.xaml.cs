@@ -38,6 +38,7 @@ using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Tiles;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
 using HyPlayer.Shell.Services;
@@ -346,7 +347,7 @@ public sealed partial class ExpandedPlayer : Page
     }
     private void HyPlayList_OnPlay()
     {
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = this.RunOnUIThreadAsync(() =>
         {
             if (_settings.albumRotate)
                 //网易云音乐圆形唱片
@@ -364,7 +365,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void HyPlayList_OnPause()
     {
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = this.RunOnUIThreadAsync(() =>
         {
             if (_settings.albumRotate)
                 RotateAnimationSet.Stop();
@@ -515,7 +516,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void RunOnUIThread(Action action)
     {
-        _taskRunner.Forget(_notification.InvokeOnUIThread(action), "ExpandedPlayer UI update");
+        _taskRunner.Forget(this.RunOnUIThreadAsync(action), "ExpandedPlayer UI update");
     }
 
     private readonly Storyboard luminousColorsRotateStoryBoard = new();
@@ -526,7 +527,7 @@ public sealed partial class ExpandedPlayer : Page
 
     public void LoadLyricsBox()
     {
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = this.RunOnUIThreadAsync(() =>
         {
             if (_lyricIsCleaning) return;
             if (_state.LyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
@@ -571,7 +572,7 @@ public sealed partial class ExpandedPlayer : Page
         var providerItem = _state.NowPlayingProviderItem;
         var lyricIsReady = ReferenceEquals(_lastSong, providerItem);
         _lyricHasBeenLoaded = lyricIsReady;
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = this.RunOnUIThreadAsync(() =>
         {
             ViewModel.SyncFromState();
             if (providerItem == null)
@@ -1110,7 +1111,7 @@ public sealed partial class ExpandedPlayer : Page
         if (_state.CoverStream == null || _lifecycle.IsInBackground) return;
         using var stream = _state.CoverStream.CloneStream();
         var isBright = await IsBrightAsync(stream);
-        _ = _notification.InvokeOnUIThread(async () =>
+        _ = this.RunOnUIThreadAsync(async () =>
         {
             if (!_settings.noImage)
             {
@@ -1193,7 +1194,7 @@ public sealed partial class ExpandedPlayer : Page
 
     public void Collapse()
     {
-        _ = _notification.InvokeOnUIThread(() =>
+        _ = this.RunOnUIThreadAsync(() =>
         {
             MainGrid.Margin = new Thickness(0);
 

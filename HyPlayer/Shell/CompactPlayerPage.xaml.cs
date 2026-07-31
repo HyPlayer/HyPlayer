@@ -21,6 +21,7 @@ using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Tiles;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
 using HyPlayer.Shell.Services;
@@ -87,7 +88,6 @@ public sealed partial class CompactPlayerPage : Page
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
     private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly WeakEventListener<CompactPlayerPage, object?, PropertyChangedEventArgs> _stateChangedListener;
     private readonly WeakEventListener<CompactPlayerPage, object?, SongLikeStatusChangedEventArgs> _songLikeStatusChangedListener;
@@ -163,7 +163,7 @@ public sealed partial class CompactPlayerPage : Page
     private async void HyPlayList_OnSongCoverChanged(SingleSongBase? providerItem, PlaybackCurrentItemSnapshot? snapshot)
     {
         if (_state.CoverStream == null) return;
-        _taskRunner.Forget(_notification.InvokeOnUIThread(async () =>
+        _taskRunner.Forget(this.RunOnUIThreadAsync(async () =>
         {
             if (!_setting.noImage)
             {
@@ -394,7 +394,7 @@ public sealed partial class CompactPlayerPage : Page
 
     private void RunOnUIThread(Action action)
     {
-        _taskRunner.Forget(_notification.InvokeOnUIThread(action), "CompactPlayerPage UI update");
+        _taskRunner.Forget(this.RunOnUIThreadAsync(action), "CompactPlayerPage UI update");
     }
 
     private void Grid_PointerEntered(object sender, PointerRoutedEventArgs e)

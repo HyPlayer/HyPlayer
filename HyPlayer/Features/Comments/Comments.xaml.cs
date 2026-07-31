@@ -20,6 +20,7 @@ using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Tiles;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
 using HyPlayer.Shell.Services;
@@ -290,7 +291,7 @@ public sealed partial class Comments : Page
     (source) =>
 
     {
-        _ = _notification.InvokeOnUIThread(
+        _ = this.RunOnUIThreadAsync(
         () =>
         {
             if (!IsCurrentDelayedUi(delayedUiVersion)) return;
@@ -324,7 +325,7 @@ public sealed partial class Comments : Page
         (source) =>
 
         {
-            _ = _notification.InvokeOnUIThread(
+            _ = this.RunOnUIThreadAsync(
             () =>
             {
                 if (!IsCurrentDelayedUi(delayedUiVersion)) return;
@@ -353,7 +354,7 @@ public sealed partial class Comments : Page
     (source) =>
 
         {
-            _ = _notification.InvokeOnUIThread(
+            _ = this.RunOnUIThreadAsync(
        () =>
        {
            if (!IsCurrentDelayedUi(delayedUiVersion)) return;
@@ -421,7 +422,7 @@ public sealed partial class Comments : Page
             (source) =>
 
             {
-                _ = _notification.InvokeOnUIThread(
+                _ = this.RunOnUIThreadAsync(
                 () =>
                 {
                     if (!IsCurrentDelayedUi(delayedUiVersion)) return;

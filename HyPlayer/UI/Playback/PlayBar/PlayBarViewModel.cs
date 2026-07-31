@@ -8,6 +8,7 @@ using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
@@ -45,7 +46,7 @@ public partial class PlayBarViewModel : ObservableObject
     private readonly PlaybackStateService _state;
     private readonly ILyricService _lyricService;
     private readonly Setting _setting;
-    private readonly INotificationService _notification;
+    private readonly IUIThreadDispatcher _uiThreadDispatcher;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly IAuthService _authService;
     private readonly WeakEventListener<PlayBarViewModel, object?, PropertyChangedEventArgs> _stateChangedListener;
@@ -57,7 +58,7 @@ public partial class PlayBarViewModel : ObservableObject
         PlaybackStateService state,
         ILyricService lyricService,
         Setting setting,
-        INotificationService notification,
+        IUIThreadDispatcher uiThreadDispatcher,
         IBackgroundTaskRunner taskRunner,
         IAuthService authService)
     {
@@ -66,7 +67,7 @@ public partial class PlayBarViewModel : ObservableObject
         _state = state;
         _lyricService = lyricService;
         _setting = setting;
-        _notification = notification;
+        _uiThreadDispatcher = uiThreadDispatcher;
         _taskRunner = taskRunner;
         _authService = authService;
         SyncFromState();
@@ -329,7 +330,7 @@ public partial class PlayBarViewModel : ObservableObject
 
     private void RunOnUIThread(Action action)
     {
-        _taskRunner.Forget(_notification.InvokeOnUIThread(action), $"{nameof(PlayBarViewModel)} UI update");
+        _taskRunner.Forget(_uiThreadDispatcher.TryRunAsync(action), $"{nameof(PlayBarViewModel)} UI update");
     }
 
     private static string FormatTime(TimeSpan time)

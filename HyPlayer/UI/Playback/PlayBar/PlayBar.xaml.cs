@@ -28,6 +28,7 @@ using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Tiles;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
 using HyPlayer.Shell.Services;
@@ -756,7 +757,7 @@ DoubleAnimation verticalAnimation;
     public async void RefreshPlayBarCover(SingleSongBase? providerItem)
     {
         if (ViewModel.CoverStream == null) return;
-        _taskRunner.Forget(_notification.InvokeOnUIThread(async () =>
+        _taskRunner.Forget(this.RunOnUIThreadAsync(async () =>
         {
             if (GridSongInfo.Visibility == Visibility.Visible && Opacity != 0)
             {
@@ -868,6 +869,6 @@ DoubleAnimation verticalAnimation;
 
     private void RunOnUIThread(Action action)
     {
-        _taskRunner.Forget(_notification.InvokeOnUIThread(action), "PlayBar UI update");
+        _taskRunner.Forget(this.RunOnUIThreadAsync(action), "PlayBar UI update");
     }
 }

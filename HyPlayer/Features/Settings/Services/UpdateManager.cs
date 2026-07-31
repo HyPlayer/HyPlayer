@@ -5,6 +5,7 @@ using HyPlayer.Platform.Serialization;
 using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
@@ -189,7 +190,7 @@ public static class UpdateManager
             }
             else
             {
-                _ = Ioc.Default.GetRequiredService<INotificationService>().InvokeOnUIThread(async () =>
+                _ = Ioc.Default.GetRequiredService<IUIThreadDispatcher>().TryRunAsync(async () =>
                 {
                     ContentDialog contentDialog = new()
                     {
