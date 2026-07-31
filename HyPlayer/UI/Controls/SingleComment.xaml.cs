@@ -33,11 +33,7 @@ using HyPlayer.UI.TeachingTips;
 using HyPlayer.Platform.Storage.Cache;
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -49,7 +45,7 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.UI.Controls;
 
-public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
+public sealed partial class SingleComment : UserControl
 {
     public static readonly DependencyProperty AvatarSourceProperty =
         DependencyProperty.Register("AvatarSource", typeof(BitmapImage), typeof(SingleComment),
@@ -59,30 +55,14 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         DependencyProperty.Register("MainComment", typeof(CommentBase), typeof(SingleComment),
             new PropertyMetadata(null)); //主评论
 
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
-    {
-        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-            () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
-    }
-
-
     private ObservableCollection<CommentBase> floorComments = new ObservableCollection<CommentBase>();
     private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    public UserDisplay CommentUserDisplay;
+    public SingleCommentState State { get; } = new();
     private string time = "0";
 
     public SingleComment()
     {
         InitializeComponent();
-        floorComments.CollectionChanged += FloorComments_CollectionChanged;
-    }
-
-    private void FloorComments_CollectionChanged(object sender,
-        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        OnPropertyChanged(nameof(floorComments));
     }
 
     public BitmapImage AvatarSource
@@ -208,7 +188,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        CommentUserDisplay = new UserDisplay(
+        State.CommentUserDisplay = new UserDisplay(
             new CommentUserInfo
             {
                 ActualId = MainComment.Sender?.ActualId ?? string.Empty,
@@ -218,7 +198,6 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             _setting.noImage);
         ReplyBtn.Visibility = Visibility.Visible;
         FloorCommentsExpander.Visibility = MainComment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
-        Bindings.Update();
     }
 
     private void FloorCommentsExpander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender,
@@ -231,11 +210,6 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         Microsoft.UI.Xaml.Controls.ExpanderCollapsedEventArgs args)
     {
         floorComments.Clear();
-    }
-
-    private void UserControl_Unloaded(object sender, RoutedEventArgs e)
-    {
-        floorComments.CollectionChanged -= FloorComments_CollectionChanged;
     }
 
     private static async Task<string?> GetCommentAvatarUrlAsync(CommentBase comment)

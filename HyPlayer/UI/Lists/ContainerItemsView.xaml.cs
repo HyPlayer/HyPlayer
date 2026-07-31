@@ -113,12 +113,6 @@ public sealed partial class ContainerItemsView : UserControl
     public static readonly DependencyProperty GreedyLoadProperty = DependencyProperty.Register(
         nameof(GreedyLoad), typeof(bool), typeof(ContainerItemsView), new PropertyMetadata(false, OnGreedyLoadChanged));
 
-    public static readonly DependencyProperty IsLoadingProperty = DependencyProperty.Register(
-        nameof(IsLoading), typeof(bool), typeof(ContainerItemsView), new PropertyMetadata(false));
-
-    public static readonly DependencyProperty HasMoreProperty = DependencyProperty.Register(
-        nameof(HasMore), typeof(bool), typeof(ContainerItemsView), new PropertyMetadata(false, OnFooterStateChanged));
-
     public static readonly DependencyProperty QueueScopeProperty = DependencyProperty.Register(
         nameof(QueueScope), typeof(SongListQueueScope), typeof(ContainerItemsView),
         new PropertyMetadata(SongListQueueScope.Visible));
@@ -129,9 +123,10 @@ public sealed partial class ContainerItemsView : UserControl
     public static readonly DependencyProperty ExtraSelectionActionsProperty = DependencyProperty.Register(
         nameof(ExtraSelectionActions), typeof(IList), typeof(ContainerItemsView), new PropertyMetadata(null));
 
-    public ObservableCollection<ProvidableItemRowViewModel> Rows { get; } = [];
-    public ObservableCollection<ProvidableItemRowViewModel> VisibleRows { get; } = [];
-    public ObservableCollection<ProvidableItemRowGroup> GroupedItems { get; } = [];
+    public ContainerItemsViewState State { get; } = new();
+    public ObservableCollection<ProvidableItemRowViewModel> Rows => State.Rows;
+    public ObservableCollection<ProvidableItemRowViewModel> VisibleRows => State.VisibleRows;
+    public ObservableCollection<ProvidableItemRowGroup> GroupedItems => State.GroupedItems;
 
     public ContainerItemsView()
     {
@@ -157,6 +152,7 @@ public sealed partial class ContainerItemsView : UserControl
         };
         AttachStateChanged();
         UpdateListHeader(ListHeader);
+        State.ActiveItemsSource = VisibleRows;
     }
 
     public ContainerBase? Container
@@ -201,16 +197,23 @@ public sealed partial class ContainerItemsView : UserControl
         set => SetValue(GreedyLoadProperty, value);
     }
 
-    public bool IsLoading
+    private bool IsLoading
     {
-        get => (bool)GetValue(IsLoadingProperty);
-        private set => SetValue(IsLoadingProperty, value);
+        get => State.IsLoading;
+        set => State.IsLoading = value;
     }
 
-    public bool HasMore
+    private bool HasMore
     {
-        get => (bool)GetValue(HasMoreProperty);
-        private set => SetValue(HasMoreProperty, value);
+        get => State.HasMore;
+        set
+        {
+            if (State.HasMore == value)
+                return;
+
+            State.HasMore = value;
+            UpdateGreedyLoadSubscription();
+        }
     }
 
     public SongListQueueScope QueueScope
@@ -231,16 +234,6 @@ public sealed partial class ContainerItemsView : UserControl
         set => SetValue(ExtraSelectionActionsProperty, value);
     }
 
-    public bool MultiSelect { get; set; }
-    public bool IsInitialLoading => IsLoading && Rows.Count == 0;
-    public bool IsLoadingMore => IsLoading && Rows.Count > 0;
-    public bool CanLoadMore => HasMore && !IsLoading;
-    public Visibility IsSearchVisible => IsSearchEnabled ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility CommentsVisible => CanViewComments ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility IsInitialLoadingVisible => IsInitialLoading ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility IsLoadingMoreVisible => IsLoadingMore ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility CanLoadMoreVisible => CanLoadMore ? Visibility.Visible : Visibility.Collapsed;
-    public object ActiveItemsSource => GroupedItems.Count > 0 ? GroupedItemsViewSource.View : VisibleRows;
     public IReadOnlyList<SingleSongBase> LoadedProviderSongs => (SingleSongBase[])[.. Rows.Select(row => row.AsPlayableSong)];
 
     public void ResetAndLoad()
@@ -303,27 +296,13 @@ public sealed partial class ContainerItemsView : UserControl
     private static void OnGreedyLoadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var view = (ContainerItemsView)d;
-        if ((bool)e.NewValue && view.HasMore)
-            view.AttachSecondTick();
-        else if (!(bool)e.NewValue)
-            view.DetachSecondTick();
-    }
-
-    private static void OnFooterStateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        var view = (ContainerItemsView)d;
-        view.Bindings.Update();
-        if (view.GreedyLoad && view.HasMore)
-            view.AttachSecondTick();
-        else if (!view.HasMore)
-            view.DetachSecondTick();
+        view.UpdateGreedyLoadSubscription();
     }
 
     private void ContainerItemsView_Loaded(object sender, RoutedEventArgs e)
     {
         AttachStateChanged();
-        MultiSelect = false;
-        Bindings.Update();
+        State.MultiSelect = false;
     }
 
     private void ContainerItemsView_Unloaded(object sender, RoutedEventArgs e)
@@ -371,7 +350,6 @@ public sealed partial class ContainerItemsView : UserControl
             return;
 
         IsLoading = true;
-        Bindings.Update();
         try
         {
             if (_progressiveContainer is not null)
@@ -396,7 +374,6 @@ public sealed partial class ContainerItemsView : UserControl
         {
             IsLoading = false;
             RefreshVisibleRows();
-            Bindings.Update();
         }
     }
 
@@ -407,7 +384,6 @@ public sealed partial class ContainerItemsView : UserControl
 
         var cancellationToken = _loadCts?.Token ?? CancellationToken.None;
         IsLoading = true;
-        Bindings.Update();
         try
         {
             if (_progressiveContainer is not null)
@@ -426,7 +402,6 @@ public sealed partial class ContainerItemsView : UserControl
         {
             IsLoading = false;
             RefreshVisibleRows();
-            Bindings.Update();
         }
     }
 
@@ -473,12 +448,12 @@ public sealed partial class ContainerItemsView : UserControl
 
         RebuildGroups();
         UpdateCurrentItem(_state.NowPlayingProviderItem);
-        Bindings.Update();
     }
 
     private void RebuildGroups()
     {
         GroupedItems.Clear();
+        State.ActiveItemsSource = VisibleRows;
         if (!ShouldGroupByDisc())
             return;
 
@@ -492,6 +467,8 @@ public sealed partial class ContainerItemsView : UserControl
 
         foreach (var group in grouped)
             GroupedItems.Add(new ProvidableItemRowGroup(group) { Key = group.Key });
+
+        State.ActiveItemsSource = GroupedItemsViewSource.View;
     }
 
     private bool ShouldGroupByDisc()
@@ -832,6 +809,14 @@ public sealed partial class ContainerItemsView : UserControl
 
         _greedyLoadThreshold = 3;
         LoadMoreAsync().SafeFireAndForget();
+    }
+
+    private void UpdateGreedyLoadSubscription()
+    {
+        if (GreedyLoad && HasMore)
+            AttachSecondTick();
+        else
+            DetachSecondTick();
     }
 
     private void AttachSecondTick()

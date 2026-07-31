@@ -144,7 +144,6 @@ public sealed partial class RadioPage : Page
         CurrentQueueScope = SongListQueueScope.Radio(RadioChannel.ActualId);
         CurrentContainer = RadioChannel;
         SongContainer.GreedyLoad = _setting.greedlyLoadPlayContainerItems;
-        Bindings.Update();
     }
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
@@ -163,7 +162,6 @@ public sealed partial class RadioPage : Page
         asc = !asc;
         _ascendingPrograms = null;
         CurrentContainer = asc ? new ReorderedContainer(RadioChannel, reverse: true) : RadioChannel;
-        Bindings.Update();
     }
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)

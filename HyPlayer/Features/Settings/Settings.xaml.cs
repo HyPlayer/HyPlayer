@@ -104,7 +104,6 @@ public sealed partial class Settings : Page
             return;
 
         _setting.TransitionId = transitionId;
-        Bindings.Update();
         _taskRunner.Forget(
             _playbackControl.SetTransitionAsync(transitionId),
             "change track transition");

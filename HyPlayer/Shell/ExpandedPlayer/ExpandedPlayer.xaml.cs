@@ -145,7 +145,6 @@ public sealed partial class ExpandedPlayer : Page
     private Setting _settings => ViewModel.Settings;
     private List<Vector3> _albumColorVectors = [];
     private List<Color> _albumColors = [];
-    private PlaybackThemeSnapshot _playbackTheme = PlaybackThemeSnapshot.Default;
     private const float LyricBoxRightPadding = 32;
     private const double ResponsiveBreakpointWidth = 800;
     private bool _isCleanedUp;
@@ -159,8 +158,6 @@ public sealed partial class ExpandedPlayer : Page
     }
 
     public ExpandedPlayerViewModel ViewModel { get; }
-
-    public SolidColorBrush PlaybackAccentBrush => _playbackTheme.AccentBrush;
 
     private void SyncCanvasState()
     {
@@ -611,14 +608,14 @@ public sealed partial class ExpandedPlayer : Page
 
     public void RefreshUIColor()
     {
-        _lyricBox.ChangeRenderColor(_playbackTheme.IdleBrush.Color, _playbackTheme.AccentBrush.Color);
+        var theme = ViewModel.DisplayedTheme;
+        _lyricBox.ChangeRenderColor(theme.IdleBrush.Color, theme.AccentBrush.Color);
     }
 
     private void ApplyPlaybackTheme(PlaybackThemeSnapshot theme)
     {
-        _playbackTheme = theme;
+        ViewModel.DisplayedTheme = theme;
         _canvasState.IsBrightTheme = theme.IsBright;
-        Bindings.Update();
         _surfaceStore.Theme = theme;
     }
 

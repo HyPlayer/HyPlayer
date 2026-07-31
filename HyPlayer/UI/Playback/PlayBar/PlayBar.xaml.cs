@@ -64,9 +64,6 @@ namespace HyPlayer.UI.Playback.PlayBar;
 
 public sealed partial class PlayBar
 {
-    private SolidColorBrush _playbackAccentBrush = CreateCompactPlaybackTheme(ElementTheme.Dark).AccentBrush;
-    private ElementTheme _playbackAccentTheme = ElementTheme.Dark;
-
     // ---------------------------------------------------------------
     //  ViewModel (resolved from DI; holds all business logic)
     // ---------------------------------------------------------------
@@ -103,26 +100,6 @@ public sealed partial class PlayBar
     private bool _isSliding = false;
     private TimeSpan StartingTimeSpan = TimeSpan.Zero;
     public ObservableCollection<PlayBarQueueItem> PlayItems => ViewModel.PlaylistItems;
-
-    public SolidColorBrush PlaybackAccentBrush
-    {
-        get => _playbackAccentBrush;
-        private set
-        {
-            _playbackAccentBrush = value;
-            Bindings.Update();
-        }
-    }
-
-    public ElementTheme PlaybackAccentTheme
-    {
-        get => _playbackAccentTheme;
-        private set
-        {
-            _playbackAccentTheme = value;
-            Bindings.Update();
-        }
-    }
 
 #nullable enable
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
@@ -212,8 +189,7 @@ DoubleAnimation verticalAnimation;
 
     private void ApplyPlaybackTheme(PlaybackThemeSnapshot theme)
     {
-        PlaybackAccentBrush = theme.AccentBrush;
-        PlaybackAccentTheme = theme.IsBright ? ElementTheme.Light : ElementTheme.Dark;
+        ViewModel.DisplayedTheme = theme;
     }
 
     private void ApplyCompactPlaybackTheme()
@@ -596,7 +572,6 @@ DoubleAnimation verticalAnimation;
     private async void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
         // 当前未打开歌词
-        Bindings.Update();
         var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
         if (await Launcher.QueryUriSupportAsync(uri, LaunchQuerySupportType.Uri,
                 "306200B4771A6.217957860C1A5_mb3g82vhcggpy") != LaunchQuerySupportStatus.Available)
@@ -626,7 +601,6 @@ DoubleAnimation verticalAnimation;
             {
                 FallbackUri = new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9")
             });
-            Bindings.Update();
         }
         catch
         {
@@ -746,7 +720,6 @@ DoubleAnimation verticalAnimation;
                     LaunchQuerySupportStatus.Available)
                 {
                     await Launcher.LaunchUriAsync(uri);
-                    Bindings.Update();
                     return;
                 }
             }

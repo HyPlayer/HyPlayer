@@ -29,6 +29,7 @@ using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Shell.ExpandedPlayer
@@ -129,6 +130,12 @@ namespace HyPlayer.Shell.ExpandedPlayer
 
         [ObservableProperty]
         public partial bool IsPlaylistVisible { get; set; }
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(PlaybackAccentBrush))]
+        public partial PlaybackThemeSnapshot DisplayedTheme { get; set; } = PlaybackThemeSnapshot.Default;
+
+        public SolidColorBrush PlaybackAccentBrush => DisplayedTheme.AccentBrush;
 
         // ── Expose services for code-behind that still needs them ─
         public PlayCoreBase PlayCore => _playCore;

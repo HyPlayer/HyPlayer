@@ -139,7 +139,6 @@ public sealed partial class MusicCloudPage : Page
         if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId, _cancellationToken) is ContainerBase container)
         {
             CloudContainer = container;
-            Bindings.Update();
         }
     }
 

@@ -175,7 +175,6 @@ public sealed partial class Search : Page
 
         CurrentResultContainer = new StaticItemsContainer(items, searchText, $"{typeId}:{page}", typeId);
         UpdatePageState(hasMore);
-        Bindings.Update();
     }
 
     private string? GetCurrentSearchTypeId()

@@ -33,6 +33,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Media;
 
 namespace HyPlayer.UI.Playback.PlayBar;
 
@@ -110,6 +112,14 @@ public partial class PlayBarViewModel : ObservableObject
 
     [ObservableProperty]
     public partial string QualityTag { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PlaybackAccentBrush))]
+    [NotifyPropertyChangedFor(nameof(PlaybackAccentTheme))]
+    public partial PlaybackThemeSnapshot DisplayedTheme { get; set; } = PlaybackThemeSnapshot.Default;
+
+    public SolidColorBrush PlaybackAccentBrush => DisplayedTheme.AccentBrush;
+    public ElementTheme PlaybackAccentTheme => DisplayedTheme.IsBright ? ElementTheme.Light : ElementTheme.Dark;
 
     /// <summary>
     /// Observable playlist items for the ListBox binding.
