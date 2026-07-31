@@ -12,6 +12,8 @@ namespace HyPlayer.UI.Controls.Primitives;
 [ContentProperty(Name = nameof(Child))]
 public partial class RedirectVisualView : Control
 {
+    private const string ChildHostTemplatePartName = "ChildHost";
+
     public RedirectVisualView()
     {
         DefaultStyleKey = typeof(RedirectVisualView);
@@ -173,7 +175,7 @@ public partial class RedirectVisualView : Control
         LayoutRoot = GetTemplateChild(nameof(LayoutRoot))?.As<Grid>();
         ChildPresenter = GetTemplateChild(nameof(ChildPresenter))?.As<ContentPresenter>();
         ChildPresenterContainer = GetTemplateChild(nameof(ChildPresenterContainer))?.As<Grid>();
-        _childHost = GetTemplateChild(nameof(_childHost))?.As<Canvas>();
+        _childHost = GetTemplateChild(ChildHostTemplatePartName)?.As<Canvas>();
         OpacityMaskContainer = GetTemplateChild(nameof(OpacityMaskContainer))?.As<Canvas>();
 
         if (RedirectVisualEnabled) AttachVisuals();
