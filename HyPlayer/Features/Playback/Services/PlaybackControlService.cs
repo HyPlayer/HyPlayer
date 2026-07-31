@@ -525,6 +525,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
     }
 
+    public void SetAudioGainEnabled(bool enabled)
+    {
+        _audioService.SetAudioGainEnabled(enabled);
+    }
+
     /// <inheritdoc />
     public async Task InitializeAsync()
     {

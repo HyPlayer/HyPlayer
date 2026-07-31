@@ -22,6 +22,11 @@ public interface IPlaybackControlService
     /// </summary>
     double Volume { get; set; }
 
+    /// <summary>
+    ///     Applies or removes per-track audio gain without replacing connected playback sources.
+    /// </summary>
+    void SetAudioGainEnabled(bool enabled);
+
     event EventHandler<SeekRequestedEventArgs>? SeekRequested;
 
     Task SetTransitionAsync(string transitionId, CancellationToken ct = default);

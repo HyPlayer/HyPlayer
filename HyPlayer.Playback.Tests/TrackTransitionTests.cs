@@ -451,6 +451,7 @@ public sealed class TrackTransitionTests
         public void SetPrimaryPlaybackSource(IPlaybackSource playbackSource) { }
         public void SetOutputVolume(double volume) { }
         public void SetPlaybackSourceOutputVolume(double volume, IPlaybackSource playbackSource) { }
+        public void SetPlaybackSourceAudioGain(double audioGain, IPlaybackSource playbackSource) { }
         public Task ChangePlayerServiceImplementation(IAudioSettings settings) => Task.CompletedTask;
     }
 

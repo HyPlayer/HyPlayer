@@ -77,11 +77,7 @@ public partial class PlaybackSettings : SettingsBase
             if (!SetSettings(nameof(EnableAudioGain), value))
                 return;
 
-            var player = Ioc.Default.GetService<AudioGraphPlayer>();
-            if (player?.PrimaryPlaybackSource != null)
-            {
-                player.SetPlaybackSourceOutputVolume(1, player.PrimaryPlaybackSource);
-            }
+            Ioc.Default.GetService<IPlaybackControlService>()?.SetAudioGainEnabled(value);
         }
     }
 

@@ -21,6 +21,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces
         void SetPrimaryPlaybackSource(IPlaybackSource playbackSource);
         void SetOutputVolume(double volume);
         void SetPlaybackSourceOutputVolume(double volume, IPlaybackSource playbackSource);
+        void SetPlaybackSourceAudioGain(double audioGain, IPlaybackSource playbackSource);
         Task ChangePlayerServiceImplementation(IAudioSettings settings);
         ISMTCManager SMTCManager { get; set; }
         int ConnectedPlaybackSourceCount { get; }

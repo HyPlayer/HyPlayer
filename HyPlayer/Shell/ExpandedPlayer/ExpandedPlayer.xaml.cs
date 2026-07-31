@@ -130,7 +130,6 @@ public sealed partial class ExpandedPlayer : Page
     private int _lastHeight;
     private int _lastWidth;
     private bool _lyricHasBeenLoaded;
-    private bool _lyricIsCleaning;
     private readonly List<SongLyric> _lyricList = [];
     private bool _needsRedesign = true;
     private int _nowHeight;
@@ -519,7 +518,6 @@ public sealed partial class ExpandedPlayer : Page
     {
         _ = this.RunOnUIThreadAsync(() =>
         {
-            if (_lyricIsCleaning) return;
             if (_state.LyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
                 _lyricBox.SetLyricLines(LrcConverter.Convert(
                     Utils.ConvertToALRC(_state.LyricInfo.Lyrics,

@@ -270,6 +270,7 @@ public sealed class SongListQueueBuilderTests
 
         public Task SetTransitionAsync(string transitionId, CancellationToken ct = default) => Task.CompletedTask;
         public Task SetPlayModeAsync(string playModeId, CancellationToken ct = default) => Task.CompletedTask;
+        public void SetAudioGainEnabled(bool enabled) { }
 
         public Task ClearQueueAsync(CancellationToken ct = default)
         {

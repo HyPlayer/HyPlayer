@@ -13,6 +13,8 @@ public sealed class ChopinAudioTicket : AudioTicketBase, IAudioTicketVolumeState
 
     public double Volume { get; set; } = 1d;
 
+    public double AudioGain { get; set; } = 1d;
+
     internal bool TryBeginDispose()
     {
         return Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0;

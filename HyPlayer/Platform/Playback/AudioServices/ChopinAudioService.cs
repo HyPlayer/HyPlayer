@@ -74,6 +74,34 @@ public sealed class ChopinAudioService :
         return Task.CompletedTask;
     }
 
+    public void SetAudioGainEnabled(bool enabled)
+    {
+        List<ChopinAudioTicket> tickets;
+        lock (_ticketSyncRoot)
+        {
+            tickets = [.. _tickets];
+        }
+
+        foreach (var ticket in tickets)
+        {
+            var metadata = ticket.MusicResource as IAudioGainMetadata;
+            var audioGain = AudioGainCalculator.Calculate(metadata, enabled);
+            try
+            {
+                _player.SetPlaybackSourceAudioGain(audioGain, ticket.PlaybackSource);
+                ticket.AudioGain = audioGain;
+            }
+            catch (ArgumentException)
+            {
+                // The ticket may have been disconnected after the snapshot was taken.
+            }
+            catch (ObjectDisposedException)
+            {
+                // The player is shutting down; no connected source remains to update.
+            }
+        }
+    }
+
     public Task PauseAudioTicketAsync(AudioTicketBase ticket, CancellationToken ctk = default)
     {
         ctk.ThrowIfCancellationRequested();
@@ -163,6 +191,9 @@ public sealed class ChopinAudioService :
         try
         {
             var targetVolume = initialVolume ?? 1d;
+            var audioGain = AudioGainCalculator.Calculate(
+                musicResource as IAudioGainMetadata,
+                _setting.EnableAudioGain);
             if (musicResource is IChopinPlaybackSourceResource chopinResource)
             {
                 source = await chopinResource.CreatePlaybackSourceAsync(ctk);
@@ -184,7 +215,8 @@ public sealed class ChopinAudioService :
             {
                 AutoPlay = false,
                 SetAsPrimarySource = setAsPrimarySource,
-                Volume = targetVolume
+                Volume = targetVolume,
+                AudioGain = audioGain
             });
 
             var ticket = new ChopinAudioTicket
@@ -193,7 +225,8 @@ public sealed class ChopinAudioService :
                 AudioServiceId = Id,
                 MusicResource = musicResource,
                 PlaybackSource = source,
-                Volume = targetVolume
+                Volume = targetVolume,
+                AudioGain = audioGain
             };
 
             lock (_ticketSyncRoot)
