@@ -12,7 +12,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
 using Windows.UI;
 
@@ -23,6 +22,11 @@ public sealed class FocusedLyricTextRenderer
     private static readonly ConcurrentDictionary<string, byte> ReportedOperationFailures = new(StringComparer.Ordinal);
     private readonly Dictionary<FocusedTransitionKey, ScalarTransitionState> _scalarTransitions = [];
     private readonly Dictionary<FocusedTransitionKey, ColorTransitionState> _colorTransitions = [];
+    private readonly Dictionary<LyricGlyphCluster, CanvasCommandList> _glyphSources = [];
+    private readonly FocusedTextExpressionFrameCache _expressionFrameCache = new();
+    private readonly LyricRenderFrameResourceScope _contributionResources = new();
+    private LyricTextLayoutSnapshot? _transitionLayout;
+    private CompiledFocusedTextEffectProfile? _transitionProfile;
 
     public void Render(
         CanvasDrawingSession session,
@@ -33,21 +37,74 @@ public sealed class FocusedLyricTextRenderer
         LyricExpressionLine line,
         LyricExpressionFrame expressionFrame)
     {
-        var reveal = profile.Operations.FirstOrDefault(operation =>
-            operation.Definition.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal);
+        _expressionFrameCache.Clear();
+        // A renderer is kept by a line for its entire lifetime.  Layouts and profiles are
+        // replaced during resize/preview, so transition keys from the old generation must
+        // not remain reachable indefinitely.
+        if (!ReferenceEquals(_transitionLayout, layout) || !ReferenceEquals(_transitionProfile, profile))
+        {
+            _scalarTransitions.Clear();
+            _colorTransitions.Clear();
+            ReleaseRasterCache();
+            _transitionLayout = layout;
+            _transitionProfile = profile;
+        }
+
+        CompiledFocusedTextOperation? reveal = null;
+        for (var index = 0; index < profile.Operations.Count; index++)
+        {
+            if (profile.Operations[index].Definition.TypeId != FocusedTextBuiltInOperationTypes.HighlightReveal)
+                continue;
+            reveal = profile.Operations[index];
+            break;
+        }
         var revealOptions = RevealOptions.From(reveal?.Definition);
-        DrawLayer(session, layout.LyricGlyphClusters, LyricTextLayer.Lyric, layout, renderContext,
-            profile, revealOptions, line, expressionFrame);
+        var vectorPath = CanUseVectorPath(profile, reveal);
+        using var brush = new CanvasSolidColorBrush(session, layout.FocusingColor);
+        DrawLayer(session, brush, layout.LyricGlyphClusters, LyricTextLayer.Lyric, layout, renderContext,
+            profile, revealOptions, line, expressionFrame, vectorPath);
         if (renderContext.EnableTransliteration)
-            DrawLayer(session, layout.TransliterationGlyphClusters, LyricTextLayer.Transliteration, layout,
-                renderContext, profile, revealOptions, line, expressionFrame);
+            DrawLayer(session, brush, layout.TransliterationGlyphClusters, LyricTextLayer.Transliteration, layout,
+                renderContext, profile, revealOptions, line, expressionFrame, vectorPath);
         if (renderContext.EnableTranslation)
-            DrawLayer(session, layout.TranslationGlyphClusters, LyricTextLayer.Translation, layout,
-                renderContext, profile, revealOptions, line, expressionFrame);
+            DrawLayer(session, brush, layout.TranslationGlyphClusters, LyricTextLayer.Translation, layout,
+                renderContext, profile, revealOptions, line, expressionFrame, vectorPath);
+    }
+
+    private static bool CanUseVectorPath(
+        CompiledFocusedTextEffectProfile profile,
+        CompiledFocusedTextOperation? reveal)
+    {
+        // This is the hot path used by the built-in profile (Opacity -> Reveal -> Lift).
+        // It is deliberately conservative: anything that needs an intermediate image keeps
+        // the full ordered Win2D pipeline and therefore retains its exact semantics.
+        if (reveal is null)
+            return false;
+        if (reveal.Definition.Parameters.TryGetValue("featherDip", out var feather) &&
+            (feather.Transition is not null ||
+             !float.TryParse(feather.Expression, System.Globalization.NumberStyles.Float,
+                 System.Globalization.CultureInfo.InvariantCulture, out var featherValue) ||
+             !float.IsFinite(featherValue) || featherValue > 0))
+            return false;
+
+        for (var index = 0; index < profile.Operations.Count; index++)
+        {
+            var operation = profile.Operations[index];
+            if (operation.DrawScript is not null) return false;
+            var type = operation.Definition.TypeId;
+            if (type is not (FocusedTextBuiltInOperationTypes.HighlightReveal or
+                FocusedTextBuiltInOperationTypes.Color or
+                FocusedTextBuiltInOperationTypes.Opacity or
+                FocusedTextBuiltInOperationTypes.GlyphLift))
+                return false;
+        }
+
+        return true;
     }
 
     private void DrawLayer(
         CanvasDrawingSession session,
+        CanvasSolidColorBrush brush,
         IReadOnlyList<LyricGlyphCluster> clusters,
         LyricTextLayer layer,
         LyricTextLayoutSnapshot layout,
@@ -55,13 +112,176 @@ public sealed class FocusedLyricTextRenderer
         CompiledFocusedTextEffectProfile profile,
         RevealOptions revealOptions,
         LyricExpressionLine line,
+        LyricExpressionFrame frame,
+        bool vectorPath)
+    {
+        for (var clusterIndex = 0; clusterIndex < clusters.Count; clusterIndex++)
+        {
+            var cluster = clusters[clusterIndex];
+            var contributions = CreateContributions(cluster, layer, layout, renderContext.CurrentLyricTime,
+                revealOptions, line);
+            DrawPlannedContribution(session, brush, contributions.First, layout, renderContext, profile, line,
+                frame, vectorPath);
+            if (contributions.Second is { } second)
+                DrawPlannedContribution(session, brush, second, layout, renderContext, profile, line, frame,
+                    vectorPath);
+        }
+    }
+
+    private void DrawPlannedContribution(
+        CanvasDrawingSession session,
+        CanvasSolidColorBrush brush,
+        Contribution contribution,
+        LyricTextLayoutSnapshot layout,
+        RenderContext renderContext,
+        CompiledFocusedTextEffectProfile profile,
+        LyricExpressionLine line,
+        LyricExpressionFrame frame,
+        bool vectorPath)
+    {
+        if (vectorPath)
+            DrawVectorContribution(session, brush, contribution, layout, renderContext, profile, line, frame);
+        else
+            DrawContribution(session, contribution, layout, renderContext, profile, line, frame);
+    }
+
+    private void DrawVectorContribution(
+        CanvasDrawingSession session,
+        CanvasSolidColorBrush brush,
+        Contribution contribution,
+        LyricTextLayoutSnapshot layout,
+        RenderContext renderContext,
+        CompiledFocusedTextEffectProfile profile,
+        LyricExpressionLine line,
         LyricExpressionFrame frame)
     {
-        foreach (var cluster in clusters)
+        var state = LyricGlyphDrawState.FromCluster(contribution.Cluster, layout.FocusingColor);
+        var revealProgress = contribution.WordProgress;
+        var hasRectangleClip = false;
+        var highlighted = false;
+        var currentOrigin = state.Origin;
+
+        for (var operationIndex = 0; operationIndex < profile.Operations.Count; operationIndex++)
         {
-            foreach (var contribution in CreateContributions(cluster, layer, layout, renderContext.CurrentLyricTime, revealOptions, line))
-                DrawContribution(session, contribution, layout, renderContext, profile, line, frame);
+            var operation = profile.Operations[operationIndex];
+            var isReveal = operation.Definition.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal;
+            if (!isReveal && !operation.Targets.Contains(contribution.Target)) continue;
+            var scopes = CreateScopes(contribution, line, revealProgress, 0);
+            var inputState = state;
+            var inputOrigin = currentOrigin;
+            var inputRevealProgress = revealProgress;
+            var inputHasRectangleClip = hasRectangleClip;
+            var inputHighlighted = highlighted;
+            try
+            {
+                switch (operation.Definition.TypeId)
+                {
+                    case FocusedTextBuiltInOperationTypes.HighlightReveal:
+                        revealProgress = contribution.WordProgress;
+                        if (contribution.State is FocusedTargetState.CurrentHighlighted or FocusedTargetState.CurrentPending)
+                        {
+                            var offset = Scalar(operation, contribution, "revealTimeOffsetMs", line, frame, scopes, 0);
+                            var adjusted = GetRevealWordProgress(frame.CurrentTimeMs, contribution.WordStart,
+                                contribution.WordEnd, offset);
+                            var options = RevealOptions.From(operation.Definition);
+                            revealProgress = FocusedTextProgress.GetRevealProgress(options.Mode, adjusted,
+                                contribution.Cluster.TokenClusterIndex, contribution.Cluster.TokenClusterCount);
+                            highlighted = contribution.State == FocusedTargetState.CurrentHighlighted;
+                            if (options.Mode == HighlightRevealMode.RectangleClip)
+                            {
+                                hasRectangleClip = true;
+                            }
+                            else
+                            {
+                                state.Opacity *= highlighted ? revealProgress : 1 - revealProgress;
+                            }
+                        }
+                        break;
+                    case FocusedTextBuiltInOperationTypes.Color:
+                        var color = ColorValue(operation, contribution, "color", line, frame, scopes,
+                            new LyricColorValue(layout.FocusingColor.A, layout.FocusingColor.R,
+                                layout.FocusingColor.G, layout.FocusingColor.B));
+                        // AlphaMaskEffect multiplies the replacement color by the complete
+                        // input alpha. Preserve that accumulation when drawing directly.
+                        state.Opacity *= state.Color.A / 255f;
+                        state.Color = Color.FromArgb(color.A, color.R, color.G, color.B);
+                        break;
+                    case FocusedTextBuiltInOperationTypes.Opacity:
+                        state.Opacity *= Scalar(operation, contribution, "opacity", line, frame, scopes, 1);
+                        break;
+                    case FocusedTextBuiltInOperationTypes.GlyphLift:
+                        ApplyLiftVector(operation, contribution, layout, renderContext.CurrentLyricTime,
+                            line, frame, revealProgress, ref state, ref currentOrigin);
+                        break;
+                }
+            }
+            catch (Exception exception)
+            {
+                state = inputState;
+                currentOrigin = inputOrigin;
+                revealProgress = inputRevealProgress;
+                hasRectangleClip = inputHasRectangleClip;
+                highlighted = inputHighlighted;
+                if (ReportedOperationFailures.TryAdd(operation.Definition.InstanceId, 0))
+                    Debug.WriteLine($"Focused lyric operation {operation.Definition.InstanceId} failed: {exception}");
+            }
         }
+
+        Windows.Foundation.Rect? clip = null;
+        if (hasRectangleClip)
+        {
+            var rtl = (contribution.Cluster.BaseState.BidiLevel & 1) != 0;
+            var offset = state.Origin - contribution.Cluster.BaseState.Origin;
+            var left = contribution.Cluster.VisualLeft + offset.X;
+            var top = contribution.Cluster.VisualTop + offset.Y;
+            var width = Math.Max(contribution.Cluster.VisualWidth, 0.001f);
+            var height = Math.Max(contribution.Cluster.VisualHeight, 0.001f);
+            var calculated = GetVectorContributionClip(
+                left, top, width, height, revealProgress, highlighted, rtl);
+            if (calculated is { Width: <= 0 }) return;
+            if (calculated is { } value)
+                clip = new Windows.Foundation.Rect(value.Left, value.Top, value.Width, value.Height);
+        }
+
+        GlyphRunDrawHelper.DrawCluster(session, brush, state, clip);
+    }
+
+    internal static FocusedRevealClip? GetVectorContributionClip(
+        float visualLeft,
+        float visualTop,
+        float visualWidth,
+        float visualHeight,
+        float revealProgress,
+        bool highlighted,
+        bool isRightToLeft)
+        => FocusedRevealClipCalculator.GetContributionClip(
+            visualLeft,
+            visualTop,
+            visualWidth,
+            visualHeight,
+            revealProgress,
+            highlighted,
+            isRightToLeft,
+            FocusedEffectOutsets.None);
+
+    public void ReleaseRasterCache()
+    {
+        foreach (var source in _glyphSources.Values) source.Dispose();
+        _glyphSources.Clear();
+    }
+
+    private CanvasCommandList GetGlyphSource(
+        CanvasDrawingSession session,
+        LyricGlyphCluster cluster,
+        Windows.UI.Color color)
+    {
+        if (_glyphSources.TryGetValue(cluster, out var source)) return source;
+        source = new CanvasCommandList(session);
+        using (var drawing = source.CreateDrawingSession())
+        using (var brush = new CanvasSolidColorBrush(drawing, color))
+            GlyphRunDrawHelper.DrawCluster(drawing, brush, LyricGlyphDrawState.FromCluster(cluster, color));
+        _glyphSources.Add(cluster, source);
+        return source;
     }
 
     private void DrawContribution(
@@ -73,77 +293,83 @@ public sealed class FocusedLyricTextRenderer
         LyricExpressionLine line,
         LyricExpressionFrame frame)
     {
-        using var resources = new LyricRenderFrameResourceScope();
-        var initial = resources.Track(new CanvasCommandList(session));
-        using (var drawing = initial.CreateDrawingSession())
-        using (var brush = new CanvasSolidColorBrush(drawing, layout.FocusingColor))
-            GlyphRunDrawHelper.DrawCluster(drawing, brush, LyricGlyphDrawState.FromCluster(contribution.Cluster, layout.FocusingColor));
-
-        var image = (ICanvasImage)initial;
-        var geometryTransform = Matrix3x2.Identity;
-        var currentOrigin = contribution.Cluster.BaseState.Origin;
-        var revealProgress = contribution.WordProgress;
-
-        foreach (var operation in profile.Operations)
+        var resources = _contributionResources;
+        try
         {
-            var isReveal = operation.Definition.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal;
-            if (!isReveal && !operation.Targets.Contains(contribution.Target)) continue;
-            var input = image;
-            var inputTransform = geometryTransform;
-            var inputOrigin = currentOrigin;
-            try
+            var image = (ICanvasImage)GetGlyphSource(session, contribution.Cluster, layout.FocusingColor);
+            var geometryTransform = Matrix3x2.Identity;
+            var currentOrigin = contribution.Cluster.BaseState.Origin;
+            var revealProgress = contribution.WordProgress;
+
+            for (var operationIndex = 0; operationIndex < profile.Operations.Count; operationIndex++)
             {
-                var scopes = CreateScopes(contribution, line, revealProgress, 0);
-                switch (operation.Definition.TypeId)
+                var operation = profile.Operations[operationIndex];
+                var isReveal = operation.Definition.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal;
+                if (!isReveal && !operation.Targets.Contains(contribution.Target)) continue;
+                var input = image;
+                var inputTransform = geometryTransform;
+                var inputOrigin = currentOrigin;
+                try
                 {
-                    case FocusedTextBuiltInOperationTypes.HighlightReveal:
-                        image = ApplyReveal(operation, contribution, input, resources, session, line, frame,
-                            scopes, geometryTransform, out revealProgress);
-                        break;
-                    case FocusedTextBuiltInOperationTypes.Color:
-                        image = ApplyColor(operation, contribution, input, resources, line, frame, scopes,
-                            new LyricColorValue(layout.FocusingColor.A, layout.FocusingColor.R,
-                                layout.FocusingColor.G, layout.FocusingColor.B));
-                        break;
-                    case FocusedTextBuiltInOperationTypes.Opacity:
-                        image = ApplyOpacity(operation, contribution, input, resources, line, frame, scopes);
-                        break;
-                    case FocusedTextBuiltInOperationTypes.Transform2D:
-                        image = ApplyTransform2D(operation, contribution, input, resources, line, frame, scopes,
-                            ref geometryTransform, ref currentOrigin);
-                        break;
-                    case FocusedTextBuiltInOperationTypes.Transform3D:
-                        image = ApplyTransform3D(operation, contribution, input, resources, line, frame, scopes, currentOrigin);
-                        break;
-                    case FocusedTextBuiltInOperationTypes.GaussianBlur:
-                        image = ApplyBlur(operation, contribution, input, resources, line, frame, scopes);
-                        break;
-                    case FocusedTextBuiltInOperationTypes.Glow:
-                        image = ApplyGlow(operation, contribution, input, resources, session, line, frame, scopes);
-                        break;
-                    case FocusedTextBuiltInOperationTypes.Stroke:
-                        image = ApplyStroke(operation, contribution, input, resources, session, line, frame, scopes);
-                        break;
-                    case FocusedTextBuiltInOperationTypes.GlyphLift:
-                        image = ApplyLift(operation, contribution, input, resources, layout, renderContext.CurrentLyricTime,
-                            line, frame, revealProgress, ref geometryTransform, ref currentOrigin);
-                        break;
-                    case FocusedTextBuiltInOperationTypes.DrawScript when operation.DrawScript is not null:
-                        image = ApplyScript(operation, contribution, input, resources, session, line, frame, scopes, currentOrigin);
-                        break;
+                    var scopes = CreateScopes(contribution, line, revealProgress, 0);
+                    switch (operation.Definition.TypeId)
+                    {
+                        case FocusedTextBuiltInOperationTypes.HighlightReveal:
+                            image = ApplyReveal(operation, contribution, input, resources, session, line, frame,
+                                scopes, geometryTransform, out revealProgress);
+                            break;
+                        case FocusedTextBuiltInOperationTypes.Color:
+                            image = ApplyColor(operation, contribution, input, resources, line, frame, scopes,
+                                new LyricColorValue(layout.FocusingColor.A, layout.FocusingColor.R,
+                                    layout.FocusingColor.G, layout.FocusingColor.B));
+                            break;
+                        case FocusedTextBuiltInOperationTypes.Opacity:
+                            image = ApplyOpacity(operation, contribution, input, resources, line, frame, scopes);
+                            break;
+                        case FocusedTextBuiltInOperationTypes.Transform2D:
+                            image = ApplyTransform2D(operation, contribution, input, resources, line, frame, scopes,
+                                ref geometryTransform, ref currentOrigin);
+                            break;
+                        case FocusedTextBuiltInOperationTypes.Transform3D:
+                            image = ApplyTransform3D(operation, contribution, input, resources, line, frame, scopes,
+                                currentOrigin);
+                            break;
+                        case FocusedTextBuiltInOperationTypes.GaussianBlur:
+                            image = ApplyBlur(operation, contribution, input, resources, line, frame, scopes);
+                            break;
+                        case FocusedTextBuiltInOperationTypes.Glow:
+                            image = ApplyGlow(operation, contribution, input, resources, session, line, frame, scopes);
+                            break;
+                        case FocusedTextBuiltInOperationTypes.Stroke:
+                            image = ApplyStroke(operation, contribution, input, resources, session, line, frame, scopes);
+                            break;
+                        case FocusedTextBuiltInOperationTypes.GlyphLift:
+                            image = ApplyLift(operation, contribution, input, resources, layout,
+                                renderContext.CurrentLyricTime, line, frame, revealProgress,
+                                ref geometryTransform, ref currentOrigin);
+                            break;
+                        case FocusedTextBuiltInOperationTypes.DrawScript when operation.DrawScript is not null:
+                            image = ApplyScript(operation, contribution, input, resources, session, line, frame,
+                                scopes, currentOrigin);
+                            break;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    image = input;
+                    geometryTransform = inputTransform;
+                    currentOrigin = inputOrigin;
+                    if (ReportedOperationFailures.TryAdd(operation.Definition.InstanceId, 0))
+                        Debug.WriteLine($"Focused lyric operation {operation.Definition.InstanceId} failed: {exception}");
                 }
             }
-            catch (Exception exception)
-            {
-                image = input;
-                geometryTransform = inputTransform;
-                currentOrigin = inputOrigin;
-                if (ReportedOperationFailures.TryAdd(operation.Definition.InstanceId, 0))
-                    Debug.WriteLine($"Focused lyric operation {operation.Definition.InstanceId} failed: {exception}");
-            }
-        }
 
-        session.DrawImage(image);
+            session.DrawImage(image);
+        }
+        finally
+        {
+            resources.Dispose();
+        }
     }
 
     private ICanvasImage ApplyReveal(
@@ -205,6 +431,14 @@ public sealed class FocusedLyricTextRenderer
         var top = cluster.VisualTop;
         var width = Math.Max(cluster.VisualWidth, 0.001f);
         var height = Math.Max(cluster.VisualHeight, 0.001f);
+        var maskPlan = CreateRectangleMaskPlan(reveal, highlighted, rtl, feather, width);
+
+        if (maskPlan.ConstantOpacity is { } constantOpacity)
+        {
+            return constantOpacity >= 1
+                ? input
+                : resources.Track(new OpacityEffect { Source = input, Opacity = 0 });
+        }
 
         if (feather <= 0)
         {
@@ -230,20 +464,15 @@ public sealed class FocusedLyricTextRenderer
             });
         }
 
-        var normalizedFeather = feather / width;
-        var boundaryProgress = Math.Clamp(localReveal, 0, 1);
-        var first = Math.Clamp(boundaryProgress - normalizedFeather / 2, 0, 1);
-        var second = Math.Clamp(boundaryProgress + normalizedFeather / 2, 0, 1);
-        var opaqueAtStart = highlighted != rtl;
-        var startAlpha = opaqueAtStart ? (byte)255 : (byte)0;
-        var endAlpha = opaqueAtStart ? (byte)0 : (byte)255;
+        var startAlpha = maskPlan.OpaqueAtStart ? (byte)255 : (byte)0;
+        var endAlpha = maskPlan.OpaqueAtStart ? (byte)0 : (byte)255;
         var mask = resources.Track(new CanvasCommandList(session));
         using (var maskSession = mask.CreateDrawingSession())
         using (var brush = new CanvasLinearGradientBrush(maskSession,
         [
             new CanvasGradientStop { Position = 0, Color = Color.FromArgb(startAlpha, 255, 255, 255) },
-            new CanvasGradientStop { Position = first, Color = Color.FromArgb(startAlpha, 255, 255, 255) },
-            new CanvasGradientStop { Position = second, Color = Color.FromArgb(endAlpha, 255, 255, 255) },
+            new CanvasGradientStop { Position = maskPlan.FirstStop, Color = Color.FromArgb(startAlpha, 255, 255, 255) },
+            new CanvasGradientStop { Position = maskPlan.SecondStop, Color = Color.FromArgb(endAlpha, 255, 255, 255) },
             new CanvasGradientStop { Position = 1, Color = Color.FromArgb(endAlpha, 255, 255, 255) }
         ])
         {
@@ -256,6 +485,28 @@ public sealed class FocusedLyricTextRenderer
         if (geometryTransform != Matrix3x2.Identity)
             alphaMask = resources.Track(new Transform2DEffect { Source = mask, TransformMatrix = geometryTransform });
         return resources.Track(new AlphaMaskEffect { Source = input, AlphaMask = alphaMask });
+    }
+
+    internal static RectangleMaskPlan CreateRectangleMaskPlan(
+        float reveal,
+        bool highlighted,
+        bool isRightToLeft,
+        float feather,
+        float width)
+    {
+        if (highlighted && reveal >= 1 || !highlighted && reveal <= 0)
+            return new RectangleMaskPlan(1, 0, 0, highlighted != isRightToLeft);
+        if (highlighted && reveal <= 0 || !highlighted && reveal >= 1)
+            return new RectangleMaskPlan(0, 0, 0, highlighted != isRightToLeft);
+
+        var localReveal = isRightToLeft ? 1 - reveal : reveal;
+        var normalizedFeather = feather / Math.Max(width, 0.001f);
+        var boundaryProgress = Math.Clamp(localReveal, 0, 1);
+        return new RectangleMaskPlan(
+            null,
+            Math.Clamp(boundaryProgress - normalizedFeather / 2, 0, 1),
+            Math.Clamp(boundaryProgress + normalizedFeather / 2, 0, 1),
+            highlighted != isRightToLeft);
     }
 
     private ICanvasImage ApplyColor(
@@ -432,8 +683,7 @@ public sealed class FocusedLyricTextRenderer
         ref Matrix3x2 geometryTransform,
         ref Vector2 currentOrigin)
     {
-        var word = ResolveLiftWord(operation.Definition, contribution, layout, line, timeMs);
-        if (word is null) return input;
+        if (ResolveLiftWord(operation.Definition, contribution, layout, line, timeMs) is not { } word) return input;
         var baseScopes = CreateScopes(contribution, line, revealProgress, 0, word);
         var offset = Scalar(operation, contribution, "liftTimeOffsetMs", line, frame, baseScopes, 0);
         var finish = Scalar(operation, contribution, "liftFinishDurationMs", line, frame, baseScopes, 0);
@@ -453,19 +703,7 @@ public sealed class FocusedLyricTextRenderer
             threshold,
             unit,
             motion);
-        var easingArguments = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["exponent"] = Scalar(operation, contribution, "exponent", line, frame, baseScopes, 2),
-            ["springiness"] = Scalar(operation, contribution, "springiness", line, frame, baseScopes, 3),
-            ["oscillations"] = Scalar(operation, contribution, "oscillations", line, frame, baseScopes, 3),
-            ["bounces"] = Scalar(operation, contribution, "bounces", line, frame, baseScopes, 2),
-            ["bounciness"] = Scalar(operation, contribution, "bounciness", line, frame, baseScopes, 2)
-        };
-        var easing = LyricEasingFactory.Create(
-            operation.Definition.Options.GetValueOrDefault("easingId", "linear"),
-            operation.Definition.Options.GetValueOrDefault("easingMode", "in"),
-            easingArguments);
-        var liftProgress = (float)easing.Ease(local);
+        var liftProgress = GetEasedLiftProgress(operation, contribution, line, frame, baseScopes, local);
         var scopes = baseScopes with { Glyph = baseScopes.Glyph with { LiftProgress = liftProgress } };
         var height = Scalar(operation, contribution, "height", line, frame, scopes, 3);
         var matrix = Matrix3x2.CreateTranslation(0, -height * liftProgress);
@@ -474,7 +712,63 @@ public sealed class FocusedLyricTextRenderer
         return resources.Track(new Transform2DEffect { Source = input, TransformMatrix = matrix });
     }
 
-    private static ICanvasImage ApplyScript(
+    private void ApplyLiftVector(
+        CompiledFocusedTextOperation operation,
+        Contribution contribution,
+        LyricTextLayoutSnapshot layout,
+        long timeMs,
+        LyricExpressionLine line,
+        LyricExpressionFrame frame,
+        float revealProgress,
+        ref LyricGlyphDrawState state,
+        ref Vector2 currentOrigin)
+    {
+        if (ResolveLiftWord(operation.Definition, contribution, layout, line, timeMs) is not { } word) return;
+        var baseScopes = CreateScopes(contribution, line, revealProgress, 0, word);
+        var offset = Scalar(operation, contribution, "liftTimeOffsetMs", line, frame, baseScopes, 0);
+        var finish = Scalar(operation, contribution, "liftFinishDurationMs", line, frame, baseScopes, 0);
+        var motion = Option(operation.Definition, "motion", GlyphLiftMotion.Hold);
+        var raw = FocusedTextProgress.GetTimedProgress(timeMs, word.Start, word.End, offset, finish, motion);
+        var unit = word.Exists
+            ? Option(operation.Definition, "liftUnit", GlyphLiftUnit.Auto)
+            : GlyphLiftUnit.Word;
+        var overlap = Scalar(operation, contribution, "overlap", line, frame, baseScopes, 0);
+        var threshold = Scalar(operation, contribution, "wholeWordThresholdMs", line, frame, baseScopes, 1000);
+        var local = FocusedTextProgress.GetLiftProgress(raw, word.End - word.Start, word.GlyphIndex,
+            word.GlyphCount, overlap, threshold, unit, motion);
+        var liftProgress = GetEasedLiftProgress(operation, contribution, line, frame, baseScopes, local);
+        var scopes = baseScopes with { Glyph = baseScopes.Glyph with { LiftProgress = liftProgress } };
+        var height = Scalar(operation, contribution, "height", line, frame, scopes, 3);
+        var translation = new Vector2(0, -height * liftProgress);
+        state.Origin += translation;
+        currentOrigin += translation;
+    }
+
+    private float GetEasedLiftProgress(
+        CompiledFocusedTextOperation operation,
+        Contribution contribution,
+        LyricExpressionLine line,
+        LyricExpressionFrame frame,
+        ExpressionScopes scopes,
+        float progress)
+    {
+        var easingId = operation.Definition.Options.GetValueOrDefault("easingId", "linear");
+        if (string.Equals(easingId, "linear", StringComparison.OrdinalIgnoreCase)) return progress;
+        if (operation.ConstantLiftEasing is { } constantEasing)
+            return (float)constantEasing.Ease(progress);
+
+        return (float)LyricEasingFactory.Evaluate(
+            easingId,
+            operation.Definition.Options.GetValueOrDefault("easingMode", "in"),
+            progress,
+            Scalar(operation, contribution, "exponent", line, frame, scopes, 2),
+            Scalar(operation, contribution, "springiness", line, frame, scopes, 3),
+            Scalar(operation, contribution, "oscillations", line, frame, scopes, 3),
+            Scalar(operation, contribution, "bounces", line, frame, scopes, 2),
+            Scalar(operation, contribution, "bounciness", line, frame, scopes, 2));
+    }
+
+    private ICanvasImage ApplyScript(
         CompiledFocusedTextOperation operation,
         Contribution contribution,
         ICanvasImage input,
@@ -495,7 +789,8 @@ public sealed class FocusedLyricTextRenderer
                 drawing.Transform = Matrix3x2.CreateTranslation(currentOrigin) * original;
                 var context = new LyricDrawExecutionContext(drawing);
                 foreach (var command in operation.DrawScript!.Commands)
-                    command.Execute(context, line, frame, scopes.Text, scopes.Word, scopes.Glyph);
+                    command.Execute(context, line, frame, scopes.Text, scopes.Word, scopes.Glyph,
+                        _expressionFrameCache);
                 context.EnsureBalanced();
             }
             finally
@@ -520,16 +815,21 @@ public sealed class FocusedLyricTextRenderer
         float fallback)
     {
         if (!operation.Scalars.TryGetValue(key, out var parameter)) return fallback;
-        var value = parameter.Expression(line, frame, scopes.Text, scopes.Word, scopes.Glyph, LyricExpressionFunctions.Instance);
+        var compiled = parameter.Value;
+        var value = compiled.ConstantValue ?? _expressionFrameCache.EvaluateScalar(
+            compiled.CacheId, compiled.Dependencies, compiled.Expression,
+            line, frame, scopes.Text, scopes.Word, scopes.Glyph);
         if (!float.IsFinite(value)) throw new InvalidOperationException("表达式返回了 NaN 或 Infinity。");
         if (parameter.Minimum is { } minimum) value = Math.Max(value, minimum);
         if (parameter.Maximum is { } maximum) value = Math.Min(value, maximum);
-        if (parameter.Transition is null) return value;
+        // A context-free expression cannot change while this renderer is alive, so a
+        // transition would only allocate one inert state per target/GlyphUnit.
+        if (parameter.Transition is null || compiled.ConstantValue.HasValue) return value;
         var keyValue = new FocusedTransitionKey(operation.Definition.InstanceId, key, contribution.Target,
             contribution.Cluster.LayerClusterIndex);
         if (!_scalarTransitions.TryGetValue(keyValue, out var state))
             _scalarTransitions[keyValue] = state = new ScalarTransitionState();
-        return state.Animate(value, parameter.Transition, line, frame, scopes);
+        return state.Animate(value, parameter.Transition, line, frame, scopes, _expressionFrameCache);
     }
 
     private LyricColorValue ColorValue(
@@ -542,16 +842,19 @@ public sealed class FocusedLyricTextRenderer
         LyricColorValue fallback)
     {
         if (!operation.Colors.TryGetValue(key, out var parameter)) return fallback;
-        var value = parameter.Expression(line, frame, scopes.Text, scopes.Word, scopes.Glyph, LyricExpressionFunctions.Instance);
-        if (parameter.Transition is null) return value;
+        var compiled = parameter.Value;
+        var value = compiled.ConstantValue ?? _expressionFrameCache.EvaluateColor(
+            compiled.CacheId, compiled.Dependencies, compiled.Expression,
+            line, frame, scopes.Text, scopes.Word, scopes.Glyph);
+        if (parameter.Transition is null || compiled.ConstantValue.HasValue) return value;
         var keyValue = new FocusedTransitionKey(operation.Definition.InstanceId, key, contribution.Target,
             contribution.Cluster.LayerClusterIndex);
         if (!_colorTransitions.TryGetValue(keyValue, out var state))
             _colorTransitions[keyValue] = state = new ColorTransitionState();
-        return state.Animate(value, parameter.Transition, line, frame, scopes);
+        return state.Animate(value, parameter.Transition, line, frame, scopes, _expressionFrameCache);
     }
 
-    private static Contribution[] CreateContributions(
+    private static ContributionSet CreateContributions(
         LyricGlyphCluster cluster,
         LyricTextLayer layer,
         LyricTextLayoutSnapshot layout,
@@ -560,12 +863,11 @@ public sealed class FocusedLyricTextRenderer
         LyricExpressionLine line)
     {
         if (layer == LyricTextLayer.Translation)
-            return [new Contribution(cluster, FocusedTextTargets.Translation, FocusedTargetState.Highlighted,
-                null, line.StartMs, line.EndMs, line.Progress)];
+            return new ContributionSet(new Contribution(cluster, FocusedTextTargets.Translation,
+                FocusedTargetState.Highlighted, null, line.StartMs, line.EndMs, line.Progress));
 
         var tokens = layout.Tokens;
-        var hasRealWords = tokens.Any(token => !token.IsInferred);
-        var useWords = hasRealWords || options.UntimedMode == UntimedHighlightMode.InferWords;
+        var useWords = layout.HasRealWords || options.UntimedMode == UntimedHighlightMode.InferWords;
         if (layer == LyricTextLayer.Transliteration && options.TransliterationMode == TransliterationProgressMode.WholeLine)
             useWords = false;
         if (!useWords || tokens.Count == 0)
@@ -574,28 +876,26 @@ public sealed class FocusedLyricTextRenderer
                               layer == LyricTextLayer.Transliteration &&
                               options.TransliterationMode == TransliterationProgressMode.WholeLine;
             var state = highlighted ? FocusedTargetState.Highlighted : FocusedTargetState.Unhighlighted;
-            return [new Contribution(cluster, Target(layer, state), state, null,
-                line.StartMs, line.EndMs, highlighted ? 1 : 0)];
+            return new ContributionSet(new Contribution(cluster, Target(layer, state), state, null,
+                line.StartMs, line.EndMs, highlighted ? 1 : 0));
         }
 
         var tokenIndex = Math.Clamp(cluster.TokenStartIndex, 0, tokens.Count - 1);
         var token = tokens[tokenIndex];
         if (timeMs < token.StartTime)
-            return [new Contribution(cluster, Target(layer, FocusedTargetState.Unhighlighted),
-                FocusedTargetState.Unhighlighted, token, token.StartTime, token.EndTime, 0)];
+            return new ContributionSet(new Contribution(cluster, Target(layer, FocusedTargetState.Unhighlighted),
+                FocusedTargetState.Unhighlighted, token, token.StartTime, token.EndTime, 0));
         if (timeMs >= token.EndTime)
-            return [new Contribution(cluster, Target(layer, FocusedTargetState.Highlighted),
-                FocusedTargetState.Highlighted, token, token.StartTime, token.EndTime, 1)];
+            return new ContributionSet(new Contribution(cluster, Target(layer, FocusedTargetState.Highlighted),
+                FocusedTargetState.Highlighted, token, token.StartTime, token.EndTime, 1));
 
         var duration = token.EndTime - token.StartTime;
         var progress = duration <= 0 ? 1 : Math.Clamp((timeMs - token.StartTime) / (float)duration, 0, 1);
-        return
-        [
+        return new ContributionSet(
             new Contribution(cluster, Target(layer, FocusedTargetState.CurrentPending),
                 FocusedTargetState.CurrentPending, token, token.StartTime, token.EndTime, progress),
             new Contribution(cluster, Target(layer, FocusedTargetState.CurrentHighlighted),
-                FocusedTargetState.CurrentHighlighted, token, token.StartTime, token.EndTime, progress)
-        ];
+                FocusedTargetState.CurrentHighlighted, token, token.StartTime, token.EndTime, progress));
     }
 
     private static LiftWord? ResolveLiftWord(
@@ -606,8 +906,7 @@ public sealed class FocusedLyricTextRenderer
         long timeMs)
     {
         var mode = Option(definition, "untimedMode", UntimedLiftMode.DoNotLift);
-        var hasRealWords = layout.Tokens.Any(token => !token.IsInferred);
-        if (contribution.Cluster.Layer != LyricTextLayer.Translation && hasRealWords)
+        if (contribution.Cluster.Layer != LyricTextLayer.Translation && layout.HasRealWords)
         {
             var tokenIndex = Math.Clamp(contribution.Cluster.TokenStartIndex, 0, layout.Tokens.Count - 1);
             return LiftWord.FromToken(layout.Tokens[tokenIndex], contribution.Cluster, tokenIndex, layout.Tokens.Count, timeMs);
@@ -630,45 +929,13 @@ public sealed class FocusedLyricTextRenderer
             LyricTextLayer.Translation => layout.InferredTranslationTokens,
             _ => layout.Tokens
         };
-        var inferredTokenIndex = TokenAtSource(inferred, contribution.Cluster.SourceStart);
+        var inferredTokenIndex = contribution.Cluster.InferredTokenIndex;
         if ((uint)inferredTokenIndex >= (uint)inferred.Count) return null;
         var token = inferred[inferredTokenIndex];
-        var layerClusters = contribution.Cluster.Layer switch
-        {
-            LyricTextLayer.Transliteration => layout.TransliterationGlyphClusters,
-            LyricTextLayer.Translation => layout.TranslationGlyphClusters,
-            _ => layout.LyricGlyphClusters
-        };
-        var (glyphIndex, glyphCount) = GlyphPositionForToken(
-            contribution.Cluster, layerClusters, inferred, inferredTokenIndex);
-        return new LiftWord(token.StartTime, token.EndTime, glyphIndex, glyphCount,
+        return new LiftWord(token.StartTime, token.EndTime,
+            contribution.Cluster.InferredTokenClusterIndex,
+            Math.Max(1, contribution.Cluster.InferredTokenClusterCount),
             true, inferredTokenIndex, inferred.Count, true, WordProgress(timeMs, token.StartTime, token.EndTime));
-    }
-
-    private static int TokenAtSource(IReadOnlyList<LyricTextToken> tokens, int sourceIndex)
-    {
-        var offset = 0;
-        for (var index = 0; index < tokens.Count; index++)
-        {
-            offset += tokens[index].Text.Length;
-            if (sourceIndex < offset) return index;
-        }
-        return tokens.Count - 1;
-    }
-
-    private static (int Index, int Count) GlyphPositionForToken(
-        LyricGlyphCluster cluster,
-        IReadOnlyList<LyricGlyphCluster> layerClusters,
-        IReadOnlyList<LyricTextToken> tokens,
-        int tokenIndex)
-    {
-        var start = 0;
-        for (var index = 0; index < tokenIndex; index++) start += tokens[index].Text.Length;
-        var end = start + tokens[tokenIndex].Text.Length;
-        var tokenClusters = layerClusters.Where(item =>
-            item.SourceStart >= 0 && item.SourceEnd > start && item.SourceStart < end).ToList();
-        var glyphIndex = tokenClusters.IndexOf(cluster);
-        return (Math.Max(0, glyphIndex), Math.Max(1, tokenClusters.Count));
     }
 
     private static ExpressionScopes CreateScopes(
@@ -685,16 +952,17 @@ public sealed class FocusedLyricTextRenderer
                 Math.Max(cluster.TokenEndIndexExclusive, cluster.TokenStartIndex + 1),
                 contribution.WordStart + (long)((contribution.WordEnd - contribution.WordStart) * contribution.WordProgress)));
         var origin = cluster.BaseState.Origin;
+        var wordScope = word is not { } resolved
+            ? new FocusedTextExpressionWord(false, -1, 0, line.StartMs, line.EndMs,
+                line.Progress, false)
+            : new FocusedTextExpressionWord(resolved.Exists, resolved.Index, resolved.Count,
+                resolved.Start, resolved.End, resolved.Progress, resolved.IsInferred);
         return new ExpressionScopes(
             new FocusedTextExpressionText(
                 cluster.Layer == LyricTextLayer.Lyric,
                 cluster.Layer == LyricTextLayer.Transliteration,
                 cluster.Layer == LyricTextLayer.Translation),
-            word is null
-                ? new FocusedTextExpressionWord(false, -1, 0, line.StartMs, line.EndMs,
-                    line.Progress, false)
-                : new FocusedTextExpressionWord(word.Exists, word.Index, word.Count,
-                    word.Start, word.End, word.Progress, word.IsInferred),
+            wordScope,
             new FocusedTextExpressionGlyph(
                 cluster.LayerClusterIndex,
                 cluster.LayerClusterCount,
@@ -748,7 +1016,7 @@ public sealed class FocusedLyricTextRenderer
         Unhighlighted
     }
 
-    private sealed record Contribution(
+    private readonly record struct Contribution(
         LyricGlyphCluster Cluster,
         string Target,
         FocusedTargetState State,
@@ -757,7 +1025,15 @@ public sealed class FocusedLyricTextRenderer
         long WordEnd,
         float WordProgress);
 
-    private sealed record LiftWord(
+    private readonly record struct ContributionSet(Contribution First, Contribution? Second = null);
+
+    internal readonly record struct RectangleMaskPlan(
+        float? ConstantOpacity,
+        float FirstStop,
+        float SecondStop,
+        bool OpaqueAtStart);
+
+    private readonly record struct LiftWord(
         long Start,
         long End,
         int GlyphIndex,
@@ -812,14 +1088,15 @@ public sealed class FocusedLyricTextRenderer
         private TransitionSnapshot _snapshot;
 
         public float Animate(float target, CompiledFocusedTransition transition,
-            LyricExpressionLine line, LyricExpressionFrame frame, ExpressionScopes scopes)
+            LyricExpressionLine line, LyricExpressionFrame frame, ExpressionScopes scopes,
+            FocusedTextExpressionFrameCache expressionCache)
         {
             if (!_initialized)
             {
                 _initialized = true;
                 _start = _target = target;
                 _startTime = frame.CurrentTimeMs;
-                _snapshot = Snapshot(transition, line, frame, scopes);
+                _snapshot = Snapshot(transition, line, frame, scopes, expressionCache);
                 return target;
             }
             if (target != _target)
@@ -827,14 +1104,14 @@ public sealed class FocusedLyricTextRenderer
                 _start = Lerp(_start, _target, Progress(frame.CurrentTimeMs));
                 _target = target;
                 _startTime = frame.CurrentTimeMs;
-                _snapshot = Snapshot(transition, line, frame, scopes);
+                _snapshot = Snapshot(transition, line, frame, scopes, expressionCache);
             }
             return Lerp(_start, _target, Progress(frame.CurrentTimeMs));
         }
 
         private double Progress(long time) => _snapshot.Duration <= 0
             ? 1
-            : _snapshot.Easing.Ease(Math.Clamp((time - _startTime) / _snapshot.Duration, 0, 1));
+            : _snapshot.Ease(Math.Clamp((time - _startTime) / _snapshot.Duration, 0, 1));
     }
 
     private sealed class ColorTransitionState
@@ -846,14 +1123,15 @@ public sealed class FocusedLyricTextRenderer
         private TransitionSnapshot _snapshot;
 
         public LyricColorValue Animate(LyricColorValue target, CompiledFocusedTransition transition,
-            LyricExpressionLine line, LyricExpressionFrame frame, ExpressionScopes scopes)
+            LyricExpressionLine line, LyricExpressionFrame frame, ExpressionScopes scopes,
+            FocusedTextExpressionFrameCache expressionCache)
         {
             if (!_initialized)
             {
                 _initialized = true;
                 _start = _target = target;
                 _startTime = frame.CurrentTimeMs;
-                _snapshot = Snapshot(transition, line, frame, scopes);
+                _snapshot = Snapshot(transition, line, frame, scopes, expressionCache);
                 return target;
             }
             if (target != _target)
@@ -861,31 +1139,51 @@ public sealed class FocusedLyricTextRenderer
                 _start = Lerp(_start, _target, Progress(frame.CurrentTimeMs));
                 _target = target;
                 _startTime = frame.CurrentTimeMs;
-                _snapshot = Snapshot(transition, line, frame, scopes);
+                _snapshot = Snapshot(transition, line, frame, scopes, expressionCache);
             }
             return Lerp(_start, _target, Progress(frame.CurrentTimeMs));
         }
 
         private double Progress(long time) => _snapshot.Duration <= 0
             ? 1
-            : _snapshot.Easing.Ease(Math.Clamp((time - _startTime) / _snapshot.Duration, 0, 1));
+            : _snapshot.Ease(Math.Clamp((time - _startTime) / _snapshot.Duration, 0, 1));
     }
 
     private static TransitionSnapshot Snapshot(
         CompiledFocusedTransition transition,
         LyricExpressionLine line,
         LyricExpressionFrame frame,
-        ExpressionScopes scopes)
+        ExpressionScopes scopes,
+        FocusedTextExpressionFrameCache expressionCache)
     {
-        var fx = LyricExpressionFunctions.Instance;
-        var duration = transition.Duration(line, frame, scopes.Text, scopes.Word, scopes.Glyph, fx);
-        var arguments = transition.Arguments.ToDictionary(
-            pair => pair.Key,
-            pair => (double)pair.Value(line, frame, scopes.Text, scopes.Word, scopes.Glyph, fx),
-            StringComparer.OrdinalIgnoreCase);
-        return new TransitionSnapshot(duration,
-            LyricEasingFactory.Create(transition.EasingId, transition.Mode, arguments));
+        var duration = Evaluate(transition.Duration, line, frame, scopes, expressionCache);
+        if (transition.ConstantEasing is { } constantEasing)
+            return new TransitionSnapshot(duration, constantEasing, transition.EasingId, transition.Mode,
+                2, 6, 1, 3, 2);
+
+        double exponent = 2, springiness = 6, oscillations = 1, bounces = 3, bounciness = 2;
+        foreach (var (key, expression) in transition.Arguments)
+        {
+            var value = Evaluate(expression, line, frame, scopes, expressionCache);
+            if (key.Equals("exponent", StringComparison.OrdinalIgnoreCase)) exponent = value;
+            else if (key.Equals("springiness", StringComparison.OrdinalIgnoreCase)) springiness = value;
+            else if (key.Equals("oscillations", StringComparison.OrdinalIgnoreCase)) oscillations = value;
+            else if (key.Equals("bounces", StringComparison.OrdinalIgnoreCase)) bounces = value;
+            else if (key.Equals("bounciness", StringComparison.OrdinalIgnoreCase)) bounciness = value;
+        }
+        return new TransitionSnapshot(duration, null, transition.EasingId, transition.Mode,
+            exponent, springiness, oscillations, bounces, bounciness);
     }
+
+    private static float Evaluate(
+        CompiledFocusedScalarValue value,
+        LyricExpressionLine line,
+        LyricExpressionFrame frame,
+        ExpressionScopes scopes,
+        FocusedTextExpressionFrameCache expressionCache) =>
+        value.ConstantValue ?? expressionCache.EvaluateScalar(
+            value.CacheId, value.Dependencies, value.Expression,
+            line, frame, scopes.Text, scopes.Word, scopes.Glyph);
 
     private static float Lerp(float start, float end, double progress) =>
         (float)(start + (end - start) * progress);
@@ -899,5 +1197,16 @@ public sealed class FocusedLyricTextRenderer
 
     private readonly record struct TransitionSnapshot(
         double Duration,
-        HyPlayer.LyricRenderer.Animator.EaseFunctionBase Easing);
+        HyPlayer.LyricRenderer.Animator.EaseFunctionBase? ConstantEasing,
+        string EasingId,
+        string Mode,
+        double Exponent,
+        double Springiness,
+        double Oscillations,
+        double Bounces,
+        double Bounciness)
+    {
+        public double Ease(double progress) => ConstantEasing?.Ease(progress) ?? LyricEasingFactory.Evaluate(
+            EasingId, Mode, progress, Exponent, Springiness, Oscillations, Bounces, Bounciness);
+    }
 }

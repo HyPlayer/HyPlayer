@@ -71,8 +71,10 @@ internal sealed partial class OpacityOperationFactory(ILyricExpressionCompiler c
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
+            var value = opacity.Evaluate(context);
+            if (value >= 1) return source;
             _effect.Source = source;
-            _effect.Opacity = opacity.Evaluate(context);
+            _effect.Opacity = value;
             return _effect;
         }
 
@@ -114,8 +116,10 @@ internal sealed partial class BlurOperationFactory(ILyricExpressionCompiler comp
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
+            var value = amount.Evaluate(context);
+            if (value <= 0) return source;
             _effect.Source = source;
-            _effect.BlurAmount = amount.Evaluate(context);
+            _effect.BlurAmount = value;
             return _effect;
         }
 
@@ -220,15 +224,21 @@ internal sealed partial class GlowOperationFactory(ILyricExpressionCompiler comp
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
-            _shadow.Source = source;
-            _shadow.BlurAmount = _blur.Evaluate(context);
+            var blur = _blur.Evaluate(context);
             var color = _color.Evaluate(context);
+            var opacity = _opacity.Evaluate(context);
+            var x = _x.Evaluate(context);
+            var y = _y.Evaluate(context);
+            if (opacity <= 0 || color.A == 0) return source;
+
+            _shadow.Source = source;
+            _shadow.BlurAmount = blur;
             _shadow.ShadowColor = Windows.UI.Color.FromArgb(color.A, color.R, color.G, color.B);
-            _shadowOpacity.Opacity = _opacity.Evaluate(context);
+            _shadowOpacity.Opacity = opacity;
 
             var commandList = context.Resources.Track(new CanvasCommandList(context.TargetSession));
             using var drawingSession = commandList.CreateDrawingSession();
-            drawingSession.DrawImage(_shadowOpacity, _x.Evaluate(context), _y.Evaluate(context));
+            drawingSession.DrawImage(_shadowOpacity, x, y);
             drawingSession.DrawImage(source);
             return commandList;
         }
@@ -298,31 +308,34 @@ internal sealed partial class Transform2DOperationFactory(ILyricExpressionCompil
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
-            var values = parameters.Select(parameter => parameter.Evaluate(context)).ToArray();
-            var anchor = new Vector2(values[5], values[6]);
+            var x = parameters[0].Evaluate(context);
+            var y = parameters[1].Evaluate(context);
+            var scaleX = parameters[2].Evaluate(context);
+            var scaleY = parameters[3].Evaluate(context);
+            var rotation = parameters[4].Evaluate(context);
+            var anchor = new Vector2(parameters[5].Evaluate(context), parameters[6].Evaluate(context));
+            if (x == 0 && y == 0 && scaleX == 1 && scaleY == 1 && rotation == 0) return source;
+
             _effect.Source = source;
             _effect.TransformMatrix =
                 Matrix3x2.CreateTranslation(-anchor) *
-                Matrix3x2.CreateScale(values[2], values[3]) *
-                Matrix3x2.CreateRotation(MathF.PI * values[4] / 180f) *
-                Matrix3x2.CreateTranslation(anchor + new Vector2(values[0], values[1]));
+                Matrix3x2.CreateScale(scaleX, scaleY) *
+                Matrix3x2.CreateRotation(MathF.PI * rotation / 180f) *
+                Matrix3x2.CreateTranslation(anchor + new Vector2(x, y));
             context.GeometryBounds = TransformBounds(context.GeometryBounds, _effect.TransformMatrix);
             return _effect;
         }
 
         private static Windows.Foundation.Rect TransformBounds(Windows.Foundation.Rect bounds, Matrix3x2 matrix)
         {
-            var points = new[]
-            {
-                Vector2.Transform(new Vector2((float)bounds.Left, (float)bounds.Top), matrix),
-                Vector2.Transform(new Vector2((float)bounds.Right, (float)bounds.Top), matrix),
-                Vector2.Transform(new Vector2((float)bounds.Left, (float)bounds.Bottom), matrix),
-                Vector2.Transform(new Vector2((float)bounds.Right, (float)bounds.Bottom), matrix)
-            };
-            var left = points.Min(point => point.X);
-            var top = points.Min(point => point.Y);
-            var right = points.Max(point => point.X);
-            var bottom = points.Max(point => point.Y);
+            var topLeft = Vector2.Transform(new Vector2((float)bounds.Left, (float)bounds.Top), matrix);
+            var topRight = Vector2.Transform(new Vector2((float)bounds.Right, (float)bounds.Top), matrix);
+            var bottomLeft = Vector2.Transform(new Vector2((float)bounds.Left, (float)bounds.Bottom), matrix);
+            var bottomRight = Vector2.Transform(new Vector2((float)bounds.Right, (float)bounds.Bottom), matrix);
+            var left = MathF.Min(MathF.Min(topLeft.X, topRight.X), MathF.Min(bottomLeft.X, bottomRight.X));
+            var top = MathF.Min(MathF.Min(topLeft.Y, topRight.Y), MathF.Min(bottomLeft.Y, bottomRight.Y));
+            var right = MathF.Max(MathF.Max(topLeft.X, topRight.X), MathF.Max(bottomLeft.X, bottomRight.X));
+            var bottom = MathF.Max(MathF.Max(topLeft.Y, topRight.Y), MathF.Max(bottomLeft.Y, bottomRight.Y));
             return new Windows.Foundation.Rect(left, top, right - left, bottom - top);
         }
 
@@ -386,16 +399,21 @@ internal sealed partial class Transform3DOperationFactory(ILyricExpressionCompil
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
-            var values = parameters.Select(parameter => parameter.Evaluate(context)).ToArray();
-            var center = new Vector3(values[4], values[5], 0);
+            var angleX = parameters[0].Evaluate(context);
+            var angleY = parameters[1].Evaluate(context);
+            var angleZ = parameters[2].Evaluate(context);
+            var depth = parameters[3].Evaluate(context);
+            var center = new Vector3(parameters[4].Evaluate(context), parameters[5].Evaluate(context), 0);
+            if (angleX == 0 && angleY == 0 && angleZ == 0) return source;
+
             var perspective = Matrix4x4.Identity;
-            perspective.M34 = 1f / values[3];
+            perspective.M34 = 1f / depth;
             _effect.Source = source;
             _effect.TransformMatrix =
                 Matrix4x4.CreateTranslation(-center) *
-                Matrix4x4.CreateRotationX(MathF.PI * values[0] / 180f) *
-                Matrix4x4.CreateRotationY(MathF.PI * values[1] / 180f) *
-                Matrix4x4.CreateRotationZ(MathF.PI * values[2] / 180f) *
+                Matrix4x4.CreateRotationX(MathF.PI * angleX / 180f) *
+                Matrix4x4.CreateRotationY(MathF.PI * angleY / 180f) *
+                Matrix4x4.CreateRotationZ(MathF.PI * angleZ / 180f) *
                 perspective *
                 Matrix4x4.CreateTranslation(center);
             return _effect;

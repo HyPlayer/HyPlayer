@@ -67,6 +67,19 @@ public class LyricExpressionCompilerTests
     }
 
     [Test]
+    public async Task WholeLineExpressions_ShouldReportTheirRuntimeDependencies()
+    {
+        _compiler.CompileScalar("1").Dependencies.Should().Be(FocusedTextExpressionDependencies.None);
+        _compiler.CompileColor("rgba(1, 2, 3, 1)").Dependencies
+            .Should().Be(FocusedTextExpressionDependencies.None);
+        _compiler.CompileScalar("line.Progress").Dependencies
+            .Should().Be(FocusedTextExpressionDependencies.Line);
+        _compiler.CompileScalar("line.Progress + frame.ScrollOffset").Dependencies
+            .Should().Be(FocusedTextExpressionDependencies.Line | FocusedTextExpressionDependencies.Frame);
+        await Task.CompletedTask;
+    }
+
+    [Test]
     public async Task Rgba_ShouldCreateCustomColorsInFocusedColorExpressions()
     {
         var result = _compiler.CompileFocusedColor("rgba(12, 34, 56, 0.5)");

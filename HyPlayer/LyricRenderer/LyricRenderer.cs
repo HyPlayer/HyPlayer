@@ -107,11 +107,8 @@ namespace HyPlayer.LyricRenderer
 
         public void ReflowTime(long time)
         {
-            var keys = _keyFrameRendered.Keys.ToArray();
-            foreach (var key in keys)
-            {
-                if (key >= time) _keyFrameRendered[key] = false;
-            }
+            foreach (var key in _allKeyFrames.GetViewBetween(time, long.MaxValue))
+                _pendingKeyFrames.Add(key);
 
             _needRecalculate = true;
         }
@@ -126,22 +123,25 @@ namespace HyPlayer.LyricRenderer
             Clear();
             Context.LyricLines.Clear();
             Context.LyricLines.AddRange(lines);
-            _keyFrameRendered.Clear();
+            _allKeyFrames.Clear();
+            _pendingKeyFrames.Clear();
+            _groupRoots.Clear();
             // 将 Id 换为 Index, 方便后续读取
             for (var i = 0; i < Context.LyricLines.Count; i++)
             {
                 Context.LyricLines[i].RuntimeIndex = i;
             }
 
-            _keyFrameRendered.Clear();
             _targetingKeyFrames.Clear();
             Context.RenderOffsets.Clear();
-            _keyFrameRendered[0] = false; // 将 0 时刻添加到 KeyFrame, 以便初始化时渲染           
+            AddKeyFrame(0); // 将 0 时刻添加到 KeyFrame, 以便初始化时渲染
             // 初始化位置
             float topleftPosition = Context.ViewHeight * Context.LyricPaddingTopRatio;
 
             foreach (var renderingLyricLine in Context.LyricLines)
             {
+                if (_groupRoots.Count == 0 || _groupRoots[^1].GroupIndex != renderingLyricLine.GroupIndex)
+                    _groupRoots.Add(renderingLyricLine);
                 var offset = new LineRenderOffset
                 {
                     X = 4,
@@ -151,8 +151,8 @@ namespace HyPlayer.LyricRenderer
                 Context.SnapshotRenderOffsets[renderingLyricLine.RuntimeIndex] = new LineRenderOffset();
                 topleftPosition += renderingLyricLine.RenderingHeight + Context.LineSpacing;
                 // 获取 Keyframe
-                _keyFrameRendered[renderingLyricLine.StartTime] = false;
-                _keyFrameRendered[renderingLyricLine.EndTime] = false;
+                AddKeyFrame(renderingLyricLine.StartTime);
+                AddKeyFrame(renderingLyricLine.EndTime);
                 // 设置对照表
                 if (!_targetingKeyFrames.ContainsKey(renderingLyricLine.StartTime))
                     _targetingKeyFrames[renderingLyricLine.StartTime] = new List<RenderingLyricLine>();
@@ -168,7 +168,7 @@ namespace HyPlayer.LyricRenderer
                     if (!_targetingKeyFrames.ContainsKey(renderOptionsKey))
                         _targetingKeyFrames[renderOptionsKey] = new List<RenderingLyricLine>();
                     _targetingKeyFrames[renderOptionsKey].Add(renderingLyricLine);
-                    _keyFrameRendered[renderOptionsKey] = false;
+                    AddKeyFrame(renderOptionsKey);
                 }
             }
 
@@ -183,11 +183,16 @@ namespace HyPlayer.LyricRenderer
                 line.Dispose();
             }
 
+            Context.EmptyPipelineImage?.Dispose();
+            Context.EmptyPipelineImage = null;
+
             Context.LyricLines.Clear();
             Context.RenderingLyricLines.Clear();
             Context.RenderOffsets.Clear();
             Context.SnapshotRenderOffsets.Clear();
-            _keyFrameRendered.Clear();
+            _allKeyFrames.Clear();
+            _pendingKeyFrames.Clear();
+            _groupRoots.Clear();
             _targetingKeyFrames.Clear();
             Context.CurrentLyricLine = default!;
             Context.CurrentLyricLineIndex = 0;
@@ -212,8 +217,16 @@ namespace HyPlayer.LyricRenderer
 
         }
 
-        private readonly Dictionary<long, bool> _keyFrameRendered = new();
+        private readonly SortedSet<long> _allKeyFrames = [];
+        private readonly SortedSet<long> _pendingKeyFrames = [];
         private readonly Dictionary<long, List<RenderingLyricLine>> _targetingKeyFrames = new();
+        private readonly List<RenderingLyricLine> _groupRoots = [];
+
+        private void AddKeyFrame(long time)
+        {
+            _allKeyFrames.Add(time);
+            _pendingKeyFrames.Add(time);
+        }
 
         private CanvasTransition _scrollTranslation = new CanvasTransition { 
             Duration = TimeSpan.FromSeconds(0.15), 
@@ -223,23 +236,8 @@ namespace HyPlayer.LyricRenderer
         private void RecalculateRenderOffset(CanvasDrawingSession session)
         {
             if (Context.LyricLines is { Count: <= 0 }) return;
-            var groups = Context.LyricLines
-                .GroupBy(line => line.GroupIndex)
-                .Select(group => group.First())
-                .ToList();
-            var currentGroup = groups
-                .Where(line => line.GroupStartTime <= Context.CurrentLyricTime &&
-                               Context.CurrentLyricTime < line.GroupEndTime)
-                .OrderBy(line => line.GroupStartTime)
-                .ThenBy(line => line.GroupIndex)
-                .FirstOrDefault()
-                ?? groups.Where(line => line.GroupStartTime >= Context.CurrentLyricTime)
-                    .OrderBy(line => line.GroupStartTime)
-                    .ThenBy(line => line.GroupIndex)
-                    .FirstOrDefault()
-                ?? groups[^1];
-            Context.CurrentLyricLineIndex = Context.LyricLines.FindIndex(line =>
-                line.GroupIndex == currentGroup.GroupIndex);
+            var currentGroup = FindCurrentGroup();
+            Context.CurrentLyricLineIndex = currentGroup.RuntimeIndex;
             Context.CurrentLyricLine = Context.LyricLines[Context.CurrentLyricLineIndex];
             Context.RenderingLyricLines.Clear();
             var theoryRenderAfterPosition = Context.LyricPaddingTopRatio * Context.ViewHeight + _scrollTranslation.Animate(Context.CurrentLyricTime,Context.ScrollingDelta);
@@ -342,15 +340,44 @@ namespace HyPlayer.LyricRenderer
                             currentLine.Rendering = false;
                         }
                     }
+                    else
+                    {
+                        currentLine.Rendering = false;
+                    }
                 }
                 else
                 {
+                    if (currentLine.Hidden) currentLine.Rendering = false;
                     renderedBeforeStartPosition = theoryRenderBeforePosition;
                 }
 
 
                 Context.RenderOffsets[currentLine.RuntimeIndex].Y = renderedBeforeStartPosition;
             }
+        }
+
+        private RenderingLyricLine FindCurrentGroup()
+        {
+            RenderingLyricLine? active = null;
+            RenderingLyricLine? future = null;
+            foreach (var group in _groupRoots)
+            {
+                if (group.GroupStartTime <= Context.CurrentLyricTime &&
+                    Context.CurrentLyricTime < group.GroupEndTime)
+                {
+                    if (active is null || group.GroupStartTime < active.GroupStartTime ||
+                        group.GroupStartTime == active.GroupStartTime && group.GroupIndex < active.GroupIndex)
+                        active = group;
+                }
+                else if (group.GroupStartTime >= Context.CurrentLyricTime &&
+                         (future is null || group.GroupStartTime < future.GroupStartTime ||
+                          group.GroupStartTime == future.GroupStartTime && group.GroupIndex < future.GroupIndex))
+                {
+                    future = group;
+                }
+            }
+
+            return active ?? future ?? _groupRoots[^1];
         }
 
 
@@ -396,12 +423,12 @@ namespace HyPlayer.LyricRenderer
                     }
                 }
 
-                foreach (var key in _keyFrameRendered.Keys.ToArray())
+                while (_pendingKeyFrames.Count > 0)
                 {
-                    if (_keyFrameRendered[key]) continue;
-                    if (key >= Context.CurrentLyricTime && key != 0) continue;
+                    var key = _pendingKeyFrames.Min;
+                    if (key >= Context.CurrentLyricTime && key != 0) break;
+                    _pendingKeyFrames.Remove(key);
                     // 该 KeyFrame 尚未渲染
-                    _keyFrameRendered[key] = true;
                     //if (!_needRecalculate)
                     Context.CurrentKeyframe = key;
                     // 视图快照

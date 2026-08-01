@@ -79,6 +79,8 @@ internal sealed class BackgroundDrawOperationFactory(ILyricExpressionCompiler co
                 bounds.Y - marginY,
                 Math.Max(0, bounds.Width + marginX * 2),
                 Math.Max(0, bounds.Height + marginY * 2));
+            if (alpha == 0 || rectangle.Width <= 0 || rectangle.Height <= 0) return source;
+
             var result = context.Resources.Track(new CanvasCommandList(context.TargetSession));
             using var session = result.CreateDrawingSession();
             using var geometry = CanvasGeometry.CreateRoundedRectangle(
@@ -88,6 +90,7 @@ internal sealed class BackgroundDrawOperationFactory(ILyricExpressionCompiler co
                 Math.Max(radius, 0));
             session.FillGeometry(geometry, Color.FromArgb(alpha, value.R, value.G, value.B));
             session.DrawImage(source);
+            context.HasContent = true;
             return result;
         }
 
@@ -123,10 +126,17 @@ internal sealed class SourceDrawOperationFactory : ILyricRenderOperationFactory
     {
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
+            if (!context.HasContent)
+            {
+                context.HasContent = true;
+                return context.SourceImage;
+            }
+
             var commandList = context.Resources.Track(new CanvasCommandList(context.TargetSession));
             using var session = commandList.CreateDrawingSession();
             session.DrawImage(source);
             session.DrawImage(context.SourceImage);
+            context.HasContent = true;
             return commandList;
         }
 
@@ -174,6 +184,7 @@ internal sealed class DebugDrawOperationFactory : ILyricRenderOperationFactory
                 Colors.Red);
             session.DrawText(context.Line.Index.ToString(), 0, 15, Colors.Red);
             session.DrawRectangle(0, 0, context.Line.Width, context.Line.Height, Colors.Yellow);
+            context.HasContent = true;
             return commandList;
         }
 

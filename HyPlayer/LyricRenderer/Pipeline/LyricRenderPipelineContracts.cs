@@ -163,23 +163,25 @@ public sealed class LyricRenderFrameResourceScope : IDisposable
 
 public sealed class LyricRenderOperationContext
 {
-    public required ICanvasImage SourceImage { get; init; }
+    public ICanvasImage SourceImage { get; set; } = null!;
 
-    public required CanvasDrawingSession TargetSession { get; init; }
+    public CanvasDrawingSession TargetSession { get; set; } = null!;
 
-    public required LyricRenderFrameResourceScope Resources { get; init; }
+    public LyricRenderFrameResourceScope Resources { get; set; } = null!;
 
-    public required LyricExpressionLine Line { get; init; }
+    public LyricExpressionLine Line { get; set; }
 
-    public required LyricExpressionFrame Frame { get; init; }
+    public LyricExpressionFrame Frame { get; set; }
 
-    public required float OffsetX { get; init; }
+    public float OffsetX { get; set; }
 
-    public required float OffsetY { get; init; }
+    public float OffsetY { get; set; }
 
-    public required bool DebugEnabled { get; init; }
+    public bool DebugEnabled { get; set; }
 
     public Windows.Foundation.Rect GeometryBounds { get; set; }
+
+    public bool HasContent { get; set; }
 
     public LyricExpressionFunctions Functions => LyricExpressionFunctions.Instance;
 }

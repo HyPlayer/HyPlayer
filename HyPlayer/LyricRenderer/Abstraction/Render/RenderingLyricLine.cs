@@ -37,7 +37,18 @@ public abstract class RenderingLyricLine : IDisposable
 
     public float RenderingWidth { get; set; }
 
-    public bool Rendering { get; set; } = false;
+    private bool _rendering;
+
+    public bool Rendering
+    {
+        get => _rendering;
+        set
+        {
+            if (_rendering == value) return;
+            _rendering = value;
+            OnRenderingChanged(value);
+        }
+    }
 
     public ReactionState ReactionState { get; set; }
 
@@ -58,6 +69,15 @@ public abstract class RenderingLyricLine : IDisposable
     public bool IsFinished { get; private set; }
 
     private LyricRenderPipelineInstance? _renderPipeline;
+    private readonly LyricRenderFrameResourceScope _frameResources = new();
+    private readonly LyricRenderOperationContext _operationContext = new();
+    private ALRCStyle? _cachedExpressionStyle;
+    private string _cachedStylePosition = "Undefined";
+    private string _cachedStyleType = "Normal";
+
+    protected LyricExpressionLine CurrentExpressionLine { get; private set; }
+
+    protected LyricExpressionFrame CurrentExpressionFrame { get; private set; }
 
     public virtual string ExpressionText => string.Empty;
 
@@ -65,53 +85,77 @@ public abstract class RenderingLyricLine : IDisposable
 
     public bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
-        using var commandList = new CanvasCommandList(session);
+        CurrentExpressionLine = CreateExpressionLine(context, offset);
+        CurrentExpressionFrame = CreateExpressionFrame(context);
+        CanvasCommandList? transientSource = null;
+        ICanvasImage sourceImage;
         bool result;
-        using (var currentLineSession = commandList.CreateDrawingSession())
+        if (TryGetStaticSourceImage(session, context, out var staticSource))
         {
-            result = RenderCore(currentLineSession, context);
-        }
-
-        ICanvasImage finalImage;
-        if (context.EffectProfile is { } profile)
-        {
-            if (_renderPipeline?.Version != profile.Version)
-            {
-                _renderPipeline?.Dispose();
-                _renderPipeline = profile.CreatePipeline();
-            }
-
-            using var emptyImage = new CanvasCommandList(session);
-            using (emptyImage.CreateDrawingSession())
-            {
-            }
-
-            using var resources = new LyricRenderFrameResourceScope();
-            finalImage = _renderPipeline!.Apply(emptyImage, new LyricRenderOperationContext
-            {
-                SourceImage = commandList,
-                TargetSession = session,
-                Resources = resources,
-                Line = CreateExpressionLine(context, offset),
-                Frame = CreateExpressionFrame(context),
-                OffsetX = offset.X,
-                OffsetY = offset.Y,
-                DebugEnabled = context.Debug,
-                GeometryBounds = new Windows.Foundation.Rect(0, 0, RenderingWidth, RenderingHeight)
-            });
-            session.DrawImage(finalImage, offset.X, offset.Y);
+            sourceImage = staticSource;
+            result = true;
         }
         else
         {
-            session.DrawImage(commandList, offset.X, offset.Y);
-            // 配置服务尚未初始化时保留调试回退绘制。
-            if (!context.Debug) return result;
-            session.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})", offset.X, offset.Y, Colors.Red);
-            session.DrawText(RuntimeIndex.ToString(), offset.X, offset.Y + 15, Colors.Red);
-            session.DrawRectangle(offset.X, offset.Y, RenderingWidth, RenderingHeight, Colors.Yellow);
+            transientSource = new CanvasCommandList(session);
+            sourceImage = transientSource;
+            using var currentLineSession = transientSource.CreateDrawingSession();
+            result = RenderCore(currentLineSession, context);
         }
 
-        return result;
+        try
+        {
+            ICanvasImage finalImage;
+            if (context.EffectProfile is { } profile)
+            {
+                if (_renderPipeline?.Version != profile.Version)
+                {
+                    _renderPipeline?.Dispose();
+                    _renderPipeline = profile.CreatePipeline();
+                }
+
+                if (context.EmptyPipelineImage is null)
+                {
+                    context.EmptyPipelineImage = new CanvasCommandList(session);
+                    using var emptySession = context.EmptyPipelineImage.CreateDrawingSession();
+                }
+
+                _operationContext.SourceImage = sourceImage;
+                _operationContext.TargetSession = session;
+                _operationContext.Resources = _frameResources;
+                _operationContext.Line = CurrentExpressionLine;
+                _operationContext.Frame = CurrentExpressionFrame;
+                _operationContext.OffsetX = offset.X;
+                _operationContext.OffsetY = offset.Y;
+                _operationContext.DebugEnabled = context.Debug;
+                _operationContext.GeometryBounds = new Windows.Foundation.Rect(0, 0, RenderingWidth, RenderingHeight);
+                _operationContext.HasContent = false;
+                try
+                {
+                    finalImage = _renderPipeline!.Apply(context.EmptyPipelineImage, _operationContext);
+                    session.DrawImage(finalImage, offset.X, offset.Y);
+                }
+                finally
+                {
+                    _frameResources.Dispose();
+                }
+            }
+            else
+            {
+                session.DrawImage(sourceImage, offset.X, offset.Y);
+                // 配置服务尚未初始化时保留调试回退绘制。
+                if (!context.Debug) return result;
+                session.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})", offset.X, offset.Y, Colors.Red);
+                session.DrawText(RuntimeIndex.ToString(), offset.X, offset.Y + 15, Colors.Red);
+                session.DrawRectangle(offset.X, offset.Y, RenderingWidth, RenderingHeight, Colors.Yellow);
+            }
+
+            return result;
+        }
+        finally
+        {
+            transientSource?.Dispose();
+        }
     }
 
 
@@ -121,6 +165,19 @@ public abstract class RenderingLyricLine : IDisposable
         ReactionState = state;
     }
     protected abstract bool RenderCore(CanvasDrawingSession session, RenderContext context);
+
+    protected virtual bool TryGetStaticSourceImage(
+        CanvasDrawingSession session,
+        RenderContext context,
+        out ICanvasImage image)
+    {
+        image = null!;
+        return false;
+    }
+
+    protected virtual void OnRenderingChanged(bool rendering)
+    {
+    }
 
     public void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
     {
@@ -146,6 +203,7 @@ public abstract class RenderingLyricLine : IDisposable
     {
         _renderPipeline?.Dispose();
         _renderPipeline = null;
+        _frameResources.Dispose();
     }
 
     protected LyricExpressionLine CreateExpressionLine(RenderContext context, LineRenderOffset offset)
@@ -177,6 +235,12 @@ public abstract class RenderingLyricLine : IDisposable
         var focusing = TypographySelector(t => t?.FocusingColor, context)!.Value;
         var source = SourceLine;
         var style = SourceStyle;
+        if (!ReferenceEquals(style, _cachedExpressionStyle))
+        {
+            _cachedExpressionStyle = style;
+            _cachedStylePosition = style?.Position?.ToString() ?? "Undefined";
+            _cachedStyleType = style?.Type?.ToString() ?? "Normal";
+        }
         var styleColor = SourceStyleColor ?? default;
 
         return new LyricExpressionLine(
@@ -210,10 +274,10 @@ public abstract class RenderingLyricLine : IDisposable
             source?.Translation ?? string.Empty,
             new LyricExpressionLineStyle(
                 style is not null,
-                style?.Position?.ToString() ?? "Undefined",
+                _cachedStylePosition,
                 SourceStyleColor.HasValue,
                 ToExpressionColor(styleColor),
-                style?.Type?.ToString() ?? "Normal",
+                _cachedStyleType,
                 style?.HiddenOnBlur == true));
     }
 

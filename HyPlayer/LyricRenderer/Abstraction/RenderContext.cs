@@ -1,11 +1,14 @@
 ﻿using HyPlayer.LyricRenderer.Abstraction.Render;
 using System.Collections.Generic;
 using HyPlayer.LyricRenderer.Pipeline;
+using Microsoft.Graphics.Canvas;
 
 namespace HyPlayer.LyricRenderer.Abstraction;
 
 public class RenderContext
 {
+    internal CanvasCommandList? EmptyPipelineImage { get; set; }
+
     /// <summary>
     /// 是否正在播放
     /// </summary>

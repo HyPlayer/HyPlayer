@@ -224,12 +224,15 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                 request.LineStartTime, request.LineEndTime);
             RetimeInferredTokens(inferredTranslationTokens, translationGlyphClusters,
                 request.LineStartTime, request.LineEndTime);
+            MapInferredTokenClusters(inferredTransliterationTokens, transliterationGlyphClusters);
+            MapInferredTokenClusters(inferredTranslationTokens, translationGlyphClusters);
         }
 
         return new LyricTextLayoutSnapshot
         {
             Text = actualText,
             Tokens = tokens.ToArray(),
+            HasRealWords = tokens.Any(token => !token.IsInferred),
             InferredTransliterationTokens = inferredTransliterationTokens,
             InferredTranslationTokens = inferredTranslationTokens,
             TextLayout = textLayout,
@@ -302,6 +305,36 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             tokens[index].StartTime = start;
             tokens[index].EndTime = end;
             tokens[index].Duration = end - start;
+        }
+    }
+
+    private static void MapInferredTokenClusters(
+        IReadOnlyList<LyricTextToken> tokens,
+        IReadOnlyList<LyricGlyphCluster> clusters)
+    {
+        var sourceStart = 0;
+        for (var tokenIndex = 0; tokenIndex < tokens.Count; tokenIndex++)
+        {
+            var sourceEnd = sourceStart + tokens[tokenIndex].Text.Length;
+            var tokenClusterCount = 0;
+            for (var clusterIndex = 0; clusterIndex < clusters.Count; clusterIndex++)
+            {
+                var cluster = clusters[clusterIndex];
+                if (cluster.SourceStart >= 0 && cluster.SourceEnd > sourceStart && cluster.SourceStart < sourceEnd)
+                    tokenClusterCount++;
+            }
+
+            var tokenClusterIndex = 0;
+            for (var clusterIndex = 0; clusterIndex < clusters.Count; clusterIndex++)
+            {
+                var cluster = clusters[clusterIndex];
+                if (cluster.SourceStart < 0 || cluster.SourceEnd <= sourceStart || cluster.SourceStart >= sourceEnd)
+                    continue;
+                cluster.InferredTokenIndex = tokenIndex;
+                cluster.InferredTokenClusterIndex = tokenClusterIndex++;
+                cluster.InferredTokenClusterCount = Math.Max(1, tokenClusterCount);
+            }
+            sourceStart = sourceEnd;
         }
     }
 

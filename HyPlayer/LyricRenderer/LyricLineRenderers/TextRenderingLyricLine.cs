@@ -26,6 +26,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
     private readonly ITextProgressResolver _progressResolver;
     private readonly ITextHighlightEffectRenderer _highlightEffectRenderer;
     private readonly FocusedLyricTextRenderer _focusedTextRenderer = new();
+    private CanvasCommandList? _idleLineCache;
 
     private float _canvasWidth;
     private float _canvasHeight;
@@ -37,6 +38,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
     private float _cachedTranslationFontSize;
     private string? _cachedFontFamily;
     private Color _cachedFocusingColor;
+    private bool _wasActive;
 
     public TextRenderingLyricLine()
         : this(new Win2DLyricTextLayouter(), new DefaultTextProgressResolver(), new DefaultTokenScanEffectRenderer())
@@ -68,68 +70,83 @@ public class TextRenderingLyricLine : RenderingLyricLine
     protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
         if (_layout is null) return true;
+        session.DrawImage(_layout.StaticPersistCache, 0, 0, _layout.SizePixelRect, 1);
 
-        using var textCommandList = new CanvasCommandList(session);
-        using (var textDrawingSession = textCommandList.CreateDrawingSession())
+        if (IsActive && context.EffectProfile is { } effectProfile)
         {
-            textDrawingSession.DrawImage(_layout.StaticPersistCache, 0, 0, _layout.SizePixelRect, 1);
-
-            if (IsActive && context.EffectProfile is { } effectProfile)
+            var frame = _progressResolver.Resolve(context.CurrentLyricTime, StartTime, EndTime, _layout);
+            _focusedTextRenderer.Render(
+                session,
+                _layout,
+                frame,
+                context,
+                effectProfile.FocusedText,
+                CurrentExpressionLine,
+                CurrentExpressionFrame);
+        }
+        else if (IsActive && (Tokens.Count > 0 || context.Effects.SimpleLineScanning))
+        {
+            var frame = _progressResolver.Resolve(context.CurrentLyricTime, StartTime, EndTime, _layout);
+            _highlightEffectRenderer.Render(session, _layout, frame, context);
+            if (_layout.DefaultTranslationPersistCache is not null)
             {
-                var frame = _progressResolver.Resolve(context.CurrentLyricTime, StartTime, EndTime, _layout);
-                var offset = context.RenderOffsets.TryGetValue(RuntimeIndex, out var currentOffset)
-                    ? currentOffset
-                    : new LineRenderOffset();
-                _focusedTextRenderer.Render(
-                    textDrawingSession,
-                    _layout,
-                    frame,
-                    context,
-                    effectProfile.FocusedText,
-                    CreateExpressionLine(context, offset),
-                    CreateExpressionFrame(context));
-            }
-            else if (IsActive && (Tokens.Count > 0 || context.Effects.SimpleLineScanning))
-            {
-                var frame = _progressResolver.Resolve(context.CurrentLyricTime, StartTime, EndTime, _layout);
-                _highlightEffectRenderer.Render(textDrawingSession, _layout, frame, context);
-                if (_layout.DefaultTranslationPersistCache is not null)
-                {
-                    textDrawingSession.DrawImage(
-                        _layout.DefaultTranslationPersistCache,
-                        0,
-                        _layout.TranslationRenderActualTop,
-                        _layout.SizePixelRect,
-                        1);
-                }
-            }
-            else
-            {
-                if (_layout.DefaultTransliterationPersistCache is not null)
-                {
-                    textDrawingSession.DrawImage(_layout.DefaultTransliterationPersistCache, 0, 0, _layout.SizePixelRect, 1);
-                }
-
-                textDrawingSession.DrawImage(_layout.DefaultTextPersistCache, 0, _layout.TextRenderActualTop, _layout.SizePixelRect, 1);
-                if (_layout.DefaultTranslationPersistCache is not null)
-                {
-                    textDrawingSession.DrawImage(
-                        _layout.DefaultTranslationPersistCache,
-                        0,
-                        _layout.TranslationRenderActualTop,
-                        _layout.SizePixelRect,
-                        1);
-                }
+                session.DrawImage(
+                    _layout.DefaultTranslationPersistCache,
+                    0,
+                    _layout.TranslationRenderActualTop,
+                    _layout.SizePixelRect,
+                    1);
             }
         }
+        else
+        {
+            if (_layout.DefaultTransliterationPersistCache is not null)
+            {
+                session.DrawImage(_layout.DefaultTransliterationPersistCache, 0, 0, _layout.SizePixelRect, 1);
+            }
 
-        session.DrawImage(textCommandList, 0, 0);
+            session.DrawImage(_layout.DefaultTextPersistCache, 0, _layout.TextRenderActualTop, _layout.SizePixelRect, 1);
+            if (_layout.DefaultTranslationPersistCache is not null)
+            {
+                session.DrawImage(
+                    _layout.DefaultTranslationPersistCache,
+                    0,
+                    _layout.TranslationRenderActualTop,
+                    _layout.SizePixelRect,
+                    1);
+            }
+        }
 
         return true;
     }
 
+    protected override bool TryGetStaticSourceImage(
+        CanvasDrawingSession session,
+        RenderContext context,
+        out ICanvasImage image)
+    {
+        if (!IsActive && _layout is not null)
+        {
+            _idleLineCache ??= CreateIdleLineCache(session, _layout);
+            image = _idleLineCache;
+            return true;
+        }
+
+        image = null!;
+        return false;
+    }
+
+    protected override void OnRenderingChanged(bool rendering)
+    {
+        if (rendering) return;
+        _idleLineCache?.Dispose();
+        _idleLineCache = null;
+    }
+
     protected override void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
     {
+        if (_wasActive && !IsActive) _focusedTextRenderer.ReleaseRasterCache();
+        _wasActive = IsActive;
         if (_canvasWidth == 0.0f) return;
         if (_layout is null)
             OnTypographyChanged(session, context);
@@ -150,6 +167,9 @@ public class TextRenderingLyricLine : RenderingLyricLine
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
+        _focusedTextRenderer.ReleaseRasterCache();
+        _idleLineCache?.Dispose();
+        _idleLineCache = null;
         _cachedAlignment = TypographySelector(t => t?.Alignment, context)!.Value;
         _cachedLyricFontSize = TypographySelector(t => t?.LyricFontSize, context)!.Value;
         _cachedTransliterationFontSize = TypographySelector(t => t?.TransliterationFontSize, context)!.Value;
@@ -185,8 +205,34 @@ public class TextRenderingLyricLine : RenderingLyricLine
         RenderingWidth = _layout.RenderingWidth;
     }
 
+    private static CanvasCommandList CreateIdleLineCache(
+        CanvasDrawingSession session,
+        LyricTextLayoutSnapshot layout)
+    {
+        var cache = new CanvasCommandList(session);
+        using var idleSession = cache.CreateDrawingSession();
+        idleSession.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
+        if (layout.DefaultTransliterationPersistCache is not null)
+            idleSession.DrawImage(layout.DefaultTransliterationPersistCache, 0, 0, layout.SizePixelRect, 1);
+        idleSession.DrawImage(layout.DefaultTextPersistCache, 0, layout.TextRenderActualTop, layout.SizePixelRect, 1);
+        if (layout.DefaultTranslationPersistCache is not null)
+        {
+            idleSession.DrawImage(
+                layout.DefaultTranslationPersistCache,
+                0,
+                layout.TranslationRenderActualTop,
+                layout.SizePixelRect,
+                1);
+        }
+
+        return cache;
+    }
+
     public override void Dispose()
     {
+        _focusedTextRenderer.ReleaseRasterCache();
+        _idleLineCache?.Dispose();
+        _idleLineCache = null;
         _layout?.Dispose();
         _layout = null;
         base.Dispose();

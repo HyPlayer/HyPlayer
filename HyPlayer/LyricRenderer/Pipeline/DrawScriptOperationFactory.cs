@@ -170,21 +170,21 @@ internal sealed partial class DrawScriptOperationFactory(
             case LyricExpressionValueType.Scalar:
             {
                 var result = expressionCompiler.CompileScalar(source);
-                if (result.IsSuccess) return CompiledDrawArgument.Scalar(result.Expression!);
+                if (result.IsSuccess) return CompiledDrawArgument.Scalar(result.Expression!, result.Dependencies);
                 AddExpressionDiagnostic(definition, command, result.Diagnostic!, diagnostics);
                 return null;
             }
             case LyricExpressionValueType.Color:
             {
                 var result = expressionCompiler.CompileColor(source);
-                if (result.IsSuccess) return CompiledDrawArgument.Color(result.Expression!);
+                if (result.IsSuccess) return CompiledDrawArgument.Color(result.Expression!, result.Dependencies);
                 AddExpressionDiagnostic(definition, command, result.Diagnostic!, diagnostics);
                 return null;
             }
             case LyricExpressionValueType.Text:
             {
                 var result = expressionCompiler.CompileText(source);
-                if (result.IsSuccess) return CompiledDrawArgument.Text(result.Expression!);
+                if (result.IsSuccess) return CompiledDrawArgument.Text(result.Expression!, result.Dependencies);
                 AddExpressionDiagnostic(definition, command, result.Diagnostic!, diagnostics);
                 return null;
             }
@@ -220,13 +220,19 @@ internal sealed partial class DrawScriptOperationFactory(
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
+            var hasVisibleOutput = false;
+            foreach (var command in _commands)
+                hasVisibleOutput |= command.Prepare(context);
+            if (!hasVisibleOutput) return source;
+
             var commandList = context.Resources.Track(new CanvasCommandList(context.TargetSession));
             using var session = commandList.CreateDrawingSession();
             var executionContext = new LyricDrawExecutionContext(session);
             if (placement == DrawScriptPlacement.AboveSource) session.DrawImage(source);
-            foreach (var command in _commands) command.Execute(executionContext, context);
+            foreach (var command in _commands) command.ExecutePrepared(executionContext);
             executionContext.EnsureBalanced();
             if (placement == DrawScriptPlacement.BehindSource) session.DrawImage(source);
+            context.HasContent = true;
             return commandList;
         }
 
@@ -237,10 +243,32 @@ internal sealed partial class DrawScriptOperationFactory(
 
     private sealed class CompiledDrawCommand(ILyricDrawCommandFactory factory, IReadOnlyList<DrawScriptOperationFactory.CompiledDrawArgument> arguments)
     {
-        public void Execute(LyricDrawExecutionContext executionContext, LyricRenderOperationContext renderContext)
+        private readonly LyricDrawValue[] _values = new LyricDrawValue[arguments.Count];
+        private readonly int _colorIndex = FindColorIndex(factory.Signature.Arguments);
+
+        public bool Prepare(LyricRenderOperationContext renderContext)
         {
-            var values = arguments.Select(argument => argument.Evaluate(renderContext)).ToArray();
-            factory.Execute(executionContext, values);
+            for (var index = 0; index < arguments.Count; index++)
+                _values[index] = arguments[index].Evaluate(renderContext);
+
+            return factory.Signature.Name switch
+            {
+                "Save" or "Restore" or "Translate" or "Scale" or "Rotate" => false,
+                "FillRectangle" or "StrokeRectangle" or "FillRoundedRectangle" or "StrokeRoundedRectangle" or
+                    "FillEllipse" or "StrokeEllipse" or "DrawLine" or "DrawText" =>
+                    _colorIndex < 0 || _values[_colorIndex].Color.A > 0,
+                _ => true
+            };
+        }
+
+        public void ExecutePrepared(LyricDrawExecutionContext executionContext) =>
+            factory.Execute(executionContext, _values);
+
+        private static int FindColorIndex(IReadOnlyList<LyricExpressionValueType> types)
+        {
+            for (var index = 0; index < types.Count; index++)
+                if (types[index] == LyricExpressionValueType.Color) return index;
+            return -1;
         }
     }
 
@@ -249,32 +277,70 @@ internal sealed partial class DrawScriptOperationFactory(
         private readonly LyricScalarExpression? _scalar;
         private readonly LyricColorExpression? _color;
         private readonly LyricTextExpression? _text;
+        private readonly LyricDrawValue _constant;
 
         private CompiledDrawArgument(
             LyricExpressionValueType type,
             LyricScalarExpression? scalar,
             LyricColorExpression? color,
-            LyricTextExpression? text)
+            LyricTextExpression? text,
+            LyricDrawValue constant = default)
         {
             Type = type;
             _scalar = scalar;
             _color = color;
             _text = text;
+            _constant = constant;
         }
 
         public LyricExpressionValueType Type { get; }
 
-        public static CompiledDrawArgument Scalar(LyricScalarExpression expression) =>
-            new(LyricExpressionValueType.Scalar, expression, null, null);
+        public static CompiledDrawArgument Scalar(
+            LyricScalarExpression expression,
+            FocusedTextExpressionDependencies dependencies)
+        {
+            if (dependencies != FocusedTextExpressionDependencies.None)
+                return new CompiledDrawArgument(LyricExpressionValueType.Scalar, expression, null, null);
+            var sample = LyricExpressionSamples.All[0];
+            var value = expression(sample.Line, sample.Frame, LyricExpressionFunctions.Instance);
+            if (!float.IsFinite(value)) throw new InvalidOperationException("绘图参数返回了 NaN 或 Infinity。");
+            return new CompiledDrawArgument(
+                LyricExpressionValueType.Scalar, null, null, null, LyricDrawValue.FromScalar(value));
+        }
 
-        public static CompiledDrawArgument Color(LyricColorExpression expression) =>
-            new(LyricExpressionValueType.Color, null, expression, null);
+        public static CompiledDrawArgument Color(
+            LyricColorExpression expression,
+            FocusedTextExpressionDependencies dependencies)
+        {
+            if (dependencies != FocusedTextExpressionDependencies.None)
+                return new CompiledDrawArgument(LyricExpressionValueType.Color, null, expression, null);
+            var sample = LyricExpressionSamples.All[0];
+            return new CompiledDrawArgument(
+                LyricExpressionValueType.Color,
+                null,
+                null,
+                null,
+                LyricDrawValue.FromColor(expression(sample.Line, sample.Frame, LyricExpressionFunctions.Instance)));
+        }
 
-        public static CompiledDrawArgument Text(LyricTextExpression expression) =>
-            new(LyricExpressionValueType.Text, null, null, expression);
+        public static CompiledDrawArgument Text(
+            LyricTextExpression expression,
+            FocusedTextExpressionDependencies dependencies)
+        {
+            if (dependencies != FocusedTextExpressionDependencies.None)
+                return new CompiledDrawArgument(LyricExpressionValueType.Text, null, null, expression);
+            var sample = LyricExpressionSamples.All[0];
+            return new CompiledDrawArgument(
+                LyricExpressionValueType.Text,
+                null,
+                null,
+                null,
+                LyricDrawValue.FromText(expression(sample.Line, sample.Frame, LyricExpressionFunctions.Instance) ?? string.Empty));
+        }
 
         public LyricDrawValue Evaluate(LyricRenderOperationContext context)
         {
+            if (_scalar is null && _color is null && _text is null) return _constant;
             return Type switch
             {
                 LyricExpressionValueType.Scalar => EvaluateScalar(context),

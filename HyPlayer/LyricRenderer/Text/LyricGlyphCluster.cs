@@ -22,6 +22,9 @@ public sealed class LyricGlyphCluster
     public int LayerClusterCount { get; set; }
     public int TokenClusterIndex { get; set; }
     public int TokenClusterCount { get; set; }
+    public int InferredTokenIndex { get; set; } = -1;
+    public int InferredTokenClusterIndex { get; set; }
+    public int InferredTokenClusterCount { get; set; }
     public int VisualLineIndex { get; set; }
     public int LayerVisualLineCount { get; set; }
     public int VisualLineClusterIndex { get; set; }

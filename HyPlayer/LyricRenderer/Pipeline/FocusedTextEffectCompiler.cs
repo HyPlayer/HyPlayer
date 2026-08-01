@@ -4,9 +4,11 @@ using HyPlayer.LyricEffects.Drawing;
 using HyPlayer.LyricEffects.Expressions;
 using HyPlayer.LyricEffects.Models;
 using HyPlayer.LyricEffects.Presets;
+using HyPlayer.LyricRenderer.Animator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace HyPlayer.LyricRenderer.Pipeline;
 
@@ -42,22 +44,43 @@ internal sealed class CompiledFocusedTextOperation
     public required IReadOnlyDictionary<string, CompiledFocusedScalarParameter> Scalars { get; init; }
     public required IReadOnlyDictionary<string, CompiledFocusedColorParameter> Colors { get; init; }
     public CompiledFocusedDrawScript? DrawScript { get; init; }
+    public EaseFunctionBase? ConstantLiftEasing { get; init; }
 }
 
+internal readonly record struct CompiledFocusedScalarValue(
+    int CacheId,
+    FocusedTextScalarExpression Expression,
+    FocusedTextExpressionDependencies Dependencies,
+    float? ConstantValue);
+
+internal readonly record struct CompiledFocusedColorValue(
+    int CacheId,
+    FocusedTextColorExpression Expression,
+    FocusedTextExpressionDependencies Dependencies,
+    LyricColorValue? ConstantValue);
+
+internal readonly record struct CompiledFocusedTextValue(
+    int CacheId,
+    FocusedTextTextExpression Expression,
+    FocusedTextExpressionDependencies Dependencies,
+    string? ConstantValue,
+    bool IsConstant);
+
 internal sealed record CompiledFocusedTransition(
-    FocusedTextScalarExpression Duration,
+    CompiledFocusedScalarValue Duration,
     string EasingId,
     string Mode,
-    IReadOnlyDictionary<string, FocusedTextScalarExpression> Arguments);
+    IReadOnlyDictionary<string, CompiledFocusedScalarValue> Arguments,
+    EaseFunctionBase? ConstantEasing);
 
 internal sealed record CompiledFocusedScalarParameter(
-    FocusedTextScalarExpression Expression,
+    CompiledFocusedScalarValue Value,
     CompiledFocusedTransition? Transition,
     float? Minimum,
     float? Maximum);
 
 internal sealed record CompiledFocusedColorParameter(
-    FocusedTextColorExpression Expression,
+    CompiledFocusedColorValue Value,
     CompiledFocusedTransition? Transition);
 
 internal enum FocusedDrawScriptPlacement
@@ -76,6 +99,7 @@ internal sealed class CompiledFocusedDrawCommand
 {
     private readonly ILyricDrawCommandFactory _factory;
     private readonly IReadOnlyList<CompiledFocusedDrawArgument> _arguments;
+    private readonly LyricDrawValue[] _values;
 
     public CompiledFocusedDrawCommand(
         ILyricDrawCommandFactory factory,
@@ -83,6 +107,7 @@ internal sealed class CompiledFocusedDrawCommand
     {
         _factory = factory;
         _arguments = arguments;
+        _values = new LyricDrawValue[arguments.Count];
     }
 
     public void Execute(
@@ -91,26 +116,26 @@ internal sealed class CompiledFocusedDrawCommand
         LyricExpressionFrame frame,
         FocusedTextExpressionText text,
         FocusedTextExpressionWord word,
-        FocusedTextExpressionGlyph glyph)
+        FocusedTextExpressionGlyph glyph,
+        FocusedTextExpressionFrameCache expressionCache)
     {
-        var values = _arguments
-            .Select(argument => argument.Evaluate(line, frame, text, word, glyph))
-            .ToArray();
-        _factory.Execute(context, values);
+        for (var index = 0; index < _arguments.Count; index++)
+            _values[index] = _arguments[index].Evaluate(line, frame, text, word, glyph, expressionCache);
+        _factory.Execute(context, _values);
     }
 }
 
 internal sealed class CompiledFocusedDrawArgument
 {
-    private readonly FocusedTextScalarExpression? _scalar;
-    private readonly FocusedTextColorExpression? _color;
-    private readonly FocusedTextTextExpression? _text;
+    private readonly CompiledFocusedScalarValue _scalar;
+    private readonly CompiledFocusedColorValue _color;
+    private readonly CompiledFocusedTextValue _text;
 
     private CompiledFocusedDrawArgument(
         LyricExpressionValueType type,
-        FocusedTextScalarExpression? scalar,
-        FocusedTextColorExpression? color,
-        FocusedTextTextExpression? text)
+        CompiledFocusedScalarValue scalar,
+        CompiledFocusedColorValue color,
+        CompiledFocusedTextValue text)
     {
         Type = type;
         _scalar = scalar;
@@ -120,28 +145,33 @@ internal sealed class CompiledFocusedDrawArgument
 
     public LyricExpressionValueType Type { get; }
 
-    public static CompiledFocusedDrawArgument Scalar(FocusedTextScalarExpression expression) =>
-        new(LyricExpressionValueType.Scalar, expression, null, null);
+    public static CompiledFocusedDrawArgument Scalar(CompiledFocusedScalarValue expression) =>
+        new(LyricExpressionValueType.Scalar, expression, default, default);
 
-    public static CompiledFocusedDrawArgument Color(FocusedTextColorExpression expression) =>
-        new(LyricExpressionValueType.Color, null, expression, null);
+    public static CompiledFocusedDrawArgument Color(CompiledFocusedColorValue expression) =>
+        new(LyricExpressionValueType.Color, default, expression, default);
 
-    public static CompiledFocusedDrawArgument Text(FocusedTextTextExpression expression) =>
-        new(LyricExpressionValueType.Text, null, null, expression);
+    public static CompiledFocusedDrawArgument Text(CompiledFocusedTextValue expression) =>
+        new(LyricExpressionValueType.Text, default, default, expression);
 
     public LyricDrawValue Evaluate(
         LyricExpressionLine line,
         LyricExpressionFrame frame,
         FocusedTextExpressionText text,
         FocusedTextExpressionWord word,
-        FocusedTextExpressionGlyph glyph)
+        FocusedTextExpressionGlyph glyph,
+        FocusedTextExpressionFrameCache expressionCache)
     {
-        var fx = LyricExpressionFunctions.Instance;
         return Type switch
         {
-            LyricExpressionValueType.Scalar => EvaluateScalar(line, frame, text, word, glyph, fx),
-            LyricExpressionValueType.Color => LyricDrawValue.FromColor(_color!(line, frame, text, word, glyph, fx)),
-            LyricExpressionValueType.Text => LyricDrawValue.FromText(_text!(line, frame, text, word, glyph, fx) ?? string.Empty),
+            LyricExpressionValueType.Scalar => EvaluateScalar(line, frame, text, word, glyph, expressionCache),
+            LyricExpressionValueType.Color => LyricDrawValue.FromColor(_color.ConstantValue ??
+                expressionCache.EvaluateColor(_color.CacheId, _color.Dependencies, _color.Expression,
+                    line, frame, text, word, glyph)),
+            LyricExpressionValueType.Text => LyricDrawValue.FromText(_text.IsConstant
+                ? _text.ConstantValue ?? string.Empty
+                : expressionCache.EvaluateText(_text.CacheId, _text.Dependencies, _text.Expression,
+                    line, frame, text, word, glyph) ?? string.Empty),
             _ => throw new ArgumentOutOfRangeException()
         };
     }
@@ -152,9 +182,10 @@ internal sealed class CompiledFocusedDrawArgument
         FocusedTextExpressionText text,
         FocusedTextExpressionWord word,
         FocusedTextExpressionGlyph glyph,
-        LyricExpressionFunctions fx)
+        FocusedTextExpressionFrameCache expressionCache)
     {
-        var value = _scalar!(line, frame, text, word, glyph, fx);
+        var value = _scalar.ConstantValue ?? expressionCache.EvaluateScalar(
+            _scalar.CacheId, _scalar.Dependencies, _scalar.Expression, line, frame, text, word, glyph);
         if (!float.IsFinite(value)) throw new InvalidOperationException("绘图参数返回了 NaN 或 Infinity。");
         return LyricDrawValue.FromScalar(value);
     }
@@ -165,6 +196,7 @@ internal sealed class FocusedTextEffectCompiler
     private readonly ILyricExpressionCompiler _expressions;
     private readonly ILyricDrawScriptParser _drawScriptParser;
     private readonly LyricDrawCommandRegistry _drawCommands;
+    private int _nextExpressionId;
 
     public FocusedTextEffectCompiler(
         ILyricExpressionCompiler expressions,
@@ -258,7 +290,7 @@ internal sealed class FocusedTextEffectCompiler
                     var result = _expressions.CompileFocusedColor(source);
                     if (result.IsSuccess)
                         colors[parameterDescriptor.Key] = new CompiledFocusedColorParameter(
-                            result.Expression!, CompileTransition(operation, parameterDescriptor.Key, parameter?.Transition, diagnostics));
+                            CompileColorValue(result), CompileTransition(operation, parameterDescriptor.Key, parameter?.Transition, diagnostics));
                     else diagnostics.Add(ToDiagnostic(operation, parameterDescriptor.Key, result.Diagnostic!));
                 }
                 else
@@ -266,7 +298,7 @@ internal sealed class FocusedTextEffectCompiler
                     var result = _expressions.CompileFocusedScalar(source);
                     if (result.IsSuccess)
                         scalars[parameterDescriptor.Key] = new CompiledFocusedScalarParameter(
-                            result.Expression!, CompileTransition(operation, parameterDescriptor.Key, parameter?.Transition, diagnostics),
+                            CompileScalarValue(result), CompileTransition(operation, parameterDescriptor.Key, parameter?.Transition, diagnostics),
                             parameterDescriptor.Minimum, parameterDescriptor.Maximum);
                     else diagnostics.Add(ToDiagnostic(operation, parameterDescriptor.Key, result.Diagnostic!));
                 }
@@ -296,7 +328,8 @@ internal sealed class FocusedTextEffectCompiler
                 Targets = operation.Targets.ToHashSet(StringComparer.Ordinal),
                 Scalars = scalars,
                 Colors = colors,
-                DrawScript = drawScript
+                DrawScript = drawScript,
+                ConstantLiftEasing = CompileConstantLiftEasing(operation, scalars)
             });
         }
 
@@ -395,14 +428,24 @@ internal sealed class FocusedTextEffectCompiler
             return null;
         }
 
-        var arguments = new Dictionary<string, FocusedTextScalarExpression>(StringComparer.OrdinalIgnoreCase);
+        var arguments = new Dictionary<string, CompiledFocusedScalarValue>(StringComparer.OrdinalIgnoreCase);
         foreach (var (key, source) in transition.Arguments)
         {
             var result = _expressions.CompileFocusedScalar(source);
-            if (result.IsSuccess) arguments[key] = result.Expression!;
+            if (result.IsSuccess) arguments[key] = CompileScalarValue(result);
             else diagnostics.Add(ToDiagnostic(operation, $"{parameter}.transition.arguments.{key}", result.Diagnostic!));
         }
-        return new CompiledFocusedTransition(duration.Expression!, transition.EasingId, transition.Mode, arguments);
+        EaseFunctionBase? constantEasing = null;
+        if (arguments.Values.All(value => value.ConstantValue.HasValue))
+        {
+            var constantArguments = arguments.ToDictionary(
+                pair => pair.Key,
+                pair => (double)pair.Value.ConstantValue!.Value,
+                StringComparer.OrdinalIgnoreCase);
+            constantEasing = LyricEasingFactory.Create(transition.EasingId, transition.Mode, constantArguments);
+        }
+        return new CompiledFocusedTransition(
+            CompileScalarValue(duration), transition.EasingId, transition.Mode, arguments, constantEasing);
     }
 
     private CompiledFocusedDrawArgument? CompileDrawArgument(
@@ -417,27 +460,97 @@ internal sealed class FocusedTextEffectCompiler
             case LyricExpressionValueType.Scalar:
             {
                 var result = _expressions.CompileFocusedScalar(source);
-                if (result.IsSuccess) return CompiledFocusedDrawArgument.Scalar(result.Expression!);
+                if (result.IsSuccess) return CompiledFocusedDrawArgument.Scalar(CompileScalarValue(result));
                 diagnostics.Add(ExpressionScriptDiagnostic(operation, command, result.Diagnostic!));
                 return null;
             }
             case LyricExpressionValueType.Color:
             {
                 var result = _expressions.CompileFocusedColor(source);
-                if (result.IsSuccess) return CompiledFocusedDrawArgument.Color(result.Expression!);
+                if (result.IsSuccess) return CompiledFocusedDrawArgument.Color(CompileColorValue(result));
                 diagnostics.Add(ExpressionScriptDiagnostic(operation, command, result.Diagnostic!));
                 return null;
             }
             case LyricExpressionValueType.Text:
             {
                 var result = _expressions.CompileFocusedText(source);
-                if (result.IsSuccess) return CompiledFocusedDrawArgument.Text(result.Expression!);
+                if (result.IsSuccess) return CompiledFocusedDrawArgument.Text(CompileTextValue(result));
                 diagnostics.Add(ExpressionScriptDiagnostic(operation, command, result.Diagnostic!));
                 return null;
             }
             default:
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
+    }
+
+    private CompiledFocusedScalarValue CompileScalarValue(
+        LyricExpressionCompileResult<FocusedTextScalarExpression> result)
+    {
+        var expression = result.Expression!;
+        float? constant = null;
+        if (result.Dependencies == FocusedTextExpressionDependencies.None)
+        {
+            var sample = FocusedTextExpressionSamples.All[0];
+            constant = expression(sample.Line, sample.Frame, sample.Text, sample.Word, sample.Glyph,
+                LyricExpressionFunctions.Instance);
+        }
+        return new CompiledFocusedScalarValue(
+            Interlocked.Increment(ref _nextExpressionId), expression, result.Dependencies, constant);
+    }
+
+    private CompiledFocusedColorValue CompileColorValue(
+        LyricExpressionCompileResult<FocusedTextColorExpression> result)
+    {
+        var expression = result.Expression!;
+        LyricColorValue? constant = null;
+        if (result.Dependencies == FocusedTextExpressionDependencies.None)
+        {
+            var sample = FocusedTextExpressionSamples.All[0];
+            constant = expression(sample.Line, sample.Frame, sample.Text, sample.Word, sample.Glyph,
+                LyricExpressionFunctions.Instance);
+        }
+        return new CompiledFocusedColorValue(
+            Interlocked.Increment(ref _nextExpressionId), expression, result.Dependencies, constant);
+    }
+
+    private CompiledFocusedTextValue CompileTextValue(
+        LyricExpressionCompileResult<FocusedTextTextExpression> result)
+    {
+        var expression = result.Expression!;
+        var isConstant = result.Dependencies == FocusedTextExpressionDependencies.None;
+        string? constant = null;
+        if (isConstant)
+        {
+            var sample = FocusedTextExpressionSamples.All[0];
+            constant = expression(sample.Line, sample.Frame, sample.Text, sample.Word, sample.Glyph,
+                LyricExpressionFunctions.Instance);
+        }
+        return new CompiledFocusedTextValue(
+            Interlocked.Increment(ref _nextExpressionId), expression, result.Dependencies, constant, isConstant);
+    }
+
+    private static EaseFunctionBase? CompileConstantLiftEasing(
+        FocusedTextOperationDefinition operation,
+        IReadOnlyDictionary<string, CompiledFocusedScalarParameter> scalars)
+    {
+        if (!operation.TypeId.Equals(FocusedTextBuiltInOperationTypes.GlyphLift, StringComparison.OrdinalIgnoreCase))
+            return null;
+        var easingId = operation.Options.GetValueOrDefault("easingId", "linear");
+        if (easingId.Equals("linear", StringComparison.OrdinalIgnoreCase))
+            return LyricEasingFactory.Create(easingId,
+                operation.Options.GetValueOrDefault("easingMode", "in"),
+                new Dictionary<string, double>());
+
+        string[] keys = ["exponent", "springiness", "oscillations", "bounces", "bounciness"];
+        var arguments = new Dictionary<string, double>(keys.Length, StringComparer.OrdinalIgnoreCase);
+        foreach (var key in keys)
+        {
+            if (!scalars.TryGetValue(key, out var parameter) || parameter.Value.ConstantValue is not { } value)
+                return null;
+            arguments.Add(key, value);
+        }
+        return LyricEasingFactory.Create(easingId,
+            operation.Options.GetValueOrDefault("easingMode", "in"), arguments);
     }
 
     private static LyricProfileDiagnostic ScriptDiagnostic(

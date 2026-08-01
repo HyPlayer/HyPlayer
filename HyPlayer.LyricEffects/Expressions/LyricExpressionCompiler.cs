@@ -45,25 +45,46 @@ public delegate string FocusedTextTextExpression(
     FocusedTextExpressionGlyph glyph,
     LyricExpressionFunctions fx);
 
+[Flags]
+public enum FocusedTextExpressionDependencies
+{
+    None = 0,
+    Line = 1 << 0,
+    Frame = 1 << 1,
+    Text = 1 << 2,
+    Word = 1 << 3,
+    Glyph = 1 << 4
+}
+
 public sealed record LyricExpressionDiagnostic(string Message, int Position, int Line, int Column);
 
 public sealed class LyricExpressionCompileResult<TDelegate> where TDelegate : Delegate
 {
-    private LyricExpressionCompileResult(TDelegate? expression, LyricExpressionDiagnostic? diagnostic)
+    private LyricExpressionCompileResult(
+        TDelegate? expression,
+        LyricExpressionDiagnostic? diagnostic,
+        FocusedTextExpressionDependencies dependencies)
     {
         Expression = expression;
         Diagnostic = diagnostic;
+        Dependencies = dependencies;
     }
 
     public TDelegate? Expression { get; }
 
     public LyricExpressionDiagnostic? Diagnostic { get; }
 
+    public FocusedTextExpressionDependencies Dependencies { get; }
+
     public bool IsSuccess => Expression is not null;
 
-    public static LyricExpressionCompileResult<TDelegate> Success(TDelegate expression) => new(expression, null);
+    public static LyricExpressionCompileResult<TDelegate> Success(
+        TDelegate expression,
+        FocusedTextExpressionDependencies dependencies = FocusedTextExpressionDependencies.None) =>
+        new(expression, null, dependencies);
 
-    public static LyricExpressionCompileResult<TDelegate> Failure(LyricExpressionDiagnostic diagnostic) => new(null, diagnostic);
+    public static LyricExpressionCompileResult<TDelegate> Failure(LyricExpressionDiagnostic diagnostic) =>
+        new(null, diagnostic, FocusedTextExpressionDependencies.None);
 }
 
 public interface ILyricExpressionCompiler
@@ -127,6 +148,7 @@ public sealed class LyricExpressionCompiler : ILyricExpressionCompiler
         {
             var interpreter = CreateInterpreter();
             var expression = interpreter.ParseAsExpression<TDelegate>(source, "line", "frame", "fx");
+            var dependencies = FocusedDependencyVisitor.Analyze(expression);
             var compiled = CompileExpression(expression);
             var validationError = sampleValidator(compiled);
             if (validationError is not null)
@@ -135,7 +157,7 @@ public sealed class LyricExpressionCompiler : ILyricExpressionCompiler
                     CreateDiagnostic(source, validationError, 0));
             }
 
-            return LyricExpressionCompileResult<TDelegate>.Success(compiled);
+            return LyricExpressionCompileResult<TDelegate>.Success(compiled, dependencies);
         }
         catch (ParseException exception)
         {
@@ -166,10 +188,11 @@ public sealed class LyricExpressionCompiler : ILyricExpressionCompiler
         {
             var interpreter = CreateInterpreter();
             var expression = interpreter.ParseAsExpression<TDelegate>(source, "line", "frame", "text", "word", "glyph", "fx");
+            var dependencies = FocusedDependencyVisitor.Analyze(expression);
             var compiled = CompileExpression(expression);
             var validationError = sampleValidator(compiled);
             return validationError is null
-                ? LyricExpressionCompileResult<TDelegate>.Success(compiled)
+                ? LyricExpressionCompileResult<TDelegate>.Success(compiled, dependencies)
                 : LyricExpressionCompileResult<TDelegate>.Failure(CreateDiagnostic(source, validationError, 0));
         }
         catch (ParseException exception)
@@ -183,8 +206,38 @@ public sealed class LyricExpressionCompiler : ILyricExpressionCompiler
         }
     }
 
-    private static TDelegate CompileExpression<TDelegate>(Expression<TDelegate> expression) where TDelegate : Delegate =>
-        expression.Compile(preferInterpretation: !RuntimeFeature.IsDynamicCodeCompiled);
+    private static TDelegate CompileExpression<TDelegate>(Expression<TDelegate> expression) where TDelegate : Delegate
+    {
+        if (!RuntimeFeature.IsDynamicCodeCompiled && LyricAotExpressionCompiler.TryCompile(expression, out TDelegate compiled))
+            return compiled;
+        return expression.Compile(preferInterpretation: !RuntimeFeature.IsDynamicCodeCompiled);
+    }
+
+    private sealed class FocusedDependencyVisitor : ExpressionVisitor
+    {
+        private FocusedTextExpressionDependencies _dependencies;
+
+        public static FocusedTextExpressionDependencies Analyze(LambdaExpression expression)
+        {
+            var visitor = new FocusedDependencyVisitor();
+            visitor.Visit(expression.Body);
+            return visitor._dependencies;
+        }
+
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            _dependencies |= node.Name switch
+            {
+                "line" => FocusedTextExpressionDependencies.Line,
+                "frame" => FocusedTextExpressionDependencies.Frame,
+                "text" => FocusedTextExpressionDependencies.Text,
+                "word" => FocusedTextExpressionDependencies.Word,
+                "glyph" => FocusedTextExpressionDependencies.Glyph,
+                _ => FocusedTextExpressionDependencies.None
+            };
+            return node;
+        }
+    }
 
     private static Interpreter CreateInterpreter() =>
         new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords)
