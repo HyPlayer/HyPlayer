@@ -16,6 +16,7 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.UI.Lists;
+using HyPlayer.NeteaseProvider.Models;
 
 namespace HyPlayer.Features.Artist;
 
@@ -31,15 +32,18 @@ public partial class ArtistPageViewModel : ObservableObject
     private Task<List<ContainerBase>> _artistSubContainersTask;
     private string _loadedArtistId = string.Empty;
     private PersonBase _providerArtist;
+    private readonly UISettings _uiSettings;
 
     public ArtistPageViewModel(
         IProvidableItemProvidable itemProvider,
         IProviderKnownTypeIds knownTypeIds,
-        INotificationService notification)
+        INotificationService notification,
+        UISettings uiSettings)
     {
         _itemProvider = itemProvider;
         _knownTypeIds = knownTypeIds;
         _notification = notification;
+        _uiSettings = uiSettings;
     }
 
     [ObservableProperty] public partial PersonBase Artist { get; set; }
@@ -87,6 +91,8 @@ public partial class ArtistPageViewModel : ObservableObject
         if (_providerArtist is null) return;
 
         Artist = _providerArtist;
+        var image = (_providerArtist as NeteaseArtist)?.CoverUrl;
+        Image = _uiSettings.NoImage ? null : new BitmapImage(new Uri(image));
         _loadedArtistId = artistId;
         _artistSubContainersTask = null;
         LoadHotSongs().SafeFireAndForget();

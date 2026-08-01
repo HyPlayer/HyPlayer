@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:uiControls="using:HyPlayer.UI.Controls"
     Title="登录"
     CloseButtonText="取消"
     PrimaryButtonStyle="{StaticResource AccentButtonStyle}"
@@ -21,7 +22,11 @@
                 <RowDefinition />
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <Pivot x:Name="LoginPivot" SelectionChanged="Pivot_SelectionChanged">
+            <uiControls:PivotView>
+                <uiControls:PivotEx
+                    x:Name="LoginPivot"
+                    Padding="0,48,0,0"
+                    SelectionChanged="OnLoginPivotSelectionChanged">
                 <PivotItem Header="密码登录">
                     <Grid>
                         <StackPanel Orientation="Vertical" Spacing="12">
@@ -79,7 +84,8 @@
                         </StackPanel>
                     </Grid>
                 </PivotItem>
-            </Pivot>
+                </uiControls:PivotEx>
+            </uiControls:PivotView>
 
             <StackPanel
                 Grid.Row="2"

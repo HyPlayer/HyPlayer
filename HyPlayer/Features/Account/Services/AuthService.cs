@@ -354,7 +354,6 @@ public class AuthService : IAuthService
     {
         public override string ProviderId => string.Empty;
         public override string TypeId => typeId;
-        public string? Description { get; set; }
 
         public override Task<List<ContainerBase>> GetSubContainerAsync(CancellationToken ctk = default)
         {

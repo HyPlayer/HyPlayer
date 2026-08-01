@@ -26,7 +26,9 @@ public sealed partial class LoginDialog : ContentDialog
         _qrLoginStatusListener = new WeakEventListener<LoginDialog, object?, QrLoginStatusChangedEventArgs>(this)
         {
             OnEventAction = static (instance, _, args) => instance.UpdateQrLoginStatus(args),
-            OnDetachAction = weakEventListener => { _loginService.QrLoginStatusChanged -= weakEventListener.OnEvent; }
+            // Capture only the long-lived service. Capturing `_loginService` here would also capture this dialog
+            // and defeat WeakEventListener's weak-reference semantics.
+            OnDetachAction = weakEventListener => { loginService.QrLoginStatusChanged -= weakEventListener.OnEvent; }
         };
         _loginService.QrLoginStatusChanged += _qrLoginStatusListener.OnEvent;
 
@@ -52,6 +54,8 @@ public sealed partial class LoginDialog : ContentDialog
     {
         StopQrLoginPolling();
         _qrLoginStatusListener.Detach();
+        PrimaryButtonClick -= OnPrimaryButtonClick;
+        Closed -= OnDialogClosed;
     }
 
     private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
@@ -91,9 +95,9 @@ public sealed partial class LoginDialog : ContentDialog
         }
     }
 
-    private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnLoginPivotSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if ((sender?.As<Pivot>()).SelectedIndex == 1)
+        if (sender is Pivot { SelectedIndex: 1 })
         {
             StartQrLoginPolling();
         }

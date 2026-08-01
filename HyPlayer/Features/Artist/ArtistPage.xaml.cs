@@ -1,5 +1,6 @@
 #region
 
+using System;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using AsyncAwaitBestPractices;
@@ -40,8 +41,21 @@ public sealed partial class ArtistPage : Page
         ViewModel.InitializeArtistInfo(artistId).SafeFireAndForget();
     }
 
-    private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnPivotSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         ViewModel.CurrentPage = 0;
+    }
+
+    private void OnArtistHeaderScrollProgressChanged(object? sender, EventArgs e)
+    {
+        var progress = ArtistPivotView.HeaderScrollProgress;
+        GridPersonalInformation.Opacity = Math.Clamp(1 - progress * 1.4, 0, 1);
+        RectangleImageBack.Opacity = Math.Clamp(1 - progress * 1.1, 0, 1);
+        RectangleImageBackAcrylic.Opacity = Math.Clamp(1 - progress * 1.1, 0, 1);
+        TextBlockDesc.Opacity = Math.Clamp(1 - progress * 0.8, 0, 1);
+
+        UserScale.ScaleX = UserScale.ScaleY = Math.Clamp(1 - progress * 0.8, 0, 1);
+        UserInfoScale.ScaleX = UserInfoScale.ScaleY = Math.Clamp(1 - progress * 0.6, 0, 1);
+        DescScale.ScaleX = DescScale.ScaleY = Math.Clamp(1 - progress * 0.4, 0, 1);
     }
 }
