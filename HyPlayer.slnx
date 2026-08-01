@@ -7,14 +7,6 @@
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="HyPlayer.LyricEffects/HyPlayer.LyricEffects.csproj">
-    <Platform Solution="*|ARM64" Project="ARM64" />
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
-  <Project Path="HyPlayer.LyricEffects.Tests/HyPlayer.LyricEffects.Tests.csproj">
-    <Platform Solution="*|ARM64" Project="ARM64" />
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
   <Project Path="HyPlayer.NeteaseProvider/HyPlayer.NeteaseApi/HyPlayer.NeteaseApi.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />

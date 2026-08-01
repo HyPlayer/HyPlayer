@@ -504,11 +504,6 @@ public sealed partial class Settings : Page
         _tileService.ClearAllTiles();
     }
 
-    private async void OpenLyricEffectSettings_Click(object sender, RoutedEventArgs e)
-    {
-        await new LyricEffectSettingsDialog().ShowAsync();
-    }
-
     [GeneratedBindableCustomProperty]
     public partial class FontInfo
     {

@@ -35,7 +35,6 @@ using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Album;
 using HyPlayer.Features.Artist;
-using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.LyricRenderer;
@@ -88,9 +87,6 @@ public sealed partial class ExpandedPlayer : Page
     private readonly HttpClient _httpClient = Ioc.Default.GetRequiredService<HttpClient>();
     private readonly IAppLifecycleStateService _lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
     private readonly LyricRenderView _lyricBox = new();
-
-    private readonly ILyricEffectProfileService _lyricEffectProfiles =
-        Ioc.Default.GetRequiredService<ILyricEffectProfileService>();
 
     private readonly LyricsLayer _lyricsLayer;
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
@@ -146,8 +142,6 @@ public sealed partial class ExpandedPlayer : Page
     {
         InitializeComponent();
         ViewModel = Ioc.Default.GetRequiredService<ExpandedPlayerViewModel>();
-        _lyricBox.SetEffectProfile(_lyricEffectProfiles.EffectiveProfile);
-        _lyricEffectProfiles.ProfileChanged += OnLyricEffectProfileChanged;
         _canvasState.LyricBox = _lyricBox;
         SyncCanvasState();
         _backgroundShaderLayer = new BackgroundShaderLayer(_canvasState, _lyricSettings);
@@ -202,7 +196,11 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.Context.LyricPaddingTopRatio = _lyricSettings.LyricPaddingTopRatio / 100f;
         _lyricBox.Context.CurrentLyricTime = 0;
         _lyricBox.Context.Debug = _lyricSettings.LyricRendererDebugMode;
+        _lyricBox.Context.Effects.Blur = _lyricSettings.LyricRenderBlur;
+        _lyricBox.Context.Effects.Transform3D = _lyricSettings.LyricRenderTransform3D;
         _lyricBox.Context.Effects.CacheRenderTarget = _lyricSettings.LyricCacheRenderTarget;
+        _lyricBox.Context.Effects.Fade = _lyricSettings.LyricRenderFade;
+        _lyricBox.Context.Effects.FadingRatio = _lyricSettings.LyricFadingRatio;
         _lyricBox.Context.LineRollingEaseCalculator = _lyricSettings.LineRollingCalculator switch
         {
             RollingCalculator.SinRollingCalculator => new SinRollingCalculator(),
@@ -211,6 +209,8 @@ public sealed partial class ExpandedPlayer : Page
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
+        _lyricBox.Context.Effects.ScaleWhenFocusing = _lyricSettings.LyricRenderScaleWhenFocusing;
+        _lyricBox.Context.Effects.FocusHighlighting = _lyricSettings.LyricRenderFocusHighlighting;
         _lyricBox.Context.Effects.TransliterationScanning = _lyricSettings.LyricRenderTransliterationScanning;
         _lyricBox.Context.Effects.SimpleLineScanning = _lyricSettings.LyricRenderSimpleLineScanning;
         _lyricBox.Context.Effects.ScanStyle = _lyricSettings.LyricRenderScanStyle;
@@ -1243,11 +1243,6 @@ public sealed partial class ExpandedPlayer : Page
             _lyricBox.LyricView_PointerReleased(sender, e);
     }
 
-    private void OnLyricEffectProfileChanged(object? sender, LyricEffectProfileChangedEventArgs args)
-    {
-        _lyricBox.SetEffectProfile(args.Profile);
-    }
-
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
         if (ApplicationView.GetForCurrentView().ViewMode == ApplicationViewMode.CompactOverlay)
@@ -1269,7 +1264,6 @@ public sealed partial class ExpandedPlayer : Page
         _surfaceStoreChangedListener.Detach();
         _seekRequestedListener.Detach();
         ViewModel.Dispose();
-        _lyricEffectProfiles.ProfileChanged -= OnLyricEffectProfileChanged;
         Window.Current.SizeChanged -= Current_SizeChanged;
         _lyricBox.OnBeforeRender -= LyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked -= LyricBoxOnOnRequestSeek;

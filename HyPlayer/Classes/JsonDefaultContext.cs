@@ -4,7 +4,6 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.Playback.Services;
-using HyPlayer.LyricEffects.Models;
 using HyPlayer.NeteaseProvider.LocalMusic;
 using HyPlayer.Platform.Diagnostics;
 using LiteFM.Abstractions;
@@ -27,11 +26,6 @@ namespace HyPlayer.Classes;
 [JsonSerializable(typeof(CommentUserInfo))]
 [JsonSerializable(typeof(LatestApplicationUpdate))]
 [JsonSerializable(typeof(GitHubReleaseResponse))]
-[JsonSerializable(typeof(LyricEffectProfileDocument))]
-[JsonSerializable(typeof(LyricRenderOperationDefinition))]
-[JsonSerializable(typeof(LyricOperationParameterDefinition))]
-[JsonSerializable(typeof(LyricTransitionDefinition))]
-[JsonSerializable(typeof(List<LyricRenderOperationDefinition>))]
 public partial class JsonDefaultContext : JsonSerializerContext
 {
 }

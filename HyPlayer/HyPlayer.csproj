@@ -94,7 +94,6 @@
         </PackageReference>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\HyPlayer.LyricEffects\HyPlayer.LyricEffects.csproj"/>
         <ProjectReference Include="..\HyPlayer.Frieren\HyPlayer.Frieren.csproj"/>
         <ProjectReference Include="..\HyPlayer.PlayCore\HyPlayer.PlayCore.Abstraction\HyPlayer.PlayCore.Abstraction.csproj"/>
         <ProjectReference Include="..\HyPlayer.PlayCore\HyPlayer.PlayCore\HyPlayer.PlayCore.csproj"/>

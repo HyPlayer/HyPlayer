@@ -24,7 +24,6 @@ public class ActionLyricLine : RenderingLyricLine
 
     public string Text { get; set; }
     public string ActionUri { get; set; }
-    public override string ExpressionText => Text ?? string.Empty;
 
 
     protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)

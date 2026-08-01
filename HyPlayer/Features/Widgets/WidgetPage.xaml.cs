@@ -14,7 +14,6 @@ using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Widgets.Services;
@@ -48,9 +47,6 @@ public sealed partial class WidgetPage : Page
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
     private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
 
-    private readonly ILyricEffectProfileService _lyricEffectProfiles =
-        Ioc.Default.GetRequiredService<ILyricEffectProfileService>();
-
     private bool _eventsRegistered;
     private bool _windowClosedRegistered;
     private bool _lyricEventsRegistered;
@@ -73,8 +69,6 @@ public sealed partial class WidgetPage : Page
             OnDetachAction = weakEventListener => { _control.SeekRequested -= weakEventListener.OnEvent; }
         };
         _gameBarSettings = new GameBarSettings(Dispatcher);
-        _lyricBox.SetEffectProfile(_lyricEffectProfiles.EffectiveProfile);
-        _lyricEffectProfiles.ProfileChanged += OnLyricEffectProfileChanged;
         Instance = this;
         Window.Current.Closed += WidgetPage_Closed;
         _windowClosedRegistered = true;
@@ -190,7 +184,6 @@ public sealed partial class WidgetPage : Page
             Instance = null;
         DetachLyricEvents();
         _lyricBox.Clear();
-        _lyricEffectProfiles.ProfileChanged -= OnLyricEffectProfileChanged;
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, LyricView.RemoveFromVisualTree);
     }
 
@@ -295,17 +288,15 @@ public sealed partial class WidgetPage : Page
         if (args.HotkeySetDown) _control.TogglePlayPause();
     }
 
-    private void OnLyricEffectProfileChanged(object? sender, LyricEffectProfileChangedEventArgs args)
-    {
-        _lyricBox.SetEffectProfile(args.Profile);
-    }
-
     public void UpdateLyricViewSettings()
     {
         _lyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         AttachLyricEvents();
         _lyricBox.Context.LyricPaddingTopRatio = _setting.LyricPaddingTopRatio / 100f;
         _lyricBox.Context.Debug = _setting.LyricRendererDebugMode;
+        _lyricBox.Context.Effects.Blur = _setting.LyricRenderBlur;
+        _lyricBox.Context.Effects.Fade = _setting.LyricRenderFade;
+        _lyricBox.Context.Effects.FadingRatio = _setting.LyricFadingRatio;
         _lyricBox.Context.Effects.CacheRenderTarget = _setting.LyricCacheRenderTarget;
         _lyricBox.Context.LineRollingEaseCalculator = _setting.LineRollingCalculator switch
         {
@@ -315,6 +306,9 @@ public sealed partial class WidgetPage : Page
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
+        _lyricBox.Context.Effects.Transform3D = _setting.LyricRenderTransform3D;
+        _lyricBox.Context.Effects.ScaleWhenFocusing = _setting.LyricRenderScaleWhenFocusing;
+        _lyricBox.Context.Effects.FocusHighlighting = _setting.LyricRenderFocusHighlighting;
         _lyricBox.Context.Effects.TransliterationScanning = _setting.LyricRenderTransliterationScanning;
         _lyricBox.Context.Effects.SimpleLineScanning = _setting.LyricRenderSimpleLineScanning;
         _lyricBox.Context.Effects.ScanStyle = _setting.LyricRenderScanStyle;

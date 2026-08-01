@@ -312,6 +312,18 @@
                                                 Value="{x:Bind Lyric.LyricRenderWidthRatio, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
 
+                                        <controls3:SettingsCard
+                                            Description="单位 %"
+                                            Header="歌词渐隐程度"
+                                            Visibility="{x:Bind Lyric.LyricRenderFade}">
+                                            <Slider
+                                                MinWidth="200"
+                                                HorizontalAlignment="Right"
+                                                Maximum="99"
+                                                Minimum="0"
+                                                Value="{x:Bind Lyric.LyricFadingRatio, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+
                                         <controls3:SettingsCard Header="歌词行间距">
                                             <controls:NumberBox
                                                 MinWidth="100"
@@ -362,11 +374,11 @@
                                         <FontIcon Glyph="&#xE794;" />
                                     </controls3:SettingsExpander.HeaderIcon>
                                     <controls3:SettingsExpander.Items>
-                                        <controls3:SettingsCard Description="拖动排序、编辑表达式与绘图脚本，支持 .hylfx 导入导出" Header="歌词特效链">
-                                            <Button
+                                        <controls3:SettingsCard Header="焦点歌词增加整体辉光">
+                                            <ToggleSwitch
+                                                MinWidth="10"
                                                 HorizontalAlignment="Right"
-                                                Click="OpenLyricEffectSettings_Click"
-                                                Content="编辑特效链" />
+                                                IsOn="{x:Bind Lyric.LyricRenderFocusHighlighting, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="音译扫词">
                                             <ToggleSwitch
@@ -391,6 +403,31 @@
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind Lyric.LyricCacheRenderTarget, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+
+                                        <controls3:SettingsCard Header="焦点歌词整体放大">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Lyric.LyricRenderScaleWhenFocusing, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="模糊非聚焦行">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Lyric.LyricRenderBlur, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="非聚焦行渐隐">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Lyric.LyricRenderFade, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="3D效果">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Lyric.LyricRenderTransform3D, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
 
                                         <controls3:SettingsCard Description="不同函数有不同的效果" Header="行滚动函数">
