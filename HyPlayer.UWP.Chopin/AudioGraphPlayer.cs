@@ -178,7 +178,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (!EnableFFTProcessing) return;
             try
             {
-                FFTProcessor.ProcessFFT(frame);
+                FFTProcessor.ProcessFFT(frame, (int)_frameOutputNode.EncodingProperties.SampleRate);
             }
             catch
             {

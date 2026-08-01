@@ -547,7 +547,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 DefaultDeviceId = _playbackSettings.AudioRenderDevice,
                 OutputVolume = _playbackSettings.Volume / 100d,
                 AutoFallback = true,
-                EnableFFTProcessing = _playbackSettings.EnableFFT
+                EnableFFTProcessing = _playbackSettings.EnableFFT || _playbackSettings.ShowSpectrum
             }).ConfigureAwait(false);
 
             if (_player is AudioGraphPlayer graphPlayer)

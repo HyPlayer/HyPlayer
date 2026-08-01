@@ -735,6 +735,7 @@
                                                 <ComboBoxItem Content="跟随唱片主色调" />
                                                 <ComboBoxItem Content="流光溢彩" />
                                                 <ComboBoxItem Content="流光溢彩 (Isolation)" />
+                                                <ComboBoxItem Content="流光溢彩 (Like Apple)" />
                                             </ComboBox>
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="背景取色设置">
@@ -817,7 +818,13 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind UI.GentleBPMAnimation, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="启用频谱图">
+                                        <controls3:SettingsCard Header="显示频谱图">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Playback.ShowSpectrum, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="为可视化和其他组件提供 FFT 数据" Header="输出音频信息">
                                             <ToggleSwitch
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"

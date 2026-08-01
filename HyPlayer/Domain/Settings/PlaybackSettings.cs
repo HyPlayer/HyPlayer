@@ -123,7 +123,7 @@ public partial class PlaybackSettings : SettingsBase
     }
 
     /// <summary>
-    ///     Whether FFT audio processing is enabled.
+    ///     Whether FFT audio information is produced for consumers.
     /// </summary>
     public bool EnableFFT
     {
@@ -132,10 +132,30 @@ public partial class PlaybackSettings : SettingsBase
         {
             if (SetSettings(nameof(EnableFFT), value))
             {
-                var player = Ioc.Default.GetService<AudioGraphPlayer>();
-                player?.EnableFFTProcessing = value;
+                UpdateFftProcessing();
             }
         }
+    }
+
+    /// <summary>
+    ///     Whether the spectrum visualization is shown in the expanded player.
+    /// </summary>
+    public bool ShowSpectrum
+    {
+        // Preserve the old combined setting as the initial display preference.
+        get => GetSettings(nameof(ShowSpectrum), GetSettings(nameof(EnableFFT), false));
+        set
+        {
+            if (SetSettings(nameof(ShowSpectrum), value))
+                UpdateFftProcessing();
+        }
+    }
+
+    private void UpdateFftProcessing()
+    {
+        var player = Ioc.Default.GetService<AudioGraphPlayer>();
+        if (player is not null)
+            player.EnableFFTProcessing = EnableFFT || ShowSpectrum;
     }
 
     /// <summary>
@@ -148,7 +168,7 @@ public partial class PlaybackSettings : SettingsBase
     }
 
     // TODO(settings-applier): PlaybackSettings still applies several playback side effects directly
-    // (EnableAudioGain, AudioRenderDevice, EnableFFT).
+    // (EnableAudioGain, AudioRenderDevice, EnableFFT/ShowSpectrum).
     // Keep the current behavior for compatibility; migrate these setters behind a dedicated
     // PlaybackSettingsApplier in a separate high-risk pass so import/reset settings can be made side-effect safe.
 }

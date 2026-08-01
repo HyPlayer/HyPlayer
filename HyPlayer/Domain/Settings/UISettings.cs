@@ -83,12 +83,9 @@ public partial class UISettings : SettingsBase
         get
         {
             var value = GetSettings(nameof(ExpandedPlayerBackgroundType), (int)BackgroundType.Isolation);
-            var backgroundType = value switch
-            {
-                4 => BackgroundType.Isolation,
-                _ when Enum.IsDefined(typeof(BackgroundType), value) => (BackgroundType)value,
-                _ => BackgroundType.Isolation
-            };
+            var backgroundType = Enum.IsDefined(typeof(BackgroundType), value)
+                ? (BackgroundType)value
+                : BackgroundType.Isolation;
 
             return backgroundType;
         }

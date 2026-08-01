@@ -11,7 +11,7 @@ public sealed class ExpandedCanvasState
 {
     public BackgroundType BackgroundType { get; set; } = BackgroundType.CoverBlur;
     public bool IsPlaying { get; set; }
-    public bool EnableFft { get; set; }
+    public bool ShowSpectrum { get; set; }
     public bool IsBrightTheme { get; set; }
     public float RandomValue { get; set; } = -1;
     public float LyricRenderXOffset { get; set; }

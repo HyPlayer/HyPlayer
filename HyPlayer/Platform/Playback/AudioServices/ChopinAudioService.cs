@@ -308,7 +308,7 @@ public sealed class ChopinAudioService :
                 DefaultDeviceId = _setting.AudioRenderDevice,
                 OutputVolume = _setting.Volume / 100d,
                 AutoFallback = true,
-                EnableFFTProcessing = _setting.EnableFFT
+                EnableFFTProcessing = _setting.EnableFFT || _setting.ShowSpectrum
             }).ConfigureAwait(false);
         }
         finally
