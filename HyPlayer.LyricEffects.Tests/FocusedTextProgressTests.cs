@@ -12,6 +12,10 @@ public class FocusedTextProgressTests
         FocusedTextProgress.GetGlyphWindowProgress(0.25f, 1, 3, 1).Should().Be(0.25f);
         FocusedTextProgress.GetRevealProgress(HighlightRevealMode.RectangleClip, 0.5f, 1, 3)
             .Should().Be(0.5f);
+        FocusedTextProgress.GetRevealProgress(HighlightRevealMode.RectangleClip, 0.5f, 0, 3)
+            .Should().Be(0.5f);
+        FocusedTextProgress.GetRevealProgress(HighlightRevealMode.RectangleClip, 0.5f, 2, 3)
+            .Should().Be(0.5f);
         await Task.CompletedTask;
     }
 

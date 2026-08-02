@@ -141,8 +141,8 @@ public static class LyricEffectPresets
         IsEnabled = true,
         Parameters =
         {
-            ["revealTimeOffsetMs"] = Scalar("0"),
-            ["featherDip"] = Scalar("0")
+            ["revealTimeOffsetMs"] = FocusedScalar("0"),
+            ["featherDip"] = FocusedScalar("0")
         },
         Options =
         {
@@ -163,7 +163,7 @@ public static class LyricEffectPresets
             FocusedTextTargets.TransliterationCurrentPending,
             FocusedTextTargets.TransliterationUnhighlighted
         ],
-        Parameters = { ["opacity"] = Scalar("0.3") }
+        Parameters = { ["opacity"] = FocusedScalar("0.3") }
     };
 
     public static FocusedTextOperationDefinition CreateFocusedGlyphLift() => new()
@@ -181,16 +181,16 @@ public static class LyricEffectPresets
         ],
         Parameters =
         {
-            ["height"] = Scalar("3"),
-            ["overlap"] = Scalar("0"),
-            ["wholeWordThresholdMs"] = Scalar("1000"),
-            ["liftTimeOffsetMs"] = Scalar("0"),
-            ["liftFinishDurationMs"] = Scalar("0"),
-            ["exponent"] = Scalar("2"),
-            ["springiness"] = Scalar("3"),
-            ["oscillations"] = Scalar("3"),
-            ["bounces"] = Scalar("2"),
-            ["bounciness"] = Scalar("2")
+            ["height"] = FocusedScalar("3"),
+            ["overlap"] = FocusedScalar("0"),
+            ["wholeWordThresholdMs"] = FocusedScalar("1000"),
+            ["liftTimeOffsetMs"] = FocusedScalar("0"),
+            ["liftFinishDurationMs"] = FocusedScalar("0"),
+            ["exponent"] = FocusedScalar("2"),
+            ["springiness"] = FocusedScalar("3"),
+            ["oscillations"] = FocusedScalar("3"),
+            ["bounces"] = FocusedScalar("2"),
+            ["bounciness"] = FocusedScalar("2")
         },
         Options =
         {
@@ -340,7 +340,9 @@ public static class LyricEffectPresets
         IsEnabled = enabled,
         Parameters =
         {
-            ["opacity"] = Scalar(expression ?? "line.IsActive ? 1 : (frame.IsScrolling ? fx.Max(fx.Clamp(fx.Lerp(0.4, 0, line.ViewportDistance), 0, 1), 0.4) : fx.Clamp(fx.Lerp(0.4, 0, line.ViewportDistance), 0, 1))")
+            ["opacity"] = Scalar(
+                expression ?? "line.IsActive ? 1 : (frame.IsScrolling ? fx.Max(fx.Clamp(fx.Lerp(0.4, 0, line.ViewportDistance), 0, 1), 0.4) : fx.Clamp(fx.Lerp(0.4, 0, line.ViewportDistance), 0, 1))",
+                "line.IsActive ? 0 : 500")
         }
     };
 
@@ -465,6 +467,17 @@ public static class LyricEffectPresets
         {
             DurationMs = durationMs.ToString(System.Globalization.CultureInfo.InvariantCulture)
         }
+    };
+
+    private static LyricOperationParameterDefinition Scalar(string expression, string durationExpression) => new()
+    {
+        Expression = expression,
+        Transition = new LyricTransitionDefinition { DurationMs = durationExpression }
+    };
+
+    private static LyricOperationParameterDefinition FocusedScalar(string expression) => new()
+    {
+        Expression = expression
     };
 
     private static LyricOperationParameterDefinition Color(string expression) => new() { Expression = expression };

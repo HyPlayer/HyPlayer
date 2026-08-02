@@ -30,6 +30,24 @@ public class LyricExpressionCompilerTests
     }
 
     [Test]
+    public async Task DistanceOpacity_ShouldCompleteImmediatelyWhenLineBecomesActive()
+    {
+        var opacity = LyricEffectPresets.CreateOpacity();
+        var durationSource = opacity.Parameters["opacity"].Transition!.DurationMs;
+        var duration = _compiler.CompileScalar(durationSource);
+
+        duration.IsSuccess.Should().BeTrue();
+        duration.Expression!(Line(isActive: true), Frame(), LyricExpressionFunctions.Instance)
+            .Should().Be(0,
+                "an active line must not multiply its pending-word opacity by a stale distance fade");
+        duration.Expression!(Line(isActive: false), Frame(), LyricExpressionFunctions.Instance)
+            .Should().Be(500,
+                "non-active lines should retain the existing smooth distance fade");
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
     [Arguments("new object()")]
     [Arguments("typeof(string).Assembly.FullName")]
     [Arguments("line.GetType().FullName")]

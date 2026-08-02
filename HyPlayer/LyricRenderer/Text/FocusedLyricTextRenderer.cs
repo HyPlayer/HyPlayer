@@ -23,6 +23,7 @@ public sealed class FocusedLyricTextRenderer
     private readonly Dictionary<FocusedTransitionKey, ScalarTransitionState> _scalarTransitions = [];
     private readonly Dictionary<FocusedTransitionKey, ColorTransitionState> _colorTransitions = [];
     private readonly Dictionary<LyricGlyphCluster, CanvasCommandList> _glyphSources = [];
+    private readonly Dictionary<RevealBoundsKey, FocusedRevealBounds> _revealBounds = [];
     private readonly FocusedTextExpressionFrameCache _expressionFrameCache = new();
     private readonly LyricRenderFrameResourceScope _contributionResources = new();
     private LyricTextLayoutSnapshot? _transitionLayout;
@@ -45,6 +46,7 @@ public sealed class FocusedLyricTextRenderer
         {
             _scalarTransitions.Clear();
             _colorTransitions.Clear();
+            _revealBounds.Clear();
             ReleaseRasterCache();
             _transitionLayout = layout;
             _transitionProfile = profile;
@@ -232,10 +234,11 @@ public sealed class FocusedLyricTextRenderer
         {
             var rtl = (contribution.Cluster.BaseState.BidiLevel & 1) != 0;
             var offset = state.Origin - contribution.Cluster.BaseState.Origin;
-            var left = contribution.Cluster.VisualLeft + offset.X;
-            var top = contribution.Cluster.VisualTop + offset.Y;
-            var width = Math.Max(contribution.Cluster.VisualWidth, 0.001f);
-            var height = Math.Max(contribution.Cluster.VisualHeight, 0.001f);
+            var revealBounds = GetRevealBounds(layout, contribution);
+            var left = revealBounds.Left + offset.X;
+            var top = revealBounds.Top + offset.Y;
+            var width = Math.Max(revealBounds.Width, 0.001f);
+            var height = Math.Max(revealBounds.Height, 0.001f);
             var calculated = GetVectorContributionClip(
                 left, top, width, height, revealProgress, highlighted, rtl);
             if (calculated is { Width: <= 0 }) return;
@@ -263,6 +266,70 @@ public sealed class FocusedLyricTextRenderer
             highlighted,
             isRightToLeft,
             FocusedEffectOutsets.None);
+
+    private FocusedRevealBounds GetRevealBounds(
+        LyricTextLayoutSnapshot layout,
+        Contribution contribution)
+    {
+        var cluster = contribution.Cluster;
+        var clusters = cluster.Layer switch
+        {
+            LyricTextLayer.Lyric => layout.LyricGlyphClusters,
+            LyricTextLayer.Transliteration => layout.TransliterationGlyphClusters,
+            _ => layout.TranslationGlyphClusters
+        };
+
+        var tokenIndex = cluster.TokenStartIndex;
+        var inferredTokenIndex = cluster.InferredTokenIndex;
+        var hasTokenIndex = tokenIndex >= 0;
+        var hasInferredTokenIndex = inferredTokenIndex >= 0;
+        if (!hasTokenIndex && !hasInferredTokenIndex)
+            return new FocusedRevealBounds(cluster.VisualLeft, cluster.VisualTop,
+                Math.Max(cluster.VisualWidth, 0.001f), Math.Max(cluster.VisualHeight, 0.001f));
+
+        var key = new RevealBoundsKey(cluster.Layer,
+            hasTokenIndex ? tokenIndex : -1,
+            hasTokenIndex ? -1 : inferredTokenIndex);
+        if (_revealBounds.TryGetValue(key, out var cached)) return cached;
+
+        var found = false;
+        var left = 0f;
+        var top = 0f;
+        var right = 0f;
+        var bottom = 0f;
+
+        for (var index = 0; index < clusters.Count; index++)
+        {
+            var candidate = clusters[index];
+            var matches = hasTokenIndex
+                ? candidate.TokenStartIndex == tokenIndex
+                : hasInferredTokenIndex && candidate.InferredTokenIndex == inferredTokenIndex;
+            if (!matches) continue;
+
+            if (!found)
+            {
+                left = candidate.VisualLeft;
+                top = candidate.VisualTop;
+                right = candidate.VisualRight;
+                bottom = candidate.VisualBottom;
+                found = true;
+                continue;
+            }
+
+            left = Math.Min(left, candidate.VisualLeft);
+            top = Math.Min(top, candidate.VisualTop);
+            right = Math.Max(right, candidate.VisualRight);
+            bottom = Math.Max(bottom, candidate.VisualBottom);
+        }
+
+        var bounds = found
+            ? new FocusedRevealBounds(left, top, Math.Max(right - left, 0.001f),
+                Math.Max(bottom - top, 0.001f))
+            : new FocusedRevealBounds(cluster.VisualLeft, cluster.VisualTop,
+                Math.Max(cluster.VisualWidth, 0.001f), Math.Max(cluster.VisualHeight, 0.001f));
+        _revealBounds[key] = bounds;
+        return bounds;
+    }
 
     public void ReleaseRasterCache()
     {
@@ -315,8 +382,8 @@ public sealed class FocusedLyricTextRenderer
                     switch (operation.Definition.TypeId)
                     {
                         case FocusedTextBuiltInOperationTypes.HighlightReveal:
-                            image = ApplyReveal(operation, contribution, input, resources, session, line, frame,
-                                scopes, geometryTransform, out revealProgress);
+                            image = ApplyReveal(operation, contribution, layout, input, resources, session,
+                                line, frame, scopes, geometryTransform, out revealProgress);
                             break;
                         case FocusedTextBuiltInOperationTypes.Color:
                             image = ApplyColor(operation, contribution, input, resources, line, frame, scopes,
@@ -375,6 +442,7 @@ public sealed class FocusedLyricTextRenderer
     private ICanvasImage ApplyReveal(
         CompiledFocusedTextOperation operation,
         Contribution contribution,
+        LyricTextLayoutSnapshot layout,
         ICanvasImage input,
         LyricRenderFrameResourceScope resources,
         CanvasDrawingSession session,
@@ -411,7 +479,9 @@ public sealed class FocusedLyricTextRenderer
 
         var feather = Scalar(operation, contribution, "featherDip", line, frame,
             scopes with { Glyph = scopes.Glyph with { RevealProgress = revealProgress } }, 0);
-        return ApplyRectangleMask(input, resources, session, contribution.Cluster, geometryTransform,
+        return ApplyRectangleMask(input, resources, session, GetRevealBounds(layout, contribution),
+            contribution.Cluster,
+            geometryTransform,
             revealProgress, highlighted, feather);
     }
 
@@ -419,6 +489,7 @@ public sealed class FocusedLyricTextRenderer
         ICanvasImage input,
         LyricRenderFrameResourceScope resources,
         CanvasDrawingSession session,
+        FocusedRevealBounds revealBounds,
         LyricGlyphCluster cluster,
         Matrix3x2 geometryTransform,
         float reveal,
@@ -427,10 +498,10 @@ public sealed class FocusedLyricTextRenderer
     {
         var rtl = (cluster.BaseState.BidiLevel & 1) != 0;
         var localReveal = rtl ? 1 - reveal : reveal;
-        var left = cluster.VisualLeft;
-        var top = cluster.VisualTop;
-        var width = Math.Max(cluster.VisualWidth, 0.001f);
-        var height = Math.Max(cluster.VisualHeight, 0.001f);
+        var left = revealBounds.Left;
+        var top = revealBounds.Top;
+        var width = Math.Max(revealBounds.Width, 0.001f);
+        var height = Math.Max(revealBounds.Height, 0.001f);
         var maskPlan = CreateRectangleMaskPlan(reveal, highlighted, rtl, feather, width);
 
         if (maskPlan.ConstantOpacity is { } constantOpacity)
@@ -1024,6 +1095,17 @@ public sealed class FocusedLyricTextRenderer
         long WordStart,
         long WordEnd,
         float WordProgress);
+
+    private readonly record struct FocusedRevealBounds(
+        float Left,
+        float Top,
+        float Width,
+        float Height);
+
+    private readonly record struct RevealBoundsKey(
+        LyricTextLayer Layer,
+        int TokenIndex,
+        int InferredTokenIndex);
 
     private readonly record struct ContributionSet(Contribution First, Contribution? Second = null);
 

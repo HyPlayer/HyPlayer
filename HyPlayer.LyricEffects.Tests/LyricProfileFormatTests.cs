@@ -207,6 +207,18 @@ public class LyricProfileFormatTests
     }
 
     [Test]
+    public async Task FocusedPresets_ShouldLeaveTransitionsDisabledByDefault()
+    {
+        foreach (var preset in LyricEffectPresets.FocusedTextProfilePresets)
+        {
+            foreach (var operation in preset.Profile.Operations)
+                operation.Parameters.Values.Should().OnlyContain(parameter => parameter.Transition == null);
+        }
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
     public async Task LimitsAndDuplicateIds_ShouldBeRejected()
     {
         var profile = new LyricEffectProfileDocument

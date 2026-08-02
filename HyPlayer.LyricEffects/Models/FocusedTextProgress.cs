@@ -80,9 +80,14 @@ public static class FocusedTextProgress
         int glyphIndexInWord,
         int glyphCountInWord) => mode switch
         {
+            // RectangleClip is a continuous reveal of the whole Word.  The
+            // clip geometry is shared by every GlyphUnit in that Word; using
+            // a glyph window here would turn it into GlyphStep and leave a
+            // separate dark tail on every GlyphUnit.
+            HighlightRevealMode.RectangleClip => Math.Clamp(wordProgress, 0, 1),
             HighlightRevealMode.GlyphStep =>
                 GetGlyphWindowProgress(wordProgress, glyphIndexInWord, glyphCountInWord, 0),
             HighlightRevealMode.WholeWord => Math.Clamp(wordProgress, 0, 1),
-            _ => Math.Clamp(wordProgress * Math.Max(glyphCountInWord, 1) - glyphIndexInWord, 0, 1)
+            _ => Math.Clamp(wordProgress, 0, 1)
         };
 }
