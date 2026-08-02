@@ -7,18 +7,7 @@ namespace HyPlayer.LyricRenderer.Abstraction;
 
 public class RenderTypography
 {
-    public TextAlignment? Alignment { get; set; } = null;
-    public Color? IdleColor { get; set; } = null;
-    public Color? FocusingColor { get; set; } = null;
-    public Color? ShadowColor { get; set; } = null;
-    public float? LyricFontSize { get; set; } = null;
-    public float? TranslationFontSize { get; set; } = null;
-    public float? TransliterationFontSize { get; set; } = null;
-    public FontWeight? FontWeight { get; set; } = null;
-    public FontStyle? FontStyle { get; set; } = null;
-    public string? Font { get; set; } = null;
-
-    public static RenderTypography Default = new()
+    public static RenderTypography Default { get; } = new()
     {
         Alignment = TextAlignment.Center,
         IdleColor = Colors.White,
@@ -30,4 +19,15 @@ public class RenderTypography
         FontStyle = Windows.UI.Text.FontStyle.Normal,
         Font = "Microsoft YaHei UI"
     };
+
+    public TextAlignment? Alignment { get; set; }
+    public Color? IdleColor { get; set; }
+    public Color? FocusingColor { get; set; }
+    public Color? ShadowColor { get; set; }
+    public float? LyricFontSize { get; set; }
+    public float? TranslationFontSize { get; set; }
+    public float? TransliterationFontSize { get; set; } = null;
+    public FontWeight? FontWeight { get; set; }
+    public FontStyle? FontStyle { get; set; }
+    public string? Font { get; set; }
 }

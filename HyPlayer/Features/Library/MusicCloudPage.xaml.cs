@@ -1,46 +1,22 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.WinUI.Helpers;
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Netease.Legacy;
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Storage.Cache;
-using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Netease.Legacy;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.UI.Lists;
+
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -52,17 +28,24 @@ namespace HyPlayer.Features.Library;
 /// </summary>
 public sealed partial class MusicCloudPage : Page
 {
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly IUserLibraryProvidable _userLibraryProvider = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
-    private readonly IUserLibraryTypeIds _userLibraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
-    private readonly IContainerItemManagementProvidable _containerItemManagement = Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
-
-    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-    private CancellationToken _cancellationToken;
-
     public static readonly DependencyProperty CloudContainerProperty = DependencyProperty.Register(
-        nameof(CloudContainer), typeof(ContainerBase), typeof(MusicCloudPage), new PropertyMetadata(default(ContainerBase)));
+        nameof(CloudContainer), typeof(ContainerBase), typeof(MusicCloudPage),
+        new PropertyMetadata(default(ContainerBase)));
+
+    private readonly CancellationToken _cancellationToken;
+
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    private readonly IContainerItemManagementProvidable _containerItemManagement =
+        Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
+
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly ApiSettings _setting = Ioc.Default.GetRequiredService<ApiSettings>();
+
+    private readonly IUserLibraryProvidable _userLibraryProvider =
+        Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
+
+    private readonly IUserLibraryTypeIds _userLibraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
 
     public MusicCloudPage()
     {
@@ -84,7 +67,7 @@ public sealed partial class MusicCloudPage : Page
         set => SetValue(CloudContainerProperty, value);
     }
 
-    public bool GreedyLoad => _setting.greedlyLoadPlayContainerItems;
+    public bool GreedyLoad => _setting.GreedilyLoadPlayContainerItems;
     public List<ProvidableItemAction> ItemActions { get; }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -128,6 +111,7 @@ public sealed partial class MusicCloudPage : Page
 
         _notification.ShowMessage("上传完成", "请重新加载云盘页面");
     }
+
     private async void BtnRefresh_OnClick(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
@@ -136,11 +120,8 @@ public sealed partial class MusicCloudPage : Page
 
     private async Task LoadCloudContainerAsync()
     {
-        if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId, _cancellationToken) is ContainerBase container)
-        {
-            CloudContainer = container;
-            Bindings.Update();
-        }
+        if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
+                _cancellationToken) is ContainerBase container) CloudContainer = container;
     }
 
     private async Task DeleteCloudItemAsync(ProvidableItemRowViewModel row)
@@ -150,7 +131,8 @@ public sealed partial class MusicCloudPage : Page
 
         try
         {
-            await _containerItemManagement.RemoveItemFromContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId, row.ItemId, _cancellationToken);
+            await _containerItemManagement.RemoveItemFromContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
+                row.ItemId, _cancellationToken);
             await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
             _notification.ShowMessage("已从云盘删除", row.Title);
             await LoadCloudContainerAsync();

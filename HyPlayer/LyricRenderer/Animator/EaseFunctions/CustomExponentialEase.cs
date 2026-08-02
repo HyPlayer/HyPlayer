@@ -8,14 +8,9 @@ public class CustomExponentialEase : EaseFunctionBase
 
     protected override double EaseInCore(double normalizedTime)
     {
-        double factor = Exponent;
-        if (Math.Abs(factor) < 0.00001)
-        {
-            return normalizedTime;
-        }
-        else
-        {
-            return (Math.Exp(factor * normalizedTime) - 1.0) / (Math.Exp(factor) - 1.0);
-        }
+        var factor = Exponent;
+        if (Math.Abs(factor) < 0.00001) return normalizedTime;
+
+        return (Math.Exp(factor * normalizedTime) - 1.0) / (Math.Exp(factor) - 1.0);
     }
 }

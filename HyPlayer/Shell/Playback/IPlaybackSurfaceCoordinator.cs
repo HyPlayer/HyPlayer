@@ -1,14 +1,15 @@
-using HyPlayer.Features.Playback.Services;
-
 namespace HyPlayer.Shell.Playback;
 
 /// <summary>
-/// Shell-level coordinator for the playback UI surface (ExpandedPlayer Frame, PlayBar, blur overlay).
-/// Owned by MainPage; breaks the direct coupling between PlayBar and MainPage Frames.
-/// External callers expand/collapse through this interface instead of casting UI state to concrete pages.
+///     Shell-level coordinator for the playback UI surface (ExpandedPlayer Frame, PlayBar, blur overlay).
+///     Owned by MainPage; breaks the direct coupling between PlayBar and MainPage Frames.
+///     External callers expand/collapse through this interface instead of casting UI state to concrete pages.
 /// </summary>
 public interface IPlaybackSurfaceCoordinator
 {
+    /// <summary>Whether the expanded player is currently shown.</summary>
+    bool IsExpanded { get; }
+
     /// <summary>Expand the playback surface: show expanded player frame, hide main frame and blur overlay.</summary>
     void Expand();
 
@@ -20,8 +21,4 @@ public interface IPlaybackSurfaceCoordinator
     void ResetExpandedFrameOffset();
 
     void RestoreExpandedSurface();
-
-    /// <summary>Whether the expanded player is currently shown.</summary>
-    bool IsExpanded { get; }
-
 }

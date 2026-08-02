@@ -1,30 +1,11 @@
 #region
 
-using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
+using System;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
 
 #endregion
 
@@ -37,7 +18,6 @@ namespace HyPlayer.Features.Artist;
 /// </summary>
 public sealed partial class ArtistPage : Page
 {
-
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
 
     public ArtistPage()
@@ -45,7 +25,9 @@ public sealed partial class ArtistPage : Page
         InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<ArtistPageViewModel>();
     }
+
     private ArtistPageViewModel ViewModel => (ArtistPageViewModel)DataContext;
+
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -55,11 +37,25 @@ public sealed partial class ArtistPage : Page
             _notification.ShowMessage("艺人ID为空", "请检查传入的参数是否正确");
             return;
         }
+
         ViewModel.InitializeArtistInfo(artistId).SafeFireAndForget();
     }
 
-    private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnPivotSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         ViewModel.CurrentPage = 0;
+    }
+
+    private void OnArtistHeaderScrollProgressChanged(object? sender, EventArgs e)
+    {
+        var progress = ArtistPivotView.HeaderScrollProgress;
+        GridPersonalInformation.Opacity = Math.Clamp(1 - progress * 1.4, 0, 1);
+        RectangleImageBack.Opacity = Math.Clamp(1 - progress * 1.1, 0, 1);
+        RectangleImageBackAcrylic.Opacity = Math.Clamp(1 - progress * 1.1, 0, 1);
+        TextBlockDesc.Opacity = Math.Clamp(1 - progress * 0.8, 0, 1);
+
+        UserScale.ScaleX = UserScale.ScaleY = Math.Clamp(1 - progress * 0.8, 0, 1);
+        UserInfoScale.ScaleX = UserInfoScale.ScaleY = Math.Clamp(1 - progress * 0.6, 0, 1);
+        DescScale.ScaleX = DescScale.ScaleY = Math.Clamp(1 - progress * 0.4, 0, 1);
     }
 }

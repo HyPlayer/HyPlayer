@@ -1,9 +1,8 @@
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Navigation;
 using System;
 using System.Threading.Tasks;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
 using Frame = Windows.UI.Xaml.Controls.Frame;
-using NavigationShellViewModel = HyPlayer.Shell.Navigation.NavigationShellViewModel;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 
 namespace HyPlayer.Shell.Navigation.Services;
@@ -13,8 +12,8 @@ public interface IAppNavigator
     Task AppendAsync(MusicResource resource);
 
     void AttachNavigationView(NavigationView navigationView,
-                              Frame rootFrame,
-                              NavigationShellViewModel shellViewModel);
+        Frame rootFrame,
+        NavigationShellViewModel shellViewModel);
 
     void DetachNavigationView(NavigationView navigationView);
 

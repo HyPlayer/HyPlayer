@@ -1,6 +1,6 @@
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Platform.Playback.AudioServices;
 

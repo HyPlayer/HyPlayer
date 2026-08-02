@@ -138,7 +138,6 @@ public sealed partial class HistoryPage : Page
             return;
 
         HistoryContainer = new StaticItemsContainer(_songHistoryCache, "最近播放", "history");
-        Bindings.Update();
     }
 
     private async Task LoadRankAll(string selectionName)
@@ -170,7 +169,6 @@ public sealed partial class HistoryPage : Page
                 return;
 
             HistoryContainer = new StaticItemsContainer(rankData, "听歌排行", rangeId);
-            Bindings.Update();
         }
         catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
         {

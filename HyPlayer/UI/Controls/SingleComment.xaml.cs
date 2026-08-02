@@ -1,47 +1,25 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Features.User;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Storage.Cache;
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.User;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Shell.Navigation.Services;
+using Microsoft.UI.Xaml.Controls;
 
 #endregion
 
@@ -49,7 +27,7 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.UI.Controls;
 
-public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
+public sealed partial class SingleComment : UserControl
 {
     public static readonly DependencyProperty AvatarSourceProperty =
         DependencyProperty.Register("AvatarSource", typeof(BitmapImage), typeof(SingleComment),
@@ -59,31 +37,17 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         DependencyProperty.Register("MainComment", typeof(CommentBase), typeof(SingleComment),
             new PropertyMetadata(null)); //主评论
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
 
-    public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
-    {
-        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-            () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
-    }
-
-
-    private ObservableCollection<CommentBase> floorComments = new ObservableCollection<CommentBase>();
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    public UserDisplay CommentUserDisplay;
-    private string time = "0";
+    private readonly ObservableCollection<CommentBase> _floorComments = new();
+    private string _time = "0";
 
     public SingleComment()
     {
         InitializeComponent();
-        floorComments.CollectionChanged += FloorComments_CollectionChanged;
     }
 
-    private void FloorComments_CollectionChanged(object sender,
-        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        OnPropertyChanged(nameof(floorComments));
-    }
+    public SingleCommentState State { get; } = new();
 
     public BitmapImage AvatarSource
     {
@@ -102,37 +66,35 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         }
     }
 
-    private async Task LoadFloorComments(bool IsLoadMoreComments)
+    private async Task LoadFloorComments(bool isLoadMoreComments)
     {
-        if (!IsLoadMoreComments) floorComments.Clear();
-        var offset = !IsLoadMoreComments ? 0 : int.Parse(time ?? "0");
+        if (!isLoadMoreComments) _floorComments.Clear();
+        var offset = !isLoadMoreComments ? 0 : int.Parse(_time ?? "0");
         const int count = 20;
         if (!TryResolveCommentTarget(MainComment, out var itemId, out var typeId))
             return;
 
-        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.ProvidableItemId}_{MainComment.ActualId}_{offset}_{count}", async () =>
-        {
-            return await Ioc.Default.GetRequiredService<ICommentProvidable>()
-                .GetThreadedCommentsAsync(
-                    itemId,
-                    typeId,
-                    MainComment.ActualId,
-                    offset,
-                    count);
-        }, TimeSpan.FromMinutes(5));
-        if (result == null)
-        {
-            return;
-        }
+        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments,
+            $"{MainComment.ProvidableItemId}_{MainComment.ActualId}_{offset}_{count}", async () =>
+            {
+                return await Ioc.Default.GetRequiredService<ICommentProvidable>()
+                    .GetThreadedCommentsAsync(
+                        itemId,
+                        typeId,
+                        MainComment.ActualId,
+                        offset,
+                        count);
+            }, TimeSpan.FromMinutes(5));
+        if (result == null) return;
         foreach (var floorcomment in result.Items)
         {
             var floorComment = floorcomment;
             floorComment.ProvidableItemId = MainComment.ProvidableItemId;
             floorComment.IsMainComment = false;
-            floorComments.Add(floorComment);
+            _floorComments.Add(floorComment);
         }
 
-        time = (result?.NextOffset ?? 0).ToString();
+        _time = (result?.NextOffset ?? 0).ToString();
         LoadMore.Visibility = result?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -208,34 +170,28 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        CommentUserDisplay = new UserDisplay(
+        State.CommentUserDisplay = new UserDisplay(
             new CommentUserInfo
             {
                 ActualId = MainComment.Sender?.ActualId ?? string.Empty,
                 Name = MainComment.Sender?.Name ?? string.Empty,
-                AvatarUrl = await GetCommentAvatarUrlAsync(MainComment),
+                AvatarUrl = await GetCommentAvatarUrlAsync(MainComment)
             },
-            _setting.noImage);
+            _setting.NoImage);
         ReplyBtn.Visibility = Visibility.Visible;
         FloorCommentsExpander.Visibility = MainComment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
-        Bindings.Update();
     }
 
-    private void FloorCommentsExpander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender,
-        Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs args)
+    private void FloorCommentsExpander_Expanding(Expander sender,
+        ExpanderExpandingEventArgs args)
     {
         _ = LoadFloorComments(false);
     }
 
-    private void FloorCommentsExpander_Collapsed(Microsoft.UI.Xaml.Controls.Expander sender,
-        Microsoft.UI.Xaml.Controls.ExpanderCollapsedEventArgs args)
+    private void FloorCommentsExpander_Collapsed(Expander sender,
+        ExpanderCollapsedEventArgs args)
     {
-        floorComments.Clear();
-    }
-
-    private void UserControl_Unloaded(object sender, RoutedEventArgs e)
-    {
-        floorComments.CollectionChanged -= FloorComments_CollectionChanged;
+        _floorComments.Clear();
     }
 
     private static async Task<string?> GetCommentAvatarUrlAsync(CommentBase comment)

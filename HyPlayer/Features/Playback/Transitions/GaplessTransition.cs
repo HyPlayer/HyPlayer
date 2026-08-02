@@ -1,13 +1,13 @@
-using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
 
 namespace HyPlayer.Features.Playback.Transitions;
 
 public sealed class GaplessTransition : ITrackTransition
 {
-    private static readonly TimeSpan PreloadWindow = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan _preloadWindow = TimeSpan.FromSeconds(30);
     private TransitionPreparedTrack? _prepared;
     private PreparedPlaybackPromotion? _promotion;
 
@@ -15,12 +15,6 @@ public sealed class GaplessTransition : ITrackTransition
 
     public async Task OnPositionChangedAsync(TrackTransitionContext context, CancellationToken ct)
     {
-        if (context.HasActiveAbLoop)
-        {
-            await CancelAsync(ct).ConfigureAwait(false);
-            return;
-        }
-
         if (_promotion is not null)
         {
             await SettlePromotionAsync().ConfigureAwait(false);
@@ -29,8 +23,8 @@ public sealed class GaplessTransition : ITrackTransition
 
         if (_prepared is not null
             || !context.CanPreload
-            || context.Duration < PreloadWindow
-            || context.Duration - context.Position > PreloadWindow)
+            || context.Duration < _preloadWindow
+            || context.Duration - context.Position > _preloadWindow)
             return;
 
         var prepared = await context.Host.PrepareNextAsync(context, ct).ConfigureAwait(false);

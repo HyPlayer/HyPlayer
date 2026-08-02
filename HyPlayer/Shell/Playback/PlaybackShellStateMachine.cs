@@ -1,17 +1,15 @@
 using HyPlayer.Features.Playback.Services;
-using System;
 
 namespace HyPlayer.Shell.Playback;
 
 /// <summary>
-/// Shell-level state machine for playback surface transitions.
-/// Owns the canonical playback shell state and enforces valid transitions
-/// between Compact ↔ ExpandAnimating ↔ Expanded states.
-///
-/// Updates <see cref="PlaybackSurfaceStore"/> to keep UI projections in sync.
-/// Intended to sit above <c>PlaybackSurfaceCoordinator</c> so that higher-level
-/// expand/collapse intent flows through the state machine and store before
-/// frame-level orchestration executes.
+///     Shell-level state machine for playback surface transitions.
+///     Owns the canonical playback shell state and enforces valid transitions
+///     between Compact ↔ ExpandAnimating ↔ Expanded states.
+///     Updates <see cref="PlaybackSurfaceStore" /> to keep UI projections in sync.
+///     Intended to sit above <c>PlaybackSurfaceCoordinator</c> so that higher-level
+///     expand/collapse intent flows through the state machine and store before
+///     frame-level orchestration executes.
 /// </summary>
 public class PlaybackShellStateMachine
 {
@@ -26,8 +24,8 @@ public class PlaybackShellStateMachine
     public PlaybackShellState CurrentState { get; private set; } = PlaybackShellState.Compact;
 
     /// <summary>
-    /// Guarded transition from Compact → ExpandAnimating → Expanded.
-    /// Returns false if the current state does not allow an expand (e.g. already expanded or mid-animation).
+    ///     Guarded transition from Compact → ExpandAnimating → Expanded.
+    ///     Returns false if the current state does not allow an expand (e.g. already expanded or mid-animation).
     /// </summary>
     public bool TryBeginExpand()
     {
@@ -41,8 +39,8 @@ public class PlaybackShellStateMachine
     }
 
     /// <summary>
-    /// Guarded transition from Expanded → CollapseAnimating → Compact.
-    /// Returns false if the current state does not allow a collapse.
+    ///     Guarded transition from Expanded → CollapseAnimating → Compact.
+    ///     Returns false if the current state does not allow a collapse.
     /// </summary>
     public bool TryBeginCollapse()
     {
@@ -56,8 +54,8 @@ public class PlaybackShellStateMachine
     }
 
     /// <summary>
-    /// Force-reset to Compact, bypassing animation transient states.
-    /// Useful during shell shutdown or navigation away from playback.
+    ///     Force-reset to Compact, bypassing animation transient states.
+    ///     Useful during shell shutdown or navigation away from playback.
     /// </summary>
     public void ForceCompact()
     {
@@ -73,10 +71,10 @@ public class PlaybackShellStateMachine
 }
 
 /// <summary>
-/// Shell-level playback states.
-/// Idle states (Compact, Expanded) represent terminal / settled states.
-/// Transient states (ExpandAnimating, CollapseAnimating) represent mid-animation phases
-/// during which further expand/collapse requests are rejected.
+///     Shell-level playback states.
+///     Idle states (Compact, Expanded) represent terminal / settled states.
+///     Transient states (ExpandAnimating, CollapseAnimating) represent mid-animation phases
+///     during which further expand/collapse requests are rejected.
 /// </summary>
 public enum PlaybackShellState
 {

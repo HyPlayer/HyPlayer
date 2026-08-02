@@ -7,8 +7,9 @@ namespace HyPlayer.LyricRenderer.Effect;
 
 public class LyricOpacityEffect : LyricEffect<OpacityEffect>
 {
-    protected override OpacityEffect Effect { get; } = new OpacityEffect();
+    protected override OpacityEffect Effect { get; } = new();
     public EffectProperty Opacity { get; set; } = new((_, _) => 1f);
+
     public override ICanvasImage Apply(ICanvasImage source, RenderingLyricLine lyricLine, RenderContext context)
     {
         Effect.Source = source;

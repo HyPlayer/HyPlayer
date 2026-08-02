@@ -1,14 +1,14 @@
+using Windows.UI.Xaml.Input;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
-using Windows.UI.Xaml.Input;
 
 namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
 /// <summary>
-/// Shared Win2D canvas host for the expanded playback surface.
-/// The owning surface supplies a <see cref="CanvasAnimatedControl"/>; this host renders
-/// composable layers such as shader background, spectrum, and lyrics in deterministic order.
+///     Shared Win2D canvas host for the expanded playback surface.
+///     The owning surface supplies a <see cref="CanvasAnimatedControl" />; this host renders
+///     composable layers such as shader background, spectrum, and lyrics in deterministic order.
 /// </summary>
 public interface IExpandedCanvasHost
 {
@@ -32,7 +32,7 @@ public interface IExpandedCanvasHost
 }
 
 /// <summary>
-/// A single composable layer in the expanded Win2D canvas pipeline.
+///     A single composable layer in the expanded Win2D canvas pipeline.
 /// </summary>
 public interface IExpandedCanvasLayer
 {
@@ -52,5 +52,8 @@ public interface IExpandedCanvasLayer
     void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing);
 
     /// <summary>Optional pointer handling hook. Return true when the event is consumed.</summary>
-    bool TryHandlePointer(PointerRoutedEventArgs args) => false;
+    bool TryHandlePointer(PointerRoutedEventArgs args)
+    {
+        return false;
+    }
 }

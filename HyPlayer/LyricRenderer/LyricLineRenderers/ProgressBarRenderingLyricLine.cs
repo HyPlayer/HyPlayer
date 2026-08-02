@@ -1,23 +1,29 @@
-﻿using HyPlayer.LyricRenderer.Abstraction;
+﻿using System;
+using System.Numerics;
+using Windows.Foundation;
+using Windows.UI.Xaml.Media.Animation;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Geometry;
-using System;
-using System.Numerics;
-using Windows.Foundation;
-using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
 /// <summary>
-/// 进度条样式的BreathPoint
+///     进度条样式的BreathPoint
 /// </summary>
 public class ProgressBarRenderingLyricLine : RenderingLyricLine
 {
-    public EaseFunctionBase AnimationEaseFunction { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
+    private const int VerticalPadding = 4;
+
+    private CanvasLinearGradientBrush _baseGradientBrush;
+
+    public EaseFunctionBase AnimationEaseFunction { get; set; } =
+        new CustomCircleEase { EasingMode = EasingMode.EaseOut };
+
     public EaseFunctionBase _easeFunc2 { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseIn };
 
     public int Width { get; set; } = 200;
@@ -25,16 +31,12 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
     public int LeaveAnimationDuration { get; set; } = 600;
     public int EnterAnimationDuration { get; set; } = 400;
 
-    private const int VerticalPadding = 4;
-
-    private CanvasLinearGradientBrush _baseGradientBrush;
-
     protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
-        float x = TextRenderingLyricLine.TextPadding;
+        var x = TextRenderingLyricLine.TextPadding;
         float y = Height;
 
-        if (context.CurrentLyricTime > EndTime || context.CurrentLyricTime < StartTime) return true;// 未激活
+        if (context.CurrentLyricTime > EndTime || context.CurrentLyricTime < StartTime) return true; // 未激活
         var remain = EndTime - context.CurrentLyricTime;
 
 
@@ -43,11 +45,13 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         {
             var surplus = (float)(context.CurrentLyricTime - StartTime) / EnterAnimationDuration;
             var prog = AnimationEaseFunction.Ease(Math.Clamp(surplus, 0, 1));
-            using var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width * prog, Height), 4, 4);
+            using var geometry =
+                CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width * prog, Height), 4, 4);
             session.FillGeometry(geometry, x, y, _baseGradientBrush);
             return true;
         }
-        else if (remain > LeaveAnimationDuration)
+
+        if (remain > LeaveAnimationDuration)
         {
             using var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width, Height), 4, 4);
             session.FillGeometry(geometry, x, y, _baseGradientBrush);
@@ -59,18 +63,22 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         double progress;
         var focusingColor = context.PreferTypography.FocusingColor!.Value;
 
-        if (remain < LeaveAnimationDuration)// 结束动画
+        if (remain < LeaveAnimationDuration) // 结束动画
         {
-            var surplus = (LeaveAnimationDuration - remain) * 1.0f / (LeaveAnimationDuration);
+            var surplus = (LeaveAnimationDuration - remain) * 1.0f / LeaveAnimationDuration;
             progress = AnimationEaseFunction.Ease(Math.Clamp(surplus, 0, 1));
             focusingColor.A = (byte)(160 - 160 * progress);
-            geometryFill = CanvasGeometry.CreateRoundedRectangle(session, new Rect(Width * progress, 0, Width - Width * progress, Height), 4, 4);
+            geometryFill = CanvasGeometry.CreateRoundedRectangle(session,
+                new Rect(Width * progress, 0, Width - Width * progress, Height), 4, 4);
         }
         else
         {
-            progress = Math.Clamp((context.CurrentLyricTime - StartTime - EnterAnimationDuration) * 1.0 / (EndTime - StartTime - EnterAnimationDuration - LeaveAnimationDuration), 0, 1);
+            progress = Math.Clamp(
+                (context.CurrentLyricTime - StartTime - EnterAnimationDuration) * 1.0 /
+                (EndTime - StartTime - EnterAnimationDuration - LeaveAnimationDuration), 0, 1);
             focusingColor.A = (byte)(100 + 60 * progress);
-            geometryFill = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width * progress, Height), 4, 4);
+            geometryFill =
+                CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width * progress, Height), 4, 4);
         }
 
         using var geometryFillToDispose = geometryFill;
@@ -79,6 +87,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         {
             clds.FillGeometry(geometryFill, x, y, focusingColor);
         }
+
         session.DrawImage(cl);
         return true;
     }
@@ -97,7 +106,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
             Color = baseColor with { A = 64 }
         };
 
-        canvasGradientStop[1] = new CanvasGradientStop()
+        canvasGradientStop[1] = new CanvasGradientStop
         {
             Position = 1,
             Color = baseColor with { A = 32 }

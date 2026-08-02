@@ -5,8 +5,8 @@ using Windows.UI.Xaml.Media.Animation;
 namespace HyPlayer.Shell.Navigation.Services;
 
 /// <summary>
-/// 纯导航服务，封装 Frame 导航操作。
-/// 应用级路由由 IAppNavigator 处理；此服务只封装 Frame 导航操作。
+///     纯导航服务，封装 Frame 导航操作。
+///     应用级路由由 IAppNavigator 处理；此服务只封装 Frame 导航操作。
 /// </summary>
 public interface INavigationService
 {
@@ -18,7 +18,7 @@ public interface INavigationService
 
     /// <summary>导航到指定页面</summary>
     void Navigate(Type pageType, object? parameter = null,
-                  NavigationTransitionInfo? transition = null);
+        NavigationTransitionInfo? transition = null);
 
     /// <summary>返回上一页</summary>
     void NavigateBack();

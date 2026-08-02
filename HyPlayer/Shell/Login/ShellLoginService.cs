@@ -1,56 +1,36 @@
-using AsyncAwaitBestPractices;
-using HyPlayer.Domain.Navigation;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Welcome;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Shell.Navigation;
-using QRCoder;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
+using Windows.System;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Welcome;
+using HyPlayer.Shell.Navigation;
+using HyPlayer.Shell.Navigation.Services;
+using QRCoder;
 using InfoBarSeverity = Microsoft.UI.Xaml.Controls.InfoBarSeverity;
 
 namespace HyPlayer.Shell.Login;
 
 /// <summary>
-/// Coordinates shell login UI while AuthService owns authentication state and API calls.
+///     Coordinates shell login UI while AuthService owns authentication state and API calls.
 /// </summary>
 public sealed class ShellLoginService
 {
     private readonly IAuthService _auth;
-    private readonly INotificationService _notification;
     private readonly INavigationService _navigation;
-    private readonly IAppNavigator _navigator;
     private readonly NavigationShellViewModel _navigationShell;
-    private readonly Setting _setting;
+    private readonly IAppNavigator _navigator;
+    private readonly INotificationService _notification;
+    private readonly UISettings _setting;
 
     private ContentDialog? _currentLoginDialog;
     private ContentDialog? _currentPreLoginDialog;
-
-    public event EventHandler<QrLoginStatusChangedEventArgs>? QrLoginStatusChanged;
 
     public ShellLoginService(
         IAuthService auth,
@@ -58,7 +38,7 @@ public sealed class ShellLoginService
         INavigationService navigation,
         IAppNavigator navigator,
         NavigationShellViewModel navigationShell,
-        Setting setting)
+        UISettings setting)
     {
         _auth = auth;
         _notification = notification;
@@ -67,6 +47,8 @@ public sealed class ShellLoginService
         _navigationShell = navigationShell;
         _setting = setting;
     }
+
+    public event EventHandler<QrLoginStatusChangedEventArgs>? QrLoginStatusChanged;
 
     public async Task ShowLoginRequiredDialogAsync()
     {
@@ -117,15 +99,10 @@ public sealed class ShellLoginService
     public async Task<AuthResult> LoginWithPasswordAsync(string account, string password)
     {
         if (string.IsNullOrWhiteSpace(account) || string.IsNullOrWhiteSpace(password))
-        {
             return new AuthResult(false, "用户名或密码不能为空");
-        }
 
         var result = await _auth.LoginWithPasswordAsync(account, password);
-        if (result.IsSuccess)
-        {
-            await FinishSuccessfulLoginAsync();
-        }
+        if (result.IsSuccess) await FinishSuccessfulLoginAsync();
 
         return result;
     }
@@ -160,6 +137,7 @@ public sealed class ShellLoginService
                         SendQrLoginStatus(statusSessionId, "获取UniKey失败: " + key.ErrorMessage, InfoBarSeverity.Error);
                         return;
                     }
+
                     activeKey = key.Key;
                     await refreshQrImage(activeKey);
                     cancellationToken.ThrowIfCancellationRequested();
@@ -189,12 +167,12 @@ public sealed class ShellLoginService
                             ? InfoBarSeverity.Informational
                             : InfoBarSeverity.Error);
                 }
+
                 await Task.Delay(2000, cancellationToken);
             }
         }
         catch (OperationCanceledException)
         {
-            return;
         }
         catch (Exception ex)
         {
@@ -202,7 +180,8 @@ public sealed class ShellLoginService
         }
     }
 
-    private void SendQrLoginStatus(Guid sessionId, string title, InfoBarSeverity severity = InfoBarSeverity.Informational)
+    private void SendQrLoginStatus(Guid sessionId, string title,
+        InfoBarSeverity severity = InfoBarSeverity.Informational)
     {
         QrLoginStatusChanged?.Invoke(this, new QrLoginStatusChangedEventArgs(sessionId, title, severity));
     }
@@ -222,8 +201,10 @@ public sealed class ShellLoginService
                 writer.WriteBytes(qrImage);
                 await writer.StoreAsync();
             }
+
             await img.SetSourceAsync(stream);
         }
+
         return img;
     }
 
@@ -278,14 +259,10 @@ public sealed class ShellLoginService
         _currentLoginDialog?.Hide();
         _currentPreLoginDialog?.Hide();
 
-        if (_setting.noImage)
-        {
+        if (_setting.NoImage)
             _navigation.Navigate(typeof(Welcome));
-        }
         else
-        {
             await _navigator.NavigateAsync(new AppRoute.Me());
-        }
     }
 
     private PreLoginHintDialog CreatePreLoginHintDialog()
@@ -293,14 +270,11 @@ public sealed class ShellLoginService
         var dialog = new PreLoginHintDialog();
         dialog.TutorialRequested += () =>
         {
-            _ = Windows.System.Launcher.LaunchUriAsync(
+            _ = Launcher.LaunchUriAsync(
                 new Uri("https://github.com/HyPlayer/HyPlayer/wiki/%E5%85%B3%E4%BA%8E-%60ApiAdditionalParameter%60"));
             _navigation.Navigate(typeof(TestPage));
         };
-        dialog.RegisterDeviceRequested += async () =>
-        {
-            await RegisterDeviceAndLoginAsync(dialog);
-        };
+        dialog.RegisterDeviceRequested += async () => { await RegisterDeviceAndLoginAsync(dialog); };
         dialog.PrimaryButtonClick += (_, _) =>
         {
             dialog.Hide();

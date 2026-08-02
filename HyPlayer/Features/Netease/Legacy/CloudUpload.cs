@@ -1,37 +1,16 @@
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Platform.Storage.Audio;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Resources;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Platform.Storage.Audio;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
 
 namespace HyPlayer.Features.Netease.Legacy;
 
@@ -88,7 +67,9 @@ internal class CloudUpload
             ["bitrate"] = ((int)musicProperties.Bitrate).ToString(),
             ["durationMs"] = ((long)musicProperties.Duration.TotalMilliseconds).ToString(),
             ["extension"] = file.FileType,
-            ["contentType"] = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType
+            ["contentType"] = string.IsNullOrWhiteSpace(file.ContentType)
+                ? "application/octet-stream"
+                : file.ContentType
         };
 
         if (coverBytes is { Length: > 0 })
@@ -101,7 +82,8 @@ internal class CloudUpload
     {
         public override ResourceType Type => ResourceType.Audio;
 
-        public override Task<ResourceResultBase> GetResourceAsync(ResourceQualityTag? qualityTag = null, CancellationToken ctk = default)
+        public override Task<ResourceResultBase> GetResourceAsync(ResourceQualityTag? qualityTag = null,
+            CancellationToken ctk = default)
         {
             return Task.FromResult<ResourceResultBase>(new StorageFileCloudUploadResourceResult(file)
             {
@@ -110,7 +92,8 @@ internal class CloudUpload
         }
     }
 
-    private sealed class StorageFileCloudUploadResourceResult(StorageFile file) : ResourceResultBase, IResourceResultOf<Stream>
+    private sealed class StorageFileCloudUploadResourceResult(StorageFile file)
+        : ResourceResultBase, IResourceResultOf<Stream>
     {
         public override Exception? ExternalException { get; init; }
         public override required ResourceStatus ResourceStatus { get; init; }

@@ -1,57 +1,40 @@
-using HyPlayer.Domain;
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Settings;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Resources;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Features.Playback.Services;
 
 /// <summary>
-/// 播放通知服务 — 负责 SMTC 显示更新、磁贴刷新、封面下载和 Last.FM Scrobble。
+///     播放通知服务 — 负责 SMTC 显示更新、磁贴刷新、封面下载和 Last.FM Scrobble。
 /// </summary>
 public sealed class PlaybackNotificationService : IPlaybackNotificationService
 {
-    private readonly PlaybackStateService _state;
-    private readonly Setting _setting;
     private readonly HttpClient _http;
+    private readonly ILastFmService _lastFm;
     private readonly IPlayer _player;
+    private readonly UISettings _uiSettings;
+    private readonly LastFMSettings _lastFmSettings;
+    private readonly PlaybackStateService _state;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly ITileService _tileService;
-    private readonly ILastFmService _lastFm;
 
     public PlaybackNotificationService(
         PlaybackStateService state,
-        Setting setting,
+        UISettings uiSettings,
+        LastFMSettings lastFmSettings,
         HttpClient http,
         IPlayer player,
         IBackgroundTaskRunner taskRunner,
@@ -59,7 +42,8 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         ILastFmService lastFm)
     {
         _state = state;
-        _setting = setting;
+        _uiSettings = uiSettings;
+        _lastFmSettings = lastFmSettings;
         _http = http;
         _player = player;
         _taskRunner = taskRunner;
@@ -73,7 +57,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         if (providerItem == null) return;
         UpdateSmtcDisplayInfo(providerItem);
 
-        if (!_setting.noImage)
+        if (!_uiSettings.NoImage)
         {
             await RefreshCoverAsync(providerItem);
             UpdateSmtcThumbnail();
@@ -84,11 +68,9 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
             _state.CoverStreamReference = null;
         }
 
-        await _tileService.UpdateTile(providerItem, _setting.noImage ? null : _state.CoverStream);
-        if (_setting.UpdateLastFMNowPlaying)
-        {
+        await _tileService.UpdateTile(providerItem, _uiSettings.NoImage ? null : _state.CoverStream);
+        if (_lastFmSettings.UpdateLastFMNowPlaying)
             _taskRunner.Forget(_lastFm.UpdateNowPlayingAsync(providerItem), "update Last.FM now playing");
-        }
     }
 
     /// <inheritdoc />
@@ -103,7 +85,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
             if (!response.IsSuccessStatusCode) return;
 
             var bytes = await response.Content.ReadAsByteArrayAsync();
-            IBuffer buffer = bytes.AsBuffer();
+            var buffer = bytes.AsBuffer();
 
             // 替换封面流
             var newStream = new InMemoryRandomAccessStream();
@@ -115,7 +97,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            System.Diagnostics.Debug.WriteLine($"Cover load failed: {ex.Message}");
+            Debug.WriteLine($"Cover load failed: {ex.Message}");
         }
     }
 
@@ -163,8 +145,6 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         if (_state.CoverStreamReference is null) return;
 
         if (_player is AudioGraphPlayer { SMTCManager: not null } graphPlayer)
-        {
             graphPlayer.SMTCManager.UpdateThumbnail(_state.CoverStreamReference);
-        }
     }
 }

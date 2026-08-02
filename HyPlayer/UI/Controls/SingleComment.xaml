@@ -9,7 +9,6 @@
     d:DesignHeight="670"
     d:DesignWidth="800"
     Loaded="UserControl_Loaded"
-    Unloaded="UserControl_Unloaded"
     mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical">
@@ -34,7 +33,7 @@
                             Height="32"
                             Tapped="NavToUser_Click">
                             <PersonPicture.ProfilePicture>
-                                <BitmapImage UriSource="{x:Bind CommentUserDisplay.AvatarUri, Mode=OneWay}" />
+                                <BitmapImage UriSource="{x:Bind State.CommentUserDisplay.AvatarUri, Mode=OneWay}" />
                             </PersonPicture.ProfilePicture>
                         </PersonPicture>
                         <StackPanel Margin="8,0,0,0">
@@ -42,9 +41,10 @@
                                 x:Name="Nickname"
                                 Padding="0"
                                 Click="NavToUser_Click"
-                                Content="{x:Bind CommentUserDisplay.User.Name, Mode=OneWay}"
+                                Content="{x:Bind State.CommentUserDisplay.User.Name, Mode=OneWay}"
                                 Style="{StaticResource TextBlockButtonStyle}" />
-                            <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind MainComment.SendTime, Mode=OneWay}" />
+                            <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                       Text="{x:Bind MainComment.SendTime, Mode=OneWay}" />
                         </StackPanel>
                     </StackPanel>
 
@@ -124,7 +124,7 @@
                         Content="回复"
                         Style="{StaticResource AccentButtonStyle}" />
                 </Grid>
-                <controls:CommentsList Comments="{x:Bind floorComments, Mode=OneWay}" />
+                <controls:CommentsList Comments="{x:Bind _floorComments, Mode=OneWay}" />
                 <Button
                     x:Name="LoadMore"
                     HorizontalAlignment="Stretch"

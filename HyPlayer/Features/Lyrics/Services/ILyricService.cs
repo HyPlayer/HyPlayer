@@ -1,14 +1,14 @@
-using HyPlayer.Domain.Lyrics;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
+using HyPlayer.Domain.Lyrics;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 namespace HyPlayer.Features.Lyrics.Services;
 
 /// <summary>
-/// 歌词服务，负责歌词加载和逐行同步
+///     歌词服务，负责歌词加载和逐行同步
 /// </summary>
 public interface ILyricService
 {
@@ -22,17 +22,18 @@ public interface ILyricService
     TimeSpan LyricOffset { get; set; }
 
     /// <summary>
-    /// 为指定 Provider 曲目加载歌词。
+    ///     为指定 Provider 曲目加载歌词。
     /// </summary>
     Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default);
 
     /// <summary>
-    /// 导入本地歌词并写入当前播放歌曲的歌词状态/缓存。
+    ///     导入本地歌词并写入当前播放歌曲的歌词状态/缓存。
     /// </summary>
-    Task<HyLyricInfo?> ImportLyricsAsync(StorageFile lyricFile, SingleSongBase? currentSong, CancellationToken ct = default);
+    Task<HyLyricInfo?> ImportLyricsAsync(StorageFile lyricFile, SingleSongBase? currentSong,
+        CancellationToken ct = default);
 
     /// <summary>
-    /// 根据播放位置更新当前歌词行
+    ///     根据播放位置更新当前歌词行
     /// </summary>
     void Tick(TimeSpan position);
 }

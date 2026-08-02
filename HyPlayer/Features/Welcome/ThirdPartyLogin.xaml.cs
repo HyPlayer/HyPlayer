@@ -1,35 +1,15 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Shell.Login;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.Web.WebView2.Core;
 using System;
 using System.Collections.Generic;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Shell.Login;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.Web.WebView2.Core;
 
 #endregion
 
@@ -44,9 +24,9 @@ public sealed partial class ThirdPartyLogin : Page
 {
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
 
-    private string LoginType = "5";
+    private string _loginType = "5";
 
-    public bool Navigated;
+    private bool _navigated;
 
     public ThirdPartyLogin()
     {
@@ -67,40 +47,40 @@ public sealed partial class ThirdPartyLogin : Page
         switch (e.Parameter as string)
         {
             case "QQ":
-                LoginType = "5";
+                _loginType = "5";
                 break;
             case "WX":
-                LoginType = "10";
+                _loginType = "10";
                 break;
             case "WB":
-                LoginType = "2";
+                _loginType = "2";
                 break;
         }
 
-        Navigated = false;
+        _navigated = false;
     }
+
     private void ThirdPartyLoginWebview_Loaded(object sender, RoutedEventArgs e)
     {
         // 10 - 微信    5 - QQ     2 - 微博
-        if (!Navigated)
+        if (!_navigated)
         {
-            ThirdPartyLoginWebview.Source = new Uri("http://music.163.com/api/sns/authorize?snsType=" + LoginType + "&clientType=mobile&callbackType=Login");
-            Navigated = true;
+            ThirdPartyLoginWebview.Source = new Uri("http://music.163.com/api/sns/authorize?snsType=" + _loginType +
+                                                    "&clientType=mobile&callbackType=Login");
+            _navigated = true;
             LoadingRingContainer.Visibility = Visibility.Collapsed;
         }
     }
 
-    private async void ThirdPartyLoginWebview_NavigationCompleted(WebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
+    private async void ThirdPartyLoginWebview_NavigationCompleted(WebView2 sender,
+        CoreWebView2NavigationCompletedEventArgs args)
     {
         if (sender.Source.ToString().StartsWith("https://music.163.com/back/sns"))
         {
             LoadingRingContainer.Visibility = Visibility.Visible;
             var cookies = await sender.CoreWebView2.CookieManager.GetCookiesAsync("https://music.163.com");
             var runtimeCookies = new Dictionary<string, string>();
-            foreach (var cookie in cookies)
-            {
-                runtimeCookies[cookie.Name] = cookie.Value;
-            }
+            foreach (var cookie in cookies) runtimeCookies[cookie.Name] = cookie.Value;
 
             await _auth.ImportRuntimeCookiesAsync(runtimeCookies);
             await Ioc.Default.GetRequiredService<ShellLoginService>().CompleteExternalLoginAsync();

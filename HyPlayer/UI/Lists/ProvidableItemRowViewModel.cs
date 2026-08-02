@@ -1,16 +1,12 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using HyPlayer.Domain;
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Settings;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using Windows.UI.Xaml;
+using CommunityToolkit.Mvvm.ComponentModel;
+using HyPlayer.Domain;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 namespace HyPlayer.UI.Lists;
 
@@ -37,13 +33,7 @@ public sealed partial class ProvidableItemRowViewModel : ObservableObject
     public required AlbumBase? Album { get; init; }
     public required string GroupKey { get; init; }
 
-    [ObservableProperty]
-    public partial bool IsCurrent { get; set; }
-
-    partial void OnIsCurrentChanged(bool value)
-    {
-        OnPropertyChanged(nameof(CurrentVisible));
-    }
+    [ObservableProperty] public partial bool IsCurrent { get; set; }
 
     public int DisplayOrder => Order + 1;
     public string ItemId => Item.ItemId;
@@ -62,7 +52,13 @@ public sealed partial class ProvidableItemRowViewModel : ObservableObject
     public Visibility LineThreeVisible => HasLineThree ? Visibility.Visible : Visibility.Collapsed;
     public Visibility TranslationVisible => HasTranslation ? Visibility.Visible : Visibility.Collapsed;
 
-    public Uri? Cover => new((string.IsNullOrEmpty(CoverUrl) ? DefaultCoverUrl : CoverUrl) + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER);
+    public Uri? Cover => new((string.IsNullOrEmpty(CoverUrl) ? DefaultCoverUrl : CoverUrl) + "?param=" +
+                             StaticSource.PicSizeSingleNcSongCover);
+
+    partial void OnIsCurrentChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CurrentVisible));
+    }
 
     public bool MatchesFilter(string filterText)
     {
@@ -82,7 +78,8 @@ public sealed partial class ProvidableItemRowViewModel : ObservableObject
     }
 }
 
-public sealed partial class ProvidableItemRowGroup(IEnumerable<ProvidableItemRowViewModel> items) : ObservableCollection<ProvidableItemRowViewModel>(items)
+public sealed partial class ProvidableItemRowGroup(IEnumerable<ProvidableItemRowViewModel> items)
+    : ObservableCollection<ProvidableItemRowViewModel>(items)
 {
     public string Key { get; set; } = string.Empty;
 }

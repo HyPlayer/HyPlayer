@@ -1,5 +1,5 @@
-﻿using HyPlayer.LyricRenderer.Abstraction.Render;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Pipeline;
 using Microsoft.Graphics.Canvas;
 
@@ -10,146 +10,147 @@ public class RenderContext
     internal CanvasCommandList? EmptyPipelineImage { get; set; }
 
     /// <summary>
-    /// 是否正在播放
+    ///     是否正在播放
     /// </summary>
     public bool IsPlaying { get; set; }
 
     /// <summary>
-    /// 是否显示调试信息
-    /// 请合理使用
+    ///     是否显示调试信息
+    ///     请合理使用
     /// </summary>
     public bool Debug { get; set; } = false;
 
     /// <summary>
-    /// 所有歌词
+    ///     所有歌词
     /// </summary>
     public List<RenderingLyricLine> LyricLines { get; set; } = new();
 
     /// <summary>
-    /// 视图宽度
+    ///     视图宽度
     /// </summary>
     public float ViewWidth { get; set; }
 
     /// <summary>
-    /// 视图高度
+    ///     视图高度
     /// </summary>
     public float ViewHeight { get; set; }
 
     public float ItemWidth { get; set; }
 
     /// <summary>
-    /// 播放时间 单位毫秒
+    ///     播放时间 单位毫秒
     /// </summary>
     public long CurrentLyricTime { get; set; }
 
     /// <summary>
-    /// 渲染时间刻 单位微秒
-    /// 精细动画时使用
+    ///     渲染时间刻 单位微秒
+    ///     精细动画时使用
     /// </summary>
     public long RenderTick { get; set; }
 
     /// <summary>
-    /// 当前主渲染的歌词行
+    ///     当前主渲染的歌词行
     /// </summary>
     public RenderingLyricLine CurrentLyricLine { get; set; }
 
     /// <summary>
-    /// 当前主渲染的歌词行号
+    ///     当前主渲染的歌词行号
     /// </summary>
     public int CurrentLyricLineIndex { get; set; }
 
     /// <summary>
-    /// 在视图范围内被渲染的歌词行
+    ///     在视图范围内被渲染的歌词行
     /// </summary>
     public List<RenderingLyricLine> RenderingLyricLines { get; } = new();
 
     /// <summary>
-    /// 歌词的偏移
+    ///     歌词的偏移
     /// </summary>
     public Dictionary<int, LineRenderOffset> RenderOffsets { get; } = new();
 
     /// <summary>
-    /// 上一关键帧的偏移快照
+    ///     上一关键帧的偏移快照
     /// </summary>
     public Dictionary<int, LineRenderOffset> SnapshotRenderOffsets { get; } = new();
 
     /// <summary>
-    /// 歌词滚动的缓动计算器
+    ///     歌词滚动的缓动计算器
     /// </summary>
     public LineRollingCalculator LineRollingEaseCalculator { get; set; }
 
     /// <summary>
-    /// 缺省的排版设置
+    ///     缺省的排版设置
     /// </summary>
     public RenderTypography PreferTypography { get; set; } = new();
 
     /// <summary>
-    /// 当前的关键帧
+    ///     当前的关键帧
     /// </summary>
     public long CurrentKeyframe { get; set; }
 
     /// <summary>
-    /// 是否正在滚动
+    ///     是否正在滚动
     /// </summary>
     public bool IsScrolling { get; set; }
 
     /// <summary>
-    /// 滚动的增量
+    ///     滚动的增量
     /// </summary>
     public long ScrollingDelta { get; set; }
 
     /// <summary>
-    /// 指针设备的焦点行号
+    ///     指针设备的焦点行号
     /// </summary>
     public int PointerFocusingIndex { get; set; }
 
     /// <summary>
-    /// 歌曲 BPM
+    ///     歌曲 BPM
     /// </summary>
     public float BeatPerMinute { get; set; }
 
     /// <summary>
-    /// 歌词距离顶部的距离比例
+    ///     歌词距离顶部的距离比例
     /// </summary>
     public float LyricPaddingTopRatio { get; set; }
 
     /// <summary>
-    /// 歌词的宽度比例
+    ///     歌词的宽度比例
     /// </summary>
     public float LyricWidthRatio { get; set; }
 
     /// <summary>
-    /// 特殊效果设置
+    ///     特殊效果设置
     /// </summary>
     public RenderEffects Effects { get; set; } = new();
+
     /// <summary>
-    /// 当前歌词特效配置的不可变编译快照。
+    ///     当前歌词特效配置的不可变编译快照。
     /// </summary>
     public CompiledLyricEffectProfile? EffectProfile { get; set; }
 
 
     /// <summary>
-    /// 行间距
+    ///     行间距
     /// </summary>
     public int LineSpacing { get; set; } = 0;
 
     /// <summary>
-    /// 启用翻译
+    ///     启用翻译
     /// </summary>
     public bool EnableTranslation { get; set; } = true;
 
     /// <summary>
-    /// 启用音译
+    ///     启用音译
     /// </summary>
     public bool EnableTransliteration { get; set; } = true;
 
     /// <summary>
-    /// 播放位置改变是否由Seek操作引起
+    ///     播放位置改变是否由Seek操作引起
     /// </summary>
     public bool IsSeek { get; set; } = false;
 
     /// <summary>
-    /// DPI
+    ///     DPI
     /// </summary>
     public float Dpi { get; set; } = 96f;
 }

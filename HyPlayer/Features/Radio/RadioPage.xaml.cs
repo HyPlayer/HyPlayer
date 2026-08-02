@@ -1,40 +1,5 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain;
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Features.User;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.UI.Lists;
-using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,6 +9,21 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.User;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.UI.Lists;
 
 #endregion
 
@@ -51,27 +31,33 @@ namespace HyPlayer.Features.Radio;
 
 public sealed partial class RadioPage : Page
 {
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IProvidableItemProvidable _itemProvider = Ioc.Default.GetRequiredService<IProvidableItemProvidable>();
-    private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
-    private readonly IPlaybackQueueLoader _queueLoader = Ioc.Default.GetRequiredService<IPlaybackQueueLoader>();
-
-    private bool asc;
-    private ContainerBase RadioChannel;
-    private IProgressiveLoadingContainer _progressiveRadioChannel;
-    private PersonBase _host;
-    private List<SingleSongBase> _ascendingPrograms;
-    private List<SingleSongBase> _allPrograms;
-    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-    private CancellationToken _cancellationToken;
-
     public static readonly DependencyProperty CurrentContainerProperty = DependencyProperty.Register(
-        nameof(CurrentContainer), typeof(ContainerBase), typeof(RadioPage), new PropertyMetadata(default(ContainerBase)));
+        nameof(CurrentContainer), typeof(ContainerBase), typeof(RadioPage),
+        new PropertyMetadata(default(ContainerBase)));
 
     public static readonly DependencyProperty CurrentQueueScopeProperty = DependencyProperty.Register(
-        nameof(CurrentQueueScope), typeof(SongListQueueScope), typeof(RadioPage), new PropertyMetadata(SongListQueueScope.Visible));
+        nameof(CurrentQueueScope), typeof(SongListQueueScope), typeof(RadioPage),
+        new PropertyMetadata(SongListQueueScope.Visible));
+
+    private readonly CancellationToken _cancellationToken;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    private readonly IProvidableItemProvidable _itemProvider =
+        Ioc.Default.GetRequiredService<IProvidableItemProvidable>();
+
+    private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IPlaybackQueueLoader _queueLoader = Ioc.Default.GetRequiredService<IPlaybackQueueLoader>();
+    private readonly ApiSettings _apiSettings = Ioc.Default.GetRequiredService<ApiSettings>();
+    private readonly UISettings _uiSettings = Ioc.Default.GetRequiredService<UISettings>();
+    private List<SingleSongBase> _allPrograms;
+    private List<SingleSongBase> _ascendingPrograms;
+    private PersonBase _host;
+    private IProgressiveLoadingContainer _progressiveRadioChannel;
+
+    private bool _asc;
+    private ContainerBase _radioChannel;
 
     public RadioPage()
     {
@@ -103,32 +89,33 @@ public sealed partial class RadioPage : Page
         base.OnNavigatedTo(e);
         if (e.Parameter is string rid)
         {
-            RadioChannel = await GetRadioChannelAsync(rid);
-            if (RadioChannel is null)
+            _radioChannel = await GetRadioChannelAsync(rid);
+            if (_radioChannel is null)
             {
                 _notification.ShowMessage("获取电台信息失败", "未知错误");
                 return;
             }
         }
 
-        if (e.Parameter is ContainerBase radio)
-        {
-            RadioChannel = radio;
-        }
+        if (e.Parameter is ContainerBase radio) _radioChannel = radio;
 
-        _progressiveRadioChannel = RadioChannel as IProgressiveLoadingContainer;
+        _progressiveRadioChannel = _radioChannel as IProgressiveLoadingContainer;
         if (_progressiveRadioChannel is null)
         {
             _notification.ShowMessage("获取电台信息失败", "提供程序未返回可分页电台容器");
             return;
         }
 
-        TextBoxRadioName.Text = RadioChannel.Name;
-        var creators = RadioChannel is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync(_cancellationToken) : null;
+        TextBoxRadioName.Text = _radioChannel.Name;
+        var creators = _radioChannel is IHasCreators creatorsProvider
+            ? await creatorsProvider.GetCreatorsAsync(_cancellationToken)
+            : null;
         _host = creators?.FirstOrDefault();
         TextBoxDJ.Content = _host?.Name;
-        TextBlockDesc.Text = RadioChannel is IHasDescription descriptionProvider ? descriptionProvider.Description : string.Empty;
-        if (_setting.noImage)
+        TextBlockDesc.Text = _radioChannel is IHasDescription descriptionProvider
+            ? descriptionProvider.Description
+            : string.Empty;
+        if (_uiSettings.NoImage)
         {
             ImageRect.ImageSource = null;
         }
@@ -136,15 +123,14 @@ public sealed partial class RadioPage : Page
         {
             var img = new BitmapImage();
             ImageRect.ImageSource = img;
-            img.UriSource = await GetCoverUriAsync(RadioChannel);
+            img.UriSource = await GetCoverUriAsync(_radioChannel);
         }
 
         _ascendingPrograms = null;
         _allPrograms = null;
-        CurrentQueueScope = SongListQueueScope.Radio(RadioChannel.ActualId);
-        CurrentContainer = RadioChannel;
-        SongContainer.GreedyLoad = _setting.greedlyLoadPlayContainerItems;
-        Bindings.Update();
+        CurrentQueueScope = SongListQueueScope.Radio(_radioChannel.ActualId);
+        CurrentContainer = _radioChannel;
+        SongContainer.GreedyLoad = _apiSettings.GreedilyLoadPlayContainerItems;
     }
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
@@ -160,15 +146,14 @@ public sealed partial class RadioPage : Page
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
-        asc = !asc;
+        _asc = !_asc;
         _ascendingPrograms = null;
-        CurrentContainer = asc ? new ReorderedContainer(RadioChannel, reverse: true) : RadioChannel;
-        Bindings.Update();
+        CurrentContainer = _asc ? new ReorderedContainer(_radioChannel, true) : _radioChannel;
     }
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        var programs = asc
+        var programs = _asc
             ? await LoadAscendingProgramsAsync()
             : await LoadAllProgramsAsync();
         await _queueLoader.AppendSongsAsync(programs);
@@ -176,7 +161,7 @@ public sealed partial class RadioPage : Page
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        var programs = asc
+        var programs = _asc
             ? await LoadAscendingProgramsAsync()
             : await LoadAllProgramsAsync();
 
@@ -188,7 +173,8 @@ public sealed partial class RadioPage : Page
         if (_knownTypeIds.RadioChannelTypeId is null)
             return null;
 
-        return await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.RadioChannelTypeId + radioId, _cancellationToken) as ContainerBase;
+        return await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.RadioChannelTypeId + radioId,
+            _cancellationToken) as ContainerBase;
     }
 
     private async Task<List<SingleSongBase>> LoadAscendingProgramsAsync()
@@ -205,9 +191,10 @@ public sealed partial class RadioPage : Page
     {
         if (_allPrograms is not null) return _allPrograms;
 
-        var programs = RadioChannel is LinerContainerBase liner
+        var programs = _radioChannel is LinerContainerBase liner
             ? await liner.GetAllItemsAsync(_cancellationToken)
-            : (await _progressiveRadioChannel.GetProgressiveItemsListAsync(0, _progressiveRadioChannel.MaxProgressiveCount, _cancellationToken)).Item2;
+            : (await _progressiveRadioChannel.GetProgressiveItemsListAsync(0,
+                _progressiveRadioChannel.MaxProgressiveCount, _cancellationToken)).Item2;
         _allPrograms = programs.OfType<SingleSongBase>().ToList();
         return _allPrograms;
     }
@@ -220,5 +207,4 @@ public sealed partial class RadioPage : Page
         var result = await coverProvider.GetCoverAsync();
         return result is IResourceResultOf<Uri?> uriResult ? await uriResult.GetResourceAsync() : null;
     }
-
 }

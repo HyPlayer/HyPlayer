@@ -1,10 +1,9 @@
+using System.Collections.Generic;
+using System.Numerics;
 using ComputeSharp.D2D1.Uwp;
 using HyPlayer.Domain;
 using HyPlayer.LyricRenderer;
 using HyPlayer.UI.Effects;
-using Microsoft.Graphics.Canvas.Effects;
-using System.Collections.Generic;
-using System.Numerics;
 
 namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 

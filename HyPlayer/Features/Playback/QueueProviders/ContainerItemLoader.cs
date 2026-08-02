@@ -1,20 +1,22 @@
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
 
 namespace HyPlayer.Features.Playback.QueueProviders;
 
 internal static class ContainerItemLoader
 {
-    public static async Task<List<ProvidableItemBase>> LoadAllAsync(ContainerBase container, CancellationToken cancellationToken)
+    public static async Task<List<ProvidableItemBase>> LoadAllAsync(ContainerBase container,
+        CancellationToken cancellationToken)
     {
         return container switch
         {
             LinerContainerBase liner => await liner.GetAllItemsAsync(cancellationToken),
-            IProgressiveLoadingContainer progressive => await LoadAllProgressiveItemsAsync(progressive, cancellationToken),
+            IProgressiveLoadingContainer progressive => await LoadAllProgressiveItemsAsync(progressive,
+                cancellationToken),
             UndeterminedContainerBase undetermined => await undetermined.GetNextItemsRangeAsync(cancellationToken),
             _ => []
         };

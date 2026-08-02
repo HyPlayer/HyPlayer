@@ -1,9 +1,9 @@
-﻿using HyPlayer.LyricRenderer.Abstraction;
+﻿using System;
+using System.Numerics;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
-using System;
-using System.Numerics;
 
 namespace HyPlayer.LyricRenderer.Effect;
 
@@ -14,17 +14,17 @@ public class LyricTransform3DEffect : LyricEffect<Transform3DEffect>
     public EffectProperty AngleY { get; set; } = new((_, _) => 0f);
     public EffectProperty AngleZ { get; set; } = new((_, _) => 0f);
 
-    protected override Transform3DEffect Effect { get; } = new Transform3DEffect();
+    protected override Transform3DEffect Effect { get; } = new();
 
     public override ICanvasImage Apply(ICanvasImage source, RenderingLyricLine lyricLine, RenderContext context)
     {
         Effect.Source = source;
         var matrix = Get3DMatrix(
-            center: new(0, lyricLine.RenderingHeight / 2, 0),
-            angleX: AngleX.GetValue(lyricLine, context),
-            angleY: AngleY.GetValue(lyricLine, context),
-            angleZ: AngleZ.GetValue(lyricLine, context),
-            depth: Depth.GetValue(lyricLine, context));
+            new Vector3(0, lyricLine.RenderingHeight / 2, 0),
+            AngleX.GetValue(lyricLine, context),
+            AngleY.GetValue(lyricLine, context),
+            AngleZ.GetValue(lyricLine, context),
+            Depth.GetValue(lyricLine, context));
         Effect.TransformMatrix = matrix;
         return Effect;
     }
@@ -47,6 +47,6 @@ public class LyricTransform3DEffect : LyricEffect<Transform3DEffect>
         if (depth > 0) perspective.M34 = 1.0f / depth;
 
         return Matrix4x4.CreateTranslation(-center) * rotation * perspective *
-                         Matrix4x4.CreateTranslation(center) * parallaxTranslation;
+               Matrix4x4.CreateTranslation(center) * parallaxTranslation;
     }
 }

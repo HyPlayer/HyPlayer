@@ -1,8 +1,8 @@
 ﻿#region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using WinRT;
 
 #endregion
@@ -16,13 +16,13 @@ namespace HyPlayer.Features.Library;
 /// </summary>
 public sealed partial class PageFavorite : Page
 {
-    private FavoriteViewModel ViewModel => (FavoriteViewModel)DataContext;
-
     public PageFavorite()
     {
         InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<FavoriteViewModel>();
     }
+
+    private FavoriteViewModel ViewModel => (FavoriteViewModel)DataContext;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {

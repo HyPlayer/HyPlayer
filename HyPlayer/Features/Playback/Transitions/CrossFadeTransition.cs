@@ -1,39 +1,33 @@
-using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
 
 namespace HyPlayer.Features.Playback.Transitions;
 
 public sealed class CrossFadeTransition : ITrackTransition
 {
-    private static readonly TimeSpan PreloadWindow = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan _preloadWindow = TimeSpan.FromSeconds(30);
+    private long _fadeStartedAt;
     private TransitionPreparedTrack? _prepared;
     private PreparedPlaybackPromotion? _promotion;
-    private long _fadeStartedAt;
 
     public string Id => "xfd";
 
     public async Task OnPositionChangedAsync(TrackTransitionContext context, CancellationToken ct)
     {
-        if (context.HasActiveAbLoop)
-        {
-            await CancelAsync(ct).ConfigureAwait(false);
-            return;
-        }
-
         if (_promotion is not null)
         {
             await ApplyFadeAsync(context.CrossFadeDuration, ct).ConfigureAwait(false);
             return;
         }
 
-        if (!context.CanPreload || context.Duration < PreloadWindow)
+        if (!context.CanPreload || context.Duration < _preloadWindow)
             return;
 
         var remaining = context.Duration - context.Position;
-        if (_prepared is null && remaining <= PreloadWindow)
+        if (_prepared is null && remaining <= _preloadWindow)
         {
             var prepared = await context.Host.PrepareNextAsync(context, ct).ConfigureAwait(false);
             if (prepared is not null)
@@ -165,11 +159,9 @@ public sealed class CrossFadeTransition : ITrackTransition
                 .SetVolumeAsync(promotion.Incoming.TargetVolume * Math.Sin(angle), ct)
                 .ConfigureAwait(false);
             if (promotion.Outgoing is not null)
-            {
                 await promotion.Outgoing
                     .SetVolumeAsync(promotion.Outgoing.TargetVolume * Math.Cos(angle), ct)
                     .ConfigureAwait(false);
-            }
         }
         catch (Exception effectException)
         {

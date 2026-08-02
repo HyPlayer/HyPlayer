@@ -1,37 +1,5 @@
 #region
 
-using Depository.Extensions.DependencyInjection;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Composition;
-using HyPlayer.Classes;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Domain;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Storage.Cache;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
-using Kawazu;
-using Microsoft.Gaming.XboxGameBar;
 using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
@@ -40,10 +8,35 @@ using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Depository.Extensions.DependencyInjection;
+using HyPlayer.Application;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
+using HyPlayer.Composition;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Effects;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.Shell.Playback;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
+using Kawazu;
+using Microsoft.Gaming.XboxGameBar;
 using WinRT;
+using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 using WidgetPage = HyPlayer.Features.Widgets.WidgetPage;
 using WidgetSettingsPage = HyPlayer.Features.Widgets.WidgetSettingsPage;
-using HyPlayer.Application;
 
 #endregion
 
@@ -54,12 +47,13 @@ namespace HyPlayer;
 /// </summary>
 public sealed partial class App : Windows.UI.Xaml.Application
 {
+    private bool _playbackMemoryRestoreRequested;
+
     /// <summary>
     ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
     ///     已执行，逻辑上等同于 main() 或 WinMain()。
     /// </summary>
-    private Frame rootFrame;
-    private bool _playbackMemoryRestoreRequested;
+    private Frame _rootFrame;
 
     public App()
     {
@@ -72,10 +66,12 @@ public sealed partial class App : Windows.UI.Xaml.Application
         InitializeCommonServices();
         AppDepository.Resolve<IHistoryService>().InitializeHistoryTrack();
         _ = AppDepository.Resolve<IPlaybackMemoryService>().InitializeAsync();
-        if (AppDepository.Resolve<Setting>().themeRequest != ThemeRequest.Auto)
-            RequestedTheme = AppDepository.Resolve<Setting>().themeRequest == ThemeRequest.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
+        var uiSettings = AppDepository.Resolve<UISettings>();
+        if (uiSettings.ThemeRequest != ThemeRequest.Auto)
+            RequestedTheme = uiSettings.ThemeRequest == ThemeRequest.Light
+                ? ApplicationTheme.Light
+                : ApplicationTheme.Dark;
         AppDepository.Resolve<IBackgroundTaskRunner>().Forget(InitializeThings, "initialize app cache and converters");
-        
     }
 
     private static void InitializeServices()
@@ -87,10 +83,10 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
     private static void InitializeCommonServices()
     {
-        var setting = AppDepository.Resolve<Setting>();
-        var neteaseProvider = AppDepository.Resolve<global::HyPlayer.NeteaseProvider.NeteaseProvider>();
-        neteaseProvider.ImportAdditionalConfiguration(setting.ApiAdditionalParametersJson);
-        neteaseProvider.ConfigureFakeCheckToken(setting.EnableCheckTokenApi);
+        var settings = AppDepository.Resolve<ApiSettings>();
+        var neteaseProvider = AppDepository.Resolve<NeteaseProvider.NeteaseProvider>();
+        neteaseProvider.ImportAdditionalConfiguration(settings.ApiAdditionalParametersJson);
+        neteaseProvider.ConfigureFakeCheckToken(settings.EnableCheckTokenApi);
         var globalTimer = AppDepository.Resolve<IGlobalTimerService>();
         var teachingTip = AppDepository.Resolve<ITeachingTipService>();
         var playBarAutoHide = AppDepository.Resolve<IPlayBarAutoHideService>();
@@ -99,7 +95,6 @@ public sealed partial class App : Windows.UI.Xaml.Application
             teachingTip.Roll();
             playBarAutoHide.Tick();
         };
-        
     }
 
     private static async Task InitializeThings()
@@ -107,7 +102,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
         try
         {
             await SimpleCacher.InitializeAsync();
-            await AppDepository.Resolve<HyPlayer.Features.Lyrics.Effects.ILyricEffectProfileService>().InitializeAsync();
+            await AppDepository.Resolve<ILyricEffectProfileService>().InitializeAsync();
             var sf = await ApplicationData.Current.LocalFolder.TryGetItemAsync("Romaji");
             if (sf != null) AppDepository.Resolve<IKawazuStateService>().Converter = new KawazuConverter(sf.Path);
         }
@@ -118,7 +113,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
         if (AppDepository.Resolve<PlaybackSurfaceStore>().IsExpanded)
             AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
-                AppDepository.Resolve<INotificationService>().InvokeOnUIThread(() =>
+                AppDepository.Resolve<IUIThreadDispatcher>().TryRunAsync(() =>
                 {
                     AppDepository.Resolve<IPlaybackSurfaceCoordinator>().RestoreExpandedSurface();
                 }),
@@ -146,23 +141,20 @@ public sealed partial class App : Windows.UI.Xaml.Application
         if (args.Kind == ActivationKind.Protocol)
         {
             var protocolArgs = args?.As<IProtocolActivatedEventArgs>();
-            string scheme = protocolArgs.Uri.Scheme;
-            if (scheme.Equals("ms-gamebarwidget"))
-            {
-                widgetArgs = args.As<XboxGameBarWidgetActivatedEventArgs>();
-            }
+            var scheme = protocolArgs.Uri.Scheme;
+            if (scheme.Equals("ms-gamebarwidget")) widgetArgs = args.As<XboxGameBarWidgetActivatedEventArgs>();
         }
+
         if (widgetArgs != null)
-        {
             if (widgetArgs.IsLaunchActivation)
             {
                 var widgetFrame = new Frame();
-                rootFrame = widgetFrame;
+                _rootFrame = widgetFrame;
                 widgetFrame.NavigationFailed += OnNavigationFailed;
                 Window.Current.Content = widgetFrame;
+
+
                 // Create Game Bar widget object which bootstraps the connection with Game Bar
-
-
                 if (widgetArgs.AppExtensionId == "SettingWidget")
                 {
                     var settingsWidget = new XboxGameBarWidget(
@@ -179,84 +171,87 @@ public sealed partial class App : Windows.UI.Xaml.Application
                         widgetFrame);
                     AppDepository.Resolve<IGameBarWidgetService>().Widget = gameBarWidget;
                     widgetFrame.Navigate(typeof(WidgetPage), gameBarWidget);
-
                 }
+
                 OnLaunchedOrActivatedAsync(args);
                 Window.Current.Activate();
             }
-            else
-            {
-                // You can perform whatever behavior you need based on the URI payload.
-            }
-        }
 
+        // You can perform whatever behavior you need based on the URI payload.
         base.OnActivated(args);
         if (args.Kind == ActivationKind.ToastNotification)
         {
-            rootFrame = Window.Current.Content?.As<Frame>();
-            if (rootFrame == null)
+            _rootFrame = Window.Current.Content?.As<Frame>();
+            if (_rootFrame == null)
             {
-                rootFrame = new Frame();
-                Window.Current.Content = rootFrame;
+                _rootFrame = new Frame();
+                Window.Current.Content = _rootFrame;
             }
 
-            rootFrame.Navigate(typeof(MainPage));
+            _rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
             if (AppDepository.Resolve<IPlaybackSurfaceCoordinator>().IsExpanded) return;
-            var setting = AppDepository.Resolve<Setting>();
-            var animation = setting.expandAnimation;
+            var settings = AppDepository.Resolve<UISettings>();
+            var animation = settings.ExpandAnimation;
             try
             {
-                setting.expandAnimation = false;
+                settings.ExpandAnimation = false;
                 AppDepository.Resolve<IPlaybackSurfaceCoordinator>().Expand();
             }
             finally
             {
-                setting.expandAnimation = animation;
+                settings.ExpandAnimation = animation;
             }
         }
+
         if (args.Kind == ActivationKind.Protocol)
         {
-            var launchUri = (args?.As<IProtocolActivatedEventArgs>())?.Uri;
+            var launchUri = args?.As<IProtocolActivatedEventArgs>()?.Uri;
             if (launchUri?.Host == "link.last.fm")
                 AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
-                    AppDepository.Resolve<ILastFmService>().CompleteBrowserLoginAsync(launchUri.Query.Replace("?token=", string.Empty)),
+                    AppDepository.Resolve<ILastFmService>()
+                        .CompleteBrowserLoginAsync(launchUri.Query.Replace("?token=", string.Empty)),
                     "complete Last.FM browser login");
         }
     }
 
-    private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+    private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         AppDepository.Resolve<IDiagnosticsStateService>().ErrorMessages.Add(e.Exception.ToString());
         e.Handled = true;
     }
 
-    protected override void OnFileActivated(FileActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
+    protected override void OnFileActivated(FileActivatedEventArgs args)
+    {
+        OnLaunchedOrActivatedAsync(args);
+    }
 
-    protected override void OnLaunched(LaunchActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
+    protected override void OnLaunched(LaunchActivatedEventArgs args)
+    {
+        OnLaunchedOrActivatedAsync(args);
+    }
 
     private async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
     {
         base.OnActivated(args);
 
-        rootFrame = Window.Current.Content?.As<Frame>();
-        if (rootFrame == null)
+        _rootFrame = Window.Current.Content?.As<Frame>();
+        if (_rootFrame == null)
         {
-            rootFrame = new Frame();
-            rootFrame.NavigationFailed += OnNavigationFailed;
+            _rootFrame = new Frame();
+            _rootFrame.NavigationFailed += OnNavigationFailed;
 
             if (args.PreviousExecutionState == ApplicationExecutionState.Terminated)
             {
-
             }
 
-            Window.Current.Content = rootFrame;
+            Window.Current.Content = _rootFrame;
         }
 
         // 直接启动
         if (args is LaunchActivatedEventArgs)
         {
-            if (rootFrame.Content == null)
+            if (_rootFrame.Content == null)
             {
                 NavigateToRootPage(args);
                 Window.Current.Activate();
@@ -301,13 +296,11 @@ public sealed partial class App : Windows.UI.Xaml.Application
                     await control.LoadAndPlayAsync(song, removeCurrentSongs: false);
             }
         }
-
-
     }
 
     private void NavigateToRootPage(IActivatedEventArgs args = null)
     {
-        rootFrame.Navigate(typeof(MainPage), (args?.As<LaunchActivatedEventArgs>())?.Arguments);
+        _rootFrame.Navigate(typeof(MainPage), args?.As<LaunchActivatedEventArgs>()?.Arguments);
     }
 
     /// <summary>

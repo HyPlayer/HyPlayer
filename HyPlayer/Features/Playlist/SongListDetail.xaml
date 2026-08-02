@@ -48,7 +48,7 @@
             IsMySongList="{x:Bind ViewModel.IsMySongList, Mode=OneWay}"
             IsSearchEnabled="True">
             <controls1:ContainerItemsView.ListHeader>
-                <Grid>
+                <Grid Margin="0,0,0,-75">
                     <Border
                         x:Name="RectangleImageBack"
                         Grid.Column="0"

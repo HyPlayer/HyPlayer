@@ -10,10 +10,10 @@ public sealed class TokenLiftGlyphEffect : ILyricGlyphEffect
     {
         if (context.Cluster.Layer == LyricTextLayer.Transliteration &&
             !context.RenderContext.Effects.TransliterationScanning)
-        {
             return;
-        }
 
-        state.Origin.Y -= LiftAmount * TokenGlyphProgress.GetLiftProgress(context.Cluster, context.Frame);
+        var origin = state.Origin;
+        origin.Y -= LiftAmount * TokenGlyphProgress.GetLiftProgress(context.Cluster, context.Frame);
+        state.Origin = origin;
     }
 }

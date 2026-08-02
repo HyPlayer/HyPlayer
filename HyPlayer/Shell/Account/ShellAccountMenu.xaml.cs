@@ -1,39 +1,23 @@
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Navigation;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Shell.Login;
-using HyPlayer.Shell.Navigation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Shell.Login;
+using HyPlayer.Shell.Navigation;
+using HyPlayer.Shell.Navigation.Services;
 
 namespace HyPlayer.Shell.Account;
 
 public sealed partial class ShellAccountMenu : UserControl
 {
-    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly ShellLoginService _loginService = Ioc.Default.GetRequiredService<ShellLoginService>();
-    private readonly NavigationShellViewModel _navigationShell = Ioc.Default.GetRequiredService<NavigationShellViewModel>();
+
+    private readonly NavigationShellViewModel _navigationShell =
+        Ioc.Default.GetRequiredService<NavigationShellViewModel>();
+
+    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
 
     public ShellAccountMenu()
     {

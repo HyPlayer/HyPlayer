@@ -1,4 +1,3 @@
-using CommunityToolkit.WinUI.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +5,7 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using CommunityToolkit.WinUI.Helpers;
 using WinRT;
 using InfoBarSeverity = Microsoft.UI.Xaml.Controls.InfoBarSeverity;
 
@@ -15,9 +15,9 @@ public sealed partial class LoginDialog : ContentDialog
 {
     private readonly ShellLoginService _loginService;
     private readonly WeakEventListener<LoginDialog, object?, QrLoginStatusChangedEventArgs> _qrLoginStatusListener;
+    private bool _isPasswordLoginRunning;
     private CancellationTokenSource? _qrLoginCts;
     private Guid? _qrLoginStatusSessionId;
-    private bool _isPasswordLoginRunning;
 
     public LoginDialog(ShellLoginService loginService)
     {
@@ -26,7 +26,9 @@ public sealed partial class LoginDialog : ContentDialog
         _qrLoginStatusListener = new WeakEventListener<LoginDialog, object?, QrLoginStatusChangedEventArgs>(this)
         {
             OnEventAction = static (instance, _, args) => instance.UpdateQrLoginStatus(args),
-            OnDetachAction = weakEventListener => { _loginService.QrLoginStatusChanged -= weakEventListener.OnEvent; }
+            // Capture only the long-lived service. Capturing `_loginService` here would also capture this dialog
+            // and defeat WeakEventListener's weak-reference semantics.
+            OnDetachAction = weakEventListener => { loginService.QrLoginStatusChanged -= weakEventListener.OnEvent; }
         };
         _loginService.QrLoginStatusChanged += _qrLoginStatusListener.OnEvent;
 
@@ -52,6 +54,8 @@ public sealed partial class LoginDialog : ContentDialog
     {
         StopQrLoginPolling();
         _qrLoginStatusListener.Detach();
+        PrimaryButtonClick -= OnPrimaryButtonClick;
+        Closed -= OnDialogClosed;
     }
 
     private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
@@ -91,10 +95,12 @@ public sealed partial class LoginDialog : ContentDialog
         }
     }
 
-    private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnLoginPivotSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if ((sender?.As<Pivot>()).SelectedIndex == 1)
+        if (sender is Pivot { SelectedIndex: 1 })
+        {
             StartQrLoginPolling();
+        }
         else
         {
             StopQrLoginPolling();
@@ -125,12 +131,12 @@ public sealed partial class LoginDialog : ContentDialog
         try
         {
             await _loginService.StartQrLoginAsync(statusSessionId,
-            async key =>
-            {
-                var img = await ShellLoginService.GenerateQrImageAsync(key);
-                if (cts.IsCancellationRequested) return;
-                QrContainer.Source = img;
-            }, cts.Token);
+                async key =>
+                {
+                    var img = await ShellLoginService.GenerateQrImageAsync(key);
+                    if (cts.IsCancellationRequested) return;
+                    QrContainer.Source = img;
+                }, cts.Token);
         }
         finally
         {

@@ -1,6 +1,13 @@
 #region
 
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
@@ -8,32 +15,7 @@ using HyPlayer.Features.Playlist;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
 using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using System;
-using System.Linq;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 
 #endregion
 
@@ -43,22 +25,28 @@ namespace HyPlayer.UI.Lists;
 
 public sealed partial class PlaylistItem : UserControl
 {
-    private readonly ContainerBase playList;
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IContainerManagementProvidable _containerManagement = Ioc.Default.GetRequiredService<IContainerManagementProvidable>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier = Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>();
-    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
+    private readonly IContainerManagementProvidable _containerManagement =
+        Ioc.Default.GetRequiredService<IContainerManagementProvidable>();
+
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+
+    private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier =
+        Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>();
+
+    private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
+    private readonly ContainerBase _playList;
+
     public PlaylistItem(ContainerBase playList)
     {
-        this.playList = playList;
+        this._playList = playList;
         InitializeComponent();
     }
 
     private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        _navigation.Navigate(typeof(SongListDetail), playList);
+        _navigation.Navigate(typeof(SongListDetail), _playList);
     }
 
     private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -79,14 +67,14 @@ public sealed partial class PlaylistItem : UserControl
     private async void PlayAllBtn_Click(object sender, RoutedEventArgs e)
     {
         //播放全部歌曲
-        await _navigator.PlayAsync(new MusicResource.Playlist(playList.ActualId));
+        await _navigator.PlayAsync(new MusicResource.Playlist(_playList.ActualId));
     }
 
     private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            await _containerManagement.SetContainerPrivacyAsync(playList.ActualId, true);
+            await _containerManagement.SetContainerPrivacyAsync(_playList.ActualId, true);
             _notification.ShowMessage("成功公开歌单");
             _playlistCollectionChangeNotifier.NotifyChanged();
         }
@@ -100,7 +88,7 @@ public sealed partial class PlaylistItem : UserControl
     {
         try
         {
-            await _containerManagement.DeleteContainerAsync(playList.ActualId);
+            await _containerManagement.DeleteContainerAsync(_playList.ActualId);
             _notification.ShowMessage("成功删除");
             _playlistCollectionChangeNotifier.NotifyChanged();
             _navigation.NavigateRefresh();
@@ -113,32 +101,35 @@ public sealed partial class PlaylistItem : UserControl
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        if (_setting.noImage) ImageContainer.Source = null;
+        if (_setting.NoImage)
+        {
+            ImageContainer.Source = null;
+        }
         else
         {
-            var coverUrl = await TryGetCoverUrlAsync(playList);
+            var coverUrl = await TryGetCoverUrlAsync(_playList);
             if (coverUrl is not null)
                 ImageContainerSource.UriSource =
-                new Uri(coverUrl + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER);
+                    new Uri(coverUrl + "?param=" + StaticSource.PicSizePlaylistItemCover);
         }
 
-        TextBlockPLName.Text = playList.Name;
-        TextBlockPLAuthor.Text = await TryGetCreatorNameAsync(playList) ?? string.Empty;
+        TextBlockPLName.Text = _playList.Name;
+        TextBlockPLAuthor.Text = await TryGetCreatorNameAsync(_playList) ?? string.Empty;
         StoryboardIn.Begin();
     }
 
-    private static async System.Threading.Tasks.Task<string?> TryGetCoverUrlAsync(ContainerBase container)
+    private static async Task<string?> TryGetCoverUrlAsync(ContainerBase container)
     {
         if (container is not IHasCover coverProvider)
             return null;
 
         var result = await coverProvider.GetCoverAsync();
-        return result is HyPlayer.PlayCore.Abstraction.Models.IResourceResultOf<Uri?> uriResult
+        return result is IResourceResultOf<Uri?> uriResult
             ? (await uriResult.GetResourceAsync())?.GetLeftPart(UriPartial.Path)
             : null;
     }
 
-    private static async System.Threading.Tasks.Task<string?> TryGetCreatorNameAsync(ContainerBase container)
+    private static async Task<string?> TryGetCreatorNameAsync(ContainerBase container)
     {
         if (container is not IHasCreators creatorsProvider)
             return null;

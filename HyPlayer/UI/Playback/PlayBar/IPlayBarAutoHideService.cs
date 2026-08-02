@@ -4,9 +4,9 @@ namespace HyPlayer.UI.Playback.PlayBar;
 
 public interface IPlayBarAutoHideService
 {
-    event EventHandler<PlayBarVisibilityChangedEventArgs>? VisibilityChanged;
     int SecondCounter { get; set; }
     bool IsVisible { get; set; }
+    event EventHandler<PlayBarVisibilityChangedEventArgs>? VisibilityChanged;
     void Tick();
     void Show();
 }

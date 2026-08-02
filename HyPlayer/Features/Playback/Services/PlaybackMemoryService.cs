@@ -1,31 +1,3 @@
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Platform.Serialization;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Playback.LocalProvider;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,6 +7,15 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Platform.Serialization;
+using HyPlayer.Platform.Storage;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using LocalPlaybackProvider = HyPlayer.Platform.Playback.LocalProvider.LocalProvider;
 
 namespace HyPlayer.Features.Playback.Services;
@@ -47,26 +28,28 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
     private const int SaveDebounceMilliseconds = 1500;
     private const int SavePositionStepMilliseconds = 5000;
     private const int EndPositionResetThresholdMilliseconds = 5000;
-
-    private readonly PlayCoreBase _playCore;
-    private readonly PlaybackStateService _state;
-    private readonly Setting _setting;
-    private readonly IPlaybackQueueLoader _queueLoader;
     private readonly IPlaybackControlService _control;
+    private readonly IHistoryService _history;
+    private readonly SemaphoreSlim _ioLock = new(1, 1);
     private readonly IProvidableItemRangeProvidable _itemRangeProvider;
     private readonly ILocalFileImportService _localFileImport;
-    private readonly IHistoryService _history;
     private readonly INotificationService _notification;
-    private readonly SemaphoreSlim _ioLock = new(1, 1);
-    private CancellationTokenSource? _saveDebounceCts;
+
+    private readonly PlayCoreBase _playCore;
+    private readonly IPlaybackQueueLoader _queueLoader;
+    private readonly PlaybackSettings _playbackSettings;
+    private readonly LocalLibrarySettings _localLibrarySettings;
+    private readonly PlaybackStateService _state;
     private bool _initialized;
-    private bool _restoring;
     private int _lastSavedPositionBucket = -1;
+    private bool _restoring;
+    private CancellationTokenSource? _saveDebounceCts;
 
     public PlaybackMemoryService(
         PlayCoreBase playCore,
         PlaybackStateService state,
-        Setting setting,
+        PlaybackSettings playbackSettings,
+        LocalLibrarySettings localLibrarySettings,
         IPlaybackQueueLoader queueLoader,
         IPlaybackControlService control,
         IProvidableItemRangeProvidable itemRangeProvider,
@@ -76,13 +59,22 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
     {
         _playCore = playCore;
         _state = state;
-        _setting = setting;
+        _playbackSettings = playbackSettings;
+        _localLibrarySettings = localLibrarySettings;
         _queueLoader = queueLoader;
         _control = control;
         _itemRangeProvider = itemRangeProvider;
         _localFileImport = localFileImport;
         _history = history;
         _notification = notification;
+    }
+
+    public void Dispose()
+    {
+        _state.PropertyChanged -= State_PropertyChanged;
+        _saveDebounceCts?.Cancel();
+        _saveDebounceCts?.Dispose();
+        _ioLock.Dispose();
     }
 
     public Task InitializeAsync()
@@ -160,18 +152,14 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
             return;
 
         if (!string.IsNullOrWhiteSpace(memory.PlaySourceId))
-        {
             _playCore.PlaySourceId = memory.PlaySourceId;
-        }
         else if (TryParseSource(memory, out var sourceKind, out var sourceId))
-        {
             _playCore.PlaySourceId = BuildPlaySourceId(sourceKind, sourceId) ?? string.Empty;
-        }
 
         if (!string.IsNullOrWhiteSpace(memory.ActiveStrategyId))
         {
             await _control.SetPlayModeAsync(memory.ActiveStrategyId).ConfigureAwait(false);
-            _setting.ActiveStrategyId = memory.ActiveStrategyId;
+            _playbackSettings.ActiveStrategyId = memory.ActiveStrategyId;
         }
 
         var playbackQueue = await _playCore.GetOrderedPlaylistAsync().ConfigureAwait(false);
@@ -188,7 +176,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
         if (_playCore.CurrentSong is not { } currentSong)
             currentSong = playbackQueue[index];
 
-        await _control.LoadAndPlayAsync(currentSong, autoPlay: false, removeCurrentSongs: false).ConfigureAwait(false);
+        await _control.LoadAndPlayAsync(currentSong, false, false).ConfigureAwait(false);
         await _playCore.MovePointerToIndexAsync(index).ConfigureAwait(false);
 
         var restorePosition = GetRestorePosition(memory.PositionMilliseconds, currentSong.Duration);
@@ -223,14 +211,10 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
         var remoteIds = new List<string>();
 
         foreach (var identity in identities)
-        {
             if (identity.ProviderId != LocalPlaybackProvider.ProviderIdValue
                 && !string.IsNullOrWhiteSpace(identity.TypeId)
                 && !string.IsNullOrWhiteSpace(identity.ActualId))
-            {
                 remoteIds.Add(identity.TypeId + identity.ActualId);
-            }
-        }
 
         var remoteSongsByKey = new Dictionary<string, SingleSongBase>(StringComparer.Ordinal);
         if (remoteIds.Count > 0)
@@ -249,7 +233,6 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
             {
                 var path = identity.LocalPath ?? identity.ActualId;
                 if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
-                {
                     try
                     {
                         var file = await StorageFile.GetFileFromPathAsync(path);
@@ -260,7 +243,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
                     {
                         // Local files can disappear or lose access between app sessions.
                     }
-                }
+
                 continue;
             }
 
@@ -307,7 +290,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
         await _ioLock.WaitAsync().ConfigureAwait(false);
         try
         {
-            if (_setting.advancedMusicHistoryStorage)
+            if (_localLibrarySettings.AdvancedMusicHistoryStorage)
             {
                 var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(
                     MemoryFileName,
@@ -330,7 +313,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
         try
         {
             string? text;
-            if (_setting.advancedMusicHistoryStorage)
+            if (_localLibrarySettings.AdvancedMusicHistoryStorage)
             {
                 var file = await ApplicationData.Current.LocalCacheFolder.TryGetItemAsync(MemoryFileName);
                 text = file is StorageFile storageFile
@@ -371,7 +354,7 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
             CreateIdentity(legacy.Songs[currentIndex]),
             currentIndex,
             0,
-            _setting.ActiveStrategyId,
+            _playbackSettings.ActiveStrategyId,
             DateTimeOffset.UtcNow);
     }
 
@@ -528,13 +511,5 @@ public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
             or SongListQueueScopeKind.Album
             or SongListQueueScopeKind.Radio
             or SongListQueueScopeKind.DailyRecommend;
-    }
-
-    public void Dispose()
-    {
-        _state.PropertyChanged -= State_PropertyChanged;
-        _saveDebounceCts?.Cancel();
-        _saveDebounceCts?.Dispose();
-        _ioLock.Dispose();
     }
 }

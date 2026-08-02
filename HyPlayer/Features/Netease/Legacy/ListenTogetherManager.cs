@@ -1,60 +1,36 @@
 #nullable enable
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Platform.Runtime;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HyPlayer.Features.Netease.Legacy;
 
 /// <summary>
-/// 一起听管理器。
-/// <para>
-/// 保留静态入口 <see cref="CreateRoom"/> / <see cref="JoinRoom"/> / <see cref="LeaveRoom"/>
-/// 以兼容现有调用方，内部通过 <see cref="Ioc.Default"/> 解析 DI 服务，不再直接引用 HyPlayList。
-/// </para>
+///     一起听管理器。
+///     <para>
+///         保留静态入口 <see cref="CreateRoom" /> / <see cref="JoinRoom" /> / <see cref="LeaveRoom" />
+///         以兼容现有调用方，内部通过 <see cref="Ioc.Default" /> 解析 DI 服务，不再直接引用 HyPlayList。
+///     </para>
 /// </summary>
 internal sealed class ListenTogetherManager
 {
-    private static ListenTogetherManager? _instance;
+    public delegate void UserChangedEvent(RoomInfo.UserInfo[] users);
+
+    private readonly IGlobalTimerService _globalTimer;
+    private readonly IListenTogetherProvidable _listenTogetherProvider;
 
     private readonly PlayCoreBase _playCore;
     private readonly PlaybackStateService _state;
-    private readonly IListenTogetherProvidable _listenTogetherProvider;
-    private readonly IGlobalTimerService _globalTimer;
-
-    public bool IsInRoom { get; private set; }
-    public RoomInfo? CurrentRoomInfo { get; private set; }
-
-    public delegate void UserChangedEvent(RoomInfo.UserInfo[] users);
-    public event UserChangedEvent? OnUserChanged;
-
-    /// <summary>服务器指定的下一首索引（供 ListenTogetherStrategy 读取）</summary>
-    internal int? ServerNextIndex { get; set; }
 
     private int _heartbeatDefer = 5;
 
@@ -66,32 +42,41 @@ internal sealed class ListenTogetherManager
         _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     }
 
+    public bool IsInRoom { get; private set; }
+    public RoomInfo? CurrentRoomInfo { get; private set; }
+
+    /// <summary>服务器指定的下一首索引（供 ListenTogetherStrategy 读取）</summary>
+    internal int? ServerNextIndex { get; set; }
+
     // ---------------------------------------------------------------
     //  Static entry points (backward-compatible)
     // ---------------------------------------------------------------
 
     /// <summary>当前实例（供 ListenTogetherStrategy 访问）</summary>
-    internal static ListenTogetherManager? Instance => _instance;
+    internal static ListenTogetherManager? Instance { get; private set; }
 
     /// <summary>是否在房间中（静态便捷属性）</summary>
-    public static bool IsInRoomStatic => _instance?.IsInRoom ?? false;
+    public static bool IsInRoomStatic => Instance?.IsInRoom ?? false;
 
     /// <summary>当前房间信息（静态便捷属性）</summary>
-    public static RoomInfo? CurrentRoomInfoStatic => _instance?.CurrentRoomInfo;
+    public static RoomInfo? CurrentRoomInfoStatic => Instance?.CurrentRoomInfo;
+
+    private string CurrentProviderSongId => _state.NowPlayingProviderItem?.ActualId ?? string.Empty;
+    public event UserChangedEvent? OnUserChanged;
 
     public static async Task CreateRoom()
     {
         CleanupInstance();
 
         var mgr = new ListenTogetherManager();
-        _instance = mgr;
+        Instance = mgr;
 
         var roomId = await mgr._listenTogetherProvider.CreateListenTogetherRoomAsync(
             await mgr._playCore.GetPlaylistAsync());
         if (string.IsNullOrWhiteSpace(roomId))
         {
             Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建一起听房间失败", "房间ID为空");
-            _instance = null;
+            Instance = null;
             return;
         }
 
@@ -111,12 +96,12 @@ internal sealed class ListenTogetherManager
         CleanupInstance();
 
         var mgr = new ListenTogetherManager();
-        _instance = mgr;
+        Instance = mgr;
 
         var canJoin = await CheckRoomCanJoin(roomId);
         if (!canJoin)
         {
-            _instance = null;
+            Instance = null;
             return false;
         }
 
@@ -159,9 +144,10 @@ internal sealed class ListenTogetherManager
         HeartbeatTick();
     }
 
-    private void OnPlaybackStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnPlaybackStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(PlaybackStateService.NowPlayingProviderItem) && _state.NowPlayingProviderItem is not null)
+        if (e.PropertyName == nameof(PlaybackStateService.NowPlayingProviderItem) &&
+            _state.NowPlayingProviderItem is not null)
             OnPlayItemChanged();
         else if (e.PropertyName == nameof(PlaybackStateService.IsPlaying) && _state.IsPlaying)
             OnPlay();
@@ -306,28 +292,24 @@ internal sealed class ListenTogetherManager
             if (_heartbeatDefer > 0) return;
             _heartbeatDefer = 5;
 
-            var status = await _listenTogetherProvider.GetListenTogetherStatusAsync(CurrentRoomInfo?.RoomId ?? string.Empty);
+            var status =
+                await _listenTogetherProvider.GetListenTogetherStatusAsync(CurrentRoomInfo?.RoomId ?? string.Empty);
             if (status is null)
             {
                 Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取一起听房间信息失败", "房间状态为空");
                 return;
             }
 
-            if (!status.IsInRoom)
-            {
-                IsInRoom = false;
-            }
+            if (!status.IsInRoom) IsInRoom = false;
 
             if (!string.IsNullOrWhiteSpace(status.RoomId))
             {
                 if (CurrentRoomInfo is null)
-                {
                     CurrentRoomInfo = new RoomInfo
                     {
                         RoomId = status.RoomId,
                         ClientSeq = 0
                     };
-                }
 
                 if (status.RoomId != CurrentRoomInfo.RoomId)
                 {
@@ -368,43 +350,40 @@ internal sealed class ListenTogetherManager
         Ioc.Default.GetRequiredService<IPlaybackControlService>().SeekRequested += OnSeekRequested;
     }
 
-    private string CurrentProviderSongId => _state.NowPlayingProviderItem?.ActualId ?? string.Empty;
-
     private static void CleanupInstance()
     {
-        if (_instance is not null)
+        if (Instance is not null)
         {
-            _instance._globalTimer.SecondTick -= _instance.OnSecondTick;
-            _instance._state.PropertyChanged -= _instance.OnPlaybackStatePropertyChanged;
-            Ioc.Default.GetRequiredService<IPlaybackControlService>().SeekRequested -= _instance.OnSeekRequested;
-            _instance.IsInRoom = false;
-            _instance = null;
+            Instance._globalTimer.SecondTick -= Instance.OnSecondTick;
+            Instance._state.PropertyChanged -= Instance.OnPlaybackStatePropertyChanged;
+            Ioc.Default.GetRequiredService<IPlaybackControlService>().SeekRequested -= Instance.OnSeekRequested;
+            Instance.IsInRoom = false;
+            Instance = null;
         }
     }
-
 }
 
 public class RoomInfo
 {
-    public required string RoomId;
-    public int ClientSeq;
-    public RoomInfoPlayMode PlayMode;
+    public enum RoomInfoPlayMode
+    {
+        OrderLoop,
+        Random,
+        SingleLoop
+    }
+
+    public int ClientSeq { get; set; }
+    public string CurrentSongId { get; set; } = "";
+    public RoomInfoPlayMode PlayMode { get; set; }
+    public required string RoomId { get; set; }
+    public List<UserInfo> Users { get; set; } = [];
     public string[] DisplaySongList { get; set; } = [];
     public string[] RandomSongList { get; set; } = [];
-    public string CurrentSongId = "";
-    public List<UserInfo> Users = [];
 
     public class UserInfo
     {
         public required string UserId { get; set; }
         public required string Nickname { get; set; }
         public required string AvatarUrl { get; set; }
-    }
-
-    public enum RoomInfoPlayMode
-    {
-        OrderLoop,
-        Random,
-        SingleLoop,
     }
 }

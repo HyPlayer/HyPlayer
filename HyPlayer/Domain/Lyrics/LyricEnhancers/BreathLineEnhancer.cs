@@ -31,15 +31,14 @@ public class BreathLineEnhancer : ILyricEnhancer<bool>
             }
 
             if (string.IsNullOrWhiteSpace(targetLine.RawText) && targetLine.Words?.Count is < 0)
-            {
                 if (targetLine.End - targetLine.Start < 1000)
                 {
                     target.Lines.RemoveAt(index);
                     index--;
                     total--;
                 }
-            }
-            lastTime = (targetLine.End is 0 or null) ? int.MaxValue : targetLine.End.Value;
+
+            lastTime = targetLine.End is 0 or null ? int.MaxValue : targetLine.End.Value;
         }
 
         return target;

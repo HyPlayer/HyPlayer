@@ -1,47 +1,28 @@
-using HyPlayer.Domain.Music;
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Music;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 namespace HyPlayer.Features.Playback.QueueProviders;
 
 /// <summary>
-/// 电台源提供者 — 加载 provider 电台/播客全部节目。
-/// Prefix: "rd", Kind: <see cref="SongListQueueScopeKind.Radio"/>
+///     电台源提供者 — 加载 provider 电台/播客全部节目。
+///     Prefix: "rd", Kind: <see cref="SongListQueueScopeKind.Radio" />
 /// </summary>
 internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
 {
-    private readonly IProvidableItemProvidable _provider;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
+    private readonly IProvidableItemProvidable _provider;
 
-    public RadioQueueSourceProvider(IProvidableItemProvidable provider, IProviderKnownTypeIds knownTypeIds, INotificationService notification)
+    public RadioQueueSourceProvider(IProvidableItemProvidable provider, IProviderKnownTypeIds knownTypeIds,
+        INotificationService notification)
     {
         _provider = provider;
         _knownTypeIds = knownTypeIds;
@@ -53,17 +34,21 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
     public bool SupportCompleteLoad => true;
 
     public async Task<ProviderQueueSourceLoadResult> LoadAsync(string id, CancellationToken cancellationToken = default)
-        => await LoadAsync(id, asc: false, cancellationToken);
+    {
+        return await LoadAsync(id, false, cancellationToken);
+    }
 
     /// <summary>内部重载 — 支持 asc 排序方向。</summary>
-    internal async Task<ProviderQueueSourceLoadResult> LoadAsync(string id, bool asc, CancellationToken cancellationToken = default)
+    internal async Task<ProviderQueueSourceLoadResult> LoadAsync(string id, bool asc,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             if (_knownTypeIds.RadioChannelTypeId is null)
                 return ProviderQueueSourceLoadResult.Failed;
 
-            var radio = await _provider.GetProvidableItemByIdAsync(_knownTypeIds.RadioChannelTypeId + id, cancellationToken);
+            var radio = await _provider.GetProvidableItemByIdAsync(_knownTypeIds.RadioChannelTypeId + id,
+                cancellationToken);
             if (radio is not IProgressiveLoadingContainer container)
                 return ProviderQueueSourceLoadResult.Failed;
 
@@ -85,10 +70,8 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
             if (asc)
             {
                 foreach (var batch in batches)
-                {
                     if (batch is List<SingleSongBase> songs)
                         songs.Reverse();
-                }
 
                 batches.Reverse();
             }

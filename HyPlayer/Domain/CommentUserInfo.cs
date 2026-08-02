@@ -1,8 +1,8 @@
 namespace HyPlayer.Domain;
 
 /// <summary>
-/// Lightweight user display info for XAML-bound types.
-/// Replaces NCUser usage in Comment and UserDisplay without required-member constraints.
+///     Lightweight user display info for XAML-bound types.
+///     Replaces NCUser usage in Comment and UserDisplay without required-member constraints.
 /// </summary>
 public sealed class CommentUserInfo
 {

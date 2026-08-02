@@ -1,6 +1,6 @@
-﻿using ALRC.Abstraction;
+﻿using System;
+using ALRC.Abstraction;
 using ALRC.Converters;
-using System;
 
 namespace HyPlayer.Domain.Lyrics.LyricEnhancers;
 
@@ -33,11 +33,10 @@ public class NearbyLineAlignmentEnhancer : ILyricEnhancer<bool>
             }
 
             if (Math.Abs(nextLine.Start - targetLine.End ?? long.MaxValue) < 1000)
-            {
                 // get the min
                 targetLine.End = nextLine.Start;
-            }
         }
+
         return target;
     }
 }

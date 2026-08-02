@@ -1,7 +1,6 @@
 #nullable enable
 
 using HyPlayer.Classes;
-using HyPlayer.Domain.Settings;
 using HyPlayer.LyricEffects.Models;
 using HyPlayer.LyricEffects.Presets;
 using HyPlayer.LyricRenderer.Pipeline;
@@ -75,7 +74,7 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
     private CompiledLyricEffectProfile _effectiveProfile;
     private bool _initialized;
 
-    public LyricEffectProfileService(Setting settings, ILyricRenderOperationRegistry registry)
+    public LyricEffectProfileService(ILyricRenderOperationRegistry registry)
     {
         _registry = registry;
         _committedDocument = LyricEffectPresets.CreateDefaultProfile();

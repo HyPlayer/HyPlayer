@@ -1,6 +1,10 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/UI/Controls/PivotExtensions/PivotEx.xaml" />
+        <ResourceDictionary Source="/UI/Controls/PivotExtensions/PivotExHeaderView.xaml" />
+        <ResourceDictionary Source="/UI/Controls/PivotExtensions/PivotView.xaml" />
         <ResourceDictionary Source="/UI/Controls/Primitives/RedirectVisualView.xaml" />
         <ResourceDictionary Source="/UI/Controls/CardButton/CardButton.xaml" />
     </ResourceDictionary.MergedDictionaries>

@@ -1,12 +1,11 @@
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using System.Text.Json.Serialization;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 namespace HyPlayer.Features.Playback.Services;
 
 /// <summary>
-/// Provider-first projection for currently playing metadata used by UI surfaces.
+///     Provider-first projection for currently playing metadata used by UI surfaces.
 /// </summary>
 public sealed class PlaybackCurrentItemSnapshot
 {
@@ -34,8 +33,8 @@ public sealed class PlaybackCurrentItemSnapshot
     public string AlbumName { get; }
     public long Duration { get; }
     public bool IsLocal { get; }
-    [JsonIgnore]
-    public SingleSongBase? ProviderItem { get; }
+
+    [JsonIgnore] public SingleSongBase? ProviderItem { get; }
 
     public static PlaybackCurrentItemSnapshot? FromProvider(SingleSongBase? item)
     {

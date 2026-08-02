@@ -1,7 +1,7 @@
+using System.Threading;
 using HyPlayer.PlayCore.Abstraction.Interfaces.AudioServices;
 using HyPlayer.PlayCore.Abstraction.Models.AudioServiceComponents;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
-using System.Threading;
 
 namespace HyPlayer.Platform.Playback.AudioServices;
 
@@ -13,11 +13,20 @@ public sealed class ChopinAudioTicket : AudioTicketBase, IAudioTicketVolumeState
 
     public double Volume { get; set; } = 1d;
 
-    internal bool TryBeginDispose() =>
-        Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0;
+    public double AudioGain { get; set; } = 1d;
 
-    internal void CompleteDispose() => Volatile.Write(ref _disposeState, 2);
+    internal bool TryBeginDispose()
+    {
+        return Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0;
+    }
 
-    internal void CancelDispose() =>
+    internal void CompleteDispose()
+    {
+        Volatile.Write(ref _disposeState, 2);
+    }
+
+    internal void CancelDispose()
+    {
         Interlocked.CompareExchange(ref _disposeState, 0, 1);
+    }
 }

@@ -1,48 +1,7 @@
-using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.WinUI.Helpers;
-using HyPlayer.Domain.Comments;
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Navigation;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Album;
-using HyPlayer.Features.Artist;
-using HyPlayer.Features.Comments;
-using HyPlayer.Features.Playlist;
-using HyPlayer.Features.User;
-using HyPlayer.Features.Video;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
@@ -52,11 +11,34 @@ using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI.Helpers;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Album;
+using HyPlayer.Features.Artist;
+using HyPlayer.Features.Comments;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Video;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Xaml;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.UI.Dialogs;
 using WinRT;
-using Microsoft.UI.Xaml.Controls;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewItemInvokedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;
 
@@ -66,29 +48,6 @@ public sealed partial class ContainerItemsView : UserControl
 {
     private const int DefaultPageSize = 500;
     private const string DailyRecommendContainerTypeId = "daily";
-
-    private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
-    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
-    private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
-    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
-    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
-    private readonly ISongListQueueBuilder _queueBuilder = Ioc.Default.GetRequiredService<ISongListQueueBuilder>();
-    private readonly IContainerItemManagementProvidable _containerItemManagement = Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
-    private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-    private readonly ProvidableItemDisplayResolver _displayResolver = ProvidableItemDisplayResolver.CreateDefault();
-    private readonly WeakEventListener<ContainerItemsView, object?, EventArgs> _secondTickListener;
-    private readonly WeakEventListener<ContainerItemsView, object?, PropertyChangedEventArgs> _stateChangedListener;
-    private CancellationTokenSource? _loadCts;
-    private IProgressiveLoadingContainer? _progressiveContainer;
-    private UndeterminedContainerBase? _undeterminedContainer;
-    private bool _isSecondTickSubscribed;
-    private bool _isStateSubscribed;
-    private int _greedyLoadThreshold = 3;
-    private int _nextOffset;
 
     public static readonly DependencyProperty ContainerProperty = DependencyProperty.Register(
         nameof(Container), typeof(ContainerBase), typeof(ContainerItemsView),
@@ -113,12 +72,6 @@ public sealed partial class ContainerItemsView : UserControl
     public static readonly DependencyProperty GreedyLoadProperty = DependencyProperty.Register(
         nameof(GreedyLoad), typeof(bool), typeof(ContainerItemsView), new PropertyMetadata(false, OnGreedyLoadChanged));
 
-    public static readonly DependencyProperty IsLoadingProperty = DependencyProperty.Register(
-        nameof(IsLoading), typeof(bool), typeof(ContainerItemsView), new PropertyMetadata(false));
-
-    public static readonly DependencyProperty HasMoreProperty = DependencyProperty.Register(
-        nameof(HasMore), typeof(bool), typeof(ContainerItemsView), new PropertyMetadata(false, OnFooterStateChanged));
-
     public static readonly DependencyProperty QueueScopeProperty = DependencyProperty.Register(
         nameof(QueueScope), typeof(SongListQueueScope), typeof(ContainerItemsView),
         new PropertyMetadata(SongListQueueScope.Visible));
@@ -129,9 +82,31 @@ public sealed partial class ContainerItemsView : UserControl
     public static readonly DependencyProperty ExtraSelectionActionsProperty = DependencyProperty.Register(
         nameof(ExtraSelectionActions), typeof(IList), typeof(ContainerItemsView), new PropertyMetadata(null));
 
-    public ObservableCollection<ProvidableItemRowViewModel> Rows { get; } = [];
-    public ObservableCollection<ProvidableItemRowViewModel> VisibleRows { get; } = [];
-    public ObservableCollection<ProvidableItemRowGroup> GroupedItems { get; } = [];
+    private readonly IContainerItemManagementProvidable _containerItemManagement =
+        Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
+
+    private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+    private readonly ProvidableItemDisplayResolver _displayResolver = ProvidableItemDisplayResolver.CreateDefault();
+    private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
+
+    private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+    private readonly ISongListQueueBuilder _queueBuilder = Ioc.Default.GetRequiredService<ISongListQueueBuilder>();
+    private readonly WeakEventListener<ContainerItemsView, object?, EventArgs> _secondTickListener;
+    private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
+    private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+    private readonly WeakEventListener<ContainerItemsView, object?, PropertyChangedEventArgs> _stateChangedListener;
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private int _greedyLoadThreshold = 3;
+    private bool _isSecondTickSubscribed;
+    private bool _isStateSubscribed;
+    private CancellationTokenSource? _loadCts;
+    private int _nextOffset;
+    private IProgressiveLoadingContainer? _progressiveContainer;
+    private UndeterminedContainerBase? _undeterminedContainer;
 
     public ContainerItemsView()
     {
@@ -146,13 +121,22 @@ public sealed partial class ContainerItemsView : UserControl
             OnEventAction = static (instance, _, args) =>
             {
                 if (args.PropertyName == nameof(PlaybackStateService.NowPlayingProviderItem))
-                    instance.UpdateCurrentItem(instance._state.NowPlayingProviderItem);
+                    instance._taskRunner.Forget(
+                        instance.RunOnUIThreadAsync(() =>
+                            instance.UpdateCurrentItem(instance._state.NowPlayingProviderItem)),
+                        "update current container item");
             },
             OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
         };
         AttachStateChanged();
         UpdateListHeader(ListHeader);
+        State.ActiveItemsSource = VisibleRows;
     }
+
+    public ContainerItemsViewState State { get; } = new();
+    public ObservableCollection<ProvidableItemRowViewModel> Rows => State.Rows;
+    public ObservableCollection<ProvidableItemRowViewModel> VisibleRows => State.VisibleRows;
+    public ObservableCollection<ProvidableItemRowGroup> GroupedItems => State.GroupedItems;
 
     public ContainerBase? Container
     {
@@ -180,7 +164,7 @@ public sealed partial class ContainerItemsView : UserControl
 
     public bool CanViewComments
     {
-        get => (bool)GetValue(CanViewCommentsProperty) && _setting.notClearMode;
+        get => (bool)GetValue(CanViewCommentsProperty) && _setting.NotClearMode;
         set => SetValue(CanViewCommentsProperty, value);
     }
 
@@ -196,16 +180,23 @@ public sealed partial class ContainerItemsView : UserControl
         set => SetValue(GreedyLoadProperty, value);
     }
 
-    public bool IsLoading
+    private bool IsLoading
     {
-        get => (bool)GetValue(IsLoadingProperty);
-        private set => SetValue(IsLoadingProperty, value);
+        get => State.IsLoading;
+        set => State.IsLoading = value;
     }
 
-    public bool HasMore
+    private bool HasMore
     {
-        get => (bool)GetValue(HasMoreProperty);
-        private set => SetValue(HasMoreProperty, value);
+        get => State.HasMore;
+        set
+        {
+            if (State.HasMore == value)
+                return;
+
+            State.HasMore = value;
+            UpdateGreedyLoadSubscription();
+        }
     }
 
     public SongListQueueScope QueueScope
@@ -226,17 +217,8 @@ public sealed partial class ContainerItemsView : UserControl
         set => SetValue(ExtraSelectionActionsProperty, value);
     }
 
-    public bool MultiSelect { get; set; }
-    public bool IsInitialLoading => IsLoading && Rows.Count == 0;
-    public bool IsLoadingMore => IsLoading && Rows.Count > 0;
-    public bool CanLoadMore => HasMore && !IsLoading;
-    public Visibility IsSearchVisible => IsSearchEnabled ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility CommentsVisible => CanViewComments ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility IsInitialLoadingVisible => IsInitialLoading ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility IsLoadingMoreVisible => IsLoadingMore ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility CanLoadMoreVisible => CanLoadMore ? Visibility.Visible : Visibility.Collapsed;
-    public object ActiveItemsSource => GroupedItems.Count > 0 ? GroupedItemsViewSource.View : VisibleRows;
-    public IReadOnlyList<SingleSongBase> LoadedProviderSongs => (SingleSongBase[])[.. Rows.Select(row => row.AsPlayableSong)];
+    public IReadOnlyList<SingleSongBase> LoadedProviderSongs =>
+        (SingleSongBase[])[.. Rows.Select(row => row.AsPlayableSong)];
 
     public void ResetAndLoad()
     {
@@ -262,7 +244,7 @@ public sealed partial class ContainerItemsView : UserControl
         await _control.StopAsync();
         await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(songs);
-        await _control.MoveNextAndPlayAsync(userInitiated: true);
+        await _control.MoveNextAndPlayAsync(true);
     }
 
     public async Task AddAllToPlaylistAsync()
@@ -298,27 +280,13 @@ public sealed partial class ContainerItemsView : UserControl
     private static void OnGreedyLoadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var view = (ContainerItemsView)d;
-        if ((bool)e.NewValue && view.HasMore)
-            view.AttachSecondTick();
-        else if (!(bool)e.NewValue)
-            view.DetachSecondTick();
-    }
-
-    private static void OnFooterStateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        var view = (ContainerItemsView)d;
-        view.Bindings.Update();
-        if (view.GreedyLoad && view.HasMore)
-            view.AttachSecondTick();
-        else if (!view.HasMore)
-            view.DetachSecondTick();
+        view.UpdateGreedyLoadSubscription();
     }
 
     private void ContainerItemsView_Loaded(object sender, RoutedEventArgs e)
     {
         AttachStateChanged();
-        MultiSelect = false;
-        Bindings.Update();
+        State.MultiSelect = false;
     }
 
     private void ContainerItemsView_Unloaded(object sender, RoutedEventArgs e)
@@ -366,13 +334,16 @@ public sealed partial class ContainerItemsView : UserControl
             return;
 
         IsLoading = true;
-        Bindings.Update();
         try
         {
             if (_progressiveContainer is not null)
+            {
                 await LoadProgressivePageAsync(cancellationToken);
+            }
             else if (_undeterminedContainer is not null)
+            {
                 await LoadUndeterminedPageAsync(cancellationToken);
+            }
             else if (Container is LinerContainerBase liner)
             {
                 var items = await liner.GetAllItemsAsync(cancellationToken);
@@ -391,7 +362,6 @@ public sealed partial class ContainerItemsView : UserControl
         {
             IsLoading = false;
             RefreshVisibleRows();
-            Bindings.Update();
         }
     }
 
@@ -402,7 +372,6 @@ public sealed partial class ContainerItemsView : UserControl
 
         var cancellationToken = _loadCts?.Token ?? CancellationToken.None;
         IsLoading = true;
-        Bindings.Update();
         try
         {
             if (_progressiveContainer is not null)
@@ -421,7 +390,6 @@ public sealed partial class ContainerItemsView : UserControl
         {
             IsLoading = false;
             RefreshVisibleRows();
-            Bindings.Update();
         }
     }
 
@@ -431,7 +399,8 @@ public sealed partial class ContainerItemsView : UserControl
             return;
 
         var pageSize = Math.Clamp(_progressiveContainer.MaxProgressiveCount, 1, DefaultPageSize);
-        var (hasMore, items) = await _progressiveContainer.GetProgressiveItemsListAsync(_nextOffset, pageSize, cancellationToken);
+        var (hasMore, items) =
+            await _progressiveContainer.GetProgressiveItemsListAsync(_nextOffset, pageSize, cancellationToken);
         await AppendItemsAsync(items, cancellationToken);
         _nextOffset += items.Count;
         HasMore = hasMore && items.Count > 0;
@@ -468,12 +437,12 @@ public sealed partial class ContainerItemsView : UserControl
 
         RebuildGroups();
         UpdateCurrentItem(_state.NowPlayingProviderItem);
-        Bindings.Update();
     }
 
     private void RebuildGroups()
     {
         GroupedItems.Clear();
+        State.ActiveItemsSource = VisibleRows;
         if (!ShouldGroupByDisc())
             return;
 
@@ -487,6 +456,8 @@ public sealed partial class ContainerItemsView : UserControl
 
         foreach (var group in grouped)
             GroupedItems.Add(new ProvidableItemRowGroup(group) { Key = group.Key });
+
+        State.ActiveItemsSource = GroupedItemsViewSource.View;
     }
 
     private bool ShouldGroupByDisc()
@@ -529,7 +500,7 @@ public sealed partial class ContainerItemsView : UserControl
             await _queueBuilder.BuildAndPlayAsync(
                 clickedSong,
                 GetEffectiveQueueScope(),
-                (SingleSongBase[])[.. VisibleRows.Select(visibleRow => visibleRow.AsPlayableSong)]);
+                VisibleRows.Select(visibleRow => visibleRow.AsPlayableSong).OfType<SingleSongBase>().ToList());
             return;
         }
 
@@ -572,7 +543,6 @@ public sealed partial class ContainerItemsView : UserControl
         {
             RemoveInjectedActions(flyout);
             if (ExtraItemActions is not null)
-            {
                 foreach (var action in ExtraItemActions.OfType<ProvidableItemAction>())
                 {
                     if (action.CanExecute is not null && !action.CanExecute(row))
@@ -587,11 +557,9 @@ public sealed partial class ContainerItemsView : UserControl
                     item.Click += async (_, _) => await action.ExecuteAsync(row);
                     flyout.Items.Add(item);
                 }
-            }
 
             var selectedRows = GetSelectedRows();
             if (ExtraSelectionActions is not null && selectedRows.Count > 0)
-            {
                 foreach (var action in ExtraSelectionActions.OfType<ProvidableSelectionAction>())
                 {
                     if (action.CanExecute is not null && !action.CanExecute(selectedRows))
@@ -606,19 +574,14 @@ public sealed partial class ContainerItemsView : UserControl
                     item.Click += async (_, _) => await action.ExecuteAsync(selectedRows);
                     flyout.Items.Add(item);
                 }
-            }
         }
     }
 
     private static void RemoveInjectedActions(MenuFlyout flyout)
     {
         for (var i = flyout.Items.Count - 1; i >= 0; i--)
-        {
             if (flyout.Items[i] is MenuFlyoutItem { Tag: ProvidableItemAction or ProvidableSelectionAction })
-            {
                 flyout.Items.RemoveAt(i);
-            }
-        }
     }
 
     private async void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
@@ -657,7 +620,7 @@ public sealed partial class ContainerItemsView : UserControl
     {
         if (!TryGetSelectedRow(out var row) || row.Creators.Count == 0) return;
         if (row.Creators.Count > 1)
-            await new Dialogs.ArtistSelectDialog([.. row.Creators]).ShowAsync();
+            await new ArtistSelectDialog([.. row.Creators]).ShowAsync();
         else
             _navigation.Navigate(typeof(ArtistPage), row.Creators[0].ActualId);
     }
@@ -695,7 +658,7 @@ public sealed partial class ContainerItemsView : UserControl
     private async void FlyoutItemCollect_Click(object sender, RoutedEventArgs e)
     {
         if (TryGetSelectedRow(out var row))
-            await new UI.Dialogs.SongListSelect(row.ActualId).ShowAsync();
+            await new SongListSelect(row.ActualId).ShowAsync();
     }
 
     private void ToolbarNavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
@@ -722,7 +685,14 @@ public sealed partial class ContainerItemsView : UserControl
 
     private SongListQueueScope GetEffectiveQueueScope()
     {
-        return Rows.Count == VisibleRows.Count ? QueueScope : SongListQueueScope.Visible;
+        return ResolveEffectiveQueueScope(QueueScope, FilterBox?.Text);
+    }
+
+    internal static SongListQueueScope ResolveEffectiveQueueScope(
+        SongListQueueScope queueScope,
+        string? filterText)
+    {
+        return string.IsNullOrWhiteSpace(filterText) ? queueScope : SongListQueueScope.Visible;
     }
 
     private bool CanPlay(ProvidableItemRowViewModel row)
@@ -778,16 +748,16 @@ public sealed partial class ContainerItemsView : UserControl
             return SongListQueueScope.Visible;
 
         if (container.TypeId == _knownTypeIds.AlbumTypeId)
-            return SongListQueueScope.Album(container.ActualId, !HasMore);
+            return SongListQueueScope.Album(container.ActualId);
 
         if (container.TypeId == _knownTypeIds.PlaylistTypeId)
-            return SongListQueueScope.Playlist(container.ActualId, !HasMore);
+            return SongListQueueScope.Playlist(container.ActualId);
 
         if (_knownTypeIds.RadioChannelTypeId is not null && container.TypeId == _knownTypeIds.RadioChannelTypeId)
-            return SongListQueueScope.Radio(container.ActualId, !HasMore);
+            return SongListQueueScope.Radio(container.ActualId);
 
         if (container.TypeId == DailyRecommendContainerTypeId)
-            return SongListQueueScope.DailyRecommend(container.ActualId, !HasMore);
+            return SongListQueueScope.DailyRecommend(container.ActualId);
 
         return SongListQueueScope.Visible;
     }
@@ -822,6 +792,14 @@ public sealed partial class ContainerItemsView : UserControl
 
         _greedyLoadThreshold = 3;
         LoadMoreAsync().SafeFireAndForget();
+    }
+
+    private void UpdateGreedyLoadSubscription()
+    {
+        if (GreedyLoad && HasMore)
+            AttachSecondTick();
+        else
+            DetachSecondTick();
     }
 
     private void AttachSecondTick()

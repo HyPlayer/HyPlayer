@@ -1,22 +1,22 @@
+using System;
+using Windows.UI;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using HyPlayer.UWP.Chopin.Utils;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
-using Windows.UI;
 
 namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
 /// <summary>
-/// Win2D composable layer that renders an FFT spectrum visualization.
+///     Win2D composable layer that renders an FFT spectrum visualization.
 /// </summary>
 public sealed class SpectrumLayer : IExpandedCanvasLayer
 {
-    private readonly ExpandedCanvasState _state;
+    private static readonly Color _darkSpectrumColor = Color.FromArgb(32, 0, 0, 0);
+    private static readonly Color _lightSpectrumColor = Color.FromArgb(32, 255, 255, 255);
     private readonly AudioGraphPlayer _player;
-
-    private static readonly Color DarkSpectrumColor = Color.FromArgb(32, 0, 0, 0);
-    private static readonly Color LightSpectrumColor = Color.FromArgb(32, 255, 255, 255);
+    private readonly ExpandedCanvasState _state;
 
     public SpectrumLayer(ExpandedCanvasState state, AudioGraphPlayer player)
     {
@@ -45,17 +45,17 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
         var fft = _player.FFTProcessor;
         if (fft is null) return;
 
-        float width = (float)sender.Size.Width;
-        float height = (float)sender.Size.Height / 2f;
-        float remainHeight = (float)sender.Size.Height - height;
-        float barWidth = width / FFTProcessor.DisplayBandCount;
-        float scaleFactor = height / 80.0f;
+        var width = (float)sender.Size.Width;
+        var height = (float)sender.Size.Height / 2f;
+        var remainHeight = (float)sender.Size.Height - height;
+        var barWidth = width / FFTProcessor.DisplayBandCount;
+        var scaleFactor = height / 80.0f;
 
-        var color = _state.IsBrightTheme ? DarkSpectrumColor : LightSpectrumColor;
+        var color = _state.IsBrightTheme ? _darkSpectrumColor : _lightSpectrumColor;
 
-        for (int i = 0; i < FFTProcessor.DisplayBandCount; i++)
+        for (var i = 0; i < FFTProcessor.DisplayBandCount; i++)
         {
-            float barHeight = System.Math.Clamp(fft.DisplayData[i] * scaleFactor, 0, height - 1);
+            var barHeight = Math.Clamp(fft.DisplayData[i] * scaleFactor, 0, height - 1);
             session.FillRectangle(
                 i * barWidth,
                 remainHeight + height - barHeight,

@@ -1,135 +1,138 @@
-﻿using HyPlayer.UI.Controls.Primitives;
-using System;
+﻿using System;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Hosting;
+using HyPlayer.UI.Controls.Primitives;
 
 namespace HyPlayer.UI.Controls;
 
 /// <summary>
-/// Marquee effect for UIElement
+///     Marquee effect for UIElement
 /// </summary>
 public partial class AutoScrollView : RedirectVisualView
 {
+    public static readonly DependencyProperty SpacingProperty =
+        DependencyProperty.Register("Spacing", typeof(double), typeof(AutoScrollView), new PropertyMetadata(20d,
+            (s, a) =>
+            {
+                if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue))
+                {
+                    var value = Convert.ToSingle(a.NewValue);
+                    if (value < 0) throw new ArgumentException(nameof(Spacing));
+
+                    sender._propSet.InsertScalar(nameof(Spacing), value);
+                }
+            }));
+
+
+    public static readonly DependencyProperty IsPlayingProperty =
+        DependencyProperty.Register("IsPlaying", typeof(bool), typeof(AutoScrollView), new PropertyMetadata(true,
+            (s, a) =>
+            {
+                if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue)) sender.UpdateAnimationState();
+            }));
+
+
+    public static readonly DependencyProperty ScrollingPixelsPreSecondProperty =
+        DependencyProperty.Register("ScrollingPixelsPreSecond", typeof(double), typeof(AutoScrollView),
+            new PropertyMetadata(30d, (s, a) =>
+            {
+                if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue))
+                {
+                    var value = Convert.ToSingle(a.NewValue);
+                    if (value <= 0) throw new ArgumentException(nameof(ScrollingPixelsPreSecondProperty));
+
+                    sender.UpdateAnimationSpeed();
+                }
+            }));
+
+    private readonly ScalarKeyFrameAnimation _animation;
+
+    private readonly Compositor _compositor;
+
+    private readonly LinearEasingFunction _linearEasingFunc;
+
+    private readonly ExpressionAnimation _offsetBind1;
+    private readonly ExpressionAnimation _offsetBind2;
+
+    private readonly CompositionPropertySet _propSet;
+    private readonly ExpressionAnimation _sizeBind;
+
+    private readonly SpriteVisual _visual1;
+    private readonly SpriteVisual _visual2;
+
     public AutoScrollView()
     {
         RedirectVisualEnabled = false;
 
-        compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
+        _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
 
-        propSet = compositor.CreatePropertySet();
-        propSet.InsertScalar(nameof(Spacing), (float)Spacing);
+        _propSet = _compositor.CreatePropertySet();
+        _propSet.InsertScalar(nameof(Spacing), (float)Spacing);
 
-        visual1 = compositor.CreateSpriteVisual();
-        visual1.Brush = ChildVisualBrush;
+        _visual1 = _compositor.CreateSpriteVisual();
+        _visual1.Brush = ChildVisualBrush;
 
-        visual2 = compositor.CreateSpriteVisual();
-        visual2.Brush = ChildVisualBrush;
+        _visual2 = _compositor.CreateSpriteVisual();
+        _visual2.Brush = ChildVisualBrush;
 
-        offsetBind1 = compositor.CreateExpressionAnimation("Vector3(visual.Offset.X, visual.Offset.Y, 0)");
-        offsetBind2 = compositor.CreateExpressionAnimation("Vector3(visual.Offset.X + visual.Size.X + propSet.Spacing, visual.Offset.Y, 0)");
+        _offsetBind1 = _compositor.CreateExpressionAnimation("Vector3(visual.Offset.X, visual.Offset.Y, 0)");
+        _offsetBind2 =
+            _compositor.CreateExpressionAnimation(
+                "Vector3(visual.Offset.X + visual.Size.X + propSet.Spacing, visual.Offset.Y, 0)");
 
-        offsetBind2.SetReferenceParameter("propSet", propSet);
+        _offsetBind2.SetReferenceParameter("propSet", _propSet);
 
-        sizeBind = compositor.CreateExpressionAnimation("visual.Size");
+        _sizeBind = _compositor.CreateExpressionAnimation("visual.Size");
 
         RootVisual.Brush = null;
-        RootVisual.Children.InsertAtTop(visual2);
-        RootVisual.Children.InsertAtTop(visual1);
+        RootVisual.Children.InsertAtTop(_visual2);
+        RootVisual.Children.InsertAtTop(_visual1);
 
-        linearEasingFunc = compositor.CreateLinearEasingFunction();
+        _linearEasingFunc = _compositor.CreateLinearEasingFunction();
 
-        animation = compositor.CreateScalarKeyFrameAnimation();
-        animation.InsertKeyFrame(0, 0);
-        animation.InsertExpressionKeyFrame(1, "-visual.Size.X - propSet.Spacing", linearEasingFunc);
-        animation.Duration = TimeSpan.FromSeconds(1);
-        animation.IterationBehavior = AnimationIterationBehavior.Forever;
-        animation.SetReferenceParameter("propSet", propSet);
+        _animation = _compositor.CreateScalarKeyFrameAnimation();
+        _animation.InsertKeyFrame(0, 0);
+        _animation.InsertExpressionKeyFrame(1, "-visual.Size.X - propSet.Spacing", _linearEasingFunc);
+        _animation.Duration = TimeSpan.FromSeconds(1);
+        _animation.IterationBehavior = AnimationIterationBehavior.Forever;
+        _animation.SetReferenceParameter("propSet", _propSet);
 
         MeasureChildInBoundingBox = IsPlaying;
 
-        this.Loaded += AutoScrollView_Loaded;
-        this.Unloaded += OnUnloaded;
+        Loaded += AutoScrollView_Loaded;
+        Unloaded += OnUnloaded;
     }
-
-    private Compositor compositor;
-
-    private CompositionPropertySet propSet;
-
-    private SpriteVisual visual1;
-    private SpriteVisual visual2;
-
-    private ExpressionAnimation offsetBind1;
-    private ExpressionAnimation offsetBind2;
-    private ExpressionAnimation sizeBind;
-
-    private LinearEasingFunction linearEasingFunc;
-    private ScalarKeyFrameAnimation animation;
 
     protected override bool ChildVisualBrushOffsetEnabled => false;
 
     /// <summary>
-    /// Space between each element. Default value is 20.
+    ///     Space between each element. Default value is 20.
     /// </summary>
     public double Spacing
     {
-        get { return (double)GetValue(SpacingProperty); }
-        set { SetValue(SpacingProperty, value); }
+        get => (double)GetValue(SpacingProperty);
+        set => SetValue(SpacingProperty, value);
     }
 
     /// <summary>
-    /// Play the animation when IsPlaying is true. Default value is true.
+    ///     Play the animation when IsPlaying is true. Default value is true.
     /// </summary>
     public bool IsPlaying
     {
-        get { return (bool)GetValue(IsPlayingProperty); }
-        set { SetValue(IsPlayingProperty, value); }
+        get => (bool)GetValue(IsPlayingProperty);
+        set => SetValue(IsPlayingProperty, value);
     }
 
     /// <summary>
-    /// The pixels of the animation scroll per second. Default value is 30.
+    ///     The pixels of the animation scroll per second. Default value is 30.
     /// </summary>
     public double ScrollingPixelsPreSecond
     {
-        get { return (double)GetValue(ScrollingPixelsPreSecondProperty); }
-        set { SetValue(ScrollingPixelsPreSecondProperty, value); }
+        get => (double)GetValue(ScrollingPixelsPreSecondProperty);
+        set => SetValue(ScrollingPixelsPreSecondProperty, value);
     }
-
-    public static readonly DependencyProperty SpacingProperty =
-        DependencyProperty.Register("Spacing", typeof(double), typeof(AutoScrollView), new PropertyMetadata(20d, (s, a) =>
-        {
-            if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue))
-            {
-                var value = Convert.ToSingle(a.NewValue);
-                if (value < 0) throw new ArgumentException(nameof(Spacing));
-
-                sender.propSet.InsertScalar(nameof(Spacing), value);
-            }
-        }));
-
-
-    public static readonly DependencyProperty IsPlayingProperty =
-        DependencyProperty.Register("IsPlaying", typeof(bool), typeof(AutoScrollView), new PropertyMetadata(true, (s, a) =>
-        {
-            if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue))
-            {
-                sender.UpdateAnimationState();
-            }
-        }));
-
-
-    public static readonly DependencyProperty ScrollingPixelsPreSecondProperty =
-        DependencyProperty.Register("ScrollingPixelsPreSecond", typeof(double), typeof(AutoScrollView), new PropertyMetadata(30d, (s, a) =>
-        {
-            if (s is AutoScrollView sender && !Equals(a.NewValue, a.OldValue))
-            {
-                var value = Convert.ToSingle(a.NewValue);
-                if (value <= 0) throw new ArgumentException(nameof(ScrollingPixelsPreSecondProperty));
-
-                sender.UpdateAnimationSpeed();
-            }
-        }));
 
 
     private void AutoScrollView_Loaded(object sender, RoutedEventArgs e)
@@ -147,26 +150,26 @@ public partial class AutoScrollView : RedirectVisualView
             var childVisual = ElementCompositionPreview.GetElementVisual(ChildPresenter);
             var rootVisual = ElementCompositionPreview.GetElementVisual(LayoutRoot);
 
-            rootVisual.Clip = compositor.CreateInsetClip();
+            rootVisual.Clip = _compositor.CreateInsetClip();
 
-            offsetBind1.SetReferenceParameter("visual", childVisual);
-            offsetBind2.SetReferenceParameter("visual", childVisual);
+            _offsetBind1.SetReferenceParameter("visual", childVisual);
+            _offsetBind2.SetReferenceParameter("visual", childVisual);
 
-            offsetBind2.SetReferenceParameter("propSet", propSet);
+            _offsetBind2.SetReferenceParameter("propSet", _propSet);
 
-            sizeBind.SetReferenceParameter("visual", childVisual);
+            _sizeBind.SetReferenceParameter("visual", childVisual);
 
-            animation.SetReferenceParameter("visual", childVisual);
-            animation.SetReferenceParameter("visual2", rootVisual);
-            animation.SetReferenceParameter("propSet", propSet);
-            animation.Duration = TimeSpan.FromSeconds(ChildPresenter.ActualWidth / ScrollingPixelsPreSecond);
+            _animation.SetReferenceParameter("visual", childVisual);
+            _animation.SetReferenceParameter("visual2", rootVisual);
+            _animation.SetReferenceParameter("propSet", _propSet);
+            _animation.Duration = TimeSpan.FromSeconds(ChildPresenter.ActualWidth / ScrollingPixelsPreSecond);
 
-            visual1.StartAnimation("Offset", offsetBind1);
-            visual1.StartAnimation("Size", sizeBind);
-            visual2.StartAnimation("Offset", offsetBind2);
-            visual2.StartAnimation("Size", sizeBind);
+            _visual1.StartAnimation("Offset", _offsetBind1);
+            _visual1.StartAnimation("Size", _sizeBind);
+            _visual2.StartAnimation("Offset", _offsetBind2);
+            _visual2.StartAnimation("Size", _sizeBind);
 
-            RootVisual.StartAnimation("Offset.X", animation);
+            RootVisual.StartAnimation("Offset.X", _animation);
         }
     }
 
@@ -174,17 +177,17 @@ public partial class AutoScrollView : RedirectVisualView
     {
         base.OnDetachVisuals();
 
-        visual1.StopAnimation("Offset");
-        visual1.StopAnimation("Size");
-        visual2.StopAnimation("Offset");
-        visual2.StopAnimation("Size");
+        _visual1.StopAnimation("Offset");
+        _visual1.StopAnimation("Size");
+        _visual2.StopAnimation("Offset");
+        _visual2.StopAnimation("Size");
 
         RootVisual.StopAnimation("Offset.X");
 
-        offsetBind1.ClearAllParameters();
-        offsetBind2.ClearAllParameters();
-        sizeBind.ClearAllParameters();
-        animation.ClearAllParameters();
+        _offsetBind1.ClearAllParameters();
+        _offsetBind2.ClearAllParameters();
+        _sizeBind.ClearAllParameters();
+        _animation.ClearAllParameters();
     }
 
     protected override void OnUpdateSize()
@@ -207,13 +210,9 @@ public partial class AutoScrollView : RedirectVisualView
             var rootWidth = LayoutRoot.ActualWidth - Padding.Left - Padding.Right;
 
             if (childWidth > rootWidth)
-            {
                 RedirectVisualEnabled = true;
-            }
             else
-            {
                 RedirectVisualEnabled = false;
-            }
         }
         else
         {
@@ -232,10 +231,11 @@ public partial class AutoScrollView : RedirectVisualView
                 animationController.Pause();
                 progress = animationController.Progress;
             }
+
             RootVisual.StopAnimation("Offset.X");
 
-            animation.Duration = TimeSpan.FromSeconds(ChildPresenter.ActualWidth / ScrollingPixelsPreSecond);
-            RootVisual.StartAnimation("Offset.X", animation);
+            _animation.Duration = TimeSpan.FromSeconds(ChildPresenter.ActualWidth / ScrollingPixelsPreSecond);
+            RootVisual.StartAnimation("Offset.X", _animation);
 
             if (progress > 0)
             {
@@ -256,23 +256,22 @@ public partial class AutoScrollView : RedirectVisualView
         Unloaded -= OnUnloaded;
 
         RootVisual.StopAnimation("Offset.X");
-        visual1.StopAnimation("Offset");
-        visual1.StopAnimation("Size");
-        visual2.StopAnimation("Offset");
-        visual2.StopAnimation("Size");
+        _visual1.StopAnimation("Offset");
+        _visual1.StopAnimation("Size");
+        _visual2.StopAnimation("Offset");
+        _visual2.StopAnimation("Size");
 
-        RootVisual.Children.Remove(visual2);
-        RootVisual.Children.Remove(visual1);
+        RootVisual.Children.Remove(_visual2);
+        RootVisual.Children.Remove(_visual1);
 
-        visual2.Dispose();
-        visual1.Dispose();
+        _visual2.Dispose();
+        _visual1.Dispose();
 
-        offsetBind1.Dispose();
-        offsetBind2.Dispose();
-        sizeBind.Dispose();
-        animation.Dispose();
-        linearEasingFunc.Dispose();
-        propSet.Dispose();
+        _offsetBind1.Dispose();
+        _offsetBind2.Dispose();
+        _sizeBind.Dispose();
+        _animation.Dispose();
+        _linearEasingFunc.Dispose();
+        _propSet.Dispose();
     }
 }
-

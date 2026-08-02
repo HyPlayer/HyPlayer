@@ -81,7 +81,7 @@
             x:Name="AlbumCoverDropShadow"
             BlurRadius="48"
             CornerRadius="16"
-            Opacity="{x:Bind _settings.expandedCoverShadowDepth, Converter={StaticResource ShadowConverter}}"
+            Opacity="{x:Bind _uiSettings.ExpandedCoverShadowDepth, Converter={StaticResource ShadowConverter}}"
             Offset="0, 4"
             Color="Black" />
     </Page.Resources>
@@ -141,7 +141,8 @@
             SizeChanged="LuminousBackgroundContainer_SizeChanged">
             <Grid.RenderTransform>
                 <TransformGroup>
-                    <RotateTransform x:Name="BgRotate" CenterX="{x:Bind BgScale.CenterX, Mode=OneWay}" CenterY="{x:Bind BgScale.CenterY, Mode=OneWay}" />
+                    <RotateTransform x:Name="BgRotate" CenterX="{x:Bind BgScale.CenterX, Mode=OneWay}"
+                                     CenterY="{x:Bind BgScale.CenterY, Mode=OneWay}" />
                     <ScaleTransform x:Name="BgScale" />
                 </TransformGroup>
             </Grid.RenderTransform>
@@ -282,7 +283,7 @@
                             x:Name="TextBlockSongTitle"
                             FontSize="46"
                             FontWeight="Bold"
-                            Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}"
+                            Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
                             HorizontalTextAlignment="Center"
                             IsTextSelectionEnabled="True"
                             Text="{x:Bind ViewModel.SongName, Mode=OneWay}" />
@@ -300,7 +301,7 @@
                             Name="SingerHyperlinkBtn"
                             Click="TextBlockSinger_OnTapped"
                             FontSize="20"
-                            Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}"
+                            Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
                             Style="{StaticResource TextBlockButtonStyle}">
                             <controls1:AutoScrollView IsPlaying="True">
                                 <TextBlock Name="SingerTextBlock" Text="{x:Bind ViewModel.Artist, Mode=OneWay}" />
@@ -310,7 +311,7 @@
                             Name="AlbumHyperlinkBtn"
                             Click="AlbumHyperlinkBtn_OnTapped"
                             FontSize="20"
-                            Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}"
+                            Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
                             Style="{StaticResource TextBlockButtonStyle}">
                             <controls1:AutoScrollView IsPlaying="True">
                                 <TextBlock x:Name="AlbumTextBlock" Text="{x:Bind ViewModel.Album, Mode=OneWay}" />
@@ -433,31 +434,10 @@
                                 </ControlTemplate>
                             </MenuFlyoutItem.Template>
                         </MenuFlyoutItem>
-                        <MenuFlyoutSeparator />
-                        <ToggleMenuFlyoutItem
-                            x:Name="ABRepeatState"
-                            IsChecked="{x:Bind _settings.ABRepeatStatus, Mode=TwoWay}"
-                            Text="AB循环" />
-                        <MenuFlyoutItem
-                            HorizontalContentAlignment="Left"
-                            Click="SetABStartPointButton_Click"
-                            Text="设置开始点" />
-                        <MenuFlyoutItem
-                            Name="ABStartPointItem"
-                            HorizontalAlignment="Left"
-                            Text="{x:Bind _settings.ABStartPointFriendlyValue, Mode=OneWay}" />
-                        <MenuFlyoutItem
-                            HorizontalContentAlignment="Left"
-                            Click="SetABEndPointButton_Click"
-                            Text="设置结束点" />
-                        <MenuFlyoutItem
-                            Name="ABEndPointItem"
-                            HorizontalAlignment="Left"
-                            Text="{x:Bind _settings.ABEndPointFriendlyValue, Mode=OneWay}" />
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>
-                    <FontIcon Foreground="{x:Bind PlaybackAccentBrush, Mode=OneTime}" Glyph="&#xEDE3;" />
+                    <FontIcon Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}" Glyph="&#xEDE3;" />
                 </Button.Content>
             </Button>
         </Grid>

@@ -1,176 +1,153 @@
-using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using HyPlayer.Domain.Comments;
-using HyPlayer.Domain.Settings;
-using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Storage.Cache;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.Shell.Navigation.Services;
 
-namespace HyPlayer.Features.Album
+namespace HyPlayer.Features.Album;
+
+public partial class AlbumPageViewModel : ObservableObject
 {
-    public partial class AlbumPageViewModel : ObservableRecipient
+    private readonly IContainerItemManagementProvidable _containerItemManagement;
+    private readonly IProvidableItemProvidable _itemProvider;
+    private readonly IProviderKnownTypeIds _knownTypeIds;
+    private readonly INavigationService _navigation;
+    private readonly INotificationService _notification;
+    private readonly UISettings _setting;
+    private readonly IBackgroundTaskRunner _taskRunner;
+    private Task<AlbumBase> _providerAlbumTask;
+    private string _providerAlbumTaskId;
+
+    public AlbumPageViewModel(
+        IProvidableItemProvidable itemProvider,
+        IProviderKnownTypeIds knownTypeIds,
+        IContainerItemManagementProvidable containerItemManagement,
+        UISettings setting,
+        INotificationService notification,
+        INavigationService navigation,
+        IBackgroundTaskRunner taskRunner)
     {
-        private readonly IProvidableItemProvidable _itemProvider;
-        private readonly IProviderKnownTypeIds _knownTypeIds;
-        private readonly IContainerItemManagementProvidable _containerItemManagement;
-        private readonly Setting _setting;
-        private readonly INotificationService _notification;
-        private readonly INavigationService _navigation;
-        private readonly IBackgroundTaskRunner _taskRunner;
-        private string _providerAlbumTaskId;
-        private Task<AlbumBase> _providerAlbumTask;
+        _itemProvider = itemProvider;
+        _knownTypeIds = knownTypeIds;
+        _containerItemManagement = containerItemManagement;
+        _setting = setting;
+        _notification = notification;
+        _navigation = navigation;
+        _taskRunner = taskRunner;
+    }
 
-        public AlbumPageViewModel(
-            IProvidableItemProvidable itemProvider,
-            IProviderKnownTypeIds knownTypeIds,
-            IContainerItemManagementProvidable containerItemManagement,
-            Setting setting,
-            INotificationService notification,
-            INavigationService navigation,
-            IBackgroundTaskRunner taskRunner)
+    [ObservableProperty] public partial AlbumBase Album { get; set; }
+
+    [ObservableProperty] public partial List<PersonBase> Artists { get; set; }
+
+    [ObservableProperty] public partial string AuthorString { get; set; }
+
+    [ObservableProperty] public partial string Description { get; set; }
+
+    [ObservableProperty] public partial bool Subscribed { get; set; }
+
+    [ObservableProperty] public partial BitmapImage SourceImage { get; set; }
+
+    [ObservableProperty] public partial long PublishTime { get; set; }
+
+    public async Task LoadAlbumDynamic(string albumId)
+    {
+        var album = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumDynamic, albumId,
+            async () => { return await LoadProviderAlbumAsync(albumId); });
+
+        if (album is not null) Subscribed = album is IHasLibraryState { IsInCurrentUserLibrary: true };
+    }
+
+    public async Task LoadAlbumInfo(string albumId)
+    {
+        try
         {
-            _itemProvider = itemProvider;
-            _knownTypeIds = knownTypeIds;
-            _containerItemManagement = containerItemManagement;
-            _setting = setting;
-            _notification = notification;
-            _navigation = navigation;
-            _taskRunner = taskRunner;
+            var providerAlbum = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, albumId, async () =>
+                await LoadProviderAlbumAsync(albumId));
+
+            if (providerAlbum is null) return;
+
+            Album = providerAlbum;
+            if (!_setting.NoImage && await GetCoverUriAsync(Album) is { } coverUri)
+                SourceImage = new BitmapImage(coverUri);
+            else SourceImage = new BitmapImage(new Uri("/Assets/icon.png"));
+
+            var artists = providerAlbum is IHasCreators creatorsProvider
+                ? await creatorsProvider.GetCreatorsAsync()
+                : null;
+            Artists = artists ?? [];
+            AuthorString = string.Join(" / ", artists?.Select(t => t.Name) ?? []);
+            var aliases = providerAlbum is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
+            var description = providerAlbum is IHasDescription descriptionProvider
+                ? descriptionProvider.Description
+                : null;
+            Description = (aliases is { Count: > 0 } ? string.Join(" / ", aliases) + "\r\n" : string.Empty) +
+                          description;
+            PublishTime = 0;
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+    }
+
+    [RelayCommand]
+    private void NavigateComment()
+    {
+        _navigation.Navigate(typeof(Comments.Comments), CommentTarget.Album(Album.ActualId));
+    }
+
+    [RelayCommand]
+    private void Subscribe()
+    {
+        if (!Subscribed)
+        {
+            _notification.ShowMessage("暂不支持收藏", "当前抽象只支持从集合中移出项目");
+            return;
         }
 
-        [ObservableProperty]
-        public partial AlbumBase Album { get; set; }
-        [ObservableProperty]
-        public partial List<PersonBase> Artists { get; set; }
-        [ObservableProperty]
-        public partial string AuthorString { get; set; }
-        [ObservableProperty]
-        public partial string Description { get; set; }
-        [ObservableProperty]
-        public partial bool Subscribed { get; set; }
-        [ObservableProperty]
-        public partial BitmapImage SourceImage { get; set; }
-        [ObservableProperty]
-        public partial long PublishTime { get; set; }
+        _taskRunner.Forget(_containerItemManagement.RemoveItemFromContainerAsync(Album.TypeId, Album.ActualId),
+            "remove album from library");
+        Subscribed = false;
+    }
 
-        public async Task LoadAlbumDynamic(string albumId)
-        {
-            var album = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumDynamic, albumId, async () =>
-            {
-                return await LoadProviderAlbumAsync(albumId);
-            });
-
-            if (album is not null)
-            {
-                Subscribed = album is IHasLibraryState { IsInCurrentUserLibrary: true };
-            }
-        }
-
-        public async Task LoadAlbumInfo(string albumId)
-        {
-            try
-            {
-                var providerAlbum = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, albumId, async () =>
-                    await LoadProviderAlbumAsync(albumId));
-
-                if (providerAlbum is null)
-                {
-                    return;
-                }
-
-                Album = providerAlbum;
-                if (!_setting.noImage && await GetCoverUriAsync(Album) is { } coverUri) SourceImage = new BitmapImage(coverUri);
-                else SourceImage = new BitmapImage(new Uri("/Assets/icon.png"));
-
-                var artists = providerAlbum is IHasCreators creatorsProvider ? await creatorsProvider.GetCreatorsAsync() : null;
-                Artists = artists ?? [];
-                AuthorString = string.Join(" / ", artists?.Select(t => t.Name) ?? []);
-                var aliases = providerAlbum is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
-                var description = providerAlbum is IHasDescription descriptionProvider ? descriptionProvider.Description : null;
-                Description = (aliases is { Count: > 0 } ? string.Join(" / ", aliases) + "\r\n" : string.Empty) + description;
-                PublishTime = 0;
-            }
-            catch (Exception ex)
-            {
-                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
-        }
-
-        [RelayCommand]
-        private void NavigateComment()
-        {
-            _navigation.Navigate(typeof(Comments.Comments), CommentTarget.Album(Album.ActualId));
-        }
-
-        [RelayCommand]
-        private void Subscribe()
-        {
-            if (!Subscribed)
-            {
-                _notification.ShowMessage("暂不支持收藏", "当前抽象只支持从集合中移出项目");
-                return;
-            }
-
-            _taskRunner.Forget(_containerItemManagement.RemoveItemFromContainerAsync(Album.TypeId, Album.ActualId),
-                "remove album from library");
-            Subscribed = false;
-        }
-
-        private async Task<AlbumBase> LoadProviderAlbumAsync(string albumId)
-        {
-            if (_providerAlbumTask is not null && _providerAlbumTaskId == albumId)
-                return await _providerAlbumTask;
-
-            _providerAlbumTaskId = albumId;
-            _providerAlbumTask = LoadProviderAlbumCoreAsync(albumId);
+    private async Task<AlbumBase> LoadProviderAlbumAsync(string albumId)
+    {
+        if (_providerAlbumTask is not null && _providerAlbumTaskId == albumId)
             return await _providerAlbumTask;
-        }
 
-        private async Task<AlbumBase> LoadProviderAlbumCoreAsync(string albumId)
-        {
-            if (await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.AlbumTypeId + albumId) is AlbumBase album)
-                return album;
+        _providerAlbumTaskId = albumId;
+        _providerAlbumTask = LoadProviderAlbumCoreAsync(albumId);
+        return await _providerAlbumTask;
+    }
 
-            _notification.ShowMessage("获取专辑信息失败", "未能从提供程序加载专辑");
+    private async Task<AlbumBase> LoadProviderAlbumCoreAsync(string albumId)
+    {
+        if (await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.AlbumTypeId + albumId) is AlbumBase album)
+            return album;
+
+        _notification.ShowMessage("获取专辑信息失败", "未能从提供程序加载专辑");
+        return null;
+    }
+
+    private static async Task<Uri?> GetCoverUriAsync(AlbumBase album)
+    {
+        if (album is not IHasCover coverProvider)
             return null;
-        }
 
-        private static async Task<Uri?> GetCoverUriAsync(AlbumBase album)
-        {
-            if (album is not IHasCover coverProvider)
-                return null;
-
-            var result = await coverProvider.GetCoverAsync();
-            return result is IResourceResultOf<Uri?> uriResult ? await uriResult.GetResourceAsync() : null;
-        }
+        var result = await coverProvider.GetCoverAsync();
+        return result is IResourceResultOf<Uri?> uriResult ? await uriResult.GetResourceAsync() : null;
     }
 }

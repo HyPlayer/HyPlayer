@@ -2,15 +2,12 @@
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace HyPlayer.LyricRenderer.Effect;
 
 public class LyricShadowEffect : LyricEffect<ShadowEffect>
 {
-    protected override ShadowEffect Effect { get; } = new ShadowEffect();
+    protected override ShadowEffect Effect { get; } = new();
 
     public EffectProperty BlurAmount { get; set; } = new((_, _) => 0);
 

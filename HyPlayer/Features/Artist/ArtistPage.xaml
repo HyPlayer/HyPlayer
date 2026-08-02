@@ -4,11 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:controls1="using:HyPlayer.UI.Lists"
-    xmlns:uiControls="using:HyPlayer.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:ui="using:CommunityToolkit.WinUI"
+    xmlns:uiControls="using:HyPlayer.UI.Controls"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Page.Resources>
@@ -29,144 +29,153 @@
 
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        <uiControls:PivotView x:Name="ArtistPivotView" HeaderScrollProgressChanged="OnArtistHeaderScrollProgressChanged">
+            <uiControls:PivotView.Header>
+                <Grid Padding="32">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Rectangle
+                        x:Name="RectangleImageBack"
+                        Grid.RowSpan="2"
+                        Margin="-32">
+                        <Rectangle.Fill>
+                            <ImageBrush
+                                x:Name="ImageRect1"
+                                ImageSource="{x:Bind ViewModel.Image, Mode=OneWay}"
+                                Stretch="UniformToFill" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <Rectangle
+                        x:Name="RectangleImageBackAcrylic"
+                        Grid.RowSpan="2"
+                        Margin="-32"
+                        Fill="{ThemeResource SystemControlAcrylicElementBrush}" />
+                    <controls:DockPanel
+                        x:Name="GridPersonalInformation"
+                        Grid.Row="0"
+                        LastChildFill="True">
 
-        <Grid Grid.Row="0" Padding="32">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <Rectangle
-                x:Name="RectangleImageBack"
-                Grid.RowSpan="2"
-                Margin="-32">
-                <Rectangle.Fill>
-                    <ImageBrush
-                        x:Name="ImageRect1"
-                        ImageSource="{x:Bind ViewModel.Image, Mode=OneWay}"
-                        Stretch="UniformToFill" />
-                </Rectangle.Fill>
-            </Rectangle>
-            <Rectangle
-                x:Name="RectangleImageBackAcrylic"
-                Grid.RowSpan="2"
-                Margin="-32"
-                Fill="{ThemeResource SystemControlAcrylicElementBrush}" />
-            <controls:DockPanel
-                x:Name="GridPersonalInformation"
-                Grid.Row="0"
-                LastChildFill="True">
-
-                <Rectangle
-                    x:Name="RectangleImage"
-                    Width="120"
-                    Height="120"
-                    Margin="0,0,0,0"
-                    controls:DockPanel.Dock="Left"
-                    RadiusX="10"
-                    RadiusY="10">
-                    <Rectangle.Fill>
-                        <ImageBrush
-                            x:Name="ImageRect"
-                            ImageSource="{x:Bind ViewModel.Image, Mode=OneWay}"
-                            Stretch="UniformToFill" />
-                    </Rectangle.Fill>
-                    <Rectangle.RenderTransform>
-                        <ScaleTransform x:Name="UserScale" CenterX="100" CenterY="100" />
-                    </Rectangle.RenderTransform>
-                </Rectangle>
-                <StackPanel
-                    Name="StackPanelUserInfo"
-                    Margin="12,0,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center">
-                    <TextBlock
-                        x:Name="TextBoxArtistName"
-                        Style="{StaticResource TitleTextBlockStyle}"
-                        Text="{x:Bind ViewModel.Artist.Name, Mode=OneWay}"
-                        TextWrapping="Wrap" />
-
-                    <StackPanel.RenderTransform>
-                        <ScaleTransform x:Name="UserInfoScale" CenterY="125" />
-                    </StackPanel.RenderTransform>
-                </StackPanel>
-
-            </controls:DockPanel>
-            <uiControls:ExpandableTextBox
-                x:Name="TextBlockDesc"
-                Grid.Row="1"
-                Margin="0,12,0,0"
-                FontSize="15"
-                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                MaxLines="7"
-                Selectable="True"
-                Text=""
-                TextWrapping="WrapWholeWords">
-                <uiControls:ExpandableTextBox.RenderTransform>
-                    <ScaleTransform x:Name="DescScale" CenterX="125" CenterY="0" />
-                </uiControls:ExpandableTextBox.RenderTransform>
-            </uiControls:ExpandableTextBox>
-            <ui:Effects.Shadow>
-                <media:AttachedCardShadow
-                    CornerRadius="0"
-                    Opacity="0.5"
-                    Offset="0,1,0"
-                    Color="Black" />
-            </ui:Effects.Shadow>
-        </Grid>
-
-        <Pivot
-            x:Name="MainPivot"
-            Grid.Row="1"
-            AllowFocusOnInteraction="False"
-            IsTabStop="False"
-            SelectedIndex="{x:Bind ViewModel.CurrentPivotIndex, Mode=TwoWay}"
-            SelectionChanged="Pivot_SelectionChanged">
-            <PivotItem Header="热门50首">
-                <controls1:ContainerItemsView x:Name="HotSongContainer" Container="{x:Bind ViewModel.HotSongsContainer, Mode=OneWay}" />
-            </PivotItem>
-            <PivotItem Header="全部歌曲">
-                <controls1:ContainerItemsView x:Name="AllSongContainer" Container="{x:Bind ViewModel.AllSongsContainer, Mode=OneWay}">
-                    <controls1:ContainerItemsView.Footer>
+                        <Rectangle
+                            x:Name="RectangleImage"
+                            Width="120"
+                            Height="120"
+                            Margin="0,0,0,0"
+                            controls:DockPanel.Dock="Left"
+                            RadiusX="10"
+                            RadiusY="10">
+                            <Rectangle.Fill>
+                                <ImageBrush
+                                    x:Name="ImageRect"
+                                    ImageSource="{x:Bind ViewModel.Image, Mode=OneWay}"
+                                    Stretch="UniformToFill" />
+                            </Rectangle.Fill>
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform x:Name="UserScale" CenterX="100" CenterY="100" />
+                            </Rectangle.RenderTransform>
+                        </Rectangle>
                         <StackPanel
-                            Grid.Row="3"
-                            HorizontalAlignment="Center"
-                            Orientation="Horizontal">
-                            <Button
-                                Command="{x:Bind ViewModel.NextPageCommand}"
-                                Content="加载更多"
-                                Style="{StaticResource ButtonRevealStyle}"
-                                Visibility="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" />
+                            Name="StackPanelUserInfo"
+                            Margin="12,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center">
+                            <TextBlock
+                                x:Name="TextBoxArtistName"
+                                Style="{StaticResource TitleTextBlockStyle}"
+                                Text="{x:Bind ViewModel.Artist.Name, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+
+                            <StackPanel.RenderTransform>
+                                <ScaleTransform x:Name="UserInfoScale" CenterY="125" />
+                            </StackPanel.RenderTransform>
                         </StackPanel>
-                    </controls1:ContainerItemsView.Footer>
-                </controls1:ContainerItemsView>
-            </PivotItem>
-            <PivotItem Header="专辑">
-                <controls1:ContainerItemsView x:Name="AlbumContainer" Container="{x:Bind ViewModel.AlbumsContainer, Mode=OneWay}">
-                    <controls1:ContainerItemsView.Footer>
-                        <StackPanel
-                            Grid.Row="3"
-                            HorizontalAlignment="Center"
-                            Orientation="Horizontal">
-                            <Button
-                                x:Name="PrevPage"
-                                Command="{x:Bind ViewModel.PreviousPageCommand}"
-                                Content="上一页"
-                                Visibility="{x:Bind ViewModel.HasPreviousPage, Mode=OneWay}" />
-                            <Button
-                                x:Name="NextPage"
-                                Command="{x:Bind ViewModel.NextPageCommand}"
-                                Content="下一页"
-                                Style="{StaticResource ButtonRevealStyle}"
-                                Visibility="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" />
-                        </StackPanel>
-                    </controls1:ContainerItemsView.Footer>
-                </controls1:ContainerItemsView>
-            </PivotItem>
-        </Pivot>
+
+                    </controls:DockPanel>
+                    <uiControls:ExpandableTextBox
+                        x:Name="TextBlockDesc"
+                        Grid.Row="1"
+                        Margin="0,12,0,0"
+                        FontSize="15"
+                        Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                        MaxLines="7"
+                        Selectable="True"
+                        Text="{x:Bind ViewModel.Artist.Description, Mode=OneWay}"
+                        TextWrapping="WrapWholeWords">
+                        <uiControls:ExpandableTextBox.RenderTransform>
+                            <ScaleTransform x:Name="DescScale" CenterX="125" CenterY="0" />
+                        </uiControls:ExpandableTextBox.RenderTransform>
+                    </uiControls:ExpandableTextBox>
+                    <ui:Effects.Shadow>
+                        <media:AttachedCardShadow
+                            CornerRadius="0"
+                            Opacity="0.5"
+                            Offset="0,1,0"
+                            Color="Black" />
+                    </ui:Effects.Shadow>
+                </Grid>
+            </uiControls:PivotView.Header>
+
+            <uiControls:PivotEx
+                x:Name="MainPivot"
+                Margin="0,-32,0,0"
+                AllowFocusOnInteraction="False"
+                IsTabStop="False"
+                SelectedIndex="{x:Bind ViewModel.CurrentPivotIndex, Mode=TwoWay}"
+                SelectionChanged="OnPivotSelectionChanged">
+                <PivotItem Header="热门50首">
+                    <controls1:ContainerItemsView x:Name="HotSongContainer" Container="{x:Bind ViewModel.HotSongsContainer, Mode=OneWay}">
+                        <controls1:ContainerItemsView.ListHeader>
+                            <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
+                        </controls1:ContainerItemsView.ListHeader>
+                    </controls1:ContainerItemsView>
+                </PivotItem>
+                <PivotItem Header="全部歌曲">
+                    <controls1:ContainerItemsView x:Name="AllSongContainer" Container="{x:Bind ViewModel.AllSongsContainer, Mode=OneWay}">
+                        <controls1:ContainerItemsView.ListHeader>
+                            <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
+                        </controls1:ContainerItemsView.ListHeader>
+                        <controls1:ContainerItemsView.Footer>
+                            <StackPanel
+                                Grid.Row="3"
+                                HorizontalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Button
+                                    Command="{x:Bind ViewModel.NextPageCommand}"
+                                    Content="加载更多"
+                                    Style="{StaticResource ButtonRevealStyle}"
+                                    Visibility="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" />
+                            </StackPanel>
+                        </controls1:ContainerItemsView.Footer>
+                    </controls1:ContainerItemsView>
+                </PivotItem>
+                <PivotItem Header="专辑">
+                    <controls1:ContainerItemsView x:Name="AlbumContainer" Container="{x:Bind ViewModel.AlbumsContainer, Mode=OneWay}">
+                        <controls1:ContainerItemsView.ListHeader>
+                            <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
+                        </controls1:ContainerItemsView.ListHeader>
+                        <controls1:ContainerItemsView.Footer>
+                            <StackPanel
+                                Grid.Row="3"
+                                HorizontalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Button
+                                    x:Name="PrevPage"
+                                    Command="{x:Bind ViewModel.PreviousPageCommand}"
+                                    Content="上一页"
+                                    Visibility="{x:Bind ViewModel.HasPreviousPage, Mode=OneWay}" />
+                                <Button
+                                    x:Name="NextPage"
+                                    Command="{x:Bind ViewModel.NextPageCommand}"
+                                    Content="下一页"
+                                    Style="{StaticResource ButtonRevealStyle}"
+                                    Visibility="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" />
+                            </StackPanel>
+                        </controls1:ContainerItemsView.Footer>
+                    </controls1:ContainerItemsView>
+                </PivotItem>
+            </uiControls:PivotEx>
+        </uiControls:PivotView>
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>

@@ -1,7 +1,4 @@
 #nullable enable
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Platform.Serialization;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -9,40 +6,40 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Platform.Serialization;
 
 namespace HyPlayer.Platform.Storage.Cache;
 
 public static class SimpleCacher
 {
-    private static StorageFolder? cacheFolder;
-    private static readonly ConcurrentDictionary<Type, bool> jsonSupportedTypes = new();
+    private static StorageFolder? _cacheFolder;
+    private static readonly ConcurrentDictionary<Type, bool> _jsonSupportedTypes = new();
 
 
     public static async Task InitializeAsync()
     {
-        cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(Ioc.Default.GetRequiredService<Setting>()!.cacheDir);
+        _cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(
+            Ioc.Default.GetRequiredService<PlaybackSettings>().CacheDirectory);
         // cacheFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("cache", CreationCollisionOption.OpenIfExists);
     }
 
-    public static async Task<T?> GetOrCreateCacheAsync<T>(CacheType cacheType, string id, Func<Task<T?>> creator, TimeSpan? expiration = null, bool forceRefresh = false, bool forceUseCache = false, CancellationToken cancellationToken = default) where T : class
+    public static async Task<T?> GetOrCreateCacheAsync<T>(CacheType cacheType, string id, Func<Task<T?>> creator,
+        TimeSpan? expiration = null, bool forceRefresh = false, bool forceUseCache = false,
+        CancellationToken cancellationToken = default) where T : class
     {
-        if (!Ioc.Default.GetRequiredService<Setting>()!.enableApiCache)
-        {
-            return await creator();
-        }
+        if (!Ioc.Default.GetRequiredService<ApiSettings>().EnableApiCache) return await creator();
 
-        if (cacheFolder == null)
-        {
-            await InitializeAsync();
-        }
+        if (_cacheFolder == null) await InitializeAsync();
         var type = cacheType.ToString();
 
         // create new type dir
-        var dir = await cacheFolder!.CreateFolderAsync(type, CreationCollisionOption.OpenIfExists);
+        var dir = await _cacheFolder!.CreateFolderAsync(type, CreationCollisionOption.OpenIfExists);
         cancellationToken.ThrowIfCancellationRequested();
-    restart:
+        restart:
         var fileName = $"{id}.cache";
-        bool hasCache = false;
+        var hasCache = false;
         var supportsJsonCache = SupportsJsonCache<T>();
         if (supportsJsonCache && await dir.TryGetItemAsync(fileName) is StorageFile cacheFile && !forceRefresh)
         {
@@ -50,16 +47,14 @@ public static class SimpleCacher
             // Check for expiration
             var properties = await cacheFile.GetBasicPropertiesAsync();
             cancellationToken.ThrowIfCancellationRequested();
-            if (forceUseCache || !expiration.HasValue || DateTimeOffset.Now - properties.DateModified < expiration.Value)
+            if (forceUseCache || !expiration.HasValue ||
+                DateTimeOffset.Now - properties.DateModified < expiration.Value)
             {
                 // Cache is still valid, read from it
                 using var stream = await cacheFile.OpenStreamForReadAsync();
                 using var reader = new StreamReader(stream);
                 var content = await reader.ReadToEndAsync();
-                if (content.Length == 0)
-                {
-                    return default;
-                }
+                if (content.Length == 0) return default;
                 try
                 {
                     var rst = JsonSerializer.Deserialize<T>(content, JsonDefaults.Options);
@@ -67,7 +62,7 @@ public static class SimpleCacher
                 }
                 catch (NotSupportedException)
                 {
-                    jsonSupportedTypes[typeof(T)] = false;
+                    _jsonSupportedTypes[typeof(T)] = false;
                     supportsJsonCache = false;
                     if (forceUseCache)
                         return default;
@@ -77,7 +72,6 @@ public static class SimpleCacher
                     if (forceUseCache)
                         return default;
                 }
-
             }
         }
 
@@ -97,15 +91,10 @@ public static class SimpleCacher
                 goto restart;
             }
         }
-        if (data == null)
-        {
-            return default;
-        }
 
-        if (!supportsJsonCache)
-        {
-            return data;
-        }
+        if (data == null) return default;
+
+        if (!supportsJsonCache) return data;
 
         try
         {
@@ -116,7 +105,7 @@ public static class SimpleCacher
         }
         catch (NotSupportedException)
         {
-            jsonSupportedTypes[typeof(T)] = false;
+            _jsonSupportedTypes[typeof(T)] = false;
         }
         catch
         {
@@ -124,14 +113,12 @@ public static class SimpleCacher
         }
 
 
-
-
         return data;
     }
 
     private static bool SupportsJsonCache<T>() where T : class
     {
-        return jsonSupportedTypes.GetOrAdd(typeof(T), static type =>
+        return _jsonSupportedTypes.GetOrAdd(typeof(T), static type =>
         {
             try
             {
@@ -146,53 +133,34 @@ public static class SimpleCacher
 
     public static async Task ResetCacheAsync(CacheType type, string id, bool isPrefix = false)
     {
-        if (cacheFolder == null)
-        {
+        if (_cacheFolder == null)
             throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
-        }
 
-        var dir = await cacheFolder.CreateFolderAsync(type.ToString()!, CreationCollisionOption.OpenIfExists);
+        var dir = await _cacheFolder.CreateFolderAsync(type.ToString()!, CreationCollisionOption.OpenIfExists);
         var files = await dir.GetFilesAsync();
         foreach (var file in files)
-        {
             if (isPrefix && file.Name.StartsWith(id))
-            {
                 await file.DeleteAsync();
-            }
-            else if (!isPrefix && file.Name == $"{id}.cache")
-            {
-                await file.DeleteAsync();
-            }
-        }
+            else if (!isPrefix && file.Name == $"{id}.cache") await file.DeleteAsync();
     }
 
     public static async Task ClearCacheAsync(CacheType type)
     {
-        if (cacheFolder == null)
-        {
+        if (_cacheFolder == null)
             throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
-        }
 
-        var dir = await cacheFolder.CreateFolderAsync(type.ToString()!, CreationCollisionOption.OpenIfExists);
+        var dir = await _cacheFolder.CreateFolderAsync(type.ToString()!, CreationCollisionOption.OpenIfExists);
         var files = await dir.GetFilesAsync();
-        foreach (var file in files)
-        {
-            await file.DeleteAsync();
-        }
+        foreach (var file in files) await file.DeleteAsync();
     }
 
     public static async Task ClearAllCacheAsync()
     {
-        if (cacheFolder == null)
-        {
+        if (_cacheFolder == null)
             throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
-        }
 
-        var files = await cacheFolder.GetFoldersAsync();
-        foreach (var file in files)
-        {
-            await file.DeleteAsync();
-        }
+        var files = await _cacheFolder.GetFoldersAsync();
+        foreach (var file in files) await file.DeleteAsync();
     }
 }
 
@@ -218,6 +186,5 @@ public enum CacheType
     UserDetail,
     UserPlaylist,
     RadioPrograms,
-    RadioInfo,
-
+    RadioInfo
 }

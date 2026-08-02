@@ -1,19 +1,18 @@
-using Microsoft.Graphics.Canvas.UI;
-using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
 using Windows.UI.Xaml.Input;
+using Microsoft.Graphics.Canvas.UI;
+using Microsoft.Graphics.Canvas.UI.Xaml;
 
 namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
 /// <summary>
-/// Concrete shared Win2D canvas host for the expanded playback surface.
-/// Maintains an ordered collection of <see cref="IExpandedCanvasLayer"/> instances
-/// and forwards the draw pipeline (CreateResources → Update → Draw) and pointer events
-/// to each layer in layer order.
-///
-/// This is a standalone host; it does NOT own the <see cref="CanvasAnimatedControl"/>.
-/// The owning ExpandedPlayer (or future surface) attaches the control's events to this host.
+///     Concrete shared Win2D canvas host for the expanded playback surface.
+///     Maintains an ordered collection of <see cref="IExpandedCanvasLayer" /> instances
+///     and forwards the draw pipeline (CreateResources → Update → Draw) and pointer events
+///     to each layer in layer order.
+///     This is a standalone host; it does NOT own the <see cref="CanvasAnimatedControl" />.
+///     The owning ExpandedPlayer (or future surface) attaches the control's events to this host.
 /// </summary>
 public class ExpandedCanvasHost : IExpandedCanvasHost
 {
@@ -63,11 +62,9 @@ public class ExpandedCanvasHost : IExpandedCanvasHost
         if (args is null) return false;
 
         // Offer pointer event to layers in reverse draw order (topmost first)
-        for (int i = _layers.Count - 1; i >= 0; i--)
-        {
+        for (var i = _layers.Count - 1; i >= 0; i--)
             if (_layers[i].TryHandlePointer(args))
                 return true;
-        }
 
         return false;
     }

@@ -1,36 +1,5 @@
 #region
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Classes;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Storage.Cache;
-using HyPlayer.Features.Settings.Services;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.Shell;
-using Kawazu;
-using LiteFM;
-using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -53,6 +22,25 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Classes;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Settings.Services;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.Shell;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.UI.Dialogs;
+using Kawazu;
+using LiteFM;
+using Microsoft.Graphics.Canvas.Text;
 using WinRT;
 using Point = Windows.Foundation.Point;
 
@@ -67,22 +55,41 @@ namespace HyPlayer.Features.Settings;
 /// </summary>
 public sealed partial class Settings : Page
 {
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IProviderNetworkConfigurationProvidable _providerNetworkConfiguration = Ioc.Default.GetRequiredService<IProviderNetworkConfigurationProvidable>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
-    private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
-    private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
-    private readonly IPlaybackMemoryService _playbackMemory = Ioc.Default.GetRequiredService<IPlaybackMemoryService>();
-    private readonly IPlaybackControlService _playbackControl = Ioc.Default.GetRequiredService<IPlaybackControlService>();
-    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
-
-    private bool isbyprogram;
-    private int _elapse = 10;
-
-
     public static readonly DependencyProperty IsAdvancedLyricColorSettingsShowProperty = DependencyProperty.Register(
         "IsAdvancedLyricColorSettingsShow", typeof(bool), typeof(Settings), new PropertyMetadata(default(bool)));
+
+    private static readonly string[] _localeList = ["zh-cn"];
+    private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
+    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+
+    private readonly IPlaybackControlService _playbackControl =
+        Ioc.Default.GetRequiredService<IPlaybackControlService>();
+
+    private readonly IPlaybackMemoryService _playbackMemory = Ioc.Default.GetRequiredService<IPlaybackMemoryService>();
+
+    private readonly IProviderNetworkConfigurationProvidable _providerNetworkConfiguration =
+        Ioc.Default.GetRequiredService<IProviderNetworkConfigurationProvidable>();
+
+    private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
+    private int _elapse = 10;
+
+    private bool _isUpdatingControls;
+
+    public PlaybackSettings Playback { get; } = Ioc.Default.GetRequiredService<PlaybackSettings>();
+    public UISettings UI { get; } = Ioc.Default.GetRequiredService<UISettings>();
+    public ApiSettings Api { get; } = Ioc.Default.GetRequiredService<ApiSettings>();
+    public LyricSettings Lyric { get; } = Ioc.Default.GetRequiredService<LyricSettings>();
+    public LastFMSettings LastFM { get; } = Ioc.Default.GetRequiredService<LastFMSettings>();
+    public DownloadSettings Download { get; } = Ioc.Default.GetRequiredService<DownloadSettings>();
+    public LocalLibrarySettings LocalLibrary { get; } = Ioc.Default.GetRequiredService<LocalLibrarySettings>();
+
+    public Settings()
+    {
+        _isUpdatingControls = true;
+        InitializeComponent();
+    }
 
     public bool IsAdvancedLyricColorSettingsShow
     {
@@ -90,21 +97,14 @@ public sealed partial class Settings : Page
         set => SetValue(IsAdvancedLyricColorSettingsShowProperty, value);
     }
 
-    public Settings()
-    {
-        isbyprogram = true;
-        InitializeComponent();
-    }
-
     private void TransitionMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (TransitionMode.SelectedValue is not string transitionId
             || transitionId is not ("dir" or "gap" or "xfd")
-            || transitionId == _setting.TransitionId)
+            || transitionId == Playback.TransitionId)
             return;
 
-        _setting.TransitionId = transitionId;
-        Bindings.Update();
+        Playback.TransitionId = transitionId;
         _taskRunner.Forget(
             _playbackControl.SetTransitionAsync(transitionId),
             "change track transition");
@@ -113,24 +113,23 @@ public sealed partial class Settings : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>();
-        RomajiStatus.Header = (kawazu.Converter == null ? "请下载Kawazu资源文件" : "可以转换");
+        RomajiStatus.Header = kawazu.Converter == null ? "请下载Kawazu资源文件" : "可以转换";
         ButtonDownloadRomaji.Visibility = kawazu.Converter == null ? Visibility.Visible : Visibility.Collapsed;
-        if (_setting.audioRate.EndsWith('0') || _setting.downloadAudioRate.EndsWith('0'))
+        if (Playback.AudioRate.EndsWith('0') || Download.DownloadAudioRate.EndsWith('0'))
         {
-            _setting.audioRate = "exhigh";
-            _setting.downloadAudioRate = "hires";
+            Playback.AudioRate = "exhigh";
+            Download.DownloadAudioRate = "hires";
         }
         else
         {
             ComboBoxSongBr.SelectedIndex = ComboBoxSongBr.Items.IndexOf(ComboBoxSongBr.Items.First(t =>
-                t?.As<ComboBoxItem>().Tag.ToString() == _setting.audioRate));
+                t?.As<ComboBoxItem>().Tag.ToString() == Playback.AudioRate));
             ComboBoxSongDownloadBr.SelectedIndex = ComboBoxSongDownloadBr.Items.IndexOf(
                 ComboBoxSongDownloadBr.Items.First(t =>
-                    t?.As<ComboBoxItem>().Tag.ToString() == _setting.downloadAudioRate));
+                    t?.As<ComboBoxItem>().Tag.ToString() == Download.DownloadAudioRate));
         }
 
-        var localSettings = ApplicationData.Current.LocalSettings.Values;
-        TextBoxXREALIP.Text = localSettings["xRealIp"]?.ToString() ?? "";
+        TextBoxXREALIP.Text = Api.RealIp ?? "";
         var package = Package.Current;
         var packageId = package.Id;
         var version = packageId.Version;
@@ -138,7 +137,7 @@ public sealed partial class Settings : Page
             $"Version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}  (#{BuildInfo.CommitSha[..7]}@{BuildInfo.BuildBranchId})";
         var deviceInfo = new EasClientDeviceInformation();
         DeviceInfo.Text = deviceInfo.Id.ToString();
-        isbyprogram = false;
+        _isUpdatingControls = false;
 #if DEBUG
         VersionCode.Text += " Debug";
 #endif
@@ -148,24 +147,16 @@ public sealed partial class Settings : Page
     private static List<FontInfo> GetAllFonts()
     {
         var names = CanvasTextFormat.GetSystemFontFamilies();
-        var displayNames = CanvasTextFormat.GetSystemFontFamilies(localeList);
+        var displayNames = CanvasTextFormat.GetSystemFontFamilies(_localeList);
         var models = new List<FontInfo>();
         for (var i = 0; i < names.Length; i++)
-        {
             models.Add(new FontInfo
             {
                 Name = displayNames[i],
                 Value = names[i]
             });
-        }
 
         return [.. models.OrderBy(t => t.Name)];
-    }
-    [GeneratedBindableCustomProperty]
-    public partial class FontInfo
-    {
-        public string Name { get; set; }
-        public string Value { get; set; }
     }
 
     private async Task GetRomaji()
@@ -241,12 +232,10 @@ public sealed partial class Settings : Page
         {
             var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>();
             RomajiStatus.Header =
-                (kawazu.Converter == null ? "请重新下载资源文件" : "可以转换");
+                kawazu.Converter == null ? "请重新下载资源文件" : "可以转换";
             ButtonDownloadRomaji.Visibility = kawazu.Converter == null ? Visibility.Visible : Visibility.Collapsed;
         }
     }
-
-    private static readonly string[] localeList = ["zh-cn"];
 
     private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
     {
@@ -256,8 +245,8 @@ public sealed partial class Settings : Page
     private void ButtonXREALIPSave_OnClick(object sender, RoutedEventArgs e)
     {
         var xRealIp = string.IsNullOrEmpty(TextBoxXREALIP.Text) ? null : TextBoxXREALIP.Text;
-        ApplicationData.Current.LocalSettings.Values["xRealIp"] = xRealIp;
-        _providerNetworkConfiguration.ConfigureClientNetwork(xRealIp, Setting.GetSettings("UseHttp", false));
+        Api.RealIp = xRealIp;
+        _providerNetworkConfiguration.ConfigureClientNetwork(xRealIp, Api.UseHttp);
     }
 
     private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)
@@ -271,7 +260,7 @@ public sealed partial class Settings : Page
         if (folder != null)
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("downloadFolder", folder);
-            _setting.downloadDir = folder.Path;
+            Download.DownloadDirectory = folder.Path;
         }
     }
 
@@ -286,7 +275,7 @@ public sealed partial class Settings : Page
         if (folder != null)
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("searchingFolder", folder);
-            _setting.searchingDir = folder.Path;
+            LocalLibrary.SearchDirectory = folder.Path;
         }
     }
 
@@ -299,16 +288,16 @@ public sealed partial class Settings : Page
 
     private void ControlSoundChecked(object sender, RoutedEventArgs e)
     {
-        if (isbyprogram) return;
-        _setting.uiSound = true;
+        if (_isUpdatingControls) return;
+        UI.UISound = true;
         ElementSoundPlayer.State = ElementSoundPlayerState.On;
         ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.On;
     }
 
     private void ControlSoundUnChecked(object sender, RoutedEventArgs e)
     {
-        if (isbyprogram) return;
-        _setting.uiSound = false;
+        if (_isUpdatingControls) return;
+        UI.UISound = false;
         ElementSoundPlayer.State = ElementSoundPlayerState.Off;
         ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
     }
@@ -330,9 +319,9 @@ public sealed partial class Settings : Page
 
     private void NBShadowDepth_OnValueChanged(object o, RangeBaseValueChangedEventArgs rangeBaseValueChangedEventArgs)
     {
-        if (isbyprogram) return;
+        if (_isUpdatingControls) return;
         var size = (int)SliderAlbumShadowDepth.Value;
-        _setting.expandedCoverShadowDepth = Math.Max(0, size);
+        UI.ExpandedCoverShadowDepth = Math.Max(0, size);
     }
 
 
@@ -347,9 +336,10 @@ public sealed partial class Settings : Page
         if (folder != null)
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("cacheFolder", folder);
-            _setting.cacheDir = folder.Path;
+            Playback.CacheDirectory = folder.Path;
         }
     }
+
     private void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         _elapse -= 2;
@@ -389,7 +379,7 @@ public sealed partial class Settings : Page
                     return;
                 }
 
-                _setting.hotlyricOnStartup = false;
+                Lyric.HotLyricOnStartup = false;
             }
             else
             {
@@ -411,12 +401,12 @@ public sealed partial class Settings : Page
             new Point(point.X + BtnChangeAudioRenderDevice.ActualWidth,
                 point.Y + BtnChangeAudioRenderDevice.ActualHeight));
         var device = await devicePicker.PickSingleDeviceAsync(rect);
-        if (device != null) _setting.AudioRenderDevice = device.Id;
+        if (device != null) Playback.AudioRenderDevice = device.Id;
     }
 
     private void BtnChangeToDefaultAudioRenderDevice_Click(object sender, RoutedEventArgs e)
     {
-        _setting.AudioRenderDevice = "";
+        Playback.AudioRenderDevice = "";
     }
 
     private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
@@ -426,16 +416,16 @@ public sealed partial class Settings : Page
 
     private void ComboBoxSongBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (isbyprogram) return;
+        if (_isUpdatingControls) return;
         var selectedItem = sender?.As<ComboBox>().SelectedItem?.As<ComboBoxItem>();
-        _setting.audioRate = selectedItem.Tag.ToString();
+        Playback.AudioRate = selectedItem.Tag.ToString();
     }
 
     private void ComboBoxSongDownloadBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (isbyprogram) return;
+        if (_isUpdatingControls) return;
         var selectedItem = sender?.As<ComboBox>().SelectedItem?.As<ComboBoxItem>();
-        _setting.downloadAudioRate = selectedItem.Tag.ToString();
+        Download.DownloadAudioRate = selectedItem.Tag.ToString();
     }
 
     private void CheckCanaryChannelButton_Click(object sender, RoutedEventArgs e)
@@ -445,32 +435,32 @@ public sealed partial class Settings : Page
 
     private void ResetPureLyricIdleColor(object sender, RoutedEventArgs e)
     {
-        _setting.pureLyricIdleColor = null;
+        Lyric.PureLyricIdleColor = null;
     }
 
     private void ConfirmPureLyricIdleColor(object sender, RoutedEventArgs e)
     {
-        _setting.pureLyricIdleColor = PureLyricIdle.SelectedColor;
+        Lyric.PureLyricIdleColor = PureLyricIdle.SelectedColor;
     }
 
     private void ResetPureLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        _setting.pureLyricFocusingColor = null;
+        Lyric.PureLyricFocusingColor = null;
     }
 
     private void ConfirmPureLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        _setting.pureLyricFocusingColor = PureLyricFocusing.SelectedColor;
+        Lyric.PureLyricFocusingColor = PureLyricFocusing.SelectedColor;
     }
 
     private void ResetKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        _setting.karaokLyricFocusingColor = null;
+        Lyric.KaraokeLyricFocusingColor = null;
     }
 
     private void ConfirmKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
     {
-        _setting.karaokLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
+        Lyric.KaraokeLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
     }
 
     private async void AboutRomaji_Click(object sender, RoutedEventArgs e)
@@ -491,25 +481,22 @@ public sealed partial class Settings : Page
     private async void BtnClearCache_Click(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ClearAllCacheAsync();
-        var folder = await StorageFolder.GetFolderFromPathAsync(_setting!.cacheDir);
+        var folder = await StorageFolder.GetFolderFromPathAsync(Playback.CacheDirectory);
         var files = await folder.GetFilesAsync();
         foreach (var file in files)
-        {
             if (file.FileType == ".flac" || file.FileType == ".mp3")
-            {
                 await file.DeleteAsync();
-            }
-        }
     }
 
     private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
     {
-        _setting.LastFMSession = null;
+        LastFM.LastFMSession = null;
     }
 
     private void LoginLastFMAccount_Click(object sender, RoutedEventArgs e)
     {
-        _ = Launcher.LaunchUriAsync(new Uri($"https://www.last.fm/api/auth?api_key={Ioc.Default.GetRequiredService<LastFMClient>().Options.ApiKey}&cb=hyplayer://link.last.fm"));
+        _ = Launcher.LaunchUriAsync(new Uri(
+            $"https://www.last.fm/api/auth?api_key={Ioc.Default.GetRequiredService<LastFMClient>().Options.ApiKey}&cb=hyplayer://link.last.fm"));
     }
 
     private void BtnClearTileCache_Click(object sender, RoutedEventArgs e)
@@ -519,7 +506,14 @@ public sealed partial class Settings : Page
 
     private async void OpenLyricEffectSettings_Click(object sender, RoutedEventArgs e)
     {
-        await new HyPlayer.UI.Dialogs.LyricEffectSettingsDialog().ShowAsync();
+        await new LyricEffectSettingsDialog().ShowAsync();
+    }
+
+    [GeneratedBindableCustomProperty]
+    public partial class FontInfo
+    {
+        public string Name { get; set; }
+        public string Value { get; set; }
     }
 
     private async void OpenFocusedLyricEffectSettings_Click(object sender, RoutedEventArgs e)

@@ -70,7 +70,8 @@
                                 Margin="4,0,8,0"
                                 VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Foreground="{ThemeResource SystemControlHighlightAccentBrush}" Text="{Binding CategoryLabel}" />
+                                    <TextBlock Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
+                                               Text="{Binding CategoryLabel}" />
                                     <TextBlock
                                         Text="{Binding DisplayName}"
                                         TextTrimming="CharacterEllipsis" />

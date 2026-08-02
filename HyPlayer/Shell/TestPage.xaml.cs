@@ -1,43 +1,3 @@
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Navigation;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Album;
-using HyPlayer.Features.Artist;
-using HyPlayer.Features.Comments;
-using HyPlayer.Features.Downloads;
-using HyPlayer.Features.Home;
-using HyPlayer.Features.Library;
-using HyPlayer.Features.Playlist;
-using HyPlayer.Features.Radio;
-using HyPlayer.Features.Settings;
-using HyPlayer.Features.User;
-using HyPlayer.Features.Video;
-using HyPlayer.Features.Welcome;
-using HyPlayer.Platform.Diagnostics;
-using HyPlayer.Platform.Serialization;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,6 +10,34 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Domain;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Album;
+using HyPlayer.Features.Artist;
+using HyPlayer.Features.Comments;
+using HyPlayer.Features.Downloads;
+using HyPlayer.Features.Home;
+using HyPlayer.Features.Library;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Playlist;
+using HyPlayer.Features.Radio;
+using HyPlayer.Features.Settings;
+using HyPlayer.Features.User;
+using HyPlayer.Features.Video;
+using HyPlayer.Features.Welcome;
+using HyPlayer.Platform.Diagnostics;
+using HyPlayer.Platform.Serialization;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.Shell.Navigation.Services;
 
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -61,19 +49,12 @@ namespace HyPlayer.Shell;
 /// </summary>
 public sealed partial class TestPage : Page
 {
-    private readonly Setting _setting = Ioc.Default.GetRequiredService<Setting>();
-    private readonly IProviderAdditionalConfigurationProvidable _providerAdditionalConfiguration = Ioc.Default.GetRequiredService<IProviderAdditionalConfigurationProvidable>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
-
     public static readonly DependencyProperty ResourceIdProperty =
         DependencyProperty.Register(nameof(ResourceId), typeof(string), typeof(TestPage), new PropertyMetadata(""));
 
-    private int _teachingTipIndex;
+    private static readonly List<KeyValuePair<string, WeakReference<FrameworkElement>>> _controlsReferences = [];
 
-    static readonly List<KeyValuePair<string, WeakReference<FrameworkElement>>> controlsReferences = [];
-
-    static readonly Dictionary<Type, object> typeParams = new()
+    private static readonly Dictionary<Type, object> _typeParams = new()
     {
         [typeof(AlbumPage)] = "97767168",
         [typeof(ArtistPage)] = "159692",
@@ -93,23 +74,34 @@ public sealed partial class TestPage : Page
         [typeof(Settings)] = null,
         [typeof(SongListDetail)] = "897784673",
         [typeof(Welcome)] = null,
-        [typeof(BlankPage)] = null,
+        [typeof(BlankPage)] = null
     };
+
+    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+
+    private readonly IProviderAdditionalConfigurationProvidable _providerAdditionalConfiguration =
+        Ioc.Default.GetRequiredService<IProviderAdditionalConfigurationProvidable>();
+
+    private readonly ApiSettings _apiSettings = Ioc.Default.GetRequiredService<ApiSettings>();
+    private readonly UISettings _uiSettings = Ioc.Default.GetRequiredService<UISettings>();
+
+    private int _teachingTipIndex;
 
     public TestPage()
     {
         InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
-    {
-        TbAdditionalApiParameters.Text = _setting.ApiAdditionalParametersJson;
-    }
-
     public string ResourceId
     {
         get => (string)GetValue(ResourceIdProperty);
         set => SetValue(ResourceIdProperty, value);
+    }
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        TbAdditionalApiParameters.Text = _apiSettings.ApiAdditionalParametersJson;
     }
 
     private void TestTeachingTip_OnClick(object sender, RoutedEventArgs e)
@@ -126,25 +118,26 @@ public sealed partial class TestPage : Page
         };
         MainStackPanel.Children.Insert(0, leakCheckFrame);
         leakCheckFrame.Visibility = Visibility.Visible;
-        foreach (var (type, param) in typeParams)
+        foreach (var (type, param) in _typeParams)
         {
             leakCheckFrame.Navigate(type, param);
             await Task.Delay(500);
             var page = leakCheckFrame.Content as Page;
-            controlsReferences.Add(new KeyValuePair<string, WeakReference<FrameworkElement>>(type.Name, new WeakReference<FrameworkElement>(page as FrameworkElement)));
+            _controlsReferences.Add(
+                new KeyValuePair<string, WeakReference<FrameworkElement>>(type.Name,
+                    new WeakReference<FrameworkElement>(page)));
             GC.Collect();
             await Task.Delay(5000);
         }
+
         MainStackPanel.Children.Remove(leakCheckFrame);
         _notification.ShowMessage("正在生成报告", "等待 GC 处理中");
         GC.Collect();
         await Task.Delay(5000);
         GC.Collect();
         var resultSb = new StringBuilder();
-        foreach (var (name, reference) in controlsReferences)
-        {
+        foreach (var (name, reference) in _controlsReferences)
             resultSb.AppendLine(name + ": " + (reference.TryGetTarget(out _) ? "Alive" : "Collected"));
-        }
         var result = resultSb.ToString();
         var contentDialog = new ContentDialog
         {
@@ -177,23 +170,26 @@ public sealed partial class TestPage : Page
     private async void DumpDebugInfo_Click(object sender, RoutedEventArgs e)
     {
         var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
-        var playCore = Ioc.Default.GetRequiredService<HyPlayer.PlayCore.Abstraction.PlayCoreBase>();
+        var playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
         var info = JsonSerializer.Serialize(new DumpInfo
         {
             CurrentSong = state.NowPlayingSnapshot,
             CurrentPlaySource = playCore.PlaySourceId,
-            CurrentUser = _auth.CurrentUser is not null ? new HyPlayer.Domain.CommentUserInfo
-            {
-                ActualId = _auth.CurrentUser.ActualId,
-                Name = _auth.CurrentUser.Name,
-                AvatarUrl = string.Empty,
-                Description = _auth.CurrentUser is HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem.IHasDescription descriptionProvider
-                    ? descriptionProvider.Description
-                    : string.Empty
-            } : null,
+            CurrentUser = _auth.CurrentUser is not null
+                ? new CommentUserInfo
+                {
+                    ActualId = _auth.CurrentUser.ActualId,
+                    Name = _auth.CurrentUser.Name,
+                    AvatarUrl = string.Empty,
+                    Description = _auth.CurrentUser is IHasDescription descriptionProvider
+                        ? descriptionProvider.Description
+                        : string.Empty
+                }
+                : null,
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
             IsInBackground = Ioc.Default.GetRequiredService<IAppLifecycleStateService>().IsInBackground,
-            ErrorMessageList = [.. Ioc.Default.GetRequiredService<IDiagnosticsStateService>().ErrorMessages.TakeLast(15)]
+            ErrorMessageList =
+                [.. Ioc.Default.GetRequiredService<IDiagnosticsStateService>().ErrorMessages.TakeLast(15)]
         }, JsonDefaults.Options);
         var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("dump-" +
             DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid() + ".txt");
@@ -203,7 +199,7 @@ public sealed partial class TestPage : Page
 
     private void DisablePopUpButton_Click(object sender, RoutedEventArgs e)
     {
-        _setting.DisablePopUp = true;
+        _uiSettings.DisablePopUp = true;
     }
 
     private void ForceGC_Click(object sender, RoutedEventArgs e)
@@ -216,7 +212,7 @@ public sealed partial class TestPage : Page
         try
         {
             using var _ = JsonDocument.Parse(TbAdditionalApiParameters.Text);
-            _setting.ApiAdditionalParametersJson = TbAdditionalApiParameters.Text;
+            _apiSettings.ApiAdditionalParametersJson = TbAdditionalApiParameters.Text;
             _providerAdditionalConfiguration.ImportAdditionalConfiguration(TbAdditionalApiParameters.Text);
             var authService = Ioc.Default.GetRequiredService<IAuthService>();
             authService.NotifyLoginCompleted();

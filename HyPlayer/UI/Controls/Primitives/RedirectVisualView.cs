@@ -12,79 +12,76 @@ namespace HyPlayer.UI.Controls.Primitives;
 [ContentProperty(Name = nameof(Child))]
 public partial class RedirectVisualView : Control
 {
+    private const string ChildHostTemplatePartName = "ChildHost";
+
     public RedirectVisualView()
     {
-        this.DefaultStyleKey = typeof(RedirectVisualView);
-        this.DefaultStyleResourceUri = new Uri("ms-appx:///Themes/Generic.xaml");
+        DefaultStyleKey = typeof(RedirectVisualView);
+        DefaultStyleResourceUri = new Uri("ms-appx:///Themes/Generic.xaml");
 
-        childVisualBrushOffsetEnabled = ChildVisualBrushOffsetEnabled;
+        _childVisualBrushOffsetEnabled = ChildVisualBrushOffsetEnabled;
 
-        hostVisual = ElementCompositionPreview.GetElementVisual(this);
-        compositor = hostVisual.Compositor;
+        _hostVisual = ElementCompositionPreview.GetElementVisual(this);
+        _compositor = _hostVisual.Compositor;
 
-        childVisualSurface = compositor.CreateVisualSurface();
-        childVisualBrush = compositor.CreateSurfaceBrush(childVisualSurface);
-        childVisualBrush.HorizontalAlignmentRatio = 0;
-        childVisualBrush.VerticalAlignmentRatio = 0;
-        childVisualBrush.Stretch = CompositionStretch.None;
+        _childVisualSurface = _compositor.CreateVisualSurface();
+        _childVisualBrush = _compositor.CreateSurfaceBrush(_childVisualSurface);
+        _childVisualBrush.HorizontalAlignmentRatio = 0;
+        _childVisualBrush.VerticalAlignmentRatio = 0;
+        _childVisualBrush.Stretch = CompositionStretch.None;
 
-        redirectVisual = compositor.CreateSpriteVisual();
-        redirectVisual.RelativeSizeAdjustment = Vector2.One;
-        redirectVisual.Brush = childVisualBrush;
-        if (Environment.OSVersion.Version >= SupportedVersion)
+        RootVisual = _compositor.CreateSpriteVisual();
+        RootVisual.RelativeSizeAdjustment = Vector2.One;
+        RootVisual.Brush = _childVisualBrush;
+        if (Environment.OSVersion.Version >= _supportedVersion)
         {
 #pragma warning disable CA1416 // 验证平台兼容性
-            redirectVisual.IsPixelSnappingEnabled = UseLayoutRounding;
+            RootVisual.IsPixelSnappingEnabled = UseLayoutRounding;
 #pragma warning restore CA1416 // 验证平台兼容性
         }
 
-        if (childVisualBrushOffsetEnabled)
-        {
-            offsetBind = compositor.CreateExpressionAnimation("Vector2(visual.Offset.X, visual.Offset.Y)");
-        }
+        if (_childVisualBrushOffsetEnabled)
+            _offsetBind = _compositor.CreateExpressionAnimation("Vector2(visual.Offset.X, visual.Offset.Y)");
 
-        this.Loaded += RedirectVisualView_Loaded;
-        this.Unloaded += RedirectVisualView_Unloaded;
+        Loaded += RedirectVisualView_Loaded;
+        Unloaded += RedirectVisualView_Unloaded;
         RegisterPropertyChangedCallback(PaddingProperty, OnPaddingPropertyChanged);
         RegisterPropertyChangedCallback(UseLayoutRoundingProperty, OnUseLayoutRoundingPropertyChanged);
     }
 
     protected virtual bool ChildVisualBrushOffsetEnabled => true;
 
-    private readonly Version SupportedVersion = new(10, 0, 20348, 0);
+    private readonly Version _supportedVersion = new(10, 0, 20348, 0);
 
-    private bool measureChildInBoundingBox = true;
+    private bool _measureChildInBoundingBox = true;
 
     protected bool MeasureChildInBoundingBox
     {
-        get => measureChildInBoundingBox;
+        get => _measureChildInBoundingBox;
         set
         {
-            if (measureChildInBoundingBox != value)
+            if (_measureChildInBoundingBox != value)
             {
-                measureChildInBoundingBox = value;
+                _measureChildInBoundingBox = value;
                 UpdateMeasureChildInBoundingBox();
             }
         }
     }
 
-    protected bool RedirectVisualAttached => attached;
+    protected bool RedirectVisualAttached { get; private set; }
 
     protected bool RedirectVisualEnabled
     {
-        get => redirectVisualEnabled;
+        get => _redirectVisualEnabled;
         set
         {
-            if (redirectVisualEnabled != value)
+            if (_redirectVisualEnabled != value)
             {
-                redirectVisualEnabled = value;
+                _redirectVisualEnabled = value;
 
                 if (value)
                 {
-                    if (IsLoaded)
-                    {
-                        AttachVisuals();
-                    }
+                    if (IsLoaded) AttachVisuals();
                 }
                 else
                 {
@@ -95,61 +92,59 @@ public partial class RedirectVisualView : Control
     }
 
 
-    private bool attached;
-    private bool redirectVisualEnabled = true;
-    private readonly bool childVisualBrushOffsetEnabled;
+    private bool _redirectVisualEnabled = true;
+    private readonly bool _childVisualBrushOffsetEnabled;
 #nullable enable
-    private Grid? layoutRoot;
-    private ContentPresenter? childPresenter;
-    private Grid? childPresenterContainer;
-    private Canvas? ChildHost;
-    private Canvas? opacityMaskContainer;
+    private Grid? _layoutRoot;
+    private ContentPresenter? _childPresenter;
+    private Grid? _childPresenterContainer;
+    private Canvas? _childHost;
 
 
     protected Grid? LayoutRoot
     {
-        get => layoutRoot;
+        get => _layoutRoot;
         private set
         {
-            if (layoutRoot != value)
+            if (_layoutRoot != value)
             {
-                var old = layoutRoot;
+                var old = _layoutRoot;
 
-                layoutRoot = value;
+                _layoutRoot = value;
 
                 old?.SizeChanged -= LayoutRoot_SizeChanged;
 
-                layoutRoot?.SizeChanged += LayoutRoot_SizeChanged;
+                _layoutRoot?.SizeChanged += LayoutRoot_SizeChanged;
             }
         }
     }
 
     protected ContentPresenter? ChildPresenter
     {
-        get => childPresenter;
+        get => _childPresenter;
         private set
         {
-            if (childPresenter != value)
+            if (_childPresenter != value)
             {
-                var old = childPresenter;
+                var old = _childPresenter;
 
-                childPresenter = value;
+                _childPresenter = value;
 
                 old?.SizeChanged -= ChildPresenter_SizeChanged;
 
-                childPresenter?.SizeChanged += ChildPresenter_SizeChanged;
+                _childPresenter?.SizeChanged += ChildPresenter_SizeChanged;
             }
         }
     }
 
     protected Grid? ChildPresenterContainer
     {
-        get => childPresenterContainer;
+        get => _childPresenterContainer;
         private set
         {
-            if (childPresenterContainer != value)
+            if (_childPresenterContainer != value)
             {
-                childPresenterContainer = value;
+                _childPresenterContainer = value;
 
                 UpdateMeasureChildInBoundingBox();
             }
@@ -157,28 +152,19 @@ public partial class RedirectVisualView : Control
     }
 
 
-    protected Canvas? OpacityMaskContainer
-    {
-        get => opacityMaskContainer;
-        private set => opacityMaskContainer = value;
-    }
+    protected Canvas? OpacityMaskContainer { get; private set; }
 
-    private readonly Visual hostVisual;
-    private readonly Compositor compositor;
+    private readonly Visual _hostVisual;
+    private readonly Compositor _compositor;
 
-    private readonly CompositionVisualSurface childVisualSurface;
-    private readonly CompositionSurfaceBrush childVisualBrush;
+    private readonly CompositionVisualSurface _childVisualSurface;
+    private readonly CompositionSurfaceBrush _childVisualBrush;
 
-    private SpriteVisual redirectVisual;
-    private readonly ExpressionAnimation? offsetBind;
+    private readonly ExpressionAnimation? _offsetBind;
 
-    protected CompositionBrush ChildVisualBrush => childVisualBrush;
+    protected CompositionBrush ChildVisualBrush => _childVisualBrush;
 
-    protected SpriteVisual RootVisual
-    {
-        get => redirectVisual;
-        set => redirectVisual = value;
-    }
+    protected SpriteVisual RootVisual { get; set; }
 
     protected override void OnApplyTemplate()
     {
@@ -189,19 +175,16 @@ public partial class RedirectVisualView : Control
         LayoutRoot = GetTemplateChild(nameof(LayoutRoot))?.As<Grid>();
         ChildPresenter = GetTemplateChild(nameof(ChildPresenter))?.As<ContentPresenter>();
         ChildPresenterContainer = GetTemplateChild(nameof(ChildPresenterContainer))?.As<Grid>();
-        ChildHost = GetTemplateChild(nameof(ChildHost))?.As<Canvas>();
+        _childHost = GetTemplateChild(ChildHostTemplatePartName)?.As<Canvas>();
         OpacityMaskContainer = GetTemplateChild(nameof(OpacityMaskContainer))?.As<Canvas>();
 
-        if (RedirectVisualEnabled)
-        {
-            AttachVisuals();
-        }
+        if (RedirectVisualEnabled) AttachVisuals();
     }
 
     public UIElement? Child
     {
-        get { return (UIElement?)GetValue(ChildProperty); }
-        set { SetValue(ChildProperty, value); }
+        get => (UIElement?)GetValue(ChildProperty);
+        set => SetValue(ChildProperty, value);
     }
 
     public static readonly DependencyProperty ChildProperty =
@@ -209,9 +192,9 @@ public partial class RedirectVisualView : Control
 #nullable restore
     private void AttachVisuals()
     {
-        if (attached) return;
+        if (RedirectVisualAttached) return;
 
-        attached = true;
+        RedirectVisualAttached = true;
 
         if (LayoutRoot != null)
         {
@@ -219,29 +202,22 @@ public partial class RedirectVisualView : Control
             {
                 var childBorderVisual = ElementCompositionPreview.GetElementVisual(ChildPresenter);
 
-                childVisualSurface.SourceVisual = childBorderVisual;
+                _childVisualSurface.SourceVisual = childBorderVisual;
 
-                if (offsetBind != null)
+                if (_offsetBind != null)
                 {
-                    offsetBind.SetReferenceParameter("visual", childBorderVisual);
-                    childVisualBrush.StartAnimation("Offset", offsetBind);
+                    _offsetBind.SetReferenceParameter("visual", childBorderVisual);
+                    _childVisualBrush.StartAnimation("Offset", _offsetBind);
                 }
             }
 
             if (ChildPresenterContainer != null)
-            {
                 ElementCompositionPreview.GetElementVisual(ChildPresenterContainer).IsVisible = false;
-            }
 
             if (OpacityMaskContainer != null)
-            {
                 ElementCompositionPreview.GetElementVisual(OpacityMaskContainer).IsVisible = false;
-            }
 
-            if (ChildHost != null)
-            {
-                ElementCompositionPreview.SetElementChildVisual(ChildHost, redirectVisual);
-            }
+            if (_childHost != null) ElementCompositionPreview.SetElementChildVisual(_childHost, RootVisual);
 
             UpdateSize();
         }
@@ -251,34 +227,27 @@ public partial class RedirectVisualView : Control
 
     private void DetachVisuals()
     {
-        if (!attached) return;
+        if (!RedirectVisualAttached) return;
 
-        attached = false;
+        RedirectVisualAttached = false;
 
         if (LayoutRoot != null)
         {
-            childVisualSurface.SourceVisual = null;
+            _childVisualSurface.SourceVisual = null;
 
-            if (offsetBind != null)
+            if (_offsetBind != null)
             {
-                childVisualBrush.StopAnimation("Offset");
-                offsetBind.ClearAllParameters();
+                _childVisualBrush.StopAnimation("Offset");
+                _offsetBind.ClearAllParameters();
             }
 
             if (ChildPresenterContainer != null)
-            {
                 ElementCompositionPreview.GetElementVisual(ChildPresenterContainer).IsVisible = true;
-            }
 
             if (OpacityMaskContainer != null)
-            {
                 ElementCompositionPreview.GetElementVisual(OpacityMaskContainer).IsVisible = true;
-            }
 
-            if (ChildHost != null)
-            {
-                ElementCompositionPreview.SetElementChildVisual(ChildHost, null);
-            }
+            if (_childHost != null) ElementCompositionPreview.SetElementChildVisual(_childHost, null);
         }
 
         OnDetachVisuals();
@@ -290,16 +259,13 @@ public partial class RedirectVisualView : Control
         LayoutRoot = null;
         ChildPresenter = null;
         ChildPresenterContainer = null;
-        ChildHost = null;
+        _childHost = null;
         OpacityMaskContainer = null;
     }
 
     private void RedirectVisualView_Loaded(object sender, RoutedEventArgs e)
     {
-        if (RedirectVisualEnabled)
-        {
-            AttachVisuals();
-        }
+        if (RedirectVisualEnabled) AttachVisuals();
     }
 
     private void OnPaddingPropertyChanged(DependencyObject sender, DependencyProperty dp)
@@ -314,10 +280,9 @@ public partial class RedirectVisualView : Control
 
     protected virtual void OnUseLayoutRoundingChanged()
     {
-
-        if (Environment.OSVersion.Version >= SupportedVersion)
+        if (Environment.OSVersion.Version >= _supportedVersion)
 #pragma warning disable CA1416 // 验证平台兼容性
-            redirectVisual.IsPixelSnappingEnabled = UseLayoutRounding;
+            RootVisual.IsPixelSnappingEnabled = UseLayoutRounding;
 #pragma warning restore CA1416 // 验证平台兼容性
     }
 
@@ -334,13 +299,10 @@ public partial class RedirectVisualView : Control
 
     private void UpdateSize()
     {
-        if (attached && LayoutRoot != null)
-        {
+        if (RedirectVisualAttached && LayoutRoot != null)
             if (ChildPresenter != null)
-            {
-                childVisualSurface.SourceSize = new Vector2((float)ChildPresenter.ActualWidth, (float)ChildPresenter.ActualHeight);
-            }
-        }
+                _childVisualSurface.SourceSize =
+                    new Vector2((float)ChildPresenter.ActualWidth, (float)ChildPresenter.ActualHeight);
 
         OnUpdateSize();
     }
@@ -354,28 +316,21 @@ public partial class RedirectVisualView : Control
             var length = new GridLength(1, value ? GridUnitType.Star : GridUnitType.Auto);
 
             if (ChildPresenterContainer.RowDefinitions.Count > 0)
-            {
                 ChildPresenterContainer.RowDefinitions[0].Height = length;
-            }
             if (ChildPresenterContainer.ColumnDefinitions.Count > 0)
-            {
                 ChildPresenterContainer.ColumnDefinitions[0].Width = length;
-            }
         }
     }
 
     protected virtual void OnAttachVisuals()
     {
-
     }
 
     protected virtual void OnDetachVisuals()
     {
-
     }
 
     protected virtual void OnUpdateSize()
     {
-
     }
 }

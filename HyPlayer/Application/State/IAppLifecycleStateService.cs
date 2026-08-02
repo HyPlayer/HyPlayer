@@ -5,7 +5,7 @@ namespace HyPlayer.Application.State;
 
 public interface IAppLifecycleStateService
 {
-    event EventHandler? EnteredForeground;
     bool IsInBackground { get; set; }
+    event EventHandler? EnteredForeground;
     void NotifyEnteredForeground();
 }

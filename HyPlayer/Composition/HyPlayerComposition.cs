@@ -1,54 +1,54 @@
+using System.Net.Http;
 using Depository.Abstraction.Enums;
 using Depository.Abstraction.Interfaces;
 using Depository.Abstraction.Interfaces.NotificationHub;
 using Depository.Extensions;
-using Depository.Extensions.DependencyInjection;
+using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Application.State;
+using HyPlayer.Application.Threading;
 using HyPlayer.Classes;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.History.Services;
+using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Effects;
+using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.QueueProviders;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Playback.Transitions;
 using HyPlayer.Features.Widgets.Services;
+using HyPlayer.LyricEffects.Drawing;
+using HyPlayer.LyricEffects.Expressions;
+using HyPlayer.LyricRenderer.Pipeline;
+using HyPlayer.Platform.Playback.AudioServices;
+using HyPlayer.Platform.Playback.LocalProvider;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.SystemServices;
+using HyPlayer.Platform.Tiles;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.AudioServices;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Notifications;
 using HyPlayer.PlayCore.PlayListControllers;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Lyrics.Effects;
-using HyPlayer.LyricEffects.Drawing;
-using HyPlayer.LyricEffects.Expressions;
-using HyPlayer.LyricRenderer.Pipeline;
-
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Playback.Transitions;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Playback.AudioServices;
-using HyPlayer.Platform.Playback.LocalProvider;
 using HyPlayer.Shell.ExpandedPlayer;
 using HyPlayer.Shell.Login;
 using HyPlayer.Shell.Navigation;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.Shell.Playback;
 using HyPlayer.Shell.Search;
+using HyPlayer.Shell.Services;
+using HyPlayer.UI.Playback.PlayBar;
+using HyPlayer.UI.TeachingTips;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using LiteFM;
 using LiteFM.Abstractions;
-using System.Net.Http;
 using AlbumPageViewModel = HyPlayer.Features.Album.AlbumPageViewModel;
 using ArtistPageViewModel = HyPlayer.Features.Artist.ArtistPageViewModel;
 using FavoriteViewModel = HyPlayer.Features.Library.FavoriteViewModel;
@@ -62,11 +62,30 @@ internal static class HyPlayerComposition
 {
     public static void ConfigureServices(IDepository depository)
     {
-        var setting = new Setting();
-        var neteaseProvider = new global::HyPlayer.NeteaseProvider.NeteaseProvider();
-        var client = neteaseProvider.ConfigureHttpClient(setting.EnableProxy);
+        var playbackSettings = new PlaybackSettings();
+        var uiSettings = new UISettings();
+        var apiSettings = new ApiSettings();
+        var lyricSettings = new LyricSettings();
+        var lastFmSettings = new LastFMSettings();
+        var downloadSettings = new DownloadSettings();
+        var localLibrarySettings = new LocalLibrarySettings(downloadSettings);
+        // The legacy settings page still exposes its bindings through XamlHelpers.Setting.
+        // Keep the facade registered while the split settings services are used by new code.
+        var legacySettings = new Setting();
 
-        ConfigureProviders(depository, setting, neteaseProvider, client);
+        depository.AddSingleton<PlaybackSettings>(playbackSettings);
+        depository.AddSingleton<UISettings>(uiSettings);
+        depository.AddSingleton<ApiSettings>(apiSettings);
+        depository.AddSingleton<LyricSettings>(lyricSettings);
+        depository.AddSingleton<LastFMSettings>(lastFmSettings);
+        depository.AddSingleton<DownloadSettings>(downloadSettings);
+        depository.AddSingleton<LocalLibrarySettings>(localLibrarySettings);
+        depository.AddSingleton<Setting>(legacySettings);
+
+        var neteaseProvider = new NeteaseProvider.NeteaseProvider();
+        var client = neteaseProvider.ConfigureHttpClient(apiSettings.EnableProxy);
+
+        ConfigureProviders(depository, neteaseProvider, client);
         ConfigurePlayCore(depository);
         ConfigurePlaybackServices(depository);
         ConfigureApplicationServices(depository);
@@ -76,12 +95,11 @@ internal static class HyPlayerComposition
 
     private static void ConfigureProviders(
         IDepository depository,
-        Setting setting,
-        global::HyPlayer.NeteaseProvider.NeteaseProvider neteaseProvider,
+        NeteaseProvider.NeteaseProvider neteaseProvider,
         HttpClient client)
     {
         depository.AddSingleton<HttpClient>(client);
-        depository.AddSingleton<global::HyPlayer.NeteaseProvider.NeteaseProvider>(neteaseProvider);
+        depository.AddSingleton<NeteaseProvider.NeteaseProvider>(neteaseProvider);
         depository.AddSingleton<ProviderBase>(neteaseProvider);
         depository.AddSingleton<IContainerManagementProvidable>(neteaseProvider);
         depository.AddSingleton<IAuthenticationProvidable>(neteaseProvider);
@@ -116,9 +134,8 @@ internal static class HyPlayerComposition
 
         depository.AddSingleton<LastFMClient>(
             new LastFMClient(
-                new LastFMOptions { ApiKey = LastFMConstants.APIKEY, ApiSecret = LastFMConstants.SECRET },
+                new LastFMOptions { ApiKey = LastFMConstants.ApiKey, ApiSecret = LastFMConstants.Secret },
                 client));
-        depository.AddSingleton<Setting>(setting);
         depository.AddSingleton<AudioGraphPlayer>();
         depository.Add(
             typeof(IPlayer),
@@ -256,9 +273,11 @@ internal static class HyPlayerComposition
     private static void ConfigureApplicationServices(IDepository depository)
     {
         depository.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
+        depository.AddSingleton<IAuthSessionStore, AuthSessionStore>();
         depository.AddSingleton<IAuthService, AuthService>();
         depository.AddSingleton<INavigationService, NavigationService>();
         depository.AddSingleton<IAppNavigator, AppNavigator>();
+        depository.AddSingleton<IUIThreadDispatcher, UIThreadDispatcher>();
         depository.AddSingleton<INotificationService, NotificationService>();
         depository.AddSingleton<IAppLifecycleStateService, AppLifecycleStateService>();
         depository.AddSingleton<IUserLibraryStateService, UserLibraryStateService>();

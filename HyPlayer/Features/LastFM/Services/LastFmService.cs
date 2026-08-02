@@ -1,47 +1,27 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using HyPlayer.Application.Notifications;
 using HyPlayer.Classes;
 using HyPlayer.Domain.Settings;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
 using LiteFM;
 using LiteFM.Abstractions.ApiContracts;
 using LiteFM.Api;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HyPlayer.Features.LastFM.Services;
 
 public sealed class LastFmService : ILastFmService
 {
     private readonly LastFMClient _client;
-    private readonly Setting _setting;
-    private readonly INotificationService _notification;
     private readonly IProviderKnownTypeIds _knownTypeIds;
+    private readonly INotificationService _notification;
+    private readonly LastFMSettings _setting;
 
     public LastFmService(
         LastFMClient client,
-        Setting setting,
+        LastFMSettings setting,
         INotificationService notification,
         IProviderKnownTypeIds knownTypeIds)
     {
@@ -53,7 +33,8 @@ public sealed class LastFmService : ILastFmService
 
     public Uri CreateLoginUri()
     {
-        return new Uri("https://www.last.fm/api/auth/?api_key=" + LastFMConstants.APIKEY + "&cb=hyplayer://link.last.fm");
+        return new Uri(
+            "https://www.last.fm/api/auth/?api_key=" + LastFMConstants.ApiKey + "&cb=hyplayer://link.last.fm");
     }
 
     public async Task CompleteBrowserLoginAsync(string token)
@@ -96,7 +77,8 @@ public sealed class LastFmService : ILastFmService
             Album = item.Album?.Name ?? string.Empty,
             Artist = item.CreatorList?.FirstOrDefault() ?? string.Empty,
             Track = item.Name,
-            TimeStamp = (uint)(DateTime.UtcNow - DateTime.UnixEpoch - TimeSpan.FromMilliseconds(item.Duration)).TotalSeconds
+            TimeStamp = (uint)(DateTime.UtcNow - DateTime.UnixEpoch - TimeSpan.FromMilliseconds(item.Duration))
+                .TotalSeconds
         };
         var response = await _client.RequestAsync(LastFMApi.ScrobbleApi, request, session);
         if (!response.IsSuccess)

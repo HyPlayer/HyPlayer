@@ -1,401 +1,319 @@
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
+using System;
 using Windows.Storage;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.UI.Playback.PlayBar;
 
-namespace HyPlayer.Domain.Settings
+namespace HyPlayer.Domain.Settings;
+
+/// <summary>
+///     Settings related to UI appearance, themes, animations, and visual effects.
+/// </summary>
+public partial class UISettings : SettingsBase
 {
+    protected override string SectionName => "ui";
+
     /// <summary>
-    /// Settings related to UI appearance, themes, animations, and visual effects.
+    ///     Theme request (Auto, Light, Dark).
     /// </summary>
-    public partial class UISettings : SettingsBase
+    public ThemeRequest ThemeRequest
     {
-        /// <summary>
-        /// Theme request (Auto, Light, Dark).
-        /// </summary>
-        public ThemeRequest themeRequest
+        get => GetSettings(nameof(ThemeRequest), ThemeRequest.Auto);
+        set => SetSettings(nameof(ThemeRequest), (int)value);
+    }
+
+    /// <summary>
+    ///     Whether expand animation is enabled.
+    /// </summary>
+    public bool ExpandAnimation
+    {
+        get => GetSettings(nameof(ExpandAnimation), true);
+        set => SetSettings(nameof(ExpandAnimation), value ? "true" : "false");
+    }
+
+    /// <summary>
+    ///     Whether to disable image loading.
+    /// </summary>
+    public bool NoImage
+    {
+        get => GetSettings(nameof(NoImage), false);
+        set => SetSettings(nameof(NoImage), value);
+    }
+
+    /// <summary>
+    ///     Lyric alignment setting.
+    /// </summary>
+    public LyricAlignment LyricAlignment
+    {
+        get => GetSettings(nameof(LyricAlignment), LyricAlignment.Left);
+        set => SetSettings(nameof(LyricAlignment), (int)value);
+    }
+
+    /// <summary>
+    ///     Lyric font size override (0 = default).
+    /// </summary>
+    public int LyricSize
+    {
+        get => GetSettings(nameof(LyricSize), 0);
+        set => SetSettings(nameof(LyricSize), value);
+    }
+
+    /// <summary>
+    ///     Lyric color mode.
+    /// </summary>
+    public LyricColor LyricColor
+    {
+        get => GetSettings(nameof(LyricColor), LyricColor.Auto);
+        set => SetSettings(nameof(LyricColor), (int)value);
+    }
+
+    /// <summary>
+    ///     Color generator type for theming.
+    /// </summary>
+    public ColorGeneratorType ColorGeneratorType
+    {
+        get => GetSettings(nameof(ColorGeneratorType), ColorGeneratorType.Auto);
+        set => SetSettings(nameof(ColorGeneratorType), (int)value);
+    }
+
+    /// <summary>
+    ///     Expanded player background type.
+    /// </summary>
+    public BackgroundType ExpandedPlayerBackgroundType
+    {
+        get
         {
-            get => GetSettings(nameof(themeRequest), ThemeRequest.Auto);
-            set
+            var value = GetSettings(nameof(ExpandedPlayerBackgroundType), (int)BackgroundType.Isolation);
+            var backgroundType = value switch
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(themeRequest)] = (int)value;
-            }
-        }
+                4 => BackgroundType.Isolation,
+                _ when Enum.IsDefined(typeof(BackgroundType), value) => (BackgroundType)value,
+                _ => BackgroundType.Isolation
+            };
 
-        /// <summary>
-        /// Whether expand animation is enabled.
-        /// </summary>
-        public bool expandAnimation
-        {
-            get => GetSettings(nameof(expandAnimation), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(expandAnimation)] = value ? "true" : "false";
-            }
+            return backgroundType;
         }
+        set => SetSettings(nameof(ExpandedPlayerBackgroundType), (int)value);
+    }
 
-        /// <summary>
-        /// Whether to disable image loading.
-        /// </summary>
-        public bool noImage
+    /// <summary>
+    ///     Whether album cover rotates during playback.
+    /// </summary>
+    public bool AlbumRotate
+    {
+        get => GetSettings(nameof(AlbumRotate), false);
+        set
         {
-            get => GetSettings(nameof(noImage), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(noImage)] = value;
+            if (SetSettings(nameof(AlbumRotate), value) && value)
+                AlbumRound = true;
         }
+    }
 
-        /// <summary>
-        /// Lyric alignment setting.
-        /// </summary>
-        public LyricAlignment lyricAlignment
+    /// <summary>
+    ///     Whether album cover is displayed as round.
+    /// </summary>
+    public bool AlbumRound
+    {
+        get => GetSettings(nameof(AlbumRound), false);
+        set
         {
-            get => GetSettings(nameof(lyricAlignment), LyricAlignment.Left);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricAlignment)] = (int)value;
-            }
+            if (SetSettings(nameof(AlbumRound), value) && !value)
+                AlbumRotate = false;
         }
+    }
 
-        /// <summary>
-        /// Lyric font size override (0 = default).
-        /// </summary>
-        public int lyricSize
-        {
-            get => GetSettings(nameof(lyricSize), 0);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(lyricSize)] = value;
-            }
-        }
+    /// <summary>
+    ///     Album border length.
+    /// </summary>
+    public int AlbumBorderLength
+    {
+        get => GetSettings(nameof(AlbumBorderLength), 0);
+        set => SetSettings(nameof(AlbumBorderLength), value);
+    }
 
-        /// <summary>
-        /// Lyric color mode.
-        /// </summary>
-        public LyricColor lyricColor
-        {
-            get => GetSettings(nameof(lyricColor), LyricColor.Auto);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(lyricColor)] = (int)value;
-        }
+    /// <summary>
+    ///     Whether expanded player uses acrylic.
+    /// </summary>
+    public bool ExpandedUseAcrylic
+    {
+        get => GetSettings(nameof(ExpandedUseAcrylic), true);
+        set => SetSettings(nameof(ExpandedUseAcrylic), value);
+    }
 
-        /// <summary>
-        /// Color generator type for theming.
-        /// </summary>
-        public ColorGeneratorType ColorGeneratorType
-        {
-            get => GetSettings(nameof(ColorGeneratorType), ColorGeneratorType.Auto);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(ColorGeneratorType)] = (int)value;
-            }
-        }
+    /// <summary>
+    ///     Whether expanded album has breath animation.
+    /// </summary>
+    public bool ExpandAlbumBreath
+    {
+        get => GetSettings(nameof(ExpandAlbumBreath), false);
+        set => SetSettings(nameof(ExpandAlbumBreath), value);
+    }
 
-        /// <summary>
-        /// Expanded player background type.
-        /// </summary>
-        public BackgroundType expandedPlayerBackgroundType
-        {
-            get => GetSettings(nameof(expandedPlayerBackgroundType), BackgroundType.CoverBlur);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerBackgroundType)] = (int)value;
-            }
-        }
+    /// <summary>
+    ///     Whether expanded player shows full cover.
+    /// </summary>
+    public bool ExpandedPlayerFullCover
+    {
+        get => GetSettings(nameof(ExpandedPlayerFullCover), false);
+        set => SetSettings(nameof(ExpandedPlayerFullCover), value);
+    }
 
-        /// <summary>
-        /// Whether album cover rotates during playback.
-        /// </summary>
-        public bool albumRotate
-        {
-            get => GetSettings(nameof(albumRotate), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(albumRotate)] = value;
-                if (value) albumRound = true;
-            }
-        }
+    /// <summary>
+    ///     Expanded cover shadow depth.
+    /// </summary>
+    public int ExpandedCoverShadowDepth
+    {
+        get => GetSettings(nameof(ExpandedCoverShadowDepth), 4);
+        set => SetSettings(nameof(ExpandedCoverShadowDepth), value);
+    }
 
-        /// <summary>
-        /// Whether album cover is displayed as round.
-        /// </summary>
-        public bool albumRound
-        {
-            get => GetSettings(nameof(albumRound), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(albumRound)] = value;
-                if (!value) albumRotate = false;
-            }
-        }
+    /// <summary>
+    ///     Whether compact player page blur is enabled.
+    /// </summary>
+    public bool CompactPlayerPageBlurStatus
+    {
+        get => GetSettings(nameof(CompactPlayerPageBlurStatus), false);
+        set => SetSettings(nameof(CompactPlayerPageBlurStatus), value);
+    }
 
-        /// <summary>
-        /// Album border length.
-        /// </summary>
-        public int albumBorderLength
-        {
-            get => GetSettings(nameof(albumBorderLength), 0);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(albumBorderLength)] = value;
-        }
+    /// <summary>
+    ///     Whether not-clear mode is enabled.
+    /// </summary>
+    public bool NotClearMode
+    {
+        get => GetSettings(nameof(NotClearMode), true);
+        set => SetSettings(nameof(NotClearMode), value);
+    }
 
-        /// <summary>
-        /// Whether expanded player uses acrylic.
-        /// </summary>
-        public bool expandedUseAcrylic
-        {
-            get => GetSettings(nameof(expandedUseAcrylic), true);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(expandedUseAcrylic)] = value;
-        }
+    /// <summary>
+    ///     Whether playbar auto-hides.
+    /// </summary>
+    public bool AutoHidePlaybar
+    {
+        get => GetSettings(nameof(AutoHidePlaybar), false);
+        set => SetSettings(nameof(AutoHidePlaybar), value);
+    }
 
-        /// <summary>
-        /// Whether expanded album has breath animation.
-        /// </summary>
-        public bool expandAlbumBreath
+    /// <summary>
+    ///     Auto-hide playbar timeout in seconds.
+    /// </summary>
+    public int AutoHidePlaybarTime
+    {
+        get => GetSettings(nameof(AutoHidePlaybarTime), 3);
+        set
         {
-            get => GetSettings(nameof(expandAlbumBreath), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(expandAlbumBreath)] = value;
-        }
-
-        /// <summary>
-        /// Whether expanded player shows full cover.
-        /// </summary>
-        public bool expandedPlayerFullCover
-        {
-            get => GetSettings(nameof(expandedPlayerFullCover), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerFullCover)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Expanded cover shadow depth.
-        /// </summary>
-        public int expandedCoverShadowDepth
-        {
-            get => GetSettings(nameof(expandedCoverShadowDepth), 4);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(expandedCoverShadowDepth)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether compact player page blur is enabled.
-        /// </summary>
-        public bool CompactPlayerPageBlurStatus
-        {
-            get => GetSettings(nameof(CompactPlayerPageBlurStatus), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(CompactPlayerPageBlurStatus)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether not-clear mode is enabled.
-        /// </summary>
-        public bool notClearMode
-        {
-            get => GetSettings(nameof(notClearMode), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(notClearMode)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Whether playbar auto-hides.
-        /// </summary>
-        public bool AutoHidePlaybar
-        {
-            get => GetSettings(nameof(AutoHidePlaybar), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybar)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Auto-hide playbar timeout in seconds.
-        /// </summary>
-        public int AutoHidePlaybarTime
-        {
-            get => GetSettings(nameof(AutoHidePlaybarTime), 3);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybarTime)] = value;
+            if (SetSettings(nameof(AutoHidePlaybarTime), value))
                 Ioc.Default.GetRequiredService<IPlayBarAutoHideService>().SecondCounter = 0;
-            }
         }
+    }
 
-        /// <summary>
-        /// Whether playbar has margin.
-        /// </summary>
-        public bool playBarMargin
-        {
-            get => GetSettings(nameof(playBarMargin), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(playBarMargin)] = value;
-            }
-        }
+    /// <summary>
+    ///     Whether playbar has margin.
+    /// </summary>
+    public bool PlayBarMargin
+    {
+        get => GetSettings(nameof(PlayBarMargin), true);
+        set => SetSettings(nameof(PlayBarMargin), value);
+    }
 
-        /// <summary>
-        /// Whether UI sounds are enabled.
-        /// </summary>
-        public bool uiSound
-        {
-            get => GetSettings(nameof(uiSound), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(uiSound)] = value;
-            }
-        }
+    /// <summary>
+    ///     Whether UI sounds are enabled.
+    /// </summary>
+    public bool UISound
+    {
+        get => GetSettings(nameof(UISound), false);
+        set => SetSettings(nameof(UISound), value);
+    }
 
-        /// <summary>
-        /// Whether to display shuffled list.
-        /// </summary>
-        public bool displayShuffledList
-        {
-            get => GetSettings(nameof(displayShuffledList), true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(displayShuffledList)] = value;
-            }
-        }
+    /// <summary>
+    ///     Whether to display shuffled list.
+    /// </summary>
+    public bool DisplayShuffledList
+    {
+        get => GetSettings(nameof(DisplayShuffledList), true);
+        set => SetSettings(nameof(DisplayShuffledList), value);
+    }
 
-        /// <summary>
-        /// Whether to display maintenance info.
-        /// </summary>
-        public bool displayMaintain
-        {
-            get => GetSettings(nameof(displayMaintain), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(displayMaintain)] = value;
-            }
-        }
+    /// <summary>
+    ///     Whether to display maintenance info.
+    /// </summary>
+    public bool DisplayMaintain
+    {
+        get => GetSettings(nameof(DisplayMaintain), false);
+        set => SetSettings(nameof(DisplayMaintain), value);
+    }
 
-        /// <summary>
-        /// Whether touch gesture actions are enabled.
-        /// </summary>
-        public bool enableTouchGestureAction
-        {
-            get => GetSettings(nameof(enableTouchGestureAction), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(enableTouchGestureAction)] = value;
-        }
+    /// <summary>
+    ///     Whether touch gesture actions are enabled.
+    /// </summary>
+    public bool EnableTouchGestureAction
+    {
+        get => GetSettings(nameof(EnableTouchGestureAction), false);
+        set => SetSettings(nameof(EnableTouchGestureAction), value);
+    }
 
-        /// <summary>
-        /// Gesture mode.
-        /// </summary>
-        public GestureMode gestureMode
-        {
-            get => GetSettings(nameof(gestureMode), GestureMode.Basic);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(gestureMode)] = (int)value;
-        }
+    /// <summary>
+    ///     Gesture mode.
+    /// </summary>
+    public GestureMode GestureMode
+    {
+        get => GetSettings(nameof(GestureMode), GestureMode.Basic);
+        set => SetSettings(nameof(GestureMode), (int)value);
+    }
 
-        /// <summary>
-        /// Whether animation adapts to BPM.
-        /// </summary>
-        public bool animationAdaptBPM
-        {
-            get => GetSettings(nameof(animationAdaptBPM), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(animationAdaptBPM)] = value;
-            }
-        }
+    /// <summary>
+    ///     Whether animation adapts to BPM.
+    /// </summary>
+    public bool AnimationAdaptBPM
+    {
+        get => GetSettings(nameof(AnimationAdaptBPM), false);
+        set => SetSettings(nameof(AnimationAdaptBPM), value);
+    }
 
-        /// <summary>
-        /// Whether gentle BPM animation is enabled.
-        /// </summary>
-        public bool gentleBPMAnimation
-        {
-            get => GetSettings(nameof(gentleBPMAnimation), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(gentleBPMAnimation)] = value;
-            }
-        }
+    /// <summary>
+    ///     Whether gentle BPM animation is enabled.
+    /// </summary>
+    public bool GentleBPMAnimation
+    {
+        get => GetSettings(nameof(GentleBPMAnimation), false);
+        set => SetSettings(nameof(GentleBPMAnimation), value);
+    }
 
-        /// <summary>
-        /// Whether popup notifications are disabled.
-        /// </summary>
-        public bool DisablePopUp
-        {
-            get => GetSettings(nameof(DisablePopUp), false);
-            set => ApplicationData.Current.LocalSettings.Values[nameof(DisablePopUp)] = value;
-        }
+    /// <summary>
+    ///     Whether popup notifications are disabled.
+    /// </summary>
+    public bool DisablePopUp
+    {
+        get => GetSettings(nameof(DisablePopUp), false);
+        set => SetSettings(nameof(DisablePopUp), value);
+    }
 
-        /// <summary>
-        /// Whether canary channel is available.
-        /// </summary>
-        public bool canaryChannelAvailability
-        {
-            get => GetSettings(nameof(canaryChannelAvailability), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(canaryChannelAvailability)] = value;
-            }
-        }
+    /// <summary>
+    ///     Whether canary channel is available.
+    /// </summary>
+    public bool CanaryChannelAvailability
+    {
+        get => GetSettings(nameof(CanaryChannelAvailability), false);
+        set => SetSettings(nameof(CanaryChannelAvailability), value);
+    }
 
-        /// <summary>
-        /// Whether local progressive loading is enabled.
-        /// </summary>
-        public bool localProgressiveLoad
-        {
-            get => GetSettings(nameof(localProgressiveLoad), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(localProgressiveLoad)] = value;
-            }
-        }
+    /// <summary>
+    ///     Update source channel.
+    /// </summary>
+    public UpdateSource UpdateSource
+    {
+        get => GetSettings(nameof(UpdateSource), UpdateSource.Release);
+        set => SetSettings(nameof(UpdateSource), (int)value);
+    }
 
-        /// <summary>
-        /// Update source channel.
-        /// </summary>
-        public UpdateSource UpdateSource
-        {
-            get => GetSettings(nameof(UpdateSource), UpdateSource.Release);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(UpdateSource)] = (int)value;
-            }
-        }
+    public bool EnableTile
+    {
+        get => GetSettings(nameof(EnableTile), false);
+        set => SetSettings(nameof(EnableTile), value);
+    }
 
-        public bool EnableTile
-        {
-            get => GetSettings(nameof(EnableTile), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(EnableTile)] = value;
-            }
-        }
-
-        public bool EnableTileBackground
-        {
-            get => GetSettings(nameof(EnableTileBackground), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(EnableTileBackground)] = value;
-            }
-        }
+    public bool EnableTileBackground
+    {
+        get => GetSettings(nameof(EnableTileBackground), false);
+        set => SetSettings(nameof(EnableTileBackground), value);
     }
 }

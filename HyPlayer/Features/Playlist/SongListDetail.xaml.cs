@@ -1,38 +1,19 @@
 #region
 
-using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
-using HyPlayer.Platform.Storage.Cache;
-using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.UI.Lists;
 
 #endregion
 
@@ -46,12 +27,13 @@ namespace HyPlayer.Features.Playlist;
 public sealed partial class SongListDetail : Page
 {
     private const string DailyRecommendPlaylistId = "daily_recommend";
-    private readonly IContainerItemManagementProvidable _containerItemManagement = Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
+
+    private readonly IContainerItemManagementProvidable _containerItemManagement =
+        Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
+
+    private readonly DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
     private bool _dataRequestedSubscribed;
-    public SongListViewModel ViewModel => (SongListViewModel)DataContext;
-    public List<ProvidableItemAction> ItemActions { get; }
 
     public SongListDetail()
     {
@@ -70,7 +52,10 @@ public sealed partial class SongListDetail : Page
         AttachDataRequested();
     }
 
-    private async System.Threading.Tasks.Task RemoveItemFromPlaylistAsync(ProvidableItemRowViewModel row)
+    public SongListViewModel ViewModel => (SongListViewModel)DataContext;
+    public List<ProvidableItemAction> ItemActions { get; }
+
+    private async Task RemoveItemFromPlaylistAsync(ProvidableItemRowViewModel row)
     {
         if (ViewModel.PlayList is null || string.IsNullOrWhiteSpace(row.ItemId))
             return;
@@ -130,7 +115,6 @@ public sealed partial class SongListDetail : Page
     }
 
 
-
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -142,13 +126,9 @@ public sealed partial class SongListDetail : Page
                 var isDailyRecommend = playList.ActualId == DailyRecommendPlaylistId;
                 ViewModel.IsDailyRecommend = isDailyRecommend;
                 if (isDailyRecommend)
-                {
                     ViewModel.LoadPageData(playList).SafeFireAndForget();
-                }
                 else
-                {
                     ViewModel.LoadPageData(playList).SafeFireAndForget();
-                }
             }
             else
             {

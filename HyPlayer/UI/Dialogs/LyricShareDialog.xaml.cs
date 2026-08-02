@@ -1,26 +1,3 @@
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Lyrics;
-using HyPlayer.Application.Diagnostics;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -28,6 +5,9 @@ using System.Linq;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Lyrics;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
 
@@ -43,7 +23,7 @@ public sealed partial class LyricShareDialog : ContentDialog
         "ShareLyricItem", typeof(ObservableCollection<LyricShareItem>), typeof(LyricShareDialog),
         new PropertyMetadata(null));
 
-    public Dictionary<SongLyric, string> OutputLines = new();
+    private readonly Dictionary<SongLyric, string> _outputLines = new();
 
     public LyricShareDialog()
     {
@@ -93,7 +73,7 @@ public sealed partial class LyricShareDialog : ContentDialog
 
     private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
-        OutputLines.Clear();
+        _outputLines.Clear();
         var output = LoadSelectedText();
         var dp = new DataPackage();
         dp.SetText(output);
@@ -106,29 +86,29 @@ public sealed partial class LyricShareDialog : ContentDialog
         var items = MainListView.SelectedItems.Cast<LyricShareItem>().ToList();
         foreach (var item in items)
         {
-            if (!OutputLines.ContainsKey(item.OriginalLyric))
-                OutputLines[item.OriginalLyric] =
+            if (!_outputLines.ContainsKey(item.OriginalLyric))
+                _outputLines[item.OriginalLyric] =
                     TextBoxOutputFormat.Text
                         .Replace("{$NEWLINE}", "\r\n")
                         .Replace("{$TIME}", item.OriginalLyric.LyricLine.StartTime.ToString(@"mm\:ss\.ff"));
-            OutputLines[item.OriginalLyric] = item.Type switch
+            _outputLines[item.OriginalLyric] = item.Type switch
             {
-                LyricShareItemType.Original => OutputLines[item.OriginalLyric]
+                LyricShareItemType.Original => _outputLines[item.OriginalLyric]
                     .Replace("{$ORIGINAL}", item.Text),
-                LyricShareItemType.Translation => OutputLines[item.OriginalLyric]
+                LyricShareItemType.Translation => _outputLines[item.OriginalLyric]
                     .Replace("{$TRANSLATION}", item.Text),
-                LyricShareItemType.Romaji => OutputLines[item.OriginalLyric]
+                LyricShareItemType.Romaji => _outputLines[item.OriginalLyric]
                     .Replace("{$ROMAJI}", item.Text),
-                _ => OutputLines[item.OriginalLyric]
+                _ => _outputLines[item.OriginalLyric]
             };
         }
 
         // 最后把没有碰撞上的匹配项给替换掉
         // 首先先复制一份出来
-        var newOutputLines = OutputLines.ToDictionary(t => t.Key, t => t.Value);
-        foreach (var outputLinesKey in OutputLines.Keys)
+        var newOutputLines = _outputLines.ToDictionary(t => t.Key, t => t.Value);
+        foreach (var outputLinesKey in _outputLines.Keys)
             newOutputLines[outputLinesKey] =
-                OutputLines[outputLinesKey]
+                _outputLines[outputLinesKey]
                     .Replace("{$ORIGINAL}", string.Empty)
                     .Replace("{$TRANSLATION}", string.Empty)
                     .Replace("{$ROMAJI}", string.Empty);
@@ -147,7 +127,7 @@ public sealed partial class LyricShareDialog : ContentDialog
     {
         Closed -= LyricShareDialog_Closed;
         ShareLyricItem.Clear();
-        OutputLines.Clear();
+        _outputLines.Clear();
     }
 
     private void SelectOriginal(object sender, RoutedEventArgs e)
@@ -213,19 +193,4 @@ public sealed partial class LyricShareDialog : ContentDialog
             if (item is LyricShareItem lyricShareItem && string.IsNullOrWhiteSpace(lyricShareItem.Text))
                 MainListView.SelectedItems.Remove(item);
     }
-}
-
-public class LyricShareItem
-{
-    public SongLyric OriginalLyric;
-    public string Text;
-    public TimeSpan Time;
-    public LyricShareItemType Type;
-}
-
-public enum LyricShareItemType
-{
-    Original,
-    Translation,
-    Romaji
 }

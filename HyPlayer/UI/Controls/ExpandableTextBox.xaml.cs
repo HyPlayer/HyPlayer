@@ -23,8 +23,10 @@ public sealed partial class ExpandableTextBox : UserControl
         "TextWrapping", typeof(TextWrapping), typeof(ExpandableTextBox),
         new PropertyMetadata(default(TextWrapping)));
 
+#pragma warning disable IDE1006 // Dependency property identifiers follow the XAML XxxProperty convention.
     private static readonly DependencyProperty ActualMaxLineProperty = DependencyProperty.Register(
         "ActualMaxLine", typeof(int), typeof(ExpandableTextBox), new PropertyMetadata(7));
+#pragma warning restore IDE1006
 
     private bool _isExpanded;
 
@@ -32,18 +34,6 @@ public sealed partial class ExpandableTextBox : UserControl
     {
         InitializeComponent();
         ExpandButton.Visibility = Visibility.Collapsed;
-    }
-
-    private void MyTextBlock_IsTextTrimmedChanged(TextBlock sender, IsTextTrimmedChangedEventArgs args)
-    {
-        if (MyTextBlock.IsTextTrimmed || _isExpanded)
-        {
-            ExpandButton.Visibility = Visibility.Visible;
-        }
-        else
-        {
-            ExpandButton.Visibility = Visibility.Collapsed;
-        }
     }
 
     public string ButtonText
@@ -61,10 +51,7 @@ public sealed partial class ExpandableTextBox : UserControl
     public string Text
     {
         get => (string)GetValue(TextProperty);
-        set
-        {
-            SetValue(TextProperty, value);
-        }
+        set => SetValue(TextProperty, value);
     }
 
 
@@ -84,6 +71,14 @@ public sealed partial class ExpandableTextBox : UserControl
     {
         get => (int)GetValue(ActualMaxLineProperty);
         set => SetValue(ActualMaxLineProperty, value);
+    }
+
+    private void MyTextBlock_IsTextTrimmedChanged(TextBlock sender, IsTextTrimmedChangedEventArgs args)
+    {
+        if (MyTextBlock.IsTextTrimmed || _isExpanded)
+            ExpandButton.Visibility = Visibility.Visible;
+        else
+            ExpandButton.Visibility = Visibility.Collapsed;
     }
 
     private void ExpandOrCollapseText(object sender, RoutedEventArgs e)

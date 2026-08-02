@@ -6,7 +6,7 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
 /// <summary>
-/// Win2D composable layer that renders lyrics through the shared LyricRenderView.
+///     Win2D composable layer that renders lyrics through the shared LyricRenderView.
 /// </summary>
 public sealed class LyricsLayer : IExpandedCanvasLayer
 {

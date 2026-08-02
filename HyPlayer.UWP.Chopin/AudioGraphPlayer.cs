@@ -22,6 +22,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         #region Private Fields
         private readonly ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new();
         private readonly ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new();
+        private readonly ConcurrentDictionary<AudioGraphPlaybackSource, PlaybackSourceGainState> _playbackSourceGainStates = new();
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
         private AudioFrameOutputNode _frameOutputNode;
@@ -235,7 +236,9 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     {
                         // 捕获旧节点状态
                         var position = oldNode.Position;
-                        var gain = oldNode.OutgoingGain;
+                        var gain = _playbackSourceGainStates.TryGetValue(source, out var gainState)
+                            ? gainState.GetOutgoingGain()
+                            : oldNode.OutgoingGain;
                         var factor = oldNode.PlaybackSpeedFactor;
                         var effects = oldNode.EffectDefinitions.ToList();
 
@@ -322,6 +325,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
 
             _defaultPlayer?.Dispose();
+            _playbackSourceGainStates.Clear();
             _disposedValue = true;
         }
 
@@ -416,8 +420,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public void SetPlaybackSourceOutputVolume(double volume, IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
-            var node = GetAudioInputNodeOrThrow(playbackSource);
-            node.OutgoingGain = volume;
+            SetPlaybackSourceGainComponent(playbackSource, volume, false);
+        }
+
+        public void SetPlaybackSourceAudioGain(double audioGain, IPlaybackSource playbackSource)
+        {
+            ThrowExceptionIfDisposed();
+            SetPlaybackSourceGainComponent(playbackSource, audioGain, true);
         }
 
         public void SetPlaybackSourceSpeed(double speed, IPlaybackSource playbackSource)
@@ -463,7 +472,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             var node = nodeResult.Node;
 
             // 配置节点
-            node.OutgoingGain = options.Volume;
+            var gainState = new PlaybackSourceGainState(options.Volume, options.AudioGain);
+            node.OutgoingGain = gainState.GetOutgoingGain();
             node.AddOutgoingConnection(_outputNode);
             node.AddOutgoingConnection(_frameOutputNode);
             node.MediaSourceCompleted += OnMediaSourceCompleted;
@@ -471,6 +481,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             // 注册节点
             _audioInputNodes.TryAdd(source, node);
             _audioInputNodesReverseDictionary.TryAdd(node, source);
+            _playbackSourceGainStates.TryAdd(source, gainState);
 
             // 设置为主播放源
             if (_audioInputNodes.Count == 1 || options.SetAsPrimarySource)
@@ -542,6 +553,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             source.PlaybackStatus = PlaybackStatus.Closed;
             _audioInputNodes.TryRemove(source, out _);
             _audioInputNodesReverseDictionary.TryRemove(node, out _);
+            _playbackSourceGainStates.TryRemove(source, out _);
 
             if (_audioInputNodes.IsEmpty)
             {
@@ -562,6 +574,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
             _audioInputNodes.Clear();
             _audioInputNodesReverseDictionary.Clear();
+            _playbackSourceGainStates.Clear();
             _primaryPlaybackSource = null;
             _defaultPlayer.Stop();
             UpdateGlobalPlaybackStatus(PlaybackStatus.Closed);
@@ -654,6 +667,61 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 throw new ArgumentException("PlaybackSource haven't connected to the player.");
 
             return node;
+        }
+
+        private void SetPlaybackSourceGainComponent(
+            IPlaybackSource playbackSource,
+            double value,
+            bool isAudioGain)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value) || value < 0)
+                throw new ArgumentOutOfRangeException(nameof(value));
+
+            var node = GetAudioInputNodeOrThrow(playbackSource);
+            var source = (AudioGraphPlaybackSource)playbackSource;
+            if (!_playbackSourceGainStates.TryGetValue(source, out var state))
+                throw new ArgumentException("PlaybackSource gain state is unavailable.", nameof(playbackSource));
+
+            state.Apply(node, value, isAudioGain);
+        }
+
+        private sealed class PlaybackSourceGainState
+        {
+            private readonly object _syncRoot = new();
+            private double _audioGain;
+            private double _volume;
+
+            public PlaybackSourceGainState(double volume, double audioGain)
+            {
+                if (double.IsNaN(volume) || double.IsInfinity(volume) || volume < 0)
+                    throw new ArgumentOutOfRangeException(nameof(volume));
+                if (double.IsNaN(audioGain) || double.IsInfinity(audioGain) || audioGain < 0)
+                    throw new ArgumentOutOfRangeException(nameof(audioGain));
+
+                _volume = volume;
+                _audioGain = audioGain;
+            }
+
+            public void Apply(MediaSourceAudioInputNode node, double value, bool isAudioGain)
+            {
+                lock (_syncRoot)
+                {
+                    if (isAudioGain)
+                        _audioGain = value;
+                    else
+                        _volume = value;
+
+                    node.OutgoingGain = _volume * _audioGain;
+                }
+            }
+
+            public double GetOutgoingGain()
+            {
+                lock (_syncRoot)
+                {
+                    return _volume * _audioGain;
+                }
+            }
         }
 
         private void ThrowExceptionIfDisposed()

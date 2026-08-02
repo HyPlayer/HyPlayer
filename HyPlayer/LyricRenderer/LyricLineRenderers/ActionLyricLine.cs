@@ -1,35 +1,35 @@
-﻿using HyPlayer.LyricRenderer.Abstraction;
-using HyPlayer.LyricRenderer.Abstraction.Render;
-using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Text;
-using System;
+﻿using System;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
+using HyPlayer.LyricRenderer.Abstraction;
+using HyPlayer.LyricRenderer.Abstraction.Render;
+using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Text;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
 public class ActionLyricLine : RenderingLyricLine
 {
-    private float _canvasWidth;
-    private CanvasTextFormat textFormat;
-    private CanvasTextLayout textLayout;
-    private bool _sizeChanged;
     private float _canvasHeight;
+    private float _canvasWidth;
 
-    private ICanvasImage _staticPersistCache = null;
+    // 新增：用于记录文本排版的实际起始 X 坐标
+    private float _renderStartX;
+    private bool _sizeChanged;
+
+    private ICanvasImage _staticPersistCache;
+    private CanvasTextFormat _textFormat;
+    private CanvasTextLayout _textLayout;
 
     public string Text { get; set; }
     public string ActionUri { get; set; }
-
-    // 新增：用于记录文本排版的实际起始 X 坐标
-    private float _renderStartX = 0f;
     public override string ExpressionText => Text ?? string.Empty;
 
 
     protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
-        if (textLayout is null) return true;
+        if (_textLayout is null) return true;
         session.DrawImage(_staticPersistCache, 0, 0);
         return true;
     }
@@ -37,7 +37,7 @@ public class ActionLyricLine : RenderingLyricLine
     protected override void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
     {
         if (_canvasWidth == 0.0f) return;
-        if (textFormat is null)
+        if (_textFormat is null)
             OnTypographyChanged(session, context);
     }
 
@@ -51,7 +51,7 @@ public class ActionLyricLine : RenderingLyricLine
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
-        textFormat = new CanvasTextFormat
+        _textFormat = new CanvasTextFormat
         {
             FontSize = TypographySelector(t => t?.LyricFontSize, context)!.Value / 2,
             HorizontalAlignment =
@@ -68,17 +68,17 @@ public class ActionLyricLine : RenderingLyricLine
             FontWeight = FontWeights.Normal
         };
 
-        if (textLayout is null || _sizeChanged)
+        if (_textLayout is null || _sizeChanged)
         {
             _sizeChanged = false;
-            textLayout = new CanvasTextLayout(session, Text, textFormat,
+            _textLayout = new CanvasTextLayout(session, Text, _textFormat,
                 Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
 
-            _renderStartX = (float)textLayout.LayoutBounds.X;
+            _renderStartX = (float)_textLayout.LayoutBounds.X;
         }
 
-        RenderingHeight = (float)(textLayout?.LayoutBounds.Height ?? 0);
-        RenderingWidth = (float)(textLayout?.LayoutBounds.Width ?? 0) + 32; // 加上 32 作为左右各 16 的 Padding 留白
+        RenderingHeight = (float)(_textLayout?.LayoutBounds.Height ?? 0);
+        RenderingWidth = (float)(_textLayout?.LayoutBounds.Width ?? 0) + 32; // 加上 32 作为左右各 16 的 Padding 留白
 
         _staticPersistCache?.Dispose();
         CanvasDrawingSession pstDs;
@@ -90,7 +90,8 @@ public class ActionLyricLine : RenderingLyricLine
         }
         else
         {
-            var staticPersistCacheTarget = new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+            var staticPersistCacheTarget =
+                new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
             _staticPersistCache = staticPersistCacheTarget;
             pstDs = staticPersistCacheTarget.CreateDrawingSession();
         }
@@ -99,17 +100,18 @@ public class ActionLyricLine : RenderingLyricLine
         using (pstDs)
         {
             pstDs.Clear(Colors.Transparent);
-            pstDs.DrawTextLayout(textLayout, -_renderStartX + 16, 0, TypographySelector(t => t?.IdleColor, context)!.Value);
+            pstDs.DrawTextLayout(_textLayout, -_renderStartX + 16, 0,
+                TypographySelector(t => t?.IdleColor, context)!.Value);
         }
     }
 
     public override void Dispose()
     {
-        textFormat?.Dispose();
-        textLayout?.Dispose();
-        (_staticPersistCache as IDisposable)?.Dispose();
-        textFormat = null;
-        textLayout = null;
+        _textFormat?.Dispose();
+        _textLayout?.Dispose();
+        _staticPersistCache?.Dispose();
+        _textFormat = null;
+        _textLayout = null;
         _staticPersistCache = null;
         base.Dispose();
     }
