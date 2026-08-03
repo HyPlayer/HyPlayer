@@ -80,6 +80,7 @@ public sealed partial class ExpandedPlayer : Page
         new PropertyMetadata("x1"));
 
     private readonly BackgroundShaderLayer _backgroundShaderLayer;
+    private readonly DebugOverlayLayer _debugOverlayLayer;
     private readonly LikeAppleBackgroundLayer _likeAppleBackgroundLayer;
     private readonly ExpandedCanvasState _canvasState = new();
     private readonly WeakEventListener<ExpandedPlayer, object?, EventArgs> _enteredForegroundListener;
@@ -149,6 +150,7 @@ public sealed partial class ExpandedPlayer : Page
         _likeAppleBackgroundLayer = new LikeAppleBackgroundLayer(_canvasState, _player);
         _spectrumLayer = new SpectrumLayer(_canvasState, _player);
         _lyricsLayer = new LyricsLayer(_canvasState);
+        _debugOverlayLayer = new DebugOverlayLayer(_canvasState);
         DataContext = ViewModel;
         _secondTickListener = new WeakEventListener<ExpandedPlayer, object?, EventArgs>(this)
         {
@@ -223,6 +225,7 @@ public sealed partial class ExpandedPlayer : Page
         _expandedCanvasHost.AddLayer(_likeAppleBackgroundLayer);
         _expandedCanvasHost.AddLayer(_spectrumLayer);
         _expandedCanvasHost.AddLayer(_lyricsLayer);
+        _expandedCanvasHost.AddLayer(_debugOverlayLayer);
 
         // ── Stage 8: Share/save controller ────────────────────────────
         _shareSave = new ExpandedPlayerShareSaveController(
@@ -255,6 +258,7 @@ public sealed partial class ExpandedPlayer : Page
         _canvasState.BackgroundType = _uiSettings.ExpandedPlayerBackgroundType;
         _canvasState.IsPlaying = _state.IsPlaying;
         _canvasState.ShowSpectrum = _playbackSettings.ShowSpectrum;
+        _canvasState.ShowDebugOverlay = _uiSettings.ExpandedPlayerDebugMode;
         _player.EnableFFTProcessing = _playbackSettings.EnableFFT ||
             _playbackSettings.ShowSpectrum ||
             _canvasState.BackgroundType == BackgroundType.LikeApple;
@@ -1222,7 +1226,16 @@ public sealed partial class ExpandedPlayer : Page
     private void LuminousBackground_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
     {
         SyncCanvasState();
+        if (!_canvasState.ShowDebugOverlay)
+        {
+            _canvasState.LastFrameDrawMilliseconds = 0;
+            _expandedCanvasHost.Draw(sender, args);
+            return;
+        }
+
+        var drawStartedAt = Stopwatch.GetTimestamp();
         _expandedCanvasHost.Draw(sender, args);
+        _canvasState.LastFrameDrawMilliseconds = Stopwatch.GetElapsedTime(drawStartedAt).TotalMilliseconds;
     }
 
 
@@ -1285,6 +1298,7 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.OnBeforeRender -= LyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked -= LyricBoxOnOnRequestSeek;
         _lyricBox.Clear();
+        _debugOverlayLayer.Dispose();
         if (_uiSettings.AlbumRotate)
             RotateAnimationSet.Stop();
         if (_uiSettings.ExpandAlbumBreath) ImageAlbumAni?.Stop();

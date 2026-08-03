@@ -155,6 +155,15 @@ public partial class UISettings : SettingsBase
     }
 
     /// <summary>
+    ///     Whether the expanded player displays Win2D rendering diagnostics.
+    /// </summary>
+    public bool ExpandedPlayerDebugMode
+    {
+        get => GetSettings(nameof(ExpandedPlayerDebugMode), false);
+        set => SetSettings(nameof(ExpandedPlayerDebugMode), value);
+    }
+
+    /// <summary>
     ///     Expanded cover shadow depth.
     /// </summary>
     public int ExpandedCoverShadowDepth

@@ -2,10 +2,10 @@
     x:Class="HyPlayer.Shell.ExpandedPlayer.ExpandedPlayer"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:alignableWrapPanel="using:HyPlayer.UI.Controls.AlignableWrapPanel"
     xmlns:ani="using:CommunityToolkit.WinUI.Animations"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:controls1="using:HyPlayer.UI.Controls"
-    xmlns:alignableWrapPanel="using:HyPlayer.UI.Controls.AlignableWrapPanel"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
@@ -123,6 +123,7 @@
             CreateResources="LuminousBackground_CreateResources"
             DoubleTapped="LyricView_DoubleTapped"
             Draw="LuminousBackground_Draw"
+            IsFixedTimeStep="False"
             PointerExited="LyricView_OnPointerExited"
             PointerMoved="LyricView_OnPointerMoved"
             PointerPressed="LyricView_OnPointerPressed"
@@ -141,8 +142,7 @@
             SizeChanged="LuminousBackgroundContainer_SizeChanged">
             <Grid.RenderTransform>
                 <TransformGroup>
-                    <RotateTransform x:Name="BgRotate" CenterX="{x:Bind BgScale.CenterX, Mode=OneWay}"
-                                     CenterY="{x:Bind BgScale.CenterY, Mode=OneWay}" />
+                    <RotateTransform x:Name="BgRotate" CenterX="{x:Bind BgScale.CenterX, Mode=OneWay}" CenterY="{x:Bind BgScale.CenterY, Mode=OneWay}" />
                     <ScaleTransform x:Name="BgScale" />
                 </TransformGroup>
             </Grid.RenderTransform>

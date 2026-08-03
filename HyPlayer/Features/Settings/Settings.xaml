@@ -1275,8 +1275,11 @@
                                 <controls3:SettingsCard Header="尝试绕过 CheckToken 接口 (可能被检测)">
                                     <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind Api.EnableCheckTokenApi, Mode=TwoWay}" />
                                 </controls3:SettingsCard>
-                                <controls3:SettingsCard Header="歌词控件Debug模式">
+                                <controls3:SettingsCard Header="LyricRenderer 调试模式">
                                     <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind Lyric.LyricRendererDebugMode, Mode=TwoWay}" />
+                                </controls3:SettingsCard>
+                                <controls3:SettingsCard Description="在展开播放器右上角显示 FPS、帧绘制耗时和 Win2D 计时信息" Header="ExpandedPlayer 调试模式">
+                                    <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind UI.ExpandedPlayerDebugMode, Mode=TwoWay}" />
                                 </controls3:SettingsCard>
                                 <controls3:SettingsCard Click="RestartBtn_Click" IsClickEnabled="True">
                                     <controls3:SettingsCard.Header>
