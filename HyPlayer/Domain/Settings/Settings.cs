@@ -133,6 +133,9 @@ namespace HyPlayer.Domain.Settings
         public int lyricLineSpacing { get => Lyric.lyricLineSpacing; set { Lyric.lyricLineSpacing = value; OnPropertyChanged(); } }
         public int translationSize { get => Lyric.translationSize; set { Lyric.translationSize = value; OnPropertyChanged(); } }
         public int romajiSize { get => Lyric.romajiSize; set { Lyric.romajiSize = value; OnPropertyChanged(); } }
+        public int sublineLyricSize { get => Lyric.sublineLyricSize; set { Lyric.sublineLyricSize = value; OnPropertyChanged(); } }
+        public int sublineTranslationSize { get => Lyric.sublineTranslationSize; set { Lyric.sublineTranslationSize = value; OnPropertyChanged(); } }
+        public int sublineRomajiSize { get => Lyric.sublineRomajiSize; set { Lyric.sublineRomajiSize = value; OnPropertyChanged(); } }
         public int lyricPaddingTopRatio { get => Lyric.lyricPaddingTopRatio; set { Lyric.lyricPaddingTopRatio = value; OnPropertyChanged(); } }
         public int lyricFadingRatio { get => Lyric.lyricFadingRatio; set { Lyric.lyricFadingRatio = value; OnPropertyChanged(); } }
         public bool hotlyricOnStartup { get => Lyric.hotlyricOnStartup; set { Lyric.hotlyricOnStartup = value; OnPropertyChanged(); } }

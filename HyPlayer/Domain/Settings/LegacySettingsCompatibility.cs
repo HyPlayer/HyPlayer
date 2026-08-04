@@ -74,6 +74,9 @@ public partial class LyricSettings
     public int lyricLineSpacing { get => LyricLineSpacing; set => LyricLineSpacing = value; }
     public int translationSize { get => TranslationSize; set => TranslationSize = value; }
     public int romajiSize { get => RomajiSize; set => RomajiSize = value; }
+    public int sublineLyricSize { get => SublineLyricSize; set => SublineLyricSize = value; }
+    public int sublineTranslationSize { get => SublineTranslationSize; set => SublineTranslationSize = value; }
+    public int sublineRomajiSize { get => SublineRomajiSize; set => SublineRomajiSize = value; }
     public int lyricPaddingTopRatio { get => LyricPaddingTopRatio; set => LyricPaddingTopRatio = value; }
     public int lyricFadingRatio { get => LyricFadingRatio; set => LyricFadingRatio = value; }
     public bool hotlyricOnStartup { get => HotLyricOnStartup; set => HotLyricOnStartup = value; }

@@ -1,5 +1,7 @@
 using ALRC.Abstraction;
 using HyPlayer.Domain.Lyrics;
+using HyPlayer.LyricRenderer;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using TUnit.Core;
 using Windows.UI.Xaml;
@@ -91,6 +93,67 @@ public sealed class LrcConverterTests
         Ensure(line.Typography?.FontWeight is null,
             "Style Accent must not be mapped to typography.");
         Ensure(line.HiddenOnBlur, "HiddenOnBlur must belong to every physical ALRC line type.");
+    }
+
+    [Test]
+    public void BackgroundAccent_ShouldSelectSublineTypographyRegardlessOfParentRelationship()
+    {
+        var backgroundStyle = new ALRCStyle
+        {
+            Id = "background",
+            Type = ALRCStyleAccent.Background
+        };
+        var normalStyle = new ALRCStyle
+        {
+            Id = "normal",
+            Type = ALRCStyleAccent.Normal
+        };
+        var source = File(
+            new ALRCLine
+            {
+                Id = "background-vocal",
+                RawText = "background",
+                LineStyle = backgroundStyle.Id
+            },
+            new ALRCLine
+            {
+                Id = "parent",
+                RawText = "parent"
+            },
+            new ALRCLine
+            {
+                Id = "child",
+                ParentLineId = "parent",
+                RawText = "child",
+                LineStyle = normalStyle.Id
+            });
+        source.Header = new ALRCHeader { Styles = [backgroundStyle, normalStyle] };
+        var lines = LrcConverter.Convert(source);
+        var context = new RenderContext
+        {
+            PreferTypography = new() { LyricFontSize = 40 },
+            SublineTypography = new() { LyricFontSize = 18 }
+        };
+
+        Ensure(lines[0].TypographySelector(value => value?.LyricFontSize, context) == 18,
+            "Background-accented lines must use the configured subline typography without requiring ParentLineId.");
+        Ensure(lines[2].TypographySelector(value => value?.LyricFontSize, context) == 40,
+            "ParentLineId alone must not make a normally styled line use subline typography.");
+    }
+
+    [Test]
+    public void ZeroSublineSizes_ShouldUseHalfOfMainLyricSize()
+    {
+        var renderer = new LyricRenderView();
+
+        renderer.ChangeRenderFontSize(40, 16, 14);
+
+        Ensure(renderer.Context.SublineTypography.LyricFontSize == 20,
+            "A zero subline lyric size must use half of the main lyric size.");
+        Ensure(renderer.Context.SublineTypography.TranslationFontSize == 20,
+            "A zero subline translation size must use half of the main lyric size.");
+        Ensure(renderer.Context.SublineTypography.TransliterationFontSize == 20,
+            "A zero subline transliteration size must use half of the main lyric size.");
     }
 
     private static ALRCFile File(params ALRCLine[] lines) => new()

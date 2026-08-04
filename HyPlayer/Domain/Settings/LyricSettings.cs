@@ -126,6 +126,33 @@ public partial class LyricSettings : SettingsBase
     }
 
     /// <summary>
+    ///     Font size of lyrics on sublines. Zero uses half of the main lyric font size.
+    /// </summary>
+    public int SublineLyricSize
+    {
+        get => GetSettings(nameof(SublineLyricSize), 0);
+        set => SetSettings(nameof(SublineLyricSize), value);
+    }
+
+    /// <summary>
+    ///     Font size of translations on sublines. Zero uses half of the main lyric font size.
+    /// </summary>
+    public int SublineTranslationSize
+    {
+        get => GetSettings(nameof(SublineTranslationSize), 0);
+        set => SetSettings(nameof(SublineTranslationSize), value);
+    }
+
+    /// <summary>
+    ///     Font size of transliterations on sublines. Zero uses half of the main lyric font size.
+    /// </summary>
+    public int SublineRomajiSize
+    {
+        get => GetSettings(nameof(SublineRomajiSize), 0);
+        set => SetSettings(nameof(SublineRomajiSize), value);
+    }
+
+    /// <summary>
     ///     Lyric padding top ratio.
     /// </summary>
     public int LyricPaddingTopRatio

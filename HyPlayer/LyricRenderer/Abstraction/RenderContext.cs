@@ -84,6 +84,11 @@ public class RenderContext
     public RenderTypography PreferTypography { get; set; } = new();
 
     /// <summary>
+    ///     Typography overrides for lines attached to another lyric line, such as background vocals.
+    /// </summary>
+    public RenderTypography SublineTypography { get; set; } = new();
+
+    /// <summary>
     ///     当前的关键帧
     /// </summary>
     public long CurrentKeyframe { get; set; }

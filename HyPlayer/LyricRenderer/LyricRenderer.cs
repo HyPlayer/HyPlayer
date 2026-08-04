@@ -84,11 +84,23 @@ namespace HyPlayer.LyricRenderer
             _isTypographyChanged = true;
         }
 
-        public void ChangeRenderFontSize(float lyricSize, float translationSize, float transliterationSize)
+        public void ChangeRenderFontSize(
+            float lyricSize,
+            float translationSize,
+            float transliterationSize,
+            float sublineLyricSize = 0,
+            float sublineTranslationSize = 0,
+            float sublineTransliterationSize = 0)
         {
             Context.PreferTypography.LyricFontSize = lyricSize;
             Context.PreferTypography.TranslationFontSize = translationSize;
             Context.PreferTypography.TransliterationFontSize = transliterationSize;
+            Context.SublineTypography.LyricFontSize =
+                sublineLyricSize > 0 ? sublineLyricSize : lyricSize / 2;
+            Context.SublineTypography.TranslationFontSize =
+                sublineTranslationSize > 0 ? sublineTranslationSize : lyricSize / 2;
+            Context.SublineTypography.TransliterationFontSize =
+                sublineTransliterationSize > 0 ? sublineTransliterationSize : lyricSize / 2;
             _isTypographyChanged = true;
         }
 

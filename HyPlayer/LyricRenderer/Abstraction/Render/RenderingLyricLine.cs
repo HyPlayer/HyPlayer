@@ -301,6 +301,9 @@ public abstract class RenderingLyricLine : IDisposable
     public T TypographySelector<T>(Func<RenderTypography?, T?> expression, RenderContext context)
     {
         return (expression(Typography) ??
+                (SourceStyle?.Type == ALRCStyleAccent.Background
+                    ? expression(context.SublineTypography)
+                    : default) ??
                 expression(context.PreferTypography) ?? expression(RenderTypography.Default))!;
     }
 }
