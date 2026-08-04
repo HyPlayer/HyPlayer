@@ -87,7 +87,7 @@ public static class LyricEffectPresets
     public static IReadOnlyList<FocusedTextProfilePreset> FocusedTextProfilePresets { get; } =
     [
         new("HyPlayer 默认", "矩形硬边高亮，真实 Word 自动选择整词或逐 GlyphUnit 抬升。", CreateDefaultFocusedText()),
-        new("柔和抬升", "自动拆词、柔和高亮边缘和 Elastic 抬升。", CreateSoftLiftFocusedText())
+        new("柔和抬升", "自动拆词、柔和高亮边缘和 Linear 抬升。", CreateSoftLiftFocusedText())
     ];
 
     public static LyricEffectProfileDocument CreateDefaultProfile() => new()
@@ -98,11 +98,10 @@ public static class LyricEffectPresets
         [
             CreateSource(),
             CreateGlow(),
-            CreateOpacity(),
-            CreateBlur(),
+            CreateOpacity(expression: "line.IsActive ? 1 : fx.Clamp(fx.Lerp(0.5, 0.05, line.ViewportDistance), 0.05, 1)"),
+            CreateBlur(maximum: 16),
             CreateHoverBackground(),
-            CreateScale(),
-            CreateTransform3D(false),
+            CreateScale(target: 0.72f),
             CreateDebug()
         ]
     };
@@ -125,11 +124,9 @@ public static class LyricEffectPresets
         reveal.Parameters["featherDip"].Expression = "40";
         var lift = definition.Operations.Single(item => item.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift);
         lift.Options["untimedMode"] = nameof(UntimedLiftMode.InferWords);
-        lift.Options["easingId"] = "elastic";
-        lift.Options["easingMode"] = "out";
+        lift.Options["easingId"] = "linear";
+        lift.Options["easingMode"] = "in";
         lift.Parameters["height"].Expression = "2";
-        lift.Parameters["springiness"].Expression = "6";
-        lift.Parameters["oscillations"].Expression = "1";
         lift.Parameters["liftFinishDurationMs"].Expression = "250";
         return definition;
     }
@@ -142,11 +139,11 @@ public static class LyricEffectPresets
         Parameters =
         {
             ["revealTimeOffsetMs"] = FocusedScalar("0"),
-            ["featherDip"] = FocusedScalar("0")
+            ["featherDip"] = FocusedScalar("40")
         },
         Options =
         {
-            ["untimedMode"] = nameof(UntimedHighlightMode.WholeLine),
+            ["untimedMode"] = nameof(UntimedHighlightMode.InferWords),
             ["revealMode"] = nameof(HighlightRevealMode.RectangleClip),
             ["transliterationMode"] = nameof(TransliterationProgressMode.FollowMain)
         }
@@ -159,9 +156,7 @@ public static class LyricEffectPresets
         Targets =
         [
             FocusedTextTargets.LyricCurrentPending,
-            FocusedTextTargets.LyricUnhighlighted,
-            FocusedTextTargets.TransliterationCurrentPending,
-            FocusedTextTargets.TransliterationUnhighlighted
+            FocusedTextTargets.LyricUnhighlighted
         ],
         Parameters = { ["opacity"] = FocusedScalar("0.3") }
     };
@@ -174,21 +169,18 @@ public static class LyricEffectPresets
         [
             FocusedTextTargets.LyricHighlighted,
             FocusedTextTargets.LyricCurrentHighlighted,
-            FocusedTextTargets.LyricCurrentPending,
-            FocusedTextTargets.TransliterationHighlighted,
-            FocusedTextTargets.TransliterationCurrentHighlighted,
-            FocusedTextTargets.TransliterationCurrentPending
+            FocusedTextTargets.LyricCurrentPending
         ],
         Parameters =
         {
             ["height"] = FocusedScalar("3"),
-            ["overlap"] = FocusedScalar("0"),
+            ["overlap"] = FocusedScalar("0.7"),
             ["wholeWordThresholdMs"] = FocusedScalar("1000"),
             ["liftTimeOffsetMs"] = FocusedScalar("0"),
-            ["liftFinishDurationMs"] = FocusedScalar("0"),
+            ["liftFinishDurationMs"] = FocusedScalar("250"),
             ["exponent"] = FocusedScalar("2"),
-            ["springiness"] = FocusedScalar("3"),
-            ["oscillations"] = FocusedScalar("3"),
+            ["springiness"] = FocusedScalar("6"),
+            ["oscillations"] = FocusedScalar("1"),
             ["bounces"] = FocusedScalar("2"),
             ["bounciness"] = FocusedScalar("2")
         },
@@ -198,7 +190,7 @@ public static class LyricEffectPresets
             ["liftUnit"] = nameof(GlyphLiftUnit.Auto),
             ["motion"] = nameof(GlyphLiftMotion.Hold),
             ["easingId"] = "linear",
-            ["easingMode"] = "in"
+            ["easingMode"] = "out"
         }
     };
 

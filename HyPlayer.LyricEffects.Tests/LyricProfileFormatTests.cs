@@ -219,6 +219,60 @@ public class LyricProfileFormatTests
     }
 
     [Test]
+    public async Task BuiltInFocusedLiftPresets_ShouldUseLinearEasing()
+    {
+        foreach (var preset in LyricEffectPresets.FocusedTextProfilePresets)
+        {
+            var lift = preset.Profile.Operations.Single(operation =>
+                operation.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift);
+            lift.Options["easingId"].Should().Be("linear");
+        }
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task DefaultProfile_ShouldUseUpdatedBingV1LineTransitions()
+    {
+        var profile = LyricEffectPresets.CreateDefaultProfile();
+        var opacity = profile.Operations.Single(operation => operation.TypeId == LyricBuiltInOperationTypes.Opacity);
+        var blur = profile.Operations.Single(operation => operation.TypeId == LyricBuiltInOperationTypes.GaussianBlur);
+        var scale = profile.Operations.Single(operation => operation.TypeId == LyricBuiltInOperationTypes.Transform2D);
+        var focusedOpacity = profile.FocusedText.Operations.Single(operation =>
+            operation.TypeId == FocusedTextBuiltInOperationTypes.Opacity);
+        var reveal = profile.FocusedText.Operations.Single(operation =>
+            operation.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal);
+        var lift = profile.FocusedText.Operations.Single(operation =>
+            operation.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift);
+
+        opacity.Parameters["opacity"].Expression.Should().Be(
+            "line.IsActive ? 1 : fx.Clamp(fx.Lerp(0.5, 0.05, line.ViewportDistance), 0.05, 1)");
+        opacity.Parameters["opacity"].Transition!.DurationMs.Should().Be("line.IsActive ? 0 : 500");
+        blur.Parameters["amount"].Expression.Should().Be(
+            "frame.IsScrolling ? 0 : fx.Lerp(0, 16, line.ViewportDistance)");
+        scale.Parameters["scaleX"].Expression.Should().Be(
+            "frame.IsScrolling ? fx.Max(fx.Lerp(1, 0.72, line.ViewportDistance), 0.8) : fx.Lerp(1, 0.72, line.ViewportDistance)");
+        profile.Operations.Should().NotContain(operation => operation.TypeId == LyricBuiltInOperationTypes.Transform3D);
+        focusedOpacity.Targets.Should().Equal(
+            FocusedTextTargets.LyricCurrentPending,
+            FocusedTextTargets.LyricUnhighlighted);
+        reveal.Parameters["featherDip"].Expression.Should().Be("40");
+        reveal.Options["untimedMode"].Should().Be(nameof(UntimedHighlightMode.InferWords));
+        lift.Targets.Should().Equal(
+            FocusedTextTargets.LyricHighlighted,
+            FocusedTextTargets.LyricCurrentHighlighted,
+            FocusedTextTargets.LyricCurrentPending);
+        lift.Parameters["overlap"].Expression.Should().Be("0.7");
+        lift.Parameters["liftFinishDurationMs"].Expression.Should().Be("250");
+        lift.Parameters["springiness"].Expression.Should().Be("6");
+        lift.Parameters["oscillations"].Expression.Should().Be("1");
+        lift.Options["easingId"].Should().Be("linear");
+        lift.Options["easingMode"].Should().Be("out");
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
     public async Task LimitsAndDuplicateIds_ShouldBeRejected()
     {
         var profile = new LyricEffectProfileDocument
