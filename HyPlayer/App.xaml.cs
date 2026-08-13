@@ -19,6 +19,7 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Widgets.Services;
@@ -101,6 +102,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
         try
         {
             await SimpleCacher.InitializeAsync();
+            await AppDepository.Resolve<ILyricEffectProfileService>().InitializeAsync();
             var sf = await ApplicationData.Current.LocalFolder.TryGetItemAsync("Romaji");
             if (sf != null) AppDepository.Resolve<IKawazuStateService>().Converter = new KawazuConverter(sf.Path);
         }

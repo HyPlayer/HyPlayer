@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using HyPlayer.LyricRenderer.Abstraction.Render;
+using HyPlayer.LyricRenderer.Pipeline;
 
 namespace HyPlayer.LyricRenderer.Abstraction;
 
@@ -118,6 +119,12 @@ public class RenderContext
     ///     特殊效果设置
     /// </summary>
     public RenderEffects Effects { get; set; } = new();
+
+    /// <summary>
+    ///     当前歌词特效配置的不可变编译快照。
+    /// </summary>
+    public CompiledLyricEffectProfile? EffectProfile { get; set; }
+
 
     /// <summary>
     ///     行间距

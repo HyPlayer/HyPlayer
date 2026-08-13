@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Windows.Devices.Input;
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -10,6 +11,7 @@ using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
+using HyPlayer.LyricRenderer.Pipeline;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 
@@ -48,6 +50,8 @@ public sealed class LyricRenderView
     private bool _needRecalculate;
     private bool _needRecalculateSize;
 
+    private CompiledLyricEffectProfile? _pendingEffectProfile;
+
     private bool _pointerPressed;
     public RenderContext Context { get; } = new();
 
@@ -78,6 +82,12 @@ public sealed class LyricRenderView
     public event BeforeRenderDelegate OnBeforeRender;
 
     public event LyricLineClickedDelegate OnLyricLineClicked;
+
+    public void SetEffectProfile(CompiledLyricEffectProfile profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        Interlocked.Exchange(ref _pendingEffectProfile, profile);
+    }
 
     public void ChangeRenderColor(Color idleColor, Color focusingColor, Color? shadowColor = null)
     {
@@ -331,6 +341,8 @@ public sealed class LyricRenderView
             Context.RenderTick = timing.TotalTime.Ticks;
             if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return;
             OnBeforeRender?.Invoke(this);
+            if (Interlocked.Exchange(ref _pendingEffectProfile, null) is { } pendingProfile)
+                Context.EffectProfile = pendingProfile;
             // 鼠标滚轮时间 5 s 清零
             if (((Context.ScrollingDelta != 0 || (Context.IsScrolling && !_pointerPressed)) &&
                  Context.RenderTick - _lastWheelTime > 50000000 && Context.IsPlaying) || Context.IsSeek)

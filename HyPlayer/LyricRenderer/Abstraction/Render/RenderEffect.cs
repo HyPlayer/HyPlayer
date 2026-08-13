@@ -6,11 +6,6 @@ namespace HyPlayer.LyricRenderer.Abstraction.Render;
 public class RenderEffects
 {
     /// <summary>
-    ///     歌词发光效果
-    /// </summary>
-    public bool FocusHighlighting { get; set; } = true;
-
-    /// <summary>
     ///     音译扫词
     /// </summary>
     public bool TransliterationScanning { get; set; } = true;
@@ -19,31 +14,6 @@ public class RenderEffects
     ///     非逐字平滑扫词
     /// </summary>
     public bool SimpleLineScanning { get; set; } = true;
-
-    /// <summary>
-    ///     焦点时放大
-    /// </summary>
-    public bool ScaleWhenFocusing { get; set; } = true;
-
-    /// <summary>
-    ///     歌词模糊
-    /// </summary>
-    public bool Blur { get; set; } = true;
-
-    /// <summary>
-    ///     3D变换
-    /// </summary>
-    public bool Transform3D { get; set; } = true;
-
-    /// <summary>
-    ///     歌词淡入淡出
-    /// </summary>
-    public bool Fade { get; set; } = true;
-
-    /// <summary>
-    ///     歌词淡入比率
-    /// </summary>
-    public double FadingRatio { get; set; } = 1.0;
 
     /// <summary>
     ///     预渲染合成
