@@ -1,7 +1,10 @@
+#nullable enable
+
 namespace HyPlayer.LyricRenderer.Text;
 
 public enum LyricTextLayer
 {
     Lyric,
-    Transliteration
+    Transliteration,
+    Translation
 }

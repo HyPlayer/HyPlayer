@@ -14,7 +14,7 @@ public static class LrcParser
         var attributes = new List<KeyValuePair<string, string>>();
         var curStateStartPosition = 0;
         var timeCalculationCache = 0;
-        var curTimestamps = ArrayPool<int>.Shared.Rent(64); // Max Count 
+        var curTimestamps = ArrayPool<int>.Shared.Rent(64); // Max Count
         var curTimestamp = 0;
         var currentTimestampPosition = 0;
         var offset = 0;

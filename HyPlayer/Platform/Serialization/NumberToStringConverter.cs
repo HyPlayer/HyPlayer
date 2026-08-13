@@ -35,4 +35,3 @@ public sealed class NumberToStringConverter : JsonConverter<string>
         writer.WritePropertyName(value);
     }
 }
-

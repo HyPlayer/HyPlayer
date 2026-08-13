@@ -567,4 +567,3 @@ public sealed partial class DownloadObject : ObservableObject
     [GeneratedRegex("[0-9]+")]
     private static partial Regex DiscInfoRegex();
 }
-

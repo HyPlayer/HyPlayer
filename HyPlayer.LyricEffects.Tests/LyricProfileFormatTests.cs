@@ -35,25 +35,141 @@ public class LyricProfileFormatTests
     }
 
     [Test]
-    public async Task VersionMigrationAndFutureVersionRejection_ShouldBeExplicit()
+    public async Task OnlySchemaV3_ShouldBeAccepted()
     {
         var old = LyricEffectPresets.CreateDefaultProfile();
-        old.SchemaVersion = 0;
-        old.ExpressionApiVersion = 1;
-        old.Operations.RemoveAll(item =>
-            item.TypeId is LyricBuiltInOperationTypes.Source or LyricBuiltInOperationTypes.Debug);
-        var migrated = LyricEffectProfileValidation.MigrateToCurrent(old);
-        migrated.SchemaVersion.Should().Be(1);
-        migrated.ExpressionApiVersion.Should().Be(1);
-        migrated.Operations.Count(item => item.TypeId == LyricBuiltInOperationTypes.Source).Should().Be(1);
-        migrated.Operations.Count(item => item.TypeId == LyricBuiltInOperationTypes.Debug).Should().Be(1);
-        migrated.Operations.First().TypeId.Should().Be(LyricBuiltInOperationTypes.Source);
-        migrated.Operations.Last().TypeId.Should().Be(LyricBuiltInOperationTypes.Debug);
+        old.SchemaVersion = 2;
+        old.ExpressionApiVersion = 2;
+        ((Action)(() => LyricEffectProfileValidation.MigrateToCurrent(old)))
+            .Should().Throw<NotSupportedException>();
 
         var future = LyricEffectPresets.CreateDefaultProfile();
-        future.SchemaVersion = 2;
+        future.SchemaVersion = 4;
         var action = () => LyricEffectProfileValidation.MigrateToCurrent(future);
         action.Should().Throw<NotSupportedException>();
+
+        var current = LyricEffectPresets.CreateDefaultProfile();
+        LyricEffectProfileValidation.MigrateToCurrent(current).SchemaVersion.Should().Be(3);
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task FocusedTextRoundTrip_ShouldKeepRevealAndLiftIndependent()
+    {
+        var source = LyricEffectPresets.CreateDefaultProfile();
+        var reveal = source.FocusedText.Operations.Single(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal);
+        reveal.Options["revealMode"] = nameof(HighlightRevealMode.RectangleClip);
+        var lift = source.FocusedText.Operations.Single(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift);
+        lift.Options["motion"] = "Pulse";
+        lift.Targets.Should().Contain(FocusedTextTargets.LyricCurrentHighlighted);
+        lift.Targets.Should().Contain(FocusedTextTargets.LyricCurrentPending);
+
+        var json = JsonSerializer.Serialize(source, LyricEffectJsonContext.Default.LyricEffectProfileDocument);
+        var result = JsonSerializer.Deserialize(json, LyricEffectJsonContext.Default.LyricEffectProfileDocument)!;
+
+        result.FocusedText.Operations.Single(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal)
+            .Options["revealMode"].Should().Be(nameof(HighlightRevealMode.RectangleClip));
+        result.FocusedText.Operations.Single(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift).Options["motion"].Should().Be("Pulse");
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task TransitionExpressions_ShouldRoundTripForScalarAndColorParameters()
+    {
+        var source = LyricEffectPresets.CreateDefaultProfile();
+        var opacity = source.FocusedText.Operations.Single(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.Opacity);
+        opacity.Parameters["opacity"].Transition = new LyricTransitionDefinition
+        {
+            DurationMs = "word.DurationMs * 0.25",
+            EasingId = "elastic",
+            Mode = "out",
+            Arguments =
+            {
+                ["springiness"] = "6 + glyph.IndexInWord",
+                ["oscillations"] = "1.5"
+            }
+        };
+        var color = new FocusedTextOperationDefinition
+        {
+            TypeId = FocusedTextBuiltInOperationTypes.Color,
+            DisplayName = "颜色",
+            Targets = [FocusedTextTargets.LyricHighlighted],
+            Parameters =
+            {
+                ["color"] = new LyricOperationParameterDefinition
+                {
+                    Expression = "fx.Rgba(255, 80, 40, 1)",
+                    Transition = new LyricTransitionDefinition { DurationMs = "line.DurationMs / 8" }
+                }
+            }
+        };
+        source.FocusedText.Operations.Add(color);
+
+        var json = JsonSerializer.Serialize(source, LyricEffectJsonContext.Default.LyricEffectProfileDocument);
+        var result = JsonSerializer.Deserialize(json, LyricEffectJsonContext.Default.LyricEffectProfileDocument)!;
+
+        var opacityTransition = result.FocusedText.Operations.Single(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.Opacity).Parameters["opacity"].Transition!;
+        opacityTransition.DurationMs.Should().Be("word.DurationMs * 0.25");
+        opacityTransition.Arguments["springiness"].Should().Be("6 + glyph.IndexInWord");
+        opacityTransition.Arguments["oscillations"].Should().Be("1.5");
+        result.FocusedText.Operations.Single(item => item.InstanceId == color.InstanceId)
+            .Parameters["color"].Transition!.DurationMs.Should().Be("line.DurationMs / 8");
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task HighlightReveal_ShouldBeRequiredEnabledAndUnique()
+    {
+        var missing = LyricEffectPresets.CreateDefaultProfile();
+        missing.FocusedText.Operations.RemoveAll(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal);
+        LyricEffectProfileValidation.Validate(missing)
+            .Should().Contain(item => item.Message.Contains("且只能包含一个"));
+
+        var disabled = LyricEffectPresets.CreateDefaultProfile();
+        disabled.FocusedText.Operations.Single(item =>
+            item.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal).IsEnabled = false;
+        LyricEffectProfileValidation.Validate(disabled)
+            .Should().Contain(item => item.Property == "isEnabled");
+
+        var duplicate = LyricEffectPresets.CreateDefaultProfile();
+        duplicate.FocusedText.Operations.Add(LyricEffectPresets.CreateHighlightReveal());
+        LyricEffectProfileValidation.Validate(duplicate)
+            .Should().Contain(item => item.Message.Contains("且只能包含一个"));
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task FocusedUnknownNodeAndExtensions_ShouldRoundTripUnchanged()
+    {
+        var source = LyricEffectPresets.CreateDefaultProfile();
+        source.FocusedText.ExtensionData = new Dictionary<string, JsonElement>
+        {
+            ["vendorFocused"] = JsonDocument.Parse("{\"enabled\":true}").RootElement.Clone()
+        };
+        source.FocusedText.Operations.Add(new FocusedTextOperationDefinition
+        {
+            TypeId = "vendor.focus.future",
+            DisplayName = "Future focused node",
+            Targets = [FocusedTextTargets.Translation],
+            ExtensionData = new Dictionary<string, JsonElement>
+            {
+                ["payload"] = JsonDocument.Parse("[1,2,3]").RootElement.Clone()
+            }
+        });
+
+        var json = JsonSerializer.Serialize(source, LyricEffectJsonContext.Default.LyricEffectProfileDocument);
+        var result = JsonSerializer.Deserialize(json, LyricEffectJsonContext.Default.LyricEffectProfileDocument)!;
+
+        result.FocusedText.ExtensionData!["vendorFocused"].GetProperty("enabled").GetBoolean().Should().BeTrue();
+        result.FocusedText.Operations.Single(item => item.TypeId == "vendor.focus.future")
+            .ExtensionData!["payload"].GetArrayLength().Should().Be(3);
         await Task.CompletedTask;
     }
 
@@ -77,6 +193,81 @@ public class LyricProfileFormatTests
             preset.Profile.Operations.Count(item => item.TypeId == LyricBuiltInOperationTypes.Debug).Should().Be(1);
             LyricEffectProfileValidation.Validate(preset.Profile).Should().BeEmpty();
         }
+
+        foreach (var preset in LyricEffectPresets.FocusedTextProfilePresets)
+        {
+            var profile = LyricEffectPresets.CreateDefaultProfile();
+            profile.FocusedText = LyricEffectPresets.CloneFocusedText(preset.Profile);
+            profile.FocusedText.Operations.Count(item =>
+                item.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal).Should().Be(1);
+            LyricEffectProfileValidation.Validate(profile).Should().BeEmpty();
+        }
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task FocusedPresets_ShouldLeaveTransitionsDisabledByDefault()
+    {
+        foreach (var preset in LyricEffectPresets.FocusedTextProfilePresets)
+        {
+            foreach (var operation in preset.Profile.Operations)
+                operation.Parameters.Values.Should().OnlyContain(parameter => parameter.Transition == null);
+        }
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task BuiltInFocusedLiftPresets_ShouldUseLinearEasing()
+    {
+        foreach (var preset in LyricEffectPresets.FocusedTextProfilePresets)
+        {
+            var lift = preset.Profile.Operations.Single(operation =>
+                operation.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift);
+            lift.Options["easingId"].Should().Be("linear");
+        }
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task DefaultProfile_ShouldUseUpdatedBingV1LineTransitions()
+    {
+        var profile = LyricEffectPresets.CreateDefaultProfile();
+        var opacity = profile.Operations.Single(operation => operation.TypeId == LyricBuiltInOperationTypes.Opacity);
+        var blur = profile.Operations.Single(operation => operation.TypeId == LyricBuiltInOperationTypes.GaussianBlur);
+        var scale = profile.Operations.Single(operation => operation.TypeId == LyricBuiltInOperationTypes.Transform2D);
+        var focusedOpacity = profile.FocusedText.Operations.Single(operation =>
+            operation.TypeId == FocusedTextBuiltInOperationTypes.Opacity);
+        var reveal = profile.FocusedText.Operations.Single(operation =>
+            operation.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal);
+        var lift = profile.FocusedText.Operations.Single(operation =>
+            operation.TypeId == FocusedTextBuiltInOperationTypes.GlyphLift);
+
+        opacity.Parameters["opacity"].Expression.Should().Be(
+            "line.IsActive ? 1 : fx.Clamp(fx.Lerp(0.5, 0.05, line.ViewportDistance), 0.05, 1)");
+        opacity.Parameters["opacity"].Transition!.DurationMs.Should().Be("line.IsActive ? 0 : 500");
+        blur.Parameters["amount"].Expression.Should().Be(
+            "frame.IsScrolling ? 0 : fx.Lerp(0, 16, line.ViewportDistance)");
+        scale.Parameters["scaleX"].Expression.Should().Be(
+            "frame.IsScrolling ? fx.Max(fx.Lerp(1, 0.72, line.ViewportDistance), 0.8) : fx.Lerp(1, 0.72, line.ViewportDistance)");
+        profile.Operations.Should().NotContain(operation => operation.TypeId == LyricBuiltInOperationTypes.Transform3D);
+        focusedOpacity.Targets.Should().Equal(
+            FocusedTextTargets.LyricCurrentPending,
+            FocusedTextTargets.LyricUnhighlighted);
+        reveal.Parameters["featherDip"].Expression.Should().Be("40");
+        reveal.Options["untimedMode"].Should().Be(nameof(UntimedHighlightMode.InferWords));
+        lift.Targets.Should().Equal(
+            FocusedTextTargets.LyricHighlighted,
+            FocusedTextTargets.LyricCurrentHighlighted,
+            FocusedTextTargets.LyricCurrentPending);
+        lift.Parameters["overlap"].Expression.Should().Be("0.7");
+        lift.Parameters["liftFinishDurationMs"].Expression.Should().Be("250");
+        lift.Parameters["springiness"].Expression.Should().Be("6");
+        lift.Parameters["oscillations"].Expression.Should().Be("1");
+        lift.Options["easingId"].Should().Be("linear");
+        lift.Options["easingMode"].Should().Be("out");
 
         await Task.CompletedTask;
     }

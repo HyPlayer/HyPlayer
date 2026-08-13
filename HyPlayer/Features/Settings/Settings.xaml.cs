@@ -515,4 +515,10 @@ public sealed partial class Settings : Page
         public string Name { get; set; }
         public string Value { get; set; }
     }
+
+    private async void OpenFocusedLyricEffectSettings_Click(object sender, RoutedEventArgs e)
+    {
+        await new HyPlayer.UI.Dialogs.FocusedLyricEffectSettingsDialog().ShowAsync();
+    }
+
 }

@@ -30,6 +30,24 @@ public class LyricExpressionCompilerTests
     }
 
     [Test]
+    public async Task DistanceOpacity_ShouldCompleteImmediatelyWhenLineBecomesActive()
+    {
+        var opacity = LyricEffectPresets.CreateOpacity();
+        var durationSource = opacity.Parameters["opacity"].Transition!.DurationMs;
+        var duration = _compiler.CompileScalar(durationSource);
+
+        duration.IsSuccess.Should().BeTrue();
+        duration.Expression!(Line(isActive: true), Frame(), LyricExpressionFunctions.Instance)
+            .Should().Be(0,
+                "an active line must not multiply its pending-word opacity by a stale distance fade");
+        duration.Expression!(Line(isActive: false), Frame(), LyricExpressionFunctions.Instance)
+            .Should().Be(500,
+                "non-active lines should retain the existing smooth distance fade");
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
     [Arguments("new object()")]
     [Arguments("typeof(string).Assembly.FullName")]
     [Arguments("line.GetType().FullName")]
@@ -57,7 +75,7 @@ public class LyricExpressionCompilerTests
     [Test]
     public async Task ColorAndTextExpressions_ShouldBeStronglyTyped()
     {
-        var color = _compiler.CompileColor("fx.LerpColor(line.IdleColor, line.AccentColor, line.Progress)");
+        var color = _compiler.CompileColor("fx.LerpColor(line.IdleColor, line.FocusingColor, line.Progress)");
         var text = _compiler.CompileText("line.Text");
         color.IsSuccess.Should().BeTrue();
         text.IsSuccess.Should().BeTrue();
@@ -66,15 +84,71 @@ public class LyricExpressionCompilerTests
         await Task.CompletedTask;
     }
 
+    [Test]
+    public async Task WholeLineExpressions_ShouldReportTheirRuntimeDependencies()
+    {
+        _compiler.CompileScalar("1").Dependencies.Should().Be(FocusedTextExpressionDependencies.None);
+        _compiler.CompileColor("rgba(1, 2, 3, 1)").Dependencies
+            .Should().Be(FocusedTextExpressionDependencies.None);
+        _compiler.CompileScalar("line.Progress").Dependencies
+            .Should().Be(FocusedTextExpressionDependencies.Line);
+        _compiler.CompileScalar("line.Progress + frame.ScrollOffset").Dependencies
+            .Should().Be(FocusedTextExpressionDependencies.Line | FocusedTextExpressionDependencies.Frame);
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task Rgba_ShouldCreateCustomColorsInFocusedColorExpressions()
+    {
+        var result = _compiler.CompileFocusedColor("rgba(12, 34, 56, 0.5)");
+        var sample = FocusedTextExpressionSamples.All[0];
+
+        result.IsSuccess.Should().BeTrue();
+        result.Expression!(sample.Line, sample.Frame, sample.Text, sample.Word, sample.Glyph,
+                LyricExpressionFunctions.Instance)
+            .Should().Be(new LyricColorValue(128, 12, 34, 56));
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task FocusedExpressions_ShouldKeepRevealAndLiftIndependent()
+    {
+        var reveal = _compiler.CompileFocusedScalar("glyph.RevealProgress");
+        var motion = _compiler.CompileFocusedScalar("glyph.LiftProgress");
+        var sample = FocusedTextExpressionSamples.All[0];
+
+        reveal.IsSuccess.Should().BeTrue();
+        motion.IsSuccess.Should().BeTrue();
+        reveal.Expression!(sample.Line, sample.Frame, sample.Text, sample.Word, sample.Glyph,
+            LyricExpressionFunctions.Instance).Should().Be(0.5f);
+        motion.Expression!(sample.Line, sample.Frame, sample.Text, sample.Word, sample.Glyph,
+            LyricExpressionFunctions.Instance).Should().Be(0.4f);
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task RemovedV2Names_ShouldNotCompile()
+    {
+        _compiler.CompileScalar("line.AccentColor.A").IsSuccess.Should().BeFalse();
+        _compiler.CompileFocusedScalar("glyph.MotionProgress").IsSuccess.Should().BeFalse();
+        _compiler.CompileScalar("line.IsPlayed ? 1 : 0").IsSuccess.Should().BeFalse();
+        await Task.CompletedTask;
+    }
+
     private static LyricExpressionLine Line(
         bool isActive = true,
         float viewportDistance = 0,
         float progress = 0,
         string text = "line") =>
-        new(1, 0, 0, viewportDistance, isActive, false, false, false, true,
+        new(1, 0, 0, new LyricExpressionLineFacto(1, 0, 0), viewportDistance,
+            isActive, isActive, false, false, false, true,
             0, 1000, progress, 300, 50, 150, 25, text,
             new LyricColorValue(255, 255, 255, 255),
-            new LyricColorValue(255, 255, 210, 80));
+            new LyricColorValue(255, 255, 210, 80),
+            "1", "", "main", "", text, "", "",
+            new LyricExpressionLineStyle(true, "Center", true,
+                new LyricColorValue(255, 255, 210, 80), "Normal", false));
 
     private static LyricExpressionFrame Frame() =>
         new(1, 500, 500, true, false, false, 0, 800, 600, 96, 120);

@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Pipeline;
+using Microsoft.Graphics.Canvas;
 
 namespace HyPlayer.LyricRenderer.Abstraction;
 
 public class RenderContext
 {
+    internal CanvasCommandList? EmptyPipelineImage { get; set; }
+
     /// <summary>
     ///     是否正在播放
     /// </summary>
@@ -79,6 +82,11 @@ public class RenderContext
     ///     缺省的排版设置
     /// </summary>
     public RenderTypography PreferTypography { get; set; } = new();
+
+    /// <summary>
+    ///     Typography overrides for lines attached to another lyric line, such as background vocals.
+    /// </summary>
+    public RenderTypography SublineTypography { get; set; } = new();
 
     /// <summary>
     ///     当前的关键帧

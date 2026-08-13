@@ -1,11 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using HyPlayer.LyricEffects.Drawing;
 using HyPlayer.LyricEffects.Expressions;
 using HyPlayer.LyricEffects.Models;
 using HyPlayer.LyricEffects.Presets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace HyPlayer.LyricRenderer.Pipeline;
 
@@ -15,7 +15,7 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
 
     private readonly Dictionary<string, ILyricRenderOperationFactory> _factories =
         new(StringComparer.OrdinalIgnoreCase);
-
+    private readonly FocusedTextEffectCompiler _focusedTextCompiler;
     private int _version;
 
     public LyricRenderOperationRegistry(
@@ -23,8 +23,10 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
         ILyricDrawScriptParser drawScriptParser,
         LyricDrawCommandRegistry drawCommands)
     {
+        _focusedTextCompiler = new FocusedTextEffectCompiler(expressionCompiler, drawScriptParser, drawCommands);
         Register(new SourceDrawOperationFactory());
         Register(new DebugDrawOperationFactory());
+        Register(new BackgroundDrawOperationFactory(expressionCompiler));
         Register(new GlowOperationFactory(expressionCompiler));
         Register(new OpacityOperationFactory(expressionCompiler));
         Register(new BlurOperationFactory(expressionCompiler));
@@ -49,10 +51,10 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
         var diagnostics = new List<LyricProfileDiagnostic>();
         if (!string.Equals(document.Format, LyricEffectProfileDocument.CurrentFormat, StringComparison.Ordinal))
             diagnostics.Add(Error("不是有效的 HyPlayer 歌词特效文件。"));
-        if (document.SchemaVersion > LyricEffectProfileDocument.CurrentSchemaVersion)
-            diagnostics.Add(Error("该配置需要更高版本的 HyPlayer。"));
-        if (document.ExpressionApiVersion > LyricEffectProfileDocument.CurrentExpressionApiVersion)
-            diagnostics.Add(Error("该配置使用了更高版本的歌词表达式 API。"));
+        if (document.SchemaVersion != LyricEffectProfileDocument.CurrentSchemaVersion)
+            diagnostics.Add(Error($"仅支持 schemaVersion {LyricEffectProfileDocument.CurrentSchemaVersion}。"));
+        if (document.ExpressionApiVersion != LyricEffectProfileDocument.CurrentExpressionApiVersion)
+            diagnostics.Add(Error($"仅支持 expressionApiVersion {LyricEffectProfileDocument.CurrentExpressionApiVersion}。"));
         if (document.Operations.Count > MaximumOperationCount)
             diagnostics.Add(Error($"歌词特效链最多允许 {MaximumOperationCount} 个节点。"));
 
@@ -77,11 +79,21 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
             }
 
             var result = factory.Compile(definition);
-            diagnostics.AddRange(result.Diagnostics);
+            diagnostics.AddRange(result.Diagnostics.Select(item => item with
+            {
+                Severity = item.Severity == LyricProfileDiagnosticSeverity.Error
+                    ? LyricProfileDiagnosticSeverity.Warning
+                    : item.Severity,
+                Message = item.Severity == LyricProfileDiagnosticSeverity.Error
+                    ? $"节点已跳过：{item.Message}"
+                    : item.Message
+            }));
             if (definition.IsEnabled && result.Operation is not null) compiled.Add(result.Operation);
         }
 
-        if (diagnostics.Any(item => item.Severity == LyricProfileDiagnosticSeverity.Error))
+        var focusedText = _focusedTextCompiler.Compile(document.FocusedText, diagnostics);
+
+        if (diagnostics.Any(item => item.Severity == LyricProfileDiagnosticSeverity.Error) || focusedText is null)
             return new LyricProfileCompileResult { Diagnostics = diagnostics };
 
         return new LyricProfileCompileResult
@@ -90,12 +102,11 @@ public sealed class LyricRenderOperationRegistry : ILyricRenderOperationRegistry
             Profile = new CompiledLyricEffectProfile(
                 Interlocked.Increment(ref _version),
                 LyricEffectPresets.CloneProfile(document),
-                compiled)
+                compiled,
+                focusedText)
         };
     }
 
-    private static LyricProfileDiagnostic Error(string message, string? instanceId = null)
-    {
-        return new LyricProfileDiagnostic(LyricProfileDiagnosticSeverity.Error, message, instanceId);
-    }
+    private static LyricProfileDiagnostic Error(string message, string? instanceId = null) =>
+        new(LyricProfileDiagnosticSeverity.Error, message, instanceId);
 }

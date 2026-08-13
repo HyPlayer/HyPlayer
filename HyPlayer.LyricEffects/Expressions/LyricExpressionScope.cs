@@ -7,13 +7,28 @@ public readonly record struct LyricColorValue(byte A, byte R, byte G, byte B)
     public string ToHex() => $"#{A:X2}{R:X2}{G:X2}{B:X2}";
 }
 
+public readonly record struct LyricExpressionLineFacto(
+    int Index,
+    int RelativeIndex,
+    float IndexDistance);
+
+public readonly record struct LyricExpressionLineStyle(
+    bool Exists,
+    string Position,
+    bool HasColor,
+    LyricColorValue Color,
+    string Accent,
+    bool HiddenOnBlur);
+
 public readonly record struct LyricExpressionLine(
     int Index,
     int RelativeIndex,
     float IndexDistance,
+    LyricExpressionLineFacto Facto,
     float ViewportDistance,
     bool IsActive,
-    bool IsPlayed,
+    bool IsStarted,
+    bool IsFinished,
     bool IsHovered,
     bool IsHidden,
     bool IsText,
@@ -26,7 +41,15 @@ public readonly record struct LyricExpressionLine(
     float AnchorY,
     string Text,
     LyricColorValue IdleColor,
-    LyricColorValue AccentColor)
+    LyricColorValue FocusingColor,
+    string Id,
+    string ParentLineId,
+    string LineStyle,
+    string Comment,
+    string RawText,
+    string Transliteration,
+    string Translation,
+    LyricExpressionLineStyle Style)
 {
     public long DurationMs => Math.Max(EndMs - StartMs, 0);
 }
@@ -43,6 +66,37 @@ public readonly record struct LyricExpressionFrame(
     float ViewHeight,
     float Dpi,
     float Bpm);
+
+public readonly record struct FocusedTextExpressionText(
+    bool IsLyric,
+    bool IsTransliteration,
+    bool IsTranslation);
+
+public readonly record struct FocusedTextExpressionWord(
+    bool Exists,
+    int Index,
+    int Count,
+    long StartTimeMs,
+    long EndTimeMs,
+    float Progress,
+    bool IsInferred)
+{
+    public long DurationMs => Math.Max(EndTimeMs - StartTimeMs, 0);
+}
+
+public readonly record struct FocusedTextExpressionGlyph(
+    int Index,
+    int Count,
+    int IndexInWord,
+    int CountInWord,
+    float RevealProgress,
+    float LiftProgress,
+    float VisualLeftDip,
+    float VisualTopDip,
+    float VisualRightDip,
+    float VisualBottomDip,
+    float VisualWidthDip,
+    float VisualHeightDip);
 
 public sealed class LyricExpressionFunctions
 {

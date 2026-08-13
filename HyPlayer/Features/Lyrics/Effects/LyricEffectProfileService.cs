@@ -1,22 +1,63 @@
 #nullable enable
 
+using HyPlayer.Classes;
+using HyPlayer.LyricEffects.Models;
+using HyPlayer.LyricEffects.Presets;
+using HyPlayer.LyricRenderer.Pipeline;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
-using HyPlayer.Classes;
-using HyPlayer.Domain.Settings;
-using HyPlayer.LyricEffects.Models;
-using HyPlayer.LyricEffects.Presets;
-using HyPlayer.LyricRenderer.Pipeline;
-using UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding;
 
 namespace HyPlayer.Features.Lyrics.Effects;
+
+public sealed class LyricEffectProfileChangedEventArgs : EventArgs
+{
+    public required CompiledLyricEffectProfile Profile { get; init; }
+
+    public required bool IsPreview { get; init; }
+}
+
+public sealed class LyricEffectProfileFormatException : Exception
+{
+    public LyricEffectProfileFormatException(string message, Exception? innerException = null)
+        : base(message, innerException)
+    {
+    }
+}
+
+public interface ILyricEffectProfileService
+{
+    event EventHandler<LyricEffectProfileChangedEventArgs>? ProfileChanged;
+
+    LyricEffectProfileDocument CommittedDocument { get; }
+
+    CompiledLyricEffectProfile EffectiveProfile { get; }
+
+    IReadOnlyList<LyricRenderOperationDescriptor> Descriptors { get; }
+
+    IReadOnlyList<FocusedTextOperationDescriptor> FocusedTextDescriptors { get; }
+
+    Task InitializeAsync();
+
+    LyricEffectProfileDocument CreateDraft();
+
+    LyricProfileCompileResult Preview(LyricEffectProfileDocument document);
+
+    void CancelPreview();
+
+    Task<LyricProfileCompileResult> CommitAsync(LyricEffectProfileDocument document);
+
+    Task<LyricEffectProfileDocument> ImportAsync(StorageFile file);
+
+    LyricEffectProfileDocument Import(string json);
+
+    string Export(LyricEffectProfileDocument document);
+}
 
 public sealed class LyricEffectProfileService : ILyricEffectProfileService
 {
@@ -24,19 +65,17 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
     public const string ActiveFileName = "active.hylfx";
     public const string BackupFileName = "active.backup.hylfx";
     private const string TemporaryFileName = "active.tmp";
-    private readonly SemaphoreSlim _initializeLock = new(1, 1);
-    private readonly ILyricRenderOperationRegistry _registry;
 
-    private readonly LyricSettings _settings;
+    private readonly ILyricRenderOperationRegistry _registry;
+    private readonly SemaphoreSlim _initializeLock = new(1, 1);
     private readonly object _stateLock = new();
     private LyricEffectProfileDocument _committedDocument;
     private CompiledLyricEffectProfile _committedProfile;
     private CompiledLyricEffectProfile _effectiveProfile;
     private bool _initialized;
 
-    public LyricEffectProfileService(LyricSettings settings, ILyricRenderOperationRegistry registry)
+    public LyricEffectProfileService(ILyricRenderOperationRegistry registry)
     {
-        _settings = settings;
         _registry = registry;
         _committedDocument = LyricEffectPresets.CreateDefaultProfile();
         _committedProfile = CompileOrThrow(_committedDocument);
@@ -49,16 +88,16 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
     {
         get
         {
-            lock (_stateLock)
-            {
-                return LyricEffectPresets.CloneProfile(_committedDocument);
-            }
+            lock (_stateLock) return LyricEffectPresets.CloneProfile(_committedDocument);
         }
     }
 
     public CompiledLyricEffectProfile EffectiveProfile => Volatile.Read(ref _effectiveProfile);
 
     public IReadOnlyList<LyricRenderOperationDescriptor> Descriptors => _registry.Descriptors;
+
+    public IReadOnlyList<FocusedTextOperationDescriptor> FocusedTextDescriptors =>
+        FocusedTextEffectCompiler.Descriptors;
 
     public async Task InitializeAsync()
     {
@@ -77,6 +116,7 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
                 document = await TryReadAsync(activeFile);
 
             if (document is null && activeItem is not null)
+            {
                 if (await folder.TryGetItemAsync(BackupFileName) is StorageFile backupFile)
                 {
                     var backupDocument = await TryReadAsync(backupFile);
@@ -86,17 +126,16 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
                         recoveredFromBackup = true;
                     }
                 }
+            }
 
             if (document is null)
             {
-                document = activeItem is null
-                    ? CreateLegacyMigrationProfile()
-                    : LyricEffectPresets.CreateDefaultProfile();
-                await PersistAsync(folder, document, false);
+                document = LyricEffectPresets.CreateDefaultProfile();
+                await PersistAsync(folder, document, keepBackup: false);
             }
             else if (recoveredFromBackup)
             {
-                await PersistAsync(folder, document, false);
+                await PersistAsync(folder, document, keepBackup: false);
             }
 
             var compiled = CompileOrThrow(document);
@@ -116,10 +155,7 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
         }
     }
 
-    public LyricEffectProfileDocument CreateDraft()
-    {
-        return CommittedDocument;
-    }
+    public LyricEffectProfileDocument CreateDraft() => CommittedDocument;
 
     public LyricProfileCompileResult Preview(LyricEffectProfileDocument document)
     {
@@ -133,11 +169,7 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
     public void CancelPreview()
     {
         CompiledLyricEffectProfile committed;
-        lock (_stateLock)
-        {
-            committed = _committedProfile;
-        }
-
+        lock (_stateLock) committed = _committedProfile;
         Volatile.Write(ref _effectiveProfile, committed);
         Publish(committed, false);
     }
@@ -150,7 +182,7 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
         var folder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(
             FolderName,
             CreationCollisionOption.OpenIfExists);
-        await PersistAsync(folder, result.Profile!.Document, true);
+        await PersistAsync(folder, result.Profile!.Document, keepBackup: true);
 
         lock (_stateLock)
         {
@@ -169,7 +201,7 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
         var properties = await file.GetBasicPropertiesAsync();
         if (properties.Size > LyricEffectProfileValidation.MaximumFileBytes)
             throw new LyricEffectProfileFormatException("歌词特效文件不能超过 1 MiB。");
-        return Import(await FileIO.ReadTextAsync(file, UnicodeEncoding.Utf8));
+        return Import(await FileIO.ReadTextAsync(file, Windows.Storage.Streams.UnicodeEncoding.Utf8));
     }
 
     public LyricEffectProfileDocument Import(string json)
@@ -201,8 +233,7 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
         var result = Compile(document);
         if (!result.IsSuccess)
             throw new LyricEffectProfileFormatException(FormatDiagnostics(result.Diagnostics));
-        return JsonSerializer.Serialize(result.Profile!.Document,
-            JsonDefaultContext.Default.LyricEffectProfileDocument);
+        return JsonSerializer.Serialize(result.Profile!.Document, JsonDefaultContext.Default.LyricEffectProfileDocument);
     }
 
     private LyricProfileCompileResult Compile(LyricEffectProfileDocument document)
@@ -239,7 +270,7 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
         {
             var properties = await file.GetBasicPropertiesAsync();
             if (properties.Size > LyricEffectProfileValidation.MaximumFileBytes) return null;
-            return Import(await FileIO.ReadTextAsync(file, UnicodeEncoding.Utf8));
+            return Import(await FileIO.ReadTextAsync(file, Windows.Storage.Streams.UnicodeEncoding.Utf8));
         }
         catch
         {
@@ -257,47 +288,20 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
             await current.CopyAsync(folder, BackupFileName, NameCollisionOption.ReplaceExisting);
 
         var temporary = await folder.CreateFileAsync(TemporaryFileName, CreationCollisionOption.ReplaceExisting);
-        await FileIO.WriteTextAsync(temporary, json, UnicodeEncoding.Utf8);
+        await FileIO.WriteTextAsync(temporary, json, Windows.Storage.Streams.UnicodeEncoding.Utf8);
         var target = await folder.CreateFileAsync(ActiveFileName, CreationCollisionOption.OpenIfExists);
         await temporary.MoveAndReplaceAsync(target);
     }
 
-    private LyricEffectProfileDocument CreateLegacyMigrationProfile()
-    {
-        var profile = LyricEffectPresets.CreateDefaultProfile();
-        SetEnabled(profile, LyricBuiltInOperationTypes.Glow, _settings.LyricRenderFocusHighlighting);
-        SetEnabled(profile, LyricBuiltInOperationTypes.Opacity, _settings.LyricRenderFade);
-        SetEnabled(profile, LyricBuiltInOperationTypes.GaussianBlur, _settings.LyricRenderBlur);
-        SetEnabled(profile, LyricBuiltInOperationTypes.Transform2D, _settings.LyricRenderScaleWhenFocusing);
-        SetEnabled(profile, LyricBuiltInOperationTypes.Transform3D, _settings.LyricRenderTransform3D);
-
-        var ratio = _settings.LyricFadingRatio.ToString(CultureInfo.InvariantCulture);
-        var distance = $"fx.Clamp(0.6 - line.IndexDistance / (10 - {ratio} / 10), 0, 1)";
-        var opacity = profile.Operations.First(item => item.TypeId == LyricBuiltInOperationTypes.Opacity);
-        opacity.Parameters["opacity"].Expression =
-            $"line.IsActive ? 1 : (frame.IsScrolling ? fx.Max({distance}, 0.5) : {distance})";
-        return profile;
-    }
-
-    private static void SetEnabled(LyricEffectProfileDocument profile, string typeId, bool isEnabled)
-    {
-        var operation = profile.Operations.FirstOrDefault(item => item.TypeId == typeId);
-        if (operation is not null) operation.IsEnabled = isEnabled;
-    }
-
-    private void Publish(CompiledLyricEffectProfile profile, bool isPreview)
-    {
+    private void Publish(CompiledLyricEffectProfile profile, bool isPreview) =>
         ProfileChanged?.Invoke(this, new LyricEffectProfileChangedEventArgs
         {
             Profile = profile,
             IsPreview = isPreview
         });
-    }
 
-    private static string FormatDiagnostics(IReadOnlyList<LyricProfileDiagnostic> diagnostics)
-    {
-        return diagnostics.Count == 0
+    private static string FormatDiagnostics(IReadOnlyList<LyricProfileDiagnostic> diagnostics) =>
+        diagnostics.Count == 0
             ? "歌词特效配置无效。"
             : string.Join(Environment.NewLine, diagnostics.Select(item => item.Message));
-    }
 }

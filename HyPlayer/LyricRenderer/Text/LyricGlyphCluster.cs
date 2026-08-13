@@ -8,8 +8,8 @@ public sealed class LyricGlyphCluster
     public required LyricGlyphDrawState BaseState { get; init; }
     public required int SourceStart { get; init; }
     public required int SourceEnd { get; init; }
-    public required int TokenStartIndex { get; init; }
-    public required int TokenEndIndexExclusive { get; init; }
+    public required int TokenStartIndex { get; set; }
+    public required int TokenEndIndexExclusive { get; set; }
     public required float AdvanceWidth { get; init; }
     public required float VisualLeft { get; init; }
     public required float VisualTop { get; init; }
@@ -22,6 +22,9 @@ public sealed class LyricGlyphCluster
     public int LayerClusterCount { get; set; }
     public int TokenClusterIndex { get; set; }
     public int TokenClusterCount { get; set; }
+    public int InferredTokenIndex { get; set; } = -1;
+    public int InferredTokenClusterIndex { get; set; }
+    public int InferredTokenClusterCount { get; set; }
     public int VisualLineIndex { get; set; }
     public int LayerVisualLineCount { get; set; }
     public int VisualLineClusterIndex { get; set; }

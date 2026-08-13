@@ -69,6 +69,9 @@ internal static class HyPlayerComposition
         var lastFmSettings = new LastFMSettings();
         var downloadSettings = new DownloadSettings();
         var localLibrarySettings = new LocalLibrarySettings(downloadSettings);
+        // The legacy settings page still exposes its bindings through XamlHelpers.Setting.
+        // Keep the facade registered while the split settings services are used by new code.
+        var legacySettings = new Setting();
 
         depository.AddSingleton<PlaybackSettings>(playbackSettings);
         depository.AddSingleton<UISettings>(uiSettings);
@@ -77,6 +80,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<LastFMSettings>(lastFmSettings);
         depository.AddSingleton<DownloadSettings>(downloadSettings);
         depository.AddSingleton<LocalLibrarySettings>(localLibrarySettings);
+        depository.AddSingleton<Setting>(legacySettings);
 
         var neteaseProvider = new NeteaseProvider.NeteaseProvider();
         var client = neteaseProvider.ConfigureHttpClient(apiSettings.EnableProxy);

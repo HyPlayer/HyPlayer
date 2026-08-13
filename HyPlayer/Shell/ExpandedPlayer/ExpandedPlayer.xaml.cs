@@ -487,7 +487,10 @@ public sealed partial class ExpandedPlayer : Page
             _lyricBox.Redesign((float)LyricWidth, _nowHeight, LuminousBackground.Dpi);
             _lyricBox.ChangeRenderFontSize((float)LyricShowSize,
                 _lyricSettings.TranslationSize > 0 ? _lyricSettings.TranslationSize : (float)LyricShowSize / 2,
-                _lyricSettings.RomajiSize > 0 ? _lyricSettings.RomajiSize : (float)LyricShowSize / 2);
+                _lyricSettings.RomajiSize > 0 ? _lyricSettings.RomajiSize : (float)LyricShowSize / 2,
+                _lyricSettings.SublineLyricSize,
+                _lyricSettings.SublineTranslationSize,
+                _lyricSettings.SublineRomajiSize);
             _lastChangedLyricWidth = LyricWidth;
         }
 

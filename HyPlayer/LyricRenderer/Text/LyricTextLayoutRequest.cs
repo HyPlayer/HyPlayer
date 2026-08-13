@@ -15,6 +15,8 @@ public sealed class LyricTextLayoutRequest
     public required RenderTypography Typography { get; init; }
     public required string Text { get; init; }
     public required IReadOnlyList<LyricTextToken> Tokens { get; init; }
+    public required long LineStartTime { get; init; }
+    public required long LineEndTime { get; init; }
     public string? Translation { get; init; }
     public string? Transliteration { get; init; }
     public bool HiddenOnBlur { get; init; }

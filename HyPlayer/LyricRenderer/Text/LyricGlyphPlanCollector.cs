@@ -118,7 +118,9 @@ internal sealed partial class LyricGlyphPlanCollector(
                     GlyphOrientation = glyphOrientation,
                     Opacity = 1,
                     BlurRadius = 0,
-                    Scale = 1
+                    Scale = 1,
+                    ScaleX = 1,
+                    ScaleY = 1
                 },
                 SourceStart = sourceStart == int.MaxValue ? -1 : sourceStart,
                 SourceEnd = sourceEnd,
