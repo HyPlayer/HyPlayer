@@ -565,14 +565,17 @@ public sealed class FocusedLyricTextRenderer
         float feather,
         float width)
     {
-        if (highlighted && reveal >= 1 || !highlighted && reveal <= 0)
-            return new RectangleMaskPlan(1, 0, 0, highlighted != isRightToLeft);
-        if (highlighted && reveal <= 0 || !highlighted && reveal >= 1)
-            return new RectangleMaskPlan(0, 0, 0, highlighted != isRightToLeft);
+        if (reveal <= 0)
+            return new RectangleMaskPlan(highlighted ? 0 : 1, 0, 0, highlighted != isRightToLeft);
+        if (reveal >= 1)
+            return new RectangleMaskPlan(highlighted ? 1 : 0, 0, 0, highlighted != isRightToLeft);
 
         var localReveal = isRightToLeft ? 1 - reveal : reveal;
         var normalizedFeather = feather / Math.Max(width, 0.001f);
-        var boundaryProgress = Math.Clamp(localReveal, 0, 1);
+        // Move the feather completely outside the word at both endpoints. Keeping its
+        // center on the word edge leaves half a gradient visible until the last frame,
+        // then snaps to a constant mask exactly when the active word changes.
+        var boundaryProgress = localReveal * (1 + normalizedFeather) - normalizedFeather / 2;
         return new RectangleMaskPlan(
             null,
             Math.Clamp(boundaryProgress - normalizedFeather / 2, 0, 1),
