@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -9,6 +10,7 @@ using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using Windows.Storage;
 
 namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
@@ -22,6 +24,7 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
     private CanvasDevice? _device;
     private CanvasRenderTarget? _frame;
     private LikeAppleBackgroundRenderer? _renderer;
+    private Task? _rendererCreationTask;
     private bool _isVisible;
     private int _artworkRequestVersion;
 
@@ -37,13 +40,85 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
     {
         DisposeRenderer();
+        if (_state.BackgroundType != BackgroundType.LikeApple)
+        {
+            _rendererCreationTask = null;
+            return;
+        }
         _device = sender.Device;
-        _renderer = new LikeAppleBackgroundRenderer(
-            sender.Device,
+        _rendererCreationTask = CreateRendererAsync(sender.Device);
+        args.TrackAsyncAction(_rendererCreationTask.AsAsyncAction());
+    }
+
+    private async Task CreateRendererAsync(CanvasDevice device)
+    {
+        LikeAppleShaderBytecode shaderBytecode = await LoadShaderBytecodeAsync();
+        var renderer = new LikeAppleBackgroundRenderer(
+            device,
             _player.FFTProcessor,
+            shaderBytecode,
             lightTheme: _state.IsBrightTheme);
-        _renderer.SetIsBehindLyrics(true, animate: false);
+        renderer.SetIsBehindLyrics(true, animate: false);
+        _renderer = renderer;
         _isVisible = false;
+    }
+
+    private static async Task<LikeAppleShaderBytecode> LoadShaderBytecodeAsync()
+    {
+        Task<byte[]> rotationVertex = LoadShaderAsync("RotationVertex");
+        Task<byte[]> artworkFillVertex = LoadShaderAsync("ArtworkFillVertex");
+        Task<byte[]> fullscreenVertex = LoadShaderAsync("FullscreenVertex");
+        Task<byte[]> pinchVertex = LoadShaderAsync("PinchVertex");
+        Task<byte[]> rotationPixel = LoadShaderAsync("RotationPixel");
+        Task<byte[]> blurHorizontalPixel = LoadShaderAsync("BlurHorizontalPixel");
+        Task<byte[]> blurVerticalPixel = LoadShaderAsync("BlurVerticalPixel");
+        Task<byte[]> ordinaryMaterialPixel = LoadShaderAsync("OrdinaryMaterialPixel");
+        Task<byte[]> materialTreatedPixel = LoadShaderAsync("MaterialTreatedPixel");
+        Task<byte[]> materialCompositePixel = LoadShaderAsync("MaterialCompositePixel");
+        Task<byte[]> pinchPixel = LoadShaderAsync("PinchPixel");
+        Task<byte[]> pinchCompositePixel = LoadShaderAsync("PinchCompositePixel");
+
+        await Task.WhenAll(
+            rotationVertex,
+            artworkFillVertex,
+            fullscreenVertex,
+            pinchVertex,
+            rotationPixel,
+            blurHorizontalPixel,
+            blurVerticalPixel,
+            ordinaryMaterialPixel,
+            materialTreatedPixel,
+            materialCompositePixel,
+            pinchPixel,
+            pinchCompositePixel);
+        return new LikeAppleShaderBytecode(
+            await rotationVertex,
+            await artworkFillVertex,
+            await fullscreenVertex,
+            await pinchVertex,
+            await rotationPixel,
+            await blurHorizontalPixel,
+            await blurVerticalPixel,
+            await ordinaryMaterialPixel,
+            await materialTreatedPixel,
+            await materialCompositePixel,
+            await pinchPixel,
+            await pinchCompositePixel);
+    }
+
+    private static async Task<byte[]> LoadShaderAsync(string shaderName)
+    {
+        StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(
+            new Uri($"ms-appx:///Shaders/LikeApple/{shaderName}.bin"));
+        await using Stream stream = await file.OpenStreamForReadAsync();
+        if (stream.Length > int.MaxValue)
+        {
+            throw new IOException($"Shader '{shaderName}' is too large.");
+        }
+
+        byte[] bytecode = new byte[(int)stream.Length];
+        await stream.ReadExactlyAsync(bytecode);
+        return bytecode;
     }
 
     public void Update(ICanvasAnimatedControl sender, CanvasAnimatedUpdateEventArgs args)
@@ -85,6 +160,11 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
     {
         ArgumentNullException.ThrowIfNull(stream);
         int requestVersion = Interlocked.Increment(ref _artworkRequestVersion);
+        Task? rendererCreationTask = _rendererCreationTask;
+        if (rendererCreationTask is not null)
+        {
+            await rendererCreationTask;
+        }
         LikeAppleBackgroundRenderer? renderer = _renderer;
         CanvasDevice? device = _device;
         if (renderer is null || device is null) return;

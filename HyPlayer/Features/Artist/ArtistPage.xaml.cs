@@ -41,11 +41,6 @@ public sealed partial class ArtistPage : Page
         ViewModel.InitializeArtistInfo(artistId).SafeFireAndForget();
     }
 
-    private void OnPivotSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        ViewModel.CurrentPage = 0;
-    }
-
     private void OnArtistHeaderScrollProgressChanged(object? sender, EventArgs e)
     {
         var progress = ArtistPivotView.HeaderScrollProgress;

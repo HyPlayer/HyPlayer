@@ -1,6 +1,7 @@
 Texture2D<float4> Source0 : register(t0);
 Texture2D<float4> Source1 : register(t1);
 SamplerState LinearClampSampler : register(s0);
+SamplerState LinearZeroBorderSampler : register(s1);
 
 cbuffer FrameConstants : register(b0)
 {
@@ -88,7 +89,6 @@ RotationOutput RotationVertex(QuadInput input, uint instanceId : SV_InstanceID)
     const float twoPi = 6.2831853071795864769;
     float angle = Time * twoPi / RotationTimeScale(instanceId);
 
-    // Exact matrix order used by TSLBackdrop's rotation vertex shader:
     // View * R(-angle) * Translation * R(-angle).
     float2 position = input.Position.xy * ImageScale(instanceId);
     position = RotateClockwise(position, angle);
@@ -104,9 +104,7 @@ RotationOutput RotationVertex(QuadInput input, uint instanceId : SV_InstanceID)
 
 float3 ApplySaturation(float3 color, float saturation)
 {
-    // Exact coefficient layout emitted by iOS material_treated_fragment.
-    // It is very close to a Rec.709 luminance lerp, but Apple's red diagonal
-    // deliberately uses 0.7873 rather than the derived value 0.7874.
+    // Saturation matrix tuned for the background material.
     float3 redColumn = float3(
         0.2126 + 0.7873 * saturation,
         0.2126 - 0.2126 * saturation,
@@ -125,6 +123,15 @@ float3 ApplySaturation(float3 color, float saturation)
         blueColumn * color.b;
 }
 
+float3 ApplyTreatedMaterial(float3 color)
+{
+    // Reduce saturation before the final composition pass.
+    color = ApplySaturation(color, 1.4);
+    color = clamp(color, -0.752941, 1.25098);
+    color = ApplySaturation(color, 0.70);
+    return lerp(color, 0.0.xxx, BlackScrimAlpha);
+}
+
 float4 RotationPixel(RotationOutput input) : SV_TARGET
 {
     float3 current = Source0.Sample(LinearClampSampler, input.TextureCoordinate).rgb;
@@ -141,9 +148,7 @@ QuadOutput FullscreenVertex(QuadInput input)
     return output;
 }
 
-// The rotating square layers do not cover all four corners at every angle.
-// Keep an aspect-fill source beneath them for full-frame coverage without
-// increasing the scale of the moving color regions.
+// Fill gaps exposed by the rotating layers.
 QuadOutput ArtworkFillVertex(QuadInput input)
 {
     QuadOutput output;
@@ -153,10 +158,7 @@ QuadOutput ArtworkFillVertex(QuadInput input)
     return output;
 }
 
-// Normalized sigma-42.5 kernel, truncated at 153 pixels. Every entry combines
-// two adjacent discrete taps into one bilinear lookup. Keeping the taps dense
-// is important: scaling a smaller kernel's offsets creates axis-aligned ghost
-// copies which become visible as a grid after the two separable passes.
+// Normalized sigma-42.5 kernel with paired bilinear taps.
 static const float BlurCenterWeight = 0.009389731878;
 static const float BlurOffsets[77] =
 {
@@ -205,19 +207,33 @@ static const float BlurWeights[77] =
     0.00001440207
 };
 
-float4 GaussianBlur(float2 textureCoordinate, float2 direction)
+float4 GaussianBlur(
+    float2 textureCoordinate,
+    float2 direction,
+    bool normalizeOutput)
 {
-    float4 color = Source0.Sample(LinearClampSampler, textureCoordinate) * BlurCenterWeight;
+    // Normalize zero-border samples by their accumulated coverage.
+    float4 color =
+        Source0.Sample(LinearZeroBorderSampler, textureCoordinate) *
+        BlurCenterWeight;
     [unroll]
     for (int index = 0; index < 77; index++)
     {
         float2 offset = direction * BlurOffsets[index];
         color +=
-            (Source0.Sample(LinearClampSampler, textureCoordinate + offset) +
-             Source0.Sample(LinearClampSampler, textureCoordinate - offset)) *
+            (Source0.Sample(
+                LinearZeroBorderSampler,
+                textureCoordinate + offset) +
+             Source0.Sample(
+                LinearZeroBorderSampler,
+                textureCoordinate - offset)) *
             BlurWeights[index];
     }
-    color.a = 1.0;
+    if (normalizeOutput)
+    {
+        color.rgb /= max(color.a, 1.0 / 65535.0);
+        color.a = 1.0;
+    }
     return color;
 }
 
@@ -228,7 +244,8 @@ float4 BlurHorizontalPixel(QuadOutput input) : SV_TARGET
     Source0.GetDimensions(width, height);
     return GaussianBlur(
         input.TextureCoordinate,
-        float2(BlurScale.x / width, 0.0));
+        float2(BlurScale.x / width, 0.0),
+        false);
 }
 
 float4 BlurVerticalPixel(QuadOutput input) : SV_TARGET
@@ -238,7 +255,8 @@ float4 BlurVerticalPixel(QuadOutput input) : SV_TARGET
     Source0.GetDimensions(width, height);
     return GaussianBlur(
         input.TextureCoordinate,
-        float2(0.0, BlurScale.y / height));
+        float2(0.0, BlurScale.y / height),
+        true);
 }
 
 struct PinchInput
@@ -281,33 +299,23 @@ float3 SampleTreatedMaterial(float2 textureCoordinate)
     float3 lyricColor =
         lyricSample.rgb / max(lyricSample.a, 1.0 / 65535.0);
 
-    // iOS material_treated_fragment uses saturation=1.4, clamps to the
-    // BGRA10_XR range, and only then applies its black scrim. In particular,
-    // there is no white-scrim/light-lift branch in the iOS shader.
-    lyricColor = ApplySaturation(lyricColor, 1.4);
-    lyricColor = clamp(lyricColor, -0.752941, 1.25098);
-    lyricColor = lerp(lyricColor, 0.0.xxx, BlackScrimAlpha);
-    return lyricColor;
+    return ApplyTreatedMaterial(lyricColor);
 }
 
 float4 FinishMaterial(float3 color, float2 pixelPosition)
 {
-    // D3DImage is restricted to BGRA8 even though iOS renders this material
-    // through BGRA10_XR. Zero-mean half-LSB noise performs the one unavoidable
-    // 8-bit quantization without turning smooth blurred ramps into color bands.
+    // Half-LSB noise reduces banding when the result is quantized to BGRA8.
     float dither = frac(
         52.9829189 * frac(dot(pixelPosition, float2(0.06711056, 0.00583715)))) -
         0.5;
     color += dither * (OutputDitherStrength / 255.0);
 
-    return float4(saturate(color), 1.0);
+    return float4(clamp(color, 0.07, 0.97), 1.0);
 }
 
 float4 OrdinaryMaterialPixel(QuadOutput input) : SV_TARGET
 {
-    // isBehindLyrics=false removes the lyric mesh and spectrum deformation;
-    // it does not expose the untreated blur texture. The backing image stays
-    // inside the same iOS material treatment as the lyric presentation.
+    // Ordinary mode keeps the treated backing image without mesh deformation.
     return FinishMaterial(
         SampleTreatedMaterial(input.TextureCoordinate),
         input.Position.xy);
@@ -336,9 +344,7 @@ float4 CompositeMaterial(
         Source1.Sample(LinearClampSampler, ordinaryTextureCoordinate);
     float3 ordinaryColor =
         ordinarySample.rgb / max(ordinarySample.a, 1.0 / 65535.0);
-    ordinaryColor = ApplySaturation(ordinaryColor, 1.4);
-    ordinaryColor = clamp(ordinaryColor, -0.752941, 1.25098);
-    ordinaryColor = lerp(ordinaryColor, 0.0.xxx, BlackScrimAlpha);
+    ordinaryColor = ApplyTreatedMaterial(ordinaryColor);
     float3 lyricColor = SampleTreatedMaterial(lyricTextureCoordinate);
     return FinishMaterial(
         lerp(ordinaryColor, lyricColor, LyricsModeMix),

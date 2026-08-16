@@ -10,7 +10,7 @@ using Windows.UI;
 
 namespace HyPlayer.LyricRenderer.Pipeline;
 
-internal sealed class BackgroundDrawOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
+internal sealed partial class BackgroundDrawOperationFactory(ILyricExpressionCompiler compiler) : ExpressionOperationFactoryBase(compiler)
 {
     private static readonly LyricOperationParameterDescriptor[] ParameterDescriptors =
     [
@@ -61,7 +61,7 @@ internal sealed class BackgroundDrawOperationFactory(ILyricExpressionCompiler co
         Maximum = maximum
     };
 
-    private sealed class BackgroundDrawOperation(
+    private sealed partial class BackgroundDrawOperation(
         ColorParameterRuntime color,
         ScalarParameterRuntime[] scalars) : ILyricRenderOperation
     {
@@ -100,7 +100,7 @@ internal sealed class BackgroundDrawOperationFactory(ILyricExpressionCompiler co
     }
 }
 
-internal sealed class SourceDrawOperationFactory : ILyricRenderOperationFactory
+internal sealed partial class SourceDrawOperationFactory : ILyricRenderOperationFactory
 {
     public LyricRenderOperationDescriptor Descriptor { get; } = new()
     {
@@ -122,7 +122,7 @@ internal sealed class SourceDrawOperationFactory : ILyricRenderOperationFactory
         }
     };
 
-    private sealed class SourceDrawOperation : ILyricRenderOperation
+    private sealed partial class SourceDrawOperation : ILyricRenderOperation
     {
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
@@ -146,7 +146,7 @@ internal sealed class SourceDrawOperationFactory : ILyricRenderOperationFactory
     }
 }
 
-internal sealed class DebugDrawOperationFactory : ILyricRenderOperationFactory
+internal sealed partial class DebugDrawOperationFactory : ILyricRenderOperationFactory
 {
     public LyricRenderOperationDescriptor Descriptor { get; } = new()
     {
@@ -168,7 +168,7 @@ internal sealed class DebugDrawOperationFactory : ILyricRenderOperationFactory
         }
     };
 
-    private sealed class DebugDrawOperation : ILyricRenderOperation
+    private sealed partial class DebugDrawOperation : ILyricRenderOperation
     {
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {

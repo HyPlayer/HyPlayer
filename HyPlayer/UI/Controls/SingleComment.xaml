@@ -129,7 +129,8 @@
                     x:Name="LoadMore"
                     HorizontalAlignment="Stretch"
                     Click="LoadMore_Click"
-                    Content="加载更多" />
+                    Content="重试"
+                    Visibility="Collapsed" />
             </StackPanel>
         </muxc:Expander>
     </StackPanel>

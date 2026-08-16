@@ -21,5 +21,4 @@ public sealed class ExpandedCanvasState
     public ExpandedWindowMode WindowMode { get; set; } = ExpandedWindowMode.Both;
     public IReadOnlyList<Vector3> AlbumColorVectors { get; set; } = [];
     public LyricRenderView? LyricBox { get; set; }
-    public PixelShaderEffect<IsolationEffect>? IsolationEffect { get; set; }
 }

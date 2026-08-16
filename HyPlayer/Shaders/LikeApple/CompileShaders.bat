@@ -1,12 +1,12 @@
 @echo off
 setlocal EnableExtensions
 
-rem Compile every entry point used by AppleMusicOriginalBackground.cs.
+rem Compile every entry point used by AppleMusicInspiredBackground.hlsl.
 rem The flags match CompileShader: EnableStrictness + OptimizationLevel3.
 
 set "SCRIPT_DIR=%~dp0"
-set "SOURCE=%SCRIPT_DIR%Shaders\AppleMusicOriginalBackground.hlsl"
-set "OUTPUT_DIR=%SCRIPT_DIR%Shaders\Compiled"
+set "SOURCE=%SCRIPT_DIR%AppleMusicInspiredBackground.hlsl"
+set "OUTPUT_DIR=%SCRIPT_DIR%"
 
 if not exist "%SOURCE%" (
     echo [ERROR] Shader source not found: "%SOURCE%"

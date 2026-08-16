@@ -121,8 +121,7 @@
                 Margin="0,-32,0,0"
                 AllowFocusOnInteraction="False"
                 IsTabStop="False"
-                SelectedIndex="{x:Bind ViewModel.CurrentPivotIndex, Mode=TwoWay}"
-                SelectionChanged="OnPivotSelectionChanged">
+                SelectedIndex="{x:Bind ViewModel.CurrentPivotIndex, Mode=TwoWay}">
                 <PivotItem Header="热门50首">
                     <controls1:ContainerItemsView x:Name="HotSongContainer" Container="{x:Bind ViewModel.HotSongsContainer, Mode=OneWay}">
                         <controls1:ContainerItemsView.ListHeader>
@@ -135,18 +134,6 @@
                         <controls1:ContainerItemsView.ListHeader>
                             <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:ContainerItemsView.ListHeader>
-                        <controls1:ContainerItemsView.Footer>
-                            <StackPanel
-                                Grid.Row="3"
-                                HorizontalAlignment="Center"
-                                Orientation="Horizontal">
-                                <Button
-                                    Command="{x:Bind ViewModel.NextPageCommand}"
-                                    Content="加载更多"
-                                    Style="{StaticResource ButtonRevealStyle}"
-                                    Visibility="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" />
-                            </StackPanel>
-                        </controls1:ContainerItemsView.Footer>
                     </controls1:ContainerItemsView>
                 </PivotItem>
                 <PivotItem Header="专辑">
@@ -154,24 +141,6 @@
                         <controls1:ContainerItemsView.ListHeader>
                             <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:ContainerItemsView.ListHeader>
-                        <controls1:ContainerItemsView.Footer>
-                            <StackPanel
-                                Grid.Row="3"
-                                HorizontalAlignment="Center"
-                                Orientation="Horizontal">
-                                <Button
-                                    x:Name="PrevPage"
-                                    Command="{x:Bind ViewModel.PreviousPageCommand}"
-                                    Content="上一页"
-                                    Visibility="{x:Bind ViewModel.HasPreviousPage, Mode=OneWay}" />
-                                <Button
-                                    x:Name="NextPage"
-                                    Command="{x:Bind ViewModel.NextPageCommand}"
-                                    Content="下一页"
-                                    Style="{StaticResource ButtonRevealStyle}"
-                                    Visibility="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" />
-                            </StackPanel>
-                        </controls1:ContainerItemsView.Footer>
                     </controls1:ContainerItemsView>
                 </PivotItem>
             </uiControls:PivotEx>

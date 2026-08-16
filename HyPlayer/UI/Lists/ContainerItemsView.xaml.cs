@@ -38,6 +38,7 @@ using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.UI.Dialogs;
+using HyPlayer.UI.Lists.IncrementalLoading;
 using WinRT;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewItemInvokedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;
@@ -87,35 +88,30 @@ public sealed partial class ContainerItemsView : UserControl
 
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly ProvidableItemDisplayResolver _displayResolver = ProvidableItemDisplayResolver.CreateDefault();
-    private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
-
+    private readonly IncrementalLoadController<ProvidableItemRowViewModel> _loadController = new();
+    private readonly IncrementalLoadingCollection<ProvidableItemRowViewModel> _rows;
     private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
     private readonly ISongListQueueBuilder _queueBuilder = Ioc.Default.GetRequiredService<ISongListQueueBuilder>();
-    private readonly WeakEventListener<ContainerItemsView, object?, EventArgs> _secondTickListener;
     private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly WeakEventListener<ContainerItemsView, object?, PropertyChangedEventArgs> _stateChangedListener;
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
-    private int _greedyLoadThreshold = 3;
-    private bool _isSecondTickSubscribed;
     private bool _isStateSubscribed;
-    private CancellationTokenSource? _loadCts;
-    private int _nextOffset;
-    private IProgressiveLoadingContainer? _progressiveContainer;
-    private UndeterminedContainerBase? _undeterminedContainer;
+    private CancellationTokenSource? _eagerLoadCts;
 
     public ContainerItemsView()
     {
+        _rows = new IncrementalLoadingCollection<ProvidableItemRowViewModel>(
+            _loadController,
+            static row => string.IsNullOrWhiteSpace(row.ActualId)
+                ? null
+                : $"{row.Item.ProviderId}\u001f{row.TypeId}\u001f{row.ActualId}");
+        State = new ContainerItemsViewState(_rows);
         InitializeComponent();
-        _secondTickListener = new WeakEventListener<ContainerItemsView, object?, EventArgs>(this)
-        {
-            OnEventAction = static (instance, _, _) => instance.GreedyLoadNextPage(),
-            OnDetachAction = weakEventListener => { _globalTimer.SecondTick -= weakEventListener.OnEvent; }
-        };
         _stateChangedListener = new WeakEventListener<ContainerItemsView, object?, PropertyChangedEventArgs>(this)
         {
             OnEventAction = static (instance, _, args) =>
@@ -128,12 +124,16 @@ public sealed partial class ContainerItemsView : UserControl
             },
             OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
         };
+        _loadController.PropertyChanged += LoadController_PropertyChanged;
+        _rows.LoadCompleted += Rows_LoadCompleted;
+        _rows.LoadFailed += Rows_LoadFailed;
         AttachStateChanged();
         UpdateListHeader(ListHeader);
-        State.ActiveItemsSource = VisibleRows;
+        State.ActiveItemsSource = Rows;
+        SyncLoadState();
     }
 
-    public ContainerItemsViewState State { get; } = new();
+    public ContainerItemsViewState State { get; }
     public ObservableCollection<ProvidableItemRowViewModel> Rows => State.Rows;
     public ObservableCollection<ProvidableItemRowViewModel> VisibleRows => State.VisibleRows;
     public ObservableCollection<ProvidableItemRowGroup> GroupedItems => State.GroupedItems;
@@ -189,14 +189,7 @@ public sealed partial class ContainerItemsView : UserControl
     private bool HasMore
     {
         get => State.HasMore;
-        set
-        {
-            if (State.HasMore == value)
-                return;
-
-            State.HasMore = value;
-            UpdateGreedyLoadSubscription();
-        }
+        set => State.HasMore = value;
     }
 
     public SongListQueueScope QueueScope
@@ -227,7 +220,7 @@ public sealed partial class ContainerItemsView : UserControl
 
     public Task LoadMoreAsync()
     {
-        return LoadNextPageAsync();
+        return State.CanRetry ? RetryLoadAsync() : LoadNextPageAsync();
     }
 
     public async Task PlayAllAsync()
@@ -280,22 +273,23 @@ public sealed partial class ContainerItemsView : UserControl
     private static void OnGreedyLoadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var view = (ContainerItemsView)d;
-        view.UpdateGreedyLoadSubscription();
+        view.RestartEagerLoading();
     }
 
     private void ContainerItemsView_Loaded(object sender, RoutedEventArgs e)
     {
         AttachStateChanged();
         State.MultiSelect = false;
+        if (Rows.Count == 0 && _loadController.HasMore && !_loadController.IsLoading)
+            LoadFirstPageAsync().SafeFireAndForget();
+        RestartEagerLoading();
     }
 
     private void ContainerItemsView_Unloaded(object sender, RoutedEventArgs e)
     {
-        DetachSecondTick();
+        StopEagerLoading();
         DetachStateChanged();
-        _loadCts?.Cancel();
-        _loadCts?.Dispose();
-        _loadCts = null;
+        _loadController.CancelPending();
     }
 
     private void UpdateListHeader(UIElement? header)
@@ -313,119 +307,67 @@ public sealed partial class ContainerItemsView : UserControl
 
     private void StartLoadForContainer()
     {
-        _loadCts?.Cancel();
-        _loadCts?.Dispose();
-        _loadCts = new CancellationTokenSource();
-        _progressiveContainer = Container as IProgressiveLoadingContainer;
-        _undeterminedContainer = Container as UndeterminedContainerBase;
-        _nextOffset = 0;
-        _greedyLoadThreshold = 3;
-        HasMore = false;
-        Rows.Clear();
+        StopEagerLoading();
+        var source = ContainerIncrementalPageSource.Create(Container, DefaultPageSize);
+        var mappedSource = source is null
+            ? null
+            : new MappingIncrementalPageSource<ProvidableItemBase, ProvidableItemRowViewModel>(
+                source,
+                (item, index, cancellationToken) =>
+                    _displayResolver.CreateRowAsync(item, index, cancellationToken));
+        _rows.Reset(mappedSource);
         VisibleRows.Clear();
         GroupedItems.Clear();
+        State.ActiveItemsSource = Rows;
         QueueScope = BuildQueueScope(Container);
-        LoadFirstPageAsync(_loadCts.Token).SafeFireAndForget();
+        SyncLoadState();
+        LoadFirstPageAsync().SafeFireAndForget();
     }
 
-    private async Task LoadFirstPageAsync(CancellationToken cancellationToken)
+    private async Task LoadFirstPageAsync()
     {
-        if (Container is null)
+        if (Container is null || !_loadController.HasMore)
             return;
 
-        IsLoading = true;
-        try
-        {
-            if (_progressiveContainer is not null)
-            {
-                await LoadProgressivePageAsync(cancellationToken);
-            }
-            else if (_undeterminedContainer is not null)
-            {
-                await LoadUndeterminedPageAsync(cancellationToken);
-            }
-            else if (Container is LinerContainerBase liner)
-            {
-                var items = await liner.GetAllItemsAsync(cancellationToken);
-                await AppendItemsAsync(items, cancellationToken);
-                HasMore = false;
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("加载列表失败", ex.Message);
-        }
-        finally
-        {
-            IsLoading = false;
-            RefreshVisibleRows();
-        }
+        await _rows.LoadInitialAsync(DefaultPageSize);
+        RestartEagerLoading();
     }
 
     private async Task LoadNextPageAsync()
     {
-        if (IsLoading || !HasMore)
+        if (_loadController.IsLoading || !_loadController.CanAutoLoad)
             return;
 
-        var cancellationToken = _loadCts?.Token ?? CancellationToken.None;
-        IsLoading = true;
-        try
-        {
-            if (_progressiveContainer is not null)
-                await LoadProgressivePageAsync(cancellationToken);
-            else if (_undeterminedContainer is not null)
-                await LoadUndeterminedPageAsync(cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("加载更多失败", ex.Message);
-        }
-        finally
-        {
-            IsLoading = false;
-            RefreshVisibleRows();
-        }
+        await _rows.LoadInitialAsync(DefaultPageSize);
     }
 
-    private async Task LoadProgressivePageAsync(CancellationToken cancellationToken)
+    private async Task RetryLoadAsync()
     {
-        if (_progressiveContainer is null)
-            return;
+        await _rows.RetryAsync(DefaultPageSize);
+    }
 
-        var pageSize = Math.Clamp(_progressiveContainer.MaxProgressiveCount, 1, DefaultPageSize);
-        var (hasMore, items) =
-            await _progressiveContainer.GetProgressiveItemsListAsync(_nextOffset, pageSize, cancellationToken);
-        await AppendItemsAsync(items, cancellationToken);
-        _nextOffset += items.Count;
-        HasMore = hasMore && items.Count > 0;
+    private void LoadController_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        SyncLoadState();
+    }
+
+    private void Rows_LoadCompleted(object? sender, EventArgs e)
+    {
+        RefreshVisibleRows();
         QueueScope = BuildQueueScope(Container);
+        SyncLoadState();
     }
 
-    private async Task LoadUndeterminedPageAsync(CancellationToken cancellationToken)
+    private void Rows_LoadFailed(object? sender, Exception exception)
     {
-        if (_undeterminedContainer is null)
-            return;
-
-        var items = await _undeterminedContainer.GetNextItemsRangeAsync(cancellationToken);
-        await AppendItemsAsync(items, cancellationToken);
-        HasMore = items.Count > 0;
-        QueueScope = BuildQueueScope(Container);
+        _notification.ShowMessage(Rows.Count == 0 ? "加载列表失败" : "加载更多失败", exception.Message);
     }
 
-    private async Task AppendItemsAsync(IEnumerable<ProvidableItemBase> items, CancellationToken cancellationToken)
+    private void SyncLoadState()
     {
-        foreach (var item in items)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var row = await _displayResolver.CreateRowAsync(item, Rows.Count, cancellationToken);
-            Rows.Add(row);
-        }
+        IsLoading = _loadController.IsLoading;
+        HasMore = _loadController.HasMore;
+        State.CanRetry = _loadController.CanRetry;
     }
 
     private void RefreshVisibleRows()
@@ -442,7 +384,7 @@ public sealed partial class ContainerItemsView : UserControl
     private void RebuildGroups()
     {
         GroupedItems.Clear();
-        State.ActiveItemsSource = VisibleRows;
+        State.ActiveItemsSource = string.IsNullOrWhiteSpace(FilterBox?.Text) ? Rows : VisibleRows;
         if (!ShouldGroupByDisc())
             return;
 
@@ -482,6 +424,20 @@ public sealed partial class ContainerItemsView : UserControl
     private void LoadMoreButton_Click(object sender, RoutedEventArgs e)
     {
         LoadMoreAsync().SafeFireAndForget();
+    }
+
+    private void IncrementalLoadSentinel_EffectiveViewportChanged(
+        FrameworkElement sender,
+        EffectiveViewportChangedEventArgs args)
+    {
+        if (ReferenceEquals(State.ActiveItemsSource, Rows)
+            || !string.IsNullOrWhiteSpace(FilterBox?.Text)
+            || args.BringIntoViewDistanceY > sender.ActualHeight
+            || !_loadController.CanAutoLoad
+            || _loadController.IsLoading)
+            return;
+
+        LoadNextPageAsync().SafeFireAndForget();
     }
 
     private async void ItemList_ItemClick(object sender, ItemClickEventArgs e)
@@ -779,45 +735,38 @@ public sealed partial class ContainerItemsView : UserControl
         return null;
     }
 
-    private void GreedyLoadNextPage()
+    private void RestartEagerLoading()
     {
-        if (!GreedyLoad || !HasMore)
+        StopEagerLoading();
+        if (!GreedyLoad || !_loadController.HasMore || _loadController.CanRetry)
+            return;
+
+        _eagerLoadCts = new CancellationTokenSource();
+        RunEagerLoadingAsync(_eagerLoadCts.Token).SafeFireAndForget();
+    }
+
+    private async Task RunEagerLoadingAsync(CancellationToken cancellationToken)
+    {
+        try
         {
-            DetachSecondTick();
-            return;
+            while (GreedyLoad && _loadController.CanAutoLoad)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+                await _rows.LoadInitialAsync(DefaultPageSize, cancellationToken);
+                if (_loadController.CanRetry)
+                    return;
+            }
         }
-
-        if (_greedyLoadThreshold-- > 0)
-            return;
-
-        _greedyLoadThreshold = 3;
-        LoadMoreAsync().SafeFireAndForget();
+        catch (OperationCanceledException)
+        {
+        }
     }
 
-    private void UpdateGreedyLoadSubscription()
+    private void StopEagerLoading()
     {
-        if (GreedyLoad && HasMore)
-            AttachSecondTick();
-        else
-            DetachSecondTick();
-    }
-
-    private void AttachSecondTick()
-    {
-        if (_isSecondTickSubscribed)
-            return;
-
-        _globalTimer.SecondTick += _secondTickListener.OnEvent;
-        _isSecondTickSubscribed = true;
-    }
-
-    private void DetachSecondTick()
-    {
-        if (!_isSecondTickSubscribed)
-            return;
-
-        _secondTickListener.Detach();
-        _isSecondTickSubscribed = false;
+        _eagerLoadCts?.Cancel();
+        _eagerLoadCts?.Dispose();
+        _eagerLoadCts = null;
     }
 
     private void AttachStateChanged()

@@ -4,7 +4,7 @@ using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 namespace HyPlayer.UI.Playback.PlayBar;
 
-public sealed class PlayBarQueueItem : ObservableObject
+public sealed partial class PlayBarQueueItem : ObservableObject
 {
     private bool _isCurrent;
 

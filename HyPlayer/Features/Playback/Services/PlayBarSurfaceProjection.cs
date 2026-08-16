@@ -5,7 +5,7 @@ namespace HyPlayer.Features.Playback.Services;
 /// <summary>
 ///     Projection of PlayBar-specific visibility booleans derived from <see cref="PlaybackSurfaceStore" />.
 /// </summary>
-public sealed class PlayBarSurfaceProjection : ObservableObject
+public sealed partial class PlayBarSurfaceProjection : ObservableObject
 {
     private bool _isExpanded;
 

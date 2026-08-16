@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -7,6 +8,41 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 
 namespace HyPlayer.UI.Lists;
+
+public sealed class DelegateProgressiveContainer : ContainerBase, IProgressiveLoadingContainer
+{
+    private readonly Func<int, int, CancellationToken, Task<(bool HasMore, List<ProvidableItemBase> Items)>> _loader;
+
+    public DelegateProgressiveContainer(
+        Func<int, int, CancellationToken, Task<(bool HasMore, List<ProvidableItemBase> Items)>> loader,
+        string name,
+        string actualId,
+        string typeId,
+        string providerId = "",
+        int pageSize = 50)
+    {
+        _loader = loader;
+        Name = name;
+        ActualId = actualId;
+        TypeIdValue = typeId;
+        ProviderIdValue = providerId;
+        MaxProgressiveCount = Math.Max(1, pageSize);
+    }
+
+    public override string ProviderId => ProviderIdValue;
+    public override string TypeId => TypeIdValue;
+    public string ProviderIdValue { get; }
+    public string TypeIdValue { get; }
+    public int MaxProgressiveCount { get; }
+
+    public Task<(bool, List<ProvidableItemBase>)> GetProgressiveItemsListAsync(
+        int start,
+        int count,
+        CancellationToken ctk = default)
+    {
+        return _loader(start, count, ctk);
+    }
+}
 
 public sealed class StaticItemsContainer : LinerContainerBase
 {

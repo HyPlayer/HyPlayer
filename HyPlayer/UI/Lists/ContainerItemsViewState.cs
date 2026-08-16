@@ -9,8 +9,9 @@ namespace HyPlayer.UI.Lists;
 /// </summary>
 public sealed partial class ContainerItemsViewState : ObservableObject
 {
-    public ContainerItemsViewState()
+    public ContainerItemsViewState(ObservableCollection<ProvidableItemRowViewModel> rows)
     {
+        Rows = rows;
         Rows.CollectionChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(IsInitialLoading));
@@ -28,15 +29,19 @@ public sealed partial class ContainerItemsViewState : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanLoadMore))]
     public partial bool HasMore { get; set; }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanLoadMore))]
+    public partial bool CanRetry { get; set; }
+
     [ObservableProperty] public partial bool MultiSelect { get; set; }
 
     [ObservableProperty] public partial object? ActiveItemsSource { get; set; }
 
-    public ObservableCollection<ProvidableItemRowViewModel> Rows { get; } = [];
+    public ObservableCollection<ProvidableItemRowViewModel> Rows { get; }
     public ObservableCollection<ProvidableItemRowViewModel> VisibleRows { get; } = [];
     public ObservableCollection<ProvidableItemRowGroup> GroupedItems { get; } = [];
 
     public bool IsInitialLoading => IsLoading && Rows.Count == 0;
     public bool IsLoadingMore => IsLoading && Rows.Count > 0;
-    public bool CanLoadMore => HasMore && !IsLoading;
+    public bool CanLoadMore => CanRetry && !IsLoading;
 }

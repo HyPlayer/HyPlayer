@@ -61,25 +61,7 @@
                     <hycontrol:ContainerItemsView
                         x:Name="SearchResultContainer"
                         Margin="0,30,0,0"
-                        Container="{x:Bind CurrentResultContainer, Mode=OneWay}">
-                        <hycontrol:ContainerItemsView.Footer>
-                            <StackPanel
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Bottom"
-                                Orientation="Horizontal">
-                                <Button
-                                    Click="PrevPage_OnClick"
-                                    Content="上一页"
-                                    Style="{StaticResource ButtonRevealStyle}"
-                                    Visibility="{x:Bind HasPreviousPage, Mode=OneWay}" />
-                                <Button
-                                    Click="NextPage_OnClickPage_OnClick"
-                                    Content="下一页"
-                                    Style="{StaticResource ButtonRevealStyle}"
-                                    Visibility="{x:Bind HasNextPage, Mode=OneWay}" />
-                            </StackPanel>
-                        </hycontrol:ContainerItemsView.Footer>
-                    </hycontrol:ContainerItemsView>
+                        Container="{x:Bind CurrentResultContainer, Mode=OneWay}" />
                     <TextBlock
                         x:Name="TBNoRes"
                         Margin="0,100,0,0"

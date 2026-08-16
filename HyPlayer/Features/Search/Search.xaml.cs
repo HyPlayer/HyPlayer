@@ -31,12 +31,6 @@ namespace HyPlayer.Features.Search;
 /// </summary>
 public sealed partial class Search : Page
 {
-    public static readonly DependencyProperty HasNextPageProperty = DependencyProperty.Register(
-        "HasNextPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
-
-    public static readonly DependencyProperty HasPreviousPageProperty = DependencyProperty.Register(
-        "HasPreviousPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
-
     public static readonly DependencyProperty CurrentResultContainerProperty = DependencyProperty.Register(
         nameof(CurrentResultContainer), typeof(ContainerBase), typeof(Search),
         new PropertyMetadata(default(ContainerBase)));
@@ -60,7 +54,6 @@ public sealed partial class Search : Page
     private List<string> _lastSuggestions = [];
     private Task _loadResultTask;
 
-    private int _page;
     private string _searchText = "";
 
     public Search()
@@ -68,18 +61,6 @@ public sealed partial class Search : Page
         InitializeComponent();
         NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
         _cancellationToken = _cancellationTokenSource.Token;
-    }
-
-    public bool HasNextPage
-    {
-        get => (bool)GetValue(HasNextPageProperty);
-        set => SetValue(HasNextPageProperty, value);
-    }
-
-    public bool HasPreviousPage
-    {
-        get => (bool)GetValue(HasPreviousPageProperty);
-        set => SetValue(HasPreviousPageProperty, value);
     }
 
     public ContainerBase CurrentResultContainer
@@ -148,15 +129,14 @@ public sealed partial class Search : Page
         if (string.IsNullOrWhiteSpace(typeId))
             return;
 
-        var (hasMore, items) = await LoadSearchItemsAsync(typeId);
-        if (items.Count is 0)
-        {
-            TBNoRes.Visibility = Visibility.Visible;
-            return;
-        }
-
-        CurrentResultContainer = new StaticItemsContainer(items, _searchText, $"{typeId}:{_page}", typeId);
-        UpdatePageState(hasMore);
+        await Task.CompletedTask;
+        CurrentResultContainer = new DelegateProgressiveContainer(
+            (offset, count, cancellationToken) =>
+                LoadSearchItemsAsync(typeId, offset, count, cancellationToken),
+            _searchText,
+            $"search:{typeId}:{_searchText}",
+            typeId,
+            pageSize: 30);
     }
 
     private string? GetCurrentSearchTypeId()
@@ -176,17 +156,27 @@ public sealed partial class Search : Page
         };
     }
 
-    private async Task<(bool HasMore, List<ProvidableItemBase> Items)> LoadSearchItemsAsync(string typeId)
+    private async Task<(bool HasMore, List<ProvidableItemBase> Items)> LoadSearchItemsAsync(
+        string typeId,
+        int offset,
+        int count,
+        CancellationToken cancellationToken)
     {
-        _cancellationToken.ThrowIfCancellationRequested();
+        cancellationToken.ThrowIfCancellationRequested();
         var cacheKey = $"{_searchText}\u001f{typeId}";
         if (!_searchContainers.TryGetValue(cacheKey, out var container))
         {
-            container = await _searchProvider.SearchProvidableItemsAsync(_searchText, typeId, _cancellationToken);
+            container = await _searchProvider.SearchProvidableItemsAsync(_searchText, typeId, cancellationToken);
             _searchContainers[cacheKey] = container;
         }
 
-        return await GetPagedItemsAsync(container);
+        var result = await GetPagedItemsAsync(container, offset, count, cancellationToken);
+        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+        {
+            if (offset == 0)
+                TBNoRes.Visibility = result.Items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        });
+        return result;
     }
 
     private void ResetSearchCachesIfKeywordChanged()
@@ -199,12 +189,17 @@ public sealed partial class Search : Page
         _cachedSearchText = _searchText;
     }
 
-    private async Task<(bool HasMore, List<ProvidableItemBase> Items)> GetPagedItemsAsync(ContainerBase container)
+    private async Task<(bool HasMore, List<ProvidableItemBase> Items)> GetPagedItemsAsync(
+        ContainerBase container,
+        int offset,
+        int count,
+        CancellationToken cancellationToken)
     {
-        _cancellationToken.ThrowIfCancellationRequested();
+        cancellationToken.ThrowIfCancellationRequested();
         if (container is IProgressiveLoadingContainer progressive)
         {
-            var (hasMore, items) = await progressive.GetProgressiveItemsListAsync(_page * 30, 30, _cancellationToken);
+            var (hasMore, items) = await progressive.GetProgressiveItemsListAsync(
+                offset, count, cancellationToken);
             return (hasMore, items ?? []);
         }
 
@@ -212,38 +207,19 @@ public sealed partial class Search : Page
         {
             if (!_linerSearchItems.TryGetValue(container, out var items))
             {
-                items = await liner.GetAllItemsAsync(_cancellationToken) ?? [];
+                items = await liner.GetAllItemsAsync(cancellationToken) ?? [];
                 _linerSearchItems[container] = items;
             }
 
-            return (items.Count > (_page + 1) * 30, items.Skip(_page * 30).Take(30).ToList());
+            return (items.Count > offset + count, items.Skip(offset).Take(count).ToList());
         }
 
         return (false, []);
     }
 
-    private void UpdatePageState(bool hasMore)
-    {
-        HasNextPage = hasMore;
-        HasPreviousPage = _page > 0;
-    }
-
-    private void PrevPage_OnClick(object sender, RoutedEventArgs e)
-    {
-        _page--;
-        _loadResultTask = LoadResult();
-    }
-
-    private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
-    {
-        _page++;
-        _loadResultTask = LoadResult();
-    }
-
     private void NavigationView_OnSelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
-        _page = 0;
         _loadResultTask = LoadResult();
     }
 
@@ -255,7 +231,6 @@ public sealed partial class Search : Page
     private void SearchKeywordBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         _searchText = sender.Text;
-        _page = 0;
         _loadResultTask = LoadResult();
     }
 

@@ -1,18 +1,9 @@
 using HyPlayer.UWP.Chopin.Utils;
 using Microsoft.Graphics.Canvas;
-using SharpGen.Runtime;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Numerics;
-using System.Runtime.InteropServices;
-using System.Threading;
-using Vortice;
-using Vortice.Direct3D;
-using Vortice.Direct3D11;
-using Vortice.Mathematics;
 using Windows.Graphics.DirectX;
-using Format = Vortice.DXGI.Format;
 
 namespace HyPlayer.UI.Effects.LikeApple
 {
@@ -22,7 +13,7 @@ namespace HyPlayer.UI.Effects.LikeApple
     /// artwork instances, the quarter-resolution iOS Gaussian blur, then
     /// the animated subdivided pinch mesh and its final saturation/scrim transfer.
     /// </summary>
-    public sealed unsafe partial class LikeAppleBackgroundRenderer : IDisposable
+    public sealed partial class LikeAppleBackgroundRenderer : IDisposable
     {
         private const double ArtworkTransitionSeconds = 0.5;
         private const double LyricsModeTransitionSeconds = 0.25;
@@ -34,8 +25,6 @@ namespace HyPlayer.UI.Effects.LikeApple
         private const float LightAppearanceBlackScrimAlpha = 0.25f;
         private const float PortraitTextureScale = 1f;
         private const float LandscapeTextureScale = 0.8f;
-        private const string ShaderDirectoryRelativePath = "Shaders/LikeApple";
-
         private readonly Stopwatch _animationClock = new();
         private readonly CanvasDevice _canvasDevice;
         private readonly float _renderScale;
@@ -60,45 +49,21 @@ namespace HyPlayer.UI.Effects.LikeApple
         private double _transitionStartTime;
         private bool _transitioning;
 
-        private GpuArtwork? _currentArtwork;
-        private GpuArtwork? _previousArtwork;
+        private LikeAppleGpuArtwork? _currentArtwork;
+        private LikeAppleGpuArtwork? _previousArtwork;
 
-        private ID3D11Device _device = null!;
-        private ID3D11DeviceContext _context = null!;
+        private readonly LikeAppleRenderPipeline _pipeline;
 
-        private RenderSurface _rotationSurface = null!;
-        private RenderSurface _horizontalBlurSurface = null!;
-        private RenderSurface _verticalBlurSurface = null!;
-        private RenderSurface _ordinaryBlurSurface = null!;
-        private RenderSurface _outputSurface = null!;
+        private LikeAppleRenderSurface _rotationSurface = null!;
+        private LikeAppleRenderSurface _horizontalBlurSurface = null!;
+        private LikeAppleRenderSurface _verticalBlurSurface = null!;
+        private LikeAppleRenderSurface _ordinaryBlurSurface = null!;
+        private LikeAppleRenderSurface _outputSurface = null!;
 
-        private ID3D11VertexShader _rotationVertexShader = null!;
-        private ID3D11VertexShader _artworkFillVertexShader = null!;
-        private ID3D11VertexShader _fullscreenVertexShader = null!;
-        private ID3D11VertexShader _pinchVertexShader = null!;
-        private ID3D11PixelShader _rotationPixelShader = null!;
-        private ID3D11PixelShader _horizontalBlurPixelShader = null!;
-        private ID3D11PixelShader _verticalBlurPixelShader = null!;
-        private ID3D11PixelShader _ordinaryMaterialPixelShader = null!;
-        private ID3D11PixelShader _materialTreatedPixelShader = null!;
-        private ID3D11PixelShader _materialCompositePixelShader = null!;
-        private ID3D11PixelShader _pinchPixelShader = null!;
-        private ID3D11PixelShader _pinchCompositePixelShader = null!;
-        private ID3D11InputLayout _quadInputLayout = null!;
-        private ID3D11InputLayout _pinchInputLayout = null!;
-        private ID3D11Buffer _quadVertexBuffer = null!;
-        private ID3D11Buffer _quadIndexBuffer = null!;
-        private ID3D11Buffer _pinchVertexBuffer = null!;
-        private ID3D11Buffer _pinchIndexBuffer = null!;
-        private ID3D11Buffer _frameConstantBuffer = null!;
-        private ID3D11Query _frameCompletionQuery = null!;
-        private ID3D11SamplerState _linearClampSampler = null!;
-        private ID3D11RasterizerState _rasterizerState = null!;
-
-        public LikeAppleBackgroundRenderer(
-
+        internal LikeAppleBackgroundRenderer(
             CanvasDevice canvasDevice,
             FFTProcessor fftProcessor,
+            LikeAppleShaderBytecode shaderBytecode,
             bool lightTheme = false,
             float renderScale = 1f,
             float blurScale = 1f,
@@ -106,6 +71,7 @@ namespace HyPlayer.UI.Effects.LikeApple
         {
             ArgumentNullException.ThrowIfNull(canvasDevice);
             ArgumentNullException.ThrowIfNull(fftProcessor);
+            ArgumentNullException.ThrowIfNull(shaderBytecode);
             _canvasDevice = canvasDevice;
             _spectrumAnalysis = new LikeAppleSpectrumAnalysis(fftProcessor);
             PresetIndex = LikeAppleMesh.SelectPreset();
@@ -120,7 +86,11 @@ namespace HyPlayer.UI.Effects.LikeApple
             _blurScale = GetSettingScale(blurScale);
             _bassPulseScale = GetSettingScale(bassPulseScale);
             _lightTheme = lightTheme;
-            InitializeDeviceResources();
+            _pipeline = new LikeAppleRenderPipeline(
+                canvasDevice,
+                shaderBytecode,
+                _meshVertices,
+                _meshIndices);
             _animationClock.Start();
         }
 
@@ -147,7 +117,7 @@ namespace HyPlayer.UI.Effects.LikeApple
             using (_canvasDevice.Lock())
             {
                 ObjectDisposedException.ThrowIf(_disposed, this);
-                GpuArtwork uploaded = CreateGpuArtwork(artwork);
+                LikeAppleGpuArtwork uploaded = _pipeline.CreateArtwork(artwork);
                 _previousArtwork?.Dispose();
                 _previousArtwork = _currentArtwork;
                 _currentArtwork = uploaded;
@@ -179,7 +149,7 @@ namespace HyPlayer.UI.Effects.LikeApple
 
             if (orientationChanged)
             {
-                RecreatePinchMeshBuffers();
+                _pipeline.UpdatePinchMesh(_meshVertices, _meshIndices);
             }
         }
 
@@ -272,7 +242,7 @@ namespace HyPlayer.UI.Effects.LikeApple
                 }
                 finally
                 {
-                    _context.ClearState();
+                    _pipeline.ClearState();
                 }
 
                 return _outputTarget;
@@ -309,7 +279,7 @@ namespace HyPlayer.UI.Effects.LikeApple
                 OrdinaryBlurSigma,
                 LyricsBlurSigma,
                 lyricsModeMix);
-            var constants = new FrameConstants
+            var constants = new LikeAppleFrameConstants
             {
                 Time = (float)time,
                 TextureTransitionMix = transitionMix,
@@ -326,12 +296,10 @@ namespace HyPlayer.UI.Effects.LikeApple
 
             try
             {
-                BindConstantBuffer();
-                BindSampler();
-                _context.RSSetState(_rasterizerState);
+                _pipeline.PrepareFrame();
 
-                ID3D11ShaderResourceView lyricsBackdrop;
-                ID3D11ShaderResourceView ordinaryBackdrop;
+                LikeAppleRenderSurface lyricsBackdrop;
+                LikeAppleRenderSurface ordinaryBackdrop;
                 bool needsOrdinaryBackdrop = lyricsModeMix < 0.9999f;
                 bool needsLyricsBackdrop = lyricsModeMix > 0.0001f;
 
@@ -341,45 +309,55 @@ namespace HyPlayer.UI.Effects.LikeApple
                     // The ordinary state differs by omitting the spectrum
                     // scale and lyric pinch mesh, not by bypassing treatment.
                     constants.ImageScales = Vector4.One;
-                    _context.UpdateSubresource(in constants, _frameConstantBuffer);
-                    RenderBackdropPass(_ordinaryBlurSurface);
-                    ordinaryBackdrop = _ordinaryBlurSurface.ShaderResourceView;
+                    _pipeline.UpdateConstants(in constants);
+                    _pipeline.RenderBackdrop(
+                        _currentArtwork!,
+                        _previousArtwork,
+                        _rotationSurface,
+                        _horizontalBlurSurface,
+                        _ordinaryBlurSurface);
+                    ordinaryBackdrop = _ordinaryBlurSurface;
 
                     constants.ImageScales = lyricsImageScales;
-                    _context.UpdateSubresource(in constants, _frameConstantBuffer);
-                    RenderBackdropPass(_verticalBlurSurface);
-                    lyricsBackdrop = _verticalBlurSurface.ShaderResourceView;
+                    _pipeline.UpdateConstants(in constants);
+                    _pipeline.RenderBackdrop(
+                        _currentArtwork!,
+                        _previousArtwork,
+                        _rotationSurface,
+                        _horizontalBlurSurface,
+                        _verticalBlurSurface);
+                    lyricsBackdrop = _verticalBlurSurface;
                 }
                 else
                 {
                     constants.ImageScales = needsLyricsBackdrop
                         ? lyricsImageScales
                         : Vector4.One;
-                    _context.UpdateSubresource(in constants, _frameConstantBuffer);
-                    RenderBackdropPass(_verticalBlurSurface);
-                    lyricsBackdrop = _verticalBlurSurface.ShaderResourceView;
+                    _pipeline.UpdateConstants(in constants);
+                    _pipeline.RenderBackdrop(
+                        _currentArtwork!,
+                        _previousArtwork,
+                        _rotationSurface,
+                        _horizontalBlurSurface,
+                        _verticalBlurSurface);
+                    lyricsBackdrop = _verticalBlurSurface;
                     ordinaryBackdrop = lyricsBackdrop;
                 }
 
-                RenderCompositePass(
+                _pipeline.RenderComposite(
                     lyricsBackdrop,
                     ordinaryBackdrop,
+                    _outputSurface,
+                    _isVerticalLayout,
                     lyricsModeMix);
 
-                UnbindPixelShaderResources(2);
-                SetRenderTarget(null);
-                WaitForFrameCompletion();
-                Result removedReason = _device.DeviceRemovedReason;
-                if (removedReason.Failure)
-                {
-                    removedReason.CheckError();
-                }
+                _pipeline.CompleteFrame();
+                _pipeline.ThrowIfDeviceRemoved();
 
             }
             finally
             {
-                UnbindPixelShaderResources(2);
-                SetRenderTarget(null);
+                _pipeline.CompleteFrame();
             }
         }
 
@@ -489,273 +467,6 @@ namespace HyPlayer.UI.Effects.LikeApple
             return 1f;
         }
 
-        private void RenderBackdropPass(RenderSurface verticalBlurTarget)
-        {
-            RenderRotationPass();
-            RenderBlurPass(
-                _rotationSurface.ShaderResourceView,
-                _horizontalBlurSurface,
-                _horizontalBlurPixelShader);
-            RenderBlurPass(
-                _horizontalBlurSurface.ShaderResourceView,
-                verticalBlurTarget,
-                _verticalBlurPixelShader);
-        }
-
-
-        private void RenderRotationPass()
-        {
-            GpuArtwork currentArtwork = _currentArtwork ??
-                throw new InvalidOperationException("Artwork is required to render a frame.");
-
-            SetViewport(_rotationSurface.Width, _rotationSurface.Height);
-            SetRenderTarget(_rotationSurface.RenderTargetView);
-            _context.ClearRenderTargetView(
-                _rotationSurface.RenderTargetView,
-                new Color4(0f, 0f, 0f, 1f));
-            _context.IASetInputLayout(_quadInputLayout);
-            _context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
-            BindVertexBuffer(_quadVertexBuffer, sizeof(QuadVertex));
-            _context.IASetIndexBuffer(_quadIndexBuffer, Format.R16_UInt, 0);
-            _context.VSSetShader(_rotationVertexShader, null, 0);
-            _context.PSSetShader(_rotationPixelShader, null, 0);
-            BindPixelShaderResources(
-                currentArtwork.ShaderResourceView,
-                _previousArtwork?.ShaderResourceView ?? currentArtwork.ShaderResourceView);
-
-            // Keep an aspect-fill copy underneath the moving layers. It only
-            // supplies pixels exposed by a rotated square, so full-frame iOS
-            // coverage does not enlarge the moving color regions.
-            _context.VSSetShader(_artworkFillVertexShader, null, 0);
-            _context.DrawIndexed(6, 0, 0);
-
-            _context.VSSetShader(_rotationVertexShader, null, 0);
-            _context.DrawIndexedInstanced(6, 3, 0, 0, 0);
-            UnbindPixelShaderResources(2);
-        }
-
-        private void RenderBlurPass(
-            ID3D11ShaderResourceView source,
-            RenderSurface target,
-            ID3D11PixelShader shader)
-        {
-            SetViewport(target.Width, target.Height);
-            SetRenderTarget(target.RenderTargetView);
-            _context.IASetInputLayout(_quadInputLayout);
-            _context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
-            BindVertexBuffer(_quadVertexBuffer, sizeof(QuadVertex));
-            _context.IASetIndexBuffer(_quadIndexBuffer, Format.R16_UInt, 0);
-            _context.VSSetShader(_fullscreenVertexShader, null, 0);
-            _context.PSSetShader(shader, null, 0);
-            BindPixelShaderResources(source);
-            _context.DrawIndexed(6, 0, 0);
-            UnbindPixelShaderResources(1);
-        }
-
-        private void RenderCompositePass(
-            ID3D11ShaderResourceView lyricsBackdrop,
-            ID3D11ShaderResourceView ordinaryBackdrop,
-            float lyricsModeMix)
-        {
-            SetViewport(_outputSurface.Width, _outputSurface.Height);
-            SetRenderTarget(_outputSurface.RenderTargetView);
-            _context.ClearRenderTargetView(
-                _outputSurface.RenderTargetView,
-                new Color4(0f, 0f, 0f, 1f));
-
-            if (lyricsModeMix <= 0f)
-            {
-                // isBehindLyrics=false keeps the treated blurred artwork but
-                // does not submit the lyric pinch mesh.
-                BindPixelShaderResources(ordinaryBackdrop);
-                DrawFullscreenMaterial(_ordinaryMaterialPixelShader);
-                return;
-            }
-
-            if (lyricsModeMix >= 1f)
-            {
-                BindPixelShaderResources(lyricsBackdrop);
-                if (_isVerticalLayout)
-                {
-                    // Portrait control maps can pull their outer contour away
-                    // from a corner, so retain the treated fallback used by
-                    // the established lyric path.
-                    DrawFullscreenMaterial(_materialTreatedPixelShader);
-                }
-                DrawPinchMesh(_pinchPixelShader);
-                return;
-            }
-
-            BindPixelShaderResources(lyricsBackdrop, ordinaryBackdrop);
-            // During the iOS mode animation this fullscreen layer supplies
-            // both the ordinary backdrop and the treated lyric fallback.
-            // The mesh then replaces only its covered pixels with the same
-            // crossfade using warped lyric coordinates.
-            DrawFullscreenMaterial(_materialCompositePixelShader);
-            DrawPinchMesh(_pinchCompositePixelShader);
-        }
-
-        private void DrawFullscreenMaterial(ID3D11PixelShader pixelShader)
-        {
-            _context.IASetInputLayout(_quadInputLayout);
-            _context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
-            BindVertexBuffer(_quadVertexBuffer, sizeof(QuadVertex));
-            _context.IASetIndexBuffer(_quadIndexBuffer, Format.R16_UInt, 0);
-            _context.VSSetShader(_fullscreenVertexShader, null, 0);
-            _context.PSSetShader(pixelShader, null, 0);
-            _context.DrawIndexed(6, 0, 0);
-        }
-
-
-        private void DrawPinchMesh(ID3D11PixelShader pixelShader)
-        {
-            _context.IASetInputLayout(_pinchInputLayout);
-            _context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
-            BindVertexBuffer(_pinchVertexBuffer, sizeof(LikeApplePinchVertex));
-            _context.IASetIndexBuffer(_pinchIndexBuffer, Format.R16_UInt, 0);
-            _context.VSSetShader(_pinchVertexShader, null, 0);
-            _context.PSSetShader(pixelShader, null, 0);
-            _context.DrawIndexed((uint)_meshIndices.Length, 0, 0);
-        }
-
-        private void InitializeDeviceResources()
-        {
-            _device = Win2DDirect3DBridge.GetDirect3DDevice(_canvasDevice);
-            _context = _device.ImmediateContext;
-
-            CreatePipelineResources();
-        }
-
-        private void CreatePipelineResources()
-        {
-            byte[] rotationVertex = ReadShaderBytecode("RotationVertex");
-            byte[] artworkFillVertex = ReadShaderBytecode("ArtworkFillVertex");
-            byte[] fullscreenVertex = ReadShaderBytecode("FullscreenVertex");
-            byte[] pinchVertex = ReadShaderBytecode("PinchVertex");
-            byte[] rotationPixel = ReadShaderBytecode("RotationPixel");
-            byte[] horizontalBlurPixel = ReadShaderBytecode("BlurHorizontalPixel");
-            byte[] verticalBlurPixel = ReadShaderBytecode("BlurVerticalPixel");
-            byte[] ordinaryMaterialPixel = ReadShaderBytecode("OrdinaryMaterialPixel");
-            byte[] materialTreatedPixel = ReadShaderBytecode("MaterialTreatedPixel");
-            byte[] materialCompositePixel = ReadShaderBytecode("MaterialCompositePixel");
-            byte[] pinchPixel = ReadShaderBytecode("PinchPixel");
-            byte[] pinchCompositePixel = ReadShaderBytecode("PinchCompositePixel");
-
-            _rotationVertexShader = CreateVertexShader(rotationVertex);
-            _artworkFillVertexShader = CreateVertexShader(artworkFillVertex);
-            _fullscreenVertexShader = CreateVertexShader(fullscreenVertex);
-            _pinchVertexShader = CreateVertexShader(pinchVertex);
-            _rotationPixelShader = CreatePixelShader(rotationPixel);
-            _horizontalBlurPixelShader = CreatePixelShader(horizontalBlurPixel);
-            _verticalBlurPixelShader = CreatePixelShader(verticalBlurPixel);
-            _ordinaryMaterialPixelShader = CreatePixelShader(ordinaryMaterialPixel);
-            _materialTreatedPixelShader = CreatePixelShader(materialTreatedPixel);
-            _materialCompositePixelShader = CreatePixelShader(materialCompositePixel);
-            _pinchPixelShader = CreatePixelShader(pinchPixel);
-            _pinchCompositePixelShader = CreatePixelShader(pinchCompositePixel);
-
-            _quadInputLayout = _device.CreateInputLayout(
-            [
-                new InputElementDescription("POSITION", 0, Format.R32G32B32A32_Float, 0, 0),
-                new InputElementDescription("TEXCOORD", 0, Format.R32G32_Float, 16, 0),
-            ],
-                rotationVertex);
-            _pinchInputLayout = _device.CreateInputLayout(
-            [
-                new InputElementDescription("FROMPOS", 0, Format.R32G32_Float, 0, 0),
-                new InputElementDescription("TOPOS", 0, Format.R32G32_Float, 8, 0),
-                new InputElementDescription("TEXCOORD", 0, Format.R32G32_Float, 16, 0),
-            ],
-                pinchVertex);
-
-            QuadVertex[] quadVertices =
-            [
-                new(new Vector4(-1f, -1f, 0f, 1f), new Vector2(0f, 1f)),
-                new(new Vector4(-1f, 1f, 0f, 1f), new Vector2(0f, 0f)),
-                new(new Vector4(1f, 1f, 0f, 1f), new Vector2(1f, 0f)),
-                new(new Vector4(1f, -1f, 0f, 1f), new Vector2(1f, 1f)),
-            ];
-            ushort[] quadIndices = [0, 1, 2, 2, 3, 0];
-            _quadVertexBuffer = _device.CreateBuffer(quadVertices, BindFlags.VertexBuffer);
-            _quadIndexBuffer = _device.CreateBuffer(quadIndices, BindFlags.IndexBuffer);
-            _pinchVertexBuffer = _device.CreateBuffer(_meshVertices, BindFlags.VertexBuffer);
-            _pinchIndexBuffer = _device.CreateBuffer(_meshIndices, BindFlags.IndexBuffer);
-            _frameConstantBuffer = _device.CreateBuffer(
-                (uint)sizeof(FrameConstants),
-                BindFlags.ConstantBuffer,
-                ResourceUsage.Default,
-                CpuAccessFlags.None,
-                ResourceOptionFlags.None,
-                0);
-            _frameCompletionQuery = _device.CreateQuery(
-                new QueryDescription(
-                    Vortice.Direct3D11.QueryType.Event,
-                    Vortice.Direct3D11.QueryFlags.None));
-
-            _linearClampSampler = _device.CreateSamplerState(new SamplerDescription(
-                Filter.MinMagMipLinear,
-
-                TextureAddressMode.Clamp,
-                0f,
-                1,
-                ComparisonFunction.Never,
-                0f,
-                float.MaxValue));
-            _rasterizerState = _device.CreateRasterizerState(
-                new RasterizerDescription(
-                    CullMode.None,
-                    Vortice.Direct3D11.FillMode.Solid));
-        }
-
-        private void RecreatePinchMeshBuffers()
-        {
-            if (_device == null)
-            {
-                return;
-            }
-
-            ID3D11Buffer replacementVertices = _device.CreateBuffer(
-                _meshVertices,
-                BindFlags.VertexBuffer);
-            ID3D11Buffer replacementIndices;
-            try
-            {
-                replacementIndices = _device.CreateBuffer(
-                    _meshIndices,
-                    BindFlags.IndexBuffer);
-            }
-            catch
-            {
-                replacementVertices.Dispose();
-                throw;
-            }
-
-            ID3D11Buffer previousVertices = _pinchVertexBuffer;
-            ID3D11Buffer previousIndices = _pinchIndexBuffer;
-            _pinchVertexBuffer = replacementVertices;
-            _pinchIndexBuffer = replacementIndices;
-            previousVertices?.Dispose();
-            previousIndices?.Dispose();
-        }
-
-        private GpuArtwork CreateGpuArtwork(CanvasBitmap bitmap)
-        {
-            ID3D11Texture2D texture = Win2DDirect3DBridge.GetTexture2D(bitmap);
-            ID3D11ShaderResourceView? view = null;
-            try
-            {
-                view = _device.CreateShaderResourceView(texture);
-                return new GpuArtwork(bitmap, texture, view);
-            }
-            catch
-            {
-                view?.Dispose();
-                texture.Dispose();
-                bitmap.Dispose();
-                throw;
-            }
-        }
-
         private void EnsureSurfaceSize(float width, float height, float dpi)
         {
             int pixelWidth = Math.Max(1, (int)Math.Round(
@@ -777,11 +488,11 @@ namespace HyPlayer.UI.Effects.LikeApple
 
         private void CreateRenderSurfaces(int width, int height, float dpi)
         {
-            RenderSurface? newRotation = null;
-            RenderSurface? newHorizontalBlur = null;
-            RenderSurface? newVerticalBlur = null;
-            RenderSurface? newOrdinaryBlur = null;
-            RenderSurface? newOutput = null;
+            LikeAppleRenderSurface? newRotation = null;
+            LikeAppleRenderSurface? newHorizontalBlur = null;
+            LikeAppleRenderSurface? newVerticalBlur = null;
+            LikeAppleRenderSurface? newOrdinaryBlur = null;
+            LikeAppleRenderSurface? newOutput = null;
             CanvasRenderTarget? newOutputTarget = null;
             try
             {
@@ -790,26 +501,18 @@ namespace HyPlayer.UI.Effects.LikeApple
                 int backdropWidth = Math.Max(1, (int)Math.Floor(width / backdropDownsample));
                 int backdropHeight = Math.Max(1, (int)Math.Floor(height / backdropDownsample));
 
-                newRotation = CreateSurface(
+                newRotation = _pipeline.CreateSurface(
                     backdropWidth,
-                    backdropHeight,
-                    Format.R16G16B16A16_Float,
-                    true);
-                newHorizontalBlur = CreateSurface(
+                    backdropHeight);
+                newHorizontalBlur = _pipeline.CreateSurface(
                     backdropWidth,
-                    backdropHeight,
-                    Format.R16G16B16A16_Float,
-                    true);
-                newVerticalBlur = CreateSurface(
+                    backdropHeight);
+                newVerticalBlur = _pipeline.CreateSurface(
                     backdropWidth,
-                    backdropHeight,
-                    Format.R16G16B16A16_Float,
-                    true);
-                newOrdinaryBlur = CreateSurface(
+                    backdropHeight);
+                newOrdinaryBlur = _pipeline.CreateSurface(
                     backdropWidth,
-                    backdropHeight,
-                    Format.R16G16B16A16_Float,
-                    true);
+                    backdropHeight);
 
                 float effectiveDpi = dpi * _renderScale;
                 float widthInDips = width * 96f / effectiveDpi;
@@ -821,31 +524,17 @@ namespace HyPlayer.UI.Effects.LikeApple
                     effectiveDpi,
                     DirectXPixelFormat.B8G8R8A8UIntNormalized,
                     CanvasAlphaMode.Premultiplied);
-                ID3D11Texture2D? outputTexture =
-                    Win2DDirect3DBridge.GetTexture2D(newOutputTarget);
-                try
-                {
-                    ID3D11RenderTargetView outputView =
-                        _device.CreateRenderTargetView(outputTexture);
-                    newOutput = new RenderSurface(
-                        outputTexture,
-                        outputView,
-                        null!,
-                        width,
-                        height);
-                    outputTexture = null;
-                }
-                finally
-                {
-                    outputTexture?.Dispose();
-                }
+                newOutput = _pipeline.CreateOutputSurface(
+                    newOutputTarget,
+                    width,
+                    height);
 
-                RenderSurface oldRotation = _rotationSurface;
-                RenderSurface oldHorizontalBlur = _horizontalBlurSurface;
-                RenderSurface oldVerticalBlur = _verticalBlurSurface;
+                LikeAppleRenderSurface oldRotation = _rotationSurface;
+                LikeAppleRenderSurface oldHorizontalBlur = _horizontalBlurSurface;
+                LikeAppleRenderSurface oldVerticalBlur = _verticalBlurSurface;
 
-                RenderSurface oldOrdinaryBlur = _ordinaryBlurSurface;
-                RenderSurface oldOutput = _outputSurface;
+                LikeAppleRenderSurface oldOrdinaryBlur = _ordinaryBlurSurface;
+                LikeAppleRenderSurface oldOutput = _outputSurface;
                 CanvasRenderTarget oldOutputTarget = _outputTarget;
 
                 _rotationSurface = newRotation;
@@ -879,52 +568,6 @@ namespace HyPlayer.UI.Effects.LikeApple
             }
         }
 
-        private RenderSurface CreateSurface(
-            int width,
-            int height,
-            Format format,
-            bool createShaderResource)
-        {
-            var description = new Texture2DDescription
-            {
-                Width = (uint)width,
-                Height = (uint)height,
-                MipLevels = 1,
-                ArraySize = 1,
-                Format = format,
-                SampleDescription = new Vortice.DXGI.SampleDescription(1, 0),
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.RenderTarget |
-                    (createShaderResource ? BindFlags.ShaderResource : BindFlags.None),
-                CPUAccessFlags = CpuAccessFlags.None,
-                MiscFlags = ResourceOptionFlags.None,
-            };
-            ID3D11Texture2D texture = _device.CreateTexture2D(description);
-            ID3D11RenderTargetView? renderTarget = null;
-            ID3D11ShaderResourceView? shaderResource = null;
-            try
-            {
-                renderTarget = _device.CreateRenderTargetView(texture);
-                if (createShaderResource)
-                {
-                    shaderResource = _device.CreateShaderResourceView(texture);
-                }
-                return new RenderSurface(
-                    texture,
-                    renderTarget,
-                    shaderResource!,
-                    width,
-                    height);
-            }
-            catch
-            {
-                shaderResource?.Dispose();
-                renderTarget?.Dispose();
-                texture.Dispose();
-                throw;
-            }
-        }
-
         public void Dispose()
         {
             if (_disposed)
@@ -950,8 +593,7 @@ namespace HyPlayer.UI.Effects.LikeApple
         {
             try
             {
-                _context?.ClearState();
-                _context?.Flush();
+                _pipeline.ClearAndFlush();
             }
             catch (Exception ex)
             {
@@ -967,215 +609,8 @@ namespace HyPlayer.UI.Effects.LikeApple
             _verticalBlurSurface?.Dispose();
             _horizontalBlurSurface?.Dispose();
             _rotationSurface?.Dispose();
-
-            _rasterizerState?.Dispose();
-            _linearClampSampler?.Dispose();
-            _frameCompletionQuery?.Dispose();
-            _frameConstantBuffer?.Dispose();
-            _pinchIndexBuffer?.Dispose();
-            _pinchVertexBuffer?.Dispose();
-            _quadIndexBuffer?.Dispose();
-            _quadVertexBuffer?.Dispose();
-            _pinchInputLayout?.Dispose();
-            _quadInputLayout?.Dispose();
-            _pinchCompositePixelShader?.Dispose();
-            _pinchPixelShader?.Dispose();
-            _materialCompositePixelShader?.Dispose();
-            _materialTreatedPixelShader?.Dispose();
-            _ordinaryMaterialPixelShader?.Dispose();
-            _verticalBlurPixelShader?.Dispose();
-            _horizontalBlurPixelShader?.Dispose();
-            _rotationPixelShader?.Dispose();
-            _pinchVertexShader?.Dispose();
-            _fullscreenVertexShader?.Dispose();
-            _artworkFillVertexShader?.Dispose();
-            _rotationVertexShader?.Dispose();
-            _context?.Dispose();
-            _device?.Dispose();
+            _pipeline.Dispose();
         }
 
-        private ID3D11VertexShader CreateVertexShader(byte[] bytecode)
-        {
-            return _device.CreateVertexShader(bytecode.AsSpan());
-        }
-
-        private ID3D11PixelShader CreatePixelShader(byte[] bytecode)
-        {
-            return _device.CreatePixelShader(bytecode.AsSpan());
-        }
-
-        private void SetRenderTarget(ID3D11RenderTargetView? renderTarget)
-        {
-            if (renderTarget == null)
-            {
-                _context.OMSetRenderTargets(
-                    0,
-                    Array.Empty<ID3D11RenderTargetView>(),
-                    null);
-                return;
-            }
-            _context.OMSetRenderTargets(1, [renderTarget], null);
-        }
-
-        private void WaitForFrameCompletion()
-        {
-            // Flush only submits the command list; it does not guarantee that
-            // the CanvasRenderTarget is complete before Win2D samples it.
-            // An event query prevents the draw pass from observing a partial frame.
-            _context.End(_frameCompletionQuery);
-            _context.Flush();
-            while (true)
-            {
-                Result result = _context.GetData(
-                    _frameCompletionQuery,
-                    IntPtr.Zero,
-                    0,
-                    AsyncGetDataFlags.DoNotFlush);
-                if (result == Result.Ok)
-                {
-                    return;
-                }
-                if (result.Failure)
-                {
-                    result.CheckError();
-                }
-                Thread.Yield();
-            }
-        }
-
-        private void SetViewport(int width, int height)
-        {
-
-            var viewport = new Vortice.Mathematics.Viewport(width, height);
-            _context.RSSetViewports([viewport]);
-        }
-
-        private void BindVertexBuffer(ID3D11Buffer buffer, int stride)
-        {
-            _context.IASetVertexBuffer(0, buffer, (uint)stride);
-        }
-
-        private void BindConstantBuffer()
-        {
-            _context.VSSetConstantBuffers(0, 1, [_frameConstantBuffer]);
-            _context.PSSetConstantBuffers(0, 1, [_frameConstantBuffer]);
-        }
-
-        private void BindSampler()
-        {
-            _context.PSSetSamplers(0, 1, [_linearClampSampler]);
-        }
-
-        private void BindPixelShaderResources(params ID3D11ShaderResourceView[] resources)
-        {
-            for (uint index = 0; index < (uint)resources.Length; index++)
-            {
-                _context.PSSetShaderResource(index, resources[index]);
-            }
-        }
-
-        private void UnbindPixelShaderResources(int count)
-        {
-            for (uint index = 0; index < (uint)count; index++)
-            {
-                _context.PSSetShaderResource(index, null!);
-            }
-        }
-
-        private static byte[] ReadShaderBytecode(string shaderName)
-        {
-            string shaderDirectory = ShaderDirectoryRelativePath.Replace(
-                '/',
-                Path.DirectorySeparatorChar);
-            string shaderPath = Path.Combine(
-                AppContext.BaseDirectory,
-                shaderDirectory,
-                $"{shaderName}.bin");
-            return File.ReadAllBytes(shaderPath);
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct FrameConstants
-        {
-            public float Time;
-            public float TextureTransitionMix;
-            public Vector2 ViewScale;
-            public float BlackScrimAlpha;
-            public float OutputDitherStrength;
-            public Vector2 BlurScale;
-            public Vector4 ImageScales;
-            public Vector4 PinchTextureTransform;
-            public float LyricsModeMix;
-            public Vector3 Padding;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private readonly struct QuadVertex
-        {
-            public QuadVertex(Vector4 position, Vector2 textureCoordinate)
-            {
-                Position = position;
-                TextureCoordinate = textureCoordinate;
-            }
-
-            public readonly Vector4 Position;
-            public readonly Vector2 TextureCoordinate;
-        }
-
-
-        private sealed partial class GpuArtwork : IDisposable
-        {
-            public GpuArtwork(
-                CanvasBitmap bitmap,
-                ID3D11Texture2D texture,
-                ID3D11ShaderResourceView shaderResourceView)
-            {
-                Bitmap = bitmap;
-                Texture = texture;
-                ShaderResourceView = shaderResourceView;
-            }
-
-            public CanvasBitmap Bitmap { get; }
-            public ID3D11Texture2D Texture { get; }
-            public ID3D11ShaderResourceView ShaderResourceView { get; }
-
-
-            public void Dispose()
-            {
-                ShaderResourceView.Dispose();
-                Texture.Dispose();
-                Bitmap.Dispose();
-            }
-        }
-
-        private sealed partial class RenderSurface : IDisposable
-        {
-            public RenderSurface(
-                ID3D11Texture2D texture,
-                ID3D11RenderTargetView renderTargetView,
-                ID3D11ShaderResourceView shaderResourceView,
-                int width,
-                int height)
-            {
-                Texture = texture;
-                RenderTargetView = renderTargetView;
-                ShaderResourceView = shaderResourceView;
-                Width = width;
-                Height = height;
-            }
-
-            public ID3D11Texture2D Texture { get; }
-            public ID3D11RenderTargetView RenderTargetView { get; }
-            public ID3D11ShaderResourceView ShaderResourceView { get; }
-            public int Width { get; }
-            public int Height { get; }
-
-            public void Dispose()
-            {
-                ShaderResourceView?.Dispose();
-                RenderTargetView.Dispose();
-                Texture.Dispose();
-            }
-        }
     }
 }
