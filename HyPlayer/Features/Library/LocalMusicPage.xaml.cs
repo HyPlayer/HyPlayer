@@ -111,6 +111,7 @@ public sealed partial class LocalMusicPage : Page
         var queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, _supportedFormats);
         queryOptions.FolderDepth = FolderDepth.Deep;
         var files = await folder.CreateFileQueryWithOptions(queryOptions).GetFilesAsync();
+        var localItems = new List<LocalSong>(files.Count);
 
         if (!_setting.LocalProgressiveLoad)
         {
@@ -120,7 +121,7 @@ public sealed partial class LocalMusicPage : Page
                 try
                 {
                     var item = await _localFileImport.LoadStorageFileAsync(storageFile);
-                    ViewModel.LocalItems.Add(item);
+                    localItems.Add(item);
                 }
                 catch
                 {
@@ -152,11 +153,12 @@ public sealed partial class LocalMusicPage : Page
                     ActualId = storageFile.Path,
                     Available = true
                 };
-                ViewModel.LocalItems.Add(item);
+                localItems.Add(item);
             }
         }
 
         ViewModel.NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
+        ViewModel.LocalItems.AddRange(localItems);
         FileLoadingIndicateRing.IsActive = false;
         FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
         ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;

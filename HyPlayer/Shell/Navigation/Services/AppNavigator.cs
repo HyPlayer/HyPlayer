@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
@@ -33,6 +32,7 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.UI.Dialogs;
+using ObservableCollections;
 using BitmapIcon = Windows.UI.Xaml.Controls.BitmapIcon;
 using FontIcon = Windows.UI.Xaml.Controls.FontIcon;
 using Frame = Windows.UI.Xaml.Controls.Frame;
@@ -91,7 +91,7 @@ public sealed partial class AppNavigator : IAppNavigator
         _navigationView = navigationView;
         _shellViewModel = shellViewModel;
 
-        shellViewModel.MenuItems.CollectionChanged += MenuItems_CollectionChanged;
+        shellViewModel.MenuItemsView.CollectionChanged += MenuItems_CollectionChanged;
         navigationView.ItemInvoked += NavigationView_ItemInvoked;
         RenderNavigationView();
     }
@@ -209,7 +209,7 @@ public sealed partial class AppNavigator : IAppNavigator
     private void DetachCurrentNavigationView()
     {
         if (_shellViewModel is not null)
-            _shellViewModel.MenuItems.CollectionChanged -= MenuItems_CollectionChanged;
+            _shellViewModel.MenuItemsView.CollectionChanged -= MenuItems_CollectionChanged;
 
         if (_navigationView is not null)
         {
@@ -261,14 +261,14 @@ public sealed partial class AppNavigator : IAppNavigator
         _ = _navigationView?.Dispatcher?.RunAsync(CoreDispatcherPriority.Normal, () => action());
     }
 
-    private void AddNavigationNodes(IList<object> target, ObservableCollection<NavigationNode> source)
+    private void AddNavigationNodes(IList<object> target, ObservableList<NavigationNode> source)
     {
         foreach (var node in source)
             target.Add(CreateNavigationObject(node));
     }
 
     private void ApplyCollectionChanges(IList<object> target,
-        ObservableCollection<NavigationNode> source,
+        ObservableList<NavigationNode> source,
         NotifyCollectionChangedEventArgs e)
     {
         switch (e.Action)
@@ -354,7 +354,7 @@ public sealed partial class AppNavigator : IAppNavigator
         }
     }
 
-    private void ResetNavigationNodes(IList<object> target, ObservableCollection<NavigationNode> source)
+    private void ResetNavigationNodes(IList<object> target, ObservableList<NavigationNode> source)
     {
         ClearSelectedItemIfOwnedBy(target);
         UntrackNavigationObjects(target);
@@ -685,13 +685,13 @@ public sealed partial class AppNavigator : IAppNavigator
             _updateNode = updateNode;
             _updateChildren = updateChildren;
             _node.PropertyChanged += Node_Changed;
-            _node.Children.CollectionChanged += Children_CollectionChanged;
+            _node.ChildrenView.CollectionChanged += Children_CollectionChanged;
         }
 
         public void Dispose()
         {
             _node.PropertyChanged -= Node_Changed;
-            _node.Children.CollectionChanged -= Children_CollectionChanged;
+            _node.ChildrenView.CollectionChanged -= Children_CollectionChanged;
         }
 
         private void Node_Changed(object? sender, EventArgs e)

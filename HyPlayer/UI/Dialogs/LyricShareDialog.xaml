@@ -20,7 +20,7 @@
         <ListView
             x:Name="MainListView"
             Grid.Row="0"
-            ItemsSource="{x:Bind ShareLyricItem}"
+            ItemsSource="{x:Bind ShareLyricItemView}"
             SelectionMode="Multiple">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:LyricShareItem">

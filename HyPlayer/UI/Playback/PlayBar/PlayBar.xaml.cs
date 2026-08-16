@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -33,6 +32,7 @@ using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Services;
+using ObservableCollections;
 using HyPlayer.Features.User;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
@@ -100,7 +100,7 @@ public sealed partial class PlayBar
     private TimeSpan _startingTimeSpan = TimeSpan.Zero;
     public HyPlayer.Domain.Settings.UISettings UISettings { get; } =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
-    public ObservableCollection<PlayBarQueueItem> PlayItems => ViewModel.PlaylistItems;
+    public NotifyCollectionChangedSynchronizedViewList<PlayBarQueueItem> PlayItems { get; }
 
 #nullable enable
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs;
@@ -114,6 +114,7 @@ DoubleAnimation verticalAnimation;
 
     public PlayBar()
     {
+        PlayItems = ViewModel.PlaylistItems.ToNotifyCollectionChanged();
         InitializeComponent();
     }
 
@@ -243,7 +244,7 @@ DoubleAnimation verticalAnimation;
     {
         RunOnUIThread(() =>
         {
-            PlayItems.Clear();
+            ViewModel.PlaylistItems.Clear();
             PlayListTitle.Text = "播放列表";
         });
     }

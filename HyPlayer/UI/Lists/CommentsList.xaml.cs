@@ -1,32 +1,34 @@
 using System;
-using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using ObservableCollections;
 using WinRT;
 
 namespace HyPlayer.UI.Lists;
 
 public sealed partial class CommentsList : UserControl
 {
-    public static readonly DependencyProperty CommentsProperty = DependencyProperty.Register(
-        nameof(Comments),
-        typeof(ObservableCollection<CommentBase>),
-        typeof(CommentsList),
-        new PropertyMetadata(null));
+    private NotifyCollectionChangedSynchronizedViewList<CommentBase>? _comments;
 
     public CommentsList()
     {
         InitializeComponent();
     }
 
-    public ObservableCollection<CommentBase> Comments
+    public NotifyCollectionChangedSynchronizedViewList<CommentBase>? Comments
     {
-        get => (ObservableCollection<CommentBase>)GetValue(CommentsProperty);
-        set => SetValue(CommentsProperty, value);
+        get => _comments;
+        set
+        {
+            _comments = value;
+            CommentsContainer.ItemsSource = value;
+        }
     }
+
+    public ISupportIncrementalLoading? IncrementalSource { get; set; }
 
     public ScrollViewer CommentPresentScrollViewer =>
         (VisualTreeHelper.GetChild(CommentsContainer, 0)?.As<Border>()).Child?.As<ScrollViewer>();
@@ -36,7 +38,7 @@ public sealed partial class CommentsList : UserControl
         EffectiveViewportChangedEventArgs args)
     {
         if (args.BringIntoViewDistanceY > sender.ActualHeight
-            || Comments is not ISupportIncrementalLoading { HasMoreItems: true } incrementalSource)
+            || IncrementalSource is not ISupportIncrementalLoading { HasMoreItems: true } incrementalSource)
             return;
 
         await incrementalSource.LoadMoreItemsAsync(20);

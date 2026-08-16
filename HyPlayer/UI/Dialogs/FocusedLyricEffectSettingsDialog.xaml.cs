@@ -3,6 +3,7 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.Controls;
 using HyPlayer.Features.Lyrics.Effects;
+using ObservableCollections;
 using HyPlayer.LyricEffects.Models;
 using HyPlayer.LyricEffects.Presets;
 using HyPlayer.LyricRenderer;
@@ -13,7 +14,6 @@ using HyPlayer.LyricRenderer.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -101,6 +101,7 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
 
     public FocusedLyricEffectSettingsDialog()
     {
+        OperationsView = Operations.ToNotifyCollectionChanged();
         InitializeComponent();
         _draft = _profiles.CreateDraft();
         InitializeAddMenu();
@@ -111,7 +112,8 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
         if (Operations.Count > 0) OperationList.SelectedIndex = 0;
     }
 
-    public ObservableCollection<FocusedTextOperationItem> Operations { get; } = [];
+    public ObservableList<FocusedTextOperationItem> Operations { get; } = [];
+    public NotifyCollectionChangedSynchronizedViewList<FocusedTextOperationItem> OperationsView { get; }
 
     private void InitializeAddMenu()
     {
@@ -172,8 +174,7 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
         foreach (var item in Operations) item.PropertyChanged -= Operation_PropertyChanged;
         Operations.Clear();
         _draft.FocusedText = LyricEffectPresets.CloneFocusedText(definition);
-        foreach (var operation in _draft.FocusedText.Operations)
-            Operations.Add(CreateItem(operation));
+        Operations.AddRange(_draft.FocusedText.Operations.Select(CreateItem));
         _loading = false;
     }
 

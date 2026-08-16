@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
@@ -16,6 +15,7 @@ using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Services;
+using ObservableCollections;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -99,7 +99,7 @@ public partial class PlayBarViewModel : ObservableObject
     /// <summary>
     ///     Observable playlist items for the ListBox binding.
     /// </summary>
-    public ObservableCollection<PlayBarQueueItem> PlaylistItems { get; } = [];
+    public ObservableList<PlayBarQueueItem> PlaylistItems { get; } = [];
 
     [ObservableProperty] public partial PlayBarQueueItem? CurrentPlaylistItem { get; set; }
 
@@ -376,15 +376,22 @@ public partial class PlayBarViewModel : ObservableObject
         QueueCount = queueSnapshot.Count;
         OnPropertyChanged(nameof(QueueCount));
 
+        var rows = new List<PlayBarQueueItem>(queueSnapshot.Count);
         if (ActiveStrategyId == "shn" && _uiSettings.DisplayShuffledList)
             foreach (var orderedSong in orderedQueue)
             {
                 var idx = IndexOfQueueItem(queue, orderedSong);
-                AddPlaylistRow(idx, queueSnapshot);
+                if (CreatePlaylistRow(idx, queueSnapshot) is { } row)
+                    rows.Add(row);
             }
         else
+        {
             for (var idx = 0; idx < queueSnapshot.Count; idx++)
-                AddPlaylistRow(idx, queueSnapshot);
+                if (CreatePlaylistRow(idx, queueSnapshot) is { } row)
+                    rows.Add(row);
+        }
+
+        PlaylistItems.AddRange(rows);
 
         UpdateCurrentPlaylistItem();
     }
@@ -404,15 +411,14 @@ public partial class PlayBarViewModel : ObservableObject
         CurrentPlaylistItem = currentItem;
     }
 
-    private void AddPlaylistRow(int queueIndex, IReadOnlyList<PlaybackQueueItemSnapshot> queueSnapshot)
+    private PlayBarQueueItem? CreatePlaylistRow(
+        int queueIndex,
+        IReadOnlyList<PlaybackQueueItemSnapshot> queueSnapshot)
     {
         if (queueIndex < 0 || queueIndex >= queueSnapshot.Count)
-            return;
+            return null;
 
-        var row = PlayBarQueueItem.FromSnapshot(queueSnapshot[queueIndex], NowPlayingProviderItem);
-        PlaylistItems.Add(row);
-        if (row.IsCurrent)
-            CurrentPlaylistItem = row;
+        return PlayBarQueueItem.FromSnapshot(queueSnapshot[queueIndex], NowPlayingProviderItem);
     }
 
     private static int IndexOfQueueItem(IReadOnlyList<SingleSongBase> queue, SingleSongBase item)

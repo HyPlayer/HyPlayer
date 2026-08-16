@@ -18,7 +18,7 @@
         <CollectionViewSource
             x:Name="GroupedItemsViewSource"
             IsSourceGrouped="True"
-            Source="{x:Bind State.GroupedItems, Mode=OneWay}" />
+            Source="{x:Bind State.GroupedItemsView, Mode=OneWay}" />
     </UserControl.Resources>
     <Grid>
         <ListView
@@ -68,7 +68,7 @@
                                             Margin="4,14,0,0"
                                             Background="Transparent"
                                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                            Value="{x:Bind State.Rows.Count, Mode=OneWay}" />
+                                            Value="{x:Bind State.RowsView.Count, Mode=OneWay}" />
                                     </muxc:NavigationViewItem.InfoBadge>
                                 </muxc:NavigationViewItem>
                                 <muxc:NavigationViewItem

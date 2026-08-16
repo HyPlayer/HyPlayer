@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI.Xaml.Data;
+using ObservableCollections;
 
 namespace HyPlayer.UI.Lists.IncrementalLoading;
 
-public sealed class IncrementalLoadingCollection<T>(
+public sealed partial class IncrementalLoadingCollection<T>(
     IncrementalLoadController<T> controller,
-    Func<T, string?>? keySelector = null) : ObservableCollection<T>, ISupportIncrementalLoading
+    Func<T, string?>? keySelector = null) : ObservableList<T>, ISupportIncrementalLoading
 {
     private readonly HashSet<string> _loadedKeys = new(StringComparer.Ordinal);
     private readonly SemaphoreSlim _loadGate = new(1, 1);
@@ -56,15 +56,18 @@ public sealed class IncrementalLoadingCollection<T>(
             enteredGate = true;
             _isLoading = true;
             var items = await Controller.LoadNextAsync((int)Math.Clamp(count, 1, int.MaxValue), cancellationToken);
+            var newItems = new List<T>(items.Count);
             foreach (var item in items)
             {
                 var key = keySelector?.Invoke(item);
                 if (key is not null && !_loadedKeys.Add(key))
                     continue;
 
-                Add(item);
-                addedCount++;
+                newItems.Add(item);
             }
+
+            AddRange(newItems);
+            addedCount = (uint)newItems.Count;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

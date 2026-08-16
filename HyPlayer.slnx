@@ -7,11 +7,11 @@
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="HyPlayer.LyricEffects/HyPlayer.LyricEffects.csproj">
+  <Project Path="HyPlayer.LyricEffects.Tests/HyPlayer.LyricEffects.Tests.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="HyPlayer.LyricEffects.Tests/HyPlayer.LyricEffects.Tests.csproj">
+  <Project Path="HyPlayer.LyricEffects/HyPlayer.LyricEffects.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
@@ -55,6 +55,10 @@
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="Microsoft.Gaming.XboxGameBar.Projection/Microsoft.Gaming.XboxGameBar.Projection.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="ObservableCollections/ObservableCollections.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>

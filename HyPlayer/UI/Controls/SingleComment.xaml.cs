@@ -22,6 +22,7 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.UI.Lists.IncrementalLoading;
+using ObservableCollections;
 using Microsoft.UI.Xaml.Controls;
 
 #endregion
@@ -44,12 +45,14 @@ public sealed partial class SingleComment : UserControl
 
     private readonly IncrementalLoadController<CommentBase> _floorCommentController = new();
     private readonly IncrementalLoadingCollection<CommentBase> _floorComments;
+    private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _floorCommentsView;
 
     public SingleComment()
     {
         _floorComments = new IncrementalLoadingCollection<CommentBase>(
             _floorCommentController,
             static comment => string.IsNullOrWhiteSpace(comment.ActualId) ? null : comment.ActualId);
+        _floorCommentsView = _floorComments.ToNotifyCollectionChanged();
         InitializeComponent();
         _floorCommentController.PropertyChanged += FloorCommentController_PropertyChanged;
         _floorComments.LoadFailed += FloorComments_LoadFailed;

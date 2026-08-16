@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.UI.Xaml;
@@ -8,6 +7,7 @@ using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Lyrics;
+using ObservableCollections;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
 
@@ -15,45 +15,37 @@ namespace HyPlayer.UI.Dialogs;
 
 public sealed partial class LyricShareDialog : ContentDialog
 {
-    public static readonly DependencyProperty LyricsProperty = DependencyProperty.Register(
-        "Lyrics", typeof(List<SongLyric>), typeof(LyricShareDialog),
-        new PropertyMetadata(default(List<SongLyric>)));
-
-    public static readonly DependencyProperty ShareLyricItemProperty = DependencyProperty.Register(
-        "ShareLyricItem", typeof(ObservableCollection<LyricShareItem>), typeof(LyricShareDialog),
-        new PropertyMetadata(null));
-
     private readonly Dictionary<SongLyric, string> _outputLines = new();
+    private List<SongLyric> _lyrics = [];
 
     public LyricShareDialog()
     {
+        ShareLyricItemView = ShareLyricItem.ToNotifyCollectionChanged();
         InitializeComponent();
-        ShareLyricItem = new ObservableCollection<LyricShareItem>();
         Closed += LyricShareDialog_Closed;
     }
 
     public List<SongLyric> Lyrics
     {
-        get => (List<SongLyric>)GetValue(LyricsProperty);
+        get => _lyrics;
         set
         {
-            SetValue(LyricsProperty, value);
+            _lyrics = value;
             LoadLyricsList();
         }
     }
 
-    public ObservableCollection<LyricShareItem> ShareLyricItem
-    {
-        get => (ObservableCollection<LyricShareItem>)GetValue(ShareLyricItemProperty);
-        set => SetValue(ShareLyricItemProperty, value);
-    }
+    public ObservableList<LyricShareItem> ShareLyricItem { get; } = [];
+
+    public NotifyCollectionChangedSynchronizedViewList<LyricShareItem> ShareLyricItemView { get; }
 
     private void LoadLyricsList()
     {
         ShareLyricItem.Clear();
+        var items = new List<LyricShareItem>(Lyrics.Count * 2);
         foreach (var songLyric in Lyrics)
         {
-            ShareLyricItem.Add(new LyricShareItem
+            items.Add(new LyricShareItem
             {
                 Type = LyricShareItemType.Original,
                 Text = songLyric.LyricLine.CurrentLyric,
@@ -61,7 +53,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                 OriginalLyric = songLyric
             });
             if (songLyric.HaveTranslation)
-                ShareLyricItem.Add(new LyricShareItem
+                items.Add(new LyricShareItem
                 {
                     Type = LyricShareItemType.Translation,
                     Text = songLyric.Translation,
@@ -69,6 +61,8 @@ public sealed partial class LyricShareDialog : ContentDialog
                     OriginalLyric = songLyric
                 });
         }
+
+        ShareLyricItem.AddRange(items);
     }
 
     private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -168,13 +162,13 @@ public sealed partial class LyricShareDialog : ContentDialog
     private void LoadRomaji(object sender, RoutedEventArgs e)
     {
         CheckBoxLoadRomaji.IsEnabled = false;
-        for (var index = 0; index < ShareLyricItem.Count; index++)
+        var items = new List<LyricShareItem>(ShareLyricItem.Count * 2);
+        foreach (var lyricShareItem in ShareLyricItem)
         {
-            var lyricShareItem = ShareLyricItem[index];
-            if (lyricShareItem.Type != LyricShareItemType.Original) continue;
-            if (lyricShareItem.OriginalLyric.HaveRomaji)
-            {
-                ShareLyricItem.Insert(index + 1, new LyricShareItem
+            items.Add(lyricShareItem);
+            if (lyricShareItem.Type == LyricShareItemType.Original
+                && lyricShareItem.OriginalLyric.HaveRomaji)
+                items.Add(new LyricShareItem
                 {
                     Type = LyricShareItemType.Romaji,
                     Text = lyricShareItem.OriginalLyric.Romaji ??
@@ -182,9 +176,10 @@ public sealed partial class LyricShareDialog : ContentDialog
                     Time = lyricShareItem.Time,
                     OriginalLyric = lyricShareItem.OriginalLyric
                 });
-                index++;
-            }
         }
+
+        ShareLyricItem.Clear();
+        ShareLyricItem.AddRange(items);
     }
 
     private void NoSelectEmpty(object sender, RoutedEventArgs e)

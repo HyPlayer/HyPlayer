@@ -53,7 +53,7 @@
                     <Grid Grid.Row="1">
                         <ListView
                             Name="ListBoxLocalMusicContainer"
-                            ItemsSource="{x:Bind ViewModel.LocalItems}"
+                            ItemsSource="{x:Bind ViewModel.LocalItemsView}"
                             SelectionChanged="ListBoxLocalMusicContainer_SelectionChanged"
                             SelectionMode="Single">
                             <ListView.ItemTemplate>

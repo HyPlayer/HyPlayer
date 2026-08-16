@@ -31,7 +31,7 @@
                 Foreground="OrangeRed" />
 
         </StackPanel>
-        <ListView Grid.Row="1" ItemsSource="{x:Bind downloads:DownloadManager.DownloadLists}">
+        <ListView Grid.Row="1" ItemsSource="{x:Bind downloads:DownloadManager.DownloadListsView}">
             <ListView.Resources>
                 <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
                     <Setter Property="Background" Value="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}" />

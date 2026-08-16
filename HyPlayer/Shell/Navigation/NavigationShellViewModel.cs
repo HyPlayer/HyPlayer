@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
@@ -16,6 +15,7 @@ using HyPlayer.Features.Account.Services;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
+using ObservableCollections;
 
 namespace HyPlayer.Shell.Navigation;
 
@@ -44,6 +44,7 @@ public partial class NavigationShellViewModel : ObservableObject
         IProviderKnownTypeIds knownTypeIds,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
     {
+        MenuItemsView = MenuItems.ToNotifyCollectionChanged();
         _auth = auth;
         _notification = notification;
         _userLibraryTypeIds = userLibraryTypeIds;
@@ -57,7 +58,8 @@ public partial class NavigationShellViewModel : ObservableObject
         playlistCollectionChangeNotifier.Changed += (_, _) => LoadPlaylistsCommand.Execute(null);
     }
 
-    public ObservableCollection<NavigationNode> MenuItems { get; } = [];
+    public ObservableList<NavigationNode> MenuItems { get; } = [];
+    public NotifyCollectionChangedSynchronizedViewList<NavigationNode> MenuItemsView { get; }
 
     [ObservableProperty] public partial bool IsLoading { get; set; }
 
@@ -75,38 +77,40 @@ public partial class NavigationShellViewModel : ObservableObject
 
     private void BuildMenuItems()
     {
-        MenuItems.Add(new NavigationNode { Title = "发现", IsHeader = true });
-        MenuItems.Add(new NavigationNode
-            { Title = "主页", Icon = new FontIcon { Glyph = "\uE80F" }, Route = new AppRoute.Home() });
-        MenuItems.Add(new NavigationNode
-            { Title = "每日推荐", Icon = new FontIcon { Glyph = "\uE787" }, Route = new AppRoute.DailyRecommend() });
-        MenuItems.Add(new NavigationNode
+        MenuItems.AddRange([
+            new NavigationNode { Title = "发现", IsHeader = true },
+            new NavigationNode
+                { Title = "主页", Icon = new FontIcon { Glyph = "\uE80F" }, Route = new AppRoute.Home() },
+            new NavigationNode
+                { Title = "每日推荐", Icon = new FontIcon { Glyph = "\uE787" }, Route = new AppRoute.DailyRecommend() },
+            new NavigationNode
         {
             Title = "私人FM", Icon = new FontIcon { Glyph = "\uF12E" }, Action = AppNavigationAction.PersonalFM,
             SelectsOnInvoked = false
-        });
-        MenuItems.Add(new NavigationNode
+        },
+            new NavigationNode
         {
             Title = "心动模式", Icon = new FontIcon { Glyph = "\uEB51" }, Action = AppNavigationAction.HeartBeat,
             SelectsOnInvoked = false
-        });
-        MenuItems.Add(new NavigationNode { IsSeparator = true });
-        MenuItems.Add(new NavigationNode { Title = "音乐", IsHeader = true });
-        MenuItems.Add(new NavigationNode
-            { Title = "离线音乐", Icon = new FontIcon { Glyph = "\uEC50" }, Route = new AppRoute.LocalMusic() });
-        MenuItems.Add(new NavigationNode
-            { Title = "播放历史", Icon = new FontIcon { Glyph = "\uE81C" }, Route = new AppRoute.History() });
-        MenuItems.Add(new NavigationNode
-            { Title = "我的收藏", Icon = new FontIcon { Glyph = "\uE728" }, Route = new AppRoute.Favorite() });
-        MenuItems.Add(new NavigationNode
-            { Title = "我的云盘", Icon = new FontIcon { Glyph = "\uE753" }, Route = new AppRoute.MusicCloud() });
-        MenuItems.Add(new NavigationNode { IsSeparator = true });
-        MenuItems.Add(new NavigationNode { Title = "资料库", IsHeader = true });
-        MenuItems.Add(new NavigationNode
+        },
+            new NavigationNode { IsSeparator = true },
+            new NavigationNode { Title = "音乐", IsHeader = true },
+            new NavigationNode
+                { Title = "离线音乐", Icon = new FontIcon { Glyph = "\uEC50" }, Route = new AppRoute.LocalMusic() },
+            new NavigationNode
+                { Title = "播放历史", Icon = new FontIcon { Glyph = "\uE81C" }, Route = new AppRoute.History() },
+            new NavigationNode
+                { Title = "我的收藏", Icon = new FontIcon { Glyph = "\uE728" }, Route = new AppRoute.Favorite() },
+            new NavigationNode
+                { Title = "我的云盘", Icon = new FontIcon { Glyph = "\uE753" }, Route = new AppRoute.MusicCloud() },
+            new NavigationNode { IsSeparator = true },
+            new NavigationNode { Title = "资料库", IsHeader = true },
+            new NavigationNode
         {
             Title = "创建歌单", Icon = new SymbolIcon { Symbol = Symbol.Add }, Action = AppNavigationAction.CreatePlaylist,
             SelectsOnInvoked = false
-        });
+        }
+        ]);
     }
 
     /// <summary>根据导航后的页面类型和参数找到对应的 NavigationNode</summary>
@@ -242,8 +246,12 @@ public partial class NavigationShellViewModel : ObservableObject
 
     private void ClearProviderLibraryNodes()
     {
-        foreach (var node in _providerLibraryNodes)
-            MenuItems.Remove(node);
+        if (_providerLibraryNodes.Count > 0)
+        {
+            var firstIndex = MenuItems.IndexOf(_providerLibraryNodes[0]);
+            if (firstIndex >= 0)
+                MenuItems.RemoveRange(firstIndex, _providerLibraryNodes.Count);
+        }
 
         _providerLibraryNodes.Clear();
     }
@@ -254,14 +262,11 @@ public partial class NavigationShellViewModel : ObservableObject
         {
             if (group.IsPinned)
             {
-                foreach (var item in group.Items)
-                {
-                    var node = CreateProviderLibraryItemNode(
+                AddProviderLibraryNodes(group.Items
+                    .Select(item => CreateProviderLibraryItemNode(
                         item,
-                        group.Id == _userLibraryTypeIds.LikedSongsTypeId);
-                    if (node is not null)
-                        AddProviderLibraryNode(node);
-                }
+                        group.Id == _userLibraryTypeIds.LikedSongsTypeId))
+                    .OfType<NavigationNode>());
 
                 continue;
             }
@@ -272,22 +277,20 @@ public partial class NavigationShellViewModel : ObservableObject
                 Icon = new SymbolIcon { Symbol = Symbol.List }
             };
 
-            foreach (var item in group.Items)
-            {
-                var itemNode = CreateProviderLibraryItemNode(item, false);
-                if (itemNode is not null)
-                    groupNode.Children.Add(itemNode);
-            }
+            groupNode.Children.AddRange(group.Items
+                .Select(item => CreateProviderLibraryItemNode(item, false))
+                .OfType<NavigationNode>());
 
             if (groupNode.Children.Count > 0)
-                AddProviderLibraryNode(groupNode);
+                AddProviderLibraryNodes([groupNode]);
         }
     }
 
-    private void AddProviderLibraryNode(NavigationNode node)
+    private void AddProviderLibraryNodes(IEnumerable<NavigationNode> nodes)
     {
-        _providerLibraryNodes.Add(node);
-        MenuItems.Add(node);
+        var materializedNodes = nodes.ToList();
+        _providerLibraryNodes.AddRange(materializedNodes);
+        MenuItems.AddRange(materializedNodes);
     }
 
     private NavigationNode? CreateProviderLibraryItemNode(ContainerBase item, bool isLikedSongs)

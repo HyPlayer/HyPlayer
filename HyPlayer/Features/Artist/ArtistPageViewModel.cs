@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,12 +15,13 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.UI.Lists;
+using ObservableCollections;
 
 namespace HyPlayer.Features.Artist;
 
 public partial class ArtistPageViewModel : ObservableObject
 {
-    private readonly ObservableCollection<ProvidableItemBase> _hotSongs = [];
+    private readonly ObservableList<ProvidableItemBase> _hotSongs = [];
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
@@ -156,8 +156,7 @@ public partial class ArtistPageViewModel : ObservableObject
         if (songs is null)
             return;
 
-        foreach (var item in songs)
-            _hotSongs.Add(item);
+        _hotSongs.AddRange(songs);
         HotSongsContainer = new StaticItemsContainer(_hotSongs, "热门歌曲", "artist-hot");
     }
 

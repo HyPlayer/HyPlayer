@@ -1,5 +1,5 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using ObservableCollections;
 
 namespace HyPlayer.UI.Lists;
 
@@ -9,10 +9,13 @@ namespace HyPlayer.UI.Lists;
 /// </summary>
 public sealed partial class ContainerItemsViewState : ObservableObject
 {
-    public ContainerItemsViewState(ObservableCollection<ProvidableItemRowViewModel> rows)
+    public ContainerItemsViewState(ObservableList<ProvidableItemRowViewModel> rows)
     {
         Rows = rows;
-        Rows.CollectionChanged += (_, _) =>
+        RowsView = Rows.ToNotifyCollectionChanged();
+        VisibleRowsView = VisibleRows.ToNotifyCollectionChanged();
+        GroupedItemsView = GroupedItems.ToNotifyCollectionChanged();
+        RowsView.CollectionChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(IsInitialLoading));
             OnPropertyChanged(nameof(IsLoadingMore));
@@ -37,9 +40,12 @@ public sealed partial class ContainerItemsViewState : ObservableObject
 
     [ObservableProperty] public partial object? ActiveItemsSource { get; set; }
 
-    public ObservableCollection<ProvidableItemRowViewModel> Rows { get; }
-    public ObservableCollection<ProvidableItemRowViewModel> VisibleRows { get; } = [];
-    public ObservableCollection<ProvidableItemRowGroup> GroupedItems { get; } = [];
+    public ObservableList<ProvidableItemRowViewModel> Rows { get; }
+    public ObservableList<ProvidableItemRowViewModel> VisibleRows { get; } = [];
+    public ObservableList<ProvidableItemRowGroup> GroupedItems { get; } = [];
+    public NotifyCollectionChangedSynchronizedViewList<ProvidableItemRowViewModel> RowsView { get; }
+    public NotifyCollectionChangedSynchronizedViewList<ProvidableItemRowViewModel> VisibleRowsView { get; }
+    public NotifyCollectionChangedSynchronizedViewList<ProvidableItemRowGroup> GroupedItemsView { get; }
 
     public bool IsInitialLoading => IsLoading && Rows.Count == 0;
     public bool IsLoadingMore => IsLoading && Rows.Count > 0;

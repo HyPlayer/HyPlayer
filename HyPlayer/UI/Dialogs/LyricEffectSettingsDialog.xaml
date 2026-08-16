@@ -45,7 +45,7 @@
                 CanReorderItems="True"
                 DragItemsCompleted="OperationList_DragItemsCompleted"
                 IsItemClickEnabled="False"
-                ItemsSource="{x:Bind Operations}"
+                ItemsSource="{x:Bind OperationsView}"
                 ReorderMode="Enabled"
                 SelectionChanged="OperationList_SelectionChanged"
                 SelectionMode="Single">

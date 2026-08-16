@@ -18,7 +18,6 @@
             IncrementalLoadingThreshold="1"
             IncrementalLoadingTrigger="Edge"
             ItemContainerStyle="{ThemeResource ListViewItemStyle}"
-            ItemsSource="{x:Bind Comments}"
             SelectionMode="None">
             <ListView.ItemTemplate>
                 <DataTemplate ScrollViewer.CanContentRenderOutsideBounds="False">

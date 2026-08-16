@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
@@ -27,6 +26,7 @@ using HyPlayer.Features.Comments;
 using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Video;
+using ObservableCollections;
 using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Xaml;
@@ -129,14 +129,14 @@ public sealed partial class ContainerItemsView : UserControl
         _rows.LoadFailed += Rows_LoadFailed;
         AttachStateChanged();
         UpdateListHeader(ListHeader);
-        State.ActiveItemsSource = Rows;
+        State.ActiveItemsSource = State.RowsView;
         SyncLoadState();
     }
 
     public ContainerItemsViewState State { get; }
-    public ObservableCollection<ProvidableItemRowViewModel> Rows => State.Rows;
-    public ObservableCollection<ProvidableItemRowViewModel> VisibleRows => State.VisibleRows;
-    public ObservableCollection<ProvidableItemRowGroup> GroupedItems => State.GroupedItems;
+    public ObservableList<ProvidableItemRowViewModel> Rows => State.Rows;
+    public ObservableList<ProvidableItemRowViewModel> VisibleRows => State.VisibleRows;
+    public ObservableList<ProvidableItemRowGroup> GroupedItems => State.GroupedItems;
 
     public ContainerBase? Container
     {
@@ -318,7 +318,7 @@ public sealed partial class ContainerItemsView : UserControl
         _rows.Reset(mappedSource);
         VisibleRows.Clear();
         GroupedItems.Clear();
-        State.ActiveItemsSource = Rows;
+        State.ActiveItemsSource = State.RowsView;
         QueueScope = BuildQueueScope(Container);
         SyncLoadState();
         LoadFirstPageAsync().SafeFireAndForget();
@@ -374,8 +374,7 @@ public sealed partial class ContainerItemsView : UserControl
     {
         var filterText = FilterBox?.Text ?? string.Empty;
         VisibleRows.Clear();
-        foreach (var row in Rows.Where(row => row.MatchesFilter(filterText)))
-            VisibleRows.Add(row);
+        VisibleRows.AddRange(Rows.Where(row => row.MatchesFilter(filterText)));
 
         RebuildGroups();
         UpdateCurrentItem(_state.NowPlayingProviderItem);
@@ -384,7 +383,9 @@ public sealed partial class ContainerItemsView : UserControl
     private void RebuildGroups()
     {
         GroupedItems.Clear();
-        State.ActiveItemsSource = string.IsNullOrWhiteSpace(FilterBox?.Text) ? Rows : VisibleRows;
+        State.ActiveItemsSource = string.IsNullOrWhiteSpace(FilterBox?.Text)
+            ? State.RowsView
+            : State.VisibleRowsView;
         if (!ShouldGroupByDisc())
             return;
 
@@ -396,8 +397,8 @@ public sealed partial class ContainerItemsView : UserControl
         if (grouped.Count <= 1)
             return;
 
-        foreach (var group in grouped)
-            GroupedItems.Add(new ProvidableItemRowGroup(group) { Key = group.Key });
+        GroupedItems.AddRange(grouped.Select(group =>
+            new ProvidableItemRowGroup(group) { Key = group.Key }));
 
         State.ActiveItemsSource = GroupedItemsViewSource.View;
     }
