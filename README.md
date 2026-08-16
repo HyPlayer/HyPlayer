@@ -93,8 +93,6 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 
 ## 依赖
 
-以下清单根据 `HyPlayer.slnx` 及其中项目的直接 `ProjectReference`、`PackageReference` 整理，不展开 NuGet 的传递依赖。版本号以项目文件为准。
-
 ### 源码及项目引用
 
 | 项目 | 用途及说明 | 许可证 |
