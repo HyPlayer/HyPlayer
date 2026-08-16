@@ -210,7 +210,6 @@ internal sealed unsafe partial class LikeAppleRenderPipeline : IDisposable
         LikeAppleRenderSurface lyricsBackdrop,
         LikeAppleRenderSurface ordinaryBackdrop,
         LikeAppleRenderSurface outputSurface,
-        bool isVerticalLayout,
         float lyricsModeMix)
     {
         SetViewport(outputSurface.Width, outputSurface.Height);
@@ -229,10 +228,7 @@ internal sealed unsafe partial class LikeAppleRenderPipeline : IDisposable
         if (lyricsModeMix >= 1f)
         {
             BindPixelShaderResources(RequireShaderResource(lyricsBackdrop));
-            if (isVerticalLayout)
-            {
-                DrawFullscreenMaterial(_materialTreatedPixelShader);
-            }
+            DrawFullscreenMaterial(_materialTreatedPixelShader);
             DrawPinchMesh(_pinchPixelShader);
             return;
         }

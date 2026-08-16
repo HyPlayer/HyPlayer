@@ -22,7 +22,7 @@ namespace HyPlayer.UI.Effects.LikeApple
         private const float LyricsBlurSigma = 42.5f;
         private const float OrdinaryBlurSigma = 80f;
         private const float IosBehindLyricsBlackScrimAlpha = 0.4f;
-        private const float LightAppearanceBlackScrimAlpha = 0.25f;
+        private const float LightAppearanceBlackScrimAlpha = 1f / 3f;
         private const float PortraitTextureScale = 1f;
         private const float LandscapeTextureScale = 0.8f;
         private readonly Stopwatch _animationClock = new();
@@ -348,7 +348,6 @@ namespace HyPlayer.UI.Effects.LikeApple
                     lyricsBackdrop,
                     ordinaryBackdrop,
                     _outputSurface,
-                    _isVerticalLayout,
                     lyricsModeMix);
 
                 _pipeline.CompleteFrame();
@@ -496,8 +495,11 @@ namespace HyPlayer.UI.Effects.LikeApple
             CanvasRenderTarget? newOutputTarget = null;
             try
             {
+                float maximumKernelScale =
+                    Math.Max(LyricsBlurSigma, OrdinaryBlurSigma) /
+                    GaussianKernelSigma * _blurScale;
                 float backdropDownsample =
-                    BlurSurfaceDownsample * Math.Max(1f, _blurScale);
+                    BlurSurfaceDownsample * Math.Max(1f, maximumKernelScale);
                 int backdropWidth = Math.Max(1, (int)Math.Floor(width / backdropDownsample));
                 int backdropHeight = Math.Max(1, (int)Math.Floor(height / backdropDownsample));
 
