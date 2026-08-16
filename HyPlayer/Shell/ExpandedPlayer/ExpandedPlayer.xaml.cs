@@ -80,8 +80,8 @@ public sealed partial class ExpandedPlayer : Page
         "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
         new PropertyMetadata("x1"));
 
-    private readonly BackgroundShaderLayer _backgroundShaderLayer;
     private readonly DebugOverlayLayer _debugOverlayLayer;
+    private readonly IsolationBackgroundLayer _isolationBackgroundLayer;
     private readonly LikeAppleBackgroundLayer _likeAppleBackgroundLayer;
     private readonly ExpandedCanvasState _canvasState = new();
     private readonly WeakEventListener<ExpandedPlayer, object?, EventArgs> _enteredForegroundListener;
@@ -152,7 +152,7 @@ public sealed partial class ExpandedPlayer : Page
         _lyricEffectProfiles.ProfileChanged += OnLyricEffectProfileChanged;
         _canvasState.LyricBox = _lyricBox;
         SyncCanvasState();
-        _backgroundShaderLayer = new BackgroundShaderLayer(_canvasState, _lyricSettings);
+        _isolationBackgroundLayer = new IsolationBackgroundLayer(_canvasState, _lyricSettings);
         _likeAppleBackgroundLayer = new LikeAppleBackgroundLayer(_canvasState, _player);
         _spectrumLayer = new SpectrumLayer(_canvasState, _player);
         _lyricsLayer = new LyricsLayer(_canvasState);
@@ -221,7 +221,7 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.Context.PreferTypography.Font = _lyricSettings.LyricFontFamily;
         _lyricBox.Context.LineSpacing = _lyricSettings.LyricLineSpacing;
 
-        _expandedCanvasHost.AddLayer(_backgroundShaderLayer);
+        _expandedCanvasHost.AddLayer(_isolationBackgroundLayer);
         _expandedCanvasHost.AddLayer(_likeAppleBackgroundLayer);
         _expandedCanvasHost.AddLayer(_spectrumLayer);
         _expandedCanvasHost.AddLayer(_lyricsLayer);
@@ -1116,7 +1116,7 @@ public sealed partial class ExpandedPlayer : Page
                     if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation)
                     {
                         _canvasState.AlbumColorVectors = _albumColorVectors;
-                        _backgroundShaderLayer.ApplyShaderProperties();
+                        _isolationBackgroundLayer.ApplyShaderProperties();
                     }
 
                     if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
@@ -1136,7 +1136,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         LuminousBackground.RemoveFromVisualTree();
         LuminousBackground = null;
-        _backgroundShaderLayer.DisposeShader();
+        _isolationBackgroundLayer.DisposeShader();
         _likeAppleBackgroundLayer.Dispose();
     }
 
@@ -1199,7 +1199,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void UpdateShaderResolution()
     {
-        _backgroundShaderLayer.UpdateResolution(
+        _isolationBackgroundLayer.UpdateResolution(
             LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, CanvasDpiRounding.Round),
             LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, CanvasDpiRounding.Round));
     }

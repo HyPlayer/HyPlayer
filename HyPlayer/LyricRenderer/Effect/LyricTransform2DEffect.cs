@@ -7,7 +7,7 @@ using Microsoft.Graphics.Canvas.Effects;
 
 namespace HyPlayer.LyricRenderer.Effect;
 
-public class LyricTransform2DEffect : LyricEffect<Transform2DEffect>
+public partial class LyricTransform2DEffect : LyricEffect<Transform2DEffect>
 {
     public EffectProperty XScale { get; set; } = new((_, _) => 1f);
     public EffectProperty YScale { get; set; } = new((_, _) => 1f);

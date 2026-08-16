@@ -46,7 +46,7 @@ using SymbolIcon = Windows.UI.Xaml.Controls.SymbolIcon;
 
 namespace HyPlayer.Shell.Navigation.Services;
 
-public sealed class AppNavigator : IAppNavigator
+public sealed partial class AppNavigator : IAppNavigator
 {
     private const string DailyRecommendPlaylistId = "daily_recommend";
     private readonly IAuthService _auth;
@@ -671,7 +671,7 @@ public sealed class AppNavigator : IAppNavigator
         }
     }
 
-    private sealed class NavigationNodeSubscription : IDisposable
+    private sealed partial class NavigationNodeSubscription : IDisposable
     {
         private readonly NavigationNode _node;
         private readonly Action<NavigationNode, NotifyCollectionChangedEventArgs> _updateChildren;

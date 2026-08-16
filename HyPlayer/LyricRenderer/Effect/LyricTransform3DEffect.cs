@@ -7,7 +7,7 @@ using Microsoft.Graphics.Canvas.Effects;
 
 namespace HyPlayer.LyricRenderer.Effect;
 
-public class LyricTransform3DEffect : LyricEffect<Transform3DEffect>
+public partial class LyricTransform3DEffect : LyricEffect<Transform3DEffect>
 {
     public EffectProperty Depth { get; set; } = new((_, _) => 3000f);
     public EffectProperty AngleX { get; set; } = new((_, _) => 0f);

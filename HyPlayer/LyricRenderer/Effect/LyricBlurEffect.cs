@@ -6,7 +6,7 @@ using System;
 
 namespace HyPlayer.LyricRenderer.Effect;
 
-public class LyricBlurEffect : LyricEffect<GaussianBlurEffect>
+public partial class LyricBlurEffect : LyricEffect<GaussianBlurEffect>
 {
     protected override GaussianBlurEffect Effect { get; } = new GaussianBlurEffect();
 

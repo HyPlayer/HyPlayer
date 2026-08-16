@@ -5,7 +5,7 @@ using Microsoft.Graphics.Canvas.Effects;
 
 namespace HyPlayer.LyricRenderer.Effect;
 
-public class LyricOpacityEffect : LyricEffect<OpacityEffect>
+public partial class LyricOpacityEffect : LyricEffect<OpacityEffect>
 {
     protected override OpacityEffect Effect { get; } = new();
     public EffectProperty Opacity { get; set; } = new((_, _) => 1f);

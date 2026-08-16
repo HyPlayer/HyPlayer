@@ -143,7 +143,7 @@ public sealed class LyricDrawExecutionContext
     }
 }
 
-public sealed class LyricRenderFrameResourceScope : IDisposable
+public sealed partial class LyricRenderFrameResourceScope : IDisposable
 {
     private readonly List<IDisposable> _resources = [];
 
@@ -186,7 +186,7 @@ public sealed class LyricRenderOperationContext
     public LyricExpressionFunctions Functions => LyricExpressionFunctions.Instance;
 }
 
-internal sealed class LyricRenderPipelineInstance : IDisposable
+internal sealed partial class LyricRenderPipelineInstance : IDisposable
 {
     private readonly IReadOnlyList<ILyricRenderOperation> _operations;
     private readonly HashSet<ILyricRenderOperation> _reportedFailures = [];

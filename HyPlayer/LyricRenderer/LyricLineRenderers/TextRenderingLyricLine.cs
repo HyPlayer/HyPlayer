@@ -17,7 +17,7 @@ using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
-public class TextRenderingLyricLine : RenderingLyricLine
+public partial class TextRenderingLyricLine : RenderingLyricLine
 {
     private const long ScaleAnimationDuration = 500;
 

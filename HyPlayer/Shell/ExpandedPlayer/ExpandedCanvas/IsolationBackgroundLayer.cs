@@ -13,30 +13,31 @@ namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 /// <summary>
 ///     Win2D composable layer that owns the Isolation-mode pixel shader background.
 /// </summary>
-public sealed class BackgroundShaderLayer : IExpandedCanvasLayer
+public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
 {
     private readonly bool _enableDithering = true;
     private readonly bool _enableLightWave;
     private readonly ExpandedCanvasState _state;
 
+    private PixelShaderEffect<IsolationEffect>? _effect;
     private Vector2 _canvasSize;
     private float3 _color1, _color2, _color3, _color4;
     private float _random1, _random2, _random3;
 
-    public BackgroundShaderLayer(ExpandedCanvasState state, LyricSettings setting)
+    public IsolationBackgroundLayer(ExpandedCanvasState state, LyricSettings setting)
     {
         _state = state;
-        _state.IsolationEffect = new PixelShaderEffect<IsolationEffect>();
         _enableDithering = true;
         _enableLightWave = setting.IsolationLightWave;
     }
 
-    public string LayerName => "BackgroundShader";
+    public string LayerName => "IsolationBackground";
     public int Order => 0;
 
     /// <inheritdoc />
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
     {
+        _effect = new PixelShaderEffect<IsolationEffect>();
         _canvasSize = new Vector2(
             sender.ConvertDipsToPixels((float)sender.ActualWidth, CanvasDpiRounding.Round),
             sender.ConvertDipsToPixels((float)sender.ActualHeight, CanvasDpiRounding.Round));
@@ -45,7 +46,7 @@ public sealed class BackgroundShaderLayer : IExpandedCanvasLayer
     /// <inheritdoc />
     public void Update(ICanvasAnimatedControl sender, CanvasAnimatedUpdateEventArgs args)
     {
-        _state.IsolationEffect?.ConstantBuffer = new IsolationEffect(
+        _effect.ConstantBuffer = new IsolationEffect(
             _canvasSize,
             (float)args.Timing.TotalTime.TotalSeconds,
             _color1,
@@ -63,16 +64,12 @@ public sealed class BackgroundShaderLayer : IExpandedCanvasLayer
     public void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing)
     {
         if (_state.BackgroundType != BackgroundType.Isolation) return;
-
-        var shader = _state.IsolationEffect;
-        if (shader is not null)
-            session.DrawImage(shader);
+            session.DrawImage(_effect);
     }
 
     public void DisposeShader()
     {
-        _state.IsolationEffect?.Dispose();
-        _state.IsolationEffect = null;
+        _effect?.Dispose();
     }
 
     public void UpdateResolution(float width, float height)
@@ -82,9 +79,6 @@ public sealed class BackgroundShaderLayer : IExpandedCanvasLayer
 
     public void ApplyShaderProperties()
     {
-        var shader = _state.IsolationEffect;
-        if (shader is null) return;
-
         var colors = _state.AlbumColorVectors;
         _color1 = colors[0];
         _color2 = colors[1];
