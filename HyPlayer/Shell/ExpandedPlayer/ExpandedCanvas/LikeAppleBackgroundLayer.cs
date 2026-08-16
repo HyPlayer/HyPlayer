@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
+using Windows.Graphics.DirectX;
 using Windows.Storage.Streams;
 using HyPlayer.Domain;
 using HyPlayer.UI.Effects.LikeApple;
@@ -19,6 +20,7 @@ namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 /// </summary>
 public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDisposable
 {
+    private const int MaximumArtworkDimension = 300;
     private readonly AudioGraphPlayer _player;
     private readonly ExpandedCanvasState _state;
     private CanvasDevice? _device;
@@ -177,6 +179,7 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
                 stream,
                 96f,
                 CanvasAlphaMode.Premultiplied);
+            artwork = ResizeArtwork(device, artwork);
             if (!ReferenceEquals(renderer, _renderer) ||
                 requestVersion != Volatile.Read(ref _artworkRequestVersion)) return;
 
@@ -187,6 +190,50 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
         {
             artwork?.Dispose();
         }
+    }
+
+    private static CanvasBitmap ResizeArtwork(CanvasDevice device, CanvasBitmap artwork)
+    {
+        double width = artwork.SizeInPixels.Width;
+        double height = artwork.SizeInPixels.Height;
+        double longestDimension = Math.Max(width, height);
+        if (longestDimension <= MaximumArtworkDimension)
+        {
+            return artwork;
+        }
+
+        double scale = MaximumArtworkDimension / longestDimension;
+        float resizedWidth = Math.Max(1f, (float)Math.Round(
+            width * scale,
+            MidpointRounding.AwayFromZero));
+        float resizedHeight = Math.Max(1f, (float)Math.Round(
+            height * scale,
+            MidpointRounding.AwayFromZero));
+        var resized = new CanvasRenderTarget(
+            device,
+            resizedWidth,
+            resizedHeight,
+            96f,
+            DirectXPixelFormat.B8G8R8A8UIntNormalized,
+            CanvasAlphaMode.Premultiplied);
+        try
+        {
+            using CanvasDrawingSession session = resized.CreateDrawingSession();
+            session.DrawImage(
+                artwork,
+                new Rect(0, 0, resizedWidth, resizedHeight),
+                artwork.Bounds,
+                1f,
+                CanvasImageInterpolation.HighQualityCubic);
+        }
+        catch
+        {
+            resized.Dispose();
+            throw;
+        }
+
+        artwork.Dispose();
+        return resized;
     }
 
     public void SetLightTheme(bool isBright)

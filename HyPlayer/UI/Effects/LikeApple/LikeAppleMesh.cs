@@ -22,9 +22,9 @@ namespace HyPlayer.UI.Effects.LikeApple
     internal static class LikeAppleMesh
     {
         private const int PortraitControlPointCount = 6;
-        private const int PortraitSubdivisionLevels = 3;
+        private const int PortraitSubdivisionLevels = 2;
         private const int LandscapeControlPointCount = 9;
-        private const int LandscapeSubdivisionLevels = 3;
+        private const int LandscapeSubdivisionLevels = 2;
 
         // TSLBackdrop/PinchVertexMap contains five selector slots. Slots 2 and 3
         // are byte-for-byte identical, so the four visual meshes are weighted
