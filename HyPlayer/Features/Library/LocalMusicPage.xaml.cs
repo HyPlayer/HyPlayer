@@ -57,6 +57,7 @@ public sealed partial class LocalMusicPage : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        Bindings.StopTracking();
         if (_currentFileScanTask != null && !_currentFileScanTask.IsCompleted)
             try
             {

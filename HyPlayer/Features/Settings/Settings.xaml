@@ -221,14 +221,7 @@
                                             </ComboBox>
                                         </controls3:SettingsCard>
 
-                                        <controls3:SettingsCard Description="重置即为歌词主色调" Header="显示颜色自定义选项">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-
-                                        <controls3:SettingsCard Header="非焦点歌词颜色 (普通歌词)" Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
+                                        <controls3:SettingsCard Header="非焦点歌词颜色 (普通歌词)">
                                             <Grid MinWidth="10" HorizontalAlignment="Right">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
@@ -252,7 +245,7 @@
                                             </Grid>
 
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="焦点歌词颜色 (普通歌词)" Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
+                                        <controls3:SettingsCard Header="焦点歌词颜色 (普通歌词)">
                                             <Grid MinWidth="10" HorizontalAlignment="Right">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
@@ -276,7 +269,7 @@
                                             </Grid>
 
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="焦点歌词颜色 (逐字歌词)" Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
+                                        <controls3:SettingsCard Header="焦点歌词颜色 (逐字歌词)">
                                             <Grid MinWidth="10" HorizontalAlignment="Right">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />

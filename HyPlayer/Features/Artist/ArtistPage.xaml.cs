@@ -41,6 +41,15 @@ public sealed partial class ArtistPage : Page
         ViewModel.InitializeArtistInfo(artistId).SafeFireAndForget();
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        HotSongContainer.ReleaseResources();
+        AllSongContainer.ReleaseResources();
+        AlbumContainer.ReleaseResources();
+        Bindings.StopTracking();
+    }
+
     private void OnArtistHeaderScrollProgressChanged(object? sender, EventArgs e)
     {
         var progress = ArtistPivotView.HeaderScrollProgress;

@@ -83,6 +83,7 @@ public sealed partial class Search : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        Bindings.StopTracking();
         if (_loadResultTask != null && !_loadResultTask.IsCompleted)
             try
             {

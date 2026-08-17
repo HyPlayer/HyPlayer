@@ -109,9 +109,9 @@ public sealed class MappingIncrementalSource<TSource, TTarget>(
 /// Keeps the CommunityToolkit collection instance stable while HyPlayer switches
 /// the application-specific source behind it.
 /// </summary>
-public sealed class SwitchingIncrementalSource<T> : IIncrementalSource<T>, IDisposable
+public sealed partial class SwitchingIncrementalSource<T> : IIncrementalSource<T>, IDisposable
 {
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
     private CancellationTokenSource _sourceCancellation = new();
     private IIncrementalSource<T>? _source;
     private long _generation;

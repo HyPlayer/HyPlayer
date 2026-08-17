@@ -55,9 +55,6 @@ namespace HyPlayer.Features.Settings;
 /// </summary>
 public sealed partial class Settings : Page
 {
-    public static readonly DependencyProperty IsAdvancedLyricColorSettingsShowProperty = DependencyProperty.Register(
-        "IsAdvancedLyricColorSettingsShow", typeof(bool), typeof(Settings), new PropertyMetadata(default(bool)));
-
     private static readonly string[] _localeList = ["zh-cn"];
     private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
@@ -89,12 +86,6 @@ public sealed partial class Settings : Page
     {
         _isUpdatingControls = true;
         InitializeComponent();
-    }
-
-    public bool IsAdvancedLyricColorSettingsShow
-    {
-        get => (bool)GetValue(IsAdvancedLyricColorSettingsShowProperty);
-        set => SetValue(IsAdvancedLyricColorSettingsShowProperty, value);
     }
 
     private void TransitionMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -142,6 +133,17 @@ public sealed partial class Settings : Page
         VersionCode.Text += " Debug";
 #endif
         FontBox.ItemsSource = GetAllFonts();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+
+        // This page binds to singleton settings objects. The generated x:Bind
+        // listeners otherwise stay registered until their weak targets are
+        // observed as dead by a later settings change.
+        Bindings.StopTracking();
+        FontBox.ItemsSource = null;
     }
 
     private static List<FontInfo> GetAllFonts()

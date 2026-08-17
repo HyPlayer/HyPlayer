@@ -105,6 +105,8 @@ public sealed partial class SongListDetail : Page
     {
         base.OnNavigatedFrom(e);
         DetachDataRequested();
+        ContainerSongs.ReleaseResources();
+        Bindings.StopTracking();
     }
 
     private void SongListDetail_Unloaded(object sender, RoutedEventArgs e)

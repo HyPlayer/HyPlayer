@@ -139,6 +139,14 @@ public sealed partial class PivotView : Control
         DetachPivotEvent(Pivot);
         DetachTemplatePartEvents();
         StopHeaderAnimations();
+
+        _headerContainer = null;
+        _pivotContainer = null;
+        _headerView = null;
+        HeaderHeightChanged = null;
+        HeaderScrollProgressChanged = null;
+        ClearValue(HeaderProperty);
+        ClearValue(PivotProperty);
     }
 
     private void AttachPivotEvent(PivotEx? pivot)

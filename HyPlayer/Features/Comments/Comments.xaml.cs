@@ -91,6 +91,7 @@ public sealed partial class Comments : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        Bindings.StopTracking();
         if (_commentLoaderTask != null && !_commentLoaderTask.IsCompleted)
             try
             {

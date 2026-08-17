@@ -70,11 +70,13 @@ public sealed partial class MusicCloudPage : Page
     public bool GreedyLoad => _setting.GreedilyLoadPlayContainerItems;
     public List<ProvidableItemAction> ItemActions { get; }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         _cancellationTokenSource.Cancel();
-        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource.Dispose();
+        SongContainer.ReleaseResources();
+        Bindings.StopTracking();
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)

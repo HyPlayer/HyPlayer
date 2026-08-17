@@ -80,6 +80,7 @@ public sealed partial class HistoryPage : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        Bindings.StopTracking();
         if (_songRankWeekLoaderTask != null && !_songRankWeekLoaderTask.IsCompleted)
         {
             try

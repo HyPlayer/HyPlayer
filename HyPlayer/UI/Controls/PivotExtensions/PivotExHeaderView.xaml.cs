@@ -71,6 +71,10 @@ public sealed partial class PivotExHeaderView : ListView
         DisposeCurrentItemsSource();
         ItemsSource = null;
         ItemTemplateSelector = null;
+        _currentPivot = null;
+        _defaultHeaderTemplate = null;
+        _emptyHeaderTemplate = null;
+        ClearValue(PivotProperty);
     }
 
     private void AttachSelectionChanged()

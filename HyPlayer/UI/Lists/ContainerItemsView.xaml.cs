@@ -133,7 +133,7 @@ public sealed partial class ContainerItemsView : UserControl
 
     public ContainerItemsViewState State { get; }
     public ObservableList<ProvidableItemRowViewModel> Rows => State.Rows;
-    public ObservableList<ProvidableItemRowViewModel> VisibleRows => State.VisibleRows;
+    public IReadOnlyCollection<ProvidableItemRowViewModel> VisibleRows => State.VisibleRows;
     public ObservableList<ProvidableItemRowGroup> GroupedItems => State.GroupedItems;
 
     public ContainerBase? Container
@@ -260,7 +260,8 @@ public sealed partial class ContainerItemsView : UserControl
 
     private static void OnContainerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        ((ContainerItemsView)d).StartLoadForContainer();
+        if(((ContainerItemsView)d).Container != null)
+            ((ContainerItemsView)d).StartLoadForContainer();
     }
 
     private static void OnListHeaderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -314,7 +315,6 @@ public sealed partial class ContainerItemsView : UserControl
                     _displayResolver.CreateRowAsync(item, index, cancellationToken));
         _rowsSource.Reset(mappedSource);
         _rows.Clear();
-        VisibleRows.Clear();
         GroupedItems.Clear();
         State.ActiveItemsSource = State.RowsView;
         QueueScope = BuildQueueScope(Container);
@@ -380,8 +380,7 @@ public sealed partial class ContainerItemsView : UserControl
     private void RefreshVisibleRows()
     {
         var filterText = FilterBox?.Text ?? string.Empty;
-        VisibleRows.Clear();
-        VisibleRows.AddRange(Rows.Where(row => row.MatchesFilter(filterText)));
+        State.ApplyFilter(filterText);
 
         RebuildGroups();
         UpdateCurrentItem(_state.NowPlayingProviderItem);
@@ -793,6 +792,35 @@ public sealed partial class ContainerItemsView : UserControl
 
         _stateChangedListener.Detach();
         _isStateSubscribed = false;
+    }
+
+    /// <summary>
+    /// Releases the XAML and ObservableCollections subscriptions owned by this view.
+    /// Call this when the containing page is permanently navigated away from.
+    /// </summary>
+    public void ReleaseResources()
+    {
+        StopEagerLoading();
+        DetachStateChanged();
+        _rowsSource.Dispose();
+
+        _rows.OnStartLoading = null;
+        _rows.OnEndLoading = null;
+        _rows.OnError = null;
+
+        State.ActiveItemsSource = null;
+        ItemList.ItemsSource = null;
+        HeaderContentControl.Content = null;
+        ListHeader = null;
+        Footer = null;
+        Container = null;
+        ExtraItemActions = null;
+        ExtraSelectionActions = null;
+
+        _rows.Clear();
+        GroupedItems.Clear();
+        State.Dispose();
+        Bindings.StopTracking();
     }
 
     private List<ProvidableItemRowViewModel> GetSelectedRows()

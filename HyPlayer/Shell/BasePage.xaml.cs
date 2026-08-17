@@ -63,6 +63,7 @@ public sealed partial class BasePage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        Bindings.StopTracking();
         _navigator.DetachNavigationView(NavMain);
         Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
