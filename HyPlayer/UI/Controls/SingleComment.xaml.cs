@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Popups;
@@ -43,19 +42,18 @@ public sealed partial class SingleComment : UserControl
 
     private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
 
-    private readonly IncrementalLoadController<CommentBase> _floorCommentController = new();
-    private readonly IncrementalLoadingCollection<CommentBase> _floorComments;
+    private readonly SwitchingIncrementalSource<CommentBase> _floorCommentSource = new();
+    private readonly IncrementalLoadingCollection<SwitchingIncrementalSource<CommentBase>, CommentBase> _floorComments;
     private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _floorCommentsView;
 
     public SingleComment()
     {
-        _floorComments = new IncrementalLoadingCollection<CommentBase>(
-            _floorCommentController,
-            static comment => string.IsNullOrWhiteSpace(comment.ActualId) ? null : comment.ActualId);
+        _floorComments = new IncrementalLoadingCollection<SwitchingIncrementalSource<CommentBase>, CommentBase>(
+            _floorCommentSource,
+            itemsPerPage: 20,
+            onError: FloorComments_LoadFailed);
         _floorCommentsView = _floorComments.ToNotifyCollectionChanged();
         InitializeComponent();
-        _floorCommentController.PropertyChanged += FloorCommentController_PropertyChanged;
-        _floorComments.LoadFailed += FloorComments_LoadFailed;
     }
 
     public SingleCommentState State { get; } = new();
@@ -77,34 +75,28 @@ public sealed partial class SingleComment : UserControl
         }
     }
 
-    private Task ResetAndLoadFloorCommentsAsync()
+    private async Task ResetAndLoadFloorCommentsAsync()
     {
         if (!TryResolveCommentTarget(MainComment, out var itemId, out var typeId))
         {
-            _floorComments.Reset(null);
-            return Task.CompletedTask;
+            _floorCommentSource.Reset(null);
+            _floorComments.Clear();
+            return;
         }
 
-        _floorComments.Reset(new ThreadedCommentPageSource(
+        _floorCommentSource.Reset(new ThreadedCommentPageSource(
             Ioc.Default.GetRequiredService<ICommentProvidable>(),
             MainComment,
             itemId,
             typeId));
-        return LoadFloorCommentsAsync();
+        LoadMore.Visibility = Visibility.Collapsed;
+        _floorComments.Clear();
+        await _floorComments.RefreshAsync();
     }
 
-    private async Task LoadFloorCommentsAsync()
+    private void FloorComments_LoadFailed(Exception exception)
     {
-        await _floorComments.LoadInitialAsync(20);
-    }
-
-    private void FloorCommentController_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        LoadMore.Visibility = _floorCommentController.CanRetry ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void FloorComments_LoadFailed(object? sender, Exception exception)
-    {
+        LoadMore.Visibility = Visibility.Visible;
         Ioc.Default.GetRequiredService<INotificationService>()
             .ShowMessage("加载回复失败", exception.Message);
     }
@@ -175,7 +167,7 @@ public sealed partial class SingleComment : UserControl
 
     private void LoadMore_Click(object sender, RoutedEventArgs e)
     {
-        _ = _floorComments.RetryAsync(20);
+        _ = ResetAndLoadFloorCommentsAsync();
     }
 
 
@@ -202,7 +194,8 @@ public sealed partial class SingleComment : UserControl
     private void FloorCommentsExpander_Collapsed(Expander sender,
         ExpanderCollapsedEventArgs args)
     {
-        _floorComments.Reset(null);
+        _floorCommentSource.Reset(null);
+        _floorComments.Clear();
     }
 
     private static async Task<string?> GetCommentAvatarUrlAsync(CommentBase comment)
@@ -241,17 +234,21 @@ public sealed partial class SingleComment : UserControl
         ICommentProvidable commentProvider,
         CommentBase mainComment,
         string itemId,
-        string typeId) : IIncrementalPageSource<CommentBase>
+        string typeId) : IIncrementalSource<CommentBase>
     {
         private int _offset;
 
-        public bool HasMore { get; private set; } = true;
+        private bool _hasMore = true;
 
-        public async Task<IncrementalPage<CommentBase>> LoadNextAsync(
-            int desiredCount,
-            CancellationToken cancellationToken)
+        public async Task<IEnumerable<CommentBase>> GetPagedItemsAsync(
+            int pageIndex,
+            int pageSize,
+            CancellationToken cancellationToken = default)
         {
-            var count = Math.Clamp(desiredCount, 1, 20);
+            if (!_hasMore)
+                return [];
+
+            var count = Math.Clamp(pageSize, 1, 20);
             var result = await SimpleCacher.GetOrCreateCacheAsync(
                 CacheType.Comments,
                 $"{mainComment.ProvidableItemId}_{mainComment.ActualId}_{_offset}_{count}",
@@ -273,8 +270,8 @@ public sealed partial class SingleComment : UserControl
             }
 
             _offset = result?.NextOffset ?? _offset + items.Count;
-            HasMore = result?.HasMore is true && items.Count > 0;
-            return new IncrementalPage<CommentBase>(items, HasMore);
+            _hasMore = result?.HasMore is true && items.Count > 0;
+            return items;
         }
     }
 }

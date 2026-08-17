@@ -103,7 +103,7 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 | `HyPlayer.UWP.Chopin`、`HyPlayer.LyricEffects` | 本仓库中的播放实现与歌词特效项目 | GPL-3.0（本仓库） |
 | [Kawazu](https://github.com/HyPlayer/Kawazu)（源自 [Cutano/Kawazu](https://github.com/Cutano/Kawazu)） | 日文分词 | MIT |
 | [Impressionist](https://github.com/Storyteller-Studios/Impressionist) | 图像取色与量化 | MIT |
-| [ObservableCollections](https://github.com/Cysharp/ObservableCollections) | 高性能可观察集合；为适配 UWP XAML/CsWinRT，源码被单独提取到 [`ObservableCollections/`](ObservableCollections/) 并进行了 WinRT 互操作修改，**没有直接引用上游 NuGet 包或原程序集**。详见 [兼容性与修改说明](ObservableCollections-CsWinRT-Fix.md) | MIT |
+| [ObservableCollections](https://github.com/Cysharp/ObservableCollections) | 高性能可观察集合；为适配 UWP XAML/CsWinRT，源码被单独提取到 [`ObservableCollections/`](ObservableCollections/)，加入了基于 `ObservableList<T>` 的 CommunityToolkit 增量加载实现，并在 `CoreCompile` 前生成 WinRT 闭合泛型暴露信息，**没有直接引用上游 NuGet 包或原程序集**。详见 [兼容性与修改说明](ObservableCollections-CsWinRT-Fix.md) | MIT |
 | `Microsoft.Gaming.XboxGameBar.Projection` | 本仓库中的 Game Bar SDK CsWinRT 投影项目 | 本仓库代码为 GPL-3.0；SDK 使用 Microsoft Software License Terms |
 
 ### 应用及运行时 NuGet 依赖
@@ -113,7 +113,7 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 | [ALRC](https://github.com/kengwang/ALRC)（`ALRC.Abstraction`、`ALRC.Converters`） | 1.3.0 / 1.3.2 | CC0-1.0 |
 | [AsyncAwaitBestPractices](https://github.com/brminnick/AsyncAwaitBestPractices) | 10.0.0 | MIT |
 | [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | 8.4.2 | MIT |
-| [Windows Community Toolkit](https://github.com/CommunityToolkit/Windows)（Animations、Behaviors、Controls、Converters、Extensions、Helpers、Media） | 8.2.251219 | MIT |
+| [Windows Community Toolkit](https://github.com/CommunityToolkit/Windows)（Animations、Behaviors、Collections 源码适配、Controls、Converters、Extensions、Helpers、Media） | 8.2.251219 / `main` 源码适配 | MIT |
 | [CommunityToolkit Labs UWP TitleBar](https://github.com/CommunityToolkit/Labs-Windows) | 0.1.251217-build.2433 | MIT |
 | [ComputeSharp](https://github.com/Sergio0694/ComputeSharp)（`ComputeSharp.D2D1.Uwp`） | 3.2.0 | MIT |
 | [Depository](https://github.com/kengwang/Depository)（含 Abstraction、DependencyInjection 扩展） | 4.0.1 | MIT |

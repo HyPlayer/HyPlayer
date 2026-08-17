@@ -132,16 +132,25 @@ public sealed partial class NonFilteredSynchronizedViewList<T, TView>
 
 公开该类型不是为了让业务代码直接构造它，而是为了让主应用程序集能够在 CsWinRT 特性中准确引用实际运行时类型。
 
-### 5. 显式注册闭合泛型类型
+### 5. 自动生成闭合泛型类型注册
 
-在主项目中，通过程序集级特性声明会跨越 WinRT/XAML 边界的具体类型，例如：
+`ObservableCollections.SourceGenerator` 会扫描 `ToNotifyCollectionChanged()`、`ToViewList()` 调用，以及实际构造的 `ISupportIncrementalLoading` 类型，并生成程序集级特性，例如：
 
 ```csharp
 [assembly: GeneratedWinRTExposedExternalType(
     typeof(NonFilteredSynchronizedViewList<CommentBase, CommentBase>))]
 ```
 
-项目中所有实际传入 XAML 的元素类型都需要分别注册，因为：
+这里不能使用普通 Roslyn Source Generator 与 CsWinRT 在同一轮生成：同一轮中的生成器看不到其他生成器刚添加的源码。当前项目因此通过 `BeforeTargets="CoreCompile"` 的 MSBuild 步骤预先分析源码，将结果写入：
+
+```text
+$(IntermediateOutputPath)ObservableCollections.SourceGenerator/
+    ObservableCollections.GeneratedWinRTExposedExternalTypes.g.cs
+```
+
+该文件会在 C# 编译器和 CsWinRT Source Generator 启动前加入 `@(Compile)`。预编译工具不存在、扫描失败或文件无法生成时，MSBuild 会直接失败，不会继续产生缺少 WinRT 暴露信息的应用程序集。
+
+项目中所有实际传入 XAML 的元素类型仍会分别注册，因为：
 
 ```csharp
 NonFilteredSynchronizedViewList<CommentBase, CommentBase>
@@ -155,11 +164,11 @@ NonFilteredSynchronizedViewList<DownloadObject, DownloadObject>
 
 在运行时是两个不同的闭合泛型类型，必须具有各自的生成信息。
 
-同理，跨越 WinRT 边界并实现增量加载接口的集合也进行了显式注册，例如：
+同理，跨越 WinRT 边界并实现增量加载接口的集合也会被自动注册，例如：
 
 ```csharp
 [assembly: GeneratedWinRTExposedExternalType(
-    typeof(IncrementalLoadingCollection<CommentBase>))]
+    typeof(IncrementalLoadingCollection<CommentSource, CommentBase>))]
 ```
 
 这些标记使 CsWinRT 在编译期生成对应的 CCW/vtable，并将其加入查找表。XAML 查询集合接口时便不再依赖缺失的运行时动态封送能力。
@@ -229,8 +238,8 @@ commentsList.Comments = _floorCommentsView;
 | 层面 | 原因 | 修复 |
 | --- | --- | --- |
 | 集合实现 | 需要使用 `ObservableCollections` 和批量操作 | 使用 `ObservableList<T>`、`AddRange` 和官方 `ToNotifyCollectionChanged()` |
-| XAML 实例封送 | 第三方闭合泛型视图没有自动进入 CsWinRT vtable 查找表 | 补充 `partial`，公开实际实现，并使用 `GeneratedWinRTExposedExternalType` 显式注册 |
-| 增量加载 | 自定义闭合泛型集合会跨越 WinRT 接口边界 | 同样为实际使用的 `IncrementalLoadingCollection<T>` 实例注册 |
+| XAML 实例封送 | 第三方闭合泛型视图没有自动进入 CsWinRT vtable 查找表 | 补充 `partial`、公开实际实现，并由 SourceGenerator 生成 `GeneratedWinRTExposedExternalType` |
+| 增量加载 | 闭合泛型集合会跨越 WinRT 接口边界 | SourceGenerator 自动注册实际构造的 `IncrementalLoadingCollection<TSource, TItem>` |
 | DependencyProperty | CLR 泛型类型不适合作为 WinRT DP 类型元数据 | 仅使用 `x:Bind` 的属性改为普通强类型 CLR 属性 |
 | UWP 集合通知 | 部分 UWP 控件不接受范围集合变更事件 | 保持视图的非范围通知兼容模式，底层继续使用 `AddRange` |
 
@@ -245,7 +254,7 @@ ObservableList<NewItem> items = new();
 var view = items.ToNotifyCollectionChanged();
 ```
 
-应同步添加：
+`ObservableCollections.SourceGenerator` 会自动生成：
 
 ```csharp
 [assembly: GeneratedWinRTExposedExternalType(
@@ -256,7 +265,15 @@ var view = items.ToNotifyCollectionChanged();
 
 ### 新增增量加载集合时
 
-如果新的闭合 `IncrementalLoadingCollection<T>` 会作为 `ISupportIncrementalLoading`、`ItemsSource` 或其他 WinRT 接口进入 XAML，也应显式注册对应类型。
+如果新的闭合 `IncrementalLoadingCollection<TSource, TItem>` 会作为 `ISupportIncrementalLoading`、`ItemsSource` 或其他 WinRT 接口进入 XAML，生成器会从对象构造表达式中发现并注册对应类型。
+
+当前增量加载实现位于 `ObservableCollections/`，以 Windows Community Toolkit 的 `IncrementalLoadingCollection` 为基础，并针对本项目做了以下适配：
+
+- 集合基类改为 `ObservableList<T>`；
+- 保留 `GetPagedItemsAsync(pageIndex, pageSize)`、空页结束、加载回调与 `RefreshAsync()` 行为；
+- 只提供传入数据源实例的 AOT 安全构造路径，不使用反射创建数据源。
+
+HyPlayer 层只保留面向播放列表容器和评论接口的 `IIncrementalSource<T>` 适配器，以及换源时所需的应用级取消逻辑；集合和加载行为统一使用 `ObservableCollections.IncrementalLoadingCollection<TSource, TItem>`。
 
 ### 调整视图创建参数时
 
@@ -284,5 +301,4 @@ System.ArgumentException: 参数错误。 (0x80070057)
 
 本次问题可以概括为：
 
-> 原生 `ObservableCollection<T>` 具有 CsWinRT 内建的映射和封送支持；迁移到 `ObservableCollections` 后，实际进入 XAML 的第三方泛型集合视图没有被源生成器自动识别。在 AOT/禁用运行时封送的环境中，这导致 XAML 无法取得所需集合接口，并以 `E_INVALIDARG` 的形式失败。通过公开并显式标记实际使用的闭合泛型类型，补齐 CsWinRT 的 CCW/vtable 生成，同时避免将第三方 CLR 泛型类型直接注册为 DependencyProperty 元数据，问题得以解决。
-
+> 原生 `ObservableCollection<T>` 具有 CsWinRT 内建的映射和封送支持；迁移到 `ObservableCollections` 后，实际进入 XAML 的第三方泛型集合视图没有被 CsWinRT 自动识别。在 AOT/禁用运行时封送的环境中，这导致 XAML 无法取得所需集合接口，并以 `E_INVALIDARG` 的形式失败。通过公开实际实现并由 `ObservableCollections.SourceGenerator` 标记使用到的闭合泛型类型，补齐 CsWinRT 的 CCW/vtable 生成，同时避免将第三方 CLR 泛型类型直接注册为 DependencyProperty 元数据，问题得以解决。

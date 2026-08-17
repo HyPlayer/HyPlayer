@@ -88,8 +88,8 @@ public sealed partial class ContainerItemsView : UserControl
 
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly ProvidableItemDisplayResolver _displayResolver = ProvidableItemDisplayResolver.CreateDefault();
-    private readonly IncrementalLoadController<ProvidableItemRowViewModel> _loadController = new();
-    private readonly IncrementalLoadingCollection<ProvidableItemRowViewModel> _rows;
+    private readonly SwitchingIncrementalSource<ProvidableItemRowViewModel> _rowsSource = new();
+    private readonly IncrementalLoadingCollection<SwitchingIncrementalSource<ProvidableItemRowViewModel>, ProvidableItemRowViewModel> _rows;
     private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
@@ -105,11 +105,12 @@ public sealed partial class ContainerItemsView : UserControl
 
     public ContainerItemsView()
     {
-        _rows = new IncrementalLoadingCollection<ProvidableItemRowViewModel>(
-            _loadController,
-            static row => string.IsNullOrWhiteSpace(row.ActualId)
-                ? null
-                : $"{row.Item.ProviderId}\u001f{row.TypeId}\u001f{row.ActualId}");
+        _rows = new IncrementalLoadingCollection<SwitchingIncrementalSource<ProvidableItemRowViewModel>, ProvidableItemRowViewModel>(
+            _rowsSource,
+            DefaultPageSize,
+            RowsLoadingStarted,
+            RowsLoadCompleted,
+            RowsLoadFailed);
         State = new ContainerItemsViewState(_rows);
         InitializeComponent();
         _stateChangedListener = new WeakEventListener<ContainerItemsView, object?, PropertyChangedEventArgs>(this)
@@ -124,9 +125,6 @@ public sealed partial class ContainerItemsView : UserControl
             },
             OnDetachAction = weakEventListener => { _state.PropertyChanged -= weakEventListener.OnEvent; }
         };
-        _loadController.PropertyChanged += LoadController_PropertyChanged;
-        _rows.LoadCompleted += Rows_LoadCompleted;
-        _rows.LoadFailed += Rows_LoadFailed;
         AttachStateChanged();
         UpdateListHeader(ListHeader);
         State.ActiveItemsSource = State.RowsView;
@@ -280,7 +278,7 @@ public sealed partial class ContainerItemsView : UserControl
     {
         AttachStateChanged();
         State.MultiSelect = false;
-        if (Rows.Count == 0 && _loadController.HasMore && !_loadController.IsLoading)
+        if (Rows.Count == 0 && _rows.HasMoreItems && !_rows.IsLoading)
             LoadFirstPageAsync().SafeFireAndForget();
         RestartEagerLoading();
     }
@@ -289,7 +287,6 @@ public sealed partial class ContainerItemsView : UserControl
     {
         StopEagerLoading();
         DetachStateChanged();
-        _loadController.CancelPending();
     }
 
     private void UpdateListHeader(UIElement? header)
@@ -311,63 +308,73 @@ public sealed partial class ContainerItemsView : UserControl
         var source = ContainerIncrementalPageSource.Create(Container, DefaultPageSize);
         var mappedSource = source is null
             ? null
-            : new MappingIncrementalPageSource<ProvidableItemBase, ProvidableItemRowViewModel>(
+            : new MappingIncrementalSource<ProvidableItemBase, ProvidableItemRowViewModel>(
                 source,
                 (item, index, cancellationToken) =>
                     _displayResolver.CreateRowAsync(item, index, cancellationToken));
-        _rows.Reset(mappedSource);
+        _rowsSource.Reset(mappedSource);
+        _rows.Clear();
         VisibleRows.Clear();
         GroupedItems.Clear();
         State.ActiveItemsSource = State.RowsView;
         QueueScope = BuildQueueScope(Container);
-        SyncLoadState();
         LoadFirstPageAsync().SafeFireAndForget();
     }
 
     private async Task LoadFirstPageAsync()
     {
-        if (Container is null || !_loadController.HasMore)
+        if (Container is null)
             return;
 
-        await _rows.LoadInitialAsync(DefaultPageSize);
+        await _rows.RefreshAsync();
         RestartEagerLoading();
     }
 
     private async Task LoadNextPageAsync()
     {
-        if (_loadController.IsLoading || !_loadController.CanAutoLoad)
+        if (_rows.IsLoading || !_rows.HasMoreItems)
             return;
 
-        await _rows.LoadInitialAsync(DefaultPageSize);
+        await _rows.LoadMoreItemsAsync(DefaultPageSize);
     }
 
     private async Task RetryLoadAsync()
     {
-        await _rows.RetryAsync(DefaultPageSize);
+        var source = ContainerIncrementalPageSource.Create(Container, DefaultPageSize);
+        var mappedSource = source is null
+            ? null
+            : new MappingIncrementalSource<ProvidableItemBase, ProvidableItemRowViewModel>(
+                source,
+                (item, index, cancellationToken) =>
+                    _displayResolver.CreateRowAsync(item, index, cancellationToken));
+        _rowsSource.Reset(mappedSource);
+        _rows.Clear();
+        await _rows.RefreshAsync();
     }
 
-    private void LoadController_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void RowsLoadingStarted()
     {
+        State.CanRetry = false;
         SyncLoadState();
     }
 
-    private void Rows_LoadCompleted(object? sender, EventArgs e)
+    private void RowsLoadCompleted()
     {
         RefreshVisibleRows();
         QueueScope = BuildQueueScope(Container);
         SyncLoadState();
     }
 
-    private void Rows_LoadFailed(object? sender, Exception exception)
+    private void RowsLoadFailed(Exception exception)
     {
+        State.CanRetry = true;
         _notification.ShowMessage(Rows.Count == 0 ? "加载列表失败" : "加载更多失败", exception.Message);
     }
 
     private void SyncLoadState()
     {
-        IsLoading = _loadController.IsLoading;
-        HasMore = _loadController.HasMore;
-        State.CanRetry = _loadController.CanRetry;
+        IsLoading = _rows.IsLoading;
+        HasMore = _rows.HasMoreItems;
     }
 
     private void RefreshVisibleRows()
@@ -434,8 +441,8 @@ public sealed partial class ContainerItemsView : UserControl
         if (ReferenceEquals(State.ActiveItemsSource, Rows)
             || !string.IsNullOrWhiteSpace(FilterBox?.Text)
             || args.BringIntoViewDistanceY > sender.ActualHeight
-            || !_loadController.CanAutoLoad
-            || _loadController.IsLoading)
+            || !_rows.HasMoreItems
+            || _rows.IsLoading)
             return;
 
         LoadNextPageAsync().SafeFireAndForget();
@@ -739,7 +746,7 @@ public sealed partial class ContainerItemsView : UserControl
     private void RestartEagerLoading()
     {
         StopEagerLoading();
-        if (!GreedyLoad || !_loadController.HasMore || _loadController.CanRetry)
+        if (!GreedyLoad || !_rows.HasMoreItems || State.CanRetry)
             return;
 
         _eagerLoadCts = new CancellationTokenSource();
@@ -750,11 +757,11 @@ public sealed partial class ContainerItemsView : UserControl
     {
         try
         {
-            while (GreedyLoad && _loadController.CanAutoLoad)
+            while (GreedyLoad && _rows.HasMoreItems && !State.CanRetry)
             {
                 await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
-                await _rows.LoadInitialAsync(DefaultPageSize, cancellationToken);
-                if (_loadController.CanRetry)
+                await _rows.LoadMoreItemsAsync(DefaultPageSize);
+                if (State.CanRetry)
                     return;
             }
         }
