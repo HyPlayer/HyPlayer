@@ -8,7 +8,7 @@ using Windows.Foundation;
 
 namespace HyPlayer.LyricRenderer.Text;
 
-public sealed class LyricTextLayoutSnapshot : IDisposable
+public sealed partial class LyricTextLayoutSnapshot : IDisposable
 {
     public required string Text { get; init; }
     public required IReadOnlyList<LyricTextToken> Tokens { get; init; }

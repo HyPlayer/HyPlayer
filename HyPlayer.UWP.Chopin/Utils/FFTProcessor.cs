@@ -12,22 +12,28 @@ namespace HyPlayer.UWP.Chopin.Utils
         public const int FftSize = 1024;           // FFT 窗口大小，必须是2的幂
         public int CurrentFftSize = 0;
         public const int DisplayBandCount = 80;    // 最终显示的柱子数量
+        public const int SpectrumBinCount = FftSize / 2;
         public const float SmoothingFactor = 0.85f; // 平滑系数 (0-1)，越高越平滑
 
 
         // --- 数据缓冲区 (全部预分配，避免GC) ---
         // 1. 用于 FFT 计算的复数缓冲区
         private Complex[] _fftBuffer = new Complex[FftSize];
+        private readonly float[] _sampleBuffer = new float[FftSize];
         // 2. 存储计算完成后的线性频率数据 (FftSize / 2)
         private float[] _linearMagnitudes = new float[FftSize / 2];
+        // 归一化的线性 FFT 幅值。供可视化、着色器和其他音频信息消费者共享。
+        private readonly float[] _fftMagnitudes = new float[SpectrumBinCount];
         // 3. 存储经过对数合并和平滑处理后，供 UI 显示的数据
         public float[] DisplayData = new float[DisplayBandCount];
         // 4. 上一帧的显示数据，用于平滑计算
         private float[] _previousDisplayData = new float[DisplayBandCount];
 
         private readonly Lock _bufferLock = new Lock();
+        private int _sampleRate = 48000;
+        private long _version;
 
-        public unsafe void ProcessFFT(AudioFrame frame)
+        public unsafe void ProcessFFT(AudioFrame frame, int sampleRate = 48000)
         {
             using (var buffer = frame.LockBuffer(AudioBufferAccessMode.Read))
             using (var reference = buffer.CreateReference())
@@ -35,68 +41,85 @@ namespace HyPlayer.UWP.Chopin.Utils
                 // ReSharper disable once SuspiciousTypeConversion.Global
                 reference.GetBuffer(out var dataInBytes, out var capacity);
                 int totalSamples = (int)(capacity / sizeof(float));
-                var dataInFloat = new float[totalSamples];
-                Marshal.Copy((IntPtr)dataInBytes, dataInFloat, 0, totalSamples);
 
-                // 核心修正：根据实际拿到的内存大小决定处理多少数据
-
-                // 取 FftSize 和 实际可用数据量 的最小值，防止越界
                 int safeProcessingLimit = Math.Min(FftSize, totalSamples);
                 CurrentFftSize = safeProcessingLimit;
-
-                // 如果连 128 个点都凑不够，这一帧就跳过
                 if (CurrentFftSize < 128) return;
+
+                Marshal.Copy((IntPtr)dataInBytes, _sampleBuffer, 0, safeProcessingLimit);
 
                 for (int i = 0; i < CurrentFftSize; i++)
                 {
-                    float sample = dataInFloat[i];
+                    float sample = _sampleBuffer[i];
+                    if (!float.IsFinite(sample)) sample = 0f;
 
-                    // 鲁棒性检查：防止音频流输入 NaN 或 Inf
-                    if (float.IsInfinity(sample)) sample = 0;
-
-                    float window = 0.5f * (1.0f - MathF.Cos(2.0f * MathF.PI * i / (CurrentFftSize - 1)));
-                    _fftBuffer[i] = new Complex(sample * window, 0);
+                    float window = 0.5f * (1f - MathF.Cos(2f * MathF.PI * i / (CurrentFftSize - 1)));
+                    _fftBuffer[i] = new Complex(sample * window, 0d);
                 }
 
-                // 清空缓冲区剩余部分（Zero Padding），防止旧数据干扰
                 for (int i = CurrentFftSize; i < FftSize; i++)
                 {
                     _fftBuffer[i] = Complex.Zero;
                 }
 
-                // 2. 执行高性能原地 FFT
                 InPlaceFFT.Transform(_fftBuffer);
 
-                // 3. 计算幅值并转换为分贝 (仅取前半部分有效数据)
-                for (var i = 0; i < CurrentFftSize / 2; i++)
-                {
-                    var magnitude = (float)_fftBuffer[i].Magnitude;
-
-                    // 核心防护：
-                    // 使用 1e-9 避免负无穷
-                    // 使用 Math.Clamp 限制视觉表现范围
-                    float db = 20 * MathF.Log10(magnitude + 1e-9f) + 20;
-
-                    if (float.IsNaN(db) || float.IsNegativeInfinity(db))
-                        _linearMagnitudes[i] = 0;
-                    else if (float.IsPositiveInfinity(db))
-                        _linearMagnitudes[i] = 100; // 给一个视觉上限
-                    else
-                        _linearMagnitudes[i] = MathF.Max(0, db);
-                }
-
-                // 4. 将线性频率数据合并为较少的显示频段 (对数映射)
-                // 并应用时间平滑。
                 lock (_bufferLock)
                 {
+                    _sampleRate = Math.Max(1, sampleRate);
+                    for (var i = 0; i < SpectrumBinCount; i++)
+                    {
+                        var magnitude = (float)_fftBuffer[i].Magnitude;
+                        _fftMagnitudes[i] = magnitude / CurrentFftSize;
+
+                        float db = 20 * MathF.Log10(magnitude + 1e-9f) + 20;
+                        _linearMagnitudes[i] = float.IsFinite(db) ? MathF.Max(0, db) : 0f;
+                    }
+
                     ProcessBandsLogarithmically();
+                    _version++;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 将最新的归一化线性 FFT 幅值复制给调用方。第 i 个频点对应
+        /// i * sampleRate / FftSize Hz；返回 false 表示尚未产生有效频域数据。
+        /// version 仅在产生新频域帧时递增，消费者可据此跳过重复数据。
+        /// </summary>
+        public bool TryCopyFftMagnitudes(float[] destination, out int sampleRate, out long version)
+        {
+            ArgumentNullException.ThrowIfNull(destination);
+            if (destination.Length < SpectrumBinCount)
+                throw new ArgumentException($"FFT output needs at least {SpectrumBinCount} elements.", nameof(destination));
+
+            lock (_bufferLock)
+            {
+                sampleRate = _sampleRate;
+                version = _version;
+                if (_version == 0) return false;
+                Array.Copy(_fftMagnitudes, destination, SpectrumBinCount);
+                return true;
+            }
+        }
+
+        public bool TryCopyDisplayData(float[] destination)
+        {
+            ArgumentNullException.ThrowIfNull(destination);
+            if (destination.Length < DisplayBandCount)
+                throw new ArgumentException($"Spectrum output needs at least {DisplayBandCount} elements.", nameof(destination));
+
+            lock (_bufferLock)
+            {
+                if (_version == 0) return false;
+                Array.Copy(DisplayData, destination, DisplayBandCount);
+                return true;
             }
         }
 
         private void ProcessBandsLogarithmically()
         {
-            double logBase = Math.Pow(CurrentFftSize / 2.0, 1.0 / DisplayBandCount);
+            double logBase = Math.Pow(SpectrumBinCount, 1.0 / DisplayBandCount);
             int fftIndex = 1;
 
             for (int i = 0; i < DisplayBandCount; i++)

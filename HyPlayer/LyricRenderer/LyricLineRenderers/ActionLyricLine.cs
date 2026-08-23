@@ -9,7 +9,7 @@ using Microsoft.Graphics.Canvas.Text;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
-public class ActionLyricLine : RenderingLyricLine
+public partial class ActionLyricLine : RenderingLyricLine
 {
     private float _canvasHeight;
     private float _canvasWidth;

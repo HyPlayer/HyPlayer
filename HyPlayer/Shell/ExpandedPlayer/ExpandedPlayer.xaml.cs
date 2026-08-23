@@ -80,7 +80,9 @@ public sealed partial class ExpandedPlayer : Page
         "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
         new PropertyMetadata("x1"));
 
-    private readonly BackgroundShaderLayer _backgroundShaderLayer;
+    private readonly DebugOverlayLayer _debugOverlayLayer;
+    private readonly IsolationBackgroundLayer _isolationBackgroundLayer;
+    private readonly LikeAppleBackgroundLayer _likeAppleBackgroundLayer;
     private readonly ExpandedCanvasState _canvasState = new();
     private readonly WeakEventListener<ExpandedPlayer, object?, EventArgs> _enteredForegroundListener;
     private readonly ExpandedCanvasHost _expandedCanvasHost = new();
@@ -150,9 +152,11 @@ public sealed partial class ExpandedPlayer : Page
         _lyricEffectProfiles.ProfileChanged += OnLyricEffectProfileChanged;
         _canvasState.LyricBox = _lyricBox;
         SyncCanvasState();
-        _backgroundShaderLayer = new BackgroundShaderLayer(_canvasState, _lyricSettings);
+        _isolationBackgroundLayer = new IsolationBackgroundLayer(_canvasState, _lyricSettings);
+        _likeAppleBackgroundLayer = new LikeAppleBackgroundLayer(_canvasState, _player);
         _spectrumLayer = new SpectrumLayer(_canvasState, _player);
         _lyricsLayer = new LyricsLayer(_canvasState);
+        _debugOverlayLayer = new DebugOverlayLayer(_canvasState);
         DataContext = ViewModel;
         _secondTickListener = new WeakEventListener<ExpandedPlayer, object?, EventArgs>(this)
         {
@@ -217,9 +221,11 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.Context.PreferTypography.Font = _lyricSettings.LyricFontFamily;
         _lyricBox.Context.LineSpacing = _lyricSettings.LyricLineSpacing;
 
-        _expandedCanvasHost.AddLayer(_backgroundShaderLayer);
+        _expandedCanvasHost.AddLayer(_isolationBackgroundLayer);
+        _expandedCanvasHost.AddLayer(_likeAppleBackgroundLayer);
         _expandedCanvasHost.AddLayer(_spectrumLayer);
         _expandedCanvasHost.AddLayer(_lyricsLayer);
+        _expandedCanvasHost.AddLayer(_debugOverlayLayer);
 
         // ── Stage 8: Share/save controller ────────────────────────────
         _shareSave = new ExpandedPlayerShareSaveController(
@@ -251,7 +257,11 @@ public sealed partial class ExpandedPlayer : Page
     {
         _canvasState.BackgroundType = _uiSettings.ExpandedPlayerBackgroundType;
         _canvasState.IsPlaying = _state.IsPlaying;
-        _canvasState.EnableFft = _playbackSettings.EnableFFT;
+        _canvasState.ShowSpectrum = _playbackSettings.ShowSpectrum;
+        _canvasState.ShowDebugOverlay = _uiSettings.ExpandedPlayerDebugMode;
+        _player.EnableFFTProcessing = _playbackSettings.EnableFFT ||
+            _playbackSettings.ShowSpectrum ||
+            _canvasState.BackgroundType == BackgroundType.LikeApple;
         _canvasState.WindowMode = _windowMode;
         _canvasState.AlbumColorVectors = _albumColorVectors;
     }
@@ -776,8 +786,10 @@ public sealed partial class ExpandedPlayer : Page
         {
             var theme = await ColorHelper.ExtractThemeColorFromStream(stream);
             _albumMainColor = theme;
+            stream.Seek(0);
             if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated ||
-                _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation)
+                _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation ||
+                _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
             {
                 var palette = await ColorHelper.ExtractPaletteFromStream(stream);
                 if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated)
@@ -788,12 +800,11 @@ public sealed partial class ExpandedPlayer : Page
                             (byte)quantizedColor.Y, (byte)quantizedColor.Z))
                     ];
                 }
-                else
+                else if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation)
                 {
                     _albumColorVectors = [.. palette.Select(t => t / 255)];
                     _canvasState.AlbumColorVectors = _albumColorVectors;
                 }
-
                 var themeVector = Vector3.Zero;
                 foreach (var item in palette) themeVector += item;
                 themeVector /= palette.Count;
@@ -938,6 +949,7 @@ public sealed partial class ExpandedPlayer : Page
                 BlackCover.Opacity = 1;
                 break;
             case BackgroundType.Isolation:
+            case BackgroundType.LikeApple:
                 BlackCover.Visibility = Visibility.Collapsed;
                 AcrylicCover.Visibility = Visibility.Collapsed;
                 break;
@@ -1083,6 +1095,8 @@ public sealed partial class ExpandedPlayer : Page
                     else if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated && !isBright)
                         BlackCover.Fill = new SolidColorBrush(Color.FromArgb(80, 0, 0, 0));
                     ApplyPlaybackTheme(ExpandedPlayerThemeFactory.Create(_uiSettings, _lyricSettings, _albumMainColor, isBright));
+                    if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
+                        _likeAppleBackgroundLayer.SetLightTheme(isBright);
 
                     //LoadLyricsBox();
                     RefreshUIColor();
@@ -1102,7 +1116,13 @@ public sealed partial class ExpandedPlayer : Page
                     if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation)
                     {
                         _canvasState.AlbumColorVectors = _albumColorVectors;
-                        _backgroundShaderLayer.ApplyShaderProperties();
+                        _isolationBackgroundLayer.ApplyShaderProperties();
+                    }
+
+                    if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
+                    {
+                        using var likeAppleCover = _state.CoverStream.CloneStream();
+                        await _likeAppleBackgroundLayer.SetArtworkAsync(likeAppleCover);
                     }
                 }
                 catch
@@ -1116,7 +1136,8 @@ public sealed partial class ExpandedPlayer : Page
     {
         LuminousBackground.RemoveFromVisualTree();
         LuminousBackground = null;
-        _backgroundShaderLayer.DisposeShader();
+        _isolationBackgroundLayer.DisposeShader();
+        _likeAppleBackgroundLayer.Dispose();
     }
 
     public Task Show()
@@ -1178,7 +1199,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void UpdateShaderResolution()
     {
-        _backgroundShaderLayer.UpdateResolution(
+        _isolationBackgroundLayer.UpdateResolution(
             LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, CanvasDpiRounding.Round),
             LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, CanvasDpiRounding.Round));
     }
@@ -1208,7 +1229,16 @@ public sealed partial class ExpandedPlayer : Page
     private void LuminousBackground_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
     {
         SyncCanvasState();
+        if (!_canvasState.ShowDebugOverlay)
+        {
+            _canvasState.LastFrameDrawMilliseconds = 0;
+            _expandedCanvasHost.Draw(sender, args);
+            return;
+        }
+
+        var drawStartedAt = Stopwatch.GetTimestamp();
         _expandedCanvasHost.Draw(sender, args);
+        _canvasState.LastFrameDrawMilliseconds = Stopwatch.GetElapsedTime(drawStartedAt).TotalMilliseconds;
     }
 
 
@@ -1277,10 +1307,12 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.OnBeforeRender -= LyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked -= LyricBoxOnOnRequestSeek;
         _lyricBox.Clear();
+        _debugOverlayLayer.Dispose();
         if (_uiSettings.AlbumRotate)
             RotateAnimationSet.Stop();
         if (_uiSettings.ExpandAlbumBreath) ImageAlbumAni?.Stop();
         _expandedPlayerWindow?.Closed -= ExpandedPlayerClosed;
         _expandedPlayerWindow = null;
+        _player.EnableFFTProcessing = _playbackSettings.EnableFFT || _playbackSettings.ShowSpectrum;
     }
 }

@@ -13,3 +13,6 @@
 [submodule "HyPlayer.PlayCore"]
 	path = HyPlayer.PlayCore
 	url = https://github.com/HyPlayer/HyPlayer.PlayCore.git
+[submodule "ObservableCollections"]
+	path = ObservableCollections
+	url = https://github.com/HyPlayer/ObservableCollections

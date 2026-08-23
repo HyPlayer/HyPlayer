@@ -83,12 +83,9 @@ public partial class UISettings : SettingsBase
         get
         {
             var value = GetSettings(nameof(ExpandedPlayerBackgroundType), (int)BackgroundType.Isolation);
-            var backgroundType = value switch
-            {
-                4 => BackgroundType.Isolation,
-                _ when Enum.IsDefined(typeof(BackgroundType), value) => (BackgroundType)value,
-                _ => BackgroundType.Isolation
-            };
+            var backgroundType = Enum.IsDefined(typeof(BackgroundType), value)
+                ? (BackgroundType)value
+                : BackgroundType.Isolation;
 
             return backgroundType;
         }
@@ -155,6 +152,15 @@ public partial class UISettings : SettingsBase
     {
         get => GetSettings(nameof(ExpandedPlayerFullCover), false);
         set => SetSettings(nameof(ExpandedPlayerFullCover), value);
+    }
+
+    /// <summary>
+    ///     Whether the expanded player displays Win2D rendering diagnostics.
+    /// </summary>
+    public bool ExpandedPlayerDebugMode
+    {
+        get => GetSettings(nameof(ExpandedPlayerDebugMode), false);
+        set => SetSettings(nameof(ExpandedPlayerDebugMode), value);
     }
 
     /// <summary>

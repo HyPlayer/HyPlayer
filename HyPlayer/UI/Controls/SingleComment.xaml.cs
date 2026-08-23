@@ -1,7 +1,8 @@
 #region
 
 using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
@@ -19,6 +20,8 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.UI.Lists.IncrementalLoading;
+using ObservableCollections;
 using Microsoft.UI.Xaml.Controls;
 
 #endregion
@@ -39,11 +42,17 @@ public sealed partial class SingleComment : UserControl
 
     private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
 
-    private readonly ObservableCollection<CommentBase> _floorComments = new();
-    private string _time = "0";
+    private readonly SwitchingIncrementalSource<CommentBase> _floorCommentSource = new();
+    private readonly IncrementalLoadingCollection<SwitchingIncrementalSource<CommentBase>, CommentBase> _floorComments;
+    private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _floorCommentsView;
 
     public SingleComment()
     {
+        _floorComments = new IncrementalLoadingCollection<SwitchingIncrementalSource<CommentBase>, CommentBase>(
+            _floorCommentSource,
+            itemsPerPage: 20,
+            onError: FloorComments_LoadFailed);
+        _floorCommentsView = _floorComments.ToNotifyCollectionChanged();
         InitializeComponent();
     }
 
@@ -66,36 +75,30 @@ public sealed partial class SingleComment : UserControl
         }
     }
 
-    private async Task LoadFloorComments(bool isLoadMoreComments)
+    private async Task ResetAndLoadFloorCommentsAsync()
     {
-        if (!isLoadMoreComments) _floorComments.Clear();
-        var offset = !isLoadMoreComments ? 0 : int.Parse(_time ?? "0");
-        const int count = 20;
         if (!TryResolveCommentTarget(MainComment, out var itemId, out var typeId))
-            return;
-
-        var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments,
-            $"{MainComment.ProvidableItemId}_{MainComment.ActualId}_{offset}_{count}", async () =>
-            {
-                return await Ioc.Default.GetRequiredService<ICommentProvidable>()
-                    .GetThreadedCommentsAsync(
-                        itemId,
-                        typeId,
-                        MainComment.ActualId,
-                        offset,
-                        count);
-            }, TimeSpan.FromMinutes(5));
-        if (result == null) return;
-        foreach (var floorcomment in result.Items)
         {
-            var floorComment = floorcomment;
-            floorComment.ProvidableItemId = MainComment.ProvidableItemId;
-            floorComment.IsMainComment = false;
-            _floorComments.Add(floorComment);
+            _floorCommentSource.Reset(null);
+            _floorComments.Clear();
+            return;
         }
 
-        _time = (result?.NextOffset ?? 0).ToString();
-        LoadMore.Visibility = result?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
+        _floorCommentSource.Reset(new ThreadedCommentPageSource(
+            Ioc.Default.GetRequiredService<ICommentProvidable>(),
+            MainComment,
+            itemId,
+            typeId));
+        LoadMore.Visibility = Visibility.Collapsed;
+        _floorComments.Clear();
+        await _floorComments.RefreshAsync();
+    }
+
+    private void FloorComments_LoadFailed(Exception exception)
+    {
+        LoadMore.Visibility = Visibility.Visible;
+        Ioc.Default.GetRequiredService<INotificationService>()
+            .ShowMessage("加载回复失败", exception.Message);
     }
 
     private async void Like_Click(object sender, RoutedEventArgs e)
@@ -142,7 +145,7 @@ public sealed partial class SingleComment : UserControl
                 // NOTE: Comment send functionality not yet implemented
                 ReplyText.Text = string.Empty;
                 await Task.Delay(1000);
-                _ = LoadFloorComments(false);
+                _ = ResetAndLoadFloorCommentsAsync();
             }
             catch (Exception ex)
             {
@@ -164,7 +167,7 @@ public sealed partial class SingleComment : UserControl
 
     private void LoadMore_Click(object sender, RoutedEventArgs e)
     {
-        _ = LoadFloorComments(true);
+        _ = ResetAndLoadFloorCommentsAsync();
     }
 
 
@@ -185,12 +188,13 @@ public sealed partial class SingleComment : UserControl
     private void FloorCommentsExpander_Expanding(Expander sender,
         ExpanderExpandingEventArgs args)
     {
-        _ = LoadFloorComments(false);
+        _ = ResetAndLoadFloorCommentsAsync();
     }
 
     private void FloorCommentsExpander_Collapsed(Expander sender,
         ExpanderCollapsedEventArgs args)
     {
+        _floorCommentSource.Reset(null);
         _floorComments.Clear();
     }
 
@@ -224,5 +228,50 @@ public sealed partial class SingleComment : UserControl
         typeId = providerScopedId[..2];
         itemId = providerScopedId[2..];
         return !string.IsNullOrWhiteSpace(itemId);
+    }
+
+    private sealed class ThreadedCommentPageSource(
+        ICommentProvidable commentProvider,
+        CommentBase mainComment,
+        string itemId,
+        string typeId) : IIncrementalSource<CommentBase>
+    {
+        private int _offset;
+
+        private bool _hasMore = true;
+
+        public async Task<IEnumerable<CommentBase>> GetPagedItemsAsync(
+            int pageIndex,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            if (!_hasMore)
+                return [];
+
+            var count = Math.Clamp(pageSize, 1, 20);
+            var result = await SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.Comments,
+                $"{mainComment.ProvidableItemId}_{mainComment.ActualId}_{_offset}_{count}",
+                () => commentProvider.GetThreadedCommentsAsync(
+                    itemId,
+                    typeId,
+                    mainComment.ActualId,
+                    _offset,
+                    count,
+                    cancellationToken),
+                TimeSpan.FromMinutes(5));
+
+            cancellationToken.ThrowIfCancellationRequested();
+            var items = result?.Items ?? [];
+            foreach (var comment in items)
+            {
+                comment.ProvidableItemId = mainComment.ProvidableItemId;
+                comment.IsMainComment = false;
+            }
+
+            _offset = result?.NextOffset ?? _offset + items.Count;
+            _hasMore = result?.HasMore is true && items.Count > 0;
+            return items;
+        }
     }
 }

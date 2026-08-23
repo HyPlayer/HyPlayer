@@ -15,7 +15,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 /// <summary>
 ///     进度条样式的BreathPoint
 /// </summary>
-public class ProgressBarRenderingLyricLine : RenderingLyricLine
+public partial class ProgressBarRenderingLyricLine : RenderingLyricLine
 {
     private const int VerticalPadding = 4;
 

@@ -16,8 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AwesomeAssertions" Version="9.3.0" />
-    <PackageReference Include="TUnit" Version="1.9.55" />
+    <PackageReference Include="AwesomeAssertions" Version="9.5.0" />
+    <PackageReference Include="TUnit" Version="1.65.0" />
   </ItemGroup>
 
   <ItemGroup>

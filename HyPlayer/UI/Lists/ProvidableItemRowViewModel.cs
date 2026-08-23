@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Domain;
+using ObservableCollections;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -79,7 +79,7 @@ public sealed partial class ProvidableItemRowViewModel : ObservableObject
 }
 
 public sealed partial class ProvidableItemRowGroup(IEnumerable<ProvidableItemRowViewModel> items)
-    : ObservableCollection<ProvidableItemRowViewModel>(items)
+    : ObservableList<ProvidableItemRowViewModel>(items)
 {
     public string Key { get; set; } = string.Empty;
 }

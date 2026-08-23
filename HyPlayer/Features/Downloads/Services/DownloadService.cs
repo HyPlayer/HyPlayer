@@ -1,14 +1,14 @@
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using ObservableCollections;
 
 namespace HyPlayer.Features.Downloads.Services;
 
 public sealed class DownloadService : IDownloadService
 {
-    public ObservableCollection<DownloadObject> Downloads => DownloadManager.DownloadLists;
+    public ObservableList<DownloadObject> Downloads => DownloadManager.DownloadLists;
 
     public Task AddAsync(SingleSongBase song)
     {

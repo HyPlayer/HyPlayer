@@ -91,24 +91,56 @@ HyPlayer 不内置解灰以及 VIP 歌曲解锁, 且不会在之后的版本中�
 CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 ```
 
-## 使用
+## 依赖
 
-* NeteaseCloudMusicApi
-  [wwh1004/NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) => [HyPlayer/NeteaseCloudMusicApi](https://github.com/HyPlayer/NeteaseCloudMusicApi) (MIT Licence)
-* Kawazu [Cutano/Kawazu](https://github.com/Cutano/Kawazu) => [HyPlayer / Kawazu](https://github.com/HyPlayer/Kawazu) (MIT Licence)
-* Windows UI Library [microsoft/microsoft-ui-xaml](https://github.com/microsoft/microsoft-ui-xaml) (MIT Licence)
-* Windows Community Toolkit [CommunityToolkit/WindowsCommunityToolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit) (MIT Licence)
-* TagLibSharp [mono/taglib-sharp](https://github.com/mono/taglib-sharp) (LGPL)
-* LyricParser [HyPlayer/LrcParser](https://github.com/HyPlayer/LyricParser) (MIT License)
-* LiteFM [Storyteller-Studios/LiteFM](https://github.com/Storyteller-Studios/LiteFM) ([MIT Licence](https://github.com/Storyteller-Studios/LiteFM/blob/main/LICENSE))
-* Impressionist [Storyteller-Studios/Impressionist](https://github.com/Storyteller-Studios/Impressionist) ([MIT License](https://github.com/Storyteller-Studios/Impressionist/blob/master/LICENSE))
-* StoryTeller-Studios Isolation [StoryTeller-Studios/Isolation](https://github.com/Storyteller-Studios/Isolation) ([MIT License](https://github.com/Storyteller-Studios/Isolation/blob/main/LICENSE))
-* ALRC [kengwang/ALRC](https://github.com/kengwang/ALRC) (Creative Commons Zero v1.0 Universal)
-* AsyncAwaitBestPractices [TheCodeTraveler/AsyncAwaitBestPractices](https://github.com/TheCodeTraveler/AsyncAwaitBestPractices) (MIT License)
+### 源码及项目引用
 
+| 项目 | 用途及说明 | 许可证 |
+| --- | --- | --- |
+| [HyPlayer.NeteaseProvider](https://github.com/HyPlayer/HyPlayer.NeteaseProvider) | 网易云音乐服务与 API；API 实现源自 [NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) | MIT |
+| [HyPlayer.PlayCore](https://github.com/HyPlayer/HyPlayer.PlayCore) | 播放核心及抽象 | MIT |
+| [HyPlayer.Frieren](https://github.com/HyPlayer/HyPlayer.Frieren) | UWP 控件、通知及辅助代码，部分代码源自 Windows Community Toolkit | MIT |
+| `HyPlayer.UWP.Chopin`、`HyPlayer.LyricEffects` | 本仓库中的播放实现与歌词特效项目 | GPL-3.0（本仓库） |
+| [Kawazu](https://github.com/HyPlayer/Kawazu)（源自 [Cutano/Kawazu](https://github.com/Cutano/Kawazu)） | 日文分词 | MIT |
+| [Impressionist](https://github.com/Storyteller-Studios/Impressionist) | 图像取色与量化 | MIT |
+| [ObservableCollections](https://github.com/Cysharp/ObservableCollections) | 高性能可观察集合；为适配 UWP XAML/CsWinRT，源码被单独提取到 [`ObservableCollections/`](ObservableCollections/)，加入了基于 `ObservableList<T>` 的 CommunityToolkit 增量加载实现，并在 `CoreCompile` 前生成 WinRT 闭合泛型暴露信息，**没有直接引用上游 NuGet 包或原程序集**。详见 [兼容性与修改说明](ObservableCollections-CsWinRT-Fix.md) | MIT |
+| `Microsoft.Gaming.XboxGameBar.Projection` | 本仓库中的 Game Bar SDK CsWinRT 投影项目 | 本仓库代码为 GPL-3.0；SDK 使用 Microsoft Software License Terms |
 
+### 应用及运行时 NuGet 依赖
 
-> 如有许可协议使用不当请发 Issue 或者 Pull Request
+| 项目 | 当前直接引用版本 | 许可证 |
+| --- | --- | --- |
+| [ALRC](https://github.com/kengwang/ALRC)（`ALRC.Abstraction`、`ALRC.Converters`） | 1.3.0 / 1.3.2 | CC0-1.0 |
+| [AsyncAwaitBestPractices](https://github.com/brminnick/AsyncAwaitBestPractices) | 10.0.0 | MIT |
+| [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | 8.4.2 | MIT |
+| [Windows Community Toolkit](https://github.com/CommunityToolkit/Windows)（Animations、Behaviors、Collections 源码适配、Controls、Converters、Extensions、Helpers、Media） | 8.2.251219 / `main` 源码适配 | MIT |
+| [CommunityToolkit Labs UWP TitleBar](https://github.com/CommunityToolkit/Labs-Windows) | 0.1.251217-build.2433 | MIT |
+| [ComputeSharp](https://github.com/Sergio0694/ComputeSharp)（`ComputeSharp.D2D1.Uwp`） | 3.2.0 | MIT |
+| [Depository](https://github.com/kengwang/Depository)（含 Abstraction、DependencyInjection 扩展） | 4.0.1 | MIT |
+| [Dynamic Expresso](https://github.com/dynamicexpresso/DynamicExpresso) | 2.19.3 | MIT |
+| [StringSimilarity.NET](https://github.com/feature23/StringSimilarity.NET) | 7.0.1 | MIT |
+| [LibNMeCab](https://github.com/komutan/NMeCab) | 0.10.2 | GPL-2.0-or-later OR LGPL-2.1-or-later |
+| [LiteFM](https://github.com/Storyteller-Studios/LiteFM) | 1.0.3 | MIT |
+| [.NET](https://github.com/dotnet/dotnet)（`Microsoft.Extensions.DependencyInjection`、`System.Text.Json`） | 10.0.10 | MIT |
+| [Windows UI Library](https://github.com/microsoft/microsoft-ui-xaml) | 2.8.7 | Microsoft Software License Terms |
+| [XAML Behaviors for UWP](https://github.com/microsoft/XamlBehaviors) | 3.0.1 | MIT |
+| [Microsoft Game Bar SDK](https://www.xbox.com/pc-gaming) / [CsWinRT](https://github.com/microsoft/CsWinRT) | 7.3.2607010 / 2.3.1 | Microsoft Software License Terms / MIT |
+| [Polly](https://github.com/App-vNext/Polly) | 8.7.0 | BSD-3-Clause |
+| [QRCoder](https://github.com/Shane32/QRCoder) | 1.8.0 | MIT |
+| [TagLibSharp](https://github.com/mono/taglib-sharp) | 2.3.0 | LGPL-2.1-only |
+| [Vanara](https://github.com/dahall/vanara)（`Vanara.Core`） | 5.0.5 | MIT |
+| [Vortice.Windows](https://github.com/amerkoleci/Vortice.Windows)（Direct3D11、DirectX） | 3.8.3 | MIT |
+
+### 构建与测试依赖
+
+| 项目 | 当前直接引用版本 | 许可证 |
+| --- | --- | --- |
+| [Microsoft Windows SDK Build Tools](https://www.nuget.org/packages/Microsoft.Windows.SDK.BuildTools) | 10.0.28000.2526 | Microsoft Windows SDK License |
+| [T4.Build](https://github.com/jgiannuzzi/T4.Build) | 0.2.5 | Apache-2.0 |
+| [TUnit](https://github.com/thomhurst/TUnit) | 1.62.0 / 1.9.55 | MIT |
+| [AwesomeAssertions](https://github.com/AwesomeAssertions/AwesomeAssertions) | 9.3.0 | Apache-2.0 |
+
+> 如有遗漏或许可协议使用不当，请提交 Issue 或 Pull Request。
 >
 > If any of the licenses are not being used correctly, please submit a new issue.
 

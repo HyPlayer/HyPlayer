@@ -20,7 +20,7 @@ using LocalPlaybackProvider = HyPlayer.Platform.Playback.LocalProvider.LocalProv
 
 namespace HyPlayer.Features.Playback.Services;
 
-public sealed class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
+public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDisposable
 {
     private const int StateVersion = 1;
     private const string MemorySettingsKey = "playbackMemoryState";

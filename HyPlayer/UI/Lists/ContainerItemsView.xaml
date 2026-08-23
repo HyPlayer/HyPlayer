@@ -18,11 +18,14 @@
         <CollectionViewSource
             x:Name="GroupedItemsViewSource"
             IsSourceGrouped="True"
-            Source="{x:Bind State.GroupedItems, Mode=OneWay}" />
+            Source="{x:Bind State.GroupedItemsView, Mode=OneWay}" />
     </UserControl.Resources>
     <Grid>
         <ListView
             x:Name="ItemList"
+            DataFetchSize="1"
+            IncrementalLoadingThreshold="1"
+            IncrementalLoadingTrigger="Edge"
             IsItemClickEnabled="True"
             ItemClick="ItemList_ItemClick"
             ItemsSource="{x:Bind State.ActiveItemsSource, Mode=OneWay}"
@@ -65,7 +68,7 @@
                                             Margin="4,14,0,0"
                                             Background="Transparent"
                                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                            Value="{x:Bind State.Rows.Count, Mode=OneWay}" />
+                                            Value="{x:Bind State.RowsView.Count, Mode=OneWay}" />
                                     </muxc:NavigationViewItem.InfoBadge>
                                 </muxc:NavigationViewItem>
                                 <muxc:NavigationViewItem
@@ -113,6 +116,10 @@
             <ListView.Footer>
                 <StackPanel Margin="0,0,0,130">
                     <ContentControl Content="{x:Bind Footer, Mode=OneWay}" />
+                    <Border
+                        x:Name="IncrementalLoadSentinel"
+                        Height="1"
+                        EffectiveViewportChanged="IncrementalLoadSentinel_EffectiveViewportChanged" />
                     <ProgressRing
                         x:Name="FooterProgressRing"
                         Width="32"
@@ -124,7 +131,7 @@
                         x:Name="LoadMoreButton"
                         HorizontalAlignment="Center"
                         Click="LoadMoreButton_Click"
-                        Content="加载更多"
+                        Content="重试"
                         Style="{StaticResource ButtonRevealStyle}"
                         Visibility="{x:Bind State.CanLoadMore, Mode=OneWay}" />
                 </StackPanel>

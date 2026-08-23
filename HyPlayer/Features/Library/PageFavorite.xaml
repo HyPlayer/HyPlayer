@@ -39,18 +39,7 @@
                 x:Name="ItemContainer"
                 Grid.Row="1"
                 Margin="-15,0,0,0"
-                Container="{x:Bind ViewModel.ContentContainer, Mode=OneWay}">
-                <controls:ContainerItemsView.Footer>
-                    <Button
-                        x:Name="BtnLoadMore"
-                        Grid.Row="2"
-                        HorizontalAlignment="Center"
-                        Command="{x:Bind ViewModel.LoadMoreCommand}"
-                        Content="加载更多"
-                        Style="{StaticResource ButtonRevealStyle}"
-                        Visibility="{x:Bind ViewModel.HasMore, Mode=OneWay}" />
-                </controls:ContainerItemsView.Footer>
-            </controls:ContainerItemsView>
+                Container="{x:Bind ViewModel.ContentContainer, Mode=OneWay}" />
         </Grid>
     </Grid>
 

@@ -5,7 +5,7 @@ namespace HyPlayer.Features.Playback.Services;
 /// <summary>
 ///     Projection of expanded-player-specific state derived from <see cref="PlaybackSurfaceStore" />.
 /// </summary>
-public sealed class ExpandedPlayerSurfaceProjection : ObservableObject
+public sealed partial class ExpandedPlayerSurfaceProjection : ObservableObject
 {
     private bool _isActive;
 

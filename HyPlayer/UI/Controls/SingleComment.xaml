@@ -124,12 +124,15 @@
                         Content="回复"
                         Style="{StaticResource AccentButtonStyle}" />
                 </Grid>
-                <controls:CommentsList Comments="{x:Bind _floorComments, Mode=OneWay}" />
+                <controls:CommentsList
+                    Comments="{x:Bind _floorCommentsView, Mode=OneWay}"
+                    IncrementalSource="{x:Bind _floorComments, Mode=OneWay}" />
                 <Button
                     x:Name="LoadMore"
                     HorizontalAlignment="Stretch"
                     Click="LoadMore_Click"
-                    Content="加载更多" />
+                    Content="重试"
+                    Visibility="Collapsed" />
             </StackPanel>
         </muxc:Expander>
     </StackPanel>

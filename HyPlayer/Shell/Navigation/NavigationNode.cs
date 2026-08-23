@@ -1,12 +1,17 @@
-﻿using System.Collections.ObjectModel;
 using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Domain.Navigation;
+using ObservableCollections;
 
 namespace HyPlayer.Shell.Navigation;
 
 public sealed partial class NavigationNode : ObservableObject
 {
+    public NavigationNode()
+    {
+        ChildrenView = Children.ToNotifyCollectionChanged();
+    }
+
     [ObservableProperty] public partial string Title { get; set; } = string.Empty;
 
     [ObservableProperty] public partial IconElement? Icon { get; set; }
@@ -19,5 +24,6 @@ public sealed partial class NavigationNode : ObservableObject
 
     [ObservableProperty] public partial bool IsVisible { get; set; } = true;
 
-    public ObservableCollection<NavigationNode> Children { get; } = [];
+    public ObservableList<NavigationNode> Children { get; } = [];
+    public NotifyCollectionChangedSynchronizedViewList<NavigationNode> ChildrenView { get; }
 }

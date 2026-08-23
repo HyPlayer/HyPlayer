@@ -81,7 +81,9 @@ public sealed partial class RadioPage : Page
     {
         base.OnNavigatedFrom(e);
         _cancellationTokenSource.Cancel();
-        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource.Dispose();
+        SongContainer.ReleaseResources();
+        Bindings.StopTracking();
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)

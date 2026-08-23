@@ -41,9 +41,13 @@ public sealed partial class ArtistPage : Page
         ViewModel.InitializeArtistInfo(artistId).SafeFireAndForget();
     }
 
-    private void OnPivotSelectionChanged(object sender, SelectionChangedEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
-        ViewModel.CurrentPage = 0;
+        base.OnNavigatedFrom(e);
+        HotSongContainer.ReleaseResources();
+        AllSongContainer.ReleaseResources();
+        AlbumContainer.ReleaseResources();
+        Bindings.StopTracking();
     }
 
     private void OnArtistHeaderScrollProgressChanged(object? sender, EventArgs e)

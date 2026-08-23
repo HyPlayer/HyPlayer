@@ -12,10 +12,12 @@
     <Grid>
         <ListView
             x:Name="CommentsContainer"
+            DataFetchSize="1"
             HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Stretch"
+            IncrementalLoadingThreshold="1"
+            IncrementalLoadingTrigger="Edge"
             ItemContainerStyle="{ThemeResource ListViewItemStyle}"
-            ItemsSource="{x:Bind Comments}"
             SelectionMode="None">
             <ListView.ItemTemplate>
                 <DataTemplate ScrollViewer.CanContentRenderOutsideBounds="False">
@@ -24,6 +26,12 @@
                     </Border>
                 </DataTemplate>
             </ListView.ItemTemplate>
+            <ListView.Footer>
+                <Border
+                    x:Name="IncrementalLoadSentinel"
+                    Height="1"
+                    EffectiveViewportChanged="IncrementalLoadSentinel_EffectiveViewportChanged" />
+            </ListView.Footer>
         </ListView>
     </Grid>
 </UserControl>

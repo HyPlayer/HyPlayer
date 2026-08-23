@@ -1,38 +1,34 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.UI.Lists;
-using HyPlayer.NeteaseProvider.Models;
+using ObservableCollections;
 
 namespace HyPlayer.Features.Artist;
 
 public partial class ArtistPageViewModel : ObservableObject
 {
-    private readonly ObservableCollection<ProvidableItemBase> _albums = [];
-
-    private readonly ObservableCollection<ProvidableItemBase> _allSongs = [];
-    private readonly ObservableCollection<ProvidableItemBase> _hotSongs = [];
+    private readonly ObservableList<ProvidableItemBase> _hotSongs = [];
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
-    private Task<List<ContainerBase>> _artistSubContainersTask;
-    private string _loadedArtistId = string.Empty;
-    private PersonBase _providerArtist;
     private readonly UISettings _uiSettings;
+    private Task<List<ContainerBase>>? _artistSubContainersTask;
+    private string _loadedArtistId = string.Empty;
+    private PersonBase? _providerArtist;
 
     public ArtistPageViewModel(
         IProvidableItemProvidable itemProvider,
@@ -46,29 +42,18 @@ public partial class ArtistPageViewModel : ObservableObject
         _uiSettings = uiSettings;
     }
 
-    [ObservableProperty] public partial PersonBase Artist { get; set; }
-
-    [ObservableProperty] public partial ContainerBase AllSongsContainer { get; set; }
-
-    [ObservableProperty] public partial ContainerBase HotSongsContainer { get; set; }
-
-    [ObservableProperty] public partial ContainerBase AlbumsContainer { get; set; }
-
-    [ObservableProperty] public partial int CurrentPage { get; set; } = 0;
-
-    [ObservableProperty] public partial int CurrentPivotIndex { get; set; } = 0;
-
-    [ObservableProperty] public partial bool HasNextPage { get; set; }
-
-    [ObservableProperty] public partial bool HasPreviousPage { get; set; }
-
-    [ObservableProperty] public partial BitmapImage Image { get; set; }
+    [ObservableProperty] public partial PersonBase? Artist { get; set; }
+    [ObservableProperty] public partial ContainerBase? AllSongsContainer { get; set; }
+    [ObservableProperty] public partial ContainerBase? HotSongsContainer { get; set; }
+    [ObservableProperty] public partial ContainerBase? AlbumsContainer { get; set; }
+    [ObservableProperty] public partial int CurrentPivotIndex { get; set; }
+    [ObservableProperty] public partial BitmapImage? Image { get; set; }
 
     public async Task InitializeArtistInfo(string artistId)
     {
-        if (artistId is null)
+        if (string.IsNullOrWhiteSpace(artistId))
         {
-            _notification.ShowMessage("艺人ID为空", "请检查传入的参数是否正确");
+            _notification.ShowMessage("艺术家ID为空", "请检查传入的参数是否正确");
             return;
         }
 
@@ -81,119 +66,107 @@ public partial class ArtistPageViewModel : ObservableObject
             {
                 return await GetProviderArtistAsync(artistId);
             }
-            catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
+            catch (Exception ex) when (ex is not (OperationCanceledException or TaskCanceledException))
             {
-                _notification.ShowMessage("获取艺人信息失败", ex.Message);
+                _notification.ShowMessage("获取艺术家信息失败", ex.Message);
                 return null;
             }
         });
 
-        if (_providerArtist is null) return;
+        if (_providerArtist is null)
+            return;
 
         Artist = _providerArtist;
         var image = (_providerArtist as NeteaseArtist)?.CoverUrl;
-        Image = _uiSettings.NoImage ? null : new BitmapImage(new Uri(image));
+        Image = _uiSettings.NoImage || string.IsNullOrWhiteSpace(image) ? null : new BitmapImage(new Uri(image));
         _loadedArtistId = artistId;
         _artistSubContainersTask = null;
+
+        AllSongsContainer = CreateArtistContainer(
+            "tim", "全部歌曲", "artist-songs", _knownTypeIds.SingleSongTypeId,
+            CacheType.ArtistSongsDetial);
+        AlbumsContainer = CreateArtistContainer(
+            "alb", "专辑", "artist-albums", _knownTypeIds.AlbumTypeId,
+            CacheType.ArtistAlbumsList);
         LoadHotSongs().SafeFireAndForget();
-        LoadSongs().SafeFireAndForget();
-        LoadAlbum().SafeFireAndForget();
+    }
+
+    private ContainerBase CreateArtistContainer(
+        string prefix,
+        string name,
+        string actualIdSuffix,
+        string typeId,
+        CacheType cacheType)
+    {
+        var artistId = _providerArtist?.ActualId ?? string.Empty;
+        return new DelegateProgressiveContainer(
+            (offset, count, cancellationToken) =>
+                LoadArtistPageAsync(prefix, cacheType, offset, count, cancellationToken),
+            name,
+            $"{artistId}:{actualIdSuffix}",
+            typeId,
+            _providerArtist?.ProviderId ?? string.Empty,
+            50);
+    }
+
+    private async Task<(bool HasMore, List<ProvidableItemBase> Items)> LoadArtistPageAsync(
+        string prefix,
+        CacheType cacheType,
+        int offset,
+        int count,
+        CancellationToken cancellationToken)
+    {
+        var artistId = _providerArtist?.ActualId ?? string.Empty;
+        var page = await SimpleCacher.GetOrCreateCacheAsync(
+            cacheType,
+            $"{artistId}_{offset}_{count}",
+            async () =>
+            {
+                var container = await GetArtistSubContainerAsync(prefix);
+                if (container is null)
+                    return new ProgressivePage();
+
+                var (hasMore, items) = await container.GetProgressiveItemsListAsync(
+                    offset, count, cancellationToken);
+                return new ProgressivePage
+                {
+                    HasMore = hasMore,
+                    Items = items ?? []
+                };
+            });
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return (page?.HasMore ?? false, page?.Items ?? []);
     }
 
     private async Task LoadHotSongs()
     {
+        if (Artist is null)
+            return;
+
         _hotSongs.Clear();
         var songs = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, Artist.ActualId,
             async () =>
             {
                 var container = await GetArtistSubContainerAsync("hot");
-                return container is null ? [] : await LoadProgressiveItemsAsync(container, 0, 50);
-            });
-        if (songs is null) return;
-
-        foreach (var item in songs)
-            _hotSongs.Add(item);
-        HotSongsContainer = new StaticItemsContainer(_hotSongs, "热门歌曲", "artist-hot");
-    }
-
-    private async Task LoadSongs()
-    {
-        if (CurrentPage == 0) _allSongs.Clear();
-        var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial,
-            Artist.ActualId + "_" + CurrentPage,
-            async () =>
-            {
-                var container = await GetArtistSubContainerAsync("tim");
                 return container is null
-                    ? new ProgressivePage<ProvidableItemBase>()
-                    : await LoadProgressivePageAsync<ProvidableItemBase>(container, CurrentPage * 50, 50);
+                    ? []
+                    : (await container.GetProgressiveItemsListAsync(0, 50)).Item2;
             });
-        foreach (var item in page?.Items ?? []) _allSongs.Add(item);
-        AllSongsContainer = new StaticItemsContainer(_allSongs, "全部歌曲", "artist-songs");
-        HasNextPage = page?.HasMore ?? false;
-        HasPreviousPage = CurrentPage > 0;
-    }
+        if (songs is null)
+            return;
 
-    private async Task LoadAlbum()
-    {
-        try
-        {
-            _albums.Clear();
-            var page = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList,
-                Artist.ActualId + "_" + CurrentPage,
-                async () =>
-                {
-                    var container = await GetArtistSubContainerAsync("alb");
-                    return container is null
-                        ? new ProgressivePage<AlbumBase>()
-                        : await LoadProgressivePageAsync<AlbumBase>(container, CurrentPage * 50, 50);
-                });
-
-            foreach (var album in page?.Items ?? []) _albums.Add(album);
-            AlbumsContainer = new StaticItemsContainer(_albums, "专辑", "artist-albums");
-            HasNextPage = page?.HasMore ?? false;
-            HasPreviousPage = CurrentPage > 0;
-        }
-        catch (Exception ex) when (!(ex is OperationCanceledException or TaskCanceledException))
-        {
-            _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
-    }
-
-    [RelayCommand]
-    private void NextPage()
-    {
-        CurrentPage++;
-        if (CurrentPivotIndex == 1)
-            _allSongs.Clear();
-        else if (CurrentPivotIndex == 2)
-            _albums.Clear();
-        if (CurrentPivotIndex == 1)
-            LoadSongs().SafeFireAndForget();
-        else if (CurrentPivotIndex == 2)
-            LoadAlbum().SafeFireAndForget();
-    }
-
-    [RelayCommand]
-    private void PreviousPage()
-    {
-        CurrentPage--;
-        if (CurrentPivotIndex == 1)
-            _allSongs.Clear();
-        else if (CurrentPivotIndex == 2)
-            _albums.Clear();
-        if (CurrentPivotIndex == 1)
-            LoadSongs().SafeFireAndForget();
-        else if (CurrentPivotIndex == 2)
-            LoadAlbum().SafeFireAndForget();
+        _hotSongs.AddRange(songs);
+        HotSongsContainer = new StaticItemsContainer(_hotSongs, "热门歌曲", "artist-hot");
     }
 
     private async Task<PersonBase> GetProviderArtistAsync(string artistId)
     {
         try
         {
-            if (await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.ArtistTypeId + artistId) is PersonBase
-                artist) return artist;
+            if (await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.ArtistTypeId + artistId)
+                is PersonBase artist)
+                return artist;
         }
         catch (NotImplementedException)
         {
@@ -216,24 +189,6 @@ public partial class ArtistPageViewModel : ObservableObject
             .FirstOrDefault(container => (container as ProvidableItemBase)?.ActualId?.StartsWith(prefix) is true);
     }
 
-    private static async Task<List<ProvidableItemBase>> LoadProgressiveItemsAsync(
-        IProgressiveLoadingContainer container, int start, int count)
-    {
-        return (await container.GetProgressiveItemsListAsync(start, count)).Item2;
-    }
-
-    private static async Task<ProgressivePage<T>> LoadProgressivePageAsync<T>(IProgressiveLoadingContainer container,
-        int start, int count)
-        where T : ProvidableItemBase
-    {
-        var (hasMore, items) = await container.GetProgressiveItemsListAsync(start, count);
-        return new ProgressivePage<T>
-        {
-            HasMore = hasMore,
-            Items = items.OfType<T>().ToList()
-        };
-    }
-
     private sealed class LocalArtist : PersonBase
     {
         public override string ProviderId => string.Empty;
@@ -245,9 +200,9 @@ public partial class ArtistPageViewModel : ObservableObject
         }
     }
 
-    private sealed class ProgressivePage<T> where T : ProvidableItemBase
+    private sealed class ProgressivePage
     {
-        public bool HasMore { get; set; }
-        public List<T> Items { get; set; } = [];
+        public bool HasMore { get; init; }
+        public List<ProvidableItemBase> Items { get; init; } = [];
     }
 }

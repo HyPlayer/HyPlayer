@@ -114,6 +114,7 @@ public sealed partial class MVPage : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        Bindings.StopTracking();
         _isUnloaded = true;
         _cancellationTokenSource.Cancel();
         _videoLoadCancellationTokenSource.Cancel();

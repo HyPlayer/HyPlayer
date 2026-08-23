@@ -17,6 +17,7 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
     private static readonly Color _lightSpectrumColor = Color.FromArgb(32, 255, 255, 255);
     private readonly AudioGraphPlayer _player;
     private readonly ExpandedCanvasState _state;
+    private readonly float[] _displayData = new float[FFTProcessor.DisplayBandCount];
 
     public SpectrumLayer(ExpandedCanvasState state, AudioGraphPlayer player)
     {
@@ -40,10 +41,10 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
     /// <inheritdoc />
     public void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing)
     {
-        if (!_state.EnableFft) return;
+        if (!_state.ShowSpectrum) return;
 
         var fft = _player.FFTProcessor;
-        if (fft is null) return;
+        if (fft is null || !fft.TryCopyDisplayData(_displayData)) return;
 
         var width = (float)sender.Size.Width;
         var height = (float)sender.Size.Height / 2f;
@@ -55,7 +56,7 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
 
         for (var i = 0; i < FFTProcessor.DisplayBandCount; i++)
         {
-            var barHeight = Math.Clamp(fft.DisplayData[i] * scaleFactor, 0, height - 1);
+            var barHeight = Math.Clamp(_displayData[i] * scaleFactor, 0, height - 1);
             session.FillRectangle(
                 i * barWidth,
                 remainHeight + height - barHeight,

@@ -13,7 +13,8 @@ public enum BackgroundType
     CoverBlur = 0,
     CoverTheme = 1,
     Animated = 2,
-    Isolation = 3
+    Isolation = 3,
+    LikeApple = 4
 }
 
 public enum ExpandedWindowMode

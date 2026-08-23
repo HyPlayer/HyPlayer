@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -18,6 +17,7 @@ using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Lyric;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using TagLib;
+using ObservableCollections;
 
 namespace HyPlayer.Features.Downloads.Services;
 
@@ -25,7 +25,9 @@ internal static class DownloadManager
 {
     private const int MaxAlbumPicturesCacheSize = 64;
     private static bool _timerStarted;
-    public static ObservableCollection<DownloadObject> DownloadLists { get; } = [];
+    public static ObservableList<DownloadObject> DownloadLists { get; } = [];
+    public static NotifyCollectionChangedSynchronizedViewList<DownloadObject> DownloadListsView { get; } =
+        DownloadLists.ToNotifyCollectionChanged();
     public static BackgroundDownloader Downloader { get; } = new();
     public static List<Task> WritingTasks { get; } = [];
     public static Dictionary<string, Picture> AlbumPicturesCache { get; } = [];
@@ -89,7 +91,7 @@ internal static class DownloadManager
         CleanupCompletedWritingTasks();
         EnsureTimerStarted();
 
-        songs.ForEach(t => { DownloadLists.Add(CreateDownloadObject(t)); });
+        DownloadLists.AddRange(songs.Select(CreateDownloadObject));
     }
 
     private static void Timer_Elapsed(object? sender, EventArgs e)

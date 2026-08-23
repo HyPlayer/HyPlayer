@@ -5,7 +5,7 @@ using Microsoft.Graphics.Canvas.Effects;
 
 namespace HyPlayer.LyricRenderer.Effect;
 
-public class LyricShadowEffect : LyricEffect<ShadowEffect>
+public partial class LyricShadowEffect : LyricEffect<ShadowEffect>
 {
     protected override ShadowEffect Effect { get; } = new();
 

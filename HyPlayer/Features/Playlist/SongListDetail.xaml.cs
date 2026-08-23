@@ -10,7 +10,6 @@ using Windows.UI.Xaml.Navigation;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Notifications;
-using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.UI.Lists;
@@ -63,14 +62,22 @@ public sealed partial class SongListDetail : Page
         try
         {
             await _containerItemManagement.RemoveItemFromContainerAsync(ViewModel.PlayList.ActualId, row.ItemId);
-            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, ViewModel.PlayList.ActualId);
-            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, ViewModel.PlayList.ActualId, true);
-            _notification.ShowMessage("已从歌单移除", row.Title);
-            ContainerSongs.ResetAndLoad();
         }
         catch (Exception ex)
         {
             _notification.ShowMessage("移除失败", ex.Message);
+            return;
+        }
+
+        _notification.ShowMessage("已从歌单移除", row.Title);
+        try
+        {
+            if (!await ViewModel.ReloadFromProviderAsync())
+                _notification.ShowMessage("刷新歌单失败", "服务端未返回歌单信息");
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("歌曲已移除，但刷新歌单失败", ex.Message);
         }
     }
 
@@ -105,6 +112,8 @@ public sealed partial class SongListDetail : Page
     {
         base.OnNavigatedFrom(e);
         DetachDataRequested();
+        ContainerSongs.ReleaseResources();
+        Bindings.StopTracking();
     }
 
     private void SongListDetail_Unloaded(object sender, RoutedEventArgs e)
@@ -162,6 +171,5 @@ public sealed partial class SongListDetail : Page
     private async void ResetCache_Click(object sender, RoutedEventArgs e)
     {
         await ViewModel.ResetCacheAsync();
-        ContainerSongs.ResetAndLoad();
     }
 }

@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.System.Threading;
@@ -17,6 +16,7 @@ using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using ObservableCollections;
 using WinRT;
 using Point = Windows.Foundation.Point;
 
@@ -43,8 +43,10 @@ public sealed partial class Comments : Page
     private readonly CancellationToken _cancellationToken;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly Dictionary<string, Task> _commentLoadTasks = [];
-    private readonly ObservableCollection<CommentBase> _hotComments = new();
-    private readonly ObservableCollection<CommentBase> _normalComments = new();
+    private readonly ObservableList<CommentBase> _hotComments = [];
+    private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _hotCommentsView;
+    private readonly ObservableList<CommentBase> _normalComments = [];
+    private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _normalCommentsView;
     private Task _commentLoaderTask;
     private int _delayedUiVersion;
     private Task _hotCommentLoaderTask;
@@ -60,6 +62,8 @@ public sealed partial class Comments : Page
 
     public Comments()
     {
+        _hotCommentsView = _hotComments.ToNotifyCollectionChanged();
+        _normalCommentsView = _normalComments.ToNotifyCollectionChanged();
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
@@ -87,6 +91,7 @@ public sealed partial class Comments : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        Bindings.StopTracking();
         if (_commentLoaderTask != null && !_commentLoaderTask.IsCompleted)
             try
             {
@@ -143,12 +148,13 @@ public sealed partial class Comments : Page
         foreach (var comment in result.Items)
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var cmt = comment;
-            cmt.ProvidableItemId = CreateProvidableItemId(_resourceType, _resourceId);
-            if (targetHotComments)
-                _hotComments.Add(cmt);
-            else _normalComments.Add(cmt);
+            comment.ProvidableItemId = CreateProvidableItemId(_resourceType, _resourceId);
         }
+
+        if (targetHotComments)
+            _hotComments.AddRange(result.Items);
+        else
+            _normalComments.AddRange(result.Items);
 
         if (type == 3)
             _cursor = result.NextOffset?.ToString();

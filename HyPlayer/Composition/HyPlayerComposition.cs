@@ -126,6 +126,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IUserLibraryNavigationProvidable>(neteaseProvider);
         depository.AddSingleton<IProviderSpecialContainerTypeIds>(neteaseProvider);
         depository.AddSingleton<IResourceQualityTagProvidable>(neteaseProvider);
+        depository.AddSingleton<IRichMediaProvidable>(neteaseProvider);
 
         var localProvider = new LocalProvider();
         depository.AddSingleton<LocalProvider>(localProvider);

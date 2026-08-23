@@ -3,6 +3,7 @@
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.Controls;
 using HyPlayer.Features.Lyrics.Effects;
+using ObservableCollections;
 using HyPlayer.LyricEffects.Models;
 using HyPlayer.LyricEffects.Presets;
 using HyPlayer.LyricRenderer;
@@ -13,7 +14,6 @@ using HyPlayer.LyricRenderer.Pipeline;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -130,6 +130,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
 
     public LyricEffectSettingsDialog()
     {
+        OperationsView = Operations.ToNotifyCollectionChanged();
         InitializeComponent();
         _draft = _profiles.CreateDraft();
         InitializePresetMenus();
@@ -156,7 +157,8 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         }
     }
 
-    public ObservableCollection<LyricEffectOperationItem> Operations { get; } = [];
+    public ObservableList<LyricEffectOperationItem> Operations { get; } = [];
+    public NotifyCollectionChangedSynchronizedViewList<LyricEffectOperationItem> OperationsView { get; }
 
     private void InitializePreview()
     {
@@ -183,10 +185,7 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         foreach (var item in Operations) item.PropertyChanged -= Operation_PropertyChanged;
         Operations.Clear();
         _draft = LyricEffectPresets.CloneProfile(profile);
-        foreach (var operation in _draft.Operations)
-        {
-            Operations.Add(CreateOperationItem(operation));
-        }
+        Operations.AddRange(_draft.Operations.Select(CreateOperationItem));
         _loading = false;
     }
 
