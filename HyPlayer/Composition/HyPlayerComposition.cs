@@ -37,6 +37,7 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Notifications;
 using HyPlayer.PlayCore.PlayListControllers;
 using HyPlayer.Shell.ExpandedPlayer;
+using HyPlayer.Shell.Input;
 using HyPlayer.Shell.Login;
 using HyPlayer.Shell.Navigation;
 using HyPlayer.Shell.Navigation.Services;
@@ -308,6 +309,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<PlaybackSurfaceStore>();
         depository.AddSingleton<PlaybackShellStateMachine>();
         depository.AddSingleton<IPlaybackSurfaceCoordinator, PlaybackSurfaceCoordinator>();
+        depository.AddSingleton<IGamepadShortcutService, GamepadShortcutService>();
         depository.AddTransient<ShellSearchViewModel>();
         depository.AddSingleton<ShellLoginService>();
     }

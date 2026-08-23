@@ -11,6 +11,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Settings.Services;
 using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Shell.Input;
 using HyPlayer.Shell.Login;
 using HyPlayer.Shell.Navigation;
 using HyPlayer.Shell.Navigation.Services;
@@ -38,6 +39,8 @@ public sealed partial class BasePage : Page
         Ioc.Default.GetRequiredService<NavigationShellViewModel>();
 
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
+    private readonly IGamepadShortcutService _gamepad =
+        Ioc.Default.GetRequiredService<IGamepadShortcutService>();
     private readonly IPlaybackControlService _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly HyPlayer.Domain.Settings.UISettings _setting =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
@@ -56,6 +59,7 @@ public sealed partial class BasePage : Page
         ApplicationView.TerminateAppOnFinalViewClose = false;
         _navigator.AttachNavigationView(NavMain, BaseFrame, _navigationShell);
         _navigationShell.UpdateAccountStatus();
+        _gamepad.Attach(Window.Current.CoreWindow);
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
     }
@@ -65,6 +69,7 @@ public sealed partial class BasePage : Page
         base.OnNavigatedFrom(e);
         Bindings.StopTracking();
         _navigator.DetachNavigationView(NavMain);
+        _gamepad.Detach(Window.Current.CoreWindow);
         Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
         _shellHost.ClearReference(AppTitleBar);
@@ -82,16 +87,6 @@ public sealed partial class BasePage : Page
 
     private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
     {
-        if (args.VirtualKey == VirtualKey.GamepadB)
-        {
-            if (!CollapseExpandedPlayerIfNeeded())
-                _navigator.NavigateBack();
-            args.Handled = true;
-        }
-
-        if (args.VirtualKey == VirtualKey.GamepadY)
-            _playback.TogglePlayPause();
-
         if (args.VirtualKey == VirtualKey.Escape)
             CollapseExpandedPlayerIfNeeded();
     }
