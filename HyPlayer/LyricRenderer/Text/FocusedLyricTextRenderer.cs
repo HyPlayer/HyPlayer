@@ -535,16 +535,14 @@ public sealed class FocusedLyricTextRenderer
             });
         }
 
-        var startAlpha = maskPlan.OpaqueAtStart ? (byte)255 : (byte)0;
-        var endAlpha = maskPlan.OpaqueAtStart ? (byte)0 : (byte)255;
         var mask = resources.Track(new CanvasCommandList(session));
         using (var maskSession = mask.CreateDrawingSession())
         using (var brush = new CanvasLinearGradientBrush(maskSession,
         [
-            new CanvasGradientStop { Position = 0, Color = Color.FromArgb(startAlpha, 255, 255, 255) },
-            new CanvasGradientStop { Position = maskPlan.FirstStop, Color = Color.FromArgb(startAlpha, 255, 255, 255) },
-            new CanvasGradientStop { Position = maskPlan.SecondStop, Color = Color.FromArgb(endAlpha, 255, 255, 255) },
-            new CanvasGradientStop { Position = 1, Color = Color.FromArgb(endAlpha, 255, 255, 255) }
+            new CanvasGradientStop { Position = 0, Color = MaskColor(maskPlan.StartOpacity) },
+            new CanvasGradientStop { Position = maskPlan.FirstStop, Color = MaskColor(maskPlan.FirstOpacity) },
+            new CanvasGradientStop { Position = maskPlan.SecondStop, Color = MaskColor(maskPlan.SecondOpacity) },
+            new CanvasGradientStop { Position = 1, Color = MaskColor(maskPlan.EndOpacity) }
         ])
         {
             StartPoint = new Vector2(left, top),
@@ -566,19 +564,45 @@ public sealed class FocusedLyricTextRenderer
         float width)
     {
         if (highlighted && reveal >= 1 || !highlighted && reveal <= 0)
-            return new RectangleMaskPlan(1, 0, 0, highlighted != isRightToLeft);
+            return new RectangleMaskPlan(1, 0, 0, 1, 1, 1, 1);
         if (highlighted && reveal <= 0 || !highlighted && reveal >= 1)
-            return new RectangleMaskPlan(0, 0, 0, highlighted != isRightToLeft);
+            return new RectangleMaskPlan(0, 0, 0, 0, 0, 0, 0);
 
-        var localReveal = isRightToLeft ? 1 - reveal : reveal;
-        var normalizedFeather = feather / Math.Max(width, 0.001f);
-        var boundaryProgress = Math.Clamp(localReveal, 0, 1);
+        var boundaryProgress = Math.Clamp(reveal, 0, 1);
+        var normalizedFeather = Math.Max(feather, 0) / Math.Max(width, 0.001f);
+        var rampStart = boundaryProgress - normalizedFeather * (1 - boundaryProgress);
+        var rampEnd = boundaryProgress + normalizedFeather * boundaryProgress;
+        var firstStop = isRightToLeft
+            ? 1 - Math.Clamp(rampEnd, 0, 1)
+            : Math.Clamp(rampStart, 0, 1);
+        var secondStop = isRightToLeft
+            ? 1 - Math.Clamp(rampStart, 0, 1)
+            : Math.Clamp(rampEnd, 0, 1);
+
+        float OpacityAt(float position)
+        {
+            var scanPosition = isRightToLeft ? 1 - position : position;
+            var highlightOpacity = scanPosition <= rampStart
+                ? 1
+                : scanPosition >= rampEnd
+                    ? 0
+                    : (rampEnd - scanPosition) / Math.Max(rampEnd - rampStart, float.Epsilon);
+            return highlighted ? highlightOpacity : 1 - highlightOpacity;
+        }
+
         return new RectangleMaskPlan(
             null,
-            Math.Clamp(boundaryProgress - normalizedFeather / 2, 0, 1),
-            Math.Clamp(boundaryProgress + normalizedFeather / 2, 0, 1),
-            highlighted != isRightToLeft);
+            firstStop,
+            secondStop,
+            OpacityAt(0),
+            OpacityAt(firstStop),
+            OpacityAt(secondStop),
+            OpacityAt(1));
     }
+
+    private static Color MaskColor(float opacity) =>
+        Color.FromArgb((byte)Math.Clamp(Math.Round(opacity * byte.MaxValue), byte.MinValue, byte.MaxValue),
+            byte.MaxValue, byte.MaxValue, byte.MaxValue);
 
     private ICanvasImage ApplyColor(
         CompiledFocusedTextOperation operation,
@@ -1113,7 +1137,10 @@ public sealed class FocusedLyricTextRenderer
         float? ConstantOpacity,
         float FirstStop,
         float SecondStop,
-        bool OpaqueAtStart);
+        float StartOpacity,
+        float FirstOpacity,
+        float SecondOpacity,
+        float EndOpacity);
 
     private readonly record struct LiftWord(
         long Start,
