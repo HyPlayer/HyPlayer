@@ -382,9 +382,7 @@ public sealed partial class ContainerItemsView : UserControl
     private void RebuildGroups()
     {
         GroupedItems.Clear();
-        State.ActiveItemsSource = string.IsNullOrWhiteSpace(FilterBox?.Text)
-            ? State.RowsView
-            : State.VisibleRowsView;
+        State.ActiveItemsSource = State.RowsView;
         if (!ShouldGroupByDisc())
             return;
 

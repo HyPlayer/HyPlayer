@@ -13,17 +13,14 @@ namespace HyPlayer.UI.Lists;
 public sealed partial class ContainerItemsViewState : ObservableObject, IDisposable
 {
     private bool _isDisposed;
-    private readonly ISynchronizedView<ProvidableItemRowViewModel, ProvidableItemRowViewModel> _allRowsViewSource;
-    private readonly ISynchronizedView<ProvidableItemRowViewModel, ProvidableItemRowViewModel> _visibleRowsViewSource;
+    private readonly ISynchronizedView<ProvidableItemRowViewModel, ProvidableItemRowViewModel> _rowsViewSource;
     private readonly ISynchronizedView<ProvidableItemRowGroup, ProvidableItemRowGroup> _groupedItemsViewSource;
 
     public ContainerItemsViewState(ObservableList<ProvidableItemRowViewModel> rows)
     {
         Rows = rows;
-        _allRowsViewSource = Rows.CreateView(static row => row);
-        _visibleRowsViewSource = Rows.CreateView(static row => row);
-        RowsView = _allRowsViewSource.ToNotifyCollectionChanged();
-        VisibleRowsView = _visibleRowsViewSource.ToNotifyCollectionChanged();
+        _rowsViewSource = Rows.CreateView(static row => row);
+        RowsView = _rowsViewSource.ToNotifyCollectionChanged();
         _groupedItemsViewSource = GroupedItems.CreateView(static group => group);
         GroupedItemsView = _groupedItemsViewSource.ToNotifyCollectionChanged();
         RowsView.CollectionChanged += RowsView_CollectionChanged;
@@ -49,9 +46,8 @@ public sealed partial class ContainerItemsViewState : ObservableObject, IDisposa
 
     public ObservableList<ProvidableItemRowViewModel> Rows { get; }
     public ObservableList<ProvidableItemRowGroup> GroupedItems { get; } = [];
-    public IReadOnlyCollection<ProvidableItemRowViewModel> VisibleRows => _visibleRowsViewSource;
+    public IReadOnlyCollection<ProvidableItemRowViewModel> VisibleRows => _rowsViewSource;
     public NotifyCollectionChangedSynchronizedViewList<ProvidableItemRowViewModel> RowsView { get; }
-    public NotifyCollectionChangedSynchronizedViewList<ProvidableItemRowViewModel> VisibleRowsView { get; }
     public NotifyCollectionChangedSynchronizedViewList<ProvidableItemRowGroup> GroupedItemsView { get; }
 
     public bool IsInitialLoading => IsLoading && Rows.Count == 0;
@@ -61,9 +57,9 @@ public sealed partial class ContainerItemsViewState : ObservableObject, IDisposa
     public void ApplyFilter(string filterText)
     {
         if (string.IsNullOrWhiteSpace(filterText))
-            _visibleRowsViewSource.ResetFilter();
+            _rowsViewSource.ResetFilter();
         else
-            _visibleRowsViewSource.AttachFilter(row => row.MatchesFilter(filterText));
+            _rowsViewSource.AttachFilter(row => row.MatchesFilter(filterText));
     }
 
     public void Dispose()
@@ -83,10 +79,8 @@ public sealed partial class ContainerItemsViewState : ObservableObject, IDisposa
 
         RowsView.CollectionChanged -= RowsView_CollectionChanged;
         RowsView.Dispose();
-        VisibleRowsView.Dispose();
         GroupedItemsView.Dispose();
-        _allRowsViewSource.Dispose();
-        _visibleRowsViewSource.Dispose();
+        _rowsViewSource.Dispose();
         _groupedItemsViewSource.Dispose();
     }
 
