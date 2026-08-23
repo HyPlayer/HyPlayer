@@ -15,6 +15,7 @@ public static class TagLibHelper
             ".ape" => new TagLib.Ape.File(abstraction),
             ".m4a" => new TagLib.Mpeg4.File(abstraction),
             ".wav" => new TagLib.Riff.File(abstraction),
+            ".aac" => new AudioFile(abstraction),
             _ => throw new ArgumentOutOfRangeException(nameof(extensions))
         };
     }

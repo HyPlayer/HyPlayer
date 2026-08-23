@@ -214,7 +214,7 @@
                         CornerRadius="6">
                         <Image Stretch="Uniform">
                             <Image.Source>
-                                <BitmapImage UriSource="{x:Bind Cover}" />
+                                <BitmapImage UriSource="{x:Bind HomeCover}" />
                             </Image.Source>
                         </Image>
                     </Border>

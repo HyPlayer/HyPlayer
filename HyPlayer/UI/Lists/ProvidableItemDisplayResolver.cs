@@ -56,7 +56,7 @@ public sealed class ProvidableItemDisplayResolver
             CanCollect = item.TypeId == _knownTypeIds.SingleSongTypeId,
             IsAvailable = true,
             Creators = creators,
-            Album = item as AlbumBase,
+            Album = item is SingleSongBase song ? song.Album : item as AlbumBase,
             GroupKey = string.IsNullOrWhiteSpace(track?.DiscName) ? string.Empty : track.DiscName
         };
     }

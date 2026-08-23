@@ -52,8 +52,8 @@ public sealed partial class ProvidableItemRowViewModel : ObservableObject
     public Visibility LineThreeVisible => HasLineThree ? Visibility.Visible : Visibility.Collapsed;
     public Visibility TranslationVisible => HasTranslation ? Visibility.Visible : Visibility.Collapsed;
 
-    public Uri? Cover => new((string.IsNullOrEmpty(CoverUrl) ? DefaultCoverUrl : CoverUrl) + "?param=" +
-                             StaticSource.PicSizeSingleNcSongCover);
+    public Uri? Cover => BuildCoverUri(StaticSource.PicSizeSingleNcSongCover);
+    public Uri? HomeCover => BuildCoverUri(StaticSource.PicSizeHomeCardCover);
 
     partial void OnIsCurrentChanged(bool value)
     {
@@ -75,6 +75,13 @@ public sealed partial class ProvidableItemRowViewModel : ObservableObject
     private static bool Contains(string? text, string filterText)
     {
         return (text ?? string.Empty).Contains(filterText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Uri? BuildCoverUri(string size)
+    {
+        var coverUrl = string.IsNullOrWhiteSpace(CoverUrl) ? DefaultCoverUrl : CoverUrl;
+        var separator = coverUrl.Contains('?') ? '&' : '?';
+        return Uri.TryCreate($"{coverUrl}{separator}param={size}", UriKind.Absolute, out var uri) ? uri : null;
     }
 }
 

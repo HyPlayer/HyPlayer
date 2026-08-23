@@ -95,7 +95,9 @@ public partial class AlbumPageViewModel : ObservableObject
                 : null;
             Description = (aliases is { Count: > 0 } ? string.Join(" / ", aliases) + "\r\n" : string.Empty) +
                           description;
-            PublishTime = 0;
+            PublishTime = providerAlbum is IHasPublishTime publishTimeProvider
+                ? publishTimeProvider.PublishTime
+                : 0;
         }
         catch (Exception ex)
         {

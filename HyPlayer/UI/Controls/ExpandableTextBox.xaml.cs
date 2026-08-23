@@ -17,7 +17,7 @@ public sealed partial class ExpandableTextBox : UserControl
         "Text", typeof(string), typeof(ExpandableTextBox), new PropertyMetadata(default(string)));
 
     public static readonly DependencyProperty MaxLinesProperty = DependencyProperty.Register(
-        "MaxLines", typeof(int), typeof(ExpandableTextBox), new PropertyMetadata(3));
+        "MaxLines", typeof(int), typeof(ExpandableTextBox), new PropertyMetadata(3, OnMaxLinesChanged));
 
     public static readonly DependencyProperty TextWrappingProperty = DependencyProperty.Register(
         "TextWrapping", typeof(TextWrapping), typeof(ExpandableTextBox),
@@ -25,7 +25,7 @@ public sealed partial class ExpandableTextBox : UserControl
 
 #pragma warning disable IDE1006 // Dependency property identifiers follow the XAML XxxProperty convention.
     private static readonly DependencyProperty ActualMaxLineProperty = DependencyProperty.Register(
-        "ActualMaxLine", typeof(int), typeof(ExpandableTextBox), new PropertyMetadata(7));
+        "ActualMaxLine", typeof(int), typeof(ExpandableTextBox), new PropertyMetadata(3));
 #pragma warning restore IDE1006
 
     private bool _isExpanded;
@@ -71,6 +71,13 @@ public sealed partial class ExpandableTextBox : UserControl
     {
         get => (int)GetValue(ActualMaxLineProperty);
         set => SetValue(ActualMaxLineProperty, value);
+    }
+
+    private static void OnMaxLinesChanged(DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs args)
+    {
+        if (dependencyObject is ExpandableTextBox control && !control._isExpanded)
+            control.ActualMaxLine = (int)args.NewValue;
     }
 
     private void MyTextBlock_IsTextTrimmedChanged(TextBlock sender, IsTextTrimmedChangedEventArgs args)

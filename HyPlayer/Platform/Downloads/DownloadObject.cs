@@ -248,10 +248,10 @@ public sealed partial class DownloadObject : ObservableObject
         _ = _uiThreadDispatcher.TryRunAsync(() => Message = "正在写文件信息");
         return Task.Run(async () =>
         {
-            using var streamAbstraction = new UwpStorageFileAbstraction(ResultFile);
-            using var file = TagLibHelper.Create(streamAbstraction, ResultFile.FileType);
             try
             {
+                using var streamAbstraction = new UwpStorageFileAbstraction(ResultFile);
+                using var file = TagLibHelper.Create(streamAbstraction, "." + _downloadFormat);
                 if (_downloadSettings.Write163Info)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, _providerSong, _downloadBitrate, _downloadFormat);
                 //写相关信息
@@ -439,30 +439,6 @@ public sealed partial class DownloadObject : ObservableObject
                 nowFolder = await nowFolder.CreateFolderAsync(s, CreationCollisionOption.OpenIfExists);
             }
 
-            if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".mp3")) ||
-                await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".flac")))
-                switch (_downloadSettings.DownloadNameOccupySolution)
-                {
-                    case OccupySolution.Skip:
-                        Status = DownloadStatus.Paused;
-                        _ = _uiThreadDispatcher.TryRunAsync(() => { Message = "歌曲已存在, 跳过"; });
-                        return;
-                    case OccupySolution.ReWrite:
-                        await (await nowFolder.GetFileAsync(Path.GetFileName(FileName))).DeleteAsync();
-                        break;
-                    case OccupySolution.AppendID:
-                        FileName = Path.GetFileNameWithoutExtension(FileName) + _downloadSongId;
-                        break;
-                    case OccupySolution.UpdateInfo:
-                        if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".mp3")))
-                            ResultFile = await nowFolder.GetFileAsync(Path.GetFileName(FileName + ".mp3"));
-                        if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".flac")))
-                            ResultFile = await nowFolder.GetFileAsync(Path.GetFileName(FileName + ".flac"));
-                        FullPath = ResultFile.Path;
-                        Wc_DownloadFileCompleted();
-                        return;
-                }
-
             _ = _uiThreadDispatcher.TryRunAsync(() =>
             {
                 HasError = false;
@@ -501,15 +477,38 @@ public sealed partial class DownloadObject : ObservableObject
                 return;
             }
 
-            var extension = (musicResource.ExtensionName ?? "mp3")
-                .ToLowerInvariant();
+            var extension = NormalizeAudioExtension(musicResource.ExtensionName);
             FileName += "." + extension;
             _downloadBitrate = 0;
             _downloadFormat = extension;
 
+            var targetFileName = Path.GetFileName(FileName);
+            if (await nowFolder.FileExistsAsync(targetFileName))
+            {
+                switch (_downloadSettings.DownloadNameOccupySolution)
+                {
+                    case OccupySolution.Skip:
+                        Status = DownloadStatus.Paused;
+                        _ = _uiThreadDispatcher.TryRunAsync(() => { Message = "歌曲已存在, 跳过"; });
+                        return;
+                    case OccupySolution.ReWrite:
+                        await (await nowFolder.GetFileAsync(targetFileName)).DeleteAsync();
+                        break;
+                    case OccupySolution.AppendID:
+                        FileName = Path.GetFileNameWithoutExtension(FileName) + _downloadSongId + "." + extension;
+                        targetFileName = Path.GetFileName(FileName);
+                        break;
+                    case OccupySolution.UpdateInfo:
+                        ResultFile = await nowFolder.GetFileAsync(targetFileName);
+                        FullPath = ResultFile.Path;
+                        Wc_DownloadFileCompleted();
+                        return;
+                }
+            }
+
             _downloadOperation = DownloadManager.Downloader.CreateDownload(
                 musicResource.Uri,
-                await nowFolder.CreateFileAsync(Path.GetFileName(FileName))
+                await nowFolder.CreateFileAsync(targetFileName)
             );
             FullPath = _downloadOperation.ResultFile.Path;
             //_downloadOperation.IsRandomAccessRequired = true;
@@ -529,6 +528,19 @@ public sealed partial class DownloadObject : ObservableObject
     private static string[] GetProviderArtistNames(SingleSongBase song)
     {
         return song.CreatorList?.Where(name => !string.IsNullOrWhiteSpace(name)).ToArray() ?? [];
+    }
+
+    private static string NormalizeAudioExtension(string? extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+            throw new InvalidDataException("下载 API 未返回音频文件格式");
+
+        var normalized = extension.Trim().TrimStart('.').ToLowerInvariant();
+        return normalized switch
+        {
+            "mp3" or "flac" or "ape" or "m4a" or "wav" or "aac" => normalized,
+            _ => throw new InvalidDataException($"下载 API 返回了不支持的音频文件格式: {extension}")
+        };
     }
 
     private static string? GetProviderAlbumCover(SingleSongBase song)

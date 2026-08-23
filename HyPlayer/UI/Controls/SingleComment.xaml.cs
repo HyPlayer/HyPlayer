@@ -38,13 +38,15 @@ public sealed partial class SingleComment : UserControl
 
     public static readonly DependencyProperty MainCommentProperty =
         DependencyProperty.Register("MainComment", typeof(CommentBase), typeof(SingleComment),
-            new PropertyMetadata(null)); //主评论
+            new PropertyMetadata(null, OnMainCommentChanged)); //主评论
 
     private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
 
     private readonly SwitchingIncrementalSource<CommentBase> _floorCommentSource = new();
     private readonly IncrementalLoadingCollection<SwitchingIncrementalSource<CommentBase>, CommentBase> _floorComments;
     private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _floorCommentsView;
+    private int _commentLoadVersion;
+    private bool _isLoaded;
 
     public SingleComment()
     {
@@ -64,20 +66,16 @@ public sealed partial class SingleComment : UserControl
         set => SetValue(AvatarSourceProperty, value);
     }
 
-    public CommentBase MainComment
+    public CommentBase? MainComment
     {
-        get => (CommentBase)GetValue(MainCommentProperty);
-        set
-        {
-            SetValue(MainCommentProperty, value);
-            ReplyCountIndicator.Text = value.ReplyCount.ToString();
-            LikeCountTB.Text = value.LikedCount.ToString();
-        }
+        get => (CommentBase?)GetValue(MainCommentProperty);
+        set => SetValue(MainCommentProperty, value);
     }
 
     private async Task ResetAndLoadFloorCommentsAsync()
     {
-        if (!TryResolveCommentTarget(MainComment, out var itemId, out var typeId))
+        var mainComment = MainComment;
+        if (mainComment is null || !TryResolveCommentTarget(mainComment, out var itemId, out var typeId))
         {
             _floorCommentSource.Reset(null);
             _floorComments.Clear();
@@ -86,7 +84,7 @@ public sealed partial class SingleComment : UserControl
 
         _floorCommentSource.Reset(new ThreadedCommentPageSource(
             Ioc.Default.GetRequiredService<ICommentProvidable>(),
-            MainComment,
+            mainComment,
             itemId,
             typeId));
         LoadMore.Visibility = Visibility.Collapsed;
@@ -103,16 +101,20 @@ public sealed partial class SingleComment : UserControl
 
     private async void Like_Click(object sender, RoutedEventArgs e)
     {
+        var mainComment = MainComment;
+        if (mainComment is null)
+            return;
+
         try
         {
-            if (!TryResolveCommentTarget(MainComment, out var itemId, out var typeId))
+            if (!TryResolveCommentTarget(mainComment, out var itemId, out var typeId))
                 return;
 
             await Ioc.Default.GetRequiredService<ICommentProvidable>().SetCommentLikeStateAsync(
                 itemId,
                 typeId,
-                MainComment.ActualId,
-                !MainComment.HasLiked);
+                mainComment.ActualId,
+                !mainComment.HasLiked);
         }
         catch (Exception ex)
         {
@@ -120,9 +122,9 @@ public sealed partial class SingleComment : UserControl
             return;
         }
 
-        MainComment.LikedCount += MainComment.HasLiked ? -1 : 1;
-        MainComment.HasLiked = !MainComment.HasLiked;
-        LikeCountTB.Text = MainComment.LikedCount.ToString();
+        mainComment.LikedCount += mainComment.HasLiked ? -1 : 1;
+        mainComment.HasLiked = !mainComment.HasLiked;
+        LikeCountTB.Text = mainComment.LikedCount.ToString();
     }
 
     private void Delete_Click(object sender, RoutedEventArgs e)
@@ -133,7 +135,8 @@ public sealed partial class SingleComment : UserControl
 
     private void NavToUser_Click(object sender, RoutedEventArgs e)
     {
-        Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me), MainComment.Sender?.ActualId);
+        if (MainComment is { } mainComment)
+            Ioc.Default.GetRequiredService<INavigationService>().Navigate(typeof(Me), mainComment.Sender?.ActualId);
     }
 
     private async void SendReply_Click(object sender, RoutedEventArgs e)
@@ -171,18 +174,19 @@ public sealed partial class SingleComment : UserControl
     }
 
 
-    private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+    private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        State.CommentUserDisplay = new UserDisplay(
-            new CommentUserInfo
-            {
-                ActualId = MainComment.Sender?.ActualId ?? string.Empty,
-                Name = MainComment.Sender?.Name ?? string.Empty,
-                AvatarUrl = await GetCommentAvatarUrlAsync(MainComment)
-            },
-            _setting.NoImage);
-        ReplyBtn.Visibility = Visibility.Visible;
-        FloorCommentsExpander.Visibility = MainComment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
+        _isLoaded = true;
+        if (MainComment is { } comment)
+            _ = LoadCommentUserAsync(comment, _commentLoadVersion);
+    }
+
+    private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+    {
+        _isLoaded = false;
+        _commentLoadVersion++;
+        _floorCommentSource.Reset(null);
+        _floorComments.Clear();
     }
 
     private void FloorCommentsExpander_Expanding(Expander sender,
@@ -208,6 +212,66 @@ public sealed partial class SingleComment : UserControl
             return null;
 
         return (await uriResult.GetResourceAsync())?.ToString();
+    }
+
+    private static void OnMainCommentChanged(DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs args)
+    {
+        if (dependencyObject is SingleComment control)
+            control.ApplyMainComment(args.NewValue as CommentBase);
+    }
+
+    private void ApplyMainComment(CommentBase? comment)
+    {
+        var version = ++_commentLoadVersion;
+        _floorCommentSource.Reset(null);
+        _floorComments.Clear();
+        FloorCommentsExpander.IsExpanded = false;
+
+        if (comment is null)
+        {
+            State.CommentUserDisplay = null;
+            UserAvatarBitmap.UriSource = null;
+            Nickname.Content = null;
+            SendTimeText.Text = string.Empty;
+            CommentContent.Text = string.Empty;
+            Like.IsChecked = false;
+            LikeCountTB.Text = string.Empty;
+            ReplyCountIndicator.Text = string.Empty;
+            ReplyBtn.Visibility = Visibility.Collapsed;
+            FloorCommentsExpander.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        State.CommentUserDisplay = CreateUserDisplay(comment, null);
+        LikeCountTB.Text = comment.LikedCount.ToString();
+        ReplyCountIndicator.Text = comment.ReplyCount.ToString();
+        ReplyBtn.Visibility = Visibility.Visible;
+        FloorCommentsExpander.Visibility = comment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
+
+        if (_isLoaded)
+            _ = LoadCommentUserAsync(comment, version);
+    }
+
+    private async Task LoadCommentUserAsync(CommentBase comment, int version)
+    {
+        var avatarUrl = _setting.NoImage ? null : await GetCommentAvatarUrlAsync(comment);
+        if (!_isLoaded || version != _commentLoadVersion || !ReferenceEquals(comment, MainComment))
+            return;
+
+        State.CommentUserDisplay = CreateUserDisplay(comment, avatarUrl);
+    }
+
+    private UserDisplay CreateUserDisplay(CommentBase comment, string? avatarUrl)
+    {
+        return new UserDisplay(
+            new CommentUserInfo
+            {
+                ActualId = comment.Sender?.ActualId ?? string.Empty,
+                Name = comment.Sender?.Name ?? string.Empty,
+                AvatarUrl = avatarUrl
+            },
+            _setting.NoImage);
     }
 
     private static bool TryResolveCommentTarget(CommentBase comment, out string itemId, out string typeId)
