@@ -86,8 +86,8 @@ public static class LyricEffectPresets
 
     public static IReadOnlyList<FocusedTextProfilePreset> FocusedTextProfilePresets { get; } =
     [
-        new("HyPlayer 默认", "矩形硬边高亮，真实 Word 自动选择整词或逐 GlyphUnit 抬升。", CreateDefaultFocusedText()),
-        new("柔和抬升", "自动拆词、柔和高亮边缘和 Linear 抬升。", CreateSoftLiftFocusedText())
+        new("HyPlayer 默认", "视觉行级连续高亮，真实 Word 自动选择整词或逐 GlyphUnit 抬升。", CreateDefaultFocusedText()),
+        new("柔和抬升", "自动拆词、行级柔和高亮边缘和 Linear 抬升。", CreateSoftLiftFocusedText())
     ];
 
     public static LyricEffectProfileDocument CreateDefaultProfile() => new()
