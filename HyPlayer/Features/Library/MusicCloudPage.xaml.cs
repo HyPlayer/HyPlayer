@@ -120,10 +120,14 @@ public sealed partial class MusicCloudPage : Page
         await LoadCloudContainerAsync();
     }
 
-    private async Task LoadCloudContainerAsync()
+    private async Task<bool> LoadCloudContainerAsync()
     {
         if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
-                _cancellationToken) is ContainerBase container) CloudContainer = container;
+                _cancellationToken) is not ContainerBase container)
+            return false;
+
+        CloudContainer = container;
+        return true;
     }
 
     private async Task DeleteCloudItemAsync(ProvidableItemRowViewModel row)
@@ -135,14 +139,23 @@ public sealed partial class MusicCloudPage : Page
         {
             await _containerItemManagement.RemoveItemFromContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
                 row.ItemId, _cancellationToken);
-            await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
-            _notification.ShowMessage("已从云盘删除", row.Title);
-            await LoadCloudContainerAsync();
-            SongContainer.ResetAndLoad();
         }
         catch (Exception ex)
         {
             _notification.ShowMessage("删除云盘歌曲失败", ex.Message);
+            return;
+        }
+
+        _notification.ShowMessage("已从云盘删除", row.Title);
+        try
+        {
+            await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
+            if (!await LoadCloudContainerAsync())
+                _notification.ShowMessage("刷新云盘失败", "服务端未返回云盘信息");
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("歌曲已删除，但刷新云盘失败", ex.Message);
         }
     }
 }

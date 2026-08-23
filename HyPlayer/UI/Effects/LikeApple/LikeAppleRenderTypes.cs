@@ -15,7 +15,8 @@ internal struct LikeAppleFrameConstants
     public Vector4 ImageScales;
     public Vector4 PinchTextureTransform;
     public float LyricsModeMix;
-    public Vector3 Padding;
+    public float RotationScale;
+    public Vector2 Padding;
 }
 
 [StructLayout(LayoutKind.Sequential)]

@@ -14,7 +14,8 @@ cbuffer FrameConstants : register(b0)
     float4 ImageScales;
     float4 PinchTextureTransform;
     float LyricsModeMix;
-    float3 Padding;
+    float RotationScale;
+    float2 Padding;
 };
 
 struct QuadInput
@@ -35,66 +36,86 @@ struct RotationOutput
     float2 TextureCoordinate : TEXCOORD0;
 };
 
-float2 RotateClockwise(float2 value, float angle)
+float2 RotateCounterClockwise(float2 value, float angle)
 {
     float sine;
     float cosine;
     sincos(angle, sine, cosine);
     return float2(
-        cosine * value.x + sine * value.y,
-        -sine * value.x + cosine * value.y);
+        cosine * value.x - sine * value.y,
+        sine * value.x + cosine * value.y);
 }
 
 float2 ModelTranslation(uint instanceId)
 {
     if (instanceId == 1)
     {
-        return float2(-0.5, 0.7);
+        return float2(-0.25, 0.15);
     }
     if (instanceId == 2)
     {
-        return float2(-0.95, -0.7);
+        return float2(0.7, 0.7);
     }
     return float2(0.0, 0.0);
 }
 
+float ModelScale(uint instanceId)
+{
+    // The iOS 16.3 constructor stores these diagonal model matrices:
+    // model 0 = scale 1.4, models 1 and 2 = scale 0.7.
+    if (instanceId == 0)
+    {
+        return 1.4;
+    }
+    return 0.7;
+}
+
 float RotationTimeScale(uint instanceId)
 {
+    // Values written by the iOS 16.3 RotatingArtworkRenderer constructor:
+    // model 0 = 120 s, model 1 = 70 s, model 2 = 90 s.
     if (instanceId == 1)
     {
-        return 90.0;
+        return 70.0;
     }
     if (instanceId == 2)
     {
-        return 70.0;
+        return 90.0;
     }
     return 120.0;
 }
 
-float ImageScale(uint instanceId)
+// Apple Music scales the material as a whole around the view origin. Keep one
+// shared scale for all artwork layers instead of scaling each layer around its
+// own center.
+float ImageScale()
 {
-    if (instanceId == 1)
-    {
-        return ImageScales.y;
-    }
-    if (instanceId == 2)
-    {
-        return ImageScales.z;
-    }
     return ImageScales.x;
 }
 
 RotationOutput RotationVertex(QuadInput input, uint instanceId : SV_InstanceID)
 {
     const float twoPi = 6.2831853071795864769;
-    float angle = Time * twoPi / RotationTimeScale(instanceId);
+    float angle = Time * RotationScale * twoPi /
+        RotationTimeScale(instanceId);
 
-    // View * R(-angle) * Translation * R(-angle).
-    float2 position = input.Position.xy * ImageScale(instanceId);
-    position = RotateClockwise(position, angle);
+    // iOS 16.3 uses one local rotation per model. Model 2 is parented to
+    // model 0, while model 1 is independent; do not apply the local angle
+    // twice (that would make the apparent speed 2x). The model matrix scales
+    // the artwork before its translation, and the view aspect transform is
+    // applied before the parent's rotation.
+    float2 position = input.Position.xy;
+    position = RotateCounterClockwise(position, angle);
+    position *= ModelScale(instanceId);
     position += ModelTranslation(instanceId);
-    position = RotateClockwise(position, angle);
     position *= ViewScale;
+    if (instanceId == 2)
+    {
+        float parentAngle = Time * RotationScale * twoPi /
+            RotationTimeScale(0);
+        position = RotateCounterClockwise(position, parentAngle);
+    }
+    position *= ImageScale();
 
     RotationOutput output;
     output.Position = float4(position, 0.0, 1.0);

@@ -35,7 +35,8 @@ internal sealed class LikeAppleSpectrumAnalysis
     private const float HarmonicBassAttackBoost = 0.9f;
     private const float SustainedBassResponse = 0.1f;
 
-    private static readonly Vector4 ExcitingIntensity = new(0.1f, 0.1f, 0.1f, 0f);
+    private const float ImagePulsePowerMix = 0.1f;
+    private const float ImagePulseIntensity = 0.33f;
     private static readonly FrequencyBand LowBassBand = new(30f, 105f);
     private static readonly FrequencyBand BassNoteBand = new(75f, 155f);
     private static readonly FrequencyBand UpperBassBand = new(145f, 210f);
@@ -111,7 +112,16 @@ internal sealed class LikeAppleSpectrumAnalysis
         float effectivePulseScale = float.IsFinite(pulseScale)
             ? Math.Clamp(pulseScale, 0f, 10f)
             : 1f;
-        return Vector4.One + _power * ExcitingIntensity * effectivePulseScale;
+        float processedPowerX = ProcessSpectrumPower(_power.X);
+        float processedPowerY = ProcessSpectrumPower(_power.Y);
+        float blendedPower = Lerp(
+            processedPowerX,
+            processedPowerY,
+            ImagePulsePowerMix);
+        float imageScale = 1f +
+            ImagePulseIntensity * blendedPower * blendedPower *
+            effectivePulseScale;
+        return new Vector4(imageScale, imageScale, imageScale, 1f);
     }
 
     public void Stop()
@@ -325,6 +335,17 @@ internal sealed class LikeAppleSpectrumAnalysis
         float timeConstant = target > current ? AttackSeconds : ReleaseSeconds;
         float mix = 1f - MathF.Exp(-seconds / timeConstant);
         return current + (target - current) * mix;
+    }
+
+    private static float ProcessSpectrumPower(float power)
+    {
+        float x = Math.Clamp(power, 0f, 1f);
+        return x * x * x * (x * (x * 6f - 15f) + 10f);
+    }
+
+    private static float Lerp(float from, float to, float amount)
+    {
+        return from + (to - from) * amount;
     }
 
     private static float SmoothRange(float value, float floor, float ceiling)

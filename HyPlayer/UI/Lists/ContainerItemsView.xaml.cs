@@ -1,3 +1,29 @@
+using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI.Helpers;
+using HyPlayer.Application.Notifications;
+using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Album;
+using HyPlayer.Features.Artist;
+using HyPlayer.Features.Comments;
+using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.User;
+using HyPlayer.Features.Video;
+using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Xaml;
+using HyPlayer.PlayCore.Abstraction;
+using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.PlayCore.Abstraction.Models.Containers;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.UI.Dialogs;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,32 +38,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.WinUI.Helpers;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Domain.Comments;
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Navigation;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Album;
-using HyPlayer.Features.Artist;
-using HyPlayer.Features.Comments;
-using HyPlayer.Features.Downloads.Services;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Video;
 using ObservableCollections;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Xaml;
-using HyPlayer.PlayCore.Abstraction;
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
-using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
-using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.UI.Dialogs;
 using HyPlayer.UI.Lists.IncrementalLoading;
 using WinRT;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
@@ -82,9 +83,6 @@ public sealed partial class ContainerItemsView : UserControl
 
     public static readonly DependencyProperty ExtraSelectionActionsProperty = DependencyProperty.Register(
         nameof(ExtraSelectionActions), typeof(IList), typeof(ContainerItemsView), new PropertyMetadata(null));
-
-    private readonly IContainerItemManagementProvidable _containerItemManagement =
-        Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
 
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly ProvidableItemDisplayResolver _displayResolver = ProvidableItemDisplayResolver.CreateDefault();
@@ -210,11 +208,6 @@ public sealed partial class ContainerItemsView : UserControl
 
     public IReadOnlyList<SingleSongBase> LoadedProviderSongs =>
         (SingleSongBase[])[.. Rows.Select(row => row.AsPlayableSong)];
-
-    public void ResetAndLoad()
-    {
-        StartLoadForContainer();
-    }
 
     public Task LoadMoreAsync()
     {
@@ -859,4 +852,5 @@ public sealed partial class ContainerItemsView : UserControl
             ? (Brush)Windows.UI.Xaml.Application.Current.Resources["DefaultTextForegroundThemeBrush"]
             : new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
     }
+
 }

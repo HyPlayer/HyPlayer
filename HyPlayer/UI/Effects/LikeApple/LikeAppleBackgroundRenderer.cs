@@ -30,6 +30,7 @@ namespace HyPlayer.UI.Effects.LikeApple
         private readonly float _renderScale;
         private readonly float _blurScale;
         private readonly float _bassPulseScale;
+        private readonly float _rotationScale;
         private volatile bool _lightTheme;
         private LikeApplePinchVertex[] _meshVertices;
         private ushort[] _meshIndices;
@@ -67,7 +68,8 @@ namespace HyPlayer.UI.Effects.LikeApple
             bool lightTheme = false,
             float renderScale = 1f,
             float blurScale = 1f,
-            float bassPulseScale = 1f)
+            float bassPulseScale = 1f,
+            float rotationScale = 1f)
         {
             ArgumentNullException.ThrowIfNull(canvasDevice);
             ArgumentNullException.ThrowIfNull(fftProcessor);
@@ -85,6 +87,7 @@ namespace HyPlayer.UI.Effects.LikeApple
                 : 1f;
             _blurScale = GetSettingScale(blurScale);
             _bassPulseScale = GetSettingScale(bassPulseScale);
+            _rotationScale = GetSettingScale(rotationScale);
             _lightTheme = lightTheme;
             _pipeline = new LikeAppleRenderPipeline(
                 canvasDevice,
@@ -292,6 +295,7 @@ namespace HyPlayer.UI.Effects.LikeApple
                 ImageScales = Vector4.One,
                 PinchTextureTransform = pinchTextureTransform,
                 LyricsModeMix = lyricsModeMix,
+                RotationScale = _rotationScale,
             };
 
             try
@@ -466,6 +470,7 @@ namespace HyPlayer.UI.Effects.LikeApple
             return 1f;
         }
 
+
         private void EnsureSurfaceSize(float width, float height, float dpi)
         {
             int pixelWidth = Math.Max(1, (int)Math.Round(
@@ -613,6 +618,5 @@ namespace HyPlayer.UI.Effects.LikeApple
             _rotationSurface?.Dispose();
             _pipeline.Dispose();
         }
-
     }
 }

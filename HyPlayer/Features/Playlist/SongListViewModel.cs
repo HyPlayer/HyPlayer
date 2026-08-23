@@ -20,6 +20,7 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.Shell.Navigation.Services;
 using ColorHelper = HyPlayer.Platform.Imaging.ColorHelper;
+using HyPlayer.Features.Account.Services;
 
 namespace HyPlayer.Features.Playlist;
 
@@ -119,7 +120,6 @@ public partial class SongListViewModel : ObservableObject, IDisposable
             _loadedPlaylistDetail = false;
             _loadedDailyRecommend = false;
             IntelligenceModeVisible = false;
-            IsMySongList = false;
         }
 
         _loadedPlaylistId = playlistId;
@@ -144,6 +144,7 @@ public partial class SongListViewModel : ObservableObject, IDisposable
             : string.Empty;
         await LoadCreatorAsync(PlayList);
         Subscribed = PlayList is IHasLibraryState { IsInCurrentUserLibrary: true };
+        IsMySongList = PlayList is IHasLibraryState { IsOwnedByCurrentUser: true };
         GreedyLoad = _apiSettings.GreedilyLoadPlayContainerItems;
         if (_uiSettings.NoImage)
             CoverUri = null;
@@ -151,7 +152,7 @@ public partial class SongListViewModel : ObservableObject, IDisposable
             CoverUri = await GetCoverUriAsync(PlayList);
         StartAlbumImageLoad();
         UpdateTime = string.Empty;
-        _loadedDailyRecommend = true;
+        _loadedDailyRecommend = IsDailyRecommend;
     }
 
     public async Task LoadPlayListItems()
@@ -170,9 +171,7 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         if (IsLikedMusicPlaylist(_playlistContainer))
         {
             IntelligenceModeVisible = true;
-            IsMySongList = true;
         }
-
         _loadedPlaylistDetail = true;
     }
 
@@ -230,22 +229,36 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         _navigation.Navigate(typeof(Comments.Comments), CommentTarget.Playlist(PlayList.ActualId));
     }
 
+    public async Task<bool> ReloadFromProviderAsync()
+    {
+        var playlistId = PlayList.ActualId;
+        await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, playlistId);
+        await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, playlistId, true);
+        await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, playlistId);
+
+        var playlist = await LoadProviderPlaylistAsync(playlistId);
+        if (playlist is null)
+            return false;
+
+        _playlistContainer = playlist;
+        _loadedPlaylistDetail = false;
+        PlayList = playlist;
+        await LoadPageData(playlistId);
+        return true;
+    }
+
     public async Task ResetCacheAsync()
     {
         try
         {
-            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, PlayList.ActualId);
-            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, PlayList.ActualId, true);
-            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, PlayList.ActualId);
-            _notification.ShowMessage("清除缓存成功", "已清除当前歌单的缓存");
-            _playlistContainer = null;
-            _loadedPlaylistDetail = false;
-            _loadedDailyRecommend = false;
-            await LoadPageData(PlayList.ActualId, true);
+            if (await ReloadFromProviderAsync())
+                _notification.ShowMessage("清除缓存成功", "已从网络重新加载当前歌单");
+            else
+                _notification.ShowMessage("刷新歌单失败", "服务端未返回歌单信息");
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            _notification.ShowMessage("刷新歌单失败", ex.Message);
         }
     }
 
