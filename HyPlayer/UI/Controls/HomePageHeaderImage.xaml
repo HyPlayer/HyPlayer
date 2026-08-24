@@ -35,16 +35,31 @@
             <Image
                 x:Name="HeroImage"
                 ImageOpened="OnImageOpened"
-                Source="https://flarum.csur.fun/2022-12-25/1671970508-774457-image.png"
                 Stretch="UniformToFill" />
 
             <Image
                 x:Name="HeroOverlayImage"
                 Opacity="0.5"
-                Source="https://flarum.csur.fun/2022-12-25/1671970508-774457-image.png"
                 Stretch="UniformToFill" />
 
         </Grid>
         <Rectangle x:Name="ImageGridSurfaceRec" Fill="Transparent" />
+        <Button
+            x:Name="CopyrightInfoButton"
+            Width="28"
+            Height="28"
+            Margin="24,0,56,80"
+            Padding="0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Background="#99000000"
+            Click="OnCopyrightClick"
+            CornerRadius="14"
+            Visibility="Collapsed">
+            <FontIcon
+                FontSize="14"
+                Foreground="White"
+                Glyph="&#xE946;" />
+        </Button>
     </Grid>
 </UserControl>

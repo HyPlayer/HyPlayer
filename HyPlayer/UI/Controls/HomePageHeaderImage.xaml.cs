@@ -1,20 +1,35 @@
 ﻿using System;
+using System.Net.Http;
 using System.Numerics;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.System;
 using Windows.UI;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Media.Imaging;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.Animations;
 using Microsoft.Graphics.Canvas.Effects;
 using CommunityToolkit.WinUI;
+using HyPlayer.Domain.Settings;
 
 namespace HyPlayer.UI.Controls;
 #nullable enable
 
 public sealed partial class HomePageHeaderImage : UserControl
 {
+    private const string BingBaseUrl = "https://www.bing.com";
+    private const string BingDailyImageEndpoint =
+        BingBaseUrl + "/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN";
+    private const string CachedImageUrlKey = "Home.BingDailyImage.Url";
+    private const string CachedCopyrightKey = "Home.BingDailyImage.Copyright";
+    private const string CachedCopyrightUrlKey = "Home.BingDailyImage.CopyrightUrl";
     private const string GradientSizeKey = "GradientSize";
     private ExpressionAnimation? _bottomGradientStartPointAnimation;
     private Compositor? _compositor;
@@ -25,6 +40,10 @@ public sealed partial class HomePageHeaderImage : UserControl
     private CompositionSurfaceBrush? _imageGridSurfaceBrush;
     private Visual? _imageGridVisual;
     private CompositionVisualSurface? _imageGridVisualSurface;
+    private readonly HttpClient _httpClient = Ioc.Default.GetRequiredService<HttpClient>();
+    private readonly UISettings _uiSettings = Ioc.Default.GetRequiredService<UISettings>();
+    private CancellationTokenSource? _imageLoadCancellation;
+    private Uri? _copyrightUri;
 
     public HomePageHeaderImage()
     {
@@ -76,10 +95,18 @@ public sealed partial class HomePageHeaderImage : UserControl
         ElementCompositionPreview.GetElementVisual(ImageGridSurfaceRec).ParentForTransform = _imageGridVisual;
 
         ElementCompositionPreview.SetElementChildVisual(ImageGridSurfaceRec, _imageGridSpriteVisual);
+
+        _imageLoadCancellation?.Cancel();
+        _imageLoadCancellation?.Dispose();
+        _imageLoadCancellation = new CancellationTokenSource();
+        _ = LoadBingDailyImageAsync(_imageLoadCancellation.Token);
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        _imageLoadCancellation?.Cancel();
+        _imageLoadCancellation?.Dispose();
+        _imageLoadCancellation = null;
         ElementCompositionPreview.SetElementChildVisual(ImageGridSurfaceRec, null);
         _imageGridSpriteVisual?.Dispose();
         _imageGridEffectBrush?.Dispose();
@@ -90,6 +117,113 @@ public sealed partial class HomePageHeaderImage : UserControl
         _bottomGradientStartPointAnimation?.Dispose();
         _bottomGradientStartPointAnimation = null;
         _imageGridBottomGradientBrush = null;
+    }
+
+    private async Task LoadBingDailyImageAsync(CancellationToken cancellationToken)
+    {
+        if (_uiSettings.NoImage)
+        {
+            HeroImage.Source = null;
+            HeroOverlayImage.Source = null;
+            CopyrightInfoButton.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        BingDailyImage? dailyImage = null;
+        try
+        {
+            using var response = await _httpClient.GetAsync(BingDailyImageEndpoint, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            dailyImage = ParseBingDailyImage(json);
+            if (dailyImage is not null)
+                CacheDailyImage(dailyImage);
+            else
+                dailyImage = GetCachedDailyImage();
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+            dailyImage = GetCachedDailyImage();
+        }
+
+        if (cancellationToken.IsCancellationRequested || dailyImage is null)
+            return;
+
+        HeroImage.Source = new BitmapImage(dailyImage.ImageUri);
+        HeroOverlayImage.Source = new BitmapImage(dailyImage.ImageUri);
+        ToolTipService.SetToolTip(CopyrightInfoButton, $"Bing 每日一图 · {dailyImage.Copyright}");
+        _copyrightUri = dailyImage.CopyrightUri;
+        CopyrightInfoButton.Visibility = Visibility.Visible;
+    }
+
+    private static BingDailyImage? ParseBingDailyImage(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        if (!document.RootElement.TryGetProperty("images", out var images) ||
+            images.ValueKind != JsonValueKind.Array || images.GetArrayLength() == 0)
+            return null;
+
+        var image = images[0];
+        if (!image.TryGetProperty("url", out var urlElement))
+            return null;
+
+        var imageUri = ResolveBingUri(urlElement.GetString());
+        if (imageUri is null)
+            return null;
+
+        var copyright = image.TryGetProperty("copyright", out var copyrightElement)
+            ? copyrightElement.GetString()
+            : null;
+        var copyrightUri = image.TryGetProperty("copyrightlink", out var copyrightLinkElement)
+            ? ResolveBingUri(copyrightLinkElement.GetString())
+            : null;
+
+        return new BingDailyImage(imageUri,
+            string.IsNullOrWhiteSpace(copyright) ? "图片版权信息由 Bing 提供" : copyright,
+            copyrightUri);
+    }
+
+    private static Uri? ResolveBingUri(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (Uri.TryCreate(value, UriKind.Absolute, out var absoluteUri))
+            return absoluteUri;
+
+        return Uri.TryCreate(new Uri(BingBaseUrl), value, out var resolvedUri) ? resolvedUri : null;
+    }
+
+    private static void CacheDailyImage(BingDailyImage dailyImage)
+    {
+        var values = ApplicationData.Current.LocalSettings.Values;
+        values[CachedImageUrlKey] = dailyImage.ImageUri.AbsoluteUri;
+        values[CachedCopyrightKey] = dailyImage.Copyright;
+        values[CachedCopyrightUrlKey] = dailyImage.CopyrightUri?.AbsoluteUri ?? string.Empty;
+    }
+
+    private static BingDailyImage? GetCachedDailyImage()
+    {
+        var values = ApplicationData.Current.LocalSettings.Values;
+        var imageUri = ResolveBingUri(values[CachedImageUrlKey] as string);
+        if (imageUri is null)
+            return null;
+
+        var copyright = values[CachedCopyrightKey] as string;
+        var copyrightUri = ResolveBingUri(values[CachedCopyrightUrlKey] as string);
+        return new BingDailyImage(imageUri,
+            string.IsNullOrWhiteSpace(copyright) ? "图片版权信息由 Bing 提供" : copyright,
+            copyrightUri);
+    }
+
+    private async void OnCopyrightClick(object sender, RoutedEventArgs e)
+    {
+        if (_copyrightUri is not null)
+            await Launcher.LaunchUriAsync(_copyrightUri);
     }
 
     private void OnLoading(FrameworkElement sender, object args)
@@ -135,4 +269,6 @@ public sealed partial class HomePageHeaderImage : UserControl
 
         return ani;
     }
+
+    private sealed record BingDailyImage(Uri ImageUri, string Copyright, Uri? CopyrightUri);
 }
