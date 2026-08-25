@@ -22,6 +22,7 @@ public sealed class LyricTextLayoutRequest
     public bool HiddenOnBlur { get; init; }
     public float TextPadding { get; init; }
     public float LiftAmount { get; init; }
+    public Color IdleColor { get; init; }
     public Color FocusingColor { get; init; }
     public float CanvasHeight { get; init; }
     public TextAlignment Alignment { get; init; }

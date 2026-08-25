@@ -1,7 +1,9 @@
+using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.LyricRenderer.Text;
 using HyPlayer.LyricEffects.Models;
 using HyPlayer.LyricEffects.Presets;
 using TUnit.Core;
+using Windows.UI;
 
 namespace HyPlayer.Playback.Tests;
 
@@ -27,6 +29,117 @@ public sealed class FocusedVectorRevealTests
                 noTargets,
                 FocusedTextTargets.Translation))
             throw new InvalidOperationException("未选择 Translation target 时，逐字抬升仍被应用到了翻译层。");
+    }
+
+    [Test]
+    public void UntimedContributions_ShouldBypassHighlightReveal()
+    {
+        foreach (var mode in Enum.GetValues<HighlightRevealMode>())
+        {
+            if (FocusedLyricTextRenderer.ShouldApplyHighlightReveal(
+                    mode, participatesInReveal: false, isCurrentContribution: false) ||
+                FocusedLyricTextRenderer.ShouldApplyHighlightReveal(
+                    mode, participatesInReveal: false, isCurrentContribution: true))
+                throw new InvalidOperationException(
+                    $"{mode} 仍处理 WholeLine 或 DoNotHighlight 的静态贡献。");
+        }
+    }
+
+    [Test]
+    public void TimedContributions_ShouldPreserveRevealModeSemantics()
+    {
+        if (!FocusedLyricTextRenderer.ShouldApplyHighlightReveal(
+                HighlightRevealMode.RectangleClip, participatesInReveal: true, isCurrentContribution: false))
+            throw new InvalidOperationException("RectangleClip 不再裁剪已完成或尚未开始的定时贡献。");
+        if (FocusedLyricTextRenderer.ShouldApplyHighlightReveal(
+                HighlightRevealMode.GlyphStep, participatesInReveal: true, isCurrentContribution: false) ||
+            FocusedLyricTextRenderer.ShouldApplyHighlightReveal(
+                HighlightRevealMode.WholeWord, participatesInReveal: true, isCurrentContribution: false))
+            throw new InvalidOperationException("非 RectangleClip 模式错误处理了非当前定时贡献。");
+        if (!FocusedLyricTextRenderer.ShouldApplyHighlightReveal(
+                HighlightRevealMode.GlyphStep, participatesInReveal: true, isCurrentContribution: true) ||
+            !FocusedLyricTextRenderer.ShouldApplyHighlightReveal(
+                HighlightRevealMode.WholeWord, participatesInReveal: true, isCurrentContribution: true))
+            throw new InvalidOperationException("当前定时贡献没有按所选推进模式处理。");
+    }
+
+    [Test]
+    public void ContributionBaseColor_ShouldUseAccentOnlyForHighlightedText()
+    {
+        var idle = Color.FromArgb(255, 10, 20, 30);
+        var accent = Color.FromArgb(255, 200, 210, 220);
+        string[] highlightedTargets =
+        [
+            FocusedTextTargets.LyricHighlighted,
+            FocusedTextTargets.LyricCurrentHighlighted,
+            FocusedTextTargets.TransliterationHighlighted,
+            FocusedTextTargets.TransliterationCurrentHighlighted
+        ];
+        string[] idleTargets =
+        [
+            FocusedTextTargets.LyricCurrentPending,
+            FocusedTextTargets.LyricUnhighlighted,
+            FocusedTextTargets.TransliterationCurrentPending,
+            FocusedTextTargets.TransliterationUnhighlighted,
+            FocusedTextTargets.Translation
+        ];
+
+        foreach (var target in highlightedTargets)
+            if (!FocusedLyricTextRenderer.GetContributionBaseColor(idle, accent, target).Equals(accent))
+                throw new InvalidOperationException($"{target} 没有使用 AccentColor。");
+        foreach (var target in idleTargets)
+            if (!FocusedLyricTextRenderer.GetContributionBaseColor(idle, accent, target).Equals(idle))
+                throw new InvalidOperationException($"{target} 没有使用 IdleColor。");
+    }
+
+    [Test]
+    public void DefaultFocusedProfile_ShouldNotDimUnhighlightedText()
+    {
+        var profile = LyricEffectPresets.CreateDefaultFocusedText();
+
+        if (profile.Operations.Any(operation =>
+                operation.TypeId == FocusedTextBuiltInOperationTypes.Opacity))
+            throw new InvalidOperationException("默认聚焦链仍包含降低未高亮歌词透明度的节点。");
+    }
+
+    [Test]
+    public void LegacyDefaultOpacity_ShouldBeRemovedWithoutDeletingCustomOpacity()
+    {
+        var focusedText = new FocusedTextEffectDefinition
+        {
+            Operations =
+            [
+                new FocusedTextOperationDefinition
+                {
+                    TypeId = FocusedTextBuiltInOperationTypes.Opacity,
+                    DisplayName = "未高亮透明度",
+                    Targets =
+                    [
+                        FocusedTextTargets.LyricCurrentPending,
+                        FocusedTextTargets.LyricUnhighlighted
+                    ],
+                    Parameters =
+                    {
+                        ["opacity"] = new LyricOperationParameterDefinition { Expression = "0.3" }
+                    }
+                },
+                new FocusedTextOperationDefinition
+                {
+                    TypeId = FocusedTextBuiltInOperationTypes.Opacity,
+                    DisplayName = "自定义透明度",
+                    Targets = [FocusedTextTargets.LyricUnhighlighted],
+                    Parameters =
+                    {
+                        ["opacity"] = new LyricOperationParameterDefinition { Expression = "0.4" }
+                    }
+                }
+            ]
+        };
+
+        if (!LyricEffectProfileService.RemoveLegacyFocusedOpacity(focusedText) ||
+            focusedText.Operations.Count != 1 ||
+            focusedText.Operations[0].DisplayName != "自定义透明度")
+            throw new InvalidOperationException("旧默认透明度节点未被精确迁移，或自定义透明度节点被误删。");
     }
 
     [Test]

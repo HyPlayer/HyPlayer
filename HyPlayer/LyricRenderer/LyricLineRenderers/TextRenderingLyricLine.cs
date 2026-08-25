@@ -37,6 +37,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
     private float _cachedTransliterationFontSize;
     private float _cachedTranslationFontSize;
     private string? _cachedFontFamily;
+    private Color _cachedIdleColor;
     private Color _cachedFocusingColor;
     private bool _wasActive;
 
@@ -175,6 +176,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         _cachedTransliterationFontSize = TypographySelector(t => t?.TransliterationFontSize, context)!.Value;
         _cachedTranslationFontSize = TypographySelector(t => t?.TranslationFontSize, context)!.Value;
         _cachedFontFamily = TypographySelector(t => t?.Font, context);
+        _cachedIdleColor = TypographySelector(t => t?.IdleColor, context)!.Value;
         _cachedFocusingColor = TypographySelector(t => t?.FocusingColor, context)!.Value;
 
         _layout?.Dispose();
@@ -192,6 +194,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
             HiddenOnBlur = HiddenOnBlur,
             TextPadding = TextPadding,
             LiftAmount = LiftAmount,
+            IdleColor = _cachedIdleColor,
             FocusingColor = _cachedFocusingColor,
             CanvasHeight = _canvasHeight,
             Alignment = _cachedAlignment,

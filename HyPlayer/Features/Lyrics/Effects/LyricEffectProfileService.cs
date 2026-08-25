@@ -111,6 +111,7 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
             var activeItem = await folder.TryGetItemAsync(ActiveFileName);
             LyricEffectProfileDocument? document = null;
             var recoveredFromBackup = false;
+            var removedLegacyFocusedOpacity = false;
 
             if (activeItem is StorageFile activeFile)
                 document = await TryReadAsync(activeFile);
@@ -128,12 +129,15 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
                 }
             }
 
+            if (document is not null)
+                removedLegacyFocusedOpacity = RemoveLegacyFocusedOpacity(document.FocusedText);
+
             if (document is null)
             {
                 document = LyricEffectPresets.CreateDefaultProfile();
                 await PersistAsync(folder, document, keepBackup: false);
             }
-            else if (recoveredFromBackup)
+            else if (recoveredFromBackup || removedLegacyFocusedOpacity)
             {
                 await PersistAsync(folder, document, keepBackup: false);
             }
@@ -153,6 +157,24 @@ public sealed class LyricEffectProfileService : ILyricEffectProfileService
         {
             _initializeLock.Release();
         }
+    }
+
+    internal static bool RemoveLegacyFocusedOpacity(FocusedTextEffectDefinition definition)
+    {
+        var removed = definition.Operations.RemoveAll(operation =>
+            operation.TypeId == FocusedTextBuiltInOperationTypes.Opacity &&
+            operation.DisplayName == "未高亮透明度" &&
+            operation.Targets.Count == 2 &&
+            operation.Targets.Contains(FocusedTextTargets.LyricCurrentPending, StringComparer.Ordinal) &&
+            operation.Targets.Contains(FocusedTextTargets.LyricUnhighlighted, StringComparer.Ordinal) &&
+            operation.Parameters.Count == 1 &&
+            operation.Parameters.TryGetValue("opacity", out var opacity) &&
+            opacity.Expression == "0.3" &&
+            opacity.Transition is null &&
+            operation.Options.Count == 0 &&
+            operation.Script is null &&
+            operation.ExtensionData is null or { Count: 0 });
+        return removed > 0;
     }
 
     public LyricEffectProfileDocument CreateDraft() => CommittedDocument;

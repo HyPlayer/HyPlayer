@@ -110,7 +110,6 @@ public static class LyricEffectPresets
     {
         Operations =
         [
-            CreateFocusedOpacity(),
             CreateHighlightReveal(),
             CreateFocusedGlyphLift()
         ]
@@ -149,17 +148,6 @@ public static class LyricEffectPresets
         }
     };
 
-    public static FocusedTextOperationDefinition CreateFocusedOpacity() => new()
-    {
-        TypeId = FocusedTextBuiltInOperationTypes.Opacity,
-        DisplayName = "未高亮透明度",
-        Targets =
-        [
-            FocusedTextTargets.LyricCurrentPending,
-            FocusedTextTargets.LyricUnhighlighted
-        ],
-        Parameters = { ["opacity"] = FocusedScalar("0.3") }
-    };
 
     public static FocusedTextOperationDefinition CreateFocusedGlyphLift() => new()
     {

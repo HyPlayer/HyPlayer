@@ -78,6 +78,16 @@ public class LyricProfileFormatTests
     }
 
     [Test]
+    public async Task DefaultFocusedProfile_ShouldNotDimUnhighlightedText()
+    {
+        var profile = LyricEffectPresets.CreateDefaultFocusedText();
+
+        profile.Operations.Should().NotContain(operation =>
+            operation.TypeId == FocusedTextBuiltInOperationTypes.Opacity);
+        await Task.CompletedTask;
+    }
+
+    [Test]
     public async Task TransitionExpressions_ShouldRoundTripForScalarAndColorParameters()
     {
         var source = LyricEffectPresets.CreateDefaultProfile();

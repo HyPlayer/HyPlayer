@@ -22,7 +22,7 @@ public sealed class FocusedLyricTextRenderer
     private static readonly ConcurrentDictionary<string, byte> ReportedOperationFailures = new(StringComparer.Ordinal);
     private readonly Dictionary<FocusedTransitionKey, ScalarTransitionState> _scalarTransitions = [];
     private readonly Dictionary<FocusedTransitionKey, ColorTransitionState> _colorTransitions = [];
-    private readonly Dictionary<LyricGlyphCluster, CanvasCommandList> _glyphSources = [];
+    private readonly Dictionary<GlyphSourceKey, CanvasCommandList> _glyphSources = [];
     private readonly Dictionary<LineRevealKey, FocusedLineRevealTimeline> _lineRevealTimelines = [];
     private readonly Dictionary<LineRevealFrameKey, LineRevealFrame> _lineRevealFrames = [];
     private readonly Dictionary<LineMaskKey, CanvasCommandList> _lineMasks = [];
@@ -155,7 +155,8 @@ public sealed class FocusedLyricTextRenderer
             break;
         }
         if (reveal is null) return true;
-        if (!ShouldUseLineRevealForTarget(options.Mode, reveal.Targets, contribution.Target) ||
+        if (!contribution.ParticipatesInReveal ||
+            !ShouldUseLineRevealForTarget(options.Mode, reveal.Targets, contribution.Target) ||
             !CanPruneLineContributions(profile)) return true;
 
         var lineFrame = GetLineRevealFrame(reveal, contribution, layout, line, frame);
@@ -219,7 +220,8 @@ public sealed class FocusedLyricTextRenderer
         LyricExpressionLine line,
         LyricExpressionFrame frame)
     {
-        var state = LyricGlyphDrawState.FromCluster(contribution.Cluster, layout.FocusingColor);
+        var baseColor = GetContributionBaseColor(layout.IdleColor, layout.FocusingColor, contribution.Target);
+        var state = LyricGlyphDrawState.FromCluster(contribution.Cluster, baseColor);
         var revealProgress = contribution.WordProgress;
         var hasRectangleClip = false;
         var highlighted = false;
@@ -244,8 +246,11 @@ public sealed class FocusedLyricTextRenderer
                     case FocusedTextBuiltInOperationTypes.HighlightReveal:
                         revealProgress = contribution.WordProgress;
                         var options = RevealOptions.From(operation.Definition);
-                        if (options.Mode == HighlightRevealMode.RectangleClip ||
-                            contribution.State is FocusedTargetState.CurrentHighlighted or FocusedTargetState.CurrentPending)
+                        if (ShouldApplyHighlightReveal(
+                                options.Mode,
+                                contribution.ParticipatesInReveal,
+                                contribution.State is FocusedTargetState.CurrentHighlighted or
+                                    FocusedTargetState.CurrentPending))
                         {
                             var offset = Scalar(operation, contribution, "revealTimeOffsetMs", line, frame, scopes, 0);
                             var adjusted = GetRevealWordProgress(frame.CurrentTimeMs, contribution.WordStart,
@@ -266,8 +271,7 @@ public sealed class FocusedLyricTextRenderer
                         break;
                     case FocusedTextBuiltInOperationTypes.Color:
                         var color = ColorValue(operation, contribution, "color", line, frame, scopes,
-                            new LyricColorValue(layout.FocusingColor.A, layout.FocusingColor.R,
-                                layout.FocusingColor.G, layout.FocusingColor.B));
+                            new LyricColorValue(baseColor.A, baseColor.R, baseColor.G, baseColor.B));
                         // AlphaMaskEffect multiplies the replacement color by the complete
                         // input alpha. Preserve that accumulation when drawing directly.
                         state.Opacity *= state.Color.A / 255f;
@@ -472,7 +476,7 @@ public sealed class FocusedLyricTextRenderer
         var end = selectedToken?.EndTime ?? line.EndMs;
         var progress = WordProgress(timeMs, start, end);
         return new Contribution(selected, Target(selected.Layer, FocusedTargetState.CurrentHighlighted),
-            FocusedTargetState.CurrentHighlighted, selectedToken, start, end, progress);
+            FocusedTargetState.CurrentHighlighted, selectedToken, start, end, progress, selectedToken is not null);
     }
 
     private static IReadOnlyList<LyricGlyphCluster> ClustersForLayer(
@@ -508,12 +512,13 @@ public sealed class FocusedLyricTextRenderer
         LyricGlyphCluster cluster,
         Windows.UI.Color color)
     {
-        if (_glyphSources.TryGetValue(cluster, out var source)) return source;
+        var key = new GlyphSourceKey(cluster, color);
+        if (_glyphSources.TryGetValue(key, out var source)) return source;
         source = new CanvasCommandList(session);
         using (var drawing = source.CreateDrawingSession())
         using (var brush = new CanvasSolidColorBrush(drawing, color))
             GlyphRunDrawHelper.DrawCluster(drawing, brush, LyricGlyphDrawState.FromCluster(cluster, color));
-        _glyphSources.Add(cluster, source);
+        _glyphSources.Add(key, source);
         return source;
     }
 
@@ -529,7 +534,8 @@ public sealed class FocusedLyricTextRenderer
         var resources = _contributionResources;
         try
         {
-            var image = (ICanvasImage)GetGlyphSource(session, contribution.Cluster, layout.FocusingColor);
+            var baseColor = GetContributionBaseColor(layout.IdleColor, layout.FocusingColor, contribution.Target);
+            var image = (ICanvasImage)GetGlyphSource(session, contribution.Cluster, baseColor);
             var geometryTransform = Matrix3x2.Identity;
             var currentOrigin = contribution.Cluster.BaseState.Origin;
             var revealProgress = contribution.WordProgress;
@@ -553,8 +559,7 @@ public sealed class FocusedLyricTextRenderer
                             break;
                         case FocusedTextBuiltInOperationTypes.Color:
                             image = ApplyColor(operation, contribution, input, resources, line, frame, scopes,
-                                new LyricColorValue(layout.FocusingColor.A, layout.FocusingColor.R,
-                                    layout.FocusingColor.G, layout.FocusingColor.B));
+                                new LyricColorValue(baseColor.A, baseColor.R, baseColor.G, baseColor.B));
                             break;
                         case FocusedTextBuiltInOperationTypes.Opacity:
                             image = ApplyOpacity(operation, contribution, input, resources, line, frame, scopes);
@@ -620,8 +625,10 @@ public sealed class FocusedLyricTextRenderer
     {
         revealProgress = contribution.WordProgress;
         var options = RevealOptions.From(operation.Definition);
-        if (options.Mode != HighlightRevealMode.RectangleClip &&
-            contribution.State is not (FocusedTargetState.CurrentHighlighted or FocusedTargetState.CurrentPending))
+        if (!ShouldApplyHighlightReveal(
+                options.Mode,
+                contribution.ParticipatesInReveal,
+                contribution.State is FocusedTargetState.CurrentHighlighted or FocusedTargetState.CurrentPending))
             return input;
 
         var offset = Scalar(operation, contribution, "revealTimeOffsetMs", line, frame, scopes, 0);
@@ -1210,7 +1217,7 @@ public sealed class FocusedLyricTextRenderer
     {
         if (layer == LyricTextLayer.Translation)
             return new ContributionSet(new Contribution(cluster, FocusedTextTargets.Translation,
-                FocusedTargetState.Highlighted, null, line.StartMs, line.EndMs, line.Progress));
+                FocusedTargetState.Highlighted, null, line.StartMs, line.EndMs, line.Progress, false));
 
         var tokens = layout.Tokens;
         var useWords = layout.HasRealWords || options.UntimedMode == UntimedHighlightMode.InferWords;
@@ -1223,7 +1230,7 @@ public sealed class FocusedLyricTextRenderer
                               options.TransliterationMode == TransliterationProgressMode.WholeLine;
             var state = highlighted ? FocusedTargetState.Highlighted : FocusedTargetState.Unhighlighted;
             return new ContributionSet(new Contribution(cluster, Target(layer, state), state, null,
-                line.StartMs, line.EndMs, highlighted ? 1 : 0));
+                line.StartMs, line.EndMs, highlighted ? 1 : 0, false));
         }
 
         var tokenIndex = Math.Clamp(cluster.TokenStartIndex, 0, tokens.Count - 1);
@@ -1242,23 +1249,23 @@ public sealed class FocusedLyricTextRenderer
                 : FocusedTargetState.CurrentPending;
             return new ContributionSet(
                 new Contribution(cluster, Target(layer, pendingState), pendingState,
-                    token, token.StartTime, token.EndTime, progress),
+                    token, token.StartTime, token.EndTime, progress, true),
                 new Contribution(cluster, Target(layer, highlightedState), highlightedState,
-                    token, token.StartTime, token.EndTime, progress));
+                    token, token.StartTime, token.EndTime, progress, true));
         }
 
         if (timeMs < token.StartTime)
             return new ContributionSet(new Contribution(cluster, Target(layer, FocusedTargetState.Unhighlighted),
-                FocusedTargetState.Unhighlighted, token, token.StartTime, token.EndTime, 0));
+                FocusedTargetState.Unhighlighted, token, token.StartTime, token.EndTime, 0, true));
         if (timeMs >= token.EndTime)
             return new ContributionSet(new Contribution(cluster, Target(layer, FocusedTargetState.Highlighted),
-                FocusedTargetState.Highlighted, token, token.StartTime, token.EndTime, 1));
+                FocusedTargetState.Highlighted, token, token.StartTime, token.EndTime, 1, true));
 
         return new ContributionSet(
             new Contribution(cluster, Target(layer, FocusedTargetState.CurrentPending),
-                FocusedTargetState.CurrentPending, token, token.StartTime, token.EndTime, progress),
+                FocusedTargetState.CurrentPending, token, token.StartTime, token.EndTime, progress, true),
             new Contribution(cluster, Target(layer, FocusedTargetState.CurrentHighlighted),
-                FocusedTargetState.CurrentHighlighted, token, token.StartTime, token.EndTime, progress));
+                FocusedTargetState.CurrentHighlighted, token, token.StartTime, token.EndTime, progress, true));
     }
 
     private static LiftWord? ResolveLiftWord(
@@ -1398,6 +1405,21 @@ public sealed class FocusedLyricTextRenderer
                               targets,
                               target);
 
+    internal static bool ShouldApplyHighlightReveal(
+        HighlightRevealMode mode,
+        bool participatesInReveal,
+        bool isCurrentContribution) =>
+        participatesInReveal &&
+        (mode == HighlightRevealMode.RectangleClip || isCurrentContribution);
+
+    internal static Color GetContributionBaseColor(Color idleColor, Color accentColor, string target) =>
+        target is FocusedTextTargets.LyricHighlighted or
+            FocusedTextTargets.LyricCurrentHighlighted or
+            FocusedTextTargets.TransliterationHighlighted or
+            FocusedTextTargets.TransliterationCurrentHighlighted
+            ? accentColor
+            : idleColor;
+
     private readonly record struct Contribution(
         LyricGlyphCluster Cluster,
         string Target,
@@ -1405,7 +1427,10 @@ public sealed class FocusedLyricTextRenderer
         LyricTextToken? Word,
         long WordStart,
         long WordEnd,
-        float WordProgress);
+        float WordProgress,
+        bool ParticipatesInReveal);
+
+    private readonly record struct GlyphSourceKey(LyricGlyphCluster Cluster, Color Color);
 
     private readonly record struct LineRevealKey(LyricTextLayer Layer, int VisualLineIndex);
 

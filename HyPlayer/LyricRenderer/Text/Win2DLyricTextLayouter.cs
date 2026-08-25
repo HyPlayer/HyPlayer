@@ -159,24 +159,24 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             {
                 if (useDynamicTransliteration)
                 {
-                    transliterationSessionToDispose!.DrawTextLayout(transliterationLayout, drawOffsetX, actualTop, request.FocusingColor);
+                    transliterationSessionToDispose!.DrawTextLayout(transliterationLayout, drawOffsetX, actualTop, request.IdleColor);
                 }
                 else
                 {
-                    staticSession.DrawTextLayout(transliterationLayout, drawOffsetX, actualTop, request.FocusingColor);
+                    staticSession.DrawTextLayout(transliterationLayout, drawOffsetX, actualTop, request.IdleColor);
                 }
 
                 actualTop += (float)transliterationLayout.LayoutBounds.Height;
             }
 
             textRenderActualTop = actualTop;
-            defaultTextSession.DrawTextLayout(textLayout, drawOffsetX, 0, request.FocusingColor);
+            defaultTextSession.DrawTextLayout(textLayout, drawOffsetX, 0, request.IdleColor);
             actualTop += (float)textLayout.LayoutBounds.Height;
 
             if (translationLayout is not null)
             {
                 translationRenderActualTop = actualTop;
-                translationSessionToDispose!.DrawTextLayout(translationLayout, drawOffsetX, 0, request.FocusingColor);
+                translationSessionToDispose!.DrawTextLayout(translationLayout, drawOffsetX, 0, request.IdleColor);
             }
             if (translationLayout is not null)
             {
@@ -249,6 +249,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             RenderingWidth = renderingWidth,
             RenderingHeight = renderingHeight,
             ScalingCenterX = scalingCenterX,
+            IdleColor = request.IdleColor,
             FocusingColor = request.FocusingColor,
             LyricGlyphClusters = lyricGlyphClusters,
             TransliterationGlyphClusters = transliterationGlyphClusters,
