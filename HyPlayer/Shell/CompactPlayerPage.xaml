@@ -442,6 +442,8 @@
                     Height="500"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
+                    AccentLyricColor="{ThemeResource SystemBaseHighColor}"
+                    LyricColor="{ThemeResource SystemBaseMediumColor}"
                     WordWrapping="NoWrap" />
 
                 <Viewbox

@@ -19,6 +19,9 @@
     <Page.Resources>
         <!--  ReSharper disable once Xaml.RedundantResource  -->
 
+        <SolidColorBrush x:Key="AccentBrush" Color="{ThemeResource SystemBaseHighColor}" />
+        <SolidColorBrush x:Key="IdleBrush" Color="{ThemeResource SystemBaseMediumColor}" />
+
         <Storyboard x:Key="ImageAlbumAni" x:Name="ImageAlbumAni">
             <DoubleAnimation
                 x:Name="albumAniOpacity"

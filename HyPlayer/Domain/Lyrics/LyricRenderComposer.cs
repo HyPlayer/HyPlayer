@@ -65,11 +65,11 @@ public static class LyricRenderComposer
         drawingSession.DrawTextLayout(textLayout, 0, 0, renderOption.LyricIdleColor);
         if (textLayoutTranslation is not null)
             drawingSession.DrawTextLayout(textLayoutTranslation, 0, (float)textLayout.DrawBounds.Bottom + 4,
-                Colors.LightGray);
+                renderOption.LyricIdleColor);
         if (textLayoutRomaji is not null)
             drawingSession.DrawTextLayout(textLayoutRomaji, 0,
                 (float)textLayout.DrawBounds.Top - (float)textLayoutRomaji.DrawBounds.Height -
-                8, Colors.LightGray);
+                8, renderOption.LyricIdleColor);
 
         if (!quickRender && lyric.LyricLine is KaraokeLyricsLine karaokeLyricsLine)
         {

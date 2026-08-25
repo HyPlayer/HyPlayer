@@ -19,6 +19,8 @@
         <x:Double x:Key="ContentDialogMinWidth">1120</x:Double>
         <x:Double x:Key="ContentDialogMaxWidth">1200</x:Double>
         <x:Double x:Key="ContentDialogMaxHeight">900</x:Double>
+        <SolidColorBrush x:Key="AccentBrush" Color="{ThemeResource SystemBaseHighColor}" />
+        <SolidColorBrush x:Key="IdleBrush" Color="{ThemeResource SystemBaseMediumColor}" />
     </ContentDialog.Resources>
 
     <Grid Width="1080" Height="700">

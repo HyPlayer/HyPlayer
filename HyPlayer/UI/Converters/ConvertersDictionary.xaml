@@ -14,7 +14,6 @@
     <classes:ReversedBooleanToVisibilityConverter x:Key="ReversedBooleanToVisibilityConverter" />
     <classes:EnumToIntConverter x:Key="EnumToIntConverter" />
     <classes:DateConverter x:Key="DateConverter" />
-    <classes:NullableColorToColorConverter x:Key="NullableColorToColorConverter" />
     <classes:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />
     <classes:ShaderConverter x:Key="ShaderConverter" />
     <classes:LuminousConverter x:Key="LuminousConverter" />

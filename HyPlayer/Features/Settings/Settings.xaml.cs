@@ -435,35 +435,6 @@ public sealed partial class Settings : Page
         _ = UpdateManager.GetUserCanaryChannelAvailability(canaryEmail.Text);
     }
 
-    private void ResetPureLyricIdleColor(object sender, RoutedEventArgs e)
-    {
-        Lyric.PureLyricIdleColor = null;
-    }
-
-    private void ConfirmPureLyricIdleColor(object sender, RoutedEventArgs e)
-    {
-        Lyric.PureLyricIdleColor = PureLyricIdle.SelectedColor;
-    }
-
-    private void ResetPureLyricFocusingColor(object sender, RoutedEventArgs e)
-    {
-        Lyric.PureLyricFocusingColor = null;
-    }
-
-    private void ConfirmPureLyricFocusingColor(object sender, RoutedEventArgs e)
-    {
-        Lyric.PureLyricFocusingColor = PureLyricFocusing.SelectedColor;
-    }
-
-    private void ResetKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
-    {
-        Lyric.KaraokeLyricFocusingColor = null;
-    }
-
-    private void ConfirmKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
-    {
-        Lyric.KaraokeLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
-    }
 
     private async void AboutRomaji_Click(object sender, RoutedEventArgs e)
     {

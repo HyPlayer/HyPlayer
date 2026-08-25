@@ -1,6 +1,4 @@
 using System;
-using Windows.Storage;
-using Windows.UI;
 
 namespace HyPlayer.Domain.Settings;
 
@@ -303,64 +301,6 @@ public partial class LyricSettings : SettingsBase
         set => SetSettings(nameof(LyricRendererDebugMode), value);
     }
 
-#nullable enable
-    /// <summary>
-    ///     Pure lyric idle color override.
-    /// </summary>
-    public Color? PureLyricIdleColor
-    {
-        get
-        {
-            var bytes = GetSettings<byte[]?>(nameof(PureLyricIdleColor), null);
-            return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
-        }
-        set
-        {
-            var bytes = value.HasValue
-                ? new[] { value.Value.A, value.Value.R, value.Value.G, value.Value.B }
-                : null;
-            SetSettings(nameof(PureLyricIdleColor), bytes, nameof(PureLyricIdleColor));
-        }
-    }
-
-    /// <summary>
-    ///     Pure lyric focusing color override.
-    /// </summary>
-    public Color? PureLyricFocusingColor
-    {
-        get
-        {
-            var bytes = GetSettings<byte[]?>(nameof(PureLyricFocusingColor), null);
-            return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
-        }
-        set
-        {
-            var bytes = value.HasValue
-                ? new[] { value.Value.A, value.Value.R, value.Value.G, value.Value.B }
-                : null;
-            SetSettings(nameof(PureLyricFocusingColor), bytes, nameof(PureLyricFocusingColor));
-        }
-    }
-
-    /// <summary>
-    ///     Karaoke lyric focusing color override.
-    /// </summary>
-    public Color? KaraokeLyricFocusingColor
-    {
-        get
-        {
-            var bytes = GetSettings<byte[]?>(nameof(KaraokeLyricFocusingColor), null);
-            return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
-        }
-        set
-        {
-            var bytes = value.HasValue
-                ? new[] { value.Value.A, value.Value.R, value.Value.G, value.Value.B }
-                : null;
-            SetSettings(nameof(KaraokeLyricFocusingColor), bytes, nameof(KaraokeLyricFocusingColor));
-        }
-    }
-#nullable restore
 
     /// <summary>
     ///     Whether Isolation full throttle mode is enabled.

@@ -581,10 +581,14 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.ChangeRenderColor(theme.IdleBrush.Color, theme.AccentBrush.Color);
     }
 
-    private void ApplyPlaybackTheme(PlaybackThemeSnapshot theme)
+    private void ApplyPlaybackTheme(bool isBright)
     {
+        RequestedTheme = isBright ? ElementTheme.Light : ElementTheme.Dark;
+        var accentBrush = (SolidColorBrush)Resources["AccentBrush"];
+        var idleBrush = (SolidColorBrush)Resources["IdleBrush"];
+        var theme = new PlaybackThemeSnapshot(accentBrush, idleBrush, accentBrush.Color, isBright);
         ViewModel.DisplayedTheme = theme;
-        _canvasState.IsBrightTheme = theme.IsBright;
+        _canvasState.IsBrightTheme = isBright;
         _surfaceStore.Theme = theme;
     }
 
@@ -773,14 +777,6 @@ public sealed partial class ExpandedPlayer : Page
     private async Task<bool> IsBrightAsync(IRandomAccessStream stream)
     {
         _lastCoverSong = _state.NowPlayingProviderItem;
-        var finalResult = false; //在不手动指定背景类型为2至5时需要执行颜色采样
-        var resultGenerated = false; //标志返回颜色已经生成
-        if (_uiSettings.LyricColor != LyricColor.Auto && _uiSettings.LyricColor != LyricColor.FollowCover)
-        {
-            finalResult = _uiSettings.LyricColor == LyricColor.Black;
-            resultGenerated = true;
-        }
-
         if (_state.NowPlayingProviderItem == null) return false;
         try
         {
@@ -814,22 +810,12 @@ public sealed partial class ExpandedPlayer : Page
             if (_uiSettings.ExpandedPlayerBackgroundType is BackgroundType.CoverTheme)
                 PageContainer.Background =
                     new SolidColorBrush(_albumMainColor!.Value);
-            if (!resultGenerated)
-            {
-                finalResult = !new Vector3(theme.R, theme.G, theme.B).RGBVectorLStarIsDark();
-                resultGenerated = true;
-            }
+            return !new Vector3(theme.R, theme.G, theme.B).RGBVectorLStarIsDark();
         }
         catch
         {
-            if (!resultGenerated)
-            {
-                finalResult = false; //如果颜色生成失败（例如解码失败），默认使用黑色字体
-                resultGenerated = true;
-            }
+            return false;
         }
-
-        return finalResult;
     }
 
     private void BtnSpeedMinusClick(object sender, RoutedEventArgs e)
@@ -1094,7 +1080,7 @@ public sealed partial class ExpandedPlayer : Page
                         BlackCover.Fill = new SolidColorBrush(Color.FromArgb(80, 255, 255, 255));
                     else if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated && !isBright)
                         BlackCover.Fill = new SolidColorBrush(Color.FromArgb(80, 0, 0, 0));
-                    ApplyPlaybackTheme(ExpandedPlayerThemeFactory.Create(_uiSettings, _lyricSettings, _albumMainColor, isBright));
+                    ApplyPlaybackTheme(isBright);
                     if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
                         _likeAppleBackgroundLayer.SetLightTheme(isBright);
 

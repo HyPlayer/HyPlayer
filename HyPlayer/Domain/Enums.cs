@@ -33,13 +33,6 @@ public enum UpdateSource
     CI = 4
 }
 
-public enum LyricColor
-{
-    Auto = 0,
-    White = 1,
-    Black = 2,
-    FollowCover = 3
-}
 
 public enum OccupySolution
 {

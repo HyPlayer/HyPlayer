@@ -197,22 +197,14 @@ DoubleAnimation verticalAnimation;
 
     private void ApplyCompactPlaybackTheme()
     {
-        var theme = ActualTheme == ElementTheme.Light ? ElementTheme.Light : ElementTheme.Dark;
-        ApplyPlaybackTheme(CreateCompactPlaybackTheme(theme));
-    }
-
-    private static PlaybackThemeSnapshot CreateCompactPlaybackTheme(ElementTheme theme)
-    {
-        var isLight = theme == ElementTheme.Light;
-        var accentColor = isLight ? Colors.Black : Colors.White;
-        var idleColor = isLight
-            ? Color.FromArgb(114, 0, 0, 0)
-            : Color.FromArgb(66, 255, 255, 255);
-        return new PlaybackThemeSnapshot(
-            new SolidColorBrush(accentColor),
-            new SolidColorBrush(idleColor),
-            accentColor,
-            isLight);
+        var accentBrush = Resources["AccentBrush"].As<SolidColorBrush>();
+        var idleBrush = Resources["IdleBrush"].As<SolidColorBrush>();
+        var isLight = ActualTheme == ElementTheme.Light;
+        ApplyPlaybackTheme(new PlaybackThemeSnapshot(
+            accentBrush,
+            idleBrush,
+            accentBrush.Color,
+            isLight));
     }
 
     private void StartPreparedCollapseAnimations()

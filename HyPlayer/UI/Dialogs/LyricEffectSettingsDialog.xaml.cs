@@ -170,7 +170,10 @@ public sealed partial class LyricEffectSettingsDialog : ContentDialog
         _preview.Context.Effects.CacheRenderTarget = false;
         _preview.Context.Effects.SimpleLineScanning = false;
         _preview.ChangeRenderFontSize(25, 14, 14);
-        _preview.ChangeRenderColor(Colors.White, Color.FromArgb(255, 255, 213, 79), Colors.Black);
+        _preview.ChangeRenderColor(
+            Resources["IdleBrush"].As<SolidColorBrush>().Color,
+            Resources["AccentBrush"].As<SolidColorBrush>().Color,
+            Colors.Black);
         _preview.SetLyricLines(
         [
             new TextRenderingLyricLine { Text = "Lorem ipsum dolor sit amet", StartTime = 0, EndTime = 3000, KeyFrames = [0, 3000], Typography = new(){ Alignment  = TextAlignment.Start} },

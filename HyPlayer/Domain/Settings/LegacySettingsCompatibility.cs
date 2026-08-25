@@ -1,5 +1,4 @@
 using System;
-using Windows.UI;
 
 namespace HyPlayer.Domain.Settings;
 
@@ -28,7 +27,6 @@ public partial class UISettings
     public bool noImage { get => NoImage; set => NoImage = value; }
     public LyricAlignment lyricAlignment { get => LyricAlignment; set => LyricAlignment = value; }
     public int lyricSize { get => LyricSize; set => LyricSize = value; }
-    public LyricColor lyricColor { get => LyricColor; set => LyricColor = value; }
     public BackgroundType expandedPlayerBackgroundType { get => ExpandedPlayerBackgroundType; set => ExpandedPlayerBackgroundType = value; }
     public bool albumRotate { get => AlbumRotate; set => AlbumRotate = value; }
     public bool albumRound { get => AlbumRound; set => AlbumRound = value; }
@@ -91,9 +89,6 @@ public partial class LyricSettings
     public bool lyricRenderTransform3D { get => LyricRenderTransform3D; set => LyricRenderTransform3D = value; }
     public bool lyricRenderBlur { get => LyricRenderBlur; set => LyricRenderBlur = value; }
     public bool lyricRenderFade { get => LyricRenderFade; set => LyricRenderFade = value; }
-    public Color? pureLyricIdleColor { get => PureLyricIdleColor; set => PureLyricIdleColor = value; }
-    public Color? pureLyricFocusingColor { get => PureLyricFocusingColor; set => PureLyricFocusingColor = value; }
-    public Color? karaokLyricFocusingColor { get => KaraokeLyricFocusingColor; set => KaraokeLyricFocusingColor = value; }
 }
 
 public partial class LastFMSettings

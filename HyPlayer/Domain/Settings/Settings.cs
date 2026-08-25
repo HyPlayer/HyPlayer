@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.Storage;
-using Windows.UI;
 using HyPlayerUISettings = HyPlayer.Domain.Settings.UISettings;
 
 namespace HyPlayer.Domain.Settings
@@ -77,7 +76,6 @@ namespace HyPlayer.Domain.Settings
         public bool noImage { get => UI.noImage; set { UI.noImage = value; OnPropertyChanged(); } }
         public LyricAlignment lyricAlignment { get => UI.lyricAlignment; set { UI.lyricAlignment = value; OnPropertyChanged(); } }
         public int lyricSize { get => UI.lyricSize; set { UI.lyricSize = value; OnPropertyChanged(); } }
-        public LyricColor lyricColor { get => UI.lyricColor; set { UI.lyricColor = value; OnPropertyChanged(); } }
         public ColorGeneratorType ColorGeneratorType { get => UI.ColorGeneratorType; set { UI.ColorGeneratorType = value; OnPropertyChanged(); } }
         public BackgroundType expandedPlayerBackgroundType { get => UI.expandedPlayerBackgroundType; set { UI.expandedPlayerBackgroundType = value; OnPropertyChanged(); } }
         public bool albumRotate { get => UI.albumRotate; set { UI.albumRotate = value; OnPropertyChanged(); } }
@@ -152,11 +150,6 @@ namespace HyPlayer.Domain.Settings
         public bool lyricRenderFade { get => Lyric.lyricRenderFade; set { Lyric.lyricRenderFade = value; OnPropertyChanged(); } }
         public RollingCalculator LineRollingCalculator { get => Lyric.LineRollingCalculator; set { Lyric.LineRollingCalculator = value; OnPropertyChanged(); } }
         public bool LyricRendererDebugMode { get => Lyric.LyricRendererDebugMode; set { Lyric.LyricRendererDebugMode = value; OnPropertyChanged(); } }
-#nullable enable
-        public Color? pureLyricIdleColor { get => Lyric.pureLyricIdleColor; set { Lyric.pureLyricIdleColor = value; OnPropertyChanged(); } }
-        public Color? pureLyricFocusingColor { get => Lyric.pureLyricFocusingColor; set { Lyric.pureLyricFocusingColor = value; OnPropertyChanged(); } }
-        public Color? karaokLyricFocusingColor { get => Lyric.karaokLyricFocusingColor; set { Lyric.karaokLyricFocusingColor = value; OnPropertyChanged(); } }
-#nullable restore
         public bool IsolationFullThrottle { get => Lyric.IsolationFullThrottle; set { Lyric.IsolationFullThrottle = value; OnPropertyChanged(); } }
         public double IsolationFPS { get => Lyric.IsolationFPS; set { Lyric.IsolationFPS = value; OnPropertyChanged(); } }
         public float IsolationScale { get => Lyric.IsolationScale; set { Lyric.IsolationScale = value; OnPropertyChanged(); } }

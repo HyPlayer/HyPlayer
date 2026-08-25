@@ -57,14 +57,6 @@ public partial class UISettings : SettingsBase
         set => SetSettings(nameof(LyricSize), value);
     }
 
-    /// <summary>
-    ///     Lyric color mode.
-    /// </summary>
-    public LyricColor LyricColor
-    {
-        get => GetSettings(nameof(LyricColor), LyricColor.Auto);
-        set => SetSettings(nameof(LyricColor), (int)value);
-    }
 
     /// <summary>
     ///     Color generator type for theming.

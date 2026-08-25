@@ -6,11 +6,8 @@ using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.Text;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
+using System.Collections.Generic;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 
@@ -18,8 +15,6 @@ namespace HyPlayer.Domain.Lyrics;
 
 public static class LrcConverter
 {
-    private static readonly ConcurrentDictionary<string, byte> ReportedInvalidStyleColors =
-        new(StringComparer.Ordinal);
 
     public static readonly List<ILyricEnhancer<bool>> LyricEnhancers =
     [
@@ -153,24 +148,22 @@ public static class LrcConverter
     {
         var source = item.Line;
         styles.TryGetValue(source.LineStyle ?? string.Empty, out var style);
-        var styleColor = TryParseColor(style?.Color, source.LineStyle);
         var words = source.Words is { Count: > 0 } ? source.Words : null;
         var text = words is null ? source.RawText ?? string.Empty : string.Concat(words.Select(word => word.Word));
         var transliteration = words?.Any(word => !string.IsNullOrEmpty(word.Transliteration)) == true
             ? string.Concat(words.Select(word => word.Transliteration ?? string.Empty))
             : source.Transliteration;
-        var typography = style is null && styleColor is null
+        var typography = style is null
             ? null
             : new RenderTypography
             {
-                Alignment = style?.Position switch
+                Alignment = style.Position switch
                 {
                     ALRCStylePosition.Left => TextAlignment.Left,
                     ALRCStylePosition.Center => TextAlignment.Center,
                     ALRCStylePosition.Right => TextAlignment.Right,
                     _ => null
-                },
-                FocusingColor = styleColor
+                }
             };
 
         RenderingLyricLine line;
@@ -197,7 +190,6 @@ public static class LrcConverter
         line.SourceLine = source;
         line.SourceStyle = style;
         line.StyleTable = styles;
-        line.SourceStyleColor = styleColor;
         line.HiddenOnBlur = style?.HiddenOnBlur == true;
         line.FactoIndex = item.OriginalIndex;
         line.GroupIndex = item.GroupIndex;
@@ -209,33 +201,6 @@ public static class LrcConverter
         return line;
     }
 
-    private static Windows.UI.Color? TryParseColor(string? source, string? styleId)
-    {
-        if (string.IsNullOrWhiteSpace(source)) return null;
-        var text = source.Trim();
-        if (text.StartsWith('#')) text = text[1..];
-        try
-        {
-            var value = text.Length switch
-            {
-                6 => uint.Parse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture) | 0xFF000000u,
-                8 => uint.Parse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture),
-                _ => throw new FormatException()
-            };
-            return Windows.UI.Color.FromArgb(
-                (byte)(value >> 24),
-                (byte)(value >> 16),
-                (byte)(value >> 8),
-                (byte)value);
-        }
-        catch (FormatException)
-        {
-            var key = $"{styleId}\u001f{source}";
-            if (ReportedInvalidStyleColors.TryAdd(key, 0))
-                Debug.WriteLine($"ALRC style '{styleId}' contains invalid color '{source}'.");
-            return null;
-        }
-    }
 
     private sealed record ResolvedLine(ALRCLine Line, int OriginalIndex, long Start, long End)
     {

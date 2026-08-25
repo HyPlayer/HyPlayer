@@ -17,6 +17,9 @@
     Unloaded="UserControl_Unloaded"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <SolidColorBrush x:Key="AccentBrush" Color="{ThemeResource SystemBaseHighColor}" />
+        <SolidColorBrush x:Key="IdleBrush" Color="{ThemeResource SystemBaseMediumColor}" />
+
         <Flyout x:Key="VolumeFlyout">
             <Grid>
                 <Grid.ColumnDefinitions>

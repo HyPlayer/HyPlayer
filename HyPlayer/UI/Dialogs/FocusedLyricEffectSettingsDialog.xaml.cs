@@ -137,7 +137,10 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
         _preview.Context.EnableTransliteration = true;
         _preview.Context.EnableTranslation = true;
         _preview.ChangeRenderFontSize(27, 15, 15);
-        _preview.ChangeRenderColor(Colors.White, Color.FromArgb(255, 255, 213, 79), Colors.Black);
+        _preview.ChangeRenderColor(
+            Resources["IdleBrush"].As<SolidColorBrush>().Color,
+            Resources["AccentBrush"].As<SolidColorBrush>().Color,
+            Colors.Black);
         SetPreviewLyrics("Timed");
     }
 
