@@ -190,7 +190,7 @@ public static class LrcConverter
         line.SourceLine = source;
         line.SourceStyle = style;
         line.StyleTable = styles;
-        line.HiddenOnBlur = style?.HiddenOnBlur == true;
+        line.HiddenOnBlur = style?.HiddenOnBlur == true || style?.Type == ALRCStyleAccent.Background;
         line.FactoIndex = item.OriginalIndex;
         line.GroupIndex = item.GroupIndex;
         line.GroupStartTime = item.GroupStart;

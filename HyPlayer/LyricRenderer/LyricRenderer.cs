@@ -98,9 +98,9 @@ namespace HyPlayer.LyricRenderer
             Context.SublineTypography.LyricFontSize =
                 sublineLyricSize > 0 ? sublineLyricSize : lyricSize / 2;
             Context.SublineTypography.TranslationFontSize =
-                sublineTranslationSize > 0 ? sublineTranslationSize : lyricSize / 2;
+                sublineTranslationSize > 0 ? sublineTranslationSize : lyricSize / 3;
             Context.SublineTypography.TransliterationFontSize =
-                sublineTransliterationSize > 0 ? sublineTransliterationSize : lyricSize / 2;
+                sublineTransliterationSize > 0 ? sublineTransliterationSize : lyricSize / 3;
             _isTypographyChanged = true;
         }
 

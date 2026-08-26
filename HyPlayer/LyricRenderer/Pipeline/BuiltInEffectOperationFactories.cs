@@ -71,6 +71,8 @@ internal sealed partial class OpacityOperationFactory(ILyricExpressionCompiler c
 
         public ICanvasImage Apply(ICanvasImage source, LyricRenderOperationContext context)
         {
+            if (context.Frame.IsScrolling) return source;
+
             var value = opacity.Evaluate(context);
             if (value >= 1) return source;
             _effect.Source = source;
