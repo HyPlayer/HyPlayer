@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
@@ -22,10 +21,10 @@ public partial class FavoriteViewModel(
 
     [ObservableProperty] public partial ContainerBase? ContentContainer { get; set; }
 
-    public void OnSelectionChanged(NavigationViewItem item)
+    public void SelectCategory(string tag)
     {
-        if (item.Tag is not string tag || string.IsNullOrWhiteSpace(tag)
-                                           || string.Equals(_currentTag, tag, StringComparison.Ordinal))
+        if (string.IsNullOrWhiteSpace(tag) ||
+            string.Equals(_currentTag, tag, StringComparison.Ordinal))
             return;
 
         _currentTag = tag;

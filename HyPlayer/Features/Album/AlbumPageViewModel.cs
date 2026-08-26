@@ -27,8 +27,6 @@ public partial class AlbumPageViewModel : ObservableObject
     private readonly INotificationService _notification;
     private readonly UISettings _setting;
     private readonly IBackgroundTaskRunner _taskRunner;
-    private Task<AlbumBase> _providerAlbumTask;
-    private string _providerAlbumTaskId;
 
     public AlbumPageViewModel(
         IProvidableItemProvidable itemProvider,
@@ -62,46 +60,47 @@ public partial class AlbumPageViewModel : ObservableObject
 
     [ObservableProperty] public partial long PublishTime { get; set; }
 
-    public async Task LoadAlbumDynamic(string albumId)
-    {
-        var album = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumDynamic, albumId,
-            async () => { return await LoadProviderAlbumAsync(albumId); });
-
-        if (album is not null) Subscribed = album is IHasLibraryState { IsInCurrentUserLibrary: true };
-    }
-
-    public async Task LoadAlbumInfo(string albumId)
+    public async Task LoadAsync(string albumId)
     {
         try
         {
-            var providerAlbum = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, albumId, async () =>
-                await LoadProviderAlbumAsync(albumId));
+            var album = await SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.AlbumInfo,
+                albumId,
+                () => LoadProviderAlbumAsync(albumId));
+            if (album is null)
+                return;
 
-            if (providerAlbum is null) return;
-
-            Album = providerAlbum;
-            if (!_setting.NoImage && await GetCoverUriAsync(Album) is { } coverUri)
+            Album = album;
+            if (!_setting.NoImage && await GetCoverUriAsync(album) is { } coverUri)
                 SourceImage = new BitmapImage(coverUri);
-            else SourceImage = new BitmapImage(new Uri("/Assets/icon.png"));
+            else
+                SourceImage = new BitmapImage(new Uri("/Assets/icon.png"));
 
-            var artists = providerAlbum is IHasCreators creatorsProvider
-                ? await creatorsProvider.GetCreatorsAsync()
-                : null;
-            Artists = artists ?? [];
-            AuthorString = string.Join(" / ", artists?.Select(t => t.Name) ?? []);
-            var aliases = providerAlbum is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
-            var description = providerAlbum is IHasDescription descriptionProvider
+            Artists = album is IHasCreators creatorsProvider
+                ? await creatorsProvider.GetCreatorsAsync() ?? []
+                : [];
+            AuthorString = string.Join(" / ", Artists.Select(artist => artist.Name));
+
+            var aliases = album is IHasAliases aliasProvider ? aliasProvider.Aliases : null;
+            var description = album is IHasDescription descriptionProvider
                 ? descriptionProvider.Description
                 : null;
             Description = (aliases is { Count: > 0 } ? string.Join(" / ", aliases) + "\r\n" : string.Empty) +
                           description;
-            PublishTime = providerAlbum is IHasPublishTime publishTimeProvider
+            PublishTime = album is IHasPublishTime publishTimeProvider
                 ? publishTimeProvider.PublishTime
                 : 0;
+
+            var dynamicAlbum = await SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.AlbumDynamic,
+                albumId,
+                () => Task.FromResult(album));
+            Subscribed = dynamicAlbum is IHasLibraryState { IsInCurrentUserLibrary: true };
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            _notification.ShowMessage("获取专辑信息失败", ex.Message);
         }
     }
 
@@ -125,17 +124,9 @@ public partial class AlbumPageViewModel : ObservableObject
         Subscribed = false;
     }
 
-    private async Task<AlbumBase> LoadProviderAlbumAsync(string albumId)
-    {
-        if (_providerAlbumTask is not null && _providerAlbumTaskId == albumId)
-            return await _providerAlbumTask;
 
-        _providerAlbumTaskId = albumId;
-        _providerAlbumTask = LoadProviderAlbumCoreAsync(albumId);
-        return await _providerAlbumTask;
-    }
-
-    private async Task<AlbumBase> LoadProviderAlbumCoreAsync(string albumId)
+#nullable enable
+    private async Task<AlbumBase?> LoadProviderAlbumAsync(string albumId)
     {
         if (await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.AlbumTypeId + albumId) is AlbumBase album)
             return album;
@@ -143,7 +134,7 @@ public partial class AlbumPageViewModel : ObservableObject
         _notification.ShowMessage("获取专辑信息失败", "未能从提供程序加载专辑");
         return null;
     }
-
+#nullable restore
     private static async Task<Uri?> GetCoverUriAsync(AlbumBase album)
     {
         if (album is not IHasCover coverProvider)

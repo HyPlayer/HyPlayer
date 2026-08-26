@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Application.State;
 using HyPlayer.Features.Account.Services;
@@ -26,6 +25,7 @@ public partial class HomeViewModel : ObservableObject
 {
 #nullable enable
     private readonly IProvidableItemProvidable _itemProvider;
+    private readonly IAuthService _auth;
     private readonly IProviderSpecialContainerTypeIds _specialContainerTypeIds;
     private readonly PlayCoreBase _playCore;
     private readonly IPlaybackControlService _control;
@@ -33,8 +33,6 @@ public partial class HomeViewModel : ObservableObject
     private readonly IUserLibraryStateService _userLibraryState;
     private List<SingleSongBase> _recommendedProviderSongs = [];
     private Task? _loadDataTask;
-    private bool _hasLoaded;
-    private string _loadedUserId = string.Empty;
 
     [ObservableProperty] public partial List<HomeContainerCardViewModel> RecommendedPlaylist { get; set; }
 
@@ -50,7 +48,8 @@ public partial class HomeViewModel : ObservableObject
         PlayCoreBase playCore,
         IPlaybackControlService control,
         INavigationService navigation,
-        IUserLibraryStateService userLibraryState)
+        IUserLibraryStateService userLibraryState,
+        IAuthService auth)
     {
         _itemProvider = itemProvider;
         _specialContainerTypeIds = specialContainerTypeIds;
@@ -58,28 +57,30 @@ public partial class HomeViewModel : ObservableObject
         _control = control;
         _navigation = navigation;
         _userLibraryState = userLibraryState;
+        _auth = auth;
     }
 
-    public Task GetDataAsync(bool forceRefresh = false)
+    public Task LoadAsync()
     {
-        var auth = Ioc.Default.GetRequiredService<IAuthService>();
-        var userId = auth.IsLoggedIn ? auth.CurrentUser?.ActualId ?? string.Empty : string.Empty;
-        if (!forceRefresh && _hasLoaded && _loadedUserId == userId)
-            return Task.CompletedTask;
+        return _loadDataTask ??= LoadDataCoreAsync();
+    }
 
-        if (!forceRefresh && _loadDataTask is not null && !_loadDataTask.IsCompleted)
+    public Task RefreshAsync()
+    {
+        if (_loadDataTask is { IsCompleted: false })
             return _loadDataTask;
 
-        _loadDataTask = LoadDataCoreAsync(auth, userId);
+        _loadDataTask = LoadDataCoreAsync();
         return _loadDataTask;
     }
 
-    private async Task LoadDataCoreAsync(IAuthService auth, string userId)
+    private async Task LoadDataCoreAsync()
     {
+        var isLoggedIn = _auth.IsLoggedIn;
         ToplistPlaylist = await LoadSpecialContainerCardsAsync(SpecialContainerType.Toplists, "chart");
         OfficialPlaylists = await LoadSpecialContainerCardsAsync(SpecialContainerType.PlaylistCategory, "官方");
         // 登录内容
-        if (auth.IsLoggedIn)
+        if (isLoggedIn)
         {
             RecommendedPlaylist =
                 await LoadSpecialContainerCardsAsync(SpecialContainerType.RecommendedPlaylists, "rcpl");
@@ -99,8 +100,6 @@ public partial class HomeViewModel : ObservableObject
             RecommendedSongItems = [];
         }
 
-        _loadedUserId = userId;
-        _hasLoaded = true;
     }
 
     private async Task<List<HomeContainerCardViewModel>> LoadSpecialContainerCardsAsync(SpecialContainerType type,

@@ -7,7 +7,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using AsyncAwaitBestPractices;
+using HyPlayer.Platform.Runtime.Background;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Notifications;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
@@ -25,13 +25,16 @@ namespace HyPlayer.Features.Playlist;
 /// </summary>
 public sealed partial class SongListDetail : Page
 {
-    private const string DailyRecommendPlaylistId = "daily_recommend";
 
     private readonly IContainerItemManagementProvidable _containerItemManagement =
         Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
 
     private readonly DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IBackgroundTaskRunner _taskRunner =
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    public SongListViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<SongListViewModel>();
+
     private bool _dataRequestedSubscribed;
 
     public SongListDetail()
@@ -46,12 +49,10 @@ public sealed partial class SongListDetail : Page
             }
         ];
         InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<SongListViewModel>();
         Unloaded += SongListDetail_Unloaded;
         AttachDataRequested();
     }
 
-    public SongListViewModel ViewModel => (SongListViewModel)DataContext;
     public List<ProvidableItemAction> ItemActions { get; }
 
     private async Task RemoveItemFromPlaylistAsync(ProvidableItemRowViewModel row)
@@ -128,23 +129,14 @@ public sealed partial class SongListDetail : Page
     {
         base.OnNavigatedTo(e);
 
-        if (e.Parameter != null)
+        switch (e.Parameter)
         {
-            if (e.Parameter is ContainerBase playList)
-            {
-                var isDailyRecommend = playList.ActualId == DailyRecommendPlaylistId;
-                ViewModel.IsDailyRecommend = isDailyRecommend;
-                if (isDailyRecommend)
-                    ViewModel.LoadPageData(playList).SafeFireAndForget();
-                else
-                    ViewModel.LoadPageData(playList).SafeFireAndForget();
-            }
-            else
-            {
-                var pid = e.Parameter.ToString();
-                ViewModel.IsDailyRecommend = false;
-                ViewModel.LoadPageData(pid, true).SafeFireAndForget();
-            }
+            case ContainerBase playlist:
+                _taskRunner.Forget(ViewModel.LoadAsync(playlist), "load playlist page");
+                break;
+            case string playlistId when !string.IsNullOrWhiteSpace(playlistId):
+                _taskRunner.Forget(ViewModel.LoadAsync(playlistId), "load playlist page");
+                break;
         }
     }
 

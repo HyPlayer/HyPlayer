@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Features.Playback.Services;
+using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -36,6 +37,8 @@ public sealed partial class MVPage : Page
     private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IRichMediaProvidable _richMediaProvider = Ioc.Default.GetRequiredService<IRichMediaProvidable>();
+    private readonly IBackgroundTaskRunner _taskRunner =
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
 
     private readonly IProviderSearchCategoryTypeIds _searchCategoryTypeIds =
         Ioc.Default.GetRequiredService<IProviderSearchCategoryTypeIds>();
@@ -43,11 +46,8 @@ public sealed partial class MVPage : Page
     private readonly List<RichMediaCardViewModel> _sources = new();
     private MediaSource _currentMediaSource;
     private bool _isUnloaded;
-    private Task _relateiveLoaderTask;
     private bool _updatingQualitySelection;
-    private Task _videoInfoLoaderTask;
     private CancellationTokenSource _videoLoadCancellationTokenSource = new();
-    private Task _videoLoaderTask;
     private int _videoLoadVersion;
     private string _mvId;
     private string _mvQuality = "1080";
@@ -66,7 +66,7 @@ public sealed partial class MVPage : Page
         {
             _mvId = row.RichMediaId;
             _songId = row.ActualId;
-            _relateiveLoaderTask = LoadRelateive();
+            _taskRunner.Forget(LoadRelateive(), "load related videos");
         }
         else if (e.Parameter is SingleSongBase providerSong)
         {
@@ -87,8 +87,8 @@ public sealed partial class MVPage : Page
 
         Ioc.Default.GetRequiredService<IPlaybackControlService>().Pause();
         var token = ResetVideoLoad(out var loadVersion);
-        _videoLoaderTask = LoadVideo(loadVersion, token);
-        _videoInfoLoaderTask = LoadVideoInfo(loadVersion, token);
+        _taskRunner.Forget(LoadVideo(loadVersion, token), "load video");
+        _taskRunner.Forget(LoadVideoInfo(loadVersion, token), "load video information");
         LoadComment();
     }
 
@@ -111,7 +111,7 @@ public sealed partial class MVPage : Page
             CommentFrame.Navigate(typeof(Comments.Comments), CommentTarget.MLog(_mvId));
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         Bindings.StopTracking();
@@ -119,35 +119,8 @@ public sealed partial class MVPage : Page
         _cancellationTokenSource.Cancel();
         _videoLoadCancellationTokenSource.Cancel();
         ReleaseCurrentMediaSource();
-        if (_relateiveLoaderTask != null && !_relateiveLoaderTask.IsCompleted)
-            try
-            {
-                await _relateiveLoaderTask;
-            }
-            catch
-            {
-            }
-
-        if (_videoLoaderTask != null && !_videoLoaderTask.IsCompleted)
-            try
-            {
-                await _videoLoaderTask;
-            }
-            catch
-            {
-            }
-
-        if (_videoInfoLoaderTask != null && !_videoInfoLoaderTask.IsCompleted)
-            try
-            {
-                await _videoInfoLoaderTask;
-            }
-            catch
-            {
-            }
-
-        _cancellationTokenSource?.Dispose();
-        _videoLoadCancellationTokenSource?.Dispose();
+        _cancellationTokenSource.Dispose();
+        _videoLoadCancellationTokenSource.Dispose();
     }
 
     private async Task LoadVideo(int loadVersion, CancellationToken cancellationToken)
@@ -242,7 +215,7 @@ public sealed partial class MVPage : Page
         if (_isUnloaded || string.IsNullOrEmpty(_mvId)) return;
 
         var token = ResetVideoLoad(out var loadVersion);
-        _videoLoaderTask = LoadVideo(loadVersion, token);
+        _taskRunner.Forget(LoadVideo(loadVersion, token), "change video quality");
     }
 
     private void RelativeList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

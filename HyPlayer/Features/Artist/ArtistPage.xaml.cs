@@ -3,7 +3,7 @@
 using System;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using AsyncAwaitBestPractices;
+using HyPlayer.Platform.Runtime.Background;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Notifications;
 
@@ -19,16 +19,17 @@ namespace HyPlayer.Features.Artist;
 public sealed partial class ArtistPage : Page
 {
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IBackgroundTaskRunner _taskRunner =
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+
+    public ArtistPageViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<ArtistPageViewModel>();
 
     public ArtistPage()
     {
         InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<ArtistPageViewModel>();
     }
 
-    private ArtistPageViewModel ViewModel => (ArtistPageViewModel)DataContext;
-
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         var artistId = e.Parameter as string;
@@ -38,7 +39,7 @@ public sealed partial class ArtistPage : Page
             return;
         }
 
-        ViewModel.InitializeArtistInfo(artistId).SafeFireAndForget();
+        _taskRunner.Forget(ViewModel.LoadAsync(artistId), "load artist page");
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)

@@ -3,7 +3,6 @@
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using WinRT;
 
 #endregion
 
@@ -16,13 +15,12 @@ namespace HyPlayer.Features.Library;
 /// </summary>
 public sealed partial class PageFavorite : Page
 {
+    public FavoriteViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<FavoriteViewModel>();
+
     public PageFavorite()
     {
         InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<FavoriteViewModel>();
     }
-
-    private FavoriteViewModel ViewModel => (FavoriteViewModel)DataContext;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -32,7 +30,7 @@ public sealed partial class PageFavorite : Page
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        var item = args.SelectedItem.As<NavigationViewItem>();
-        ViewModel.OnSelectionChanged(item);
+        if (args.SelectedItem is NavigationViewItem { Tag: string tag })
+            ViewModel.SelectCategory(tag);
     }
 }

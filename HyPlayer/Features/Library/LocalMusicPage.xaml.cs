@@ -34,7 +34,6 @@ namespace HyPlayer.Features.Library;
 public sealed partial class LocalMusicPage : Page
 {
     private static readonly string[] _supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
-    private readonly CancellationToken _cancellationToken;
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
 
     private readonly ILocalFileImportService _localFileImport =
@@ -51,25 +50,14 @@ public sealed partial class LocalMusicPage : Page
     public LocalMusicPage()
     {
         InitializeComponent();
-        _cancellationToken = _cancellationTokenSource.Token;
+
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         Bindings.StopTracking();
-        if (_currentFileScanTask != null && !_currentFileScanTask.IsCompleted)
-            try
-            {
-                ViewModel.NotificationText = "正在等待本地扫描进程结束...";
-                _cancellationTokenSource.Cancel();
-                await _currentFileScanTask;
-            }
-            catch
-            {
-                _currentFileScanTask = null;
-            }
-
+        _cancellationTokenSource.Cancel();
         ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
         _cancellationTokenSource.Dispose();
     }
@@ -95,7 +83,11 @@ public sealed partial class LocalMusicPage : Page
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentFileScanTask == null || _currentFileScanTask.IsCompleted) _currentFileScanTask = LoadLocalMusic();
+        if (_currentFileScanTask is { IsCompleted: false })
+            return;
+
+        _currentFileScanTask = LoadLocalMusic();
+        _taskRunner.Forget(_currentFileScanTask, "scan local music");
     }
 
     private async Task LoadLocalMusic()
@@ -118,7 +110,7 @@ public sealed partial class LocalMusicPage : Page
         {
             foreach (var storageFile in files)
             {
-                _cancellationToken.ThrowIfCancellationRequested();
+                _cancellationTokenSource.Token.ThrowIfCancellationRequested();
                 try
                 {
                     var item = await _localFileImport.LoadStorageFileAsync(storageFile);
@@ -137,7 +129,7 @@ public sealed partial class LocalMusicPage : Page
                 { new() { Name = "未知歌手 - 播放后加载", ActualId = string.Empty } };
             foreach (var storageFile in files)
             {
-                _cancellationToken.ThrowIfCancellationRequested();
+                _cancellationTokenSource.Token.ThrowIfCancellationRequested();
                 var item = new LocalSong
                 {
                     Album = undeterminedAlbum,
@@ -158,6 +150,7 @@ public sealed partial class LocalMusicPage : Page
             }
         }
 
+        _cancellationTokenSource.Token.ThrowIfCancellationRequested();
         ViewModel.NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
         ViewModel.LocalItems.AddRange(localItems);
         FileLoadingIndicateRing.IsActive = false;

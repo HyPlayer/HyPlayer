@@ -13,6 +13,7 @@ using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.UI.Lists;
@@ -32,7 +33,6 @@ public sealed partial class MusicCloudPage : Page
         nameof(CloudContainer), typeof(ContainerBase), typeof(MusicCloudPage),
         new PropertyMetadata(default(ContainerBase)));
 
-    private readonly CancellationToken _cancellationToken;
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
@@ -40,6 +40,8 @@ public sealed partial class MusicCloudPage : Page
         Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
 
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IBackgroundTaskRunner _taskRunner =
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly ApiSettings _setting = Ioc.Default.GetRequiredService<ApiSettings>();
 
     private readonly IUserLibraryProvidable _userLibraryProvider =
@@ -58,7 +60,7 @@ public sealed partial class MusicCloudPage : Page
             }
         ];
         InitializeComponent();
-        _cancellationToken = _cancellationTokenSource.Token;
+
     }
 
     public ContainerBase CloudContainer
@@ -79,10 +81,10 @@ public sealed partial class MusicCloudPage : Page
         Bindings.StopTracking();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        await LoadCloudContainerAsync();
+        _taskRunner.Forget(LoadCloudContainerAsync(), "load cloud music page");
     }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
@@ -123,7 +125,7 @@ public sealed partial class MusicCloudPage : Page
     private async Task<bool> LoadCloudContainerAsync()
     {
         if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
-                _cancellationToken) is not ContainerBase container)
+                _cancellationTokenSource.Token) is not ContainerBase container)
             return false;
 
         CloudContainer = container;
@@ -138,7 +140,7 @@ public sealed partial class MusicCloudPage : Page
         try
         {
             await _containerItemManagement.RemoveItemFromContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
-                row.ActualId, _cancellationToken);
+                row.ActualId, _cancellationTokenSource.Token);
         }
         catch (Exception ex)
         {

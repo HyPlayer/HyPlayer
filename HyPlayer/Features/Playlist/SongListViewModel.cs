@@ -60,7 +60,6 @@ public partial class SongListViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] public partial ContainerBase PlayList { get; set; }
 
-    [ObservableProperty] public partial bool IsDailyRecommend { get; set; }
 
     [ObservableProperty] public partial bool IntelligenceModeVisible { get; set; }
 
@@ -88,11 +87,6 @@ public partial class SongListViewModel : ObservableObject, IDisposable
     private bool _disposed;
     private Task _loadAlbumImageTask;
     private string _loadedAlbumImageUrl;
-    private bool _loadedDailyRecommend;
-    private bool _loadedPlaylistDetail;
-    private string _loadedPlaylistId;
-
-    private ContainerBase _playlistContainer;
 
     public void Dispose()
     {
@@ -101,86 +95,40 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         CancelAlbumImageLoad();
     }
 
-    public Task LoadPageData(ContainerBase playlist)
+    public Task LoadAsync(ContainerBase playlist)
     {
-        _playlistContainer = playlist;
-        PlayList = playlist;
-        return LoadPageData(playlist.ActualId);
+        return ApplyPlaylistAsync(playlist);
     }
 
-    public async Task LoadPageData(string playlistId, bool loadPlaylist = false)
+    public async Task LoadAsync(string playlistId)
     {
-        var playlistChanged = !string.Equals(_loadedPlaylistId, playlistId, StringComparison.Ordinal)
-                              || _loadedDailyRecommend != IsDailyRecommend;
-        if (playlistChanged)
-        {
-            _playlistContainer = null;
-            CancelAlbumImageLoad();
-            _loadedAlbumImageUrl = null;
-            _loadedPlaylistDetail = false;
-            _loadedDailyRecommend = false;
-            IntelligenceModeVisible = false;
-        }
-
-        _loadedPlaylistId = playlistId;
-
-        if (loadPlaylist && (playlistChanged || PlayList?.ActualId != playlistId ||
-                             _playlistContainer?.ActualId != playlistId))
-        {
-            _playlistContainer = await LoadProviderPlaylistAsync(playlistId);
-            if (_playlistContainer is null)
-            {
-                _notification.ShowMessage("加载歌单出错", "未找到歌单信息");
-                return;
-            }
-
-            PlayList = _playlistContainer;
-            _loadedPlaylistDetail = false;
-        }
-
-        await LoadPlayListItems();
-        DescriptionBoxContent = PlayList is IHasDescription descriptionProvider
-            ? descriptionProvider.Description ?? string.Empty
-            : string.Empty;
-        await LoadCreatorAsync(PlayList);
-        Subscribed = PlayList is IHasLibraryState { IsInCurrentUserLibrary: true };
-        IsMySongList = PlayList is IHasLibraryState { IsOwnedByCurrentUser: true };
-        GreedyLoad = _apiSettings.GreedilyLoadPlayContainerItems;
-        if (_uiSettings.NoImage)
-            CoverUri = null;
-        else
-            CoverUri = await GetCoverUriAsync(PlayList);
-        StartAlbumImageLoad();
-        UpdateTime = string.Empty;
-        _loadedDailyRecommend = IsDailyRecommend;
-    }
-
-    public async Task LoadPlayListItems()
-    {
-        if (_loadedPlaylistDetail)
-            return;
-
-        _playlistContainer ??= PlayList;
-        if (_playlistContainer is null)
+        var playlist = await LoadProviderPlaylistAsync(playlistId);
+        if (playlist is null)
         {
             _notification.ShowMessage("加载歌单出错", "未找到歌单信息");
             return;
         }
 
-        PlayList = _playlistContainer;
-        if (IsLikedMusicPlaylist(_playlistContainer))
-        {
-            IntelligenceModeVisible = true;
-        }
-        _loadedPlaylistDetail = true;
+        await ApplyPlaylistAsync(playlist);
     }
 
-    private bool IsLikedMusicPlaylist(ContainerBase playlist)
+    private async Task ApplyPlaylistAsync(ContainerBase playlist)
     {
-        return _userLibraryState.IsLikedSongsPlaylist(playlist.ActualId);
+        PlayList = playlist;
+        IntelligenceModeVisible = _userLibraryState.IsLikedSongsPlaylist(playlist.ActualId);
+        DescriptionBoxContent = playlist is IHasDescription descriptionProvider
+            ? descriptionProvider.Description ?? string.Empty
+            : string.Empty;
+        await LoadCreatorAsync(playlist);
+        Subscribed = playlist is IHasLibraryState { IsInCurrentUserLibrary: true };
+        IsMySongList = playlist is IHasLibraryState { IsOwnedByCurrentUser: true };
+        GreedyLoad = _apiSettings.GreedilyLoadPlayContainerItems;
+        CoverUri = _uiSettings.NoImage ? null : await GetCoverUriAsync(playlist);
+        StartAlbumImageLoad();
+        UpdateTime = string.Empty;
     }
 
-    public async Task LoadAlbumImage(CancellationToken cancellationToken)
+    private async Task LoadAlbumImage(CancellationToken cancellationToken)
     {
         if (CoverUri is null) return;
         using var result = await _httpClient.GetAsync(CoverUri, cancellationToken);
@@ -240,10 +188,7 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         if (playlist is null)
             return false;
 
-        _playlistContainer = playlist;
-        _loadedPlaylistDetail = false;
-        PlayList = playlist;
-        await LoadPageData(playlistId);
+        await ApplyPlaylistAsync(playlist);
         return true;
     }
 

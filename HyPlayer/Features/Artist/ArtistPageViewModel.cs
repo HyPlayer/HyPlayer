@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
-using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Settings;
@@ -27,7 +26,6 @@ public partial class ArtistPageViewModel : ObservableObject
     private readonly INotificationService _notification;
     private readonly UISettings _uiSettings;
     private Task<List<ContainerBase>>? _artistSubContainersTask;
-    private string _loadedArtistId = string.Empty;
     private PersonBase? _providerArtist;
 
     public ArtistPageViewModel(
@@ -49,7 +47,7 @@ public partial class ArtistPageViewModel : ObservableObject
     [ObservableProperty] public partial int CurrentPivotIndex { get; set; }
     [ObservableProperty] public partial BitmapImage? Image { get; set; }
 
-    public async Task InitializeArtistInfo(string artistId)
+    public async Task LoadAsync(string artistId)
     {
         if (string.IsNullOrWhiteSpace(artistId))
         {
@@ -57,8 +55,6 @@ public partial class ArtistPageViewModel : ObservableObject
             return;
         }
 
-        if (_loadedArtistId == artistId && Artist is not null)
-            return;
 
         _providerArtist = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
         {
@@ -79,7 +75,6 @@ public partial class ArtistPageViewModel : ObservableObject
         Artist = _providerArtist;
         var image = (_providerArtist as NeteaseArtist)?.CoverUrl;
         Image = _uiSettings.NoImage || string.IsNullOrWhiteSpace(image) ? null : new BitmapImage(new Uri(image));
-        _loadedArtistId = artistId;
         _artistSubContainersTask = null;
 
         AllSongsContainer = CreateArtistContainer(
@@ -88,7 +83,7 @@ public partial class ArtistPageViewModel : ObservableObject
         AlbumsContainer = CreateArtistContainer(
             "alb", "专辑", "artist-albums", _knownTypeIds.AlbumTypeId,
             CacheType.ArtistAlbumsList);
-        LoadHotSongs().SafeFireAndForget();
+        await LoadHotSongs();
     }
 
     private ContainerBase CreateArtistContainer(

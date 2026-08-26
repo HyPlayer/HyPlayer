@@ -52,7 +52,6 @@ public sealed partial class Search : Page
     private string _cachedSearchText = string.Empty;
     private string _lastSuggestionKeyword = string.Empty;
     private List<string> _lastSuggestions = [];
-    private Task _loadResultTask;
 
     private string _searchText = "";
 
@@ -74,31 +73,21 @@ public sealed partial class Search : Page
         if ((string)e.Parameter != null)
         {
             _searchText = (string)e.Parameter;
-            _loadResultTask = LoadResult();
+            LoadResult();
         }
 
         //if (searchText != string.Empty) _ = LoadResult();
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         Bindings.StopTracking();
-        if (_loadResultTask != null && !_loadResultTask.IsCompleted)
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _loadResultTask;
-            }
-            catch
-            {
-                //Ignore
-            }
-
-        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
     }
 
-    private async Task LoadResult()
+    private void LoadResult()
     {
         _cancellationToken.ThrowIfCancellationRequested();
         if (string.IsNullOrEmpty(_searchText)) return;
@@ -111,26 +100,12 @@ public sealed partial class Search : Page
 
         TBNoRes.Visibility = Visibility.Collapsed;
         _history.AddSearchHistory(_searchText);
-
         CurrentResultContainer = null;
-        try
-        {
-            await LoadCurrentCategoryResult();
-        }
-        catch (Exception ex)
-        {
-            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
-    }
 
-    private async Task LoadCurrentCategoryResult()
-    {
         var typeId = GetCurrentSearchTypeId();
         if (string.IsNullOrWhiteSpace(typeId))
             return;
 
-        await Task.CompletedTask;
         CurrentResultContainer = new DelegateProgressiveContainer(
             (offset, count, cancellationToken) =>
                 LoadSearchItemsAsync(typeId, offset, count, cancellationToken),
@@ -139,6 +114,7 @@ public sealed partial class Search : Page
             typeId,
             pageSize: 30);
     }
+
 
     private string? GetCurrentSearchTypeId()
     {
@@ -221,7 +197,7 @@ public sealed partial class Search : Page
     private void NavigationView_OnSelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
-        _loadResultTask = LoadResult();
+        LoadResult();
     }
 
     private void SearchKeywordBox_LostFocus(object sender, RoutedEventArgs e)
@@ -232,7 +208,7 @@ public sealed partial class Search : Page
     private void SearchKeywordBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         _searchText = sender.Text;
-        _loadResultTask = LoadResult();
+        LoadResult();
     }
 
     private async void SearchKeywordBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
@@ -276,7 +252,7 @@ public sealed partial class Search : Page
         if (item is not null)
         {
             _searchText = item.ToString();
-            _loadResultTask = LoadResult();
+            LoadResult();
         }
     }
 }

@@ -22,11 +22,6 @@ public partial class MeViewModel : ObservableObject
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
     private readonly UISettings _settings;
-    private Task _initializeTask;
-    private string _initializingUserId = string.Empty;
-    private string _loadedUserId = string.Empty;
-    private Task _loadPlaylistTask;
-    private PersonBase _providerUser;
 
     public MeViewModel(IProvidableItemProvidable itemProvider, IProviderKnownTypeIds knownTypeIds, UISettings settings,
         INotificationService notification)
@@ -43,51 +38,27 @@ public partial class MeViewModel : ObservableObject
 
     [ObservableProperty] public partial UserProfileViewData User { get; set; }
 
-    public Task InitializeUserInfo(string uid)
+    public async Task LoadAsync(string userId)
     {
-        if (_loadedUserId == uid && User is not null)
-            return Task.CompletedTask;
-
-        if (_initializingUserId == uid && _initializeTask is not null && !_initializeTask.IsCompleted)
-            return _initializeTask;
-
-        _initializingUserId = uid;
-        _initializeTask = InitializeUserInfoCoreAsync(uid);
-        return _initializeTask;
-    }
-
-    private async Task InitializeUserInfoCoreAsync(string uid)
-    {
-        var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserDetail, uid,
-            async () => { return await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.UserTypeId + uid); });
-        if (resp is not PersonBase user)
+        var response = await SimpleCacher.GetOrCreateCacheAsync(
+            CacheType.UserDetail,
+            userId,
+            () => _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.UserTypeId + userId));
+        if (response is not PersonBase user)
             return;
 
-        _providerUser = user;
         User = await CreateUserProfileViewDataAsync(user);
-        _loadedUserId = uid;
-        _loadPlaylistTask = LoadPlayListCoreAsync();
-        await _loadPlaylistTask;
+        await LoadPlaylistsAsync(user);
     }
 
-    public async Task LoadPlayList()
-    {
-        if (_loadPlaylistTask is not null && !_loadPlaylistTask.IsCompleted)
-        {
-            await _loadPlaylistTask;
-            return;
-        }
-
-        _loadPlaylistTask = LoadPlayListCoreAsync();
-        await _loadPlaylistTask;
-    }
-
-    private async Task LoadPlayListCoreAsync()
+    private async Task LoadPlaylistsAsync(PersonBase user)
     {
         try
         {
-            var val = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserPlaylist, User.ActualId,
-                async () => { return await _providerUser.GetSubContainerAsync(); });
+            var val = await SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.UserPlaylist,
+                user.ActualId,
+                () => user.GetSubContainerAsync());
 
             var subListIdx = 0;
             var likedList = new List<SimpleListItem>();
@@ -114,7 +85,7 @@ public partial class MeViewModel : ObservableObject
                 var coverLink = _settings.NoImage ? null : await TryGetCoverLinkAsync(valuePlaylist);
                 var isOwned = valuePlaylist is IHasLibraryState libraryState
                     ? libraryState.IsOwnedByCurrentUser
-                    : owner?.ActualId == User.ActualId;
+                    : owner?.ActualId == user.ActualId;
                 if (!isOwned)
                     likedList.Add(
                         new SimpleListItem

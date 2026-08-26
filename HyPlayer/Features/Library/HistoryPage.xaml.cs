@@ -77,33 +77,12 @@ public sealed partial class HistoryPage : Page
         set => SetValue(HistoryContainerProperty, value);
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         Bindings.StopTracking();
-        if (_songRankWeekLoaderTask != null && !_songRankWeekLoaderTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _songRankWeekLoaderTask;
-            }
-            catch
-            {
-            }
-        }
-        if (_songRankAllLoaderTask != null && !_songRankAllLoaderTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _songRankAllLoaderTask;
-            }
-            catch
-            {
-            }
-        }
-        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
     }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
@@ -120,12 +99,12 @@ public sealed partial class HistoryPage : Page
                 break;
             case "SongRankWeek":
                 //听歌排行加载部分 - 优先级靠下
-                _songRankWeekLoaderTask ??= LoadRankWeek(selectedName);
+                _songRankWeekLoaderTask ??= LoadRank("recent", selectedName);
                 await _songRankWeekLoaderTask;
                 break;
             case "SongRankAll":
                 //听歌排行加载部分 - 优先级靠下
-                _songRankAllLoaderTask ??= LoadRankAll(selectedName);
+                _songRankAllLoaderTask ??= LoadRank("all", selectedName);
                 await _songRankAllLoaderTask;
                 break;
         }
@@ -141,15 +120,6 @@ public sealed partial class HistoryPage : Page
         HistoryContainer = new StaticItemsContainer(_songHistoryCache, "最近播放", "history");
     }
 
-    private async Task LoadRankAll(string selectionName)
-    {
-        await LoadRank("all", selectionName);
-    }
-
-    private async Task LoadRankWeek(string selectionName)
-    {
-        await LoadRank("recent", selectionName);
-    }
 
     private async Task LoadRank(string rangeId, string selectionName)
     {

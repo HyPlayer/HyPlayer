@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Platform.Xaml;
+using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
@@ -36,6 +37,9 @@ public sealed partial class Comments : Page
 
     private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IBackgroundTaskRunner _taskRunner =
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+
 
 #nullable enable
     private ScrollViewer? _mainScroll, _hotCommentsScroll;
@@ -47,9 +51,7 @@ public sealed partial class Comments : Page
     private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _hotCommentsView;
     private readonly ObservableList<CommentBase> _normalComments = [];
     private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _normalCommentsView;
-    private Task _commentLoaderTask;
     private int _delayedUiVersion;
-    private Task _hotCommentLoaderTask;
     private int _hotCommentsLoadVersion;
     private bool _isUnloaded;
     private int _normalCommentsLoadVersion;
@@ -84,42 +86,19 @@ public sealed partial class Comments : Page
             _resourceType = target.TypeId;
         }
 
-        LoadHotComments();
-        _commentLoaderTask = StartLoadComments(_sortType);
+        StartLoadComments(2);
+        StartLoadComments(_sortType);
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         Bindings.StopTracking();
-        if (_commentLoaderTask != null && !_commentLoaderTask.IsCompleted)
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _commentLoaderTask;
-            }
-            catch
-            {
-            }
-
-        if (_hotCommentLoaderTask != null && !_hotCommentLoaderTask.IsCompleted)
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _hotCommentLoaderTask;
-            }
-            catch
-            {
-            }
-
-        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
     }
 
 
-    private void LoadHotComments()
-    {
-        _hotCommentLoaderTask = StartLoadComments(2);
-    }
 
     private async Task LoadComments(int type)
     {
@@ -163,22 +142,22 @@ public sealed partial class Comments : Page
         PrevPage.IsEnabled = _page > 1;
     }
 
-    private Task StartLoadComments(int type)
+    private void StartLoadComments(int type)
     {
         if (string.IsNullOrEmpty(_resourceId))
-            return Task.CompletedTask;
+            return;
 
         var offset = type == 3 && _page != 1 && int.TryParse(_cursor, out var cursorOffset)
             ? cursorOffset
             : (_page - 1) * 20;
         var key = $"{_resourceId}:{_resourceType}:{_page}:{offset}:{type}";
         if (_commentLoadTasks.TryGetValue(key, out var runningTask) && !runningTask.IsCompleted)
-            return runningTask;
+            return;
 
         var task = LoadComments(type);
         _commentLoadTasks[key] = task;
+        _taskRunner.Forget(task, "load comments");
         _ = RemoveCommentLoadTaskWhenCompletedAsync(key, task);
-        return task;
     }
 
     private async Task RemoveCommentLoadTaskWhenCompletedAsync(string key, Task task)
@@ -232,14 +211,14 @@ public sealed partial class Comments : Page
     private void NextPage_Click(object sender, RoutedEventArgs e)
     {
         _page++;
-        _commentLoaderTask = StartLoadComments(_sortType);
+        StartLoadComments(_sortType);
         ScrollTop();
     }
 
     private void PrevPage_Click(object sender, RoutedEventArgs e)
     {
         _page--;
-        _commentLoaderTask = StartLoadComments(_sortType);
+        StartLoadComments(_sortType);
         ScrollTop();
     }
 
@@ -254,14 +233,14 @@ public sealed partial class Comments : Page
         _sortType = ComboBoxSortType.SelectedIndex + 1;
         _page = 1;
         _cursor = null;
-        _commentLoaderTask = StartLoadComments(_sortType);
+        StartLoadComments(_sortType);
     }
 
     private void SkipPage_Click(object sender, RoutedEventArgs e)
     {
         if (int.TryParse(PageSelect.Text, out _page))
         {
-            _commentLoaderTask = StartLoadComments(_sortType);
+            StartLoadComments(_sortType);
             ScrollTop();
         }
     }
@@ -321,7 +300,7 @@ public sealed partial class Comments : Page
     {
         if (int.TryParse(PageSelect.Text, out _page))
         {
-            _commentLoaderTask = StartLoadComments(_sortType);
+            StartLoadComments(_sortType);
             ScrollTop();
         }
     }

@@ -4,7 +4,7 @@ using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using AsyncAwaitBestPractices;
+using HyPlayer.Platform.Runtime.Background;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Features.Artist;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -22,36 +22,36 @@ namespace HyPlayer.Features.Album;
 /// </summary>
 public sealed partial class AlbumPage : Page
 {
+    private readonly IBackgroundTaskRunner _taskRunner =
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
 
-    public AlbumPageViewModel ViewModel { get; }
+    public AlbumPageViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<AlbumPageViewModel>();
 
     public AlbumPage()
     {
         InitializeComponent();
-        ViewModel = Ioc.Default.GetRequiredService<AlbumPageViewModel>();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        var albumId = string.Empty;
-        switch (e.Parameter)
+        var albumId = e.Parameter switch
         {
-            case AlbumBase album:
-                albumId = album.ActualId;
-                break;
-            case string:
-                albumId = e.Parameter.ToString();
-                break;
-        }
+            AlbumBase album => album.ActualId,
+            string id => id,
+            _ => null
+        };
 
-        ViewModel.LoadAlbumInfo(albumId).SafeFireAndForget();
-        ViewModel.LoadAlbumDynamic(albumId).SafeFireAndForget();
+        if (!string.IsNullOrWhiteSpace(albumId))
+            _taskRunner.Forget(ViewModel.LoadAsync(albumId), "load album page");
     }
 
     private async void TextBoxAuthor_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
+        if (ViewModel.Artists is not { Count: > 0 })
+            return;
+
         if (ViewModel.Artists.Count > 1)
             await new ArtistSelectDialog(ViewModel.Artists).ShowAsync();
         else

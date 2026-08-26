@@ -3,7 +3,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
-using AsyncAwaitBestPractices;
+using HyPlayer.Platform.Runtime.Background;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
@@ -29,26 +29,40 @@ public sealed partial class HomePage : Page
 
     private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier =
         Ioc.Default.GetRequiredService<IPlaylistCollectionChangeNotifier>();
+    private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
+    private readonly IBackgroundTaskRunner _taskRunner =
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+
+    public HomeViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<HomeViewModel>();
+
 
     public HomePage()
     {
         InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<HomeViewModel>();
     }
 
-    private HomeViewModel ViewModel => (HomeViewModel)DataContext;
-
-    private void RefreshRequested(RefreshContainer sender, RefreshRequestedEventArgs args)
+    private async void RefreshRequested(RefreshContainer sender, RefreshRequestedEventArgs args)
     {
-        var def = args.GetDeferral();
-        ViewModel.GetDataAsync(true).ContinueWith(t => def.Complete()).SafeFireAndForget();
+        var deferral = args.GetDeferral();
+        try
+        {
+            await ViewModel.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("刷新主页失败", ex.Message);
+        }
+        finally
+        {
+            deferral.Complete();
+        }
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
 
-        ViewModel.GetDataAsync().SafeFireAndForget();
+        _taskRunner.Forget(ViewModel.LoadAsync(), "load home page");
     }
 
     private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
@@ -56,8 +70,7 @@ public sealed partial class HomePage : Page
         var playList = sender?.As<MenuFlyoutItem>()?.CommandParameter as HomeContainerCardViewModel;
         if (playList is null) return;
         //播放全部歌曲
-        await Ioc.Default.GetRequiredService<IAppNavigator>()
-            .PlayAsync(new MusicResource.Playlist(playList.ActualId));
+        await _navigator.PlayAsync(new MusicResource.Playlist(playList.ActualId));
     }
 
     private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)

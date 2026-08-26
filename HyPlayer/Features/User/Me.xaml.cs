@@ -1,18 +1,15 @@
 #region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Domain.Music;
+using HyPlayer.Domain.Navigation;
+using HyPlayer.Features.Account.Services;
+using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Shell.Navigation.Services;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
-using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Application.Notifications;
-using HyPlayer.Domain.Music;
-using HyPlayer.Domain.Navigation;
-using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Shell.Navigation.Services;
 
 #endregion
 
@@ -26,26 +23,22 @@ namespace HyPlayer.Features.User;
 public sealed partial class Me : Page
 {
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
-    private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
-    private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+
+    public MeViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<MeViewModel>();
 
     public Me()
     {
         InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<MeViewModel>();
     }
-
-    private MeViewModel ViewModel => (MeViewModel)DataContext;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (e.Parameter != null)
-            ViewModel.InitializeUserInfo((string)e.Parameter).SafeFireAndForget();
-        else if (_auth.CurrentUser?.ActualId is { } currentUserId)
-            ViewModel.InitializeUserInfo(currentUserId).SafeFireAndForget();
+        var userId = e.Parameter as string ?? _auth.CurrentUser?.ActualId;
+        if (!string.IsNullOrWhiteSpace(userId))
+            _taskRunner.Forget(ViewModel.LoadAsync(userId), "load user page");
     }
 
     private void SonglistItem_Tapped(object sender, TappedRoutedEventArgs e)
