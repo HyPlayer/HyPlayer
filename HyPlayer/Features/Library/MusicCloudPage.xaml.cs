@@ -138,7 +138,7 @@ public sealed partial class MusicCloudPage : Page
         try
         {
             await _containerItemManagement.RemoveItemFromContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
-                row.ItemId, _cancellationToken);
+                row.ActualId, _cancellationToken);
         }
         catch (Exception ex)
         {

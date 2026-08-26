@@ -26,32 +26,6 @@ namespace HyPlayer.Features.Netease.Legacy;
 
 internal class Api
 {
-    public static async Task<bool> LikeSong(string songid, bool like)
-    {
-        var notification = Ioc.Default.GetRequiredService<INotificationService>();
-        try
-        {
-            if (like)
-            {
-                notification.ShowMessage("暂不支持收藏", "当前抽象只支持从集合中移出项目");
-            }
-            else
-            {
-                var libraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
-                var itemManagement = Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
-                await itemManagement.RemoveItemFromContainerAsync(libraryTypeIds.LikedSongsTypeId,
-                    NormalizeProviderItemId(songid));
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            notification.ShowMessage(ex.Message);
-            return false;
-        }
-    }
-
     public static Task EnterIntelligencePlay(CancellationToken cancellationToken = default)
     {
         return EnterIntelligencePlayCoreAsync(null, null, cancellationToken);

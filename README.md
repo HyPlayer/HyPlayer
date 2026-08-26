@@ -130,6 +130,7 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 | [TagLibSharp](https://github.com/mono/taglib-sharp) | 2.3.0 | LGPL-2.1-only |
 | [Vanara](https://github.com/dahall/vanara)（`Vanara.Core`） | 5.0.5 | MIT |
 | [Vortice.Windows](https://github.com/amerkoleci/Vortice.Windows)（Direct3D11、DirectX） | 3.8.3 | MIT |
+| [Lyricify.Lyrics.Helper](https://github.com/WXRIW/Lyricify-Lyrics-Helper)| 0.2.0 | Apache-2.0 |
 
 ### 构建与测试依赖
 

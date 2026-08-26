@@ -342,10 +342,10 @@ public sealed partial class DownloadObject : ObservableObject
                 var lrctxt = string.Join("\r\n", lrc.Select(t =>
                 {
                     if (t.HaveTranslation && !string.IsNullOrWhiteSpace(t.Translation))
-                        return "[" + t.LyricLine.StartTime.ToString(@"mm\:ss\.ff") + "]" + t.LyricLine.CurrentLyric +
+                        return "[" + t.StartTime.ToString(@"mm\:ss\.ff") + "]" + t.Text +
                                " 「" +
                                t.Translation + "」";
-                    return "[" + t.LyricLine.StartTime.ToString(@"mm\:ss\.ff") + "]" + t.LyricLine.CurrentLyric;
+                    return "[" + t.StartTime.ToString(@"mm\:ss\.ff") + "]" + t.Text;
                 }));
                 if (string.IsNullOrWhiteSpace(lrctxt)) return;
                 var sf = await (await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(FullPath)))

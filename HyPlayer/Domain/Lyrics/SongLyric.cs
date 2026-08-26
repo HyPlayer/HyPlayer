@@ -1,9 +1,7 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using ALRC.Abstraction;
-using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
-
 namespace HyPlayer.Domain.Lyrics;
 
 public class KaraokLyricInfo : PureLyricInfo
@@ -29,21 +27,31 @@ public class PureLyricInfo
     public List<LyricInfoMetadata> LyricMetadata { get; set; } = [];
 }
 
-public class SongLyric
+public sealed class SongLyric
 {
-    public static SongLyric PureSong { get; } = new()
-        { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", TimeSpan.Zero) };
+    public static SongLyric PureSong { get; } = new() { Text = "纯音乐 请欣赏" };
 
-    public static SongLyric NoLyric { get; } = new()
-        { LyricLine = new LrcLyricsLine("无歌词 请欣赏", TimeSpan.Zero) };
+    public static SongLyric NoLyric { get; } = new() { Text = "无歌词 请欣赏" };
 
-    public static SongLyric LoadingLyric { get; } = new()
-        { LyricLine = new LrcLyricsLine("加载歌词中...", TimeSpan.Zero) };
+    public static SongLyric LoadingLyric { get; } = new() { Text = "加载歌词中..." };
 
-    public LyricLine LyricLine { get; set; }
-    public string Translation { get; set; }
-    public string Romaji { get; set; }
+    public string Text { get; set; } = string.Empty;
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan? MatchedStartTime { get; set; }
+    public TimeSpan Duration { get; set; }
+    public List<LyricSyllable>? Syllables { get; set; }
+    public string? Translation { get; set; }
+    public string? Romaji { get; set; }
 
+    public bool IsSyllableSynced => Syllables is { Count: > 0 };
     public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
     public bool HaveRomaji => !string.IsNullOrEmpty(Romaji);
+}
+
+public sealed class LyricSyllable
+{
+    public string Text { get; set; } = string.Empty;
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan Duration { get; set; }
+    public string? Transliteration { get; set; }
 }

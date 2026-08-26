@@ -12,7 +12,6 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.Helpers;
 using CommunityToolkit.WinUI.Media;
 using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Lyrics.Services;
@@ -264,21 +263,21 @@ public sealed partial class CompactPlayerPage : Page
     {
         if (_lyricService.CurrentLyricIndex == -1) return;
         if (_lyricService.CurrentLyricInfo.Lyrics.Count <= _lyricService.CurrentLyricIndex) return;
-        if (_lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].LyricLine is KaraokeLyricsLine kara)
+        var currentLyric = _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex];
+        if (currentLyric.IsSyllableSynced)
         {
             LyricControl.QuickRenderMode = false;
-            if (kara.Duration.TotalSeconds > 1)
+            if (currentLyric.Duration.TotalSeconds > 1)
             {
                 RunOnUIThread(() => { ChangeLyric(); });
                 return;
             }
         }
-        else if (_lyricService.CurrentLyricIndex < _lyricService.CurrentLyricInfo.Lyrics.Count - 1 &&
-                 _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex + 1].LyricLine is LrcLyricsLine
-                     lrcLine)
+        else if (_lyricService.CurrentLyricIndex < _lyricService.CurrentLyricInfo.Lyrics.Count - 1)
         {
-            if (lrcLine.StartTime.TotalSeconds - _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex]
-                    .LyricLine.StartTime.TotalSeconds > 1)
+            var nextLyric = _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex + 1];
+            if (!nextLyric.IsSyllableSynced &&
+                nextLyric.StartTime.TotalSeconds - currentLyric.StartTime.TotalSeconds > 1)
             {
                 LyricControl.QuickRenderMode = false;
                 RunOnUIThread(() => { ChangeLyric(); });
@@ -296,7 +295,7 @@ public sealed partial class CompactPlayerPage : Page
     {
         RunOnUIThread(() =>
         {
-            LyricText = _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].LyricLine.CurrentLyric;
+            LyricText = _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex].Text;
             LyricControl.Lyric = _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex];
         });
     }

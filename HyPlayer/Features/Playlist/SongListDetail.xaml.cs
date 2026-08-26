@@ -56,12 +56,12 @@ public sealed partial class SongListDetail : Page
 
     private async Task RemoveItemFromPlaylistAsync(ProvidableItemRowViewModel row)
     {
-        if (ViewModel.PlayList is null || string.IsNullOrWhiteSpace(row.ItemId))
+        if (ViewModel.PlayList is null || string.IsNullOrWhiteSpace(row.ActualId))
             return;
 
         try
         {
-            await _containerItemManagement.RemoveItemFromContainerAsync(ViewModel.PlayList.ActualId, row.ItemId);
+            await _containerItemManagement.RemoveItemFromContainerAsync(ViewModel.PlayList.ActualId, row.ActualId);
         }
         catch (Exception ex)
         {

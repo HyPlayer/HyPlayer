@@ -5,7 +5,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas.Text;
 
 namespace HyPlayer.UI.Playback.LyricControl;
@@ -68,8 +67,7 @@ public partial class LyricControl
 
     public static readonly DependencyProperty LyricProperty =
         DependencyProperty.Register(nameof(Lyric), typeof(SongLyric), typeof(LyricControl),
-            new PropertyMetadata(new SongLyric { LyricLine = new LrcLyricsLine("无歌词", TimeSpan.Zero) },
-                OnLyricChanged));
+            new PropertyMetadata(SongLyric.NoLyric, OnLyricChanged));
 
     private Color _accentLyricColor = Colors.White;
 
@@ -88,7 +86,7 @@ public partial class LyricControl
 
     private CanvasHorizontalAlignment _horizontalTextAlignment = CanvasHorizontalAlignment.Center;
 
-    private SongLyric _lyric = new() { LyricLine = new LrcLyricsLine("无歌词", TimeSpan.Zero) };
+    private SongLyric _lyric = SongLyric.NoLyric;
 
     private Color _lyricColor = Color.FromArgb(50, 200, 200, 200);
 

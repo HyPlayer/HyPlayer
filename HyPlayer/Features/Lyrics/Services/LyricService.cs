@@ -10,7 +10,6 @@ using Windows.Storage;
 using ALRC.Converters;
 using ALRC.Converters.Enhancers;
 using HyPlayer.Domain.Lyrics;
-using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.NeteaseProvider.Models;
@@ -109,9 +108,9 @@ public sealed class LyricService(
         var changed = false;
 
         // 进度回溯
-        if (lyrics[idx].LyricLine.StartTime > realPos)
+        if (lyrics[idx].StartTime > realPos)
         {
-            idx = lyrics.FindLastIndex(t => t.LyricLine.StartTime <= realPos) - 1;
+            idx = lyrics.FindLastIndex(t => t.StartTime <= realPos) - 1;
             if (idx == -2) idx = -1;
             changed = true;
         }
@@ -120,7 +119,7 @@ public sealed class LyricService(
         try
         {
             if (idx == 0 && lyrics.Count != 1) changed = false;
-            while (lyrics.Count > idx + 1 && lyrics[idx + 1].LyricLine.StartTime <= realPos)
+            while (lyrics.Count > idx + 1 && lyrics[idx + 1].StartTime <= realPos)
             {
                 idx++;
                 changed = true;
@@ -205,7 +204,7 @@ public sealed class LyricService(
             if (setting.ShowComposerInLyric)
                 lyricInfo.Lyrics.Add(new SongLyric
                 {
-                    LyricLine = new LrcLyricsLine(artistText, TimeSpan.Zero)
+                    Text = artistText
                 });
         }
         else
@@ -223,9 +222,8 @@ public sealed class LyricService(
                     setting.LyricRomajiSource,
                     kawazuState.Converter));
 
-            if (lyricInfo.Lyrics.Count != 0 && lyricInfo.Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
-                lyricInfo.Lyrics.Insert(0,
-                    new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, TimeSpan.Zero) });
+            if (lyricInfo.Lyrics.Count != 0 && lyricInfo.Lyrics[0].StartTime != TimeSpan.Zero)
+                lyricInfo.Lyrics.Insert(0, new SongLyric());
         }
 
         lyricInfo.LyricMetadata = pureLyricInfo.LyricMetadata;
@@ -486,8 +484,8 @@ public sealed class LyricService(
     {
         var artistText = GetArtistText(providerItem);
         return lyricInfo.Lyrics.Any(t =>
-            !string.IsNullOrWhiteSpace(t.LyricLine.CurrentLyric) &&
-            !string.Equals(t.LyricLine.CurrentLyric, artistText, StringComparison.Ordinal));
+            !string.IsNullOrWhiteSpace(t.Text) &&
+            !string.Equals(t.Text, artistText, StringComparison.Ordinal));
     }
 
     private static bool HasCacheableLyrics(HyLyricInfo lyricInfo, SingleSongBase providerItem)

@@ -48,8 +48,8 @@ public sealed partial class LyricShareDialog : ContentDialog
             items.Add(new LyricShareItem
             {
                 Type = LyricShareItemType.Original,
-                Text = songLyric.LyricLine.CurrentLyric,
-                Time = songLyric.LyricLine.StartTime,
+                Text = songLyric.Text,
+                Time = songLyric.StartTime,
                 OriginalLyric = songLyric
             });
             if (songLyric.HaveTranslation)
@@ -57,7 +57,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                 {
                     Type = LyricShareItemType.Translation,
                     Text = songLyric.Translation,
-                    Time = songLyric.LyricLine.StartTime,
+                    Time = songLyric.StartTime,
                     OriginalLyric = songLyric
                 });
         }
@@ -84,7 +84,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                 _outputLines[item.OriginalLyric] =
                     TextBoxOutputFormat.Text
                         .Replace("{$NEWLINE}", "\r\n")
-                        .Replace("{$TIME}", item.OriginalLyric.LyricLine.StartTime.ToString(@"mm\:ss\.ff"));
+                        .Replace("{$TIME}", item.OriginalLyric.StartTime.ToString(@"mm\:ss\.ff"));
             _outputLines[item.OriginalLyric] = item.Type switch
             {
                 LyricShareItemType.Original => _outputLines[item.OriginalLyric]
@@ -108,7 +108,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                     .Replace("{$ROMAJI}", string.Empty);
 
         // 再根据歌词拍下序
-        newOutputLines = newOutputLines.OrderBy(t => t.Key.LyricLine.StartTime).ToDictionary(t => t.Key, t => t.Value);
+        newOutputLines = newOutputLines.OrderBy(t => t.Key.StartTime).ToDictionary(t => t.Key, t => t.Value);
         return string.Join(string.Empty, newOutputLines.Values);
     }
 

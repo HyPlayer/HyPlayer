@@ -6,7 +6,6 @@ using System.Numerics;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml.Media.Animation;
-using HyPlayer.Domain.Lyrics.LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Geometry;
@@ -24,7 +23,7 @@ public static class LyricRenderComposer
     {
         var currentTimeInLine = TimeSpan.Zero;
         if (!quickRender)
-            currentTimeInLine = position - lyric.LyricLine.StartTime;
+            currentTimeInLine = position - lyric.StartTime;
         using var textFormat = new CanvasTextFormat
         {
             FontSize = renderOption.FontSize,
@@ -51,7 +50,7 @@ public static class LyricRenderComposer
 
         using var textLayout =
             new CanvasTextLayout(
-                drawingSession, lyric.LyricLine.CurrentLyric, textFormat,
+                drawingSession, lyric.Text, textFormat,
                 (float)drawingSize.Width, (float)drawingSize.Height);
         var textLayoutTranslation = lyric.HaveTranslation
             ? new CanvasTextLayout(drawingSession, lyric.Translation, textFormatTranslation, (float)drawingSize.Width,
@@ -71,27 +70,26 @@ public static class LyricRenderComposer
                 (float)textLayout.DrawBounds.Top - (float)textLayoutRomaji.DrawBounds.Height -
                 8, renderOption.LyricIdleColor);
 
-        if (!quickRender && lyric.LyricLine is KaraokeLyricsLine karaokeLyricsLine)
+        if (!quickRender && lyric.Syllables is { Count: > 0 } syllables)
         {
             // 获取已高亮字符数
-            var currentWordInfo = GetCurrentWordInfo(currentTimeInLine, karaokeLyricsLine);
-            var wordInfos = karaokeLyricsLine.WordInfos;
-            var currentWordIndex = wordInfos.IndexOf(currentWordInfo);
-            var letterPosition = GetLetterPosition(currentWordInfo, karaokeLyricsLine);
+            var currentSyllable = GetCurrentSyllable(currentTimeInLine, syllables);
+            var currentSyllableIndex = syllables.IndexOf(currentSyllable);
+            var letterPosition = GetLetterPosition(currentSyllable, syllables);
             var highlightedGeometry =
                 CreateHighlightedWordsGeometry(textLayout.GetCharacterRegions(0, letterPosition), drawingSession);
             var startTime =
-                TimeSpan.FromMilliseconds(wordInfos.Take(currentWordIndex)
-                    .Sum(p => p.Duration.TotalMilliseconds));
-            var shouldEase = currentWordIndex == wordInfos.Count - 1 ||
-                             currentWordInfo.Duration.TotalSeconds > 1;
+                TimeSpan.FromMilliseconds(syllables.Take(currentSyllableIndex)
+                    .Sum(syllable => syllable.Duration.TotalMilliseconds));
+            var shouldEase = currentSyllableIndex == syllables.Count - 1 ||
+                             currentSyllable.Duration.TotalSeconds > 1;
             var currentPercentage =
                 GetCurrentWordPercentage(startTime.TotalMilliseconds, currentTimeInLine.TotalMilliseconds,
-                    currentWordInfo.Duration.TotalMilliseconds, shouldEase, renderOption);
+                    currentSyllable.Duration.TotalMilliseconds, shouldEase, renderOption);
             var currentWordGeometry = CreateCurrentWordGeometry(currentPercentage, drawingSession,
                 textLayout.GetCharacterRegions(
                     letterPosition,
-                    currentWordInfo.CurrentWords.Length));
+                    currentSyllable.Text.Length));
             var textGeometry = CanvasGeometry.CreateText(textLayout);
             var highlightTextGeometry =
                 highlightedGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
@@ -127,11 +125,6 @@ public static class LyricRenderComposer
                     ds.FillGeometry(currentTextGeometry, renderOption.HighlightColor);
                 }
 
-                var shadowPercentage = -0.5;
-                if (shouldEase && false)
-                    shadowPercentage =
-                        GetCurrentWordPercentage(startTime.TotalMilliseconds, currentTimeInLine.TotalMilliseconds,
-                            currentWordInfo.Duration.TotalMilliseconds, false, renderOption);
                 var wordHighlightShadow = new ColorMatrixEffect
                 {
                     Source = new GaussianBlurEffect
@@ -164,31 +157,28 @@ public static class LyricRenderComposer
             : (currentTime - startTime) / duration;
     }
 
-    private static KaraokeWordInfo GetCurrentWordInfo(TimeSpan currentTime, KaraokeLyricsLine karaokeLyricsLine)
+    private static LyricSyllable GetCurrentSyllable(TimeSpan currentTime, List<LyricSyllable> syllables)
     {
-        var wordInfos = karaokeLyricsLine.WordInfos;
         var time = TimeSpan.Zero;
-        var currentLyric = wordInfos.Last();
-        //获取播放中单词在歌词的位置
-        foreach (var item in wordInfos)
+        var currentSyllable = syllables[^1];
+        foreach (var syllable in syllables)
         {
-            if (item.Duration + time > currentTime)
+            if (syllable.Duration + time > currentTime)
             {
-                currentLyric = item;
+                currentSyllable = syllable;
                 break;
             }
 
-            time += item.Duration;
+            time += syllable.Duration;
         }
 
-        return currentLyric;
+        return currentSyllable;
     }
 
-    private static int GetLetterPosition(KaraokeWordInfo currentLyric, KaraokeLyricsLine karaokeLyricsLine)
+    private static int GetLetterPosition(LyricSyllable currentSyllable, List<LyricSyllable> syllables)
     {
-        var wordInfos = karaokeLyricsLine.WordInfos;
-        var index = wordInfos.IndexOf(currentLyric);
-        return wordInfos.Take(index).Sum(p => p.CurrentWords.Length);
+        var index = syllables.IndexOf(currentSyllable);
+        return syllables.Take(index).Sum(syllable => syllable.Text.Length);
     }
 
     private static CanvasGeometry? CreateCurrentWordGeometry(double currentPercentage,
