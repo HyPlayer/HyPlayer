@@ -81,6 +81,7 @@ public sealed partial class Settings : Page
     public LastFMSettings LastFM { get; } = Ioc.Default.GetRequiredService<LastFMSettings>();
     public DownloadSettings Download { get; } = Ioc.Default.GetRequiredService<DownloadSettings>();
     public LocalLibrarySettings LocalLibrary { get; } = Ioc.Default.GetRequiredService<LocalLibrarySettings>();
+    public SettingsViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<SettingsViewModel>();
 
     public Settings()
     {
@@ -304,12 +305,6 @@ public sealed partial class Settings : Page
         ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
     }
 
-    private async void ClearHistory_Click(object sender, RoutedEventArgs e)
-    {
-        await _history.ClearHistoryAsync();
-        await _playbackMemory.ClearAsync();
-    }
-
 
     private void CopyDeviceCode_Click(object sender, RoutedEventArgs e)
     {
@@ -451,16 +446,6 @@ public sealed partial class Settings : Page
         Ioc.Default.GetRequiredService<IDisplayKeepAwakeService>().RequestRelease();
     }
 
-    private async void BtnClearCache_Click(object sender, RoutedEventArgs e)
-    {
-        await SimpleCacher.ClearAllCacheAsync();
-        var folder = await StorageFolder.GetFolderFromPathAsync(Playback.CacheDirectory);
-        var files = await folder.GetFilesAsync();
-        foreach (var file in files)
-            if (file.FileType == ".flac" || file.FileType == ".mp3")
-                await file.DeleteAsync();
-    }
-
     private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
     {
         LastFM.LastFMSession = null;
@@ -493,5 +478,4 @@ public sealed partial class Settings : Page
     {
         await new HyPlayer.UI.Dialogs.FocusedLyricEffectSettingsDialog().ShowAsync();
     }
-
 }

@@ -8,8 +8,6 @@
     NavigationCacheMode="Disabled"
     Unloaded="Page_Unloaded"
     mc:Ignorable="d">
-
-
     <Grid>
         <Grid
             Margin="15,20,15,0"
@@ -23,7 +21,6 @@
                 x:Name="CommentEdit"
                 Grid.Column="0"
                 Height="80"
-                HorizontalAlignment="Stretch"
                 AcceptsReturn="True"
                 MaxLength="140"
                 PlaceholderText="发表评论"
@@ -33,36 +30,14 @@
                 Grid.Column="1"
                 Width="80"
                 Height="80"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
                 Click="SendComment_Click"
                 Content="发表"
                 Style="{StaticResource AccentButtonStyle}" />
         </Grid>
         <Grid
-            x:Name="HotCommentsContainer"
+            x:Name="CommentsContainer"
             Margin="0,110,0,0"
             VerticalAlignment="Stretch">
-            <TextBlock
-                Margin="25,10,15,10"
-                FontSize="24"
-                FontWeight="Bold"
-                Text="热评" />
-            <hycontrols:CommentsList
-                x:Name="HotComments"
-                Margin="0,40,0,190"
-                Comments="{x:Bind _hotCommentsView}"
-                Loaded="HotComments_Loaded">
-                <hycontrols:CommentsList.RenderTransform>
-                    <TranslateTransform x:Name="HotCommentsAnimateTranslateTransform" />
-                </hycontrols:CommentsList.RenderTransform>
-            </hycontrols:CommentsList>
-        </Grid>
-        <Grid
-            x:Name="AllCommentsContainer"
-            Margin="0,110,0,0"
-            VerticalAlignment="Stretch"
-            Visibility="Collapsed">
             <StackPanel Orientation="Horizontal">
                 <TextBlock
                     x:Name="AllCmtsTB"
@@ -72,9 +47,7 @@
                     Text="所有评论" />
                 <ComboBox
                     x:Name="ComboBoxSortType"
-                    Grid.Column="1"
                     Margin="0,8,16,0"
-                    HorizontalAlignment="Right"
                     SelectedIndex="2"
                     SelectionChanged="ComboBoxSortType_OnSelectionChanged">
                     <x:String>推荐</x:String>
@@ -82,32 +55,27 @@
                     <x:String>时间</x:String>
                 </ComboBox>
             </StackPanel>
-
             <hycontrols:CommentsList
                 x:Name="NormalComments"
                 Margin="0,40,0,190"
-                Comments="{x:Bind _normalCommentsView}">
-                <hycontrols:CommentsList.RenderTransform>
-                    <TranslateTransform x:Name="MainCommentsAnimateTranslateTransform" />
-                </hycontrols:CommentsList.RenderTransform>
-            </hycontrols:CommentsList>
-
+                Comments="{x:Bind ViewModel.Comments, Mode=OneWay}"
+                Loaded="MainComments_Loaded" />
             <StackPanel
                 Margin="135"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Bottom"
-                Spacing="4"
-                Visibility="{x:Bind NormalComments.Visibility}">
+                Spacing="4">
                 <TextBlock
                     x:Name="PageIndicator"
                     HorizontalAlignment="Center"
-                    Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" />
+                    Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                    Text="{x:Bind ViewModel.Page, Mode=OneWay}" />
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <Button
                         x:Name="PrevPage"
                         Click="PrevPage_Click"
                         Content="上一页"
-                        IsEnabled="False" />
+                        IsEnabled="{x:Bind ViewModel.HasPreviousPage, Mode=OneWay}" />
                     <AutoSuggestBox
                         x:Name="PageSelect"
                         Width="110"
@@ -118,7 +86,7 @@
                         x:Name="NextPage"
                         Click="NextPage_Click"
                         Content="下一页"
-                        IsEnabled="False" />
+                        IsEnabled="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" />
                 </StackPanel>
             </StackPanel>
         </Grid>
@@ -128,42 +96,12 @@
             Height="50"
             Margin="15"
             HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
             Click="BackToTop_Click"
             CornerRadius="5"
             ToolTipService.ToolTip="回到顶部"
             Visibility="Collapsed">
-            <Button.Content>
-                <SymbolIcon Symbol="Up" />
-            </Button.Content>
+            <SymbolIcon Symbol="Up" />
         </Button>
     </Grid>
-    <Page.Resources>
-        <Storyboard x:Name="CommentFlyUp">
-            <DoubleAnimation
-                EnableDependentAnimation="True"
-                Storyboard.TargetName="MainCommentsAnimateTranslateTransform"
-                Storyboard.TargetProperty="Y"
-                From="1200"
-                To="0"
-                Duration="0:0:0.6">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
-        <Storyboard x:Name="CommentFlyDown">
-            <DoubleAnimation
-                EnableDependentAnimation="True"
-                Storyboard.TargetName="HotCommentsAnimateTranslateTransform"
-                Storyboard.TargetProperty="Y"
-                From="-1200"
-                To="0"
-                Duration="0:0:0.6">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
-    </Page.Resources>
-
 </Page>

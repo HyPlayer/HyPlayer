@@ -65,46 +65,6 @@ public sealed partial class HomePage : Page
         _taskRunner.Forget(ViewModel.LoadAsync(), "load home page");
     }
 
-    private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
-    {
-        var playList = sender?.As<MenuFlyoutItem>()?.CommandParameter as HomeContainerCardViewModel;
-        if (playList is null) return;
-        //播放全部歌曲
-        await _navigator.PlayAsync(new MusicResource.Playlist(playList.ActualId));
-    }
-
-    private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
-    {
-        var playList = sender?.As<MenuFlyoutItem>()?.CommandParameter as HomeContainerCardViewModel;
-        if (playList is null) return;
-        try
-        {
-            await _containerManager.SetContainerPrivacyAsync(playList.ActualId, true);
-            _notification.ShowMessage("成功公开歌单");
-            _playlistCollectionChangeNotifier.NotifyChanged();
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("公开歌单失败", ex.Message);
-        }
-    }
-
-    private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
-    {
-        var playList = sender?.As<MenuFlyoutItem>()?.CommandParameter as HomeContainerCardViewModel;
-        if (playList is null) return;
-        try
-        {
-            await _containerManager.DeleteContainerAsync(playList.ActualId);
-            _notification.ShowMessage("成功删除");
-            _playlistCollectionChangeNotifier.NotifyChanged();
-            _navigation.NavigateRefresh();
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("删除歌单失败", ex.Message);
-        }
-    }
 
     private void Card_Tapped(object sender, TappedRoutedEventArgs e)
     {

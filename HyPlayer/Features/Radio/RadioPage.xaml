@@ -8,9 +8,10 @@
     <Grid>
         <controls1:ContainerItemsView
             x:Name="SongContainer"
-            Container="{x:Bind CurrentContainer, Mode=OneWay}"
+            Container="{x:Bind ViewModel.CurrentContainer, Mode=OneWay}"
+            GreedyLoad="{x:Bind ViewModel.GreedyLoad, Mode=OneWay}"
             IsSearchEnabled="True"
-            QueueScope="{x:Bind CurrentQueueScope, Mode=OneWay}">
+            QueueScope="{x:Bind ViewModel.CurrentQueueScope, Mode=OneWay}">
             <controls1:ContainerItemsView.ListHeader>
                 <controls:DockPanel
                     x:Name="GridPersonalInformation"
@@ -27,7 +28,7 @@
                         <Rectangle.Fill>
                             <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
-                                    <BitmapImage UriSource="/Assets/icon.png" />
+                                    <BitmapImage UriSource="{x:Bind ViewModel.CoverUri, Mode=OneWay}" />
                                 </ImageBrush.ImageSource>
                             </ImageBrush>
                         </Rectangle.Fill>
@@ -42,7 +43,7 @@
                             Margin="0,0,0,0"
                             FontSize="36"
                             FontWeight="Medium"
-                            Text="电台名"
+                            Text="{x:Bind ViewModel.Name, Mode=OneWay}"
                             TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
@@ -53,8 +54,8 @@
                             <HyperlinkButton
                                 x:Name="TextBoxDJ"
                                 Margin="0,2,0,0"
-                                Click="TextBoxDJ_OnTapped"
-                                Content="电台创建者"
+                                Command="{x:Bind ViewModel.NavigateToHostCommand}"
+                                Content="{x:Bind ViewModel.HostName, Mode=OneWay}"
                                 FontSize="18"
                                 Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
                         </StackPanel>
@@ -67,15 +68,15 @@
                                 Content="播放全部"
                                 Style="{StaticResource ButtonRevealStyle}" />
                             <Button
-                                Click="ButtonDownloadAll_OnClick"
+                                Command="{x:Bind ViewModel.DownloadAllCommand}"
                                 Content="下载全部"
                                 Style="{StaticResource ButtonRevealStyle}" />
                             <Button
-                                Click="BtnAddAll_Clicked"
+                                Command="{x:Bind ViewModel.AddAllCommand}"
                                 Content="添加全部"
                                 Style="{StaticResource ButtonRevealStyle}" />
                             <Button
-                                Click="Button_Click"
+                                Command="{x:Bind ViewModel.ToggleOrderCommand}"
                                 Content="排序"
                                 Style="{StaticResource ButtonRevealStyle}" />
                         </StackPanel>
@@ -86,7 +87,7 @@
                             FontSize="13"
                             Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
                             MaxLines="7"
-                            Text="电台简介"
+                            Text="{x:Bind ViewModel.Description, Mode=OneWay}"
                             TextWrapping="WrapWholeWords" />
                     </StackPanel>
                 </controls:DockPanel>

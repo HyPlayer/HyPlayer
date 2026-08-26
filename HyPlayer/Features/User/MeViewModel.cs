@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
@@ -12,24 +13,31 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 
 namespace HyPlayer.Features.User;
 
 public partial class MeViewModel : ObservableObject
 {
+    private readonly IAppNavigator _navigator;
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
     private readonly UISettings _settings;
 
-    public MeViewModel(IProvidableItemProvidable itemProvider, IProviderKnownTypeIds knownTypeIds, UISettings settings,
-        INotificationService notification)
+    public MeViewModel(
+        IProvidableItemProvidable itemProvider,
+        IProviderKnownTypeIds knownTypeIds,
+        UISettings settings,
+        INotificationService notification,
+        IAppNavigator navigator)
     {
         _itemProvider = itemProvider;
         _knownTypeIds = knownTypeIds;
         _settings = settings;
         _notification = notification;
+        _navigator = navigator;
     }
 
     [ObservableProperty] public partial List<SimpleListItem> LikedPlaylist { get; set; }
@@ -99,7 +107,8 @@ public partial class MeViewModel : ObservableObject
                             PlayResource = new MusicResource.Playlist($"{valuePlaylist.ActualId}"),
                             ShowCover = !_settings.NoImage,
                             Title = valuePlaylist.Name,
-                            CanPlay = true
+                            CanPlay = true,
+                            CustomCommand = PlayResourceCommand
                         }
                     );
                 else
@@ -115,7 +124,8 @@ public partial class MeViewModel : ObservableObject
                             PlayResource = new MusicResource.Playlist($"{valuePlaylist.ActualId}"),
                             ShowCover = !_settings.NoImage,
                             Title = valuePlaylist.Name,
-                            CanPlay = true
+                            CanPlay = true,
+                            CustomCommand = PlayResourceCommand
                         }
                     );
             }
@@ -169,4 +179,6 @@ public partial class MeViewModel : ObservableObject
         public string? Description { get; init; }
         public string? AvatarUrl { get; init; }
     }
+    [RelayCommand]
+    private Task PlayResourceAsync(MusicResource resource) => _navigator.PlayAsync(resource);
 }

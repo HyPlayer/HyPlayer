@@ -106,10 +106,10 @@
                                     VerticalAlignment="Top"
                                     Background="{ThemeResource SystemAltLowColor}"
                                     BorderBrush="Transparent"
+                                    Command="{x:Bind CustomCommand}"
+                                    CommandParameter="{x:Bind PlayResource}"
                                     CornerRadius="9"
-                                    Click="PlayBtn_Click"
                                     FocusVisualSecondaryBrush="AliceBlue"
-                                    Tag="{x:Bind PlayResource}"
                                     ToolTipService.ToolTip="播放">
                                     <FontIcon
                                         Name="PlayStateIcon"

@@ -927,7 +927,7 @@
                                         <controls3:SettingsCard Header="清理所有缓存">
                                             <Button
                                                 HorizontalAlignment="Right"
-                                                Click="BtnClearCache_Click"
+                                                Command="{x:Bind ViewModel.ClearCacheCommand}"
                                                 Content="清理" />
                                         </controls3:SettingsCard>
                                     </controls3:SettingsExpander.Items>
@@ -1041,7 +1041,7 @@
                                     <controls3:SettingsCard.Header>
                                         <HyperlinkButton
                                             x:Name="ClearHistory"
-                                            Click="ClearHistory_Click"
+                                            Command="{x:Bind ViewModel.ClearHistoryCommand}"
                                             Content="清除历史记录">
                                             <HyperlinkButton.Transitions>
                                                 <TransitionCollection>

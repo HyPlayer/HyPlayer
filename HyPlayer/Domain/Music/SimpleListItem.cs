@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Input;
 using HyPlayer.Domain.Navigation;
 
 namespace HyPlayer.Domain.Music;
@@ -26,4 +27,5 @@ public class SimpleListItem
                       StaticSource.PicSizeSimpleLinerListItem);
 
     public int DisplayOrder => Order + 1;
+    public ICommand CustomCommand { get; set; }
 }

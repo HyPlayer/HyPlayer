@@ -33,16 +33,16 @@
             PaneDisplayMode="Top"
             SelectionChanged="NavigationView_SelectionChanged">
             <NavigationView.MenuItems>
-                <NavigationViewItem x:Name="SongHis" Content="最近播放歌曲" />
-                <NavigationViewItem x:Name="SongRankWeek" Content="听歌排行 (本周)" />
-                <NavigationViewItem x:Name="SongRankAll" Content="听歌排行 (全部)" />
+                <NavigationViewItem x:Name="SongHis" Content="最近播放歌曲" Tag="Recent" />
+                <NavigationViewItem x:Name="SongRankWeek" Content="听歌排行 (本周)" Tag="WeeklyRanking" />
+                <NavigationViewItem x:Name="SongRankAll" Content="听歌排行 (全部)" Tag="AllRanking" />
             </NavigationView.MenuItems>
         </NavigationView>
         <controls:ContainerItemsView
             x:Name="ItemsList"
             Grid.Row="2"
             Margin="20,0,20,0"
-            Container="{x:Bind HistoryContainer, Mode=OneWay}" />
+            Container="{x:Bind ViewModel.ContentContainer, Mode=OneWay}" />
     </Grid>
 
 

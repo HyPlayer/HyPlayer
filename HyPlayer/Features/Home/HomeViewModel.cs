@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
+using HyPlayer.Domain.Music;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Services;
@@ -24,6 +28,10 @@ namespace HyPlayer.Features.Home;
 public partial class HomeViewModel : ObservableObject
 {
 #nullable enable
+    private readonly IContainerManagementProvidable _containerManager;
+    private readonly IPlaylistCollectionChangeNotifier _playlistCollectionChangeNotifier;
+    private readonly IAppNavigator _navigator;
+    private readonly INotificationService _notification;
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly IAuthService _auth;
     private readonly IProviderSpecialContainerTypeIds _specialContainerTypeIds;
@@ -43,6 +51,10 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] public partial List<HomeContainerCardViewModel> OfficialPlaylists { get; set; }
 #nullable restore
     public HomeViewModel(
+        IContainerManagementProvidable containerManager,
+        IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier,
+        IAppNavigator navigator,
+        INotificationService notification,
         IProvidableItemProvidable itemProvider,
         IProviderSpecialContainerTypeIds specialContainerTypeIds,
         PlayCoreBase playCore,
@@ -51,6 +63,10 @@ public partial class HomeViewModel : ObservableObject
         IUserLibraryStateService userLibraryState,
         IAuthService auth)
     {
+        _containerManager = containerManager;
+        _playlistCollectionChangeNotifier = playlistCollectionChangeNotifier;
+        _navigator = navigator;
+        _notification = notification;
         _itemProvider = itemProvider;
         _specialContainerTypeIds = specialContainerTypeIds;
         _playCore = playCore;
@@ -122,7 +138,7 @@ public partial class HomeViewModel : ObservableObject
             : [];
     }
 
-    private static async Task<HomeContainerCardViewModel> CreateContainerCardAsync(ContainerBase container)
+    private async Task<HomeContainerCardViewModel> CreateContainerCardAsync(ContainerBase container)
     {
         var creators = container is IHasCreators creatorsProvider
             ? await creatorsProvider.GetCreatorsAsync()
@@ -141,7 +157,10 @@ public partial class HomeViewModel : ObservableObject
             CreatorName = creators?.FirstOrDefault()?.Name ?? string.Empty,
             Description = container is IHasDescription descriptionProvider
                 ? descriptionProvider.Description ?? string.Empty
-                : string.Empty
+                : string.Empty,
+            DeletePlaylistCommand = DeletePlaylistCommand,
+            PublishPlaylistCommand = PublishPlaylistCommand,
+            PlayPlaylistCommand = PlayPlaylistCommand
         };
     }
 
@@ -184,6 +203,39 @@ public partial class HomeViewModel : ObservableObject
         await _playCore.InsertSongRangeAsync(_recommendedProviderSongs);
         await _control.MoveNextAndPlayAsync(true);
     }
+    [RelayCommand]
+    private Task PlayPlaylistAsync(HomeContainerCardViewModel playlist) =>
+        _navigator.PlayAsync(new MusicResource.Playlist(playlist.ActualId));
+
+    [RelayCommand]
+    private async Task PublishPlaylistAsync(HomeContainerCardViewModel playlist)
+    {
+        try
+        {
+            await _containerManager.SetContainerPrivacyAsync(playlist.ActualId, true);
+            _notification.ShowMessage("成功公开歌单");
+            _playlistCollectionChangeNotifier.NotifyChanged();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("公开歌单失败", ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeletePlaylistAsync(HomeContainerCardViewModel playlist)
+    {
+        try
+        {
+            await _containerManager.DeleteContainerAsync(playlist.ActualId);
+            _notification.ShowMessage("成功删除");
+            _playlistCollectionChangeNotifier.NotifyChanged();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("删除歌单失败", ex.Message);
+        }
+    }
 }
 
 public sealed class HomeContainerCardViewModel
@@ -194,4 +246,7 @@ public sealed class HomeContainerCardViewModel
     public string CoverUrl { get; init; } = string.Empty;
     public string CreatorName { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
+    public ICommand DeletePlaylistCommand { get; init; }
+    public ICommand PublishPlaylistCommand { get; init; }
+    public ICommand PlayPlaylistCommand { get; init; }
 }

@@ -18,89 +18,6 @@
     xmlns:ui="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
     <Page.Resources>
-        <DataTemplate x:Key="RecommendedCardTemplate" x:DataType="home:HomeContainerCardViewModel">
-            <ListViewItem
-                x:Name="Card"
-                Width="256"
-                Height="128"
-                Margin="2,10"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Tag="{x:Bind}"
-                Tapped="Card_Tapped">
-                <ui:Effects.Shadow>
-                    <media:AttachedCardShadow
-                        BlurRadius="0"
-                        CornerRadius="0"
-                        Opacity="0.4" />
-                </ui:Effects.Shadow>
-                <Grid HorizontalAlignment="Left" RightTapped="{x:Bind hyplayer:XamlHelpers.UIElement_RightTapped}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="100" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border
-                        Grid.Column="0"
-                        HorizontalAlignment="Left"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        CornerRadius="6">
-                        <Image Source="{x:Bind CoverUrl}" Stretch="Uniform" />
-                    </Border>
-                    <Grid
-                        Grid.Column="1"
-                        Margin="16,4,0,4"
-                        RowSpacing="4">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <TextBlock
-                            Grid.Row="0"
-                            FontSize="14"
-                            FontWeight="SemiBold"
-                            MaxLines="1"
-                            Text="{x:Bind Name}"
-                            TextTrimming="CharacterEllipsis"
-                            ToolTipService.ToolTip="{x:Bind Name}" />
-                        <TextBlock
-                            Grid.Row="1"
-                            FontSize="14"
-                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                            MaxLines="1"
-                            Text="{x:Bind CreatorName}"
-                            TextTrimming="CharacterEllipsis"
-                            ToolTipService.ToolTip="{x:Bind CreatorName}" />
-                    </Grid>
-
-                    <Grid.ContextFlyout>
-                        <MenuFlyout>
-                            <MenuFlyoutItem
-                                Click="MenuFlyoutItem_Click"
-                                CommandParameter="{x:Bind}"
-                                Icon="Play"
-                                Text="播放全部" />
-                            <MenuFlyoutItem
-                                x:Name="ItemPublicPlayList"
-                                Click="ItemPublicPlayList_Click"
-                                CommandParameter="{x:Bind}"
-                                Icon="People"
-                                Text="公开此歌单" />
-                            <MenuFlyoutItem
-                                x:Name="ItemDelPlayList"
-                                Click="ItemDelPlayList_Click"
-                                CommandParameter="{x:Bind}"
-                                Foreground="Red"
-                                Icon="Delete"
-                                Text="删除此歌单" />
-                        </MenuFlyout>
-                    </Grid.ContextFlyout>
-                </Grid>
-            </ListViewItem>
-        </DataTemplate>
-
         <DataTemplate x:Key="ToplistCardTemplate" x:DataType="home:HomeContainerCardViewModel">
             <ListViewItem
                 x:Name="Card"
@@ -160,19 +77,19 @@
                     <Grid.ContextFlyout>
                         <MenuFlyout>
                             <MenuFlyoutItem
-                                Click="MenuFlyoutItem_Click"
+                                Command="{x:Bind PlayPlaylistCommand}"
                                 CommandParameter="{x:Bind}"
                                 Icon="Play"
                                 Text="播放全部" />
                             <MenuFlyoutItem
                                 x:Name="ItemPublicPlayList"
-                                Click="ItemPublicPlayList_Click"
+                                Command="{x:Bind PublishPlaylistCommand}"
                                 CommandParameter="{x:Bind}"
                                 Icon="People"
                                 Text="公开此歌单" />
                             <MenuFlyoutItem
                                 x:Name="ItemDelPlayList"
-                                Click="ItemDelPlayList_Click"
+                                Command="{x:Bind DeletePlaylistCommand}"
                                 CommandParameter="{x:Bind}"
                                 Foreground="Red"
                                 Icon="Delete"

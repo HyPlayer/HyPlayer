@@ -35,13 +35,13 @@
                         Spacing="10">
                         <Button
                             x:Name="Playall"
-                            Click="Playall_Click"
+                            Command="{x:Bind ViewModel.PlayAllCommand}"
                             Content="播放全部" />
                         <Button
                             x:Name="Refresh"
                             Click="Refresh_Click"
                             Content="开始扫描" />
-                        <Button Click="Add_Local" Content="手动添加" />
+                        <Button Command="{x:Bind ViewModel.AppendFilesCommand}" Content="手动添加" />
                         <TextBlock
                             Grid.Row="0"
                             HorizontalAlignment="Left"
@@ -91,7 +91,7 @@
                             x:Name="FileLoadingIndicateRing"
                             Width="100"
                             Height="100"
-                            IsActive="False" />
+                            IsActive="{x:Bind ViewModel.IsScanning, Mode=OneWay}" />
                     </Grid>
                 </Grid>
             </PivotItem>

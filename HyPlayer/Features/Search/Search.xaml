@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:history="using:HyPlayer.Features.History.Services"
     xmlns:hycontrol="using:HyPlayer.UI.Lists"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
@@ -32,7 +31,7 @@
                 x:Name="HistoryComboBox"
                 Margin="15,0,15,5"
                 HorizontalAlignment="Stretch"
-                ItemsSource="{x:Bind history:HistoryManagement.GetSearchHistory()}"
+                ItemsSource="{x:Bind ViewModel.SearchHistory, Mode=OneWay}"
                 PlaceholderText="展开搜索历史"
                 SelectionChanged="HistoryComboBox_SelectionChanged" />
         </StackPanel>
@@ -61,12 +60,13 @@
                     <hycontrol:ContainerItemsView
                         x:Name="SearchResultContainer"
                         Margin="0,30,0,0"
-                        Container="{x:Bind CurrentResultContainer, Mode=OneWay}" />
+                        Container="{x:Bind ViewModel.CurrentResultContainer, Mode=OneWay}" />
                     <TextBlock
                         x:Name="TBNoRes"
                         Margin="0,100,0,0"
                         HorizontalAlignment="Center"
                         FontSize=" 18"
+                        Visibility="{x:Bind ViewModel.HasNoResults, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}"
                         Text="没有搜索到相关内容" />
                 </Grid>
             </Grid>

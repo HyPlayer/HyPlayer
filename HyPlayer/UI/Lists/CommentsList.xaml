@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:HyPlayer.UI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:playcore="using:HyPlayer.PlayCore.Abstraction.Models.SingleItems"
     d:DesignHeight="300"
     d:DesignWidth="400"
     mc:Ignorable="d">
@@ -12,17 +13,17 @@
     <Grid>
         <ListView
             x:Name="CommentsContainer"
-            DataFetchSize="1"
             HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Stretch"
+            DataFetchSize="1"
             IncrementalLoadingThreshold="1"
             IncrementalLoadingTrigger="Edge"
             ItemContainerStyle="{ThemeResource ListViewItemStyle}"
             SelectionMode="None">
             <ListView.ItemTemplate>
-                <DataTemplate ScrollViewer.CanContentRenderOutsideBounds="False">
+                <DataTemplate x:DataType="playcore:CommentBase" ScrollViewer.CanContentRenderOutsideBounds="False">
                     <Border>
-                        <local:SingleComment MainComment="{Binding}" />
+                        <local:SingleComment MainComment="{x:Bind}" />
                     </Border>
                 </DataTemplate>
             </ListView.ItemTemplate>

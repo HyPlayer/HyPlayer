@@ -18,6 +18,7 @@ using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.UI.Lists;
 using HyPlayer.Shell.Navigation.Services;
 using ColorHelper = HyPlayer.Platform.Imaging.ColorHelper;
 using HyPlayer.Features.Account.Services;
@@ -213,6 +214,22 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         Api.EnterIntelligencePlay(PlayList.ActualId).SafeFireAndForget();
     }
 
+    public async Task RemoveItemAsync(ProvidableItemRowViewModel row)
+    {
+        if (PlayList is null || string.IsNullOrWhiteSpace(row.ActualId))
+            return;
+        try
+        {
+            await _containerItemManagement.RemoveItemFromContainerAsync(PlayList.ActualId, row.ActualId);
+            _notification.ShowMessage("已从歌单移除", row.Title);
+            if (!await ReloadFromProviderAsync())
+                _notification.ShowMessage("刷新歌单失败", "服务端未返回歌单信息");
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("移除失败", ex.Message);
+        }
+    }
     [RelayCommand]
     private async Task LikePlaylist()
     {

@@ -45,7 +45,7 @@ public sealed partial class SongListDetail : Page
             {
                 Text = "从歌单移除",
                 CanExecute = _ => ViewModel.IsMySongList && ViewModel.PlayList is not null,
-                ExecuteAsync = RemoveItemFromPlaylistAsync
+                ExecuteAsync = row => ViewModel.RemoveItemAsync(row)
             }
         ];
         InitializeComponent();
@@ -54,33 +54,6 @@ public sealed partial class SongListDetail : Page
     }
 
     public List<ProvidableItemAction> ItemActions { get; }
-
-    private async Task RemoveItemFromPlaylistAsync(ProvidableItemRowViewModel row)
-    {
-        if (ViewModel.PlayList is null || string.IsNullOrWhiteSpace(row.ActualId))
-            return;
-
-        try
-        {
-            await _containerItemManagement.RemoveItemFromContainerAsync(ViewModel.PlayList.ActualId, row.ActualId);
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("移除失败", ex.Message);
-            return;
-        }
-
-        _notification.ShowMessage("已从歌单移除", row.Title);
-        try
-        {
-            if (!await ViewModel.ReloadFromProviderAsync())
-                _notification.ShowMessage("刷新歌单失败", "服务端未返回歌单信息");
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("歌曲已移除，但刷新歌单失败", ex.Message);
-        }
-    }
 
     private void AttachDataRequested()
     {

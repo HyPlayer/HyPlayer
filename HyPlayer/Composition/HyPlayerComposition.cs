@@ -56,6 +56,14 @@ using FavoriteViewModel = HyPlayer.Features.Library.FavoriteViewModel;
 using HomeViewModel = HyPlayer.Features.Home.HomeViewModel;
 using MeViewModel = HyPlayer.Features.User.MeViewModel;
 using SongListViewModel = HyPlayer.Features.Playlist.SongListViewModel;
+using SearchViewModel = HyPlayer.Features.Search.SearchViewModel;
+using HistoryViewModel = HyPlayer.Features.Library.HistoryViewModel;
+using DownloadPageViewModel = HyPlayer.Features.Downloads.DownloadPageViewModel;
+using CommentsViewModel = HyPlayer.Features.Comments.CommentsViewModel;
+using MusicCloudViewModel = HyPlayer.Features.Library.MusicCloudViewModel;
+using RadioPageViewModel = HyPlayer.Features.Radio.RadioPageViewModel;
+using LocalMusicPageViewModel = HyPlayer.Features.Library.LocalMusicPageViewModel;
+using SettingsViewModel = HyPlayer.Features.Settings.SettingsViewModel;
 
 namespace HyPlayer.Composition;
 
@@ -321,8 +329,16 @@ internal static class HyPlayerComposition
         depository.AddTransient<ExpandedPlayerViewModel>();
         depository.AddTransient<ArtistPageViewModel>();
         depository.AddTransient<SongListViewModel>();
+        depository.AddTransient<SettingsViewModel>();
         depository.AddTransient<FavoriteViewModel>();
         depository.AddTransient<AlbumPageViewModel>();
+        depository.AddTransient<SearchViewModel>();
+        depository.AddTransient<HistoryViewModel>();
+        depository.AddTransient<DownloadPageViewModel>();
+        depository.AddTransient<CommentsViewModel>();
+        depository.AddTransient<MusicCloudViewModel>();
+        depository.AddTransient<RadioPageViewModel>();
+        depository.AddTransient<LocalMusicPageViewModel>();
         depository.AddTransient<PlayBarViewModel>();
     }
 }

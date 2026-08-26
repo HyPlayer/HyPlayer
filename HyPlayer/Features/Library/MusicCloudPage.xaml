@@ -39,9 +39,9 @@
         <controls1:ContainerItemsView
             x:Name="SongContainer"
             Grid.Row="1"
-            Container="{x:Bind CloudContainer, Mode=OneWay}"
+            Container="{x:Bind ViewModel.ContentContainer, Mode=OneWay}"
             ExtraItemActions="{x:Bind ItemActions, Mode=OneWay}"
-            GreedyLoad="{x:Bind GreedyLoad, Mode=OneWay}"
+            GreedyLoad="{x:Bind ViewModel.GreedyLoad, Mode=OneWay}"
             IsSearchEnabled="True" />
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>

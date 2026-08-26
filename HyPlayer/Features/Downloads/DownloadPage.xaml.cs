@@ -1,73 +1,30 @@
-#region
-
-using System;
-using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Downloads.Services;
 using WinRT;
 
-#endregion
-
-// https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
-
 namespace HyPlayer.Features.Downloads;
 
-/// <summary>
-///     可用于自身或导航至 Frame 内部的空白页。
-/// </summary>
 public sealed partial class DownloadPage : Page
 {
-    private readonly IDownloadService _downloadService = Ioc.Default.GetRequiredService<IDownloadService>();
-    private readonly DownloadSettings _setting = Ioc.Default.GetRequiredService<DownloadSettings>();
+    public DownloadPageViewModel ViewModel { get; } =
+        Ioc.Default.GetRequiredService<DownloadPageViewModel>();
 
     public DownloadPage()
     {
         InitializeComponent();
     }
 
-    private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
-    {
-        await Launcher.LaunchFolderPathAsync(_setting.DownloadDirectory);
-    }
-
-    private void Button_CleanAll_Click(object sender, RoutedEventArgs e)
-    {
-        _downloadService.ClearCompleted();
-    }
-
     private void PauseBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (sender?.As<Button>()?.DataContext is not DownloadObject downloadObject) return;
-        switch (downloadObject.Status)
-        {
-            case DownloadObject.DownloadStatus.Downloading or DownloadObject.DownloadStatus.Queueing:
-                _downloadService.Pause(downloadObject);
-                break;
-            case DownloadObject.DownloadStatus.Paused:
-                _downloadService.Resume(downloadObject);
-                break;
-            case DownloadObject.DownloadStatus.Error:
-                _downloadService.Retry(downloadObject);
-                break;
-        }
+        if (sender?.As<Button>()?.DataContext is DownloadObject download)
+            ViewModel.ToggleDownloadCommand.Execute(download);
     }
 
     private void RemoveBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (sender?.As<Button>()?.DataContext is not DownloadObject downloadObject) return;
-        _downloadService.Remove(downloadObject);
-    }
-
-    private void PauseAllBtn_Click(object sender, RoutedEventArgs e)
-    {
-        _downloadService.PauseAll();
-    }
-
-    private void Resume_All(object sender, RoutedEventArgs e)
-    {
-        _downloadService.ResumeAll();
+        if (sender?.As<Button>()?.DataContext is DownloadObject download)
+            ViewModel.RemoveCommand.Execute(download);
     }
 }

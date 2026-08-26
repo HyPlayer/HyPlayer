@@ -21,17 +21,17 @@
             Spacing="15">
             <Button
                 x:Name="OpenDownloadFolder"
-                Click="OpenDownloadFolder_Click"
+                Command="{x:Bind ViewModel.OpenDownloadFolderCommand}"
                 Content="打开下载目标文件夹" />
-            <Button Click="PauseAllBtn_Click" Content="暂停全部" />
-            <Button Click="Resume_All" Content="继续全部" />
+            <Button Command="{x:Bind ViewModel.PauseAllCommand}" Content="暂停全部" />
+            <Button Command="{x:Bind ViewModel.ResumeAllCommand}" Content="继续全部" />
             <Button
-                Click="Button_CleanAll_Click"
+                Command="{x:Bind ViewModel.ClearCompletedCommand}"
                 Content="删除全部"
                 Foreground="OrangeRed" />
 
         </StackPanel>
-        <ListView Grid.Row="1" ItemsSource="{x:Bind downloads:DownloadManager.DownloadListsView}">
+        <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.Downloads, Mode=OneWay}">
             <ListView.Resources>
                 <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
                     <Setter Property="Background" Value="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}" />
