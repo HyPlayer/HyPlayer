@@ -17,16 +17,19 @@ public sealed class HistoryService : IHistoryService
     private const string CurPlayingListHistoryKey = "curPlayingListHistory";
     private const string SongPlayHistoryFileName = "songPlayHistory";
     private readonly IProvidableItemRangeProvidable _itemRangeProvider;
+    private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
     private readonly LocalLibrarySettings _setting;
 
     public HistoryService(
         LocalLibrarySettings setting,
         IProvidableItemRangeProvidable itemRangeProvider,
+        IProviderKnownTypeIds knownTypeIds,
         INotificationService notification)
     {
         _setting = setting;
         _itemRangeProvider = itemRangeProvider;
+        _knownTypeIds = knownTypeIds;
         _notification = notification;
     }
 
@@ -58,8 +61,10 @@ public sealed class HistoryService : IHistoryService
             ApplicationData.Current.LocalSettings.Values["songHistory"]?.ToString() ?? "[]",
             JsonDefaults.Options) ?? [];
 
-        list.Remove(songId);
-        list.Insert(0, songId);
+        var actualId = NormalizeStoredSongId(songId, _knownTypeIds.SingleSongTypeId);
+        list.RemoveAll(item => string.Equals(
+            NormalizeStoredSongId(item, _knownTypeIds.SingleSongTypeId), actualId, StringComparison.Ordinal));
+        list.Insert(0, actualId);
         if (list.Count >= 100)
             list.RemoveRange(100, list.Count - 100);
         ApplicationData.Current.LocalSettings.Values["songHistory"] =
@@ -204,8 +209,24 @@ public sealed class HistoryService : IHistoryService
         if (songIds.Count == 0)
             return [];
 
-        var items = await _itemRangeProvider.GetProvidableItemsRangeAsync(songIds);
+        var providerSongIds = BuildProviderSongIds(songIds, _knownTypeIds.SingleSongTypeId);
+        var items = await _itemRangeProvider.GetProvidableItemsRangeAsync(providerSongIds);
         return items.OfType<SingleSongBase>().ToList();
+    }
+
+    internal static List<string> BuildProviderSongIds(IEnumerable<string> songIds, string singleSongTypeId)
+    {
+        return songIds
+            .Where(songId => !string.IsNullOrWhiteSpace(songId))
+            .Select(songId => singleSongTypeId + NormalizeStoredSongId(songId, singleSongTypeId))
+            .ToList();
+    }
+
+    private static string NormalizeStoredSongId(string songId, string singleSongTypeId)
+    {
+        return songId.StartsWith(singleSongTypeId, StringComparison.Ordinal)
+            ? songId[singleSongTypeId.Length..]
+            : songId;
     }
 
     private static CurPlayingListHistoryState ParseCurrentPlayingListHistoryState(string text)

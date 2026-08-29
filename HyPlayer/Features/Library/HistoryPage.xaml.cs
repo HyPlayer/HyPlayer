@@ -1,32 +1,10 @@
 #region
 
 using CommunityToolkit.Mvvm.DependencyInjection;
-using HyPlayer.Domain.Music;
-using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
-using HyPlayer.PlayCore.Abstraction.Models.Containers;
-using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
-using HyPlayer.Application.State;
-using HyPlayer.Features.Account.Services;
-using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
-using HyPlayer.Features.LastFM.Services;
-using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.Features.Playback.QueueProviders;
-using HyPlayer.Features.Playback.Services;
-using HyPlayer.Features.Widgets.Services;
-using HyPlayer.Platform.Runtime;
-using HyPlayer.Platform.Runtime.Background;
-using HyPlayer.Platform.Storage;
-using HyPlayer.Platform.SystemServices;
-using HyPlayer.Platform.Tiles;
-using HyPlayer.Shell.Navigation.Services;
-using HyPlayer.Shell.Playback;
-using HyPlayer.Shell.Services;
-using HyPlayer.UI.Playback.PlayBar;
-using HyPlayer.UI.TeachingTips;
 using HyPlayer.UI.Lists;
 using System;
 using System.Collections.Generic;
@@ -49,7 +27,6 @@ namespace HyPlayer.Features.Library;
 public sealed partial class HistoryPage : Page
 {
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
-    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly IUserLibraryProvidable _userLibraryProvider = Ioc.Default.GetRequiredService<IUserLibraryProvidable>();
     private readonly IUserLibraryTypeIds _userLibraryTypeIds = Ioc.Default.GetRequiredService<IUserLibraryTypeIds>();
     private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
@@ -57,10 +34,8 @@ public sealed partial class HistoryPage : Page
     public static readonly DependencyProperty HistoryContainerProperty = DependencyProperty.Register(
         nameof(HistoryContainer), typeof(ContainerBase), typeof(HistoryPage), new PropertyMetadata(default(ContainerBase)));
 
-    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
     private CancellationToken _cancellationToken;
-    private Task _songRankWeekLoaderTask;
-    private Task _songRankAllLoaderTask;
     private string _currentSelectionName;
     private List<ProvidableItemBase> _songHistoryCache;
 
@@ -77,33 +52,12 @@ public sealed partial class HistoryPage : Page
         set => SetValue(HistoryContainerProperty, value);
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         Bindings.StopTracking();
-        if (_songRankWeekLoaderTask != null && !_songRankWeekLoaderTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _songRankWeekLoaderTask;
-            }
-            catch
-            {
-            }
-        }
-        if (_songRankAllLoaderTask != null && !_songRankAllLoaderTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _songRankAllLoaderTask;
-            }
-            catch
-            {
-            }
-        }
-        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
     }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
@@ -119,14 +73,10 @@ public sealed partial class HistoryPage : Page
                 await LoadSongHistory(selectedName);
                 break;
             case "SongRankWeek":
-                //听歌排行加载部分 - 优先级靠下
-                _songRankWeekLoaderTask ??= LoadRankWeek(selectedName);
-                await _songRankWeekLoaderTask;
+                await LoadRankWeek(selectedName);
                 break;
             case "SongRankAll":
-                //听歌排行加载部分 - 优先级靠下
-                _songRankAllLoaderTask ??= LoadRankAll(selectedName);
-                await _songRankAllLoaderTask;
+                await LoadRankAll(selectedName);
                 break;
         }
     }
@@ -156,20 +106,17 @@ public sealed partial class HistoryPage : Page
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            if (_auth.CurrentUser?.ActualId is null)
-                return;
-
             var libraryTypeId = rangeId.Equals("recent", StringComparison.OrdinalIgnoreCase)
                 ? _userLibraryTypeIds.RecentListeningHistoryTypeId
                 : _userLibraryTypeIds.AllListeningHistoryTypeId;
-            if (await _userLibraryProvider.GetUserLibraryContainerAsync(_auth.CurrentUser.ActualId, libraryTypeId, _cancellationToken) is not ContainerBase container)
+            if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(libraryTypeId, _cancellationToken)
+                is not ContainerBase container)
                 return;
 
-            var rankData = await LoadContainerItemsAsync(container);
             if (!string.Equals(_currentSelectionName, selectionName, StringComparison.Ordinal))
                 return;
 
-            HistoryContainer = new StaticItemsContainer(rankData, "听歌排行", rangeId);
+            HistoryContainer = container;
         }
         catch (Exception ex) when (!(ex is TaskCanceledException or OperationCanceledException))
         {
@@ -177,13 +124,4 @@ public sealed partial class HistoryPage : Page
         }
     }
 
-    private async Task<List<ProvidableItemBase>> LoadContainerItemsAsync(ContainerBase container)
-    {
-        return container switch
-        {
-            LinerContainerBase liner => await liner.GetAllItemsAsync(_cancellationToken),
-            IProgressiveLoadingContainer progressive => (await progressive.GetProgressiveItemsListAsync(0, progressive.MaxProgressiveCount, _cancellationToken)).Item2,
-            _ => []
-        };
-    }
 }

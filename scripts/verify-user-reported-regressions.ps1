@@ -22,6 +22,25 @@ function Assert-SourceContains {
     }
 }
 
+function Assert-SourceNotContains {
+    param(
+        [Parameter(Mandatory)] [string] $Path,
+        [Parameter(Mandatory)] [string] $Pattern,
+        [Parameter(Mandatory)] [string] $Message
+    )
+
+    $fullPath = Join-Path $repoRoot $Path
+    if (-not (Test-Path -LiteralPath $fullPath)) {
+        $failures.Add($Message)
+        return
+    }
+
+    $content = Get-Content -Raw -LiteralPath $fullPath
+    if ($content -match $Pattern) {
+        $failures.Add($Message)
+    }
+}
+
 Assert-SourceContains 'HyPlayer.NeteaseProvider/HyPlayer.NeteaseProvider/NeteaseProvider.cs' `
     'ExtensionName\s*=.*songUrl\.(Type|EncodeType)' `
     '下载资源没有使用歌曲 URL API 返回的文件格式。'
@@ -72,6 +91,22 @@ Assert-SourceContains 'HyPlayer/Features/Album/AlbumPageViewModel.cs' `
 Assert-SourceContains 'HyPlayer/Features/Artist/ArtistPage.xaml' `
     'MaxLines="2"' `
     '歌手简介默认没有折叠为两行。'
+
+Assert-SourceNotContains 'HyPlayer/UI/Lists/ContainerItemsView.xaml' `
+    'x:Name="Toolbar"[\s\S]{0,120}Margin="0,0,0,-16"' `
+    '歌曲列表工具栏仍使用负底边距，会与第一首歌曲重叠。'
+Assert-SourceContains 'HyPlayer/Features/History/Services/HistoryService.cs' `
+    'BuildProviderSongIds\(songIds,\s*_knownTypeIds\.SingleSongTypeId\)' `
+    '最近播放歌曲 ID 没有补齐 provider 类型前缀。'
+Assert-SourceContains 'HyPlayer/Features/Library/HistoryPage.xaml.cs' `
+    'GetCurrentUserLibraryContainerAsync\(libraryTypeId' `
+    '听歌排行仍依赖可能尚未同步的页面登录用户，而没有从 provider 当前会话加载。'
+Assert-SourceContains 'HyPlayer/Features/Library/HistoryPage.xaml.cs' `
+    'HistoryContainer\s*=\s*container' `
+    '听歌排行没有把 provider 容器直接交给歌曲列表加载。'
+Assert-SourceNotContains 'HyPlayer/Features/Library/HistoryPage.xaml.cs' `
+    '_songRank(Week|All)LoaderTask' `
+    '听歌排行仍缓存失败或空结果任务，后续切换不会重试。'
 
 if ($failures.Count -gt 0) {
     $failures | ForEach-Object { Write-Host "FAIL: $_" }
