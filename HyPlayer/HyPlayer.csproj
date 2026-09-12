@@ -23,6 +23,10 @@
         <Content Include="Shaders\LikeApple\*.bin">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <Content Include="Assets\PattleCNN.onnx">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="ALRC.Abstraction">

@@ -68,7 +68,8 @@ public enum ColorGeneratorType
 {
     KMeans = 0,
     OctTree = 1,
-    Auto = 2
+    Auto = 2,
+    PattleCNN = 3
 }
 
 public enum ThemeRequest

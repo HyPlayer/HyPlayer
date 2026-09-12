@@ -717,6 +717,7 @@
                                                 <ComboBoxItem Content="KMeans" />
                                                 <ComboBoxItem Content="OctTree" />
                                                 <ComboBoxItem Content="Auto" />
+                                                <ComboBoxItem Content="PattleCNN" />
                                             </ComboBox>
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="歌词页面渲染帧率">

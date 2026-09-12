@@ -784,14 +784,14 @@ public sealed partial class ExpandedPlayer : Page
         if (_state.NowPlayingProviderItem == null) return false;
         try
         {
-            var theme = await ColorHelper.ExtractThemeColorFromStream(stream);
+            var theme = await ColorHelper.ExtractThemeColorFromStream(stream, _uiSettings.ColorGeneratorType);
             _albumMainColor = theme;
             stream.Seek(0);
             if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated ||
                 _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation ||
                 _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
             {
-                var palette = await ColorHelper.ExtractPaletteFromStream(stream);
+                var palette = await ColorHelper.ExtractPaletteFromStream(stream, _uiSettings.ColorGeneratorType);
                 if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated)
                 {
                     _albumColors =

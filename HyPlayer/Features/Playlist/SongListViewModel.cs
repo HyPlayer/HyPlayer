@@ -188,7 +188,7 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         {
             using var stream = await result.Content.ReadAsStreamAsync(cancellationToken);
             using var inputStream = stream.AsRandomAccessStream();
-            var imageMainColor = await ColorHelper.ExtractThemeColorFromStream(inputStream);
+            var imageMainColor = await ColorHelper.ExtractThemeColorFromStream(inputStream, _uiSettings.ColorGeneratorType);
             cancellationToken.ThrowIfCancellationRequested();
             AlbumColor = imageMainColor;
         }
