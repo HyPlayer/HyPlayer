@@ -23,10 +23,6 @@
         <Content Include="Shaders\LikeApple\*.bin">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="Assets\PattleCNN.onnx">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-        </Content>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="ALRC.Abstraction">
@@ -109,6 +105,11 @@
         <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj" />
         <ProjectReference Include="..\Microsoft.Gaming.XboxGameBar.Projection\Microsoft.Gaming.XboxGameBar.Projection.csproj" />
         <ProjectReference Include="..\ObservableCollections\src\ObservableCollections\ObservableCollections.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Content Update="Assets\PattleCNN.onnx">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
     <Import Project="..\ObservableCollections\src\ObservableCollections.SourceGenerator\build\ObservableCollections.SourceGenerator.targets" />
 </Project>
