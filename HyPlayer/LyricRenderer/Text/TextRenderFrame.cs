@@ -2,7 +2,7 @@
 
 namespace HyPlayer.LyricRenderer.Text;
 
-public sealed class TextRenderFrame
+public readonly struct TextRenderFrame
 {
     public int CurrentTokenIndex { get; init; }
     public float CurrentTokenProgress { get; init; }

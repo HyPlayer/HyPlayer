@@ -203,6 +203,11 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                 lyricTokenIndexMap,
                 request.Context.Dpi,
                 tokens.Count);
+            // Win2D may split a wrapped CJK run at a visual-line boundary and omit
+            // the token association for the last glyph in that run. Rebuild the
+            // association from the source UTF-16 range so the line reveal still
+            // includes the trailing glyph.
+            RepairTokenMappings(lyricGlyphClusters, tokens);
             RetimeInferredTokens(tokens, lyricGlyphClusters, request.LineStartTime, request.LineEndTime);
             if (useDynamicTransliteration)
             {
@@ -232,6 +237,11 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         {
             Text = actualText,
             Tokens = tokens.ToArray(),
+            TokenStartTimes = CreateTokenStartTimes(tokens),
+            TokenStartTimesAreSorted = AreTokenStartTimesSorted(tokens),
+            TokenSourceStarts = CreateTokenSourceStarts(tokens, static token => token.Text),
+            TransliterationSourceStarts = CreateTokenSourceStarts(tokens,
+                static token => token.Transliteration ?? string.Empty),
             HasRealWords = tokens.Any(token => !token.IsInferred),
             InferredTransliterationTokens = inferredTransliterationTokens,
             InferredTranslationTokens = inferredTranslationTokens,
@@ -272,6 +282,34 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                 return true;
         }
         return false;
+    }
+
+    private static long[] CreateTokenStartTimes(IReadOnlyList<LyricTextToken> tokens)
+    {
+        var result = new long[tokens.Count];
+        for (var index = 0; index < tokens.Count; index++) result[index] = tokens[index].StartTime;
+        return result;
+    }
+
+    internal static bool AreTokenStartTimesSorted(IReadOnlyList<LyricTextToken> tokens)
+    {
+        for (var index = 1; index < tokens.Count; index++)
+            if (tokens[index].StartTime < tokens[index - 1].StartTime) return false;
+        return true;
+    }
+
+    private static int[] CreateTokenSourceStarts(
+        IReadOnlyList<LyricTextToken> tokens,
+        Func<LyricTextToken, string> textSelector)
+    {
+        var result = new int[tokens.Count];
+        var position = 0;
+        for (var index = 0; index < tokens.Count; index++)
+        {
+            result[index] = position;
+            position += textSelector(tokens[index]).Length;
+        }
+        return result;
     }
 
     private static void RetimeInferredTokens(
@@ -337,6 +375,62 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             }
             sourceStart = sourceEnd;
         }
+    }
+
+    private static void RepairTokenMappings(
+        IReadOnlyList<LyricGlyphCluster> clusters,
+        IReadOnlyList<LyricTextToken> tokens)
+    {
+        if (clusters.Count == 0 || tokens.Count == 0) return;
+
+        var tokenStarts = new int[tokens.Count + 1];
+        var sourcePosition = 0;
+        for (var tokenIndex = 0; tokenIndex < tokens.Count; tokenIndex++)
+        {
+            tokenStarts[tokenIndex] = sourcePosition;
+            sourcePosition += tokens[tokenIndex].Text.Length;
+        }
+        tokenStarts[tokens.Count] = sourcePosition;
+
+        for (var clusterIndex = 0; clusterIndex < clusters.Count; clusterIndex++)
+        {
+            var cluster = clusters[clusterIndex];
+            if (cluster.SourceStart < 0 || cluster.SourceEnd <= cluster.SourceStart) continue;
+
+            var (first, end) = FindOverlappingTokens(tokenStarts, cluster.SourceStart, cluster.SourceEnd);
+
+            if (first >= 0)
+            {
+                cluster.TokenStartIndex = first;
+                cluster.TokenEndIndexExclusive = end;
+            }
+        }
+    }
+
+    internal static (int First, int End) FindOverlappingTokens(
+        IReadOnlyList<int> boundaries, int sourceStart, int sourceEnd)
+    {
+        if (sourceStart < 0 || sourceEnd <= sourceStart || boundaries.Count <= 1) return (-1, -1);
+        var count = boundaries.Count - 1;
+        var low = 0;
+        var high = count;
+        // First token whose end is strictly after the source start.
+        while (low < high)
+        {
+            var middle = low + (high - low) / 2;
+            if (boundaries[middle + 1] <= sourceStart) low = middle + 1;
+            else high = middle;
+        }
+        var first = low;
+        high = count;
+        // First token whose start is at or after the source end.
+        while (low < high)
+        {
+            var middle = low + (high - low) / 2;
+            if (boundaries[middle] < sourceEnd) low = middle + 1;
+            else high = middle;
+        }
+        return first < low ? (first, low) : (-1, -1);
     }
 
     private static CanvasTextFormat CreateTextFormat(

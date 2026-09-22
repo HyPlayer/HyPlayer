@@ -20,6 +20,8 @@ namespace HyPlayer.LyricRenderer.Text;
 public sealed class FocusedLyricTextRenderer
 {
     private static readonly ConcurrentDictionary<string, byte> ReportedOperationFailures = new(StringComparer.Ordinal);
+    private static readonly object ReportedOperationFailuresGate = new();
+    private const int MaxReportedOperationFailures = 4096;
     private readonly Dictionary<FocusedTransitionKey, ScalarTransitionState> _scalarTransitions = [];
     private readonly Dictionary<FocusedTransitionKey, ColorTransitionState> _colorTransitions = [];
     private readonly Dictionary<GlyphSourceKey, CanvasCommandList> _glyphSources = [];
@@ -31,11 +33,14 @@ public sealed class FocusedLyricTextRenderer
     private readonly LyricRenderFrameResourceScope _lineRevealResources = new();
     private LyricTextLayoutSnapshot? _transitionLayout;
     private CompiledFocusedTextEffectProfile? _transitionProfile;
+    private CompiledFocusedTextOperation? _cachedReveal;
+    private RevealOptions _cachedRevealOptions;
+    private bool _cachedVectorPath;
+    private bool _cachedCanPrune;
 
     public void Render(
         CanvasDrawingSession session,
         LyricTextLayoutSnapshot layout,
-        TextRenderFrame frame,
         RenderContext renderContext,
         CompiledFocusedTextEffectProfile profile,
         LyricExpressionLine line,
@@ -56,27 +61,50 @@ public sealed class FocusedLyricTextRenderer
             ReleaseRasterCache();
             _transitionLayout = layout;
             _transitionProfile = profile;
+            _cachedReveal = FindHighlightReveal(profile);
+            _cachedRevealOptions = _cachedReveal is null
+                ? RevealOptions.From((FocusedTextOperationDefinition?)null)
+                : RevealOptions.From(_cachedReveal);
+            _cachedVectorPath = CanUseVectorPath(profile, _cachedReveal);
+            _cachedCanPrune = _cachedReveal is not null && CanPruneLineContributions(profile);
         }
 
-        CompiledFocusedTextOperation? reveal = null;
-        for (var index = 0; index < profile.Operations.Count; index++)
-        {
-            if (profile.Operations[index].Definition.TypeId != FocusedTextBuiltInOperationTypes.HighlightReveal)
-                continue;
-            reveal = profile.Operations[index];
-            break;
-        }
-        var revealOptions = RevealOptions.From(reveal?.Definition);
-        var vectorPath = CanUseVectorPath(profile, reveal);
+        var reveal = _cachedReveal;
+        var revealOptions = _cachedRevealOptions;
+        var vectorPath = _cachedVectorPath;
+        var canPrune = _cachedCanPrune;
         using var brush = new CanvasSolidColorBrush(session, layout.FocusingColor);
         DrawLayer(session, brush, layout.LyricGlyphClusters, LyricTextLayer.Lyric, layout, renderContext,
-            profile, revealOptions, line, expressionFrame, vectorPath);
+            profile, reveal, revealOptions, line, expressionFrame, vectorPath, canPrune);
         if (renderContext.EnableTransliteration)
             DrawLayer(session, brush, layout.TransliterationGlyphClusters, LyricTextLayer.Transliteration, layout,
-                renderContext, profile, revealOptions, line, expressionFrame, vectorPath);
+                renderContext, profile, reveal, revealOptions, line, expressionFrame, vectorPath, canPrune);
         if (renderContext.EnableTranslation)
             DrawLayer(session, brush, layout.TranslationGlyphClusters, LyricTextLayer.Translation, layout,
-                renderContext, profile, revealOptions, line, expressionFrame, vectorPath);
+                renderContext, profile, reveal, revealOptions, line, expressionFrame, vectorPath, canPrune);
+    }
+
+    private static CompiledFocusedTextOperation? FindHighlightReveal(
+        CompiledFocusedTextEffectProfile profile)
+    {
+        for (var index = 0; index < profile.Operations.Count; index++)
+        {
+            var operation = profile.Operations[index];
+            if (operation.Definition.TypeId == FocusedTextBuiltInOperationTypes.HighlightReveal)
+                return operation;
+        }
+
+        return null;
+    }
+
+    private static bool TryMarkOperationFailure(string key)
+    {
+        if (ReportedOperationFailures.ContainsKey(key)) return false;
+        lock (ReportedOperationFailuresGate)
+        {
+            if (ReportedOperationFailures.Count >= MaxReportedOperationFailures) return false;
+            return ReportedOperationFailures.TryAdd(key, 0);
+        }
     }
 
     private static bool CanUseVectorPath(
@@ -118,21 +146,23 @@ public sealed class FocusedLyricTextRenderer
         LyricTextLayoutSnapshot layout,
         RenderContext renderContext,
         CompiledFocusedTextEffectProfile profile,
+        CompiledFocusedTextOperation? reveal,
         RevealOptions revealOptions,
         LyricExpressionLine line,
         LyricExpressionFrame frame,
-        bool vectorPath)
+        bool vectorPath,
+        bool canPrune)
     {
         for (var clusterIndex = 0; clusterIndex < clusters.Count; clusterIndex++)
         {
             var cluster = clusters[clusterIndex];
             var contributions = CreateContributions(cluster, layer, layout, renderContext.CurrentLyricTime,
                 revealOptions, line);
-            if (ShouldDrawContribution(contributions.First, layout, profile, revealOptions, line, frame))
+            if (ShouldDrawContribution(contributions.First, layout, canPrune, reveal, revealOptions, line, frame))
                 DrawPlannedContribution(session, brush, contributions.First, layout, renderContext, profile, line,
                     frame, vectorPath);
             if (contributions.Second is { } second &&
-                ShouldDrawContribution(second, layout, profile, revealOptions, line, frame))
+                ShouldDrawContribution(second, layout, canPrune, reveal, revealOptions, line, frame))
                 DrawPlannedContribution(session, brush, second, layout, renderContext, profile, line, frame,
                     vectorPath);
         }
@@ -141,23 +171,16 @@ public sealed class FocusedLyricTextRenderer
     private bool ShouldDrawContribution(
         Contribution contribution,
         LyricTextLayoutSnapshot layout,
-        CompiledFocusedTextEffectProfile profile,
+        bool canPrune,
+        CompiledFocusedTextOperation? reveal,
         RevealOptions options,
         LyricExpressionLine line,
         LyricExpressionFrame frame)
     {
-        CompiledFocusedTextOperation? reveal = null;
-        for (var index = 0; index < profile.Operations.Count; index++)
-        {
-            if (profile.Operations[index].Definition.TypeId != FocusedTextBuiltInOperationTypes.HighlightReveal)
-                continue;
-            reveal = profile.Operations[index];
-            break;
-        }
         if (reveal is null) return true;
         if (!contribution.ParticipatesInReveal ||
             !ShouldUseLineRevealForTarget(options.Mode, reveal.Targets, contribution.Target) ||
-            !CanPruneLineContributions(profile)) return true;
+            !canPrune) return true;
 
         var lineFrame = GetLineRevealFrame(reveal, contribution, layout, line, frame);
         var timeline = lineFrame.Timeline;
@@ -178,7 +201,7 @@ public sealed class FocusedLyricTextRenderer
             : end > rampStart || lineFrame.Sample.Progress <= 0;
     }
 
-    private static bool CanPruneLineContributions(CompiledFocusedTextEffectProfile profile)
+    internal static bool CanPruneLineContributions(CompiledFocusedTextEffectProfile profile)
     {
         for (var index = 0; index < profile.Operations.Count; index++)
         {
@@ -245,7 +268,7 @@ public sealed class FocusedLyricTextRenderer
                 {
                     case FocusedTextBuiltInOperationTypes.HighlightReveal:
                         revealProgress = contribution.WordProgress;
-                        var options = RevealOptions.From(operation.Definition);
+                        var options = RevealOptions.From(operation);
                         if (ShouldApplyHighlightReveal(
                                 options.Mode,
                                 contribution.ParticipatesInReveal,
@@ -293,7 +316,7 @@ public sealed class FocusedLyricTextRenderer
                 revealProgress = inputRevealProgress;
                 hasRectangleClip = inputHasRectangleClip;
                 highlighted = inputHighlighted;
-                if (ReportedOperationFailures.TryAdd(operation.Definition.InstanceId, 0))
+                if (TryMarkOperationFailure(operation.Definition.InstanceId))
                     Debug.WriteLine($"Focused lyric operation {operation.Definition.InstanceId} failed: {exception}");
             }
         }
@@ -597,7 +620,7 @@ public sealed class FocusedLyricTextRenderer
                     image = input;
                     geometryTransform = inputTransform;
                     currentOrigin = inputOrigin;
-                    if (ReportedOperationFailures.TryAdd(operation.Definition.InstanceId, 0))
+                    if (TryMarkOperationFailure(operation.Definition.InstanceId))
                         Debug.WriteLine($"Focused lyric operation {operation.Definition.InstanceId} failed: {exception}");
                 }
             }
@@ -624,7 +647,7 @@ public sealed class FocusedLyricTextRenderer
         out float revealProgress)
     {
         revealProgress = contribution.WordProgress;
-        var options = RevealOptions.From(operation.Definition);
+        var options = RevealOptions.From(operation);
         if (!ShouldApplyHighlightReveal(
                 options.Mode,
                 contribution.ParticipatesInReveal,
@@ -1499,6 +1522,11 @@ public sealed class FocusedLyricTextRenderer
         HighlightRevealMode Mode,
         TransliterationProgressMode TransliterationMode)
     {
+        public static RevealOptions From(CompiledFocusedTextOperation operation) => new(
+            operation.UntimedHighlightMode,
+            operation.HighlightRevealMode,
+            operation.TransliterationProgressMode);
+
         public static RevealOptions From(FocusedTextOperationDefinition? definition) => definition is null
             ? new RevealOptions(UntimedHighlightMode.WholeLine, HighlightRevealMode.RectangleClip,
                 TransliterationProgressMode.FollowMain)

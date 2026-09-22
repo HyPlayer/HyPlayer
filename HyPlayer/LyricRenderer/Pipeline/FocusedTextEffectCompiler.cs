@@ -45,6 +45,9 @@ internal sealed class CompiledFocusedTextOperation
     public required IReadOnlyDictionary<string, CompiledFocusedColorParameter> Colors { get; init; }
     public CompiledFocusedDrawScript? DrawScript { get; init; }
     public EaseFunctionBase? ConstantLiftEasing { get; init; }
+    public UntimedHighlightMode UntimedHighlightMode { get; init; } = UntimedHighlightMode.WholeLine;
+    public HighlightRevealMode HighlightRevealMode { get; init; } = HighlightRevealMode.RectangleClip;
+    public TransliterationProgressMode TransliterationProgressMode { get; init; } = TransliterationProgressMode.FollowMain;
 }
 
 internal readonly record struct CompiledFocusedScalarValue(
@@ -329,13 +332,22 @@ internal sealed class FocusedTextEffectCompiler
                 Scalars = scalars,
                 Colors = colors,
                 DrawScript = drawScript,
-                ConstantLiftEasing = CompileConstantLiftEasing(operation, scalars)
+                ConstantLiftEasing = CompileConstantLiftEasing(operation, scalars),
+                UntimedHighlightMode = ParseOption(operation.Options, "untimedMode", UntimedHighlightMode.WholeLine),
+                HighlightRevealMode = ParseOption(operation.Options, "revealMode", HighlightRevealMode.RectangleClip),
+                TransliterationProgressMode = ParseOption(operation.Options, "transliterationMode", TransliterationProgressMode.FollowMain)
             });
         }
 
         return new CompiledFocusedTextEffectProfile(
             LyricEffectPresets.CloneFocusedText(definition), operations);
     }
+
+    private static T ParseOption<T>(IReadOnlyDictionary<string, string> options, string key, T fallback)
+        where T : struct, Enum => options.TryGetValue(key, out var value) &&
+                                  Enum.TryParse<T>(value, true, out var parsed)
+        ? parsed
+        : fallback;
 
     private CompiledFocusedDrawScript? CompileDrawScript(
         FocusedTextOperationDefinition operation,

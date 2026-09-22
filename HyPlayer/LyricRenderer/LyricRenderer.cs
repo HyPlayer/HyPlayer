@@ -529,11 +529,16 @@ namespace HyPlayer.LyricRenderer
         public void LyricView_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
             var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
-            var min = -(long)Context.LyricLines
-                .Where(p => Context.LyricLines.IndexOf(p) >= Context.CurrentLyricLineIndex)
-                .Sum(p => p.RenderingHeight + Context.LineSpacing);
-            var max = (long)Context.LyricLines.Where(p => Context.LyricLines.IndexOf(p) < Context.CurrentLyricLineIndex)
-                .Sum(p => p.RenderingHeight + Context.LineSpacing);
+            double before = 0;
+            double after = 0;
+            for (var index = 0; index < Context.LyricLines.Count; index++)
+            {
+                var height = Context.LyricLines[index].RenderingHeight + Context.LineSpacing;
+                if (index < Context.CurrentLyricLineIndex) before += height;
+                else after += height;
+            }
+            var min = -(long)after;
+            var max = (long)before;
             Context.ScrollingDelta = Math.Clamp(Context.ScrollingDelta + delta, min, max); //限制滚动范围
             Context.IsScrolling = true;
             _lastWheelTime = Context.RenderTick;

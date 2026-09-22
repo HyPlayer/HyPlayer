@@ -12,6 +12,10 @@ public sealed partial class LyricTextLayoutSnapshot : IDisposable
 {
     public required string Text { get; init; }
     public required IReadOnlyList<LyricTextToken> Tokens { get; init; }
+    public required long[] TokenStartTimes { get; init; }
+    public required bool TokenStartTimesAreSorted { get; init; }
+    public required int[] TokenSourceStarts { get; init; }
+    public required int[] TransliterationSourceStarts { get; init; }
     public required bool HasRealWords { get; init; }
     public required IReadOnlyList<LyricTextToken> InferredTransliterationTokens { get; init; }
     public required IReadOnlyList<LyricTextToken> InferredTranslationTokens { get; init; }

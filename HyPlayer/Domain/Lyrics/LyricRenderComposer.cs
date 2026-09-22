@@ -74,15 +74,11 @@ public static class LyricRenderComposer
         if (!quickRender && lyric.LyricLine is KaraokeLyricsLine karaokeLyricsLine)
         {
             // 获取已高亮字符数
-            var currentWordInfo = GetCurrentWordInfo(currentTimeInLine, karaokeLyricsLine);
             var wordInfos = karaokeLyricsLine.WordInfos;
-            var currentWordIndex = wordInfos.IndexOf(currentWordInfo);
-            var letterPosition = GetLetterPosition(currentWordInfo, karaokeLyricsLine);
+            var (currentWordInfo, currentWordIndex, letterPosition, startTime) =
+                FindCurrentWord(currentTimeInLine, wordInfos);
             var highlightedGeometry =
                 CreateHighlightedWordsGeometry(textLayout.GetCharacterRegions(0, letterPosition), drawingSession);
-            var startTime =
-                TimeSpan.FromMilliseconds(wordInfos.Take(currentWordIndex)
-                    .Sum(p => p.Duration.TotalMilliseconds));
             var shouldEase = currentWordIndex == wordInfos.Count - 1 ||
                              currentWordInfo.Duration.TotalSeconds > 1;
             var currentPercentage =
@@ -164,31 +160,24 @@ public static class LyricRenderComposer
             : (currentTime - startTime) / duration;
     }
 
-    private static KaraokeWordInfo GetCurrentWordInfo(TimeSpan currentTime, KaraokeLyricsLine karaokeLyricsLine)
+    private static (KaraokeWordInfo Word, int Index, int LetterPosition, TimeSpan StartTime) FindCurrentWord(
+        TimeSpan currentTime, IReadOnlyList<KaraokeWordInfo> wordInfos)
     {
-        var wordInfos = karaokeLyricsLine.WordInfos;
         var time = TimeSpan.Zero;
-        var currentLyric = wordInfos.Last();
-        //获取播放中单词在歌词的位置
-        foreach (var item in wordInfos)
+        var letterPosition = 0;
+        for (var index = 0; index < wordInfos.Count; index++)
         {
+            var item = wordInfos[index];
             if (item.Duration + time > currentTime)
-            {
-                currentLyric = item;
-                break;
-            }
-
+                return (item, index, letterPosition, time);
             time += item.Duration;
+            letterPosition += item.CurrentWords.Length;
         }
 
-        return currentLyric;
-    }
-
-    private static int GetLetterPosition(KaraokeWordInfo currentLyric, KaraokeLyricsLine karaokeLyricsLine)
-    {
-        var wordInfos = karaokeLyricsLine.WordInfos;
-        var index = wordInfos.IndexOf(currentLyric);
-        return wordInfos.Take(index).Sum(p => p.CurrentWords.Length);
+        var lastIndex = Math.Max(0, wordInfos.Count - 1);
+        return (wordInfos[lastIndex], lastIndex,
+            Math.Max(0, letterPosition - wordInfos[lastIndex].CurrentWords.Length),
+            time - wordInfos[lastIndex].Duration);
     }
 
     private static CanvasGeometry? CreateCurrentWordGeometry(double currentPercentage,

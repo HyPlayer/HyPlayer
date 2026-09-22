@@ -16,7 +16,6 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     // 新增：用于记录文本排版的实际起始 X 坐标
     private float _renderStartX;
-    private bool _sizeChanged;
 
     private ICanvasImage _staticPersistCache;
     private CanvasTextFormat _textFormat;
@@ -43,7 +42,6 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     public override void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context)
     {
-        _sizeChanged = true;
         _canvasWidth = context.ItemWidth;
         _canvasHeight = context.ViewHeight;
         OnTypographyChanged(session, context);
@@ -51,6 +49,12 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
+        _textFormat?.Dispose();
+        _textLayout?.Dispose();
+        _staticPersistCache?.Dispose();
+        _textFormat = null;
+        _textLayout = null;
+        _staticPersistCache = null;
         _textFormat = new CanvasTextFormat
         {
             FontSize = TypographySelector(t => t?.LyricFontSize, context)!.Value / 2,
@@ -68,19 +72,13 @@ public partial class ActionLyricLine : RenderingLyricLine
             FontWeight = FontWeights.Normal
         };
 
-        if (_textLayout is null || _sizeChanged)
-        {
-            _sizeChanged = false;
-            _textLayout = new CanvasTextLayout(session, Text, _textFormat,
-                Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
-
-            _renderStartX = (float)_textLayout.LayoutBounds.X;
-        }
+        _textLayout = new CanvasTextLayout(session, Text, _textFormat,
+            Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
+        _renderStartX = (float)_textLayout.LayoutBounds.X;
 
         RenderingHeight = (float)(_textLayout?.LayoutBounds.Height ?? 0);
         RenderingWidth = (float)(_textLayout?.LayoutBounds.Width ?? 0) + 32; // 加上 32 作为左右各 16 的 Padding 留白
 
-        _staticPersistCache?.Dispose();
         CanvasDrawingSession pstDs;
         if (!context.Effects.CacheRenderTarget)
         {

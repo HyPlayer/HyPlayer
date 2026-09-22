@@ -75,11 +75,9 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
 
         if (IsActive && context.EffectProfile is { } effectProfile)
         {
-            var frame = _progressResolver.Resolve(context.CurrentLyricTime, StartTime, EndTime, _layout);
             _focusedTextRenderer.Render(
                 session,
                 _layout,
-                frame,
                 context,
                 effectProfile.FocusedText,
                 CurrentExpressionLine,

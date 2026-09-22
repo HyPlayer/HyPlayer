@@ -20,6 +20,8 @@ public static class LrcConverter
 {
     private static readonly ConcurrentDictionary<string, byte> ReportedInvalidStyleColors =
         new(StringComparer.Ordinal);
+    private static readonly object ReportedInvalidStyleColorsGate = new();
+    private const int MaxReportedInvalidStyleColors = 4096;
 
     public static readonly List<ILyricEnhancer<bool>> LyricEnhancers =
     [
@@ -231,9 +233,19 @@ public static class LrcConverter
         catch (FormatException)
         {
             var key = $"{styleId}\u001f{source}";
-            if (ReportedInvalidStyleColors.TryAdd(key, 0))
+            if (TryMarkInvalidStyleColor(key))
                 Debug.WriteLine($"ALRC style '{styleId}' contains invalid color '{source}'.");
             return null;
+        }
+    }
+
+    private static bool TryMarkInvalidStyleColor(string key)
+    {
+        if (ReportedInvalidStyleColors.ContainsKey(key)) return false;
+        lock (ReportedInvalidStyleColorsGate)
+        {
+            if (ReportedInvalidStyleColors.Count >= MaxReportedInvalidStyleColors) return false;
+            return ReportedInvalidStyleColors.TryAdd(key, 0);
         }
     }
 

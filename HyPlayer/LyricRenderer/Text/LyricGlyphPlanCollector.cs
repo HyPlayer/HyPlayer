@@ -292,13 +292,16 @@ internal sealed partial class LyricGlyphPlanCollector(
         return origins;
     }
 
-    private static int FindNextGlyphStart(IReadOnlyList<int> clusterMap, int charStart, int glyphStart, int glyphCount)
+    internal static int FindNextGlyphStart(IReadOnlyList<int> clusterMap, int charStart, int glyphStart, int glyphCount)
     {
         var next = glyphCount;
         for (var i = charStart; i < clusterMap.Count; i++)
         {
             var candidate = clusterMap[i];
             if (candidate > glyphStart && candidate < next) next = candidate;
+            // No integer boundary can lie between adjacent glyph indexes. This
+            // avoids rescanning the rest of a one-glyph-per-character CJK run.
+            if (next == glyphStart + 1) break;
         }
 
         return next;
