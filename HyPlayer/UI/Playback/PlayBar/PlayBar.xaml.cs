@@ -705,7 +705,7 @@ DoubleAnimation verticalAnimation;
 
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
-        _diagnostics.Logs.Add("Now PlaySource is " + ViewModel.PlaySourceId);
+        _diagnostics.AddLog("Now PlaySource is " + ViewModel.PlaySourceId);
 
         if (_lyricSettings.HotLyricOnStartup)
             try
@@ -730,7 +730,7 @@ DoubleAnimation verticalAnimation;
         }
         catch (Exception ex)
         {
-            _diagnostics.Logs.Add("Failed to initialize PlayBar share integration: " + ex.Message);
+            _diagnostics.AddLog("Failed to initialize PlayBar share integration: " + ex.Message);
         }
     }
 

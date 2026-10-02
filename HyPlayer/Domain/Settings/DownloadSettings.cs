@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Windows.Storage;
 
 namespace HyPlayer.Domain.Settings;
@@ -27,19 +28,26 @@ public partial class DownloadSettings : SettingsBase
 
     public string DownloadDirectory
     {
-        get
-        {
-            try
-            {
-                return GetSettings(nameof(DownloadDirectory), KnownFolders.MusicLibrary
-                    .CreateFolderAsync(nameof(HyPlayer), CreationCollisionOption.OpenIfExists).AsTask().Result.Path);
-            }
-            catch
-            {
-                return ApplicationData.Current.LocalCacheFolder.Path;
-            }
-        }
+        get => TryGetSettings<string>(nameof(DownloadDirectory), out var value)
+            ? value!
+            : ApplicationData.Current.LocalCacheFolder.Path;
         set => SetSettings(nameof(DownloadDirectory), value);
+    }
+
+    public async Task<string> GetDownloadDirectoryAsync()
+    {
+        if (TryGetSettings<string>(nameof(DownloadDirectory), out var value) && !string.IsNullOrWhiteSpace(value))
+            return value!;
+
+        try
+        {
+            return (await KnownFolders.MusicLibrary.CreateFolderAsync(
+                nameof(HyPlayer), CreationCollisionOption.OpenIfExists)).Path;
+        }
+        catch
+        {
+            return ApplicationData.Current.LocalCacheFolder.Path;
+        }
     }
 
     public string DownloadFileName

@@ -40,7 +40,7 @@ public sealed class DownloadService : IDownloadService
     public void Remove(DownloadObject download)
     {
         download.Remove();
-        Downloads.Remove(download);
+        DownloadManager.RemoveDownload(download);
     }
 
     public void ClearCompleted()

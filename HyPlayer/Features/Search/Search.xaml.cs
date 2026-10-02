@@ -37,6 +37,7 @@ public sealed partial class Search : Page
 
     private readonly CancellationToken _cancellationToken;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationTokenSource? _suggestionCancellationTokenSource;
     private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
     private readonly Dictionary<ContainerBase, List<ProvidableItemBase>> _linerSearchItems = new();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
@@ -50,6 +51,7 @@ public sealed partial class Search : Page
         Ioc.Default.GetService<ISearchSuggestionProvidable>();
 
     private string _cachedSearchText = string.Empty;
+    private long _suggestionVersion;
     private string _lastSuggestionKeyword = string.Empty;
     private List<string> _lastSuggestions = [];
     private Task _loadResultTask;
@@ -96,6 +98,8 @@ public sealed partial class Search : Page
             }
 
         _cancellationTokenSource?.Dispose();
+        _suggestionCancellationTokenSource?.Cancel();
+        _suggestionCancellationTokenSource?.Dispose();
     }
 
     private async Task LoadResult()
@@ -226,6 +230,7 @@ public sealed partial class Search : Page
 
     private void SearchKeywordBox_LostFocus(object sender, RoutedEventArgs e)
     {
+        _suggestionCancellationTokenSource?.Cancel();
         ((AutoSuggestBox)sender).ItemsSource = null;
     }
 
@@ -238,10 +243,22 @@ public sealed partial class Search : Page
     private async void SearchKeywordBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
         var keyword = sender.Text;
-        if (string.IsNullOrEmpty(keyword) || args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
+        if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
+
+        _suggestionCancellationTokenSource?.Cancel();
+        _suggestionCancellationTokenSource?.Dispose();
+        _suggestionCancellationTokenSource = new CancellationTokenSource();
+        var token = _suggestionCancellationTokenSource.Token;
+        var suggestionVersion = Interlocked.Increment(ref _suggestionVersion);
+        if (string.IsNullOrWhiteSpace(keyword))
+        {
+            sender.ItemsSource = null;
+            return;
+        }
 
         try
         {
+            await Task.Delay(250, token);
             if (_suggestionProvider is null)
             {
                 sender.ItemsSource = null;
@@ -250,10 +267,12 @@ public sealed partial class Search : Page
 
             if (keyword != _lastSuggestionKeyword)
             {
-                var container = await _suggestionProvider.GetSearchSuggestionsAsync(keyword);
+                var container = await _suggestionProvider.GetSearchSuggestionsAsync(keyword, token);
                 var items = container is LinerContainerBase liner
-                    ? await liner.GetAllItemsAsync(_cancellationToken)
+                    ? await liner.GetAllItemsAsync(token)
                     : [];
+                token.ThrowIfCancellationRequested();
+                if (suggestionVersion != Volatile.Read(ref _suggestionVersion)) return;
                 _lastSuggestionKeyword = keyword;
                 _lastSuggestions = items.Select(t => !string.IsNullOrWhiteSpace(t.Name) ? t.Name : t.ActualId)
                     .Where(t => !string.IsNullOrWhiteSpace(t))
@@ -262,6 +281,10 @@ public sealed partial class Search : Page
 
             if (sender.Text == keyword)
                 sender.ItemsSource = _lastSuggestions;
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer keystroke superseded this request.
         }
         catch (Exception ex)
         {

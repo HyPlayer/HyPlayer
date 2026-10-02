@@ -32,9 +32,7 @@ public sealed partial class MusicCloudPage : Page
         nameof(CloudContainer), typeof(ContainerBase), typeof(MusicCloudPage),
         new PropertyMetadata(default(ContainerBase)));
 
-    private readonly CancellationToken _cancellationToken;
-
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationTokenSource? _cancellationTokenSource = new();
 
     private readonly IContainerItemManagementProvidable _containerItemManagement =
         Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
@@ -58,7 +56,6 @@ public sealed partial class MusicCloudPage : Page
             }
         ];
         InitializeComponent();
-        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     public ContainerBase CloudContainer
@@ -73,8 +70,9 @@ public sealed partial class MusicCloudPage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        _cancellationTokenSource.Cancel();
-        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = null;
         SongContainer.ReleaseResources();
         Bindings.StopTracking();
     }
@@ -82,6 +80,7 @@ public sealed partial class MusicCloudPage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        _cancellationTokenSource ??= new CancellationTokenSource();
         await LoadCloudContainerAsync();
     }
 
@@ -123,7 +122,7 @@ public sealed partial class MusicCloudPage : Page
     private async Task<bool> LoadCloudContainerAsync()
     {
         if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
-                _cancellationToken) is not ContainerBase container)
+                _cancellationTokenSource?.Token ?? CancellationToken.None) is not ContainerBase container)
             return false;
 
         CloudContainer = container;
@@ -138,7 +137,7 @@ public sealed partial class MusicCloudPage : Page
         try
         {
             await _containerItemManagement.RemoveItemFromContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
-                row.ItemId, _cancellationToken);
+                row.ItemId, _cancellationTokenSource?.Token ?? CancellationToken.None);
         }
         catch (Exception ex)
         {

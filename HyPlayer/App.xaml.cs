@@ -217,7 +217,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
     private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        AppDepository.Resolve<IDiagnosticsStateService>().ErrorMessages.Add(e.Exception.ToString());
+        AppDepository.Resolve<IDiagnosticsStateService>().AddError(e.Exception.ToString());
         e.Handled = true;
     }
 

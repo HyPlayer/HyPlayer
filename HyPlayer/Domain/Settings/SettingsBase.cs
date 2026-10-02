@@ -41,6 +41,35 @@ public abstract partial class SettingsBase : ObservableObject
         }
     }
 
+    protected bool TryGetSettings<T>(string propertyName, out T? value)
+    {
+        try
+        {
+            if (ApplicationData.Current.LocalSettings.Values.TryGetValue(GetStorageKey(propertyName), out var stored)
+                && stored is not null)
+            {
+                if (stored is T typed)
+                {
+                    value = typed;
+                    return true;
+                }
+
+                var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+                value = targetType.IsEnum
+                    ? (T)Enum.ToObject(targetType, stored)
+                    : (T)Convert.ChangeType(stored, targetType);
+                return true;
+            }
+        }
+        catch
+        {
+            // Treat malformed settings as absent.
+        }
+
+        value = default;
+        return false;
+    }
+
     protected bool SetSettings<T>(string propertyName, T value,
         [CallerMemberName] string? notifyingPropertyName = null)
     {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using HyPlayer.Application.Notifications;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
@@ -17,6 +18,7 @@ public sealed class ShellSearchViewModel
     private readonly ISearchSuggestionProvidable _suggestionProvider;
     private string _lastSuggestionKeyword = string.Empty;
     private IReadOnlyList<string>? _lastSuggestions;
+    private long _suggestionVersion;
 
     public ShellSearchViewModel(ISearchSuggestionProvidable suggestionProvider,
         INavigationService navigation,
@@ -27,19 +29,29 @@ public sealed class ShellSearchViewModel
         _notification = notification;
     }
 
-    public async Task<IReadOnlyList<string>?> GetSuggestionsAsync(string keyword)
+    public async Task<IReadOnlyList<string>?> GetSuggestionsAsync(string keyword, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(keyword)) return null;
         if (keyword == _lastSuggestionKeyword)
             return _lastSuggestions;
 
+        var version = Interlocked.Increment(ref _suggestionVersion);
+
         try
         {
-            var container = await _suggestionProvider.GetSearchSuggestionsAsync(keyword);
-            var items = container is LinerContainerBase liner ? await liner.GetAllItemsAsync() : [];
+            var container = await _suggestionProvider.GetSearchSuggestionsAsync(keyword, cancellationToken);
+            var items = container is LinerContainerBase liner
+                ? await liner.GetAllItemsAsync(cancellationToken)
+                : [];
+            cancellationToken.ThrowIfCancellationRequested();
+            if (version != Volatile.Read(ref _suggestionVersion)) return null;
             _lastSuggestionKeyword = keyword;
             _lastSuggestions = items.Select(GetSuggestionText).Where(text => !string.IsNullOrWhiteSpace(text)).ToList();
             return _lastSuggestions;
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
         }
         catch (Exception ex)
         {

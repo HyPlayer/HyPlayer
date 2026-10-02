@@ -34,8 +34,7 @@ public sealed partial class HistoryPage : Page
     public static readonly DependencyProperty HistoryContainerProperty = DependencyProperty.Register(
         nameof(HistoryContainer), typeof(ContainerBase), typeof(HistoryPage), new PropertyMetadata(default(ContainerBase)));
 
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
-    private CancellationToken _cancellationToken;
+    private CancellationTokenSource? _cancellationTokenSource = new();
     private string _currentSelectionName;
     private List<ProvidableItemBase> _songHistoryCache;
 
@@ -43,7 +42,6 @@ public sealed partial class HistoryPage : Page
     {
         InitializeComponent();
         HisModeNavView.SelectedItem = SongHis;
-        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     public ContainerBase HistoryContainer
@@ -56,12 +54,15 @@ public sealed partial class HistoryPage : Page
     {
         base.OnNavigatedFrom(e);
         Bindings.StopTracking();
-        _cancellationTokenSource.Cancel();
-        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = null;
+        _songHistoryCache = null;
     }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
+        _cancellationTokenSource ??= new CancellationTokenSource();
         var selectedName = (sender.SelectedItem?.As<NavigationViewItem>()).Name;
         if (string.Equals(_currentSelectionName, selectedName, StringComparison.Ordinal) && HistoryContainer is not null)
             return;
@@ -103,13 +104,14 @@ public sealed partial class HistoryPage : Page
 
     private async Task LoadRank(string rangeId, string selectionName)
     {
-        _cancellationToken.ThrowIfCancellationRequested();
+        (_cancellationTokenSource?.Token ?? CancellationToken.None).ThrowIfCancellationRequested();
         try
         {
             var libraryTypeId = rangeId.Equals("recent", StringComparison.OrdinalIgnoreCase)
                 ? _userLibraryTypeIds.RecentListeningHistoryTypeId
                 : _userLibraryTypeIds.AllListeningHistoryTypeId;
-            if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(libraryTypeId, _cancellationToken)
+            if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(libraryTypeId,
+                    _cancellationTokenSource?.Token ?? CancellationToken.None)
                 is not ContainerBase container)
                 return;
 

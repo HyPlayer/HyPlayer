@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using HyPlayer.Domain.Settings;
@@ -30,6 +31,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     private readonly PlaybackStateService _state;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly ITileService _tileService;
+    private int _coverRequestVersion;
 
     public PlaybackNotificationService(
         PlaybackStateService state,
@@ -64,6 +66,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         }
         else
         {
+            Interlocked.Increment(ref _coverRequestVersion);
             _state.CoverStream = null;
             _state.CoverStreamReference = null;
         }
@@ -76,6 +79,8 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     /// <inheritdoc />
     public async Task RefreshCoverAsync(SingleSongBase providerItem)
     {
+        var requestVersion = Interlocked.Increment(ref _coverRequestVersion);
+        InMemoryRandomAccessStream newStream = null;
         try
         {
             var coverUri = await GetCoverUriAsync(providerItem);
@@ -83,21 +88,33 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
 
             using var response = await _http.GetAsync(coverUri);
             if (!response.IsSuccessStatusCode) return;
-
-            var bytes = await response.Content.ReadAsByteArrayAsync();
-            var buffer = bytes.AsBuffer();
+            if (requestVersion != Volatile.Read(ref _coverRequestVersion)) return;
 
             // 替换封面流
-            var newStream = new InMemoryRandomAccessStream();
+            newStream = new InMemoryRandomAccessStream();
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            var buffer = bytes.AsBuffer();
             await newStream.WriteAsync(buffer);
+            newStream.Seek(0);
+            if (requestVersion != Volatile.Read(ref _coverRequestVersion))
+            {
+                newStream.Dispose();
+                newStream = null;
+                return;
+            }
             var newRef = RandomAccessStreamReference.CreateFromStream(newStream);
 
             _state.CoverStreamReference = newRef;
             _state.CoverStream = newStream;
+            newStream = null;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             Debug.WriteLine($"Cover load failed: {ex.Message}");
+        }
+        finally
+        {
+            newStream?.Dispose();
         }
     }
 

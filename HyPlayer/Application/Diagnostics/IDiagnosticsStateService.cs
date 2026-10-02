@@ -7,4 +7,6 @@ public interface IDiagnosticsStateService
 {
     List<string> ErrorMessages { get; }
     ObservableList<string> Logs { get; }
+    void AddError(string message);
+    void AddLog(string message);
 }

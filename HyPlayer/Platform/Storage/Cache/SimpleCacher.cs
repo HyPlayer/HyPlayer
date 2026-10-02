@@ -15,13 +15,24 @@ namespace HyPlayer.Platform.Storage.Cache;
 public static class SimpleCacher
 {
     private static StorageFolder? _cacheFolder;
+    private static readonly SemaphoreSlim _initializeLock = new(1, 1);
     private static readonly ConcurrentDictionary<Type, bool> _jsonSupportedTypes = new();
 
 
     public static async Task InitializeAsync()
     {
-        _cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(
-            Ioc.Default.GetRequiredService<PlaybackSettings>().CacheDirectory);
+        if (_cacheFolder is not null) return;
+
+        await _initializeLock.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            _cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(
+                Ioc.Default.GetRequiredService<PlaybackSettings>().CacheDirectory);
+        }
+        finally
+        {
+            _initializeLock.Release();
+        }
         // cacheFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("cache", CreationCollisionOption.OpenIfExists);
     }
 
@@ -51,13 +62,13 @@ public static class SimpleCacher
                 DateTimeOffset.Now - properties.DateModified < expiration.Value)
             {
                 // Cache is still valid, read from it
-                using var stream = await cacheFile.OpenStreamForReadAsync();
-                using var reader = new StreamReader(stream);
-                var content = await reader.ReadToEndAsync();
-                if (content.Length == 0) return default;
                 try
                 {
-                    var rst = JsonSerializer.Deserialize<T>(content, JsonDefaults.Options);
+                    using var stream = await cacheFile.OpenStreamForReadAsync();
+                    var rst = await JsonSerializer.DeserializeAsync<T>(
+                        stream,
+                        JsonDefaults.Options,
+                        cancellationToken).ConfigureAwait(false);
                     return rst;
                 }
                 catch (NotSupportedException)
@@ -99,9 +110,11 @@ public static class SimpleCacher
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var json = JsonSerializer.Serialize(data, JsonDefaults.Options);
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
-            await FileIO.WriteTextAsync(file, json);
+            using var stream = await file.OpenStreamForWriteAsync();
+            stream.SetLength(0);
+            await JsonSerializer.SerializeAsync(stream, data, JsonDefaults.Options, cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (NotSupportedException)
         {

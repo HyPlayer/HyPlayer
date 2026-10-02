@@ -111,7 +111,7 @@ public sealed partial class DownloadObject : ObservableObject
         _downloadCdName = trackMetadata?.DiscName;
         _downloadSongId = song.ActualId ?? string.Empty;
         _downloadAlbumId = song.Album?.ActualId;
-        AlbumCover = GetProviderAlbumCover(song);
+        AlbumCover = null;
     }
 
     public IStorageFile ResultFile
@@ -134,7 +134,7 @@ public sealed partial class DownloadObject : ObservableObject
 
     public string AlbumName { get; }
 
-    public string? AlbumCover { get; }
+    public string? AlbumCover { get; private set; }
 
     public ulong HadSize
     {
@@ -231,15 +231,22 @@ public sealed partial class DownloadObject : ObservableObject
 
     private void Wc_DownloadFileCompleted()
     {
-        DownloadManager.WritingTasks.Add(Task.Run(async () =>
+        var task = Task.Run(async () =>
         {
-            if (_lyricSettings.DownloadLyric)
-                await DownloadLyric().ConfigureAwait(false);
-            if (_downloadSettings.WriteDownloadFileInfo)
-                await WriteInfoToFile().ConfigureAwait(false);
-            DownloadManager.WritingTasks.RemoveAll(t => t.IsCompleted);
-            Status = DownloadStatus.Finished;
-        }));
+            try
+            {
+                if (_lyricSettings.DownloadLyric)
+                    await DownloadLyric().ConfigureAwait(false);
+                if (_downloadSettings.WriteDownloadFileInfo)
+                    await WriteInfoToFile().ConfigureAwait(false);
+                Status = DownloadStatus.Finished;
+            }
+            finally
+            {
+                DownloadManager.CleanupCompletedWritingTasks();
+            }
+        });
+        DownloadManager.RegisterWritingTask(task);
         _ = _uiThreadDispatcher.TryRunAsync(() => Message = "下载完成");
     }
 
@@ -273,7 +280,7 @@ public sealed partial class DownloadObject : ObservableObject
                 if (!string.IsNullOrWhiteSpace(AlbumCover))
                 {
                     if (!string.IsNullOrWhiteSpace(_downloadAlbumId)
-                        && DownloadManager.AlbumPicturesCache.TryGetValue(_downloadAlbumId, out var cachedPic))
+                        && DownloadManager.TryGetAlbumPicture(_downloadAlbumId, out var cachedPic))
                     {
                         pic = cachedPic;
                     }
@@ -284,14 +291,14 @@ public sealed partial class DownloadObject : ObservableObject
                         using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
                         using var stream = await responseMessage.Content.ReadAsStreamAsync();
                         using var inputStream = stream.AsRandomAccessStream();
-                        SoftwareBitmap softwareBitmap;
                         var decoder = await BitmapDecoder.CreateAsync(inputStream);
-                        softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+                        using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
                         var encoder =
                             await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
                         encoder.SetSoftwareBitmap(softwareBitmap);
                         await encoder.FlushAsync();
-                        pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
+                        using var outputReadStream = outputStream.AsStreamForRead();
+                        pic = new Picture(ByteVector.FromStream(outputReadStream));
                     }
 
                     if (!string.IsNullOrWhiteSpace(_downloadAlbumId))
@@ -317,7 +324,7 @@ public sealed partial class DownloadObject : ObservableObject
                     Progress = 100;
                     Message = "写入音乐信息时出现错误" + ex.Message;
                 });
-                _diagnostics.ErrorMessages.Add("写入音乐信息时出现错误" + ex.Message);
+                _diagnostics.AddError("写入音乐信息时出现错误" + ex.Message);
                 _notification.ShowMessage("写入信息错误: " + ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         });
@@ -429,7 +436,7 @@ public sealed partial class DownloadObject : ObservableObject
                     (_downloadTrackId > 0 ? _downloadTrackId : _downloadOrder + 1).ToString().EscapeForPath())
                 .Replace("{$CDNAME}", _downloadCdName?.EscapeForPath())
                 .Replace("{$SONGID}", _downloadSongId.EscapeForPath());
-            var folderName = _downloadSettings.DownloadDirectory;
+            var folderName = await _downloadSettings.GetDownloadDirectoryAsync();
             var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
             var ses = FileName.Replace('\\', '/').Split('/');
             for (var index = 0; index < ses.Length - 1; index++)
@@ -478,6 +485,7 @@ public sealed partial class DownloadObject : ObservableObject
             }
 
             var extension = NormalizeAudioExtension(musicResource.ExtensionName);
+            AlbumCover ??= await GetProviderAlbumCoverAsync(_providerSong);
             FileName += "." + extension;
             _downloadBitrate = 0;
             _downloadFormat = extension;
@@ -521,7 +529,7 @@ public sealed partial class DownloadObject : ObservableObject
         {
             Status = DownloadStatus.Error;
             _ = _uiThreadDispatcher.TryRunAsync(() => { Message = "下载错误: " + ex.Message; });
-            _diagnostics.ErrorMessages.Add("无法下载歌曲 " + SongName + "\n已自动将其从下载列表中移除" + ex.Message);
+            _diagnostics.AddError("无法下载歌曲 " + SongName + "\n已自动将其从下载列表中移除" + ex.Message);
         }
     }
 
@@ -543,15 +551,15 @@ public sealed partial class DownloadObject : ObservableObject
         };
     }
 
-    private static string? GetProviderAlbumCover(SingleSongBase song)
+    private static async Task<string?> GetProviderAlbumCoverAsync(SingleSongBase song)
     {
         var coverProvider = song.Album as IHasCover ?? song as IHasCover;
         if (coverProvider is null)
             return null;
 
-        var result = coverProvider.GetCoverAsync().GetAwaiter().GetResult();
+        var result = await coverProvider.GetCoverAsync();
         return result is IResourceResultOf<Uri?> uriResult
-            ? uriResult.GetResourceAsync().GetAwaiter().GetResult()?.ToString()
+            ? (await uriResult.GetResourceAsync())?.ToString()
             : null;
     }
 

@@ -24,6 +24,7 @@ namespace HyPlayer.Features.Downloads.Services;
 internal static class DownloadManager
 {
     private const int MaxAlbumPicturesCacheSize = 64;
+    private static readonly object StateGate = new();
     private static bool _timerStarted;
     public static ObservableList<DownloadObject> DownloadLists { get; } = [];
     public static NotifyCollectionChangedSynchronizedViewList<DownloadObject> DownloadListsView { get; } =
@@ -70,36 +71,43 @@ internal static class DownloadManager
             _timerStarted = false;
         }
 
-        WritingTasks.RemoveAll(t => t.IsCompleted);
-        if (DownloadLists.Count == 0)
-            AlbumPicturesCache.Clear();
-        TrimAlbumPicturesCache();
+        lock (StateGate)
+        {
+            WritingTasks.RemoveAll(t => t.IsCompleted);
+            if (DownloadLists.Count == 0)
+                AlbumPicturesCache.Clear();
+            TrimAlbumPicturesCache();
+        }
     }
 
     public static void AddDownload(SingleSongBase song)
     {
         if (!CheckDownloadAbilityAndToast()) return;
-        CleanupCompletedWritingTasks();
-        EnsureTimerStarted();
-
-        DownloadLists.Add(CreateDownloadObject(song));
+        _ = UIThreadDispatcher.TryRunAsync(() =>
+        {
+            CleanupCompletedWritingTasks();
+            EnsureTimerStarted();
+            DownloadLists.Add(CreateDownloadObject(song));
+        });
     }
 
     public static void AddDownload(List<SingleSongBase> songs)
     {
         if (!CheckDownloadAbilityAndToast()) return;
-        CleanupCompletedWritingTasks();
-        EnsureTimerStarted();
-
-        DownloadLists.AddRange(songs.Select(CreateDownloadObject));
+        _ = UIThreadDispatcher.TryRunAsync(() =>
+        {
+            CleanupCompletedWritingTasks();
+            EnsureTimerStarted();
+            DownloadLists.AddRange(songs.Select(CreateDownloadObject));
+        });
     }
 
     private static void Timer_Elapsed(object? sender, EventArgs e)
     {
-        Timer_Elapsed();
+        _ = UIThreadDispatcher.TryRunAsync(Timer_ElapsedOnUi);
     }
 
-    private static void Timer_Elapsed()
+    private static void Timer_ElapsedOnUi()
     {
         if (DownloadLists.Count == 0)
         {
@@ -119,13 +127,7 @@ internal static class DownloadManager
                     --maxDownloadCount;
                     return;
                 case DownloadObject.DownloadStatus.Finished:
-                    var i1 = i;
-                    _ = UIThreadDispatcher.TryRunAsync(() =>
-                    {
-                        DownloadLists.RemoveAt(i1);
-                        if (DownloadLists.Count == 0)
-                            StopTimer();
-                    });
+                    RemoveDownload(DownloadLists[i]);
                     break;
                 case DownloadObject.DownloadStatus.Paused:
                 case DownloadObject.DownloadStatus.Error:
@@ -153,13 +155,39 @@ internal static class DownloadManager
         if (string.IsNullOrWhiteSpace(albumId))
             return;
 
-        AlbumPicturesCache[albumId] = picture;
-        TrimAlbumPicturesCache();
+        lock (StateGate)
+        {
+            AlbumPicturesCache[albumId] = picture;
+            TrimAlbumPicturesCache();
+        }
     }
 
-    private static void CleanupCompletedWritingTasks()
+    public static bool TryGetAlbumPicture(string albumId, out Picture picture)
     {
-        WritingTasks.RemoveAll(t => t.IsCompleted);
+        lock (StateGate)
+            return AlbumPicturesCache.TryGetValue(albumId, out picture!);
+    }
+
+    public static void RegisterWritingTask(Task task)
+    {
+        lock (StateGate)
+            WritingTasks.Add(task);
+    }
+
+    public static void RemoveDownload(DownloadObject download)
+    {
+        _ = UIThreadDispatcher.TryRunAsync(() =>
+        {
+            DownloadLists.Remove(download);
+            if (DownloadLists.Count == 0)
+                StopTimer();
+        });
+    }
+
+    internal static void CleanupCompletedWritingTasks()
+    {
+        lock (StateGate)
+            WritingTasks.RemoveAll(t => t.IsCompleted);
     }
 
     private static void TrimAlbumPicturesCache()

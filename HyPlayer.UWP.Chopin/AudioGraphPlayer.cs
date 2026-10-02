@@ -202,6 +202,11 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 var oldPlayer = _defaultPlayer;
                 var oldOutputNode = _outputNode;
                 var oldNodes = _audioInputNodes.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                AudioGraph newPlayer = null;
+                AudioDeviceOutputNode newOutputNode = null;
+                AudioFrameOutputNode newFrameOutputNode = null;
+                var newNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
+                var committed = false;
 
                 try
                 {
@@ -210,7 +215,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     var newPlayerResult = await AudioGraph.CreateAsync(setting);
                     if (newPlayerResult.Status != AudioGraphCreationStatus.Success)
                         throw newPlayerResult.ExtendedError;
-                    var newPlayer = newPlayerResult.Graph;
+                    newPlayer = newPlayerResult.Graph;
 
 
                     oldPlayer.Stop();
@@ -220,16 +225,14 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     var deviceNodeCreateResult = await newPlayer.CreateDeviceOutputNodeAsync();
                     if (deviceNodeCreateResult.Status != AudioDeviceNodeCreationStatus.Success)
                         throw deviceNodeCreateResult.ExtendedError;
-                    var newOutputNode = deviceNodeCreateResult.DeviceOutputNode;
+                    newOutputNode = deviceNodeCreateResult.DeviceOutputNode;
                     newOutputNode.OutgoingGain = oldOutputNode.OutgoingGain;
 
                     var encodingProperties = _outputNode.EncodingProperties.Copy();
                     encodingProperties.ChannelCount = 1;
-                    var frameOutputResult = newPlayer.CreateFrameOutputNode(encodingProperties);
-                    _frameOutputNode = frameOutputResult;
+                    newFrameOutputNode = newPlayer.CreateFrameOutputNode(encodingProperties);
 
                     // 转移所有播放源
-                    var newNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
                     var newNodesReverse = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
 
                     foreach (var (source, oldNode) in oldNodes)
@@ -257,12 +260,14 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                         if (createResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
                             throw createResult.ExtendedError;
                         var newNode = createResult.Node;
+                        newNodes[source] = newNode;
+                        newNodesReverse[newNode] = source;
 
                         // 应用状态
                         newNode.PlaybackSpeedFactor = factor;
                         newNode.OutgoingGain = gain;
                         newNode.AddOutgoingConnection(newOutputNode);
-                        newNode.AddOutgoingConnection(_frameOutputNode);
+                        newNode.AddOutgoingConnection(newFrameOutputNode);
                         newNode.MediaSourceCompleted += OnMediaSourceCompleted;
 
                         // 应用效果
@@ -276,8 +281,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                         newNode.Seek(position);
                         newNode.Start();
 
-                        newNodes[source] = newNode;
-                        newNodesReverse[newNode] = source;
                     }
 
                     // 替换为新图
@@ -285,6 +288,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     newPlayer.QuantumProcessed += GraphOnQuantumProcessed;
                     EnableFFTProcessing = settings.EnableFFTProcessing;
                     _outputNode = newOutputNode;
+                    _frameOutputNode = newFrameOutputNode;
                     _audioInputNodes.Clear();
                     foreach (var kvp in newNodes) _audioInputNodes.TryAdd(kvp.Key, kvp.Value);
                     _audioInputNodesReverseDictionary.Clear();
@@ -292,10 +296,29 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
                     _currentDeviceId = audioGraphSetting.DefaultDeviceId;
                     if (GlobalPlaybackStatus == PlaybackStatus.Playing) newPlayer.Start();
+                    committed = true;
                 }
                 finally
                 {
-                    oldPlayer.Dispose();
+                    if (committed)
+                    {
+                        oldPlayer.QuantumProcessed -= GraphOnQuantumProcessed;
+                        oldPlayer.Dispose();
+                    }
+                    else
+                    {
+                        foreach (var node in newNodes.Values)
+                        {
+                            try { node.MediaSourceCompleted -= OnMediaSourceCompleted; } catch { }
+                            try { node.RemoveOutgoingConnection(newOutputNode); } catch { }
+                            try { node.RemoveOutgoingConnection(newFrameOutputNode); } catch { }
+                            try { node.Dispose(); } catch { }
+                        }
+
+                        newOutputNode?.Dispose();
+                        newFrameOutputNode?.Dispose();
+                        newPlayer?.Dispose();
+                    }
                     _positionTimer.Start();
                 }
             }
@@ -312,20 +335,29 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (disposing)
             {
                 _positionTimer?.Stop();
+                _positionTimer.Elapsed -= PositionTimer_Elapsed;
                 _positionTimer?.Dispose();
                 _lifecycleGate.Dispose();
             }
 
+            var player = _defaultPlayer;
+            if (player is not null)
+                player.QuantumProcessed -= GraphOnQuantumProcessed;
+
             // 清理所有播放源
             foreach (var item in _audioInputNodes.Values)
             {
+                item.MediaSourceCompleted -= OnMediaSourceCompleted;
                 item.RemoveOutgoingConnection(_outputNode);
                 item.RemoveOutgoingConnection(_frameOutputNode);
                 item.Dispose();
             }
 
-            _defaultPlayer?.Dispose();
+            _audioInputNodes.Clear();
+            _audioInputNodesReverseDictionary.Clear();
             _playbackSourceGainStates.Clear();
+            _primaryPlaybackSource = null;
+            player?.Dispose();
             _disposedValue = true;
         }
 
