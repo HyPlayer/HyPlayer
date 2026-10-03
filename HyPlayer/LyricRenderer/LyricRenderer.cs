@@ -159,8 +159,8 @@ namespace HyPlayer.LyricRenderer
                     X = 4,
                     Y = topleftPosition
                 };
-                Context.RenderOffsets[renderingLyricLine.RuntimeIndex] = offset;
-                Context.SnapshotRenderOffsets[renderingLyricLine.RuntimeIndex] = new LineRenderOffset();
+                Context.RenderOffsets.Add(offset);
+                Context.SnapshotRenderOffsets.Add(new LineRenderOffset());
                 topleftPosition += renderingLyricLine.RenderingHeight + Context.LineSpacing;
                 // 获取 Keyframe
                 AddKeyFrame(renderingLyricLine.StartTime);
@@ -273,8 +273,7 @@ namespace HyPlayer.LyricRenderer
 
                 if (renderedAfterStartPosition <= Context.ViewHeight && (Context.IsPlaying || !Context.IsScrolling) &&
                     !Context.IsSeek) // 在可视区域, 需要缓动
-                    if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.RuntimeIndex) &&
-                        Math.Abs(theoryRenderAfterPosition - Context.RenderOffsets[currentLine.RuntimeIndex].Y) >
+                    if (Math.Abs(theoryRenderAfterPosition - Context.RenderOffsets[currentLine.RuntimeIndex].Y) >
                         Epsilon)
                     {
                         renderedAfterStartPosition = Context.LineRollingEaseCalculator.CalculateCurrentY(
@@ -322,8 +321,7 @@ namespace HyPlayer.LyricRenderer
                     theoryRenderBeforePosition -= currentLine.RenderingHeight + Context.LineSpacing;
                     if (renderedBeforeStartPosition + currentLine.RenderingHeight > 0) // 可见区域, 需要判断缓动
                     {
-                        if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.RuntimeIndex) &&
-                            Math.Abs(Context.RenderOffsets[currentLine.RuntimeIndex].Y - theoryRenderBeforePosition) >
+                        if (Math.Abs(Context.RenderOffsets[currentLine.RuntimeIndex].Y - theoryRenderBeforePosition) >
                             Epsilon &&
                             (Context.IsPlaying ||
                              !Context.IsScrolling)
@@ -445,9 +443,9 @@ namespace HyPlayer.LyricRenderer
                     Context.CurrentKeyframe = key;
                     // 视图快照
                     //if (!_needRecalculate)
-                    foreach (var (i, value) in Context.RenderOffsets)
+                    for (var i = 0; i < Context.RenderOffsets.Count; i++)
                     {
-                        Context.SnapshotRenderOffsets[i].Y = value.Y;
+                        Context.SnapshotRenderOffsets[i].Y = Context.RenderOffsets[i].Y;
                     }
 
 
@@ -475,11 +473,9 @@ namespace HyPlayer.LyricRenderer
 
                 foreach (var renderingLyricLine in Context.RenderingLyricLines)
                 {
-                    if (Context.RenderOffsets.GetValueOrDefault(renderingLyricLine.RuntimeIndex) is { } offset)
-                    {
-                        var doRender = renderingLyricLine.Render(session, offset, Context);
-                        if (doRender == false) break;
-                    }
+                    var offset = Context.RenderOffsets[renderingLyricLine.RuntimeIndex];
+                    var doRender = renderingLyricLine.Render(session, offset, Context);
+                    if (doRender == false) break;
                 }
 
                 if (Context.Debug)
@@ -653,7 +649,7 @@ namespace HyPlayer.LyricRenderer
 
         public void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            foreach (var renderOffsetsKey in Context.RenderOffsets.Keys)
+            for (var renderOffsetsKey = 0; renderOffsetsKey < Context.RenderOffsets.Count; renderOffsetsKey++)
             {
                 if (Context.LyricLines[renderOffsetsKey].Hidden)
                     continue;

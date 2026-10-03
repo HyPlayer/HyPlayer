@@ -5,6 +5,7 @@ using HyPlayer.LyricRenderer.Pipeline;
 using Microsoft.Graphics.Canvas;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Windows.UI;
 using Windows.UI.Xaml;
 
@@ -87,12 +88,43 @@ public abstract class RenderingLyricLine : IDisposable
     {
         CurrentExpressionLine = CreateExpressionLine(context, offset);
         CurrentExpressionFrame = CreateExpressionFrame(context);
+        var hasStaticSource = TryGetStaticSourceImage(session, context, out var staticSourceImage);
+
+        // A line without an effect pipeline can render directly into the target
+        // session. The previous path recorded the line into a transient command
+        // list and immediately submitted that list, adding one allocation and one
+        // extra image pass for every active line on every frame.
+        if (context.EffectProfile is null && !hasStaticSource)
+        {
+            var originalTransform = session.Transform;
+            try
+            {
+                var lineTransform = Matrix3x2.CreateTranslation(offset.X, offset.Y) * originalTransform;
+                session.Transform = lineTransform;
+                var directResult = RenderCore(session, context);
+                if (context.Debug)
+                {
+                    session.Transform = lineTransform;
+                    session.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})",
+                        0, 0, Colors.Red);
+                    session.DrawText(RuntimeIndex.ToString(), 0, 15, Colors.Red);
+                    session.DrawRectangle(0, 0, RenderingWidth, RenderingHeight, Colors.Yellow);
+                }
+
+                return directResult;
+            }
+            finally
+            {
+                session.Transform = originalTransform;
+            }
+        }
+
         CanvasCommandList? transientSource = null;
         ICanvasImage sourceImage;
         bool result;
-        if (TryGetStaticSourceImage(session, context, out var staticSource))
+        if (hasStaticSource)
         {
-            sourceImage = staticSource;
+            sourceImage = staticSourceImage;
             result = true;
         }
         else
@@ -212,8 +244,8 @@ public abstract class RenderingLyricLine : IDisposable
         var relativeIndex = GroupIndex - currentGroupIndex;
         var currentFactoIndex = context.CurrentLyricLine?.FactoIndex ?? FactoIndex;
         var factoRelativeIndex = FactoIndex - currentFactoIndex;
-        var currentOffsetY = context.RenderOffsets.TryGetValue(context.CurrentLyricLineIndex, out var currentOffset)
-            ? currentOffset.Y
+        var currentOffsetY = (uint)context.CurrentLyricLineIndex < (uint)context.RenderOffsets.Count
+            ? context.RenderOffsets[context.CurrentLyricLineIndex].Y
             : offset.Y;
         var viewportDistance = context.ViewHeight <= 0
             ? 0

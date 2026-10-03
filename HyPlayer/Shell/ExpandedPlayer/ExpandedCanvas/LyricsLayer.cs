@@ -2,6 +2,7 @@ using HyPlayer.Domain;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using System.Numerics;
 
 namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 
@@ -38,10 +39,17 @@ public sealed class LyricsLayer : IExpandedCanvasLayer
         var box = _state.LyricBox;
         if (box is null) return;
 
-        using var lyricCommand = new CanvasCommandList(session);
-        using var lyricSession = lyricCommand.CreateDrawingSession();
-        box.Draw(lyricSession, timing);
-
-        session.DrawImage(lyricCommand, _state.LyricRenderXOffset, _state.LyricRenderYOffset);
+        var originalTransform = session.Transform;
+        try
+        {
+            session.Transform = Matrix3x2.CreateTranslation(
+                _state.LyricRenderXOffset,
+                _state.LyricRenderYOffset) * originalTransform;
+            box.Draw(session, timing);
+        }
+        finally
+        {
+            session.Transform = originalTransform;
+        }
     }
 }

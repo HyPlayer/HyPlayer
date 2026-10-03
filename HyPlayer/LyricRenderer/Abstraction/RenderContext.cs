@@ -66,12 +66,12 @@ public class RenderContext
     /// <summary>
     ///     歌词的偏移
     /// </summary>
-    public Dictionary<int, LineRenderOffset> RenderOffsets { get; } = new();
+    public List<LineRenderOffset> RenderOffsets { get; } = new();
 
     /// <summary>
     ///     上一关键帧的偏移快照
     /// </summary>
-    public Dictionary<int, LineRenderOffset> SnapshotRenderOffsets { get; } = new();
+    public List<LineRenderOffset> SnapshotRenderOffsets { get; } = new();
 
     /// <summary>
     ///     歌词滚动的缓动计算器
