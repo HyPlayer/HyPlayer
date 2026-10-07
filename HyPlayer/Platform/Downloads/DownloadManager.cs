@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Networking.BackgroundTransfer;
 using CommunityToolkit.Mvvm.DependencyInjection;
@@ -26,6 +27,7 @@ internal static class DownloadManager
     private const int MaxAlbumPicturesCacheSize = 64;
     private static readonly object StateGate = new();
     private static bool _timerStarted;
+    private static int _tickPending;
     public static ObservableList<DownloadObject> DownloadLists { get; } = [];
     public static NotifyCollectionChangedSynchronizedViewList<DownloadObject> DownloadListsView { get; } =
         DownloadLists.ToNotifyCollectionChanged();
@@ -71,19 +73,20 @@ internal static class DownloadManager
             _timerStarted = false;
         }
 
+        var isEmpty = DownloadLists.Count == 0;
         lock (StateGate)
         {
             WritingTasks.RemoveAll(t => t.IsCompleted);
-            if (DownloadLists.Count == 0)
+            if (isEmpty)
                 AlbumPicturesCache.Clear();
             TrimAlbumPicturesCache();
         }
     }
 
-    public static void AddDownload(SingleSongBase song)
+    public static Task AddDownload(SingleSongBase song)
     {
-        if (!CheckDownloadAbilityAndToast()) return;
-        _ = UIThreadDispatcher.TryRunAsync(() =>
+        if (!CheckDownloadAbilityAndToast()) return Task.CompletedTask;
+        return UIThreadDispatcher.TryRunAsync(() =>
         {
             CleanupCompletedWritingTasks();
             EnsureTimerStarted();
@@ -91,20 +94,38 @@ internal static class DownloadManager
         });
     }
 
-    public static void AddDownload(List<SingleSongBase> songs)
+    public static Task AddDownload(List<SingleSongBase> songs)
     {
-        if (!CheckDownloadAbilityAndToast()) return;
-        _ = UIThreadDispatcher.TryRunAsync(() =>
+        if (!CheckDownloadAbilityAndToast()) return Task.CompletedTask;
+        return UIThreadDispatcher.TryRunAsync(async () =>
         {
             CleanupCompletedWritingTasks();
             EnsureTimerStarted();
-            DownloadLists.AddRange(songs.Select(CreateDownloadObject));
+            var added = 0;
+            foreach (var song in songs)
+            {
+                DownloadLists.Add(CreateDownloadObject(song));
+                if (++added % 32 == 0) await Task.Yield();
+            }
         });
     }
 
     private static void Timer_Elapsed(object? sender, EventArgs e)
     {
-        _ = UIThreadDispatcher.TryRunAsync(Timer_ElapsedOnUi);
+        if (Interlocked.Exchange(ref _tickPending, 1) != 0) return;
+        _ = DispatchTickAsync();
+    }
+
+    private static async Task DispatchTickAsync()
+    {
+        try
+        {
+            await UIThreadDispatcher.TryRunAsync(Timer_ElapsedOnUi);
+        }
+        finally
+        {
+            Volatile.Write(ref _tickPending, 0);
+        }
     }
 
     private static void Timer_ElapsedOnUi()
@@ -115,24 +136,14 @@ internal static class DownloadManager
             return;
         }
 
-        var maxDownloadCount = DownloadSettings.MaxDownloadCount;
-        for (var i = 0; i < DownloadLists.Count; i++)
-            switch (DownloadLists[i].Status)
-            {
-                case DownloadObject.DownloadStatus.Downloading:
-                    if (--maxDownloadCount <= 0) return;
-                    continue;
-                case DownloadObject.DownloadStatus.Queueing:
-                    _ = DownloadLists[i].StartDownload();
-                    --maxDownloadCount;
-                    return;
-                case DownloadObject.DownloadStatus.Finished:
-                    RemoveDownload(DownloadLists[i]);
-                    break;
-                case DownloadObject.DownloadStatus.Paused:
-                case DownloadObject.DownloadStatus.Error:
-                    break;
-            }
+        var downloads = DownloadLists.ToArray();
+        foreach (var download in downloads)
+            if (download.Status == DownloadObject.DownloadStatus.Finished)
+                DownloadLists.Remove(download);
+
+        foreach (var download in DownloadQueueScheduler.GetReadyDownloads(downloads, DownloadSettings.MaxDownloadCount))
+            _ = download.StartDownload();
+        if (DownloadLists.Count == 0) StopTimer();
     }
 
     private static DownloadObject CreateDownloadObject(SingleSongBase song)

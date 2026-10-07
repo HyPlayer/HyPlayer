@@ -164,6 +164,7 @@
                     <win2d:CanvasAnimatedControl
                         x:Name="PreviewCanvas"
                         Draw="PreviewCanvas_Draw"
+                        Unloaded="PreviewCanvas_Unloaded"
                         SizeChanged="PreviewCanvas_SizeChanged" />
                     <TextBlock
                         Margin="12"

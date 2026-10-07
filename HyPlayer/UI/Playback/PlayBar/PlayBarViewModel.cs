@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Linq;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
@@ -24,6 +26,7 @@ namespace HyPlayer.UI.Playback.PlayBar;
 
 public partial class PlayBarViewModel : ObservableObject
 {
+    private int _playlistRefreshVersion;
     private readonly IAuthService _authService;
     private readonly IPlaybackControlService _control;
     private readonly ILyricService _lyricService;
@@ -207,10 +210,13 @@ public partial class PlayBarViewModel : ObservableObject
     [RelayCommand]
     private void RemoveItem(PlayBarQueueItem item)
     {
-        if (item == null) return;
-        var queue = PlayCoreQueueSnapshot.GetPlaylist(_playCore);
-        if (item.QueueIndex >= 0 && item.QueueIndex < queue.Count)
-            _taskRunner.Forget(_playCore.RemoveSongAsync(queue[item.QueueIndex]), "remove PlayCore queue item");
+        _taskRunner.Forget(RemoveItemAsync(item), "remove PlayCore queue item");
+    }
+
+    private async Task RemoveItemAsync(PlayBarQueueItem item)
+    {
+        if (item?.ProviderItem is { } song)
+            await _playCore.RemoveSongAsync(song);
     }
 
     [RelayCommand]
@@ -368,32 +374,34 @@ public partial class PlayBarViewModel : ObservableObject
     /// </summary>
     public void RefreshPlaylistItems()
     {
-        PlaylistItems.Clear();
-        CurrentPlaylistItem = null;
-        var queueSnapshot = PlayCoreQueueSnapshot.GetQueueItems(_playCore);
-        var orderedQueue = PlayCoreQueueSnapshot.GetOrderedPlaylist(_playCore);
-        var queue = PlayCoreQueueSnapshot.GetPlaylist(_playCore);
-        QueueCount = queueSnapshot.Count;
-        OnPropertyChanged(nameof(QueueCount));
+        _taskRunner.Forget(RefreshPlaylistItemsAsync(), "refresh PlayCore queue");
+    }
 
-        var rows = new List<PlayBarQueueItem>(queueSnapshot.Count);
-        if (ActiveStrategyId == "shn" && _uiSettings.DisplayShuffledList)
-            foreach (var orderedSong in orderedQueue)
-            {
-                var idx = IndexOfQueueItem(queue, orderedSong);
-                if (CreatePlaylistRow(idx, queueSnapshot) is { } row)
-                    rows.Add(row);
-            }
-        else
+    internal async Task RefreshPlaylistItemsAsync()
+    {
+        var version = Interlocked.Increment(ref _playlistRefreshVersion);
+        var revision = _state.QueueRevision;
+        var shuffled = ActiveStrategyId == "shn" && _uiSettings.DisplayShuffledList;
+        var queue = (await PlayCoreQueueSnapshot.GetPlaylistAsync(_playCore)).ToArray();
+        var ordered = shuffled
+            ? (await PlayCoreQueueSnapshot.GetOrderedPlaylistAsync(_playCore)).ToArray()
+            : null;
+        var snapshots = await Task.Run(() => PlayCoreQueueSnapshot.Build(queue, ordered));
+        await _uiThreadDispatcher.TryRunAsync(async () =>
         {
-            for (var idx = 0; idx < queueSnapshot.Count; idx++)
-                if (CreatePlaylistRow(idx, queueSnapshot) is { } row)
-                    rows.Add(row);
-        }
-
-        PlaylistItems.AddRange(rows);
-
-        UpdateCurrentPlaylistItem();
+            if (version != Volatile.Read(ref _playlistRefreshVersion) || revision != _state.QueueRevision) return;
+            PlaylistItems.Clear();
+            CurrentPlaylistItem = null;
+            QueueCount = queue.Length;
+            OnPropertyChanged(nameof(QueueCount));
+            for (var i = 0; i < snapshots.Length; i++)
+            {
+                if (version != Volatile.Read(ref _playlistRefreshVersion) || revision != _state.QueueRevision) return;
+                PlaylistItems.Add(PlayBarQueueItem.FromSnapshot(snapshots[i], NowPlayingProviderItem));
+                if ((i + 1) % 32 == 0) await Task.Yield();
+            }
+            UpdateCurrentPlaylistItem();
+        });
     }
 
     private void UpdateCurrentPlaylistItem()
@@ -409,25 +417,6 @@ public partial class PlayBarViewModel : ObservableObject
         }
 
         CurrentPlaylistItem = currentItem;
-    }
-
-    private PlayBarQueueItem? CreatePlaylistRow(
-        int queueIndex,
-        IReadOnlyList<PlaybackQueueItemSnapshot> queueSnapshot)
-    {
-        if (queueIndex < 0 || queueIndex >= queueSnapshot.Count)
-            return null;
-
-        return PlayBarQueueItem.FromSnapshot(queueSnapshot[queueIndex], NowPlayingProviderItem);
-    }
-
-    private static int IndexOfQueueItem(IReadOnlyList<SingleSongBase> queue, SingleSongBase item)
-    {
-        for (var i = 0; i < queue.Count; i++)
-            if (SameSong(queue[i], item))
-                return i;
-
-        return -1;
     }
 
     /// <summary>

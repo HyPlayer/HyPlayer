@@ -86,7 +86,7 @@
             Color="Black" />
     </Page.Resources>
     <!--  Grid Beam~  -->
-    <Grid x:Name="PageContainer" Unloaded="LuminousBackground_OnUnloaded">
+    <Grid x:Name="PageContainer">
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
             <!--  Title Bar  -->
@@ -132,7 +132,8 @@
             RightTapped="LyricBoxContainer_RightTapped"
             SizeChanged="LuminousBackground_SizeChanged"
             Tapped="LyricBox_Tapped"
-            Update="LuminousBackground_Update" />
+            Update="LuminousBackground_Update"
+            Unloaded="LuminousBackground_OnUnloaded" />
         <Grid
             x:Name="LuminousBackgroundContainer"
             Grid.Row="0"

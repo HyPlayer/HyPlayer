@@ -104,6 +104,7 @@
                     <win2d:CanvasAnimatedControl
                         x:Name="PreviewCanvas"
                         Draw="PreviewCanvas_Draw"
+                        Unloaded="PreviewCanvas_Unloaded"
                         SizeChanged="PreviewCanvas_SizeChanged" />
                     <StackPanel Margin="12" HorizontalAlignment="Right" VerticalAlignment="Top" Spacing="6">
                         <ComboBox

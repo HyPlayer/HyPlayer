@@ -8,7 +8,10 @@ public partial class ImageUrlToImageSourceConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        return new BitmapImage(new Uri(value + "?param=70y70"));
+        if (value is not string url || !Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return null;
+        var separator = string.IsNullOrEmpty(uri.Query) ? "?" : "&";
+        return new BitmapImage(new Uri(url + separator + "param=70y70"));
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

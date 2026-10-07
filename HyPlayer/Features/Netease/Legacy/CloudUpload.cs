@@ -25,7 +25,7 @@ internal class CloudUpload
 
         try
         {
-            var metadata = await CreateMetadataAsync(file);
+            var metadata = await Task.Run(() => CreateMetadataAsync(file));
             await cloudUploadProvider.UploadCloudLibraryItemAsync(new StorageFileCloudUploadResource(file), metadata);
             notification.ShowMessage("上传本地音乐至音乐云盘成功", "成功上传: " + file.DisplayName);
         }
@@ -38,7 +38,7 @@ internal class CloudUpload
     private static async Task<IReadOnlyDictionary<string, string>> CreateMetadataAsync(StorageFile file)
     {
         var musicProperties = await file.Properties.GetMusicPropertiesAsync();
-        using var abstraction = new UwpStorageFileAbstraction(file);
+        using var abstraction = await UwpStorageFileAbstraction.OpenAsync(file);
         var album = string.Empty;
         var title = file.DisplayName;
         var artist = string.Empty;

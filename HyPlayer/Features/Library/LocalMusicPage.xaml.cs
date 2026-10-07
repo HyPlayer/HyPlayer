@@ -45,6 +45,7 @@ public sealed partial class LocalMusicPage : Page
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private Task _currentFileScanTask;
+    private bool _isNavigatedAway;
 
     public LocalMusicPageViewModel ViewModel { get; } = new();
 
@@ -54,24 +55,26 @@ public sealed partial class LocalMusicPage : Page
         _cancellationToken = _cancellationTokenSource.Token;
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        _isNavigatedAway = true;
         Bindings.StopTracking();
-        if (_currentFileScanTask != null && !_currentFileScanTask.IsCompleted)
-            try
-            {
-                ViewModel.NotificationText = "正在等待本地扫描进程结束...";
-                _cancellationTokenSource.Cancel();
-                await _currentFileScanTask;
-            }
-            catch
-            {
-                _currentFileScanTask = null;
-            }
-
         ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
-        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource.Cancel();
+        _taskRunner.Forget(CompleteScanShutdownAsync(), "stop local music scan");
+    }
+
+    private async Task CompleteScanShutdownAsync()
+    {
+        try
+        {
+            if (_currentFileScanTask is not null) await _currentFileScanTask;
+        }
+        finally
+        {
+            _cancellationTokenSource.Dispose();
+        }
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -95,7 +98,7 @@ public sealed partial class LocalMusicPage : Page
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentFileScanTask == null || _currentFileScanTask.IsCompleted) _currentFileScanTask = LoadLocalMusic();
+        if (!_isNavigatedAway && (_currentFileScanTask == null || _currentFileScanTask.IsCompleted)) _currentFileScanTask = LoadLocalMusic();
     }
 
     private async Task LoadLocalMusic()
@@ -103,68 +106,87 @@ public sealed partial class LocalMusicPage : Page
         ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
         ViewModel.NotificationText = "正在扫描...";
         ViewModel.LocalItems.Clear();
-        var folder = !string.IsNullOrEmpty(_setting.SearchDirectory)
-            ? await StorageFolder.GetFolderFromPathAsync(_setting.SearchDirectory)
-            : KnownFolders.MusicLibrary;
-        // Use Query to boost? maybe?
         FileLoadingIndicateRing.Visibility = Visibility.Visible;
         FileLoadingIndicateRing.IsActive = true;
-        var queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, _supportedFormats);
-        queryOptions.FolderDepth = FolderDepth.Deep;
-        var files = await folder.CreateFileQueryWithOptions(queryOptions).GetFilesAsync();
-        var localItems = new List<LocalSong>(files.Count);
-
-        if (!_setting.LocalProgressiveLoad)
+        try
         {
-            foreach (var storageFile in files)
+            var folder = !string.IsNullOrEmpty(_setting.SearchDirectory)
+                ? await StorageFolder.GetFolderFromPathAsync(_setting.SearchDirectory)
+                : KnownFolders.MusicLibrary;
+            var queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, _supportedFormats)
             {
+                FolderDepth = FolderDepth.Deep
+            };
+            var query = folder.CreateFileQueryWithOptions(queryOptions);
+            var progressive = _setting.LocalProgressiveLoad;
+            var album = new LocalAlbum { Name = "未知专辑 - 播放后加载", ActualId = string.Empty };
+            var artists = new List<LocalArtist> { new() { Name = "未知歌手 - 播放后加载", ActualId = string.Empty } };
+            var scanned = 0;
+            await foreach (var files in PagedBatchReader.ReadAsync<StorageFile>(
+                (start, count, token) => query.GetFilesAsync(start, count).AsTask(token), 64, _cancellationToken))
+            {
+                var items = new List<LocalSong>(files.Count);
+                if (progressive)
+                {
+                    items = await Task.Run(() =>
+                    {
+                        var batch = new List<LocalSong>(files.Count);
+                        foreach (var file in files)
+                        {
+                            _cancellationToken.ThrowIfCancellationRequested();
+                            batch.Add(new LocalSong
+                            {
+                                Album = album, Artists = artists,
+                                CreatorList = artists.Select(artist => artist.Name ?? string.Empty).ToList(),
+                                StorageFile = file, Name = file.Name, CdName = "01",
+                                ExtensionName = file.FileType, InfoTag = "本地歌曲",
+                                ActualId = file.Path, Available = true
+                            });
+                        }
+                        return batch;
+                    }, _cancellationToken);
+                }
+                else
+                {
+                    foreach (var file in files)
+                    {
+                        _cancellationToken.ThrowIfCancellationRequested();
+                        try { items.Add(await _localFileImport.LoadStorageFileAsync(file)); }
+                        catch (OperationCanceledException) { throw; }
+                        catch { /* Skip unreadable audio. */ }
+                    }
+                }
                 _cancellationToken.ThrowIfCancellationRequested();
-                try
+                for (var i = 0; i < items.Count; i++)
                 {
-                    var item = await _localFileImport.LoadStorageFileAsync(storageFile);
-                    localItems.Add(item);
+                    _cancellationToken.ThrowIfCancellationRequested();
+                    ViewModel.LocalItems.Add(items[i]);
+                    if ((i + 1) % 32 == 0) await Task.Yield();
                 }
-                catch
-                {
-                    //ignore
-                }
+                _cancellationToken.ThrowIfCancellationRequested();
+                scanned += files.Count;
+                ViewModel.NotificationText = "正在扫描...已检查 " + scanned + " 个文件";
+            }
+            _cancellationToken.ThrowIfCancellationRequested();
+            ViewModel.NotificationText = "扫描完成, 共 " + ViewModel.LocalItems.Count + " 首音乐";
+        }
+        catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            if (!_isNavigatedAway) ViewModel.NotificationText = "扫描失败: " + ex.Message;
+        }
+        finally
+        {
+            if (!_isNavigatedAway)
+            {
+                FileLoadingIndicateRing.IsActive = false;
+                FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
+                ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
             }
         }
-        else
-        {
-            var undeterminedAlbum = new LocalAlbum { Name = "未知专辑 - 播放后加载", ActualId = string.Empty };
-            var undeterminedArtistList = new List<LocalArtist>
-                { new() { Name = "未知歌手 - 播放后加载", ActualId = string.Empty } };
-            foreach (var storageFile in files)
-            {
-                _cancellationToken.ThrowIfCancellationRequested();
-                var item = new LocalSong
-                {
-                    Album = undeterminedAlbum,
-                    Artists = undeterminedArtistList,
-                    CreatorList = undeterminedArtistList.Select(artist => artist.Name ?? string.Empty).ToList(),
-                    Bitrate = 0,
-                    StorageFile = storageFile,
-                    Duration = 0,
-                    Name = storageFile.Name,
-                    CdName = "01",
-                    ExtensionName = storageFile.FileType,
-                    TrackNumber = 0,
-                    InfoTag = "本地歌曲",
-                    ActualId = storageFile.Path,
-                    Available = true
-                };
-                localItems.Add(item);
-            }
-        }
-
-        ViewModel.NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
-        ViewModel.LocalItems.AddRange(localItems);
-        FileLoadingIndicateRing.IsActive = false;
-        FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
-        ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
     }
-
 
     private async void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {

@@ -29,6 +29,9 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
     private Task? _rendererCreationTask;
     private bool _isVisible;
     private int _artworkRequestVersion;
+    private readonly object _lifetimeGate = new();
+    private int _resourceVersion;
+    private bool _disposed;
 
     public LikeAppleBackgroundLayer(ExpandedCanvasState state, AudioGraphPlayer player)
     {
@@ -42,27 +45,32 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
     {
         DisposeRenderer();
+        if (_disposed) return;
         if (_state.BackgroundType != BackgroundType.LikeApple)
         {
             _rendererCreationTask = null;
             return;
         }
         _device = sender.Device;
-        _rendererCreationTask = CreateRendererAsync(sender.Device);
+        _rendererCreationTask = CreateRendererAsync(sender.Device, _resourceVersion);
         args.TrackAsyncAction(_rendererCreationTask.AsAsyncAction());
     }
 
-    private async Task CreateRendererAsync(CanvasDevice device)
+    private async Task CreateRendererAsync(CanvasDevice device, int resourceVersion)
     {
         LikeAppleShaderBytecode shaderBytecode = await LoadShaderBytecodeAsync();
-        var renderer = new LikeAppleBackgroundRenderer(
-            device,
-            _player.FFTProcessor,
-            shaderBytecode,
-            lightTheme: _state.IsBrightTheme);
-        renderer.SetIsBehindLyrics(true, animate: false);
-        _renderer = renderer;
-        _isVisible = false;
+        lock (_lifetimeGate)
+        {
+            if (_disposed || resourceVersion != _resourceVersion) return;
+            var renderer = new LikeAppleBackgroundRenderer(
+                device,
+                _player.FFTProcessor,
+                shaderBytecode,
+                lightTheme: _state.IsBrightTheme);
+            renderer.SetIsBehindLyrics(true, animate: false);
+            _renderer = renderer;
+            _isVisible = false;
+        }
     }
 
     private static async Task<LikeAppleShaderBytecode> LoadShaderBytecodeAsync()
@@ -180,11 +188,14 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
                 96f,
                 CanvasAlphaMode.Premultiplied);
             artwork = ResizeArtwork(device, artwork);
-            if (!ReferenceEquals(renderer, _renderer) ||
-                requestVersion != Volatile.Read(ref _artworkRequestVersion)) return;
+            lock (_lifetimeGate)
+            {
+                if (_disposed || !ReferenceEquals(renderer, _renderer) ||
+                    requestVersion != Volatile.Read(ref _artworkRequestVersion)) return;
 
-            renderer.SetArtwork(artwork);
-            artwork = null; // ownership moved to the renderer
+                renderer.SetArtwork(artwork);
+                artwork = null; // ownership moved to the renderer
+            }
         }
         finally
         {
@@ -238,20 +249,31 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
 
     public void SetLightTheme(bool isBright)
     {
-        _renderer?.SetLightTheme(isBright);
+        lock (_lifetimeGate)
+            _renderer?.SetLightTheme(isBright);
     }
 
     public void Dispose()
     {
-        DisposeRenderer();
-        _device = null;
+        lock (_lifetimeGate)
+        {
+            _disposed = true;
+            DisposeRenderer();
+            _device = null;
+            _rendererCreationTask = null;
+        }
     }
 
     private void DisposeRenderer()
     {
-        _frame = null;
-        _renderer?.Dispose();
-        _renderer = null;
-        _isVisible = false;
+        lock (_lifetimeGate)
+        {
+            _resourceVersion++;
+            Interlocked.Increment(ref _artworkRequestVersion);
+            _frame = null;
+            _renderer?.Dispose();
+            _renderer = null;
+            _isVisible = false;
+        }
     }
 }

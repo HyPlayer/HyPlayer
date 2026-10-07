@@ -12,14 +12,12 @@ public sealed class DownloadService : IDownloadService
 
     public Task AddAsync(SingleSongBase song)
     {
-        DownloadManager.AddDownload(song);
-        return Task.CompletedTask;
+        return DownloadManager.AddDownload(song);
     }
 
     public Task AddAsync(IEnumerable<SingleSongBase> songs)
     {
-        DownloadManager.AddDownload(songs.ToList());
-        return Task.CompletedTask;
+        return DownloadManager.AddDownload(songs.ToList());
     }
 
     public void Pause(DownloadObject download)

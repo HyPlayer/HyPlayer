@@ -7,6 +7,7 @@ using HyPlayer.LyricRenderer.Pipeline;
 using Microsoft.Graphics.Canvas.UI;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using Windows.UI;
 using System.Threading;
@@ -21,6 +22,47 @@ namespace HyPlayer.LyricRenderer
     public sealed class LyricRenderView
     {
         public RenderContext Context { get; } = new();
+        private readonly object _frameGate = new();
+        private readonly object _mutationGate = new();
+        private readonly ConcurrentQueue<Action> _pendingMutations = new();
+        private volatile bool _queueRenderUpdates;
+        private bool _resourcesReleased;
+        private int _renderThreadId;
+
+        public void EnableRenderThreadUpdates() => _queueRenderUpdates = true;
+
+        private void Mutate(Action action)
+        {
+            lock (_mutationGate)
+            {
+                if (_resourcesReleased) return;
+                if (_queueRenderUpdates && Volatile.Read(ref _renderThreadId) != Environment.CurrentManagedThreadId)
+                {
+                    _pendingMutations.Enqueue(action);
+                    return;
+                }
+            }
+            lock (_frameGate)
+            {
+                if (!_resourcesReleased) action();
+            }
+        }
+
+        // Called after the canvas stops; also serializes against a final in-flight frame.
+        public void ReleaseResources()
+        {
+            lock (_frameGate)
+            {
+                lock (_mutationGate)
+                {
+                    if (_resourcesReleased) return;
+                    _resourcesReleased = true;
+                    while (_pendingMutations.TryDequeue(out var mutation)) mutation();
+                    ClearCore();
+                    _pendingEffectProfile = null;
+                }
+            }
+        }
 
         private const float Epsilon = 0.001f;
 
@@ -51,9 +93,12 @@ namespace HyPlayer.LyricRenderer
             get => Context.EnableTranslation;
             set
             {
-                Context.EnableTranslation = value;
-                _isTypographyChanged = true;
-                _needRecalculate = true;
+                Mutate(() =>
+                {
+                    Context.EnableTranslation = value;
+                    _isTypographyChanged = true;
+                    _needRecalculate = true;
+                });
             }
         }
 
@@ -62,9 +107,12 @@ namespace HyPlayer.LyricRenderer
             get => Context.EnableTransliteration;
             set
             {
-                Context.EnableTransliteration = value;
-                _isTypographyChanged = true;
-                _needRecalculate = true;
+                Mutate(() =>
+                {
+                    Context.EnableTransliteration = value;
+                    _isTypographyChanged = true;
+                    _needRecalculate = true;
+                });
             }
         }
 
@@ -78,6 +126,11 @@ namespace HyPlayer.LyricRenderer
 
         public void ChangeRenderColor(Color idleColor, Color focusingColor, Color? shadowColor = null)
         {
+            Mutate(() => ChangeRenderColorCore(idleColor, focusingColor, shadowColor));
+        }
+
+        private void ChangeRenderColorCore(Color idleColor, Color focusingColor, Color? shadowColor = null)
+        {
             Context.PreferTypography.IdleColor = idleColor;
             Context.PreferTypography.FocusingColor = focusingColor;
             Context.PreferTypography.ShadowColor = shadowColor ?? focusingColor;
@@ -85,6 +138,17 @@ namespace HyPlayer.LyricRenderer
         }
 
         public void ChangeRenderFontSize(
+            float lyricSize,
+            float translationSize,
+            float transliterationSize,
+            float sublineLyricSize = 0,
+            float sublineTranslationSize = 0,
+            float sublineTransliterationSize = 0)
+        {
+            Mutate(() => ChangeRenderFontSizeCore(lyricSize, translationSize, transliterationSize, sublineLyricSize, sublineTranslationSize, sublineTransliterationSize));
+        }
+
+        private void ChangeRenderFontSizeCore(
             float lyricSize,
             float translationSize,
             float transliterationSize,
@@ -106,6 +170,11 @@ namespace HyPlayer.LyricRenderer
 
         public void ChangeAlignment(TextAlignment alignment)
         {
+            Mutate(() => ChangeAlignmentCore(alignment));
+        }
+
+        private void ChangeAlignmentCore(TextAlignment alignment)
+        {
             Context.PreferTypography.Alignment = alignment;
             _isTypographyChanged = true;
             _needRecalculateSize = true;
@@ -113,11 +182,21 @@ namespace HyPlayer.LyricRenderer
 
         public void ChangeBeatPerMinute(float beatPerMinute)
         {
+            Mutate(() => ChangeBeatPerMinuteCore(beatPerMinute));
+        }
+
+        private void ChangeBeatPerMinuteCore(float beatPerMinute)
+        {
             Context.BeatPerMinute = beatPerMinute;
             _isTypographyChanged = true;
         }
 
         public void ReflowTime(long time)
+        {
+            Mutate(() => ReflowTimeCore(time));
+        }
+
+        private void ReflowTimeCore(long time)
         {
             foreach (var key in _allKeyFrames.GetViewBetween(time, long.MaxValue))
                 _pendingKeyFrames.Add(key);
@@ -131,8 +210,13 @@ namespace HyPlayer.LyricRenderer
 
         public void SetLyricLines(List<RenderingLyricLine> lines)
         {
+            Mutate(() => SetLyricLinesCore(lines));
+        }
+
+        private void SetLyricLinesCore(List<RenderingLyricLine> lines)
+        {
             _initializing = true;
-            Clear();
+            ClearCore();
             Context.LyricLines.Clear();
             Context.LyricLines.AddRange(lines);
             _allKeyFrames.Clear();
@@ -189,6 +273,11 @@ namespace HyPlayer.LyricRenderer
         }
 
         public void Clear()
+        {
+            Mutate(() => ClearCore());
+        }
+
+        private void ClearCore()
         {
             foreach (var line in Context.LyricLines)
             {
@@ -393,6 +482,24 @@ namespace HyPlayer.LyricRenderer
 
         public void Draw(CanvasDrawingSession session, CanvasTimingInformation timing)
         {
+            lock (_frameGate)
+            {
+                if (_resourcesReleased) return;
+                Volatile.Write(ref _renderThreadId, Environment.CurrentManagedThreadId);
+                try
+                {
+                    while (_pendingMutations.TryDequeue(out var mutation)) mutation();
+                    DrawCore(session, timing);
+                }
+                finally
+                {
+                    Volatile.Write(ref _renderThreadId, 0);
+                }
+            }
+        }
+
+        private void DrawCore(CanvasDrawingSession session, CanvasTimingInformation timing)
+        {
             try
             {
                 Context.RenderTick = timing.TotalTime.Ticks;
@@ -512,6 +619,11 @@ namespace HyPlayer.LyricRenderer
 
         public void Redesign(float width, float height, float dpi)
         {
+            Mutate(() => RedesignCore(width, height, dpi));
+        }
+
+        private void RedesignCore(float width, float height, float dpi)
+        {
             Context.ViewWidth = width;
             Context.ViewHeight = height;
             Context.Dpi = dpi;
@@ -523,6 +635,14 @@ namespace HyPlayer.LyricRenderer
         private long _lastWheelTime;
 
         public void LyricView_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
+        {
+            lock (_frameGate)
+            {
+                if (!_resourcesReleased) LyricView_OnPointerWheelChangedCore(sender, e);
+            }
+        }
+
+        private void LyricView_OnPointerWheelChangedCore(object sender, PointerRoutedEventArgs e)
         {
             var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
             double before = 0;
@@ -543,6 +663,14 @@ namespace HyPlayer.LyricRenderer
 
 
         public void LyricView_OnPointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            lock (_frameGate)
+            {
+                if (!_resourcesReleased) LyricView_OnPointerMovedCore(sender, e);
+            }
+        }
+
+        private void LyricView_OnPointerMovedCore(object sender, PointerRoutedEventArgs e)
         {
             // 指针事件
             // 获取在指针范围的行（二分法查找）
@@ -628,6 +756,14 @@ namespace HyPlayer.LyricRenderer
 
         public void LyricView_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
+            lock (_frameGate)
+            {
+                if (!_resourcesReleased) LyricView_OnPointerExitedCore(sender, e);
+            }
+        }
+
+        private void LyricView_OnPointerExitedCore(object sender, PointerRoutedEventArgs e)
+        {
             if (Context.PointerFocusingIndex != -1 && Context.LyricLines.Count > Context.PointerFocusingIndex)
                 Context.LyricLines[Context.PointerFocusingIndex].GoToReactionState(ReactionState.Leave, Context);
             Context.PointerFocusingIndex = -1;
@@ -638,10 +774,26 @@ namespace HyPlayer.LyricRenderer
 
         public void LyricView_OnPointerPressed(object sender, PointerRoutedEventArgs e)
         {
+            lock (_frameGate)
+            {
+                if (!_resourcesReleased) LyricView_OnPointerPressedCore(sender, e);
+            }
+        }
+
+        private void LyricView_OnPointerPressedCore(object sender, PointerRoutedEventArgs e)
+        {
             _pointerPressed = true;
         }
 
         public void LyricView_PointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            lock (_frameGate)
+            {
+                if (!_resourcesReleased) LyricView_PointerReleasedCore(sender, e);
+            }
+        }
+
+        private void LyricView_PointerReleasedCore(object sender, PointerRoutedEventArgs e)
         {
             _pointerPressed = false;
             _lastPointerPressedYValue = null;
@@ -649,6 +801,20 @@ namespace HyPlayer.LyricRenderer
 
         public void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
+            RenderingLyricLine? clicked;
+            lock (_frameGate)
+            {
+                if (_resourcesReleased) return;
+                clicked = OnDoubleTappedCore(sender, e);
+            }
+            // Navigation can unload the canvas and join its game loop. Do not
+            // hold the frame gate while invoking application callbacks.
+            if (clicked is not null) OnLyricLineClicked?.Invoke(clicked);
+        }
+
+        private RenderingLyricLine? OnDoubleTappedCore(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            RenderingLyricLine? clicked = null;
             for (var renderOffsetsKey = 0; renderOffsetsKey < Context.RenderOffsets.Count; renderOffsetsKey++)
             {
                 if (Context.LyricLines[renderOffsetsKey].Hidden)
@@ -658,7 +824,7 @@ namespace HyPlayer.LyricRenderer
                     e.GetPosition((UIElement)sender).Y)
                 {
                     Context.LyricLines[renderOffsetsKey].GoToReactionState(ReactionState.Press, Context);
-                    OnLyricLineClicked?.Invoke(Context.LyricLines[renderOffsetsKey]);
+                    clicked = Context.LyricLines[renderOffsetsKey];
                     _jumpedLyrics = true;
                     break;
                 }
@@ -666,6 +832,7 @@ namespace HyPlayer.LyricRenderer
 
             Context.ScrollingDelta = 0;
             _pointerPressed = true;
+            return clicked;
         }
 
         private void LyricView_Tapped(object sender, TappedRoutedEventArgs e)

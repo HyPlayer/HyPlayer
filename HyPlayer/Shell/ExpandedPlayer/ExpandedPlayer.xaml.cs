@@ -125,7 +125,8 @@ public sealed partial class ExpandedPlayer : Page
     private readonly Storyboard _luminousColorsRotateStoryBoard = new();
     private List<Color> _albumColors = [];
     private List<Vector3> _albumColorVectors = [];
-    private bool _isCleanedUp;
+    private volatile bool _isCleanedUp;
+    private bool _canvasResourcesReleased;
     private bool _isManualChangeMode;
     private bool _isRealClick;
     private SingleSongBase? _lastCoverSong;
@@ -147,6 +148,7 @@ public sealed partial class ExpandedPlayer : Page
     public ExpandedPlayer()
     {
         InitializeComponent();
+        _lyricBox.EnableRenderThreadUpdates();
         ViewModel = Ioc.Default.GetRequiredService<ExpandedPlayerViewModel>();
         _lyricBox.SetEffectProfile(_lyricEffectProfiles.EffectiveProfile);
         _lyricEffectProfiles.ProfileChanged += OnLyricEffectProfileChanged;
@@ -531,6 +533,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         _ = this.RunOnUIThreadAsync(() =>
         {
+            if (_isCleanedUp || _canvasResourcesReleased) return;
             if (_state.LyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
                 _lyricBox.SetLyricLines(LrcConverter.Convert(
                     Utils.ConvertToALRC(_state.LyricInfo.Lyrics,
@@ -1064,11 +1067,12 @@ public sealed partial class ExpandedPlayer : Page
 
     public async void RefreshAlbumCover(SingleSongBase? playItem)
     {
-        if (_state.CoverStream == null || _lifecycle.IsInBackground) return;
+        if (_isCleanedUp || _canvasResourcesReleased || _state.CoverStream == null || _lifecycle.IsInBackground) return;
         using var stream = _state.CoverStream.CloneStream();
         var isBright = await IsBrightAsync(stream);
         _ = this.RunOnUIThreadAsync(async () =>
         {
+            if (_isCleanedUp || _canvasResourcesReleased) return;
             if (!_uiSettings.NoImage)
                 try
                 {
@@ -1077,6 +1081,7 @@ public sealed partial class ExpandedPlayer : Page
                     using var cover = _state.CoverStream.CloneStream();
                     var bitmap = new BitmapImage();
                     await bitmap.SetSourceAsync(cover);
+                    if (_isCleanedUp || _canvasResourcesReleased) return;
                     ViewModel.Cover = bitmap;
                     if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.CoverBlur &&
                         Background is not ImageBrush)
@@ -1134,10 +1139,22 @@ public sealed partial class ExpandedPlayer : Page
 
     private void LuminousBackground_OnUnloaded(object sender, RoutedEventArgs e)
     {
-        LuminousBackground.RemoveFromVisualTree();
-        LuminousBackground = null;
+        if (_canvasResourcesReleased) return;
+        _canvasResourcesReleased = true;
+        // The control's own Unloaded follows GameLoopStopped. An ancestor's
+        // Unloaded (or the page's cleanup) can precede the last Draw callback.
+        var canvas = (CanvasAnimatedControl)sender;
+        canvas.CreateResources -= LuminousBackground_CreateResources;
+        canvas.Update -= LuminousBackground_Update;
+        canvas.Draw -= LuminousBackground_Draw;
+        canvas.SizeChanged -= LuminousBackground_SizeChanged;
+        _canvasState.LyricBox = null;
+        _lyricBox.ReleaseResources();
+        _debugOverlayLayer.Dispose();
         _isolationBackgroundLayer.DisposeShader();
         _likeAppleBackgroundLayer.Dispose();
+        canvas.RemoveFromVisualTree();
+        LuminousBackground = null;
     }
 
     public Task Show()
@@ -1199,6 +1216,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void UpdateShaderResolution()
     {
+        if (_isCleanedUp || LuminousBackground is null) return;
         _isolationBackgroundLayer.UpdateResolution(
             LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, CanvasDpiRounding.Round),
             LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, CanvasDpiRounding.Round));
@@ -1206,6 +1224,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void LuminousBackground_CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
     {
+        if (_isCleanedUp || _canvasResourcesReleased) return;
         // Canvas-level configuration (not a layer concern)
         SyncCanvasState();
         LuminousBackground.DpiScale = _lyricSettings.IsolationScale;
@@ -1222,12 +1241,14 @@ public sealed partial class ExpandedPlayer : Page
 
     private void LuminousBackground_Update(ICanvasAnimatedControl sender, CanvasAnimatedUpdateEventArgs args)
     {
+        if (_isCleanedUp) return;
         SyncCanvasState();
         _expandedCanvasHost.Update(sender, args);
     }
 
     private void LuminousBackground_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
     {
+        if (_isCleanedUp) return;
         SyncCanvasState();
         if (!_canvasState.ShowDebugOverlay)
         {
@@ -1306,8 +1327,6 @@ public sealed partial class ExpandedPlayer : Page
         Window.Current.SizeChanged -= Current_SizeChanged;
         _lyricBox.OnBeforeRender -= LyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked -= LyricBoxOnOnRequestSeek;
-        _lyricBox.Clear();
-        _debugOverlayLayer.Dispose();
         if (_uiSettings.AlbumRotate)
             RotateAnimationSet.Stop();
         if (_uiSettings.ExpandAlbumBreath) ImageAlbumAni?.Stop();

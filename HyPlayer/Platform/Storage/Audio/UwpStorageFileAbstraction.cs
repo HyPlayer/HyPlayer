@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Windows.Storage;
 using File = TagLib.File;
 
@@ -9,13 +10,24 @@ public sealed partial class UwpStorageFileAbstraction : File.IFileAbstraction, I
 {
     private bool _disposed;
 
-    public UwpStorageFileAbstraction(IStorageFile file)
+    public static async Task<UwpStorageFileAbstraction> OpenAsync(IStorageFile file, bool writable = false)
     {
         ArgumentNullException.ThrowIfNull(file);
-
-        Name = file.Name;
-        ReadStream = file.OpenStreamForReadAsync().GetAwaiter().GetResult();
-        WriteStream = file.OpenStreamForWriteAsync().GetAwaiter().GetResult();
+        // One handle avoids opening a writer while a separate read handle is still open.
+        // Buffer TagLib's small synchronous reads; callers parse/save on a worker thread.
+        var randomAccessStream = await file.OpenAsync(writable ? FileAccessMode.ReadWrite : FileAccessMode.Read);
+        try
+        {
+            var stream = writable
+                ? randomAccessStream.AsStream(64 * 1024)
+                : randomAccessStream.AsStreamForRead(64 * 1024);
+            return new UwpStorageFileAbstraction(stream, stream, file.Name);
+        }
+        catch
+        {
+            randomAccessStream.Dispose();
+            throw;
+        }
     }
 
     public UwpStorageFileAbstraction(Stream readStream, Stream writeStream, string name = "HyPlayer Music")
@@ -48,7 +60,8 @@ public sealed partial class UwpStorageFileAbstraction : File.IFileAbstraction, I
         if (disposing)
         {
             ReadStream?.Dispose();
-            WriteStream?.Dispose();
+            if (!ReferenceEquals(ReadStream, WriteStream))
+                WriteStream?.Dispose();
         }
 
         _disposed = true;

@@ -75,14 +75,20 @@ public sealed class LocalFileImportService : ILocalFileImportService
     }
 
     /// <inheritdoc />
-    public async Task<LocalSong> LoadStorageFileAsync(StorageFile sf, bool nocheck163 = false)
+    public Task<LocalSong> LoadStorageFileAsync(StorageFile sf, bool nocheck163 = false)
+    {
+        return Task.Run(() => LoadStorageFileCoreAsync(sf, nocheck163));
+    }
+
+    private async Task<LocalSong> LoadStorageFileCoreAsync(StorageFile sf, bool nocheck163)
     {
         if (string.Equals(Path.GetExtension(sf.Path), ".ncm", StringComparison.OrdinalIgnoreCase))
             return await LoadNcmStorageFileAsync(sf);
 
-        using var abstraction = new UwpStorageFileAbstraction(sf);
+        using var abstraction = await UwpStorageFileAbstraction.OpenAsync(sf);
         using var tagFile = TagLibHelper.Create(abstraction, sf.FileType);
-        if (nocheck163 || !The163KeyHelper.TryGetMusicInfo(tagFile.Tag, out var mi))
+        if (nocheck163 || !The163KeyHelper.TryGetMusicInfo(tagFile.Tag, out var mi) ||
+            string.IsNullOrEmpty(mi.MusicName))
         {
             var songPerformersList = tagFile.Tag.Performers
                 .Select(t => new LocalArtist { Name = t, ActualId = t }).ToList();
@@ -107,9 +113,6 @@ public sealed class LocalFileImportService : ILocalFileImportService
                 Available = true
             };
         }
-
-        if (string.IsNullOrEmpty(mi.MusicName))
-            return await LoadStorageFileAsync(sf, true);
 
         var artists = mi.Artist
             .Select(t => new LocalArtist { Name = t[0].ToString(), ActualId = t[1].ToString() })

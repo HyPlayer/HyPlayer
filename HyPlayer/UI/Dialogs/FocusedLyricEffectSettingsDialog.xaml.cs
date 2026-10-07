@@ -103,6 +103,7 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
     {
         OperationsView = Operations.ToNotifyCollectionChanged();
         InitializeComponent();
+        _preview.EnableRenderThreadUpdates();
         _draft = _profiles.CreateDraft();
         InitializeAddMenu();
         LoadFocusedText(_draft.FocusedText);
@@ -550,6 +551,7 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
 
     private void PreviewCanvas_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
     {
+        if (_closed) return;
         var time = (long)(args.Timing.TotalTime.TotalMilliseconds % 6000);
         if (time < _preview.Context.CurrentLyricTime)
         {
@@ -586,6 +588,11 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
         }
     }
 
+    private void PreviewCanvas_Unloaded(object sender, RoutedEventArgs args)
+    {
+        _preview.ReleaseResources();
+    }
+
     private void Dialog_Closed(ContentDialog sender, ContentDialogClosedEventArgs args)
     {
         if (_closed) return;
@@ -595,7 +602,6 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
         _previewDebounce = null;
         if (!_saved) _profiles.CancelPreview();
         foreach (var item in Operations) item.PropertyChanged -= Operation_PropertyChanged;
-        _preview.Clear();
         PreviewCanvas.RemoveFromVisualTree();
     }
 }

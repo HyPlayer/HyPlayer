@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Networking.BackgroundTransfer;
@@ -45,7 +46,8 @@ public sealed partial class DownloadObject : ObservableObject
         Downloading,
         Finished,
         Paused,
-        Error
+        Error,
+        Processing
     }
 
     private readonly IDiagnosticsStateService _diagnostics;
@@ -73,6 +75,14 @@ public sealed partial class DownloadObject : ObservableObject
     private bool _hasPaused;
     private string _message;
     private int _progress;
+    private long _lastProgressTimestamp;
+    private int _progressDispatchPending;
+    private int _startInProgress;
+    private volatile bool _removed;
+    private int _status;
+    private bool _transferCompleted;
+    private bool _processingFailed;
+    private readonly CancellationTokenSource _downloadCancellation = new();
 
     private IStorageFile _resultFileBackingField;
 
@@ -110,7 +120,9 @@ public sealed partial class DownloadObject : ObservableObject
         _downloadTrackId = trackMetadata?.TrackNumber ?? 0;
         _downloadCdName = trackMetadata?.DiscName;
         _downloadSongId = song.ActualId ?? string.Empty;
-        _downloadAlbumId = song.Album?.ActualId;
+        _downloadAlbumId = string.IsNullOrWhiteSpace(song.Album?.ActualId)
+            ? null
+            : song.ProviderId + ":" + song.Album.ActualId;
         AlbumCover = null;
     }
 
@@ -149,7 +161,11 @@ public sealed partial class DownloadObject : ObservableObject
     }
 
     // 0 - 排队 1 - 下载中 2 - 下载完成  3 - 暂停
-    public DownloadStatus Status { get; set; }
+    public DownloadStatus Status
+    {
+        get => (DownloadStatus)Volatile.Read(ref _status);
+        set => Volatile.Write(ref _status, (int)value);
+    }
 
     public bool HasError
     {
@@ -177,6 +193,7 @@ public sealed partial class DownloadObject : ObservableObject
 
     public void Pause()
     {
+        if (Status == DownloadStatus.Processing) return;
         if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
             _downloadOperation?.Pause();
         Status = DownloadStatus.Paused;
@@ -190,17 +207,12 @@ public sealed partial class DownloadObject : ObservableObject
 
     public void Resume()
     {
-        _downloadOperation?.Resume();
-        Status = DownloadStatus.Downloading;
-        _ = _uiThreadDispatcher.TryRunAsync(() =>
-        {
-            Message = "下载中";
-            HasPaused = false;
-        });
+        Queue();
     }
 
     public void Queue()
     {
+        if (_removed || Status is DownloadStatus.Processing or DownloadStatus.Finished) return;
         Status = DownloadStatus.Queueing;
         _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
@@ -219,8 +231,8 @@ public sealed partial class DownloadObject : ObservableObject
 
     public void Remove()
     {
-        if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
-            _downloadOperation?.Pause();
+        _removed = true;
+        _downloadCancellation.Cancel();
         Status = DownloadStatus.Finished;
         _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
@@ -231,6 +243,10 @@ public sealed partial class DownloadObject : ObservableObject
 
     private void Wc_DownloadFileCompleted()
     {
+        if (_removed) return;
+        _transferCompleted = true;
+        _processingFailed = false;
+        Status = DownloadStatus.Processing;
         var task = Task.Run(async () =>
         {
             try
@@ -239,7 +255,29 @@ public sealed partial class DownloadObject : ObservableObject
                     await DownloadLyric().ConfigureAwait(false);
                 if (_downloadSettings.WriteDownloadFileInfo)
                     await WriteInfoToFile().ConfigureAwait(false);
-                Status = DownloadStatus.Finished;
+                if (_processingFailed && !_removed)
+                    Status = DownloadStatus.Error;
+                else if (!_removed)
+                {
+                    Status = DownloadStatus.Finished;
+                    await _uiThreadDispatcher.TryRunAsync(() =>
+                    {
+                        Progress = 100;
+                        Message = "下载完成";
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                if (_removed) return;
+                Status = DownloadStatus.Error;
+                await _uiThreadDispatcher.TryRunAsync(() =>
+                {
+                    HasError = true;
+                    HasPaused = true;
+                    Message = "下载后处理错误: " + ex.Message;
+                });
+                _diagnostics.AddError("下载后处理错误: " + ex.Message);
             }
             finally
             {
@@ -247,7 +285,6 @@ public sealed partial class DownloadObject : ObservableObject
             }
         });
         DownloadManager.RegisterWritingTask(task);
-        _ = _uiThreadDispatcher.TryRunAsync(() => Message = "下载完成");
     }
 
     private Task WriteInfoToFile()
@@ -257,7 +294,7 @@ public sealed partial class DownloadObject : ObservableObject
         {
             try
             {
-                using var streamAbstraction = new UwpStorageFileAbstraction(ResultFile);
+                using var streamAbstraction = await UwpStorageFileAbstraction.OpenAsync(ResultFile, writable: true);
                 using var file = TagLibHelper.Create(streamAbstraction, "." + _downloadFormat);
                 if (_downloadSettings.Write163Info)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, _providerSong, _downloadBitrate, _downloadFormat);
@@ -288,6 +325,7 @@ public sealed partial class DownloadObject : ObservableObject
                     {
                         using var responseMessage = await _httpClient.GetAsync(new Uri(AlbumCover + "?param=" +
                             StaticSource.PicSizeDownloadAlbumCover));
+                        responseMessage.EnsureSuccessStatusCode();
                         using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
                         using var stream = await responseMessage.Content.ReadAsStreamAsync();
                         using var inputStream = stream.AsRandomAccessStream();
@@ -298,25 +336,21 @@ public sealed partial class DownloadObject : ObservableObject
                         encoder.SetSoftwareBitmap(softwareBitmap);
                         await encoder.FlushAsync();
                         using var outputReadStream = outputStream.AsStreamForRead();
-                        pic = new Picture(ByteVector.FromStream(outputReadStream));
+                        pic = TagLibHelper.CreateCoverPicture(outputReadStream);
                     }
 
                     if (!string.IsNullOrWhiteSpace(_downloadAlbumId))
                         DownloadManager.CacheAlbumPicture(_downloadAlbumId, pic);
 
-                    file.Tag.Pictures =
-                    [
-                        pic
-                    ];
-                    file.Tag.Pictures[0].MimeType = "image/jpeg";
-                    file.Tag.Pictures[0].Description = "Cover.jpg";
+                    TagLibHelper.SetCover(file, pic);
                 }
 
                 file.Save();
             }
             catch (Exception ex)
             {
-                Status = DownloadStatus.Error;
+                if (_removed) return;
+                _processingFailed = true;
                 _ = _uiThreadDispatcher.TryRunAsync(() =>
                 {
                     HasError = true;
@@ -363,7 +397,8 @@ public sealed partial class DownloadObject : ObservableObject
             }
             catch (Exception ex)
             {
-                Status = DownloadStatus.Error;
+                if (_removed) return;
+                _processingFailed = true;
                 _ = _uiThreadDispatcher.TryRunAsync(() =>
                 {
                     Message = "下载歌词错误: " + ex.Message;
@@ -395,15 +430,32 @@ public sealed partial class DownloadObject : ObservableObject
         if (obj.Progress.TotalBytesToReceive == 0) return;
         if (Status != DownloadStatus.Downloading) return;
 
-        _ = _uiThreadDispatcher.TryRunAsync(() =>
-        {
-            TotalSize = obj.Progress.TotalBytesToReceive;
-            HadSize = obj.Progress.BytesReceived;
-            Progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
-            Message = $"下载中: {GetSize(obj.Progress.BytesReceived)} / {GetSize(obj.Progress.TotalBytesToReceive)}";
-        });
+        var progress = obj.Progress;
+        var now = Environment.TickCount64;
+        if (progress.BytesReceived != progress.TotalBytesToReceive &&
+            now - Interlocked.Read(ref _lastProgressTimestamp) < 250) return;
+        if (Interlocked.Exchange(ref _progressDispatchPending, 1) != 0) return;
+        Interlocked.Exchange(ref _lastProgressTimestamp, now);
+        _ = PublishProgressAsync(progress.BytesReceived, progress.TotalBytesToReceive);
+    }
 
-        if (HadSize == TotalSize && Status == DownloadStatus.Finished) return;
+    private async Task PublishProgressAsync(ulong received, ulong total)
+    {
+        try
+        {
+            await _uiThreadDispatcher.TryRunAsync(() =>
+            {
+                if (_removed || Status != DownloadStatus.Downloading) return;
+                TotalSize = total;
+                HadSize = received;
+                Progress = (int)(received * 100 / total);
+                Message = $"下载中: {GetSize(received)} / {GetSize(total)}";
+            });
+        }
+        finally
+        {
+            Volatile.Write(ref _progressDispatchPending, 0);
+        }
     }
 
     public void DownloadStartToast(string songName)
@@ -411,24 +463,58 @@ public sealed partial class DownloadObject : ObservableObject
         _notification.ShowMessage("下载开始", "歌曲" + songName + "下载开始");
     }
 
-    public async Task StartDownload()
+    public Task StartDownload()
     {
-        if (_downloadOperation != null)
+        if (_removed || Status != DownloadStatus.Queueing) return Task.CompletedTask;
+        // Reserve the queue slot before returning to the scheduler. No provider or
+        // storage code (including synchronously completed awaits) runs on the UI thread.
+        Status = DownloadStatus.Downloading;
+        return Task.Run(StartDownloadCoreAsync);
+    }
+
+    private async Task StartDownloadCoreAsync()
+    {
+        if (Interlocked.Exchange(ref _startInProgress, 1) != 0)
         {
-            Resume();
+            if (_downloadOperation?.Progress.Status == BackgroundTransferStatus.PausedByApplication)
+            {
+                _downloadOperation.Resume();
+                await _uiThreadDispatcher.TryRunAsync(() =>
+                {
+                    HasPaused = false;
+                    Message = "下载中";
+                });
+            }
             return;
         }
+        try
+        {
+            if (_transferCompleted)
+            {
+                Wc_DownloadFileCompleted();
+                return;
+            }
+            await DownloadCoreAsync();
+        }
+        finally
+        {
+            Volatile.Write(ref _startInProgress, 0);
+        }
+    }
 
-        Status = DownloadStatus.Downloading;
+    private async Task DownloadCoreAsync()
+    {
         _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
             HasError = false;
             HasPaused = false;
             Message = "正在预加载";
         });
+        if (_removed) return;
         try
         {
-            FileName = _downloadSettings.DownloadFileName
+            await WaitForDownloadSlotAsync();
+            var fileName = _downloadSettings.DownloadFileName
                 .Replace("{$SINGER}", string.Join(';', _downloadArtistNames).EscapeForPath())
                 .Replace("{$SONGNAME}", SongName.EscapeForPath())
                 .Replace("{$ALBUM}", AlbumName.EscapeForPath())
@@ -438,7 +524,7 @@ public sealed partial class DownloadObject : ObservableObject
                 .Replace("{$SONGID}", _downloadSongId.EscapeForPath());
             var folderName = await _downloadSettings.GetDownloadDirectoryAsync();
             var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
-            var ses = FileName.Replace('\\', '/').Split('/');
+            var ses = fileName.Replace('\\', '/').Split('/');
             for (var index = 0; index < ses.Length - 1; index++)
             {
                 var s = ses[index];
@@ -485,26 +571,38 @@ public sealed partial class DownloadObject : ObservableObject
             }
 
             var extension = NormalizeAudioExtension(musicResource.ExtensionName);
-            AlbumCover ??= await GetProviderAlbumCoverAsync(_providerSong);
-            FileName += "." + extension;
+            var albumCover = AlbumCover ?? await GetProviderAlbumCoverAsync(_providerSong);
+            fileName += "." + extension;
+            // Metadata must remain available when background mode suppresses UI dispatch.
+            AlbumCover = albumCover;
+            await _uiThreadDispatcher.TryRunAsync(() =>
+            {
+                FileName = fileName;
+                OnPropertyChanged(nameof(AlbumCover));
+            });
             _downloadBitrate = 0;
             _downloadFormat = extension;
 
-            var targetFileName = Path.GetFileName(FileName);
+            var targetFileName = Path.GetFileName(fileName);
             if (await nowFolder.FileExistsAsync(targetFileName))
             {
                 switch (_downloadSettings.DownloadNameOccupySolution)
                 {
                     case OccupySolution.Skip:
                         Status = DownloadStatus.Paused;
-                        _ = _uiThreadDispatcher.TryRunAsync(() => { Message = "歌曲已存在, 跳过"; });
+                        _ = _uiThreadDispatcher.TryRunAsync(() =>
+                        {
+                            Message = "歌曲已存在, 跳过";
+                            HasPaused = true;
+                        });
                         return;
                     case OccupySolution.ReWrite:
                         await (await nowFolder.GetFileAsync(targetFileName)).DeleteAsync();
                         break;
                     case OccupySolution.AppendID:
-                        FileName = Path.GetFileNameWithoutExtension(FileName) + _downloadSongId + "." + extension;
-                        targetFileName = Path.GetFileName(FileName);
+                        fileName = Path.GetFileNameWithoutExtension(fileName) + _downloadSongId + "." + extension;
+                        targetFileName = Path.GetFileName(fileName);
+                        await _uiThreadDispatcher.TryRunAsync(() => FileName = fileName);
                         break;
                     case OccupySolution.UpdateInfo:
                         ResultFile = await nowFolder.GetFileAsync(targetFileName);
@@ -514,23 +612,53 @@ public sealed partial class DownloadObject : ObservableObject
                 }
             }
 
+            await WaitForDownloadSlotAsync();
+            var targetFile = await nowFolder.CreateFileAsync(targetFileName);
+            if (_removed)
+            {
+                await targetFile.DeleteAsync();
+                return;
+            }
             _downloadOperation = DownloadManager.Downloader.CreateDownload(
                 musicResource.Uri,
-                await nowFolder.CreateFileAsync(targetFileName)
+                targetFile
             );
             FullPath = _downloadOperation.ResultFile.Path;
+            if (_removed)
+            {
+                _downloadOperation = null;
+                await targetFile.DeleteAsync();
+                return;
+            }
             //_downloadOperation.IsRandomAccessRequired = true;
             var process = new Progress<DownloadOperation>(Wc_DownloadProgressChanged);
             //DownloadStartToast(FileName);
-            await _downloadOperation.StartAsync().AsTask(process);
+            await WaitForDownloadSlotAsync();
+            await _downloadOperation.StartAsync().AsTask(_downloadCancellation.Token, process);
             Wc_DownloadFileCompleted();
         }
         catch (Exception ex)
         {
+            if (_removed) return;
             Status = DownloadStatus.Error;
-            _ = _uiThreadDispatcher.TryRunAsync(() => { Message = "下载错误: " + ex.Message; });
+            _downloadOperation = null;
+            _ = _uiThreadDispatcher.TryRunAsync(() =>
+            {
+                Message = "下载错误: " + ex.Message;
+                HasError = true;
+                HasPaused = true;
+            });
             _diagnostics.AddError("无法下载歌曲 " + SongName + "\n已自动将其从下载列表中移除" + ex.Message);
         }
+    }
+
+    private async Task WaitForDownloadSlotAsync()
+    {
+        // Pausing during URL/file preparation must keep the owning worker alive.
+        // Resume queues the item; only the scheduler grants a slot and wakes it.
+        while (Status is DownloadStatus.Paused or DownloadStatus.Queueing)
+            await Task.Delay(100, _downloadCancellation.Token);
+        _downloadCancellation.Token.ThrowIfCancellationRequested();
     }
 
     private static string[] GetProviderArtistNames(SingleSongBase song)
