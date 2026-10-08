@@ -1,10 +1,13 @@
 #region
 
+using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Numerics;
 using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Composition;
+using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -30,6 +33,7 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Shell;
 using HyPlayer.Shell.ExpandedPlayer;
 using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.Shell.Playback;
 using HyPlayer.Shell.Services;
 using HyPlayer.UI.Playback.PlayBar;
 using Microsoft.Graphics.Canvas.Effects;
@@ -56,6 +60,8 @@ public sealed partial class MainPage : Page
     private bool _playBarAutoHideSubscribed;
     private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
     private bool _isPlaybarOnShow = true;
+    private ConnectedAnimationBatch? _collapseAnimations;
+    private int _surfaceTransitionVersion;
 
     public HyPlayer.Domain.Settings.UISettings UISettings { get; } =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
@@ -139,6 +145,11 @@ public sealed partial class MainPage : Page
 
     private void PresentExpandedSurface()
     {
+        CancelCollapseTransition();
+        ImageResetPositionAni.Stop();
+        ExpandedPlayerPositionOffset.X = 0;
+        ExpandedPlayerPositionOffset.Y = 0;
+        ExpandedPlayer.IsHitTestVisible = true;
         ExpandedPlayer.Visibility = Visibility.Visible;
         EnsureExpandedPlayerFrame();
         GridPlayBar.BorderThickness = new Thickness(0);
@@ -147,12 +158,19 @@ public sealed partial class MainPage : Page
         GridPlayBar.Background = null;
     }
 
-    private void RestoreCompactSurface()
+    private async void RestoreCompactSurface()
     {
+        CancelCollapseTransition();
+        var version = _surfaceTransitionVersion;
+        var source = ExpandedPlayer.Content as ExpandedPlayer;
+        var animations = UISettings.ExpandAnimation && source != null
+            ? source.PrepareCollapseAnimations(PlaybackBar)
+            : null;
+        _collapseAnimations = animations;
+
         GridPlayBarMarginBlur.Visibility = Visibility.Visible;
         _shellHost.AppTitleBar?.ReleasePointerCaptures();
-        ExpandedPlayer.Content = null;
-        ExpandedPlayer.Visibility = Visibility.Collapsed;
+        ExpandedPlayer.IsHitTestVisible = false;
         GridPlayBar.BorderThickness = new Thickness(1);
         GridPlayBar.Background = Windows.UI.Xaml.Application.Current
             .Resources["SystemControlAcrylicElementMediumHighBrush"].As<Brush>();
@@ -163,16 +181,66 @@ public sealed partial class MainPage : Page
             var dragRegion = titleBar.FindDescendant("PART_DragRegion")?.As<Grid>();
             Window.Current.SetTitleBar(dragRegion);
         }
+
+        try
+        {
+            if (animations != null)
+            {
+                // Let all SurfaceMode subscribers reveal the PlayBar targets before layout.
+                // Keep the source attached and visible while DWM consumes the queued snapshots:
+                // clearing Content here can fail-fast in CVisual::GetWorldTransform.
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () => { });
+                if (version != _surfaceTransitionVersion) return;
+                PlaybackBar.UpdateLayout();
+                if (GridPlayBar.Visibility == Visibility.Visible && PlaybackBar.CanShowCollapseAnimations)
+                    await animations.StartAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Playback collapse transition failed: {ex}");
+        }
+        finally
+        {
+            animations?.Cancel();
+            if (version == _surfaceTransitionVersion && !_surfaceStore.IsExpanded &&
+                ReferenceEquals(ExpandedPlayer.Content, source))
+            {
+                _collapseAnimations = null;
+                ExpandedPlayer.Content = null;
+                ExpandedPlayer.Visibility = Visibility.Collapsed;
+                ImageResetPositionAni.Stop();
+                ExpandedPlayerPositionOffset.X = 0;
+                ExpandedPlayerPositionOffset.Y = 0;
+            }
+        }
+    }
+
+    private void CancelCollapseTransition()
+    {
+        // Invalidate the continuation before Cancel completes its pending task.
+        _surfaceTransitionVersion++;
+        var animations = _collapseAnimations;
+        _collapseAnimations = null;
+        animations?.Cancel();
     }
 
     private void EnsureExpandedPlayerFrame()
     {
         ExpandedPlayer.Visibility = Visibility.Visible;
         ExpandedPlayer.Content ??= new ExpandedPlayer();
+        if (ExpandedPlayer.Content is ExpandedPlayer { IsLoaded: true } page)
+            page.RestoreTitleBar();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
+        CancelCollapseTransition();
+        if (!_surfaceStore.IsExpanded)
+        {
+            ExpandedPlayer.Content = null;
+            ExpandedPlayer.Visibility = Visibility.Collapsed;
+        }
         base.OnNavigatedFrom(e);
         _surfaceStoreChangedListener?.Detach();
         _surfaceStoreChangedListener = null;

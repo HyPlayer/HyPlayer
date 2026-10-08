@@ -103,7 +103,7 @@
             CornerRadius="{x:Bind UISettings.PlayBarMargin, Mode=OneWay, Converter={StaticResource PlayBarCornerRadiusConverter}}"
             Opacity="1"
             Visibility="Visible">
-            <controls2:PlayBar />
+            <controls2:PlayBar x:Name="PlaybackBar" />
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="PlayBarTrans" />
             </Grid.RenderTransform>

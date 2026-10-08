@@ -50,8 +50,6 @@ public sealed class PlaybackSurfaceCoordinator : IPlaybackSurfaceCoordinator
     {
         if (!_surfaceStore.IsExpanded) return;
 
-        _surfaceStore.RequestTransition(ExpandedPlayerTransition.Collapse);
-
         // Guarded transition through state machine — rejects if already compact/mid-animation
         if (!_stateMachine.TryBeginCollapse())
             return;

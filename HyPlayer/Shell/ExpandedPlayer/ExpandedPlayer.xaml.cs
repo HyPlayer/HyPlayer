@@ -296,8 +296,6 @@ public sealed partial class ExpandedPlayer : Page
             case nameof(PlaybackSurfaceStore.TransitionRequestId):
                 if (_surfaceStore.RequestedTransition == ExpandedPlayerTransition.Expand)
                     StartExpandAnimation();
-                else
-                    StartCollapseAnimation();
                 break;
             case nameof(PlaybackSurfaceStore.ExpandedFrameOffsetY):
                 // MainPage observes the same store value and moves the frame. ExpandedPlayer keeps the gesture local state here.
@@ -599,9 +597,9 @@ public sealed partial class ExpandedPlayer : Page
         var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
         var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
         var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
-        if (anim2 != null) anim3.Configuration = new DirectConnectedAnimationConfiguration();
+        anim3?.Configuration = new DirectConnectedAnimationConfiguration();
         anim2?.Configuration = new DirectConnectedAnimationConfiguration();
-        if (anim2 != null) anim1.Configuration = new DirectConnectedAnimationConfiguration();
+        anim1?.Configuration = new DirectConnectedAnimationConfiguration();
         try
         {
             //anim3?.TryStart(TextBlockSinger);
@@ -614,26 +612,14 @@ public sealed partial class ExpandedPlayer : Page
         }
     }
 
-    public void StartCollapseAnimation()
+    internal ConnectedAnimationBatch PrepareCollapseAnimations(PlayBar destination)
     {
-        try
-        {
-            if (_uiSettings.ExpandAnimation)
-            {
-                if (TextBlockSongTitle.ActualSize.X != 0 && TextBlockSongTitle.ActualSize.Y != 0)
-                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
-                if (ImageAlbum.ActualSize.X != 0 && ImageAlbum.ActualSize.Y != 0)
-                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbum);
-                if (SingerHyperlinkBtn.ActualSize.X != 0 && SingerHyperlinkBtn.ActualSize.Y != 0)
-                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", SingerHyperlinkBtn);
-                if (AlbumHyperlinkBtn.ActualSize.X != 0 && AlbumHyperlinkBtn.ActualSize.Y != 0)
-                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongAlbum", AlbumHyperlinkBtn);
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Expanded player collapse animation failed: {ex}");
-        }
+        var batch = new ConnectedAnimationBatch();
+        batch.Prepare("SongTitle", TextBlockSongTitle, destination.GetCollapseAnimationTarget("SongTitle"));
+        batch.Prepare("SongImg", ImageAlbum, destination.GetCollapseAnimationTarget("SongImg"));
+        batch.Prepare("SongArtist", SingerHyperlinkBtn, destination.GetCollapseAnimationTarget("SongArtist"));
+        batch.Prepare("SongAlbum", AlbumHyperlinkBtn, destination.GetCollapseAnimationTarget("SongAlbum"));
+        return batch;
     }
 
     private void LyricBoxContainer_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
@@ -903,11 +889,13 @@ public sealed partial class ExpandedPlayer : Page
         _expandedPlayerWindow?.Closed -= ExpandedPlayerClosed;
     }
 
+    internal void RestoreTitleBar() => Window.Current.SetTitleBar(AppTitleBar);
+
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
         if (_uiSettings.AlbumRound) ImageAlbum.CornerRadius = new CornerRadius(300);
         ImageAlbum.BorderThickness = new Thickness(_uiSettings.AlbumBorderLength);
-        Window.Current.SetTitleBar(AppTitleBar);
+        RestoreTitleBar();
         _lifecycle.IsInBackground = false;
         Current_SizeChanged(null, null);
         Redesign();

@@ -183,9 +183,6 @@ DoubleAnimation verticalAnimation;
                 ApplyCompactPlaybackTheme();
 
             if (!isExpanded)
-                StartPreparedCollapseAnimations();
-
-            if (!isExpanded)
                 RefreshPlayBarCover(ViewModel.NowPlayingProviderItem);
         });
     }
@@ -215,30 +212,18 @@ DoubleAnimation verticalAnimation;
             isLight);
     }
 
-    private void StartPreparedCollapseAnimations()
-    {
-        if (!UISettings.ExpandAnimation || GridSongInfoContainer.Visibility != Visibility.Visible) return;
+    internal bool CanShowCollapseAnimations => GridSongInfoContainer.Visibility == Visibility.Visible &&
+                                               GridSongInfo.Visibility == Visibility.Visible &&
+                                               IsLoaded && ActualHeight > 0;
 
-        var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
-        var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
-        var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
-        var anim4 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongAlbum");
-        anim4?.Configuration = new DirectConnectedAnimationConfiguration();
-        anim3?.Configuration = new DirectConnectedAnimationConfiguration();
-        anim2?.Configuration = new DirectConnectedAnimationConfiguration();
-        anim1?.Configuration = new DirectConnectedAnimationConfiguration();
-        try
-        {
-            anim3?.TryStart(TbSingerName);
-            anim1?.TryStart(TbSongName);
-            anim2?.TryStart(AlbumImage);
-            anim4?.TryStart(TbAlbumName);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"PlayBar collapse connected animation failed: {ex.Message}");
-        }
-    }
+    internal FrameworkElement GetCollapseAnimationTarget(string key) => key switch
+    {
+        "SongTitle" => TbSongName,
+        "SongImg" => AlbumImage,
+        "SongArtist" => TbSingerName,
+        "SongAlbum" => TbAlbumName,
+        _ => throw new ArgumentOutOfRangeException(nameof(key))
+    };
 
     private void HyPlayListOnOnSongRemoveAll()
     {
