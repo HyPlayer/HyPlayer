@@ -131,7 +131,7 @@ public partial class PlaybackSettings : SettingsBase
         set
         {
             if (SetSettings("audio-render-device", value, nameof(AudioRenderDevice)))
-                _ = Ioc.Default.GetRequiredService<IPlaybackControlService>().InitializeAsync();
+                _ = Ioc.Default.GetRequiredService<IPlaybackControlService>().ApplyAudioDeviceAsync();
         }
     }
 

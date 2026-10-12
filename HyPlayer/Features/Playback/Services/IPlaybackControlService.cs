@@ -76,4 +76,6 @@ public interface IPlaybackControlService
     ///     初始化播放器（AudioGraph 等底层资源）
     /// </summary>
     Task InitializeAsync();
+
+    Task ApplyAudioDeviceAsync();
 }

@@ -130,17 +130,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 AudioFrameOutputNode newFrameOutputNode = null;
                 try
                 {
-                    var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
-                    var graphResult = await AudioGraph.CreateAsync(setting);
-                    if (graphResult.Status != AudioGraphCreationStatus.Success)
-                        throw graphResult.ExtendedError;
-
-                    newGraph = graphResult.Graph;
-                    var outputResult = await newGraph.CreateDeviceOutputNodeAsync();
-                    if (outputResult.Status != AudioDeviceNodeCreationStatus.Success)
-                        throw outputResult.ExtendedError;
-
-                    newOutputNode = outputResult.DeviceOutputNode;
+                    (newGraph, newOutputNode) = await CreateGraphAsync(audioGraphSetting);
                     var encodingProperties = newOutputNode.EncodingProperties.Copy();
                     encodingProperties.ChannelCount = 1;
                     newFrameOutputNode = newGraph.CreateFrameOutputNode(encodingProperties);
@@ -148,9 +138,10 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
                     _outputNode = newOutputNode;
                     _frameOutputNode = newFrameOutputNode;
-                    _currentDeviceId = audioGraphSetting.DefaultDeviceId;
+                    _currentDeviceId = audioGraphSetting.ResolvedDeviceId;
                     EnableFFTProcessing = settings.EnableFFTProcessing;
                     newGraph.QuantumProcessed += GraphOnQuantumProcessed;
+                    newGraph.UnrecoverableErrorOccurred += GraphOnUnrecoverableErrorOccurred;
                     Volatile.Write(ref _defaultPlayer, newGraph);
                     _positionTimer.Start();
 
@@ -170,6 +161,46 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             {
                 _lifecycleGate.Release();
             }
+        }
+
+        public event Action<AudioGraphUnrecoverableError> OnDeviceLost;
+
+        private void GraphOnUnrecoverableErrorOccurred(AudioGraph sender, AudioGraphUnrecoverableErrorOccurredEventArgs args)
+        {
+            if (!ReferenceEquals(sender, _defaultPlayer)) return;
+            _currentDeviceId = string.Empty;
+            OnDeviceLost?.Invoke(args.Error);
+        }
+
+        private static async Task<(AudioGraph graph, AudioDeviceOutputNode output)> CreateGraphAsync(AudioGraphAudioSetting audioGraphSetting)
+        {
+            var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
+            var graphResult = await AudioGraph.CreateAsync(setting);
+            if (graphResult.Status == AudioGraphCreationStatus.Success)
+            {
+                var outputResult = await graphResult.Graph.CreateDeviceOutputNodeAsync();
+                if (outputResult.Status == AudioDeviceNodeCreationStatus.Success)
+                    return (graphResult.Graph, outputResult.DeviceOutputNode);
+                graphResult.Graph.Dispose();
+                if (audioGraphSetting.PreferredSampleRate == 0) throw outputResult.ExtendedError;
+            }
+            else if (audioGraphSetting.PreferredSampleRate == 0)
+            {
+                throw graphResult.ExtendedError;
+            }
+
+            audioGraphSetting.DisablePreferredSampleRate();
+            setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
+            graphResult = await AudioGraph.CreateAsync(setting);
+            if (graphResult.Status != AudioGraphCreationStatus.Success)
+                throw graphResult.ExtendedError;
+            var fallbackOutput = await graphResult.Graph.CreateDeviceOutputNodeAsync();
+            if (fallbackOutput.Status != AudioDeviceNodeCreationStatus.Success)
+            {
+                graphResult.Graph.Dispose();
+                throw fallbackOutput.ExtendedError;
+            }
+            return (graphResult.Graph, fallbackOutput.DeviceOutputNode);
         }
 
         private void GraphOnQuantumProcessed(AudioGraph sender, object args)
@@ -195,7 +226,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             await _lifecycleGate.WaitAsync();
             try
             {
-                if (_currentDeviceId == audioGraphSetting.DefaultDeviceId)
+                if (_defaultPlayer == null || _currentDeviceId == audioGraphSetting.ResolvedDeviceId)
                     return;
 
                 _positionTimer.Stop();
@@ -211,24 +242,20 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 try
                 {
                     // 创建新的 AudioGraph
-                    var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
-                    var newPlayerResult = await AudioGraph.CreateAsync(setting);
-                    if (newPlayerResult.Status != AudioGraphCreationStatus.Success)
-                        throw newPlayerResult.ExtendedError;
-                    newPlayer = newPlayerResult.Graph;
+                    (newPlayer, newOutputNode) = await CreateGraphAsync(audioGraphSetting);
 
-
-                    oldPlayer.Stop();
+                    try
+                    {
+                        oldPlayer.Stop();
+                    }
+                    catch
+                    {
+                    }
                     oldPlayer.QuantumProcessed -= GraphOnQuantumProcessed;
-
-                    // 创建新的输出节点
-                    var deviceNodeCreateResult = await newPlayer.CreateDeviceOutputNodeAsync();
-                    if (deviceNodeCreateResult.Status != AudioDeviceNodeCreationStatus.Success)
-                        throw deviceNodeCreateResult.ExtendedError;
-                    newOutputNode = deviceNodeCreateResult.DeviceOutputNode;
+                    oldPlayer.UnrecoverableErrorOccurred -= GraphOnUnrecoverableErrorOccurred;
                     newOutputNode.OutgoingGain = oldOutputNode.OutgoingGain;
 
-                    var encodingProperties = _outputNode.EncodingProperties.Copy();
+                    var encodingProperties = newOutputNode.EncodingProperties.Copy();
                     encodingProperties.ChannelCount = 1;
                     newFrameOutputNode = newPlayer.CreateFrameOutputNode(encodingProperties);
 
@@ -286,6 +313,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     // 替换为新图
                     _defaultPlayer = newPlayer;
                     newPlayer.QuantumProcessed += GraphOnQuantumProcessed;
+                    newPlayer.UnrecoverableErrorOccurred += GraphOnUnrecoverableErrorOccurred;
                     EnableFFTProcessing = settings.EnableFFTProcessing;
                     _outputNode = newOutputNode;
                     _frameOutputNode = newFrameOutputNode;
@@ -294,7 +322,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     _audioInputNodesReverseDictionary.Clear();
                     foreach (var kvp in newNodesReverse) _audioInputNodesReverseDictionary.TryAdd(kvp.Key, kvp.Value);
 
-                    _currentDeviceId = audioGraphSetting.DefaultDeviceId;
+                    _currentDeviceId = audioGraphSetting.ResolvedDeviceId;
                     if (GlobalPlaybackStatus == PlaybackStatus.Playing) newPlayer.Start();
                     committed = true;
                 }
@@ -342,7 +370,10 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
             var player = _defaultPlayer;
             if (player is not null)
+            {
                 player.QuantumProcessed -= GraphOnQuantumProcessed;
+                player.UnrecoverableErrorOccurred -= GraphOnUnrecoverableErrorOccurred;
+            }
 
             // 清理所有播放源
             foreach (var item in _audioInputNodes.Values)

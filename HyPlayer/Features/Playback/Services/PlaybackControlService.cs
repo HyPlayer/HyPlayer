@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media;
+using Windows.Media.Audio;
+using Windows.Media.Devices;
 using AsyncAwaitBestPractices;
 using Depository.Abstraction.Interfaces;
 using Depository.Abstraction.Interfaces.NotificationHub;
@@ -65,6 +67,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private bool _disposed;
     private bool _initialized;
     private long _lastScrobbledGeneration = -1;
+    private CancellationTokenSource? _deviceRefreshCts;
     private CancellationTokenSource? _lyricCts;
     private CancellationTokenSource? _playbackCts;
     private long _playbackGeneration;
@@ -127,6 +130,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             graphPlayer.OnGlobalPlaybackStatusChanged += OnGlobalPlaybackStatusChanged;
             graphPlayer.OnPositionChanged += OnPositionChanged;
             graphPlayer.OnPrimaryPlaybackSourceChanged += OnPrimaryPlaybackSourceChanged;
+            graphPlayer.OnDeviceLost += OnAudioDeviceLost;
         }
 
         _state.PropertyChanged += OnPlaybackStatePropertyChanged;
@@ -562,13 +566,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             if (_initialized)
                 return;
 
-            await _player.InitializePlayer(new AudioGraphAudioSetting
-            {
-                DefaultDeviceId = _playbackSettings.AudioRenderDevice,
-                OutputVolume = _playbackSettings.Volume / 100d,
-                AutoFallback = true,
-                EnableFFTProcessing = _playbackSettings.EnableFFT || _playbackSettings.ShowSpectrum
-            }).ConfigureAwait(false);
+            await _player.InitializePlayer(CreateAudioSetting()).ConfigureAwait(false);
 
             if (_player is AudioGraphPlayer graphPlayer)
             {
@@ -600,12 +598,65 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             }
 
             _state.Volume = _playbackSettings.Volume / 100d;
+            MediaDevice.DefaultAudioRenderDeviceChanged += OnDefaultAudioRenderDeviceChanged;
             _initialized = true;
         }
         finally
         {
             _initializeGate.Release();
         }
+    }
+
+    private AudioGraphAudioSetting CreateAudioSetting()
+    {
+        return new AudioGraphAudioSetting
+        {
+            DefaultDeviceId = _playbackSettings.AudioRenderDevice,
+            OutputVolume = _playbackSettings.Volume / 100d,
+            AutoFallback = true,
+            EnableFFTProcessing = _playbackSettings.EnableFFT || _playbackSettings.ShowSpectrum
+        };
+    }
+
+    public async Task ApplyAudioDeviceAsync()
+    {
+        if (!_initialized || _player is not AudioGraphPlayer { PlayerCreated: true })
+            return;
+
+        try
+        {
+            await _player.ChangePlayerServiceImplementation(CreateAudioSetting()).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+    private void OnDefaultAudioRenderDeviceChanged(object? sender, DefaultAudioRenderDeviceChangedEventArgs args)
+    {
+        if (args.Role != AudioDeviceRole.Default || !string.IsNullOrEmpty(_playbackSettings.AudioRenderDevice))
+            return;
+
+        ScheduleAudioDeviceRefresh();
+    }
+
+    private void OnAudioDeviceLost(AudioGraphUnrecoverableError error)
+    {
+        ScheduleAudioDeviceRefresh();
+    }
+
+    private void ScheduleAudioDeviceRefresh()
+    {
+        _deviceRefreshCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _deviceRefreshCts = cts;
+        _taskRunner.Forget(RefreshAudioDeviceAsync(cts.Token), "refresh audio render device");
+    }
+
+    private async Task RefreshAudioDeviceAsync(CancellationToken ct)
+    {
+        await Task.Delay(300, ct).ConfigureAwait(false);
+        await ApplyAudioDeviceAsync().ConfigureAwait(false);
     }
 
     private void SMTC_PlaybackPositionChangeRequested(SystemMediaTransportControls sender,
@@ -1088,8 +1139,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             graphPlayer.OnGlobalPlaybackStatusChanged -= OnGlobalPlaybackStatusChanged;
             graphPlayer.OnPositionChanged -= OnPositionChanged;
             graphPlayer.OnPrimaryPlaybackSourceChanged -= OnPrimaryPlaybackSourceChanged;
+            graphPlayer.OnDeviceLost -= OnAudioDeviceLost;
         }
 
+        if (_initialized)
+            MediaDevice.DefaultAudioRenderDeviceChanged -= OnDefaultAudioRenderDeviceChanged;
+        _deviceRefreshCts?.Cancel();
         _state.PropertyChanged -= OnPlaybackStatePropertyChanged;
         _smtc?.ButtonPressed -= SMTC_ButtonPressed;
         _smtc?.PlaybackPositionChangeRequested -= SMTC_PlaybackPositionChangeRequested;
