@@ -32,6 +32,15 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
     private readonly object _lifetimeGate = new();
     private int _resourceVersion;
     private bool _disposed;
+    private int _renderWidth;
+    private int _renderHeight;
+    private int _pendingWidth;
+    private int _pendingHeight;
+    private long _pendingSizeTick;
+    private long _renderSizeTick;
+
+    private const long SurfaceQuietTicks = 150 * TimeSpan.TicksPerMillisecond;
+    private const long SurfaceRepeatTicks = 300 * TimeSpan.TicksPerMillisecond;
 
     public LikeAppleBackgroundLayer(ExpandedCanvasState state, AudioGraphPlayer player)
     {
@@ -158,7 +167,24 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
 
         int pixelWidth = sender.ConvertDipsToPixels((float)sender.Size.Width, CanvasDpiRounding.Round);
         int pixelHeight = sender.ConvertDipsToPixels((float)sender.Size.Height, CanvasDpiRounding.Round);
-        _frame = renderer.Render(pixelWidth, pixelHeight, _state.IsPlaying);
+        long tick = args.Timing.TotalTime.Ticks;
+        if (pixelWidth != _pendingWidth || pixelHeight != _pendingHeight)
+        {
+            _pendingWidth = pixelWidth;
+            _pendingHeight = pixelHeight;
+            _pendingSizeTick = tick;
+        }
+
+        if ((pixelWidth != _renderWidth || pixelHeight != _renderHeight) &&
+            (_renderWidth <= 0 || _renderHeight <= 0 || tick < _renderSizeTick ||
+             tick - _pendingSizeTick >= SurfaceQuietTicks || tick - _renderSizeTick >= SurfaceRepeatTicks))
+        {
+            _renderWidth = pixelWidth;
+            _renderHeight = pixelHeight;
+            _renderSizeTick = tick;
+        }
+
+        _frame = renderer.Render(_renderWidth, _renderHeight, _state.IsPlaying);
     }
 
     public void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing)
@@ -272,6 +298,8 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
             _resourceVersion++;
             Interlocked.Increment(ref _artworkRequestVersion);
             _frame = null;
+            _renderWidth = 0;
+            _renderHeight = 0;
             _renderer?.Dispose();
             _renderer = null;
             _isVisible = false;

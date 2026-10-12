@@ -2,6 +2,7 @@ using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
+using HyPlayer.LyricRenderer.RollingCalculators;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using System;
@@ -19,9 +20,21 @@ using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer
 {
+    [Flags]
+    public enum LyricFrameActivity
+    {
+        None = 0,
+        LineChange = 1,
+        Layout = 2,
+        BlurCache = 4,
+        Seek = 8
+    }
+
     public sealed class LyricRenderView
     {
         public RenderContext Context { get; } = new();
+
+        public LyricFrameActivity LastFrameActivity { get; private set; }
         private readonly object _frameGate = new();
         private readonly object _mutationGate = new();
         private readonly ConcurrentQueue<Action> _pendingMutations = new();
@@ -89,7 +102,9 @@ namespace HyPlayer.LyricRenderer
                 if (!_pendingMutations.IsEmpty) return true;
                 if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return false;
                 return Volatile.Read(ref _pendingSettings) is not null || _isTypographyChanged ||
-                       _needRecalculateSize || _forceScrollReset || _scrollSettling;
+                       _needRecalculateSize || _forceScrollReset || _scrollSettling || _springMoving ||
+                       _staleLayoutCount > 0 || _layoutRequestPending || _needRealign ||
+                       _layoutRequestSerial != _layoutSeenSerial;
             }
         }
 
@@ -181,20 +196,40 @@ namespace HyPlayer.LyricRenderer
             if (sublineLyricSize <= 0) sublineLyricSize = lyricSize / 2;
             if (sublineTranslationSize <= 0) sublineTranslationSize = lyricSize / 2;
             if (sublineTransliterationSize <= 0) sublineTransliterationSize = lyricSize / 2;
-            if (Context.PreferTypography.LyricFontSize == lyricSize &&
-                Context.PreferTypography.TranslationFontSize == translationSize &&
-                Context.PreferTypography.TransliterationFontSize == transliterationSize &&
-                Context.SublineTypography.LyricFontSize == sublineLyricSize &&
-                Context.SublineTypography.TranslationFontSize == sublineTranslationSize &&
-                Context.SublineTypography.TransliterationFontSize == sublineTransliterationSize) return;
-            Context.PreferTypography.LyricFontSize = lyricSize;
-            Context.PreferTypography.TranslationFontSize = translationSize;
-            Context.PreferTypography.TransliterationFontSize = transliterationSize;
-            Context.SublineTypography.LyricFontSize = sublineLyricSize;
-            Context.SublineTypography.TranslationFontSize = sublineTranslationSize;
-            Context.SublineTypography.TransliterationFontSize = sublineTransliterationSize;
+            var sizes = new LyricFontSizes(lyricSize, translationSize, transliterationSize, sublineLyricSize,
+                sublineTranslationSize, sublineTransliterationSize);
+            if (sizes == (_requestedFontSizes ?? AppliedFontSizes())) return;
+            _requestedFontSizes = sizes;
+            if (_layoutEverApplied)
+            {
+                _layoutRequestSerial++;
+                return;
+            }
+
+            ApplyFontSizes(sizes);
             _isTypographyChanged = true;
         }
+
+        private void ApplyFontSizes(LyricFontSizes sizes)
+        {
+            Context.PreferTypography.LyricFontSize = sizes.Lyric;
+            Context.PreferTypography.TranslationFontSize = sizes.Translation;
+            Context.PreferTypography.TransliterationFontSize = sizes.Transliteration;
+            Context.SublineTypography.LyricFontSize = sizes.SublineLyric;
+            Context.SublineTypography.TranslationFontSize = sizes.SublineTranslation;
+            Context.SublineTypography.TransliterationFontSize = sizes.SublineTransliteration;
+        }
+
+        private readonly record struct LyricFontSizes(float? Lyric, float? Translation, float? Transliteration,
+            float? SublineLyric, float? SublineTranslation, float? SublineTransliteration);
+
+        private LyricFontSizes AppliedFontSizes() => new(
+            Context.PreferTypography.LyricFontSize,
+            Context.PreferTypography.TranslationFontSize,
+            Context.PreferTypography.TransliterationFontSize,
+            Context.SublineTypography.LyricFontSize,
+            Context.SublineTypography.TranslationFontSize,
+            Context.SublineTypography.TransliterationFontSize);
 
         public void ChangeAlignment(TextAlignment alignment)
         {
@@ -215,6 +250,7 @@ namespace HyPlayer.LyricRenderer
                 if (Context.LineSpacing == spacing) return;
                 Context.LineSpacing = spacing;
                 _needRecalculate = true;
+                _layoutMoved = true;
             });
         }
 
@@ -306,7 +342,11 @@ namespace HyPlayer.LyricRenderer
                 }
             }
 
+            if (_staleLayouts.Length < Context.LyricLines.Count) _staleLayouts = new byte[Context.LyricLines.Count];
+            Array.Clear(_staleLayouts);
+            _staleLayoutCount = 0;
             _isTypographyChanged = true;
+            _springSnap = true;
             _initializing = false;
         }
 
@@ -338,22 +378,140 @@ namespace HyPlayer.LyricRenderer
             Context.ScrollingDelta = 0;
             Context.IsScrolling = false;
             _scrollSettling = false;
+            _springMoving = false;
+            _springSnap = true;
             _needRecalculate = false;
             _needRecalculateSize = false;
             _isTypographyChanged = true;
+            Array.Clear(_staleLayouts);
+            _staleLayoutCount = 0;
         }
 
-        private void RecalculateItemsSize(CanvasDrawingSession session)
+        private const byte StaleSize = 1;
+        private const byte StaleTypography = 2;
+        private const long LayoutQuietTicks = 120 * TimeSpan.TicksPerMillisecond;
+        private const long LayoutRepeatTicks = 250 * TimeSpan.TicksPerMillisecond;
+
+        private byte[] _staleLayouts = [];
+        private int _staleLayoutCount;
+        private float _requestedWidth;
+        private float _requestedDpi = 96;
+        private LyricFontSizes? _requestedFontSizes;
+        private int _layoutRequestSerial;
+        private int _layoutSeenSerial;
+        private bool _layoutRequestPending;
+        private bool _layoutEverApplied;
+        private bool _needRealign;
+        private long _layoutRequestTick;
+        private long _layoutAppliedTick;
+
+        internal double LayoutBudgetMilliseconds { get; set; } = 8;
+
+        internal int LayoutPassCount { get; private set; }
+
+        private void MarkLayoutsStale(byte kind)
         {
-
-            Context.ItemWidth = Context.ViewWidth * Context.LyricWidthRatio;
-
-            foreach (var renderingLyricLine in Context.LyricLines)
+            var count = Context.LyricLines.Count;
+            for (var index = 0; index < count; index++)
             {
-                renderingLyricLine.OnRenderSizeChanged(session, Context);
-                Context.RenderOffsets[renderingLyricLine.RuntimeIndex].X = CalculateRenderX(renderingLyricLine);
+                if (_staleLayouts[index] == 0) _staleLayoutCount++;
+                if (_staleLayouts[index] < kind) _staleLayouts[index] = kind;
+            }
+        }
+
+        private void UpdateLayoutRequest(bool force)
+        {
+            var tick = Context.RenderTick;
+            if (_layoutRequestSerial != _layoutSeenSerial)
+            {
+                _layoutSeenSerial = _layoutRequestSerial;
+                _layoutRequestTick = tick;
+                _layoutRequestPending = true;
             }
 
+            if (!_layoutRequestPending) return;
+            if (!force && _layoutEverApplied && tick >= _layoutAppliedTick &&
+                tick - _layoutRequestTick < LayoutQuietTicks &&
+                tick - _layoutAppliedTick < LayoutRepeatTicks) return;
+            _layoutRequestPending = false;
+            _layoutEverApplied = true;
+            _layoutAppliedTick = tick;
+            var itemWidth = _requestedWidth * Context.LyricWidthRatio;
+            var kind = Context.ItemWidth != itemWidth ? StaleSize : (byte)0;
+            if (Context.Dpi != _requestedDpi) kind = StaleTypography;
+            Context.ItemWidth = itemWidth;
+            Context.Dpi = _requestedDpi;
+            if (_requestedFontSizes is { } sizes && sizes != AppliedFontSizes())
+            {
+                ApplyFontSizes(sizes);
+                kind = StaleTypography;
+            }
+
+            if (kind == 0) return;
+            LayoutPassCount++;
+            MarkLayoutsStale(kind);
+        }
+
+        private void ProcessStaleLayouts(CanvasDrawingSession session)
+        {
+            if (_staleLayoutCount <= 0) return;
+            var lines = Context.LyricLines;
+            var count = lines.Count;
+            if (count <= 0 || _groupRoots.Count <= 0) return;
+            var center = FindCurrentGroup().RuntimeIndex;
+            var started = System.Diagnostics.Stopwatch.GetTimestamp();
+            var budget = LayoutBudgetMilliseconds;
+            var origin = Context.LyricPaddingTopRatio * Context.ViewHeight;
+            var below = origin;
+            var above = origin;
+            var belowKnown = true;
+            var aboveKnown = true;
+            var exhausted = false;
+            for (var distance = 0; distance < count && _staleLayoutCount > 0; distance++)
+            {
+                var index = center + distance;
+                if (index < count)
+                {
+                    var line = lines[index];
+                    var required = line.Rendering || belowKnown && below <= Context.ViewHeight;
+                    if (_staleLayouts[index] != 0 && (required || !exhausted))
+                    {
+                        LayOutLine(session, index);
+                        exhausted = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds >= budget;
+                    }
+
+                    if (_staleLayouts[index] != 0) belowKnown = false;
+                    else if (!line.Hidden) below += line.RenderingHeight + Context.LineSpacing;
+                }
+
+                index = center - distance - 1;
+                if (index < 0) continue;
+                var previous = lines[index];
+                var needed = previous.Rendering || aboveKnown && above > 0;
+                if (_staleLayouts[index] != 0 && (needed || !exhausted))
+                {
+                    LayOutLine(session, index);
+                    exhausted = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds >= budget;
+                }
+
+                if (_staleLayouts[index] != 0) aboveKnown = false;
+                else if (!previous.Hidden) above -= previous.RenderingHeight + Context.LineSpacing;
+            }
+
+            _needRecalculate = true;
+            _layoutMoved = true;
+        }
+
+        private void LayOutLine(CanvasDrawingSession session, int index)
+        {
+            var line = Context.LyricLines[index];
+            var kind = _staleLayouts[index];
+            _staleLayouts[index] = 0;
+            _staleLayoutCount--;
+            LastFrameActivity |= LyricFrameActivity.Layout;
+            if (kind == StaleTypography) line.OnTypographyChanged(session, Context);
+            else line.OnRenderSizeChanged(session, Context);
+            Context.RenderOffsets[index].X = CalculateRenderX(line);
         }
 
         private readonly SortedSet<long> _allKeyFrames = [];
@@ -496,20 +654,22 @@ namespace HyPlayer.LyricRenderer
             }
         }
 
-        private RenderingLyricLine FindCurrentGroup()
+        private RenderingLyricLine FindCurrentGroup() => FindGroupAt(Context.CurrentLyricTime);
+
+        private RenderingLyricLine FindGroupAt(long time)
         {
             RenderingLyricLine? active = null;
             RenderingLyricLine? future = null;
             foreach (var group in _groupRoots)
             {
-                if (group.GroupStartTime <= Context.CurrentLyricTime &&
-                    Context.CurrentLyricTime < group.GroupEndTime)
+                if (group.GroupStartTime <= time &&
+                    time < group.GroupEndTime)
                 {
                     if (active is null || group.GroupStartTime < active.GroupStartTime ||
                         group.GroupStartTime == active.GroupStartTime && group.GroupIndex < active.GroupIndex)
                         active = group;
                 }
-                else if (group.GroupStartTime >= Context.CurrentLyricTime &&
+                else if (group.GroupStartTime >= time &&
                          (future is null || group.GroupStartTime < future.GroupStartTime ||
                           group.GroupStartTime == future.GroupStartTime && group.GroupIndex < future.GroupIndex))
                 {
@@ -518,6 +678,233 @@ namespace HyPlayer.LyricRenderer
             }
 
             return active ?? future ?? _groupRoots[^1];
+        }
+
+        private const int BlurCacheBuildsPerFrame = 3;
+        private const double OffscreenMargin = 96;
+
+        private enum SpringEvent { Correction, Together, LineChange, Rebase, Follow, Release }
+
+        private readonly LineSpringField _springField = new();
+        private double[] _springGoals = [];
+        private double[] _springPositions = [];
+        private PerLineSpringRollingCalculator? _springOwner;
+        private bool _springSnap = true;
+        private bool _springMoving;
+        private bool _layoutMoved;
+        private bool _keyframeProcessed;
+        private int _springIndex;
+        private double _springScroll;
+        private bool _clockValid;
+        private bool _lyricJumped;
+        private long _clockTick;
+        private double _clockLyric;
+        private double _lyricRate = 1;
+
+        private void TrackLyricClock()
+        {
+            var tick = Context.RenderTick;
+            var lyric = Context.PreciseLyricTime;
+            if (_clockValid)
+            {
+                var elapsedRender = (tick - _clockTick) / (double)TimeSpan.TicksPerMillisecond;
+                var elapsedLyric = lyric - _clockLyric;
+                if (Math.Abs(elapsedLyric) >= PerLineSpringRollingCalculator.LargeJumpMilliseconds)
+                    _lyricJumped = true;
+                if (Context.IsPlaying && elapsedRender is > 1 and < 250 && elapsedLyric > 0 &&
+                    elapsedLyric < elapsedRender * 4.5)
+                    _lyricRate += (Math.Clamp(elapsedLyric / elapsedRender, 0.25, 4) - _lyricRate) * 0.1;
+            }
+
+            _clockValid = true;
+            _clockTick = tick;
+            _clockLyric = lyric;
+        }
+
+        private double SecondsUntilNextLineChange(RenderingLyricLine current)
+        {
+            var now = Context.PreciseLyricTime;
+            var probe = Context.CurrentLyricTime;
+            for (var attempt = 0; attempt < 4; attempt++)
+            {
+                var next = long.MaxValue;
+                foreach (var group in _groupRoots)
+                {
+                    if (group.GroupStartTime > probe && group.GroupStartTime < next) next = group.GroupStartTime;
+                    if (group.GroupEndTime > probe && group.GroupEndTime < next) next = group.GroupEndTime;
+                }
+
+                if (next == long.MaxValue) return double.PositiveInfinity;
+                probe = next;
+                if (!ReferenceEquals(FindGroupAt(next), current)) break;
+            }
+
+            return Math.Max(0, (probe - now) / 1000 / _lyricRate);
+        }
+
+        private void RecalculateSpringOffsets(PerLineSpringRollingCalculator spring)
+        {
+            var lines = Context.LyricLines;
+            var count = lines.Count;
+            if (count <= 0) return;
+            var tick = Context.RenderTick;
+            var current = FindCurrentGroup();
+            var index = current.RuntimeIndex;
+            Context.CurrentLyricLineIndex = index;
+            Context.CurrentLyricLine = lines[index];
+            Context.RenderingLyricLines.Clear();
+            _scrollSettling = false;
+
+            var snap = _springSnap || _springField.Count != count || !ReferenceEquals(_springOwner, spring);
+            if (snap)
+            {
+                _springField.Reset(count);
+                if (_springGoals.Length < count)
+                {
+                    _springGoals = new double[count];
+                    _springPositions = new double[count];
+                }
+
+                _springOwner = spring;
+                _springSnap = false;
+            }
+
+            var goals = _springGoals;
+            var positions = _springPositions;
+            var viewHeight = (double)Context.ViewHeight;
+            var spacing = Context.LineSpacing;
+            var scroll = (double)Context.ScrollingDelta;
+            var origin = Context.LyricPaddingTopRatio * viewHeight + scroll;
+            var cursor = origin;
+            for (var i = index; i < count; i++)
+            {
+                goals[i] = cursor;
+                if (!lines[i].Hidden) cursor += lines[i].RenderingHeight + spacing;
+            }
+
+            cursor = origin;
+            for (var i = index - 1; i >= 0; i--)
+            {
+                if (!lines[i].Hidden) cursor -= lines[i].RenderingHeight + spacing;
+                goals[i] = cursor;
+            }
+
+            var first = -1;
+            var visible = 0;
+            for (var i = 0; i < count; i++)
+            {
+                var line = lines[i];
+                line.RestDistance = viewHeight > 0 ? (float)(Math.Abs(goals[i] - origin) / viewHeight) : 0;
+                var position = positions[i] = _springField.Advance(i, tick, out _);
+                if (line.Hidden || position + line.RenderingHeight <= 0 || position >= viewHeight) continue;
+                if (first < 0) first = i;
+                visible++;
+            }
+
+            var scrollChanged = scroll != _springScroll;
+            var mode = Context.IsSeek || _lyricJumped ||
+                       Math.Abs(index - _springIndex) >= PerLineSpringRollingCalculator.LargeJumpLines
+                ? SpringEvent.Together
+                : index != _springIndex || _keyframeProcessed
+                    ? SpringEvent.LineChange
+                    : _layoutMoved
+                        ? SpringEvent.Rebase
+                        : !scrollChanged
+                            ? SpringEvent.Correction
+                            : scroll == 0 && !Context.IsScrolling
+                                ? SpringEvent.Release
+                                : SpringEvent.Follow;
+            double response = PerLineSpringRollingCalculator.TogetherResponseSeconds;
+            double damping = 1;
+            double step = 0;
+            if (mode == SpringEvent.LineChange)
+            {
+                var gap = SecondsUntilNextLineChange(current);
+                PerLineSpringRollingCalculator.LineChangeSpring(gap, out response, out damping);
+                step = PerLineSpringRollingCalculator.CascadeStep(gap, response, visible);
+            }
+            else if (mode == SpringEvent.Follow)
+            {
+                response = PerLineSpringRollingCalculator.FollowResponseSeconds;
+            }
+            else if (mode == SpringEvent.Release)
+            {
+                response = PerLineSpringRollingCalculator.ReleaseResponseSeconds;
+                damping = PerLineSpringRollingCalculator.ReleaseDamping;
+            }
+
+            var lastRank = visible - 1 + PerLineSpringRollingCalculator.CascadeTrailingLines;
+            var rank = -1;
+            for (var i = 0; i < count; i++)
+            {
+                var line = lines[i];
+                var goal = goals[i];
+                if (snap || line.Hidden)
+                {
+                    _springField.Snap(i, goal);
+                    continue;
+                }
+
+                if (first >= 0 && i >= first && rank < lastRank) rank++;
+                var delta = goal - _springField.Goal(i);
+                if (Math.Abs(delta) <= Epsilon) continue;
+                if (mode == SpringEvent.Rebase)
+                {
+                    _springField.Shift(i, delta);
+                    continue;
+                }
+
+                var position = positions[i];
+                if (mode == SpringEvent.Together && viewHeight > 0 && Math.Abs(delta) > viewHeight)
+                {
+                    var excess = delta - Math.Sign(delta) * viewHeight;
+                    _springField.Shift(i, excess);
+                    position += excess;
+                    delta -= excess;
+                }
+
+                var height = line.RenderingHeight;
+                if (position + height < -OffscreenMargin && goal + height < -OffscreenMargin ||
+                    position > viewHeight + OffscreenMargin && goal > viewHeight + OffscreenMargin)
+                {
+                    _springField.Snap(i, goal);
+                    continue;
+                }
+
+                if (Math.Abs(delta) < PerLineSpringRollingCalculator.CorrectionDistance)
+                {
+                    _springField.Retarget(i, goal, tick, 0,
+                        PerLineSpringRollingCalculator.CorrectionResponseSeconds, 1);
+                    continue;
+                }
+
+                var delay = mode == SpringEvent.LineChange
+                    ? (long)(Math.Max(rank, 0) * step * TimeSpan.TicksPerSecond)
+                    : 0;
+                _springField.Retarget(i, goal, tick, delay, response, damping);
+            }
+
+            var moving = false;
+            for (var i = index; i < count; i++) moving |= PlaceSpringLine(i, tick);
+            for (var i = index - 1; i >= 0; i--) moving |= PlaceSpringLine(i, tick);
+            _springIndex = index;
+            _springScroll = scroll;
+            _layoutMoved = false;
+            _lyricJumped = false;
+            _springMoving = moving;
+            if (moving) _needRecalculate = true;
+        }
+
+        private bool PlaceSpringLine(int index, long tick)
+        {
+            var line = Context.LyricLines[index];
+            var position = (float)_springField.Advance(index, tick, out _);
+            Context.RenderOffsets[index].Y = position;
+            var rendering = !line.Hidden && position + line.RenderingHeight + Context.LineSpacing > 0 &&
+                            position <= Context.ViewHeight;
+            line.Rendering = rendering;
+            if (rendering) Context.RenderingLyricLines.Add(line);
+            return _springField.IsMoving(index);
         }
 
 
@@ -545,8 +932,14 @@ namespace HyPlayer.LyricRenderer
             try
             {
                 Context.RenderTick = timing.TotalTime.Ticks;
+                LastFrameActivity = LyricFrameActivity.None;
                 if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return;
                 OnBeforeRender?.Invoke(this);
+                if (Context.IsSeek) LastFrameActivity |= LyricFrameActivity.Seek;
+                var spring = Context.LineRollingEaseCalculator as PerLineSpringRollingCalculator;
+                Context.PerLineMotion = spring is not null;
+                Context.BlurCacheBudget = BlurCacheBuildsPerFrame;
+                if (spring is not null) TrackLyricClock();
                 if (Interlocked.Exchange(ref _pendingSettings, null) is { } pendingSettings)
                 {
                     var inferChanged = Context.Settings.Focused.InferWords != pendingSettings.Focused.InferWords;
@@ -562,7 +955,9 @@ namespace HyPlayer.LyricRenderer
                     // 缓动来一下吧
                     // 0.5 秒缓动到 0
                     Context.IsScrolling = false;
-                    var progress = Math.Clamp((Context.RenderTick - _lastWheelTime - 50000000) / 5000000.0, 0, 1);
+                    var progress = spring is not null
+                        ? 1
+                        : Math.Clamp((Context.RenderTick - _lastWheelTime - 50000000) / 5000000.0, 0, 1);
                     Context.ScrollingDelta = (int)(Context.ScrollingDelta * _circleEase.Ease(1 - progress));
                     if (Math.Abs(progress - 1) < Epsilon || Context.IsSeek || Context.ScrollingDelta == 0)
                     {
@@ -581,14 +976,26 @@ namespace HyPlayer.LyricRenderer
                     _scrollPreviewing = false;
                 }
 
-                if (_isTypographyChanged)
+                var typographyChanged = _isTypographyChanged;
+                UpdateLayoutRequest(typographyChanged);
+                if (typographyChanged)
                 {
                     _isTypographyChanged = false;
+                    MarkLayoutsStale(StaleTypography);
+                }
+
+                if (_needRecalculateSize)
+                {
+                    _needRecalculateSize = false;
+                    MarkLayoutsStale(StaleSize);
+                }
+
+                ProcessStaleLayouts(session);
+                if (_needRealign)
+                {
+                    _needRealign = false;
                     foreach (var renderingLyricLine in Context.LyricLines)
-                    {
-                        renderingLyricLine.OnTypographyChanged(session, Context);
                         Context.RenderOffsets[renderingLyricLine.RuntimeIndex].X = CalculateRenderX(renderingLyricLine);
-                    }
                 }
 
                 while (_pendingKeyFrames.Count > 0)
@@ -615,18 +1022,16 @@ namespace HyPlayer.LyricRenderer
                     }
 
                     _needRecalculate = true;
-                }
-
-                if (_needRecalculateSize)
-                {
-                    _needRecalculateSize = false;
-                    RecalculateItemsSize(session);
+                    _keyframeProcessed = true;
+                    LastFrameActivity |= LyricFrameActivity.LineChange;
                 }
 
                 if (_needRecalculate)
                 {
                     _needRecalculate = false;
-                    RecalculateRenderOffset(session);
+                    if (spring is null) RecalculateRenderOffset(session);
+                    else RecalculateSpringOffsets(spring);
+                    _keyframeProcessed = false;
                 }
 
                 foreach (var renderingLyricLine in Context.RenderingLyricLines)
@@ -635,6 +1040,8 @@ namespace HyPlayer.LyricRenderer
                     var doRender = renderingLyricLine.Render(session, offset, Context);
                     if (doRender == false) break;
                 }
+
+                if (Context.BlurCacheBudget < BlurCacheBuildsPerFrame) LastFrameActivity |= LyricFrameActivity.BlurCache;
 
                 if (Context.Debug)
                 {
@@ -675,11 +1082,24 @@ namespace HyPlayer.LyricRenderer
 
         private void RedesignCore(float width, float height, float dpi)
         {
-            Context.ViewWidth = width;
-            Context.ViewHeight = height;
-            Context.Dpi = dpi;
-            _needRecalculateSize = true;
-            _needRecalculate = true;
+            if (Context.ViewHeight != height)
+            {
+                Context.ViewHeight = height;
+                _needRecalculate = true;
+                _layoutMoved = true;
+            }
+
+            if (Context.ViewWidth != width)
+            {
+                Context.ViewWidth = width;
+                _needRealign = true;
+            }
+
+            if (_requestedWidth == width && _requestedDpi == dpi &&
+                Context.ItemWidth == width * Context.LyricWidthRatio && Context.Dpi == dpi) return;
+            _requestedWidth = width;
+            _requestedDpi = dpi;
+            _layoutRequestSerial++;
         }
 
 

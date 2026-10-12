@@ -85,8 +85,17 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         var actualText = tokens.Count > 0
             ? string.Join("", tokens.Select(t => t.Text))
             : request.Text;
-        var wrappedText = WrapText(request.Session, actualText, textFormat, requestedWidth, request.CanvasHeight);
+        var wrappedText = WrapText(request.Session, actualText, textFormat, requestedWidth, request.CanvasHeight,
+            out var wrapped, out var measuredWidth);
         var textLayout = new CanvasTextLayout(request.Session, wrappedText, textFormat, requestedWidth, request.CanvasHeight);
+        var stableMinimumWidth = wrapped || textLayout.LineCount != 1 ||
+                                 translationLayout is { LineCount: not 1 } ||
+                                 transliterationLayout is { LineCount: not 1 }
+            ? float.PositiveInfinity
+            : MathF.Ceiling((float)Math.Max(
+                Math.Max(measuredWidth, textLayout.LayoutBounds.Width),
+                Math.Max(translationLayout?.LayoutBounds.Width ?? 0, transliterationLayout?.LayoutBounds.Width ?? 0))) +
+              StableWidthSlack;
         var lyricSourceIndexMap = CreateSourceIndexMap(wrappedText, actualText);
         var lyricTokenIndexMap = CreateTokenIndexMap(tokens, t => t.Text);
         var transliterationSourceIndexMap = transliterationActual is not null
@@ -259,6 +268,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             RenderingWidth = renderingWidth,
             RenderingHeight = renderingHeight,
             ScalingCenterX = scalingCenterX,
+            StableMinimumWidth = stableMinimumWidth,
             IdleColor = request.IdleColor,
             FocusingColor = request.FocusingColor,
             LyricGlyphClusters = lyricGlyphClusters,
@@ -444,13 +454,19 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
         };
     }
 
+    private const float StableWidthSlack = 2;
+
     private static string WrapText(
         CanvasDrawingSession session,
         string text,
         CanvasTextFormat textFormat,
         float requestedWidth,
-        float canvasHeight)
+        float canvasHeight,
+        out bool wrapped,
+        out double measuredWidth)
     {
+        wrapped = false;
+        measuredWidth = 0;
         using var tmpTextLayout = new CanvasTextLayout(session, text, textFormat, int.MaxValue, canvasHeight);
         var span = text.AsSpan();
         var lastSpaceIndex = 0;
@@ -468,8 +484,10 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
                 length += region[0].LayoutBounds.Width;
             }
 
+            measuredWidth += length;
             if (currentLineLength + length > requestedWidth)
             {
+                wrapped = true;
                 if (lastSpaceIndex != 0)
                 {
                     sb.Append('\n');

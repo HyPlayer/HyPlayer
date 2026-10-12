@@ -178,4 +178,8 @@ public class RenderContext
     ///     DPI
     /// </summary>
     public float Dpi { get; set; } = 96f;
+
+    internal bool PerLineMotion { get; set; }
+
+    internal int BlurCacheBudget { get; set; }
 }

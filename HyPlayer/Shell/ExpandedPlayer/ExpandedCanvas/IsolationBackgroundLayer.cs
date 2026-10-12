@@ -90,6 +90,20 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
 
         if (_state.IsPlaying) _shaderSeconds += args.Timing.ElapsedTime.TotalSeconds;
 
+        _canvasSize = PixelSize(sender);
+        ApplyConstants();
+    }
+
+    private static Vector2 PixelSize(ICanvasAnimatedControl sender)
+    {
+        var size = sender.Size;
+        return new Vector2(
+            sender.ConvertDipsToPixels((float)size.Width, CanvasDpiRounding.Round),
+            sender.ConvertDipsToPixels((float)size.Height, CanvasDpiRounding.Round));
+    }
+
+    private void ApplyConstants()
+    {
         _effect.ConstantBuffer = new IsolationEffect(
             _canvasSize,
             (float)_shaderSeconds,
@@ -108,6 +122,13 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
     public void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing)
     {
         if (_state.BackgroundType != BackgroundType.Isolation) return;
+        var pixelSize = PixelSize(sender);
+        if (pixelSize != _canvasSize)
+        {
+            _canvasSize = pixelSize;
+            ApplyConstants();
+        }
+
         var progress = _dimProgress;
         if (progress <= 0.001f)
         {
@@ -137,11 +158,6 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
         if (active) _dimAmount = amount;
         _dimTarget = active ? 1 : 0;
         Volatile.Write(ref _dimTimestamp, Stopwatch.GetTimestamp());
-    }
-
-    public void UpdateResolution(float width, float height)
-    {
-        _canvasSize = new Vector2(width, height);
     }
 
     public void ApplyShaderProperties()

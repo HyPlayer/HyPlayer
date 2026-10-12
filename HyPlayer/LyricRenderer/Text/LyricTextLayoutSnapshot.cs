@@ -33,11 +33,14 @@ public sealed partial class LyricTextLayoutSnapshot : IDisposable
     public required float RenderingWidth { get; init; }
     public required float RenderingHeight { get; init; }
     public required float ScalingCenterX { get; init; }
+    public float StableMinimumWidth { get; init; } = float.PositiveInfinity;
     public required Windows.UI.Color IdleColor { get; init; }
     public required Windows.UI.Color FocusingColor { get; init; }
     public required IReadOnlyList<LyricGlyphCluster> LyricGlyphClusters { get; init; }
     public required IReadOnlyList<LyricGlyphCluster> TransliterationGlyphClusters { get; init; }
     public required IReadOnlyList<LyricGlyphCluster> TranslationGlyphClusters { get; init; }
+
+    public bool KeepsLayoutAt(float requestedWidth) => requestedWidth >= StableMinimumWidth;
 
     public void Dispose()
     {

@@ -146,6 +146,7 @@
                 Style="{StaticResource TransportButtonStyle}"
                 ToolTipService.ToolTip="下一首">
                 <FontIcon
+                    x:Name="IconNext"
                     FontSize="26"
                     Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
                     Glyph="&#xF8AD;" />

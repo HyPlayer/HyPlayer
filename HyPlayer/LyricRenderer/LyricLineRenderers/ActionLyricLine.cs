@@ -43,13 +43,13 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     public override void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context)
     {
-        _canvasWidth = context.ItemWidth;
-        _canvasHeight = context.ViewHeight;
         OnTypographyChanged(session, context);
     }
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
+        _canvasWidth = context.ItemWidth;
+        _canvasHeight = context.ViewHeight;
         ReleaseDrawingResources();
         _textFormat?.Dispose();
         _textLayout?.Dispose();

@@ -122,6 +122,10 @@ public sealed partial class ExpandedPlayer : Page
     private readonly SpectrumLayer _spectrumLayer;
     private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs> _stateChangedListener;
     private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs> _lyricSettingsChangedListener;
+    private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs> _uiSettingsChangedListener;
+
+    private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs>
+        _playbackSettingsChangedListener;
 
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator =
         Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
@@ -169,7 +173,7 @@ public sealed partial class ExpandedPlayer : Page
     private int _lyricApplyQueued;
     private readonly List<SongLyric> _lyricList = [];
     private bool _needsRedesign = true;
-    private DispatcherQueueTimer? _redesignTimer;
+    private bool _windowSizeSubscribed;
     private int _nowHeight;
     private int _nowWidth;
     private bool _positionChangedBySeeking;
@@ -189,6 +193,9 @@ public sealed partial class ExpandedPlayer : Page
         _lyricRenderSettings.SettingsChanged += OnLyricEffectSettingsChanged;
         _canvasState.LyricBox = _lyricBox;
         SyncCanvasState();
+        _canvasState.BackgroundType = _uiSettings.ExpandedPlayerBackgroundType;
+        _canvasState.ShowSpectrum = _playbackSettings.ShowSpectrum;
+        _canvasState.ShowDebugOverlay = _uiSettings.ExpandedPlayerDebugMode;
         _isolationBackgroundLayer = new IsolationBackgroundLayer(_canvasState, _lyricSettings);
         _likeAppleBackgroundLayer = new LikeAppleBackgroundLayer(_canvasState, _player);
         _spectrumLayer = new SpectrumLayer(_canvasState, _player);
@@ -241,7 +248,6 @@ public sealed partial class ExpandedPlayer : Page
             OnDetachAction = weakEventListener => { _control.SeekRequested -= weakEventListener.OnEvent; }
         };
         _control.SeekRequested += _seekRequestedListener.OnEvent;
-        Window.Current.SizeChanged += Current_SizeChanged;
         var wakeHandler = new PointerEventHandler((_, _) => WakeLyricCanvas());
         LuminousBackground.AddHandler(PointerMovedEvent, wakeHandler, true);
         LuminousBackground.AddHandler(PointerWheelChangedEvent, wakeHandler, true);
@@ -266,6 +272,7 @@ public sealed partial class ExpandedPlayer : Page
             RollingCalculator.LyricifyRollingCalculator => new LyricifyRollingCalculator(),
             RollingCalculator.SyncRollingCalculator => new SyncRollingCalculator(),
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
+            RollingCalculator.PerLineSpringRollingCalculator => new PerLineSpringRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         _lyricBox.Context.Effects.TransliterationScanning = _lyricSettings.LyricRenderTransliterationScanning;
@@ -279,6 +286,22 @@ public sealed partial class ExpandedPlayer : Page
             OnDetachAction = weakEventListener => { _lyricSettings.PropertyChanged -= weakEventListener.OnEvent; }
         };
         _lyricSettings.PropertyChanged += _lyricSettingsChangedListener.OnEvent;
+        _uiSettingsChangedListener = new WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.SyncCanvasSettings(),
+            OnDetachAction = weakEventListener => { _uiSettings.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _uiSettings.PropertyChanged += _uiSettingsChangedListener.OnEvent;
+        _playbackSettingsChangedListener =
+            new WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs>(this)
+            {
+                OnEventAction = static (instance, _, _) => instance.SyncCanvasSettings(),
+                OnDetachAction = weakEventListener =>
+                {
+                    _playbackSettings.PropertyChanged -= weakEventListener.OnEvent;
+                }
+            };
+        _playbackSettings.PropertyChanged += _playbackSettingsChangedListener.OnEvent;
 
         _expandedCanvasHost.AddLayer(_isolationBackgroundLayer);
         _expandedCanvasHost.AddLayer(_likeAppleBackgroundLayer);
@@ -312,15 +335,22 @@ public sealed partial class ExpandedPlayer : Page
 
     public ExpandedPlayerViewModel ViewModel { get; }
 
+    private void SyncCanvasSettings()
+    {
+        if (_isCleanedUp) return;
+        var showSpectrum = _playbackSettings.ShowSpectrum;
+        _canvasState.BackgroundType = _uiSettings.ExpandedPlayerBackgroundType;
+        _canvasState.ShowSpectrum = showSpectrum;
+        _canvasState.ShowDebugOverlay = _uiSettings.ExpandedPlayerDebugMode;
+        _player.EnableFFTProcessing = _playbackSettings.EnableFFT || showSpectrum ||
+            _canvasState.BackgroundType == BackgroundType.LikeApple;
+        WakeLyricCanvas();
+    }
+
     private void SyncCanvasState()
     {
-        _canvasState.BackgroundType = _uiSettings.ExpandedPlayerBackgroundType;
         _canvasState.IsPlaying = _state.IsPlaying;
-        _canvasState.ShowSpectrum = _playbackSettings.ShowSpectrum;
-        _canvasState.ShowDebugOverlay = _uiSettings.ExpandedPlayerDebugMode;
-        _player.EnableFFTProcessing = _playbackSettings.EnableFFT ||
-            _playbackSettings.ShowSpectrum ||
-            _canvasState.BackgroundType == BackgroundType.LikeApple;
+        _canvasState.IsTransitioning = _state.IsTransitioning;
         _canvasState.WindowMode = _windowMode;
         _canvasState.AlbumColorVectors = _albumColorVectors;
         _canvasState.LyricOpacity = GetLyricOpacity();
@@ -337,6 +367,7 @@ public sealed partial class ExpandedPlayer : Page
                 break;
             case nameof(PlaybackStateService.NowPlayingProviderItem):
             case nameof(PlaybackStateService.NowPlayingSnapshot):
+                _canvasState.TrackChangeTimestamp = Stopwatch.GetTimestamp();
                 WakeLyricCanvas();
                 OnSongChange();
                 break;
@@ -534,45 +565,28 @@ public sealed partial class ExpandedPlayer : Page
         WakeLyricCanvas();
         _nowWidth = e is null ? (int)Window.Current.Bounds.Width : (int)e.Size.Width;
         _nowHeight = e is null ? (int)Window.Current.Bounds.Height : (int)e.Size.Height;
+        if (_lastWidth == _nowWidth && _lastHeight == _nowHeight) return;
         if (_lastWidth != _nowWidth)
         {
             LyricWidth = CalculateLyricWidth();
             LyricShowSize = _uiSettings.LyricSize <= 0
                 ? Math.Max(_nowWidth / 40, 40)
                 : _uiSettings.LyricSize;
-
-            _lastWidth = _nowWidth;
-            _needsRedesign = true;
-            UpdateAlbumSizeLimit();
-        }
-        else if (_lastHeight != _nowHeight)
-        {
-            _lastHeight = _nowHeight;
-            _needsRedesign = true;
-            UpdateAlbumSizeLimit();
         }
 
-        if (_needsRedesign) ScheduleRedesign();
+        _lastWidth = _nowWidth;
+        _lastHeight = _nowHeight;
+        UpdateAlbumSizeLimit();
+        if (_isCleanedUp || !IsLoaded) return;
+        ApplyResponsiveWindowMode();
+        SyncLyricViewport();
     }
 
-    private void ScheduleRedesign()
+    private void RightPanel_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (_redesignTimer is null)
-        {
-            _redesignTimer = DispatcherQueue.GetForCurrentThread()?.CreateTimer();
-            if (_redesignTimer is null) return;
-            _redesignTimer.Interval = TimeSpan.FromMilliseconds(60);
-            _redesignTimer.IsRepeating = false;
-            _redesignTimer.Tick += (_, _) =>
-            {
-                if (!_needsRedesign || _isCleanedUp || _lifecycle.IsInBackground) return;
-                _needsRedesign = false;
-                WakeLyricCanvas();
-                Redesign();
-            };
-        }
-
-        if (!_redesignTimer.IsRunning) _redesignTimer.Start();
+        if (_isCleanedUp || !IsLoaded) return;
+        WakeLyricCanvas();
+        SyncLyricViewport();
     }
 
     private double CalculateLyricWidth()
@@ -899,7 +913,13 @@ public sealed partial class ExpandedPlayer : Page
     {
         // 这个函数里面放无法用XAML实现的页面布局方式
         BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
+        SyncLyricViewport();
+        ApplyResponsiveWindowMode();
+    }
 
+    private void SyncLyricViewport()
+    {
+        if (LuminousBackground is null) return;
         ApplyLyricLineSpacing();
         var lyricOffset = RightPanel.ActualOffset;
         if (Math.Abs(_lastChangedLyricWidth - LyricWidth) > 0.001f || _lastRedesignHeight != _nowHeight ||
@@ -918,21 +938,22 @@ public sealed partial class ExpandedPlayer : Page
                 _lyricSettings.SublineRomajiSize);
             _lastChangedLyricWidth = LyricWidth;
         }
+    }
 
+    private void ApplyResponsiveWindowMode()
+    {
         // 响应式布局: 窗口宽度 <= ResponsiveBreakpointWidth 时仅显示封面, > ResponsiveBreakpointWidth 时恢复双栏
-        if (!_isManualChangeMode)
+        if (_isManualChangeMode) return;
+        if (_nowWidth <= ResponsiveBreakpointWidth && _windowMode == ExpandedWindowMode.Both)
         {
-            if (_nowWidth <= ResponsiveBreakpointWidth && _windowMode == ExpandedWindowMode.Both)
-            {
-                _windowMode = ExpandedWindowMode.CoverOnly;
-                ChangeWindowMode();
-            }
-            else if (_nowWidth > ResponsiveBreakpointWidth && _windowMode != ExpandedWindowMode.Both &&
-                     !_lyricsSuppressed)
-            {
-                _windowMode = ExpandedWindowMode.Both;
-                ChangeWindowMode();
-            }
+            _windowMode = ExpandedWindowMode.CoverOnly;
+            ChangeWindowMode();
+        }
+        else if (_nowWidth > ResponsiveBreakpointWidth && _windowMode != ExpandedWindowMode.Both &&
+                 !_lyricsSuppressed)
+        {
+            _windowMode = ExpandedWindowMode.Both;
+            ChangeWindowMode();
         }
     }
 
@@ -1284,6 +1305,8 @@ public sealed partial class ExpandedPlayer : Page
             if (_uiSettings.ExpandedPlayerBackgroundType is BackgroundType.CoverTheme)
                 PageContainer.Background =
                     new SolidColorBrush(_albumMainColor!.Value);
+            else if (_uiSettings.ExpandedPlayerBackgroundType is BackgroundType.Isolation or BackgroundType.LikeApple)
+                PageContainer.Background = new SolidColorBrush(theme);
             _coverLuminance = (0.2126 * theme.R + 0.7152 * theme.G + 0.0722 * theme.B) / 255;
             if (!resultGenerated)
             {
@@ -1384,6 +1407,12 @@ public sealed partial class ExpandedPlayer : Page
         ImageAlbum.BorderThickness = new Thickness(_uiSettings.AlbumBorderLength);
         RestoreTitleBar();
         _lifecycle.IsInBackground = false;
+        if (!_isCleanedUp && !_windowSizeSubscribed)
+        {
+            _windowSizeSubscribed = true;
+            Window.Current.SizeChanged += Current_SizeChanged;
+        }
+
         Current_SizeChanged(null, null);
         Redesign();
         try
@@ -1798,15 +1827,6 @@ public sealed partial class ExpandedPlayer : Page
     private void LuminousBackground_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         WakeLyricCanvas();
-        UpdateShaderResolution();
-    }
-
-    private void UpdateShaderResolution()
-    {
-        if (_isCleanedUp || LuminousBackground is null) return;
-        _isolationBackgroundLayer.UpdateResolution(
-            LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, CanvasDpiRounding.Round),
-            LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, CanvasDpiRounding.Round));
     }
 
     private void LuminousBackground_CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
@@ -1814,6 +1834,7 @@ public sealed partial class ExpandedPlayer : Page
         if (_isCleanedUp || _canvasResourcesReleased) return;
         // Canvas-level configuration (not a layer concern)
         SyncCanvasState();
+        SyncCanvasSettings();
         LuminousBackground.DpiScale = _lyricSettings.IsolationScale;
         if (!_lyricSettings.IsolationFullThrottle)
         {
@@ -1823,7 +1844,6 @@ public sealed partial class ExpandedPlayer : Page
 
         // Delegate to composable layers
         _expandedCanvasHost.CreateResources(sender, args);
-        UpdateShaderResolution();
     }
 
     private void LuminousBackground_Update(ICanvasAnimatedControl sender, CanvasAnimatedUpdateEventArgs args)
@@ -1909,12 +1929,19 @@ public sealed partial class ExpandedPlayer : Page
         _playBarVisibilityListener.Detach();
         _stateChangedListener.Detach();
         _lyricSettingsChangedListener.Detach();
+        _uiSettingsChangedListener.Detach();
+        _playbackSettingsChangedListener.Detach();
         _surfaceStoreChangedListener.Detach();
         _escapeRequestedListener.Detach();
         _seekRequestedListener.Detach();
         ViewModel.Dispose();
         _lyricRenderSettings.SettingsChanged -= OnLyricEffectSettingsChanged;
-        Window.Current.SizeChanged -= Current_SizeChanged;
+        if (_windowSizeSubscribed)
+        {
+            _windowSizeSubscribed = false;
+            Window.Current.SizeChanged -= Current_SizeChanged;
+        }
+
         _lyricBox.OnBeforeRender -= LyricBox_OnBeforeRender;
         _lyricBox.ScrollPreviewChanged -= LyricBox_ScrollPreviewChanged;
         _lyricBox.OnChanged -= WakeLyricCanvas;
@@ -1924,7 +1951,6 @@ public sealed partial class ExpandedPlayer : Page
         if (_uiSettings.ExpandAlbumBreath) ImageAlbumAni?.Stop();
         _expandedPlayerWindow?.Closed -= ExpandedPlayerClosed;
         _expandedPlayerWindow = null;
-        _redesignTimer?.Stop();
         _player.EnableFFTProcessing = _playbackSettings.EnableFFT || _playbackSettings.ShowSpectrum;
     }
 }

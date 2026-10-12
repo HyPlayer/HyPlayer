@@ -97,7 +97,8 @@ public enum RollingCalculator
     SinRollingCalculator = 1,
     LyricifyRollingCalculator = 2,
     SyncRollingCalculator = 3,
-    CircleEaseRollingCalculator = 4
+    CircleEaseRollingCalculator = 4,
+    PerLineSpringRollingCalculator = 5
 }
 
 public enum LyricScanStyle

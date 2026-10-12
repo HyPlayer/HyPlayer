@@ -316,7 +316,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
 
     internal static void DrawGlyphRun(CanvasDrawingSession session, LyricGlyphDrawState state, Vector2 origin, ICanvasBrush brush) =>
         session.DrawGlyphRun(origin, state.FontFace, state.FontSize, state.Glyphs, state.IsSideways,
-            state.BidiLevel, brush, state.MeasuringMode, state.LocaleName, state.TextString, state.ClusterMap, state.CharacterIndex);
+            state.BidiLevel, brush, state.MeasuringMode);
 
     private static float GetRevealWordProgress(long time, long start, long end, float offset)
     {

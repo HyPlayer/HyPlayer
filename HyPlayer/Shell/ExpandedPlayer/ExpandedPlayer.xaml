@@ -436,7 +436,10 @@
                         x:Load="False" />
                 </Grid>
             </Grid>
-            <Grid x:Name="RightPanel" Grid.Column="1" />
+            <Grid
+                x:Name="RightPanel"
+                Grid.Column="1"
+                SizeChanged="RightPanel_SizeChanged" />
             <Button
                 x:Name="MoreBtn"
                 Grid.Row="1"

@@ -143,14 +143,23 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
             Hidden = true;
         }
 
-        _canvasWidth = context.ItemWidth;
-        _canvasHeight = context.ViewHeight;
-        OnKeyFrameCore(session, context);
+        if (KeepsLayoutAt(context.ItemWidth - TextPadding))
+        {
+            _canvasWidth = context.ItemWidth;
+            _canvasHeight = context.ViewHeight;
+            return;
+        }
+
         OnTypographyChanged(session, context);
     }
 
+    internal bool KeepsLayoutAt(float requestedWidth) =>
+        _layout is not null && _layout.KeepsLayoutAt(requestedWidth);
+
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
+        _canvasWidth = context.ItemWidth;
+        _canvasHeight = context.ViewHeight;
         ReleaseDrawingResources();
         _focusTransition = default;
         _focusedTextRenderer.Dispose();

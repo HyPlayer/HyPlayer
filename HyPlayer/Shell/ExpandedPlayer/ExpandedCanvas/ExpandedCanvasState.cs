@@ -11,6 +11,8 @@ public sealed class ExpandedCanvasState
 {
     public BackgroundType BackgroundType { get; set; } = BackgroundType.CoverBlur;
     public bool IsPlaying { get; set; }
+    public bool IsTransitioning { get; set; }
+    public long TrackChangeTimestamp { get; set; }
     public bool ShowSpectrum { get; set; }
     public bool ShowDebugOverlay { get; set; }
     public bool IsBrightTheme { get; set; }

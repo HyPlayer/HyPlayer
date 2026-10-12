@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Numerics;
 using Windows.System.Profile;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
@@ -21,12 +22,22 @@ public sealed partial class ExpandedPlaybackControls : UserControl
     private readonly PlaybackStateService _playbackState = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private bool _isAttached;
+    private const float IconSwapScale = 0.6f;
+    private const double IconSwapMilliseconds = 90;
+
     private long _lastElapsedSecond = -1;
     private long _lastRemainingSecond = -1;
     private bool? _qualityHostBright;
     private int _qualityVersion;
     private bool _showingTransition;
     private TextGlowEffect? _textGlow;
+    private readonly Windows.UI.ViewManagement.UISettings _systemSettings = new();
+    private readonly PressSpring _playModeSpring;
+    private readonly PressSpring _previousSpring;
+    private readonly PressSpring _playPauseSpring;
+    private readonly PressSpring _nextSpring;
+    private string? _playGlyph;
+    private int _playGlyphVersion;
 
     public ExpandedPlaybackControls()
     {
@@ -35,6 +46,11 @@ public sealed partial class ExpandedPlaybackControls : UserControl
         ProgressBar.ValueCommitted += ProgressBar_ValueCommitted;
         VolumeBar.ValueDragging += VolumeBar_ValueChanged;
         VolumeBar.ValueCommitted += VolumeBar_ValueChanged;
+        _playModeSpring = new PressSpring(BtnPlayMode, AnimationsEnabled);
+        _previousSpring = new PressSpring(BtnPrevious, AnimationsEnabled);
+        _playPauseSpring = new PressSpring(BtnPlayPause, AnimationsEnabled);
+        _nextSpring = new PressSpring(BtnNext, AnimationsEnabled);
+        _ = new PressSpring(BtnMore, AnimationsEnabled);
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             ItemDesktopLyrics.Visibility = Visibility.Collapsed;
     }
@@ -57,6 +73,9 @@ public sealed partial class ExpandedPlaybackControls : UserControl
         : viewModel.Duration != TimeSpan.Zero
             ? viewModel.Duration.TotalMilliseconds
             : viewModel.NowPlayingSnapshot?.Duration ?? 0;
+
+    private bool AnimationsEnabled() =>
+        ViewModel?.UISettings.ExpandAnimation != false && _systemSettings.AnimationsEnabled;
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
@@ -135,7 +154,7 @@ public sealed partial class ExpandedPlaybackControls : UserControl
         _lastElapsedSecond = -1;
         _lastRemainingSecond = -1;
         RefreshProgress();
-        RefreshPlayState();
+        RefreshPlayState(false);
         RefreshFmState();
         RefreshPlayMode();
         RefreshVolume();
@@ -222,10 +241,37 @@ public sealed partial class ExpandedPlaybackControls : UserControl
         visual.StartAnimation("Opacity", fade);
     }
 
-    private void RefreshPlayState()
+    private void RefreshPlayState(bool animate = true)
     {
         if (ViewModel is not { } viewModel) return;
-        IconPlayPause.Glyph = viewModel.IsPlaying ? "\uF8AE" : "\uF5B0";
+        var glyph = viewModel.IsPlaying ? "\uF8AE" : "\uF5B0";
+        if (_playGlyph == glyph) return;
+        _playGlyph = glyph;
+        var version = ++_playGlyphVersion;
+        if (!animate || !IsLoaded || !AnimationsEnabled())
+        {
+            IconPlayPause.Glyph = glyph;
+            return;
+        }
+
+        var compositor = ElementCompositionPreview.GetElementVisual(IconPlayPause).Compositor;
+        IconPlayPause.CenterPoint = new Vector3((float)IconPlayPause.ActualWidth / 2,
+            (float)IconPlayPause.ActualHeight / 2, 0);
+        var shrink = compositor.CreateVector3KeyFrameAnimation();
+        shrink.Target = "Scale";
+        shrink.InsertKeyFrame(1f, new Vector3(IconSwapScale, IconSwapScale, 1),
+            compositor.CreateCubicBezierEasingFunction(new Vector2(0.4f, 0f), new Vector2(1f, 1f)));
+        shrink.Duration = TimeSpan.FromMilliseconds(IconSwapMilliseconds);
+        var batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
+        IconPlayPause.StartAnimation(shrink);
+        batch.End();
+        batch.Completed += (_, _) =>
+        {
+            if (version != _playGlyphVersion) return;
+            IconPlayPause.Glyph = glyph;
+            PressSpring.Start(IconPlayPause, "Scale", Vector3.One, PressSpring.ReleaseDamping,
+                PressSpring.ReleasePeriod);
+        };
     }
 
     private void RefreshFmState()
@@ -297,21 +343,27 @@ public sealed partial class ExpandedPlaybackControls : UserControl
 
     private void BtnPlayMode_Click(object sender, RoutedEventArgs e)
     {
+        _playModeSpring.Pulse();
         _surfaceStore.RequestCommand(PlaybackSurfaceCommand.ChangePlayMode);
     }
 
     private void BtnPrevious_Click(object sender, RoutedEventArgs e)
     {
+        _previousSpring.Pulse();
+        if (AnimationsEnabled()) PressSpring.Nudge(IconPrevious, -1);
         _surfaceStore.RequestCommand(PlaybackSurfaceCommand.MovePrevious);
     }
 
     private void BtnPlayPause_Click(object sender, RoutedEventArgs e)
     {
+        _playPauseSpring.Pulse();
         _surfaceStore.RequestCommand(PlaybackSurfaceCommand.TogglePlayback);
     }
 
     private void BtnNext_Click(object sender, RoutedEventArgs e)
     {
+        _nextSpring.Pulse();
+        if (AnimationsEnabled()) PressSpring.Nudge(IconNext, 1);
         _surfaceStore.RequestCommand(PlaybackSurfaceCommand.MoveNext);
     }
 

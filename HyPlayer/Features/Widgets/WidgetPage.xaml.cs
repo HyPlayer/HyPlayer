@@ -313,6 +313,7 @@ public sealed partial class WidgetPage : Page
             RollingCalculator.LyricifyRollingCalculator => new LyricifyRollingCalculator(),
             RollingCalculator.SyncRollingCalculator => new SyncRollingCalculator(),
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
+            RollingCalculator.PerLineSpringRollingCalculator => new PerLineSpringRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         _lyricBox.Context.Effects.TransliterationScanning = _setting.LyricRenderTransliterationScanning;
