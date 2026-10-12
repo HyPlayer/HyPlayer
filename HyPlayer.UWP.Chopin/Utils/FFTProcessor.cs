@@ -14,6 +14,7 @@ namespace HyPlayer.UWP.Chopin.Utils
         public const int DisplayBandCount = 80;    // 最终显示的柱子数量
         public const int SpectrumBinCount = FftSize / 2;
         public const float SmoothingFactor = 0.85f; // 平滑系数 (0-1)，越高越平滑
+        public const int DisplayUpperFrequency = 16000;
 
 
         // --- 数据缓冲区 (全部预分配，避免GC) ---
@@ -119,13 +120,14 @@ namespace HyPlayer.UWP.Chopin.Utils
 
         private void ProcessBandsLogarithmically()
         {
-            double logBase = Math.Pow(SpectrumBinCount, 1.0 / DisplayBandCount);
+            int binLimit = Math.Clamp((int)((long)DisplayUpperFrequency * FftSize / _sampleRate), DisplayBandCount + 1, SpectrumBinCount);
+            double logBase = Math.Pow(binLimit, 1.0 / DisplayBandCount);
             int fftIndex = 1;
 
             for (int i = 0; i < DisplayBandCount; i++)
             {
                 int nextFftIndex = (int)Math.Pow(logBase, i + 1);
-                nextFftIndex = Math.Clamp(nextFftIndex, fftIndex + 1, _linearMagnitudes.Length);
+                nextFftIndex = Math.Clamp(nextFftIndex, fftIndex + 1, binLimit);
 
                 float maxMagnitudeInBand = 0;
                 // 找出当前频段区间内的最大值
