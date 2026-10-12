@@ -50,6 +50,12 @@ public partial class AutoMixSettings : SettingsBase
         set => SetSettings(nameof(GpuAdapter), value ?? string.Empty);
     }
 
+    public bool ModelsSuspended
+    {
+        get => GetSettings(nameof(ModelsSuspended), false);
+        set => SetSettings(nameof(ModelsSuspended), value);
+    }
+
     public bool IsModelEnabled(string modelId)
     {
         return GetSettings($"ModelEnabled.{modelId}", true);

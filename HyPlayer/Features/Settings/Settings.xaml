@@ -522,6 +522,15 @@
                                                 ToolTipService.ToolTip="{x:Bind CrossFadeTime.Value, Mode=OneWay}"
                                                 Value="{x:Bind Playback.CrossFadeTime, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard
+                                            Description="混音参数、分析模型与推理设备"
+                                            Header="自动混音"
+                                            Visibility="{x:Bind Playback.IsAutoMixTransition, Mode=OneWay}">
+                                            <Button
+                                                HorizontalAlignment="Right"
+                                                Click="OpenAutoMixSettings_Click"
+                                                Content="打开设置" />
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Description="播放、暂停与手动切歌时音量平滑变化" Header="播放控制淡入淡出">
                                             <ToggleSwitch
                                                 MinWidth="10"

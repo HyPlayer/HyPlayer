@@ -56,6 +56,7 @@ public partial class PlaybackSettings : SettingsBase
             {
                 OnPropertyChanged(nameof(IsCrossFadeTransition));
                 OnPropertyChanged(nameof(TransitionUsesDuration));
+                OnPropertyChanged(nameof(IsAutoMixTransition));
             }
         }
     }
@@ -63,6 +64,8 @@ public partial class PlaybackSettings : SettingsBase
     public bool IsCrossFadeTransition => TransitionId == "xfd";
 
     public bool TransitionUsesDuration => TransitionId is "xfd" or "fde" or "mix";
+
+    public bool IsAutoMixTransition => TransitionId == "mix";
 
     public bool PlaybackFade
     {

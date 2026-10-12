@@ -664,6 +664,11 @@ public sealed partial class Settings : Page
         await new LyricEffectSettingsDialog().ShowAsync();
     }
 
+    private async void OpenAutoMixSettings_Click(object sender, RoutedEventArgs e)
+    {
+        await new AutoMixSettingsDialog().ShowAsync();
+    }
+
     [GeneratedBindableCustomProperty]
     public partial class FontInfo
     {

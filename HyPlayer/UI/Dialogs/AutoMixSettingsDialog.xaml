@@ -1,0 +1,207 @@
+<ContentDialog
+    x:Class="HyPlayer.UI.Dialogs.AutoMixSettingsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls3="using:CommunityToolkit.WinUI.Controls"
+    xmlns:models="using:HyPlayer.Features.Playback.Models"
+    Title="自动混音"
+    CloseButtonText="关闭"
+    DefaultButton="Close">
+    <ContentDialog.Resources>
+        <x:Double x:Key="ContentDialogMaxWidth">760</x:Double>
+    </ContentDialog.Resources>
+    <ScrollViewer
+        Width="680"
+        MaxHeight="620"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,16,0" Spacing="4">
+            <TextBlock
+                Margin="0,0,0,8"
+                Opacity="0.75"
+                Text="按节拍、乐句与人声自动选择过渡方式，不满足条件时使用交叉淡化。混音需要歌曲已缓存、已下载或为本地文件。"
+                TextWrapping="Wrap" />
+
+            <controls3:SettingsCard Header="最长过渡 单位: s">
+                <Slider
+                    x:Name="MaxOverlapSlider"
+                    Width="240"
+                    HorizontalAlignment="Right"
+                    Maximum="60"
+                    Minimum="8"
+                    StepFrequency="4"
+                    TickFrequency="4"
+                    ToolTipService.ToolTip="{x:Bind MaxOverlapSlider.Value, Mode=OneWay}"
+                    Value="{x:Bind Settings.MaxOverlap, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+            <controls3:SettingsCard
+                x:Name="TimeStretchCard"
+                Description="速度相近时对齐下一首的速度，过渡后平滑恢复原速"
+                Header="变速对齐">
+                <ToggleSwitch
+                    MinWidth="10"
+                    HorizontalAlignment="Right"
+                    IsEnabled="{x:Bind CanTimeStretch}"
+                    IsOn="{x:Bind Settings.TimeStretch, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+            <controls3:SettingsCard Header="同一专辑连续播放时保持无缝">
+                <ToggleSwitch
+                    MinWidth="10"
+                    HorizontalAlignment="Right"
+                    IsOn="{x:Bind Settings.KeepAlbumGapless, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+
+            <TextBlock
+                Margin="0,16,0,4"
+                FontWeight="SemiBold"
+                Text="分析" />
+            <controls3:SettingsCard Description="{x:Bind Models.AnalyzerSummary, Mode=OneWay}" Header="当前分析方式" />
+            <controls3:SettingsCard Description="优先使用显卡运行分析模型，不可用时自动改用 CPU" Header="模型推理使用 GPU">
+                <ToggleSwitch
+                    MinWidth="10"
+                    HorizontalAlignment="Right"
+                    IsOn="{x:Bind Models.UseGpu, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+            <controls3:SettingsCard
+                Description="自动使用系统默认显卡；如有多显卡可手动选择"
+                Header="推理使用的显卡"
+                Visibility="{x:Bind Models.UseGpu, Mode=OneWay}">
+                <ComboBox
+                    MinWidth="220"
+                    HorizontalAlignment="Right"
+                    ItemsSource="{x:Bind Models.GpuChoices}"
+                    SelectedIndex="{x:Bind Models.GpuChoiceIndex, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+
+            <TextBlock
+                Margin="0,16,0,0"
+                FontWeight="SemiBold"
+                Text="分析模型" />
+            <TextBlock
+                Margin="0,0,0,4"
+                Opacity="0.75"
+                Text="可选下载，用于提升自动混音的效果；如果启用分析模型，在播放歌曲时会有短时间的高负载资源占用"
+                TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{x:Bind Models.Entries}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:ModelEntry">
+                        <Border
+                            Margin="0,0,0,4"
+                            Padding="16,12"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                            <StackPanel Spacing="6">
+                                <Grid>
+                                    <TextBlock Text="{x:Bind Name}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Right"
+                                        Opacity="0.75"
+                                        Text="{x:Bind StatusText, Mode=OneWay}" />
+                                </Grid>
+                                <TextBlock
+                                    FontSize="12"
+                                    IsTextSelectionEnabled="True"
+                                    Opacity="0.75"
+                                    Text="{x:Bind Details}"
+                                    TextWrapping="Wrap" />
+                                <ProgressBar
+                                    Maximum="100"
+                                    Visibility="{x:Bind IsDownloading, Mode=OneWay}"
+                                    Value="{x:Bind Progress, Mode=OneWay}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button
+                                        Click="ModelDownload_Click"
+                                        Content="下载"
+                                        Tag="{x:Bind}"
+                                        Visibility="{x:Bind CanDownload, Mode=OneWay}" />
+                                    <Button
+                                        Click="ModelImport_Click"
+                                        Content="选择本地文件"
+                                        Tag="{x:Bind}"
+                                        Visibility="{x:Bind CanDownload, Mode=OneWay}" />
+                                    <Button
+                                        Click="ModelCancel_Click"
+                                        Content="取消"
+                                        Tag="{x:Bind}"
+                                        Visibility="{x:Bind IsDownloading, Mode=OneWay}" />
+                                    <Button
+                                        Click="ModelDelete_Click"
+                                        Content="删除"
+                                        Tag="{x:Bind}"
+                                        Visibility="{x:Bind IsInstalled, Mode=OneWay}" />
+                                    <ToggleSwitch
+                                        MinWidth="10"
+                                        IsOn="{x:Bind IsEnabled, Mode=TwoWay}"
+                                        OffContent="停用"
+                                        OnContent="启用"
+                                        Visibility="{x:Bind IsInstalled, Mode=OneWay}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <controls3:SettingsCard Header="分析模型路径">
+                <StackPanel
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <TextBox
+                        Width="240"
+                        IsReadOnly="True"
+                        Text="{x:Bind Models.FolderDisplayPath, Mode=OneWay}" />
+                    <Button
+                        x:Name="ModelFolderResetButton"
+                        Click="ModelFolderReset_Click"
+                        Content="恢复默认"
+                        Visibility="{x:Bind Models.IsCustomFolder, Mode=OneWay}" />
+                    <Button
+                        x:Name="ModelFolderSelectButton"
+                        Click="ModelFolderSelect_Click"
+                        Content="选择" />
+                </StackPanel>
+            </controls3:SettingsCard>
+            <Border
+                x:Name="MigrationPanel"
+                Padding="16,12"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Visibility="Collapsed">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        x:Name="MigrationText"
+                        IsTextSelectionEnabled="True"
+                        TextWrapping="Wrap" />
+                    <StackPanel
+                        x:Name="MigrationButtons"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Button
+                            Click="MigrationMove_Click"
+                            Content="迁移并删除原文件"
+                            Style="{StaticResource AccentButtonStyle}" />
+                        <Button Click="MigrationCopy_Click" Content="迁移并保留原文件" />
+                        <Button Click="MigrationSkip_Click" Content="不迁移" />
+                        <Button Click="MigrationCancel_Click" Content="取消" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <controls3:SettingsCard Description="默认为huggingface国内镜像源，也可填写其他镜像地址" Header="分析模型下载源">
+                <TextBox
+                    Width="240"
+                    HorizontalAlignment="Right"
+                    Text="{x:Bind Models.Mirror, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+            <TextBlock
+                x:Name="StatusText"
+                Margin="0,8,0,0"
+                TextWrapping="Wrap"
+                Visibility="Collapsed" />
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

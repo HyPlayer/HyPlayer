@@ -14,6 +14,7 @@ using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Application.Threading;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Playback.Models;
 using HyPlayer.Platform.Network;
 
 namespace HyPlayer.Features.Settings.Services;
@@ -258,9 +259,21 @@ public static class ResourceSaver
         _powerActive = true;
     }
 
+    private static SettingChange ModelAnalysisChange =>
+        BoolChange(nameof(AutoMixSettings.ModelsSuspended),
+            () => Ioc.Default.GetRequiredService<AutoMixSettings>().ModelsSuspended,
+            value => Ioc.Default.GetRequiredService<AutoMixSettings>().ModelsSuspended = value, true);
+
     private static List<SaverOption> BuildPowerOptions()
     {
         var options = new List<SaverOption>();
+        if (Playback.TransitionId == "mix" && Ioc.Default.GetRequiredService<ModelManager>().HasUsableModel)
+            options.Add(new SaverOption
+            {
+                Title = "暂停自动混音的模型分析",
+                Description = "改用轻量的算法分析节拍，已分析过的歌曲不受影响",
+                Changes = [ModelAnalysisChange]
+            });
         if (Playback.ShowSpectrum || Playback.EnableFFT)
             options.Add(new SaverOption
             {
@@ -495,6 +508,7 @@ public static class ResourceSaver
         var map = new Dictionary<string, SettingChange>();
         foreach (var change in changes) map[change.Key] = change;
         foreach (var change in StreamingChanges) map[change.Key] = change;
+        map[ModelAnalysisChange.Key] = ModelAnalysisChange;
         return map;
     }
 

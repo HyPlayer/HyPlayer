@@ -103,7 +103,11 @@ public sealed partial class ModelManager : ObservableObject
         {
             if (e.PropertyName is not (nameof(ModelEntry.State) or nameof(ModelEntry.IsEnabled))) return;
             OnPropertyChanged(nameof(AnalyzerSummary));
-            ModelsChanged?.Invoke();
+        };
+        settings.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AutoMixSettings.ModelsSuspended))
+                Post(() => OnPropertyChanged(nameof(AnalyzerSummary)));
         };
     }
 
@@ -111,8 +115,6 @@ public sealed partial class ModelManager : ObservableObject
         $"节拍：{(IsUsable(ModelCatalog.BeatThisId) ? "Beat This!" : "内置算法")}　调性：{(IsUsable(ModelCatalog.SKeyId) ? "S-KEY" : "内置算法")}　人声：{(IsUsable(ModelCatalog.VocalId) ? "歌词时间轴 + MDX-Net" : "歌词时间轴")}";
 
     public System.Collections.ObjectModel.ObservableCollection<ModelEntry> Entries { get; }
-
-    public event Action? ModelsChanged;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FolderDisplayPath), nameof(IsCustomFolder))]
@@ -164,9 +166,17 @@ public sealed partial class ModelManager : ObservableObject
 
     public ModelEntry? Find(string id) => Entries.FirstOrDefault(e => e.Descriptor.Id == id);
 
-    public static bool Suspended { get; set; }
+    public bool IsUsable(string id) => !_settings.ModelsSuspended && Find(id) is { IsInstalled: true, IsEnabled: true };
 
-    public bool IsUsable(string id) => !Suspended && Find(id) is { IsInstalled: true, IsEnabled: true };
+    public bool HasUsableModel
+    {
+        get
+        {
+            foreach (var entry in Entries)
+                if (entry is { IsInstalled: true, IsEnabled: true }) return true;
+            return false;
+        }
+    }
 
     public Task EnsureRefreshedAsync() => _refresh ??= RefreshAsync();
 

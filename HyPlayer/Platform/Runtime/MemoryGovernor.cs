@@ -8,7 +8,9 @@ using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Playback.Models;
 using HyPlayer.Features.Playback.Services;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Platform.Runtime;
 
@@ -64,6 +66,8 @@ public sealed class MemoryGovernor : IMemoryGovernor
 
     private readonly UISettings _settings;
     private readonly PlaybackStateService _playbackState;
+    private readonly ModelManager _models;
+    private readonly AudioGraphPlayer _player;
 
     private Timer? _pollTimer;
     private CancellationTokenSource? _inactiveCts;
@@ -75,10 +79,16 @@ public sealed class MemoryGovernor : IMemoryGovernor
     private volatile bool _windowInactive;
     private volatile bool _appInBackground;
 
-    public MemoryGovernor(UISettings settings, PlaybackStateService playbackState)
+    public MemoryGovernor(
+        UISettings settings,
+        PlaybackStateService playbackState,
+        ModelManager models,
+        AudioGraphPlayer player)
     {
         _settings = settings;
         _playbackState = playbackState;
+        _models = models;
+        _player = player;
     }
 
     public unsafe ulong WorkingSetBytes
@@ -141,6 +151,7 @@ public sealed class MemoryGovernor : IMemoryGovernor
             try
             {
                 await Task.Delay(TimeSpan.FromSeconds(seconds), cts.Token);
+                while (IsBusy()) await Task.Delay(TimeSpan.FromSeconds(10), cts.Token);
             }
             catch (OperationCanceledException)
             {
@@ -153,12 +164,24 @@ public sealed class MemoryGovernor : IMemoryGovernor
 
     private bool CooldownElapsed() => DateTime.UtcNow - _lastReclaim >= _cooldown;
 
+    private bool IsBusy()
+    {
+        try
+        {
+            return _models.IsBusy || _player.RealtimeCallbacksActive || _playbackState.IsTransitioning;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private void Evaluate()
     {
         try
         {
             var limitMb = _settings.MemoryLimitMB;
-            if (limitMb == 0 || !CooldownElapsed()) return;
+            if (limitMb == 0 || !CooldownElapsed() || IsBusy()) return;
             var workingSet = WorkingSetBytes;
             if (workingSet < _workingSetAfterReclaim + RegrowthBeforeRetry) return;
             var threshold = limitMb > 0 ? (ulong)limitMb * MB : AutoThreshold();
@@ -188,6 +211,14 @@ public sealed class MemoryGovernor : IMemoryGovernor
         ulong freed = 0;
         try
         {
+            try
+            {
+                _models.ReleaseIdleSessions();
+            }
+            catch
+            {
+            }
+
             if (_playbackState.IsPlaying)
             {
                 GC.Collect(2, GCCollectionMode.Forced, blocking: false);
