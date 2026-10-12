@@ -266,6 +266,18 @@ public partial class UISettings : SettingsBase
         set => SetSettings(nameof(GestureMode), (int)value);
     }
 
+    public bool KeyboardShortcutsEnabled
+    {
+        get => GetSettings(nameof(KeyboardShortcutsEnabled), true);
+        set => SetSettings(nameof(KeyboardShortcutsEnabled), value);
+    }
+
+    public string KeyboardShortcutBindings
+    {
+        get => GetSettings(nameof(KeyboardShortcutBindings), string.Empty);
+        set => SetSettings(nameof(KeyboardShortcutBindings), value);
+    }
+
     /// <summary>
     ///     Whether animation adapts to BPM.
     /// </summary>

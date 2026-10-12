@@ -311,6 +311,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<PlaybackShellStateMachine>();
         depository.AddSingleton<IPlaybackSurfaceCoordinator, PlaybackSurfaceCoordinator>();
         depository.AddSingleton<IGamepadShortcutService, GamepadShortcutService>();
+        depository.AddSingleton<IKeyboardShortcutService, KeyboardShortcutService>();
         depository.AddTransient<ShellSearchViewModel>();
         depository.AddSingleton<ShellLoginService>();
     }

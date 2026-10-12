@@ -37,6 +37,7 @@ using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Tiles;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Shell;
+using HyPlayer.Shell.Input;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.UI.Dialogs;
 using Kawazu;
@@ -88,6 +89,27 @@ public sealed partial class Settings : Page
     {
         _isUpdatingControls = true;
         InitializeComponent();
+    }
+
+    private readonly IKeyboardShortcutService _keyboardShortcuts =
+        Ioc.Default.GetRequiredService<IKeyboardShortcutService>();
+
+    public System.Collections.ObjectModel.ObservableCollection<KeyboardShortcutEntry> Shortcuts =>
+        _keyboardShortcuts.Entries;
+
+    private void ShortcutCapture_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: KeyboardShortcutEntry entry }) _keyboardShortcuts.BeginCapture(entry);
+    }
+
+    private void ShortcutClear_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: KeyboardShortcutEntry entry }) _keyboardShortcuts.Clear(entry);
+    }
+
+    private void ShortcutResetAll_Click(object sender, RoutedEventArgs e)
+    {
+        _keyboardShortcuts.ResetAll();
     }
 
     private void TransitionMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -146,6 +168,7 @@ public sealed partial class Settings : Page
         // observed as dead by a later settings change.
         Bindings.StopTracking();
         FontBox.ItemsSource = null;
+        _keyboardShortcuts.CancelCapture();
     }
 
     private static List<FontInfo> GetAllFonts()

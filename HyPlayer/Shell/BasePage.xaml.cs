@@ -41,6 +41,8 @@ public sealed partial class BasePage : Page
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly IGamepadShortcutService _gamepad =
         Ioc.Default.GetRequiredService<IGamepadShortcutService>();
+    private readonly IKeyboardShortcutService _keyboardShortcuts =
+        Ioc.Default.GetRequiredService<IKeyboardShortcutService>();
     private readonly IPlaybackControlService _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly HyPlayer.Domain.Settings.UISettings _setting =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
@@ -60,6 +62,7 @@ public sealed partial class BasePage : Page
         _navigator.AttachNavigationView(NavMain, BaseFrame, _navigationShell);
         _navigationShell.UpdateAccountStatus();
         _gamepad.Attach(Window.Current.CoreWindow);
+        _keyboardShortcuts.Attach(Window.Current.CoreWindow);
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
     }
@@ -70,6 +73,7 @@ public sealed partial class BasePage : Page
         Bindings.StopTracking();
         _navigator.DetachNavigationView(NavMain);
         _gamepad.Detach(Window.Current.CoreWindow);
+        _keyboardShortcuts.Detach(Window.Current.CoreWindow);
         Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
         _shellHost.ClearReference(AppTitleBar);

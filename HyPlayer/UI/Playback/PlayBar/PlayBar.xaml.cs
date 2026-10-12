@@ -40,6 +40,7 @@ using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Shell.Input;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
 using HyPlayer.UI.Dialogs;
@@ -88,11 +89,14 @@ public sealed partial class PlayBar
 
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private readonly IAppLifecycleStateService _lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
+    private readonly IKeyboardShortcutService _keyboardShortcuts =
+        Ioc.Default.GetRequiredService<IKeyboardShortcutService>();
     private WeakEventListener<PlayBar, object?, EventArgs>? _enteredForegroundListener;
     private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _stateChangedListener;
     private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
     private WeakEventListener<PlayBar, object?, SongLikeStatusChangedEventArgs>? _songLikeStatusChangedListener;
     private WeakEventListener<PlayBar, object?, EventArgs>? _loginCompletedListener;
+    private WeakEventListener<PlayBar, object?, EventArgs>? _muteChangedListener;
     private DataTransferManager? _dataTransferManager;
 
     private SolidColorBrush _backgroundElayBrush = new(Colors.Transparent);
@@ -157,6 +161,9 @@ DoubleAnimation verticalAnimation;
                 break;
             case nameof(PlaybackStateService.CoverStream):
                 RefreshPlayBarCover(_state.NowPlayingProviderItem);
+                break;
+            case nameof(PlaybackStateService.Volume):
+                RunOnUIThread(SyncVolumeSlider);
                 break;
         }
     }
@@ -382,6 +389,18 @@ DoubleAnimation verticalAnimation;
     private void BtnMute_OnCllick(object sender, RoutedEventArgs e)
     {
         _player.IsMuted = !_player.IsMuted;
+        RefreshMuteGlyphs();
+    }
+
+    private void SyncVolumeSlider()
+    {
+        var value = Math.Round(_state.Volume * 100);
+        if (Math.Abs(SliderAudioRate.Value - value) >= 1)
+            SliderAudioRate.Value = value;
+    }
+
+    private void RefreshMuteGlyphs()
+    {
         BtnMuteIcon.Glyph = _player.IsMuted ? "\uE198" : "\uE15D";
         FlyoutBtnMuteIcon.Glyph = _player.IsMuted ? "\uE198" : "\uE15D";
         BtnVolIcon.Glyph = _player.IsMuted ? "\uE198" : "\uE15D";
@@ -706,6 +725,13 @@ DoubleAnimation verticalAnimation;
             OnDetachAction = weakEventListener => { _auth.LoginCompleted -= weakEventListener.OnEvent; }
         };
         _auth.LoginCompleted += _loginCompletedListener.OnEvent;
+        _muteChangedListener?.Detach();
+        _muteChangedListener = new WeakEventListener<PlayBar, object?, EventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.RunOnUIThread(instance.RefreshMuteGlyphs),
+            OnDetachAction = weakEventListener => { _keyboardShortcuts.MuteChanged -= weakEventListener.OnEvent; }
+        };
+        _keyboardShortcuts.MuteChanged += _muteChangedListener.OnEvent;
         if (_surfaceStore.HasPendingExpandedIntent)
             TryExpandPendingSurface();
         else if (_surfaceCoordinator.IsExpanded)
@@ -862,6 +888,7 @@ DoubleAnimation verticalAnimation;
         _surfaceStoreChangedListener?.Detach();
         _songLikeStatusChangedListener?.Detach();
         _loginCompletedListener?.Detach();
+        _muteChangedListener?.Detach();
         if (_dataTransferManager is not null)
             _dataTransferManager.DataRequested -= DataTransferManager_DataRequested;
     }

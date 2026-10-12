@@ -602,6 +602,43 @@
                                     </controls3:SettingsExpander.Items>
                                 </controls3:SettingsExpander>
                                 <controls3:SettingsExpander
+                                    xmlns:shellInput="using:HyPlayer.Shell.Input"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    Header="快捷键"
+                                    IsExpanded="False"
+                                    ItemsSource="{x:Bind Shortcuts}">
+                                    <controls3:SettingsExpander.HeaderIcon>
+                                        <FontIcon Glyph="&#xE92E;" />
+                                    </controls3:SettingsExpander.HeaderIcon>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Click="ShortcutResetAll_Click" Content="全部恢复默认" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            IsOn="{x:Bind UI.KeyboardShortcutsEnabled, Mode=TwoWay}"
+                                            OffContent="关闭"
+                                            OnContent="开启" />
+                                    </StackPanel>
+                                    <controls3:SettingsExpander.ItemTemplate>
+                                        <DataTemplate x:DataType="shellInput:KeyboardShortcutEntry">
+                                            <controls3:SettingsCard Header="{x:Bind Name}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <Button
+                                                        MinWidth="160"
+                                                        AutomationProperties.Name="{x:Bind Name}"
+                                                        Click="ShortcutCapture_Click"
+                                                        Content="{x:Bind DisplayText, Mode=OneWay}"
+                                                        Tag="{x:Bind}" />
+                                                    <Button
+                                                        Click="ShortcutClear_Click"
+                                                        Content="清除"
+                                                        Tag="{x:Bind}" />
+                                                </StackPanel>
+                                            </controls3:SettingsCard>
+                                        </DataTemplate>
+                                    </controls3:SettingsExpander.ItemTemplate>
+                                </controls3:SettingsExpander>
+                                <controls3:SettingsExpander
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Stretch"
                                     Header="弱网与节能"
