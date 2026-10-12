@@ -38,6 +38,7 @@ internal static class DownloadManager
     private static INotificationService Notification => Ioc.Default.GetRequiredService<INotificationService>();
     private static IUIThreadDispatcher UIThreadDispatcher => Ioc.Default.GetRequiredService<IUIThreadDispatcher>();
     private static DownloadSettings DownloadSettings => Ioc.Default.GetRequiredService<DownloadSettings>();
+    private static ApiSettings ApiSettings => Ioc.Default.GetRequiredService<ApiSettings>();
     private static LyricSettings LyricSettings => Ioc.Default.GetRequiredService<LyricSettings>();
     private static HttpClient HttpClient => Ioc.Default.GetRequiredService<HttpClient>();
     private static ILyricProvidable LyricProvider => Ioc.Default.GetRequiredService<ILyricProvidable>();
@@ -153,6 +154,7 @@ internal static class DownloadManager
             Notification,
             UIThreadDispatcher,
             DownloadSettings,
+            ApiSettings,
             LyricSettings,
             HttpClient,
             LyricProvider,

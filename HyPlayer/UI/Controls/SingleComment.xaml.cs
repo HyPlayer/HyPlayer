@@ -302,6 +302,8 @@ public sealed partial class SingleComment : UserControl
     {
         private int _offset;
 
+        private string? _pageToken;
+
         private bool _hasMore = true;
 
         public async Task<IEnumerable<CommentBase>> GetPagedItemsAsync(
@@ -315,14 +317,22 @@ public sealed partial class SingleComment : UserControl
             var count = Math.Clamp(pageSize, 1, 20);
             var result = await SimpleCacher.GetOrCreateCacheAsync(
                 CacheType.Comments,
-                $"{mainComment.ProvidableItemId}_{mainComment.ActualId}_{_offset}_{count}",
-                () => commentProvider.GetThreadedCommentsAsync(
-                    itemId,
-                    typeId,
-                    mainComment.ActualId,
-                    _offset,
-                    count,
-                    cancellationToken),
+                $"{mainComment.ProvidableItemId}_{mainComment.ActualId}_{_offset}_{_pageToken}_{count}",
+                () => _pageToken is not null && commentProvider is IProvidableItemCommentPageTokenProvidable tokenProvider
+                    ? tokenProvider.GetThreadedCommentsPageAsync(
+                        itemId,
+                        typeId,
+                        mainComment.ActualId,
+                        _pageToken,
+                        count,
+                        cancellationToken)
+                    : commentProvider.GetThreadedCommentsAsync(
+                        itemId,
+                        typeId,
+                        mainComment.ActualId,
+                        _offset,
+                        count,
+                        cancellationToken),
                 TimeSpan.FromMinutes(5));
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -334,6 +344,7 @@ public sealed partial class SingleComment : UserControl
             }
 
             _offset = result?.NextOffset ?? _offset + items.Count;
+            _pageToken = result?.NextOffset is null ? result?.NextPageToken : null;
             _hasMore = result?.HasMore is true && items.Count > 0;
             return items;
         }

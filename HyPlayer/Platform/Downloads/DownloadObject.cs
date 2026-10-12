@@ -32,6 +32,7 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Lyric;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using Microsoft.Toolkit.Uwp.Helpers;
 using TagLib;
@@ -67,6 +68,7 @@ public sealed partial class DownloadObject : ObservableObject
     private readonly SingleSongBase _providerSong;
     private readonly IResourceQualityTagProvidable _qualityTagProvider;
     private readonly DownloadSettings _downloadSettings;
+    private readonly ApiSettings _apiSettings;
     private readonly LyricSettings _lyricSettings;
     private readonly IUIThreadDispatcher _uiThreadDispatcher;
     private int _downloadBitrate;
@@ -97,6 +99,7 @@ public sealed partial class DownloadObject : ObservableObject
         INotificationService notification,
         IUIThreadDispatcher uiThreadDispatcher,
         DownloadSettings downloadSettings,
+        ApiSettings apiSettings,
         LyricSettings lyricSettings,
         HttpClient httpClient,
         ILyricProvidable lyricProvider,
@@ -107,6 +110,7 @@ public sealed partial class DownloadObject : ObservableObject
         _notification = notification;
         _uiThreadDispatcher = uiThreadDispatcher;
         _downloadSettings = downloadSettings;
+        _apiSettings = apiSettings;
         _lyricSettings = lyricSettings;
         _httpClient = httpClient;
         _lyricProvider = lyricProvider;
@@ -575,6 +579,18 @@ public sealed partial class DownloadObject : ObservableObject
                 return;
             }
 
+            if (ShouldSkipTrial(musicResource, _apiSettings.JumpVipSongDownloading))
+            {
+                Status = DownloadStatus.Paused;
+                _ = _uiThreadDispatcher.TryRunAsync(() =>
+                {
+                    HasPaused = true;
+                    Progress = 100;
+                    Message = "VIP 试听歌曲, 跳过";
+                });
+                return;
+            }
+
             var extension = NormalizeAudioExtension(musicResource.ExtensionName);
             var albumCover = AlbumCover ?? await GetProviderAlbumCoverAsync(_providerSong);
             fileName += "." + extension;
@@ -694,6 +710,11 @@ public sealed partial class DownloadObject : ObservableObject
         return result is IResourceResultOf<Uri?> uriResult
             ? (await uriResult.GetResourceAsync())?.ToString()
             : null;
+    }
+
+    internal static bool ShouldSkipTrial(MusicResourceBase resource, bool skipTrials)
+    {
+        return skipTrials && resource is IAudioTrialMetadata { IsTrial: true };
     }
 
     private static async Task<string?> GetLyricTextAsync(IEnumerable<RawLyricInfo> lyrics, LyricType type, bool word)
