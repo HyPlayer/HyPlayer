@@ -138,31 +138,86 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     internal static bool HasActiveEmphasis(LyricTextLayoutSnapshot layout, RenderContext context) =>
         context.Settings.Focused.LongNoteEmphasis && layout.Emphasis?.IsActiveAt(context.CurrentLyricTime) == true;
 
-    internal void RenderEmphasisTail(CanvasDrawingSession session, LyricTextLayoutSnapshot layout, RenderContext context)
+    internal void RenderTail(CanvasDrawingSession session, LyricTextLayoutSnapshot layout, RenderContext context, float focus)
     {
         EnsureBrushes(session, layout);
         session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
-        if (layout.DefaultTransliterationPersistCache is not null)
-            session.DrawImage(layout.DefaultTransliterationPersistCache, 0, 0, layout.SizePixelRect, 1);
-        var emphasis = layout.Emphasis;
-        var clusters = layout.LyricGlyphClusters;
+        var settings = context.Settings.Focused;
         var time = context.CurrentLyricTime;
+        focus = focus > 0.001f ? Math.Min(focus, 1) : 0;
+        if (focus > 0 && context.EnableTransliteration && layout.TransliterationGlyphClusters.Count > 0)
+            DrawTailLayer(session, layout, layout.TransliterationGlyphClusters, time, settings, true,
+                context.Effects.TransliterationScanning, focus);
+        else if (layout.DefaultTransliterationPersistCache is not null)
+            session.DrawImage(layout.DefaultTransliterationPersistCache, 0, 0, layout.SizePixelRect, 1);
+        DrawTailLayer(session, layout, layout.LyricGlyphClusters, time, settings, false,
+            context.Effects.TransliterationScanning, focus);
+        if (layout.DefaultTranslationPersistCache is not null)
+            session.DrawImage(layout.DefaultTranslationPersistCache, 0, layout.TranslationRenderActualTop, layout.SizePixelRect, 1);
+    }
+
+    private void DrawTailLayer(CanvasDrawingSession session, LyricTextLayoutSnapshot layout,
+        IReadOnlyList<LyricGlyphCluster> clusters, long time, FocusedTextSettings settings, bool transliteration,
+        bool scanTransliteration, float focus)
+    {
+        var useWords = layout.HasRealWords || settings.UntimedHighlight == UntimedHighlightMode.InferWords;
+        var wholeLine = transliteration && (settings.Transliteration == TransliterationProgressMode.WholeLine || !scanTransliteration);
+        var emphasis = transliteration || !settings.LongNoteEmphasis ? null : layout.Emphasis;
         var baseTransform = session.Transform;
         for (var index = 0; index < clusters.Count; index++)
         {
             var cluster = clusters[index];
+            var origin = cluster.BaseState.Origin;
+            var color = layout.IdleColor;
+            var lift = 0f;
+            if (focus > 0)
+            {
+                var tokenIndex = cluster.TokenStartIndex;
+                var token = (uint)tokenIndex < (uint)layout.Tokens.Count ? layout.Tokens[tokenIndex] : null;
+                float highlight;
+                if (wholeLine || !useWords || token is null)
+                    highlight = wholeLine || settings.UntimedHighlight == UntimedHighlightMode.WholeLine ? 1 : 0;
+                else
+                    highlight = FocusedTextProgress.GetRevealProgress(settings.RevealMode,
+                        GetRevealWordProgress(time, token.StartTime, token.EndTime, settings.RevealTimeOffsetMs),
+                        cluster.TokenClusterIndex, cluster.TokenClusterCount);
+                color = Blend(layout.IdleColor, layout.FocusingColor, highlight * focus);
+                if (!transliteration)
+                {
+                    lift = CalculateLift(cluster, token, layout, time, settings) * focus;
+                    origin -= new Vector2(0, lift);
+                }
+            }
             if (emphasis is null || !emphasis.TrySample(index, time, cluster.BaseState.FontSize, out var emphasized))
             {
-                DrawSolid(session, cluster, cluster.BaseState.Origin, layout.IdleColor);
+                DrawSolid(session, cluster, origin, color);
                 continue;
             }
             session.Transform = CreateEmphasisTransform(cluster, emphasized) * baseTransform;
-            DrawEmphasisGlow(session, index, cluster, layout.FocusingColor, emphasized, 0);
-            DrawSolid(session, cluster, cluster.BaseState.Origin, layout.IdleColor);
+            DrawEmphasisGlow(session, index, cluster, layout.FocusingColor, emphasized, lift);
+            DrawSolid(session, cluster, origin, color);
             session.Transform = baseTransform;
         }
-        if (layout.DefaultTranslationPersistCache is not null)
-            session.DrawImage(layout.DefaultTranslationPersistCache, 0, layout.TranslationRenderActualTop, layout.SizePixelRect, 1);
+    }
+
+    internal static Color Blend(Color from, Color to, float amount)
+    {
+        if (amount <= 0) return from;
+        if (amount >= 1) return to;
+        var alpha = from.A + (to.A - from.A) * amount;
+        if (alpha <= 0) return Color.FromArgb(0, to.R, to.G, to.B);
+        return Color.FromArgb(
+            (byte)MathF.Round(alpha),
+            BlendChannel(from.R, from.A, to.R, to.A, amount, alpha),
+            BlendChannel(from.G, from.A, to.G, to.A, amount, alpha),
+            BlendChannel(from.B, from.A, to.B, to.A, amount, alpha));
+    }
+
+    private static byte BlendChannel(byte from, byte fromAlpha, byte to, byte toAlpha, float amount, float alpha)
+    {
+        var start = from * (float)fromAlpha;
+        var end = to * (float)toAlpha;
+        return (byte)Math.Clamp(MathF.Round((start + (end - start) * amount) / alpha), 0, 255);
     }
 
     private static Matrix3x2 CreateEmphasisTransform(LyricGlyphCluster cluster, LyricEmphasisSample sample)

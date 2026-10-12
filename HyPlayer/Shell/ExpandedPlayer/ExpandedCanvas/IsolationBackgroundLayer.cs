@@ -43,6 +43,7 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
     private float _dimProgress;
     private float _dimTarget;
     private long _dimTimestamp;
+    private double _shaderSeconds;
 
     public IsolationBackgroundLayer(ExpandedCanvasState state, LyricSettings setting)
     {
@@ -53,7 +54,9 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
 
     public string LayerName => "IsolationBackground";
     public int Order => 0;
-    public bool NeedsFrames => _state.BackgroundType == BackgroundType.Isolation;
+    public bool NeedsFrames =>
+        _state.BackgroundType == BackgroundType.Isolation &&
+        (_state.IsPlaying || _dimProgress != _dimTarget || Volatile.Read(ref _colorBlendStart) != 0);
 
     /// <inheritdoc />
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
@@ -85,9 +88,11 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
             if (blend >= 1) Volatile.Write(ref _colorBlendStart, 0);
         }
 
+        if (_state.IsPlaying) _shaderSeconds += args.Timing.ElapsedTime.TotalSeconds;
+
         _effect.ConstantBuffer = new IsolationEffect(
             _canvasSize,
-            (float)args.Timing.TotalTime.TotalSeconds,
+            (float)_shaderSeconds,
             _color1,
             _color2,
             _color3,

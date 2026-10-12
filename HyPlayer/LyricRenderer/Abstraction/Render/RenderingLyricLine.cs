@@ -97,7 +97,7 @@ public abstract class RenderingLyricLine : IDisposable
         var enabled = settings.Preset != LyricLinePreset.None;
         var opacityTarget = IsActive ? 1 : Math.Clamp(settings.NearOpacity + (settings.FarOpacity - settings.NearOpacity) * distance, settings.FarOpacity, 1);
         if (settings.Preset == LyricLinePreset.Layered && context.IsScrolling) opacityTarget = Math.Max(opacityTarget, 0.4f);
-        var opacity = _opacityTransition.Update(enabled ? opacityTarget : 1, time, IsActive ? 0 : 500, context.IsSeek);
+        var opacity = _opacityTransition.Update(enabled ? opacityTarget : 1, time, IsActive ? 300 : 500, context.IsSeek);
         var scaleTarget = enabled ? Math.Max(0.1f, 1 + (settings.DistantScale - 1) * distance) : 1;
         if (context.IsScrolling) scaleTarget = Math.Max(scaleTarget, 0.8f);
         var scale = _scaleTransition.Update(scaleTarget, time, 500, context.IsSeek);

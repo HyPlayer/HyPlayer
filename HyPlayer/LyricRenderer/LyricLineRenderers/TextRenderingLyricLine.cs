@@ -35,7 +35,9 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
     private Color _cachedIdleColor;
     private Color _cachedFocusingColor;
     private bool _wasActive;
-    private bool _emphasisTail;
+    private bool _tail;
+    private float _tailFocus;
+    private LyricScalarTransition _focusTransition;
 
     public TextRenderingLyricLine()
         : this(new Win2DLyricTextLayouter())
@@ -51,6 +53,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
 
     public const float TextPadding = 16;
     public const float LiftAmount = 3;
+    private const float FocusFadeDurationMs = 300;
 
     public string? Text { get; set; }
     public override bool IsTextLine => true;
@@ -65,8 +68,8 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         if (_layout is null) return true;
         if (IsActive)
             _focusedTextRenderer.Render(session, _layout, context);
-        else if (_emphasisTail)
-            _focusedTextRenderer.RenderEmphasisTail(session, _layout, context);
+        else if (_tail)
+            _focusedTextRenderer.RenderTail(session, _layout, context, _tailFocus);
         else
             DrawIdle(session, _layout);
         return true;
@@ -87,16 +90,22 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         RenderContext context,
         out ICanvasImage image)
     {
-        if (!IsActive && _layout is not null)
+        if (_layout is not null)
         {
-            var emphasisTail = FocusedLyricTextRenderer.HasActiveEmphasis(_layout, context);
-            if (_emphasisTail && !emphasisTail) _focusedTextRenderer.Dispose();
-            _emphasisTail = emphasisTail;
-            if (!emphasisTail)
+            var focus = _focusTransition.Update(IsActive ? 1 : 0, context.CurrentLyricTime,
+                IsActive ? 0 : FocusFadeDurationMs, context.IsSeek);
+            if (!IsActive)
             {
-                _idleLineCache ??= CreateIdleLineCache(session, _layout);
-                image = _idleLineCache;
-                return true;
+                _tailFocus = focus > 0.001f ? focus : 0;
+                var tail = _tailFocus > 0 || FocusedLyricTextRenderer.HasActiveEmphasis(_layout, context);
+                if (_tail && !tail) _focusedTextRenderer.Dispose();
+                _tail = tail;
+                if (!tail)
+                {
+                    _idleLineCache ??= CreateIdleLineCache(session, _layout);
+                    image = _idleLineCache;
+                    return true;
+                }
             }
         }
 
@@ -108,6 +117,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
     {
         if (rendering) return;
         ReleaseDrawingResources();
+        _focusTransition = default;
         _focusedTextRenderer.Dispose();
         _idleLineCache?.Dispose();
         _idleLineCache = null;
@@ -115,7 +125,11 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
 
     protected override void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
     {
-        if (_wasActive && !IsActive) _focusedTextRenderer.Dispose();
+        if (_wasActive && !IsActive)
+        {
+            if (Hidden) _focusedTextRenderer.Dispose();
+            else _tail = true;
+        }
         _wasActive = IsActive;
         if (_canvasWidth == 0.0f) return;
         if (_layout is null)
@@ -138,6 +152,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
         ReleaseDrawingResources();
+        _focusTransition = default;
         _focusedTextRenderer.Dispose();
         _idleLineCache?.Dispose();
         _idleLineCache = null;
