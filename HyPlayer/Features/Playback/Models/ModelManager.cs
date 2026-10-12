@@ -83,6 +83,7 @@ public sealed partial class ModelEntry : ObservableObject
 public sealed partial class ModelManager : ObservableObject
 {
     public const string FolderToken = "modelFolder";
+    private static readonly TimeSpan SessionIdleRelease = TimeSpan.FromSeconds(60);
 
     private readonly AutoMixSettings _settings;
     private readonly Dictionary<string, SessionSlot> _sessions = new();
@@ -523,7 +524,8 @@ public sealed partial class ModelManager : ObservableObject
         {
             if (!_sessions.TryGetValue(id, out var slot)) return;
             if (--slot.Users > 0) return;
-            slot.IdleTimer = new Timer(_ => DisposeSession(id, onlyIdle: true), null, TimeSpan.FromMilliseconds(200), Timeout.InfiniteTimeSpan);
+            slot.IdleTimer?.Dispose();
+            slot.IdleTimer = new Timer(_ => DisposeSession(id, onlyIdle: true), null, SessionIdleRelease, Timeout.InfiniteTimeSpan);
         }
     }
 

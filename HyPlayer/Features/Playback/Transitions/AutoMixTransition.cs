@@ -26,6 +26,8 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     private static readonly TimeSpan _restoreTime = TimeSpan.FromMilliseconds(200);
     private static readonly TimeSpan _forcedHandBackTime = TimeSpan.FromMilliseconds(60);
     private const double RetryLeadSeconds = 6;
+    private const double AnalysisStartSeconds = 12;
+    private const double AnalysisUrgentRemainingSeconds = 150;
 
     private readonly AutoMixSettings _settings;
     private readonly IPlayer _player;
@@ -261,7 +263,10 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         var now = DateTime.UtcNow;
         var token = _cts.Token;
         var retry = (now - _lastAnalysisAttempt).TotalSeconds > 8;
-        if ((_analysisA is null || _analysisA.IsCompleted && _analysisA.Result is null && retry) && remaining.TotalSeconds > 30)
+        var settled = context.Position.TotalSeconds >= AnalysisStartSeconds
+                      || remaining.TotalSeconds < AnalysisUrgentRemainingSeconds
+                      || _analysis.TryGetCached(current) is not null;
+        if ((_analysisA is null || _analysisA.IsCompleted && _analysisA.Result is null && retry) && remaining.TotalSeconds > 30 && settled)
         {
             _lastAnalysisAttempt = now;
             _analysisA = _analysis.AnalyzeAsync(current, token);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using HyPlayer.UWP.Chopin.Utils;
 using Windows.Media;
 using Windows.Media.Audio;
@@ -7,20 +8,30 @@ namespace HyPlayer.UWP.Chopin.Dsp
 {
     internal sealed class PitchCorrector : IDisposable
     {
+        private const int WakeMilliseconds = 5;
         private readonly CallbackGate _gate = new();
         private readonly TimeStretcher _stretcher;
         private readonly object _stretchLock = new();
-        private float[] _fifo = new float[8192];
-        private int _fifoCount;
-        private float[] _input = new float[4096];
-        private float[] _output = new float[4096];
+        private readonly PitchPump _pump;
+        private readonly PreciseWait _wait = new();
+        private readonly Thread _thread;
+        private volatile bool _stop;
+        private bool _started;
+        private bool _disposed;
+        private int _unit;
 
-        internal PitchCorrector(AudioFrameOutputNode capture, AudioFrameInputNode render, int sampleRate)
+        internal PitchCorrector(AudioFrameOutputNode capture, AudioFrameInputNode render, int sampleRate, int quantumFrames)
         {
             Capture = capture;
             Render = render;
             _stretcher = new TimeStretcher(2, sampleRate);
-            render.QuantumStarted += OnQuantumStarted;
+            _pump = new PitchPump(quantumFrames, sampleRate, Stretch, Write);
+            _thread = new Thread(Run)
+            {
+                IsBackground = true,
+                Priority = ThreadPriority.AboveNormal,
+                Name = "Pitch corrector"
+            };
         }
 
         internal AudioFrameOutputNode Capture { get; }
@@ -28,16 +39,54 @@ namespace HyPlayer.UWP.Chopin.Dsp
 
         internal void SetSpeed(double speed)
         {
-            lock (_stretchLock) _stretcher.SetTranspose(1 / Math.Max(0.1, speed));
+            lock (_stretchLock)
+            {
+                if (!_disposed) _stretcher.SetTranspose(1 / Math.Max(0.1, speed));
+            }
         }
 
-        private void OnQuantumStarted(AudioFrameInputNode sender, FrameInputNodeQuantumStartedEventArgs args)
+        internal void Start()
         {
-            if (!_gate.TryEnter()) return;
-            AudioThreadCallbacks.Mark();
+            if (_started) return;
+            Step();
+            _started = true;
+            _thread.Start();
+        }
+
+        private void Run()
+        {
             try
             {
-                Process(sender, args.RequiredSamples);
+                while (!_stop)
+                {
+                    Step();
+                    if (_stop) break;
+                    _wait.Wait(WakeMilliseconds);
+                }
+            }
+            finally
+            {
+                _wait.Dispose();
+            }
+        }
+
+        private unsafe void Step()
+        {
+            if (!_gate.TryEnter()) return;
+            try
+            {
+                var queued = _unit > 0 ? (long)Render.QueuedSampleCount / _unit : 0;
+                using (var captured = Capture.GetFrame())
+                using (var buffer = captured.LockBuffer(AudioBufferAccessMode.Read))
+                using (var reference = buffer.CreateReference())
+                {
+                    reference.GetBuffer(out var bytes, out _);
+                    var count = bytes == null ? 0 : (int)(buffer.Length / 4);
+                    _pump.Step(new ReadOnlySpan<float>(bytes, count), queued);
+                }
+
+                if (_unit == 0)
+                    _unit = (long)Render.QueuedSampleCount >= _pump.WrittenFrames * 2 ? 2 : 1;
             }
             catch
             {
@@ -48,54 +97,40 @@ namespace HyPlayer.UWP.Chopin.Dsp
             }
         }
 
-        private unsafe void Process(AudioFrameInputNode sender, int frames)
+        private void Stretch(ReadOnlySpan<float> input, Span<float> output)
         {
-            if (frames <= 0) return;
-            using (var captured = Capture.GetFrame())
-            using (var buffer = captured.LockBuffer(AudioBufferAccessMode.Read))
-            using (var reference = buffer.CreateReference())
+            lock (_stretchLock)
             {
-                reference.GetBuffer(out var bytes, out _);
-                var count = (int)(buffer.Length / 4);
-                if (_fifoCount + count > _fifo.Length) Array.Resize(ref _fifo, Math.Max(_fifo.Length * 2, _fifoCount + count));
-                new ReadOnlySpan<float>((float*)bytes, count).CopyTo(_fifo.AsSpan(_fifoCount));
-                _fifoCount += count;
+                if (_disposed) output.Clear();
+                else _stretcher.Process(input, output);
             }
+        }
 
-            var samples = frames * 2;
-            if (_input.Length < samples) _input = new float[samples];
-            if (_output.Length < samples) _output = new float[samples];
-            var input = _input.AsSpan(0, samples);
-            if (_fifoCount >= samples)
-            {
-                _fifo.AsSpan(0, samples).CopyTo(input);
-                _fifo.AsSpan(samples, _fifoCount - samples).CopyTo(_fifo);
-                _fifoCount -= samples;
-            }
-            else
-            {
-                input.Clear();
-            }
-            if (_fifoCount > samples * 8) _fifoCount = 0;
-
-            var output = _output.AsSpan(0, samples);
-            lock (_stretchLock) _stretcher.Process(input, output);
-
-            using var frame = new AudioFrame((uint)(samples * 4));
+        private unsafe void Write(ReadOnlySpan<float> interleavedStereo)
+        {
+            using var frame = new AudioFrame((uint)(interleavedStereo.Length * 4));
             using (var buffer = frame.LockBuffer(AudioBufferAccessMode.Write))
             using (var reference = buffer.CreateReference())
             {
                 reference.GetBuffer(out var bytes, out _);
-                output.CopyTo(new Span<float>((float*)bytes, samples));
+                interleavedStereo.CopyTo(new Span<float>((float*)bytes, interleavedStereo.Length));
             }
-            sender.AddFrame(frame);
+
+            Render.AddFrame(frame);
         }
 
         public void Dispose()
         {
+            _stop = true;
             _gate.CloseAndDrain();
-            Render.QuantumStarted -= OnQuantumStarted;
-            lock (_stretchLock) _stretcher.Dispose();
+            lock (_stretchLock)
+            {
+                if (_disposed) return;
+                _disposed = true;
+                _stretcher.Dispose();
+            }
+
+            if (!_started) _wait.Dispose();
         }
     }
 }

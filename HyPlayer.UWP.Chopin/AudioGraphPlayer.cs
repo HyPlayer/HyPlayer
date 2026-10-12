@@ -50,6 +50,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private AudioGraph _callbackGraph;
         private AudioFrameOutputNode _runningFrameOutput;
         private readonly CallbackGate _callbackGate = new();
+        private readonly SpectrumFeed _spectrumFeed = new();
         private bool _enableFftProcessing;
         [ThreadStatic] private static bool _inGraphCallback;
         #endregion
@@ -121,6 +122,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             get => _enableFftProcessing;
             set
             {
+                if (_enableFftProcessing == value) return;
                 _enableFftProcessing = value;
                 RefreshCallbacks();
             }
@@ -301,8 +303,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             RefreshCallbacks();
         }
 
-        private bool CallbacksNeeded() => _enableFftProcessing || TransientCallbacksNeeded();
-
         private bool TransientCallbacksNeeded() => Volatile.Read(ref _activeRampCount) > 0;
 
         private bool MixWorkActive()
@@ -323,37 +323,47 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             lock (_callbackLock)
             {
                 var graph = _defaultPlayer;
-                var needed = graph != null && CallbacksNeeded();
                 RealtimeGcGuard.Set(graph != null && (TransientCallbacksNeeded() || MixWorkActive()));
-                var target = needed ? graph : null;
-                if (ReferenceEquals(target, _callbackGraph)
-                    && ReferenceEquals(_runningFrameOutput, needed ? _frameOutputNode : null))
-                    return;
-
-                if (_callbackGraph != null)
+                var target = graph != null && TransientCallbacksNeeded() ? graph : null;
+                if (!ReferenceEquals(target, _callbackGraph))
                 {
-                    _callbackGraph.QuantumStarted -= GraphOnQuantumStarted;
-                    _callbackGraph.QuantumProcessed -= GraphOnQuantumProcessed;
-                    _callbackGraph = null;
+                    if (_callbackGraph != null)
+                    {
+                        _callbackGraph.QuantumStarted -= GraphOnQuantumStarted;
+                        _callbackGraph = null;
+                    }
+
+                    _callbackGate.CloseAndDrain();
+                    if (target != null)
+                    {
+                        _callbackGate.Reopen();
+                        target.QuantumStarted += GraphOnQuantumStarted;
+                        _callbackGraph = target;
+                    }
                 }
 
-                _callbackGate.CloseAndDrain();
-                var frameOutput = _frameOutputNode;
+                var frameOutput = graph != null && _enableFftProcessing ? _frameOutputNode : null;
+                if (ReferenceEquals(frameOutput, _runningFrameOutput)) return;
+                _spectrumFeed.Detach();
                 try
                 {
-                    if (needed) frameOutput?.Start();
-                    else frameOutput?.Stop();
+                    _runningFrameOutput?.Stop();
                 }
                 catch
                 {
                 }
 
-                _runningFrameOutput = needed ? frameOutput : null;
-                if (target == null) return;
-                _callbackGate.Reopen();
-                target.QuantumStarted += GraphOnQuantumStarted;
-                target.QuantumProcessed += GraphOnQuantumProcessed;
-                _callbackGraph = target;
+                _runningFrameOutput = frameOutput;
+                if (frameOutput == null) return;
+                try
+                {
+                    frameOutput.Start();
+                    _spectrumFeed.Attach(frameOutput, FFTProcessor, graph.SamplesPerQuantum,
+                        (int)graph.EncodingProperties.SampleRate);
+                }
+                catch
+                {
+                }
             }
         }
 
@@ -419,7 +429,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             node.Stop();
             var bus = graph.CreateSubmixNode();
             bus.AddOutgoingConnection(_outputNode);
-            bus.AddOutgoingConnection(_frameOutputNode);
+            ConnectFrameOutput(bus);
             node.AddOutgoingConnection(bus);
             var renderer = new MixRenderer(graph, node, bus, source);
             lock (_renderers) _renderers.Add(renderer);
@@ -439,7 +449,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 renderer.Node.Stop();
                 renderer.Node.RemoveOutgoingConnection(renderer.Bus);
                 renderer.Bus.RemoveOutgoingConnection(_outputNode);
-                renderer.Bus.RemoveOutgoingConnection(_frameOutputNode);
+                DisconnectFrameOutput(renderer.Bus);
             }
             catch
             {
@@ -483,36 +493,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         {
             if (_outputNode == null) return;
             _outputNode.OutgoingGain = _muted ? 0 : _volume * _masterFade;
-        }
-
-        private void GraphOnQuantumProcessed(AudioGraph sender, object args)
-        {
-            if (!_callbackGate.TryEnter()) return;
-            AudioThreadCallbacks.Mark();
-            _inGraphCallback = true;
-            try
-            {
-                ProcessQuantumEnd();
-            }
-            finally
-            {
-                _inGraphCallback = false;
-                _callbackGate.Exit();
-            }
-        }
-
-        private void ProcessQuantumEnd()
-        {
-            using var frame = _frameOutputNode.GetFrame();
-            if (!EnableFFTProcessing) return;
-            try
-            {
-                FFTProcessor.ProcessFFT(frame, (int)_frameOutputNode.EncodingProperties.SampleRate);
-            }
-            catch
-            {
-                //Ignore
-            }
         }
 
         public async Task ChangePlayerServiceImplementation(IAudioSettings settings)
@@ -745,10 +725,10 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 if (_callbackGraph != null)
                 {
                     _callbackGraph.QuantumStarted -= GraphOnQuantumStarted;
-                    _callbackGraph.QuantumProcessed -= GraphOnQuantumProcessed;
                     _callbackGraph = null;
                 }
 
+                _spectrumFeed.Detach();
                 _runningFrameOutput = null;
             }
         }
@@ -1059,10 +1039,11 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 var capture = _defaultPlayer.CreateFrameOutputNode(properties);
                 var render = _defaultPlayer.CreateFrameInputNode(properties);
                 render.Stop();
-                corrector = new PitchCorrector(capture, render, (int)properties.SampleRate);
+                corrector = new PitchCorrector(capture, render, (int)properties.SampleRate, _defaultPlayer.SamplesPerQuantum);
                 render.AddOutgoingConnection(bus);
                 node.AddOutgoingConnection(capture);
                 node.RemoveOutgoingConnection(bus);
+                corrector.Start();
                 render.Start();
                 _pitchCorrectors[source] = corrector;
                 return corrector;
@@ -1159,7 +1140,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             var bus = _defaultPlayer.CreateSubmixNode();
             bus.OutgoingGain = gainState.GetOutgoingGain();
             bus.AddOutgoingConnection(_outputNode);
-            bus.AddOutgoingConnection(_frameOutputNode);
+            ConnectFrameOutput(bus);
             node.AddOutgoingConnection(bus);
             node.MediaSourceCompleted += OnMediaSourceCompleted;
 
@@ -1274,7 +1255,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
                 try
                 {
-                    bus.RemoveOutgoingConnection(_frameOutputNode);
+                    DisconnectFrameOutput(bus);
                 }
                 catch
                 {
@@ -1284,6 +1265,32 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
 
             DisposeInBackground(node);
+        }
+
+        private void ConnectFrameOutput(AudioSubmixNode bus)
+        {
+            _spectrumFeed.Block();
+            try
+            {
+                bus.AddOutgoingConnection(_frameOutputNode);
+            }
+            finally
+            {
+                _spectrumFeed.Unblock();
+            }
+        }
+
+        private void DisconnectFrameOutput(AudioSubmixNode bus)
+        {
+            _spectrumFeed.Block();
+            try
+            {
+                bus.RemoveOutgoingConnection(_frameOutputNode);
+            }
+            finally
+            {
+                _spectrumFeed.Unblock();
+            }
         }
 
         private static void DisposeInBackground(IDisposable node)
