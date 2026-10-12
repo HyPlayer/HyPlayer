@@ -14,6 +14,7 @@ using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.User;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
@@ -206,11 +207,9 @@ public sealed partial class RadioPage : Page
     {
         if (_allPrograms is not null) return _allPrograms;
 
-        var programs = _radioChannel is LinerContainerBase liner
-            ? await liner.GetAllItemsAsync(_cancellationToken)
-            : (await _progressiveRadioChannel.GetProgressiveItemsListAsync(0,
-                _progressiveRadioChannel.MaxProgressiveCount, _cancellationToken)).Item2;
-        _allPrograms = programs.OfType<SingleSongBase>().ToList();
+        var pages = await ContainerItemLoader.LoadProgressivePagesAsync(_progressiveRadioChannel,
+            _progressiveRadioChannel.MaxProgressiveCount, _cancellationToken);
+        _allPrograms = pages.SelectMany(page => page).OfType<SingleSongBase>().ToList();
         return _allPrograms;
     }
 

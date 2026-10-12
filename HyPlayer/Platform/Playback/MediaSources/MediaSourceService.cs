@@ -39,10 +39,10 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
         if (!IsNeteaseSong(song)
             || !_providers.TryGetValue(SelectProviderId(), out var provider)
             || provider is not IMediaPrefetchProvider prefetcher
-            || await DownloadedTrackIndex.TryGetAsync(song.ActualId).ConfigureAwait(false) is not null)
+            || await DownloadedTrackIndex.TryGetAsync(NeteaseTrack.IdOf(song)).ConfigureAwait(false) is not null)
             return;
 
-        var resolved = await _urlResolver.ResolveAsync(song.ActualId, ct).ConfigureAwait(false);
+        var resolved = await _urlResolver.ResolveAsync(NeteaseTrack.IdOf(song), ct).ConfigureAwait(false);
         if (resolved is null)
             return;
 
@@ -72,7 +72,7 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
             || provider is not IMediaTransferProvider transfers)
             return true;
 
-        if (await DownloadedTrackIndex.TryGetAsync(song.ActualId).ConfigureAwait(false) is not null)
+        if (await DownloadedTrackIndex.TryGetAsync(NeteaseTrack.IdOf(song)).ConfigureAwait(false) is not null)
             return true;
 
         if (transfers.IsTransferring(song))
@@ -81,7 +81,7 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
         ResolvedSongUrl? resolved;
         try
         {
-            resolved = await _urlResolver.ResolveAsync(song.ActualId, ct).ConfigureAwait(false);
+            resolved = await _urlResolver.ResolveAsync(NeteaseTrack.IdOf(song), ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -101,7 +101,7 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
         if (!IsNeteaseSong(song))
             return null;
 
-        if (await DownloadedTrackIndex.TryGetAsync(song.ActualId).ConfigureAwait(false) is { } downloaded)
+        if (await DownloadedTrackIndex.TryGetAsync(NeteaseTrack.IdOf(song)).ConfigureAwait(false) is { } downloaded)
             return await downloaded.OpenReadAsync();
 
         if (!_providers.TryGetValue(SelectProviderId(), out var provider)
@@ -109,7 +109,7 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
             || transfers.IsTransferring(song))
             return null;
 
-        var resolved = await _urlResolver.ResolveAsync(song.ActualId, ct).ConfigureAwait(false);
+        var resolved = await _urlResolver.ResolveAsync(NeteaseTrack.IdOf(song), ct).ConfigureAwait(false);
         if (resolved is null)
             return null;
 
@@ -155,15 +155,15 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
     {
         ct.ThrowIfCancellationRequested();
         if (IsNeteaseSong(song)
-            && await DownloadedTrackIndex.TryGetAsync(song.ActualId).ConfigureAwait(false) is { } downloaded)
+            && await DownloadedTrackIndex.TryGetAsync(NeteaseTrack.IdOf(song)).ConfigureAwait(false) is { } downloaded)
             return new LocalFileMediaResource(song, downloaded);
 
         ResolvedSongUrl? resolved;
         try
         {
             resolved = qualityTag is NeteaseMusicQualityTag tag && !string.IsNullOrWhiteSpace(tag.Quality)
-                ? await _urlResolver.ResolveAsync(song.ActualId, tag.Quality, ct).ConfigureAwait(false)
-                : await _urlResolver.ResolveAsync(song.ActualId, ct).ConfigureAwait(false);
+                ? await _urlResolver.ResolveAsync(NeteaseTrack.IdOf(song), tag.Quality, ct).ConfigureAwait(false)
+                : await _urlResolver.ResolveAsync(NeteaseTrack.IdOf(song), ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -199,7 +199,7 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
 
     private static bool IsNeteaseSong(SingleSongBase song)
     {
-        return song.ProviderId == "ncm" && !string.IsNullOrWhiteSpace(song.ActualId);
+        return song.ProviderId == "ncm" && !string.IsNullOrWhiteSpace(NeteaseTrack.IdOf(song));
     }
 
     private NeteaseMediaResource CreateResource(SingleSongBase song, ResolvedSongUrl resolved)

@@ -34,6 +34,7 @@ using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Services;
 using ObservableCollections;
 using HyPlayer.Features.User;
+using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.PlayCore.Abstraction;
@@ -422,7 +423,7 @@ DoubleAnimation verticalAnimation;
             SliderProgress.Minimum = 0;
             // Maximum/value/current time are provided by PlayBarViewModel x:Bind.
         });
-        var songId = providerItem.ActualId;
+        var songId = NeteaseTrack.IdOf(providerItem);
         var isLiked = !string.IsNullOrEmpty(songId) && _auth.LikedSongs.Contains(songId);
         if (snapshot?.IsLocal != true)
         {
@@ -685,7 +686,7 @@ DoubleAnimation verticalAnimation;
 
     private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
     {
-        var songId = ViewModel.NowPlayingProviderItem?.ActualId;
+        var songId = NeteaseTrack.IdOf(ViewModel.NowPlayingProviderItem);
         if (!string.IsNullOrEmpty(songId))
             await new SongListSelect(songId).ShowAsync();
     }
@@ -904,7 +905,7 @@ DoubleAnimation verticalAnimation;
     {
         var dataPackage = new DataPackage();
         var providerItem = ViewModel.NowPlayingProviderItem;
-        var songId = providerItem?.ActualId;
+        var songId = NeteaseTrack.IdOf(providerItem);
         if (string.IsNullOrEmpty(songId)) return;
         dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" + songId));
         dataPackage.Properties.Title = providerItem?.Name ?? string.Empty;

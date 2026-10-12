@@ -22,7 +22,9 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.LocalMusic;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Downloads;
+using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Storage.Audio;
 using HyPlayer.Platform.Xaml;
@@ -120,7 +122,7 @@ public sealed partial class DownloadObject : ObservableObject
         var trackMetadata = song as IHasTrackMetadata;
         _downloadTrackId = trackMetadata?.TrackNumber ?? 0;
         _downloadCdName = trackMetadata?.DiscName;
-        _downloadSongId = song.ActualId ?? string.Empty;
+        _downloadSongId = NeteaseTrack.IdOf(song) ?? string.Empty;
         _downloadAlbumId = string.IsNullOrWhiteSpace(song.Album?.ActualId)
             ? null
             : song.ProviderId + ":" + song.Album.ActualId;
@@ -252,7 +254,7 @@ public sealed partial class DownloadObject : ObservableObject
         {
             try
             {
-                if (_lyricSettings.DownloadLyric)
+                if (_lyricSettings.DownloadLyric && _providerSong is not NeteaseRadioProgram)
                     await DownloadLyric().ConfigureAwait(false);
                 if (_downloadSettings.WriteDownloadFileInfo)
                     await WriteInfoToFile().ConfigureAwait(false);
@@ -300,7 +302,7 @@ public sealed partial class DownloadObject : ObservableObject
                 using var streamAbstraction = await UwpStorageFileAbstraction.OpenAsync(ResultFile, writable: true);
                 using var file = TagLibHelper.Create(streamAbstraction, "." + _downloadFormat);
                 if (_downloadSettings.Write163Info)
-                    The163KeyHelper.TrySetMusicInfo(file.Tag, _providerSong, _downloadBitrate, _downloadFormat);
+                    The163KeyHelper.TrySetMusicInfo(file.Tag, NeteaseTrack.Of(_providerSong), _downloadBitrate, _downloadFormat);
                 //写相关信息
                 file.Tag.Album = AlbumName;
                 file.Tag.Performers = _downloadArtistNames;
@@ -558,7 +560,7 @@ public sealed partial class DownloadObject : ObservableObject
                 return;
             }
 
-            var musicResource = await musicResourceProvider.GetMusicResourceAsync(_providerSong, qualityTag);
+            var musicResource = await musicResourceProvider.GetMusicResourceAsync(NeteaseTrack.Of(_providerSong), qualityTag);
 
             if (musicResource?.Uri is null)
             {

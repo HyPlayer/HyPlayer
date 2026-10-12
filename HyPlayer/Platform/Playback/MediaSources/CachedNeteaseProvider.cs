@@ -47,7 +47,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
     {
         ct.ThrowIfCancellationRequested();
         var playUri = resource.Uri;
-        if (_downloadOperations.TryGetValue(song.ActualId, out var pendingOperation))
+        if (_downloadOperations.TryGetValue(NeteaseTrack.IdOf(song), out var pendingOperation))
             return pendingOperation.IsRandomAccessRequired || playUri is null
                 ? await CreateFromDownloadAsync(resource, pendingOperation)
                 : MediaSource.CreateFromUri(playUri);
@@ -67,7 +67,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
 
     public async Task PrefetchAsync(SingleSongBase song, MusicResourceBase resource, CancellationToken ct)
     {
-        if (resource.Uri is not { } playUri || _downloadOperations.ContainsKey(song.ActualId))
+        if (resource.Uri is not { } playUri || _downloadOperations.ContainsKey(NeteaseTrack.IdOf(song)))
             return;
         if (await GetCacheFileAsync(song, resource, ct) is not null)
             return;
@@ -76,22 +76,22 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
         var destinationFile = await CreateCacheFileAsync(song, resource);
         var operation = _downloader.CreateDownload(playUri, destinationFile);
         operation.IsRandomAccessRequired = supportsRandomAccess;
-        if (!_downloadOperations.TryAdd(song.ActualId, operation))
+        if (!_downloadOperations.TryAdd(NeteaseTrack.IdOf(song), operation))
             return;
 
-        StartTransfer(song.ActualId, operation);
+        StartTransfer(NeteaseTrack.IdOf(song), operation);
     }
 
     public bool IsTransferring(SingleSongBase song)
     {
-        return _downloadOperations.ContainsKey(song.ActualId);
+        return _downloadOperations.ContainsKey(NeteaseTrack.IdOf(song));
     }
 
     public void CancelTransfersExcept(SingleSongBase keep)
     {
         foreach (var pair in _transferCancellations)
         {
-            if (pair.Key == keep.ActualId)
+            if (pair.Key == NeteaseTrack.IdOf(keep))
                 continue;
 
             try
@@ -106,7 +106,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
 
     public async Task<bool> IsCachedAsync(SingleSongBase song, MusicResourceBase resource, CancellationToken ct)
     {
-        return !_downloadOperations.ContainsKey(song.ActualId)
+        return !_downloadOperations.ContainsKey(NeteaseTrack.IdOf(song))
                && await GetCacheFileAsync(song, resource, ct) is not null;
     }
 
@@ -119,13 +119,13 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
     {
         try
         {
-            if (_downloadOperations.ContainsKey(song.ActualId))
+            if (_downloadOperations.ContainsKey(NeteaseTrack.IdOf(song)))
                 return null;
 
             var cacheFolder = await StorageMaintenance.GetCacheFolderAsync();
             foreach (var extension in _offlineExtensions)
             {
-                var fileName = string.Format(CacheFileNameFormat, song.ActualId, extension);
+                var fileName = string.Format(CacheFileNameFormat, NeteaseTrack.IdOf(song), extension);
                 if (await cacheFolder.TryGetItemAsync(fileName) is not StorageFile file)
                     continue;
                 if ((await file.GetBasicPropertiesAsync()).Size == 0)
@@ -186,7 +186,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
     private async Task<StorageFile> CreateCacheFileAsync(SingleSongBase song, MusicResourceBase resource)
     {
         var cacheFolder = await StorageMaintenance.GetCacheFolderAsync();
-        var fileName = string.Format(CacheFileNameFormat, song.ActualId, GetExtension(resource));
+        var fileName = string.Format(CacheFileNameFormat, NeteaseTrack.IdOf(song), GetExtension(resource));
         return await cacheFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
     }
 
@@ -198,11 +198,11 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
         try
         {
             ct.ThrowIfCancellationRequested();
-            if (_downloadOperations.ContainsKey(song.ActualId))
+            if (_downloadOperations.ContainsKey(NeteaseTrack.IdOf(song)))
                 return null;
 
             var cacheFolder = await StorageMaintenance.GetCacheFolderAsync();
-            var fileName = string.Format(CacheFileNameFormat, song.ActualId, GetExtension(resource));
+            var fileName = string.Format(CacheFileNameFormat, NeteaseTrack.IdOf(song), GetExtension(resource));
             if (await cacheFolder.TryGetItemAsync(fileName) is not StorageFile cacheFile)
                 return null;
 
@@ -243,15 +243,15 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
         Uri playUri,
         CancellationToken ct)
     {
-        if (_downloadOperations.TryGetValue(song.ActualId, out var existingOperation))
+        if (_downloadOperations.TryGetValue(NeteaseTrack.IdOf(song), out var existingOperation))
             return await CreateFromDownloadAsync(resource, existingOperation);
 
         var supportsRandomAccess = await SupportsRandomAccessAsync(playUri, ct);
         var destinationFile = await CreateCacheFileAsync(song, resource);
         var operation = _downloader.CreateDownload(playUri, destinationFile);
         operation.IsRandomAccessRequired = supportsRandomAccess;
-        _downloadOperations[song.ActualId] = operation;
-        StartTransfer(song.ActualId, operation);
+        _downloadOperations[NeteaseTrack.IdOf(song)] = operation;
+        StartTransfer(NeteaseTrack.IdOf(song), operation);
 
         return supportsRandomAccess
             ? await CreateFromDownloadAsync(resource, operation)

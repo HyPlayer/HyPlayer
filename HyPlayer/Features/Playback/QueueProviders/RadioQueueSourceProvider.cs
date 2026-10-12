@@ -17,6 +17,8 @@ namespace HyPlayer.Features.Playback.QueueProviders;
 /// </summary>
 internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
 {
+    private const int PageSize = 100;
+
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly INotificationService _notification;
     private readonly IProvidableItemProvidable _provider;
@@ -52,19 +54,13 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
             if (radio is not IProgressiveLoadingContainer container)
                 return ProviderQueueSourceLoadResult.Failed;
 
-            var hasMore = true;
-            var offset = 0;
             var batches = new List<IList<SingleSongBase>>();
-            const int count = 100;
-            while (hasMore)
+            foreach (var page in await ContainerItemLoader.LoadProgressivePagesAsync(container, PageSize,
+                         cancellationToken))
             {
-                var result = await container.GetProgressiveItemsListAsync(offset, count, cancellationToken);
-                hasMore = result.Item1;
-                var songs = result.Item2.OfType<SingleSongBase>().ToList();
+                var songs = page.OfType<SingleSongBase>().ToList();
                 if (songs.Count > 0)
                     batches.Add(songs);
-
-                offset += count;
             }
 
             if (asc)
@@ -78,7 +74,7 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
 
             return ProviderQueueSourceLoadResult.FromBatches(batches);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _notification.ShowMessage("AppendRadioList时发生错误", ex.Message);
         }

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.System.Threading;
@@ -12,6 +13,10 @@ using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Comments;
+using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Comment;
+using HyPlayer.NeteaseProvider.Mappers;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -37,6 +42,9 @@ public sealed partial class Comments : Page
     private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
 
+    private readonly NeteaseProvider.NeteaseProvider _neteaseProvider =
+        Ioc.Default.GetRequiredService<NeteaseProvider.NeteaseProvider>();
+
 #nullable enable
     private ScrollViewer? _mainScroll, _hotCommentsScroll;
 #nullable restore
@@ -54,7 +62,7 @@ public sealed partial class Comments : Page
     private int _hotCommentsLoadVersion;
     private bool _isUnloaded;
     private int _normalCommentsLoadVersion;
-    private string _cursor;
+    private readonly CommentCursorTrail _timeCursors = new();
     private bool _isShiftingPage;
     private int _page = 1;
     private string _resourceId;
@@ -133,10 +141,13 @@ public sealed partial class Comments : Page
             ? ++_hotCommentsLoadVersion
             : ++_normalCommentsLoadVersion;
 
-        var offset = type == 3 && _page != 1 && int.TryParse(_cursor, out var cursorOffset)
-            ? cursorOffset
-            : (_page - 1) * 20;
-        var result = await LoadProviderCommentsAsync(offset, type);
+        var page = _page;
+        ProviderPageResult<CommentBase> result;
+        string nextCursor = null;
+        if (type == 3)
+            (result, nextCursor) = await LoadTimeSortedCommentsAsync(page);
+        else
+            result = await LoadProviderCommentsAsync((page - 1) * 20, type);
         if (targetHotComments
                 ? requestVersion != _hotCommentsLoadVersion
                 : requestVersion != _normalCommentsLoadVersion)
@@ -158,7 +169,7 @@ public sealed partial class Comments : Page
             _normalComments.AddRange(result.Items);
 
         if (type == 3)
-            _cursor = result.NextOffset?.ToString();
+            _timeCursors.Record(page, nextCursor);
 
         NextPage.IsEnabled = result.HasMore;
         PrevPage.IsEnabled = _page > 1;
@@ -169,10 +180,7 @@ public sealed partial class Comments : Page
         if (string.IsNullOrEmpty(_resourceId))
             return Task.CompletedTask;
 
-        var offset = type == 3 && _page != 1 && int.TryParse(_cursor, out var cursorOffset)
-            ? cursorOffset
-            : (_page - 1) * 20;
-        var key = $"{_resourceId}:{_resourceType}:{_page}:{offset}:{type}";
+        var key = $"{_resourceId}:{_resourceType}:{_page}:{type}";
         if (_commentLoadTasks.TryGetValue(key, out var runningTask) && !runningTask.IsCompleted)
             return runningTask;
 
@@ -224,6 +232,36 @@ public sealed partial class Comments : Page
         }
     }
 
+    private async Task<(ProviderPageResult<CommentBase> Page, string NextCursor)> LoadTimeSortedCommentsAsync(
+        int page)
+    {
+        var response = await _neteaseProvider.RequestAsync(
+            NeteaseApis.CommentsApi,
+            new CommentsRequest
+            {
+                ResourceId = _resourceId,
+                ResourceType = TypeIdToSearchIdMapper.MapToResourceId(_resourceType),
+                CommentSortType = CommentSortType.Time,
+                PageNo = page,
+                PageSize = 20,
+                Cursor = _timeCursors.For(page)
+            },
+            _cancellationToken);
+        _cancellationToken.ThrowIfCancellationRequested();
+        if (response.IsError)
+        {
+            _notification.ShowMessage("加载评论时出错", response.Error?.Message ?? "未知错误");
+            return (new ProviderPageResult<CommentBase> { Items = [], HasMore = false }, null);
+        }
+
+        var data = response.Value?.Data;
+        return (new ProviderPageResult<CommentBase>
+        {
+            Items = data?.Comments?.Select(comment => (CommentBase)comment.MapToNeteaseComment()).ToList() ?? [],
+            HasMore = data?.HasMore is true
+        }, data?.Cursor);
+    }
+
     private string CreateProvidableItemId(string typeId, string actualId)
     {
         return _knownTypeIds.Id + typeId + actualId;
@@ -254,7 +292,7 @@ public sealed partial class Comments : Page
     {
         _sortType = ComboBoxSortType.SelectedIndex + 1;
         _page = 1;
-        _cursor = null;
+        _timeCursors.Clear();
         _commentLoaderTask = StartLoadComments(_sortType);
     }
 
