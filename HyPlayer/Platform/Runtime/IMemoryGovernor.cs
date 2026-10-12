@@ -15,5 +15,7 @@ public interface IMemoryGovernor
 
     void ScheduleNavigationReclaim();
 
+    void OnExpandedPlayerVisibilityChanged(bool open);
+
     Task<ulong> ReclaimAsync();
 }

@@ -18,6 +18,7 @@ using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Services;
+using HyPlayer.NeteaseProvider.Models;
 using ObservableCollections;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.PlayCore.Abstraction;
@@ -133,6 +134,7 @@ public partial class PlayBarViewModel : ObservableObject
     public string ArtistDisplayText => IsLoadingTrack ? "正在加载…" : ArtistName;
     public string AlbumName => NowPlayingSnapshot?.AlbumName ?? string.Empty;
     public string QualityTagText => GetQualityTagText(NowPlayingSnapshot, QualityTag, _playbackSettings.AudioRate);
+    public double QualityTagOpacity => _state.IsTransitioning || QualityTagText.Length > 0 ? 1 : 0;
 
     public string TotalTimeText => FormatTime(Duration != TimeSpan.Zero
         ? Duration
@@ -264,6 +266,9 @@ public partial class PlayBarViewModel : ObservableObject
                 case nameof(PlaybackStateService.QualityTag):
                     QualityTag = _state.QualityTag;
                     break;
+                case nameof(PlaybackStateService.IsTransitioning):
+                    OnPropertyChanged(nameof(QualityTagOpacity));
+                    break;
                 case nameof(PlaybackStateService.IsLoadingTrack):
                     IsLoadingTrack = _state.IsLoadingTrack;
                     break;
@@ -350,6 +355,7 @@ public partial class PlayBarViewModel : ObservableObject
     partial void OnQualityTagChanged(string value)
     {
         OnPropertyChanged(nameof(QualityTagText));
+        OnPropertyChanged(nameof(QualityTagOpacity));
     }
 
     private void NotifyPlayBarProperties()
@@ -359,6 +365,7 @@ public partial class PlayBarViewModel : ObservableObject
         OnPropertyChanged(nameof(ArtistDisplayText));
         OnPropertyChanged(nameof(AlbumName));
         OnPropertyChanged(nameof(QualityTagText));
+        OnPropertyChanged(nameof(QualityTagOpacity));
         OnPropertyChanged(nameof(TotalTimeText));
         OnPropertyChanged(nameof(DurationMilliseconds));
         OnPropertyChanged(nameof(CanShareCurrentSong));
@@ -383,6 +390,7 @@ public partial class PlayBarViewModel : ObservableObject
         if (!string.IsNullOrWhiteSpace(qualityTag)) return FormatAudioLevel(qualityTag);
         if (snapshot is null) return "无歌曲";
         if (snapshot.IsLocal) return "本地歌曲";
+        if (snapshot.ProviderItem is NeteaseRadioProgram) return string.Empty;
         return FormatAudioLevel(fallbackLevel);
     }
 

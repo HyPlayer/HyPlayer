@@ -36,6 +36,24 @@ internal static class ReclaimPolicy
     }
 }
 
+internal sealed class NavigationReclaimGate
+{
+    private int _version;
+    private volatile bool _expandedPlayerOpen;
+
+    public bool AllowsNavigationReclaim => !_expandedPlayerOpen;
+
+    public int Begin() => Interlocked.Increment(ref _version);
+
+    public bool IsCurrent(int ticket) => ticket == Volatile.Read(ref _version);
+
+    public void SetExpandedPlayerOpen(bool open)
+    {
+        _expandedPlayerOpen = open;
+        Interlocked.Increment(ref _version);
+    }
+}
+
 public sealed class MemoryGovernor : IMemoryGovernor
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -103,7 +121,7 @@ public sealed class MemoryGovernor : IMemoryGovernor
     private volatile bool _appInBackground;
     private volatile bool _fullReclaimPending;
     private int _pollsWithoutPlayback;
-    private int _collectVersion;
+    private readonly NavigationReclaimGate _navigationReclaim = new();
 
     public MemoryGovernor(
         UISettings settings,
@@ -142,7 +160,7 @@ public sealed class MemoryGovernor : IMemoryGovernor
     public void OnEnteredBackground()
     {
         _appInBackground = true;
-        Interlocked.Increment(ref _collectVersion);
+        _navigationReclaim.Begin();
         _ = Task.Run(Collect);
         RestartInactiveTimer();
     }
@@ -155,11 +173,22 @@ public sealed class MemoryGovernor : IMemoryGovernor
 
     public void ScheduleNavigationReclaim()
     {
-        var version = Interlocked.Increment(ref _collectVersion);
+        if (_navigationReclaim.AllowsNavigationReclaim) ScheduleCollect();
+    }
+
+    public void OnExpandedPlayerVisibilityChanged(bool open)
+    {
+        _navigationReclaim.SetExpandedPlayerOpen(open);
+        if (!open) ScheduleCollect();
+    }
+
+    private void ScheduleCollect()
+    {
+        var ticket = _navigationReclaim.Begin();
         _ = Task.Run(async () =>
         {
             await Task.Delay(NavigationReclaimDelay);
-            if (version != Volatile.Read(ref _collectVersion)) return;
+            if (!_navigationReclaim.IsCurrent(ticket)) return;
             Collect();
         });
     }
@@ -168,7 +197,7 @@ public sealed class MemoryGovernor : IMemoryGovernor
     {
         if (!ReclaimPolicy.AllowsBackgroundCollect(_player.RealtimeCallbacksActive, _playbackState.IsTransitioning))
         {
-            ScheduleNavigationReclaim();
+            ScheduleCollect();
             return;
         }
 

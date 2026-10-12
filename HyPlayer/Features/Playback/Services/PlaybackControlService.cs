@@ -1488,9 +1488,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
     private void PublishQualityTag()
     {
-        _state.QualityTag = _playCore.CurrentPlayingTicket?.MusicResource is NeteaseMusicResource { Level: { } level }
-            ? level
-            : string.Empty;
+        _state.QualityTag = PlaybackQualityLevel.Of(_playCore.CurrentPlayingTicket?.MusicResource);
     }
 
     private TrackTransitionContext CreateTransitionContext(

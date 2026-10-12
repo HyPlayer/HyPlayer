@@ -908,7 +908,8 @@
                             x:FieldModifier="public"
                             BorderBrush="Red"
                             BorderThickness="1.5"
-                            CornerRadius="4">
+                            CornerRadius="4"
+                            Opacity="{x:Bind ViewModel.QualityTagOpacity, Mode=OneWay}">
                             <Border x:Name="TransitionTagGlowHost" IsHitTestVisible="False" />
                             <TextBlock
                                 x:Name="TbSongTag"

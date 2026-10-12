@@ -63,6 +63,7 @@ public sealed partial class Comments : Page
     private string _resourceId;
     private string _resourceType;
     private int _sortType = 1;
+    private int? _totalCount;
 
     public Comments()
     {
@@ -82,11 +83,13 @@ public sealed partial class Comments : Page
     {
         var isListEmpty = _normalComments.Count == 0;
         NormalLoadView.State = isListEmpty ? _normalLoad : null;
-        PageIndicator.Text = isListEmpty || !_normalLoad.IsLoading
+        PageIndicator.Text = isListEmpty
             ? string.Empty
-            : _normalLoad.IsSlow
-                ? LoadState.SlowText
-                : _normalLoad.Title;
+            : !_normalLoad.IsLoading
+                ? CommentPageText.Format(_page, _totalCount)
+                : _normalLoad.IsSlow
+                    ? LoadState.SlowText
+                    : _normalLoad.Title;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -217,9 +220,14 @@ public sealed partial class Comments : Page
         }
 
         if (targetHotComments)
+        {
             _hotComments.AddRange(result.Items);
+        }
         else
+        {
             _normalComments.AddRange(result.Items);
+            _totalCount = result.TotalCount;
+        }
 
         NextPage.IsEnabled = result.HasMore;
         PrevPage.IsEnabled = _page > 1;
@@ -266,14 +274,14 @@ public sealed partial class Comments : Page
                     _resourceId,
                     _resourceType,
                     pageToken,
-                    20,
+                    CommentPageText.PageSize,
                     type,
                     _cancellationToken)
                 : _commentProvider.GetCommentsAsync(
                     _resourceId,
                     _resourceType,
-                    (page - 1) * 20,
-                    20,
+                    (page - 1) * CommentPageText.PageSize,
+                    CommentPageText.PageSize,
                     type,
                     _cancellationToken),
             static result => result?.Items is not { Count: > 0 });
@@ -288,6 +296,7 @@ public sealed partial class Comments : Page
     private void NextPage_Click(object sender, RoutedEventArgs e)
     {
         _page++;
+        PageSelect.Text = string.Empty;
         _commentLoaderTask = StartLoadComments(_sortType);
         ScrollTop();
     }
@@ -295,6 +304,7 @@ public sealed partial class Comments : Page
     private void PrevPage_Click(object sender, RoutedEventArgs e)
     {
         _page--;
+        PageSelect.Text = string.Empty;
         _commentLoaderTask = StartLoadComments(_sortType);
         ScrollTop();
     }
@@ -310,6 +320,7 @@ public sealed partial class Comments : Page
         _sortType = ComboBoxSortType.SelectedIndex + 1;
         _page = 1;
         _pageTrail = new CommentCursorTrail();
+        PageSelect?.Text = string.Empty;
         _commentLoaderTask = StartLoadComments(_sortType);
     }
 

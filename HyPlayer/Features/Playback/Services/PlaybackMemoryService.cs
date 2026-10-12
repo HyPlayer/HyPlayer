@@ -309,7 +309,8 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
         if (currentItem is null)
             return false;
 
-        if (_playCore.CurrentPlayingTicket?.MusicResource is NeteaseMediaResource { Level: { Length: > 0 } level } resource
+        if (_playCore.CurrentPlayingTicket?.MusicResource is NeteaseMediaResource resource
+            && PlaybackQualityLevel.Of(resource) is { Length: > 0 } level
             && Matches(currentItem, CreateIdentity(resource.Song)))
         {
             _qualityItem = CreateIdentity(resource.Song);

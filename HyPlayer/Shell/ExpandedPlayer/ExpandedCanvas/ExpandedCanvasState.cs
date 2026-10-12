@@ -17,6 +17,7 @@ public sealed class ExpandedCanvasState
     public bool ShowDebugOverlay { get; set; }
     public bool IsBrightTheme { get; set; }
     public double LastFrameDrawMilliseconds { get; set; }
+    public float RasterizationScale { get; set; } = 1;
     public float RandomValue { get; set; } = -1;
     public float LyricRenderXOffset { get; set; }
     public float LyricRenderYOffset { get; set; }

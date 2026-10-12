@@ -127,7 +127,7 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
             $"更新计数         {timing.UpdateCount,8}\n" +
             $"计时状态         {timingMode,8} / {runningState}\n" +
             $"画布 (DIP)       {sender.Size.Width:F0} x {sender.Size.Height:F0}\n" +
-            $"DPI 缩放         {sender.DpiScale,8:F2}x\n" +
+            $"DPI 缩放         {_state.RasterizationScale,8:F2}x\n" +
             $"-- 最近 {WindowSeconds} 秒 --\n" +
             $"最长帧间隔       {window.LongestInterval,8:F2} ms\n" +
             $"最长帧绘制       {window.LongestDraw,8:F2} ms\n" +

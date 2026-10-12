@@ -920,6 +920,7 @@ public sealed partial class ExpandedPlayer : Page
     private void SyncLyricViewport()
     {
         if (LuminousBackground is null) return;
+        SyncCanvasRasterizationScale();
         ApplyLyricLineSpacing();
         var lyricOffset = RightPanel.ActualOffset;
         if (Math.Abs(_lastChangedLyricWidth - LyricWidth) > 0.001f || _lastRedesignHeight != _nowHeight ||
@@ -938,6 +939,12 @@ public sealed partial class ExpandedPlayer : Page
                 _lyricSettings.SublineRomajiSize);
             _lastChangedLyricWidth = LyricWidth;
         }
+    }
+
+    private void SyncCanvasRasterizationScale()
+    {
+        if (_isCleanedUp || LuminousBackground is null) return;
+        _canvasState.RasterizationScale = LuminousBackground.Dpi / 96f;
     }
 
     private void ApplyResponsiveWindowMode()
@@ -1836,6 +1843,7 @@ public sealed partial class ExpandedPlayer : Page
         SyncCanvasState();
         SyncCanvasSettings();
         LuminousBackground.DpiScale = _lyricSettings.IsolationScale;
+        RunOnUIThread(SyncCanvasRasterizationScale);
         if (!_lyricSettings.IsolationFullThrottle)
         {
             LuminousBackground.IsFixedTimeStep = true;

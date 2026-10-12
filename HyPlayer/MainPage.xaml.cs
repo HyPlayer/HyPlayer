@@ -192,7 +192,8 @@ public sealed partial class MainPage : Page
             case nameof(PlaybackSurfaceStore.SurfaceMode):
                 ApplySurfaceMode(_surfaceStore.SurfaceMode);
                 UpdateHomePlaybar();
-                _memoryGovernor.ScheduleNavigationReclaim();
+                _memoryGovernor.OnExpandedPlayerVisibilityChanged(
+                    _surfaceStore.SurfaceMode == PlaybackSurfaceMode.Expanded);
                 break;
             case nameof(PlaybackSurfaceStore.ExpandedFrameOffsetY):
                 ExpandedPlayerPositionOffset.Y = _surfaceStore.ExpandedFrameOffsetY;
