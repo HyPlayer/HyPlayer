@@ -497,22 +497,29 @@
                                                 SelectedValuePath="Tag"
                                                 SelectionChanged="TransitionMode_SelectionChanged">
                                                 <ComboBoxItem Content="直接切换" Tag="dir" />
+                                                <ComboBoxItem Content="淡入淡出" Tag="fde" />
                                                 <ComboBoxItem Content="提前准备" Tag="gap" />
                                                 <ComboBoxItem Content="交叉淡化" Tag="xfd" />
                                             </ComboBox>
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="交叉淡化渐入渐出时间 单位: s" Visibility="{x:Bind Playback.IsCrossFadeTransition, Mode=OneWay}">
+                                        <controls3:SettingsCard Header="过渡时长 单位: s" Visibility="{x:Bind Playback.TransitionUsesDuration, Mode=OneWay}">
                                             <Slider
                                                 x:Name="CrossFadeTime"
                                                 Width="256"
                                                 HorizontalAlignment="Right"
-                                                IsEnabled="{x:Bind Playback.IsCrossFadeTransition, Mode=OneWay}"
+                                                IsEnabled="{x:Bind Playback.TransitionUsesDuration, Mode=OneWay}"
                                                 Maximum="10"
                                                 Minimum="3"
                                                 StepFrequency="1"
                                                 TickFrequency="1"
                                                 ToolTipService.ToolTip="{x:Bind CrossFadeTime.Value, Mode=OneWay}"
                                                 Value="{x:Bind Playback.CrossFadeTime, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="播放、暂停与手动切歌时音量平滑变化" Header="播放控制淡入淡出">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Playback.PlaybackFade, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                     </controls3:SettingsExpander.Items>
                                 </controls3:SettingsExpander>

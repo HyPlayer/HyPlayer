@@ -146,7 +146,7 @@ public sealed partial class Settings : Page
     private void TransitionMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (TransitionMode.SelectedValue is not string transitionId
-            || transitionId is not ("dir" or "gap" or "xfd")
+            || transitionId is not ("dir" or "gap" or "xfd" or "fde")
             || transitionId == Playback.TransitionId)
             return;
 

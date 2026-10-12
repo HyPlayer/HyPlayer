@@ -45,6 +45,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 {
     private readonly ChopinAudioService _audioService;
 
+    private static readonly TimeSpan _resumeFadeIn = TimeSpan.FromMilliseconds(220);
+    private static readonly TimeSpan _pauseFadeOut = TimeSpan.FromMilliseconds(180);
+    private static readonly TimeSpan _switchFadeIn = TimeSpan.FromMilliseconds(250);
+    private static readonly TimeSpan _switchFadeOut = TimeSpan.FromMilliseconds(140);
+    private static readonly TimeSpan _switchFadeOutLimit = TimeSpan.FromMilliseconds(400);
+
     private readonly SemaphoreSlim _autoSkipLock = new(1, 1);
     private readonly SemaphoreSlim _initializeGate = new(1, 1);
     private readonly ILyricService _lyricService;
@@ -154,7 +160,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
             await _playCore.MovePreviousAsync().ConfigureAwait(false);
             if (_playCore.CurrentSong is { } song)
-                await LoadAndPlayCoreAsync(song, true, false, CancellationToken.None).ConfigureAwait(false);
+                await LoadAndPlayCoreAsync(song, true, false, CancellationToken.None, true).ConfigureAwait(false);
         }
         finally
         {
@@ -220,7 +226,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
 
         if (_playCore.CurrentSong is { } song)
-            await LoadAndPlayCoreAsync(song, true, false, ct).ConfigureAwait(false);
+            await LoadAndPlayCoreAsync(song, true, false, ct, userInitiated).ConfigureAwait(false);
     }
 
     private async Task<TransitionPreparedTrack?> PrepareNextCoreAsync(
@@ -249,6 +255,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         if (nextSong is null)
             return null;
 
+        _audioService.TakeLastPreparedSource();
         PreparedPlaybackTicket? ticket;
         try
         {
@@ -260,6 +267,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             throw;
         }
 
+        var incomingSource = _audioService.TakeLastPreparedSource();
         if (ticket is null)
         {
             _prepareRetryAfter = Environment.TickCount64 + PrepareRetryDelayMilliseconds;
@@ -279,6 +287,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             Ticket = ticket,
             Generation = context.Generation,
             Source = context.Source,
+            IncomingSource = incomingSource,
             CurrentIndex = currentIndex,
             QueueRevision = queueRevision
         };
@@ -431,6 +440,16 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 false,
                 true,
                 ct);
+        }
+
+        public Task<bool> RampVolumeAsync(IPlaybackSource source, double targetVolume, TimeSpan duration)
+        {
+            return _owner._audioService.RampVolumeAsync(source, targetVolume, duration);
+        }
+
+        public double GetVolume(IPlaybackSource source)
+        {
+            return _owner._audioService.GetVolume(source);
         }
     }
 
@@ -687,7 +706,16 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         try
         {
             await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
-            await _playCore.PlayAsync().ConfigureAwait(false);
+            if (_playbackSettings.PlaybackFade)
+                _audioService.FadeInNextPlay(_resumeFadeIn);
+            try
+            {
+                await _playCore.PlayAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                _audioService.FadeInNextPlay(TimeSpan.Zero);
+            }
 
             if (_playCore.CurrentPlayingTicket is null)
             {
@@ -720,6 +748,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         try
         {
             await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+            if (_playbackSettings.PlaybackFade)
+            {
+                _state.IsPlaying = false;
+                await _player.PauseAllAsync(_pauseFadeOut).ConfigureAwait(false);
+            }
+
             await _playCore.PauseAsync().ConfigureAwait(false);
             _state.IsPlaying = false;
         }
@@ -796,7 +830,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             try
             {
                 await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
-                await LoadAndPlayCoreAsync(song, autoPlay, removeCurrentSongs, ct).ConfigureAwait(false);
+                await LoadAndPlayCoreAsync(song, autoPlay, removeCurrentSongs, ct, autoPlay).ConfigureAwait(false);
             }
             finally
             {
@@ -988,8 +1022,13 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         SingleSongBase song,
         bool autoPlay,
         bool removeCurrentSongs,
-        CancellationToken ct)
+        CancellationToken ct,
+        bool fade = false)
     {
+        fade = fade && _playbackSettings.PlaybackFade;
+        if (fade)
+            await FadeOutCurrentAsync().ConfigureAwait(false);
+
         if (removeCurrentSongs)
             await StopCoreAsync(ct).ConfigureAwait(false);
 
@@ -997,12 +1036,33 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         if (!autoPlay)
             return;
 
+        if (fade)
+            _audioService.FadeInNextPlay(_switchFadeIn);
         var loadStarted = Stopwatch.GetTimestamp();
-        await _playCore.PlayAsync(ct).ConfigureAwait(false);
+        try
+        {
+            await _playCore.PlayAsync(ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            _audioService.FadeInNextPlay(TimeSpan.Zero);
+        }
+
         if (song.ProviderId != LocalPlaybackProvider.ProviderIdValue)
             ResourceSaver.ReportLoad(Stopwatch.GetElapsedTime(loadStarted));
+
         _state.IsPlaying = _playCore.CurrentPlayingTicket is not null;
         CaptureCurrentPlaybackIdentity();
+    }
+
+    private async Task FadeOutCurrentAsync()
+    {
+        if (_player.PrimaryPlaybackSource is not { } current
+            || _player.GlobalPlaybackStatus != PlaybackStatus.Playing)
+            return;
+
+        var fadeOut = _audioService.RampVolumeAsync(current, 0, _switchFadeOut);
+        await Task.WhenAny(fadeOut, Task.Delay(_switchFadeOutLimit)).ConfigureAwait(false);
     }
 
     private bool IsCurrentGeneration(IPlaybackSource source, long generation)

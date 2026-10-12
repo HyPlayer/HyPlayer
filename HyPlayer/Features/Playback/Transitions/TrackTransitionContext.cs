@@ -23,6 +23,7 @@ public sealed class TransitionPreparedTrack
     public required PreparedPlaybackTicket Ticket { get; init; }
     public required long Generation { get; init; }
     public required IPlaybackSource Source { get; init; }
+    public IPlaybackSource? IncomingSource { get; init; }
     public required int CurrentIndex { get; init; }
     public required int QueueRevision { get; init; }
 }

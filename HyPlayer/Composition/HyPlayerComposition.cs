@@ -255,6 +255,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<ITrackTransition, DirectTransition>();
         depository.AddSingleton<ITrackTransition, GaplessTransition>();
         depository.AddSingleton<ITrackTransition, CrossFadeTransition>();
+        depository.AddSingleton<ITrackTransition, FadeTransition>();
         depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
         depository.Add(
             typeof(INotificationSubscriber<PlaybackRequestFailedNotification>),

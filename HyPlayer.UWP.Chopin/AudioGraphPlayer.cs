@@ -32,8 +32,26 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private TimeSpan _lastPosition = TimeSpan.Zero;
         private string _currentDeviceId = string.Empty;
         private double _volume = 1;
+        private bool _muted;
+        private double _masterFade = 1;
         private AudioGraphPlaybackSource _primaryPlaybackSource;
+        private readonly object _rampLock = new();
+        private readonly List<GainRamp> _ramps = new();
+        private GainRamp _masterRamp;
+        private int _activeRampCount;
+        private int _transportVersion;
         #endregion
+
+        private sealed class GainRamp
+        {
+            public AudioGraphPlaybackSource Source;
+            public double From;
+            public double To;
+            public double Duration;
+            public double Elapsed;
+            public FadeCurve Curve;
+            public TaskCompletionSource<bool> Completion;
+        }
 
         public AudioGraphPlayer()
         {
@@ -46,11 +64,12 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public bool IsMuted
         {
-            get => _outputNode?.OutgoingGain == 0;
+            get => _outputNode != null && _muted;
             set
             {
                 if (_outputNode == null) return;
-                _outputNode.OutgoingGain = value ? 0 : _volume;
+                _muted = value;
+                ApplyMasterGain();
             }
         }
 
@@ -134,12 +153,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     var encodingProperties = newOutputNode.EncodingProperties.Copy();
                     encodingProperties.ChannelCount = 1;
                     newFrameOutputNode = newGraph.CreateFrameOutputNode(encodingProperties);
-                    newOutputNode.OutgoingGain = audioGraphSetting.OutputVolume;
-
+                    _volume = audioGraphSetting.OutputVolume;
                     _outputNode = newOutputNode;
                     _frameOutputNode = newFrameOutputNode;
+                    ApplyMasterGain();
                     _currentDeviceId = audioGraphSetting.ResolvedDeviceId;
                     EnableFFTProcessing = settings.EnableFFTProcessing;
+                    newGraph.QuantumStarted += GraphOnQuantumStarted;
                     newGraph.QuantumProcessed += GraphOnQuantumProcessed;
                     newGraph.UnrecoverableErrorOccurred += GraphOnUnrecoverableErrorOccurred;
                     Volatile.Write(ref _defaultPlayer, newGraph);
@@ -203,6 +223,78 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             return (graphResult.Graph, fallbackOutput.DeviceOutputNode);
         }
 
+        private void GraphOnQuantumStarted(AudioGraph sender, object args)
+        {
+            if (Volatile.Read(ref _activeRampCount) == 0) return;
+            var sampleRate = sender.EncodingProperties.SampleRate;
+            if (sampleRate == 0) return;
+            var step = sender.SamplesPerQuantum / (double)sampleRate;
+            List<GainRamp> finished = null;
+            lock (_rampLock)
+            {
+                if (_masterRamp != null)
+                {
+                    _masterFade = Advance(_masterRamp, step);
+                    ApplyMasterGain();
+                    if (_masterRamp.Elapsed >= _masterRamp.Duration)
+                    {
+                        (finished ??= new()).Add(_masterRamp);
+                        _masterRamp = null;
+                    }
+                }
+
+                for (var i = _ramps.Count - 1; i >= 0; i--)
+                {
+                    var ramp = _ramps[i];
+                    ApplyRampVolume(ramp.Source, Advance(ramp, step));
+                    if (ramp.Elapsed < ramp.Duration) continue;
+                    _ramps.RemoveAt(i);
+                    (finished ??= new()).Add(ramp);
+                }
+
+                UpdateActiveRampCount();
+            }
+
+            if (finished == null) return;
+            foreach (var ramp in finished) ramp.Completion.TrySetResult(true);
+        }
+
+        private static double Advance(GainRamp ramp, double step)
+        {
+            ramp.Elapsed = Math.Min(ramp.Duration, ramp.Elapsed + step);
+            var t = ramp.Duration <= 0 ? 1 : ramp.Elapsed / ramp.Duration;
+            var shaped = ramp.Curve == FadeCurve.EqualPower
+                ? (ramp.To >= ramp.From ? Math.Sin(t * Math.PI / 2) : 1 - Math.Cos(t * Math.PI / 2))
+                : t;
+            return ramp.From + (ramp.To - ramp.From) * shaped;
+        }
+
+        private void ApplyRampVolume(AudioGraphPlaybackSource source, double volume)
+        {
+            if (!_audioInputNodes.TryGetValue(source, out var node)
+                || !_playbackSourceGainStates.TryGetValue(source, out var state))
+                return;
+
+            try
+            {
+                state.Apply(node, volume, false);
+            }
+            catch
+            {
+            }
+        }
+
+        private void UpdateActiveRampCount()
+        {
+            Volatile.Write(ref _activeRampCount, _ramps.Count + (_masterRamp != null ? 1 : 0));
+        }
+
+        private void ApplyMasterGain()
+        {
+            if (_outputNode == null) return;
+            _outputNode.OutgoingGain = _muted ? 0 : _volume * _masterFade;
+        }
+
         private void GraphOnQuantumProcessed(AudioGraph sender, object args)
         {
             using var frame = _frameOutputNode.GetFrame();
@@ -251,6 +343,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     catch
                     {
                     }
+                    oldPlayer.QuantumStarted -= GraphOnQuantumStarted;
                     oldPlayer.QuantumProcessed -= GraphOnQuantumProcessed;
                     oldPlayer.UnrecoverableErrorOccurred -= GraphOnUnrecoverableErrorOccurred;
                     newOutputNode.OutgoingGain = oldOutputNode.OutgoingGain;
@@ -312,6 +405,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
                     // 替换为新图
                     _defaultPlayer = newPlayer;
+                    newPlayer.QuantumStarted += GraphOnQuantumStarted;
                     newPlayer.QuantumProcessed += GraphOnQuantumProcessed;
                     newPlayer.UnrecoverableErrorOccurred += GraphOnUnrecoverableErrorOccurred;
                     EnableFFTProcessing = settings.EnableFFTProcessing;
@@ -330,6 +424,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 {
                     if (committed)
                     {
+                        oldPlayer.QuantumStarted -= GraphOnQuantumStarted;
                         oldPlayer.QuantumProcessed -= GraphOnQuantumProcessed;
                         oldPlayer.Dispose();
                     }
@@ -369,8 +464,10 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
 
             var player = _defaultPlayer;
+            CancelAllRamps();
             if (player is not null)
             {
+                player.QuantumStarted -= GraphOnQuantumStarted;
                 player.QuantumProcessed -= GraphOnQuantumProcessed;
                 player.UnrecoverableErrorOccurred -= GraphOnUnrecoverableErrorOccurred;
             }
@@ -405,12 +502,21 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         #endregion
 
         #region Playback Control Methods
-        public void PlayAll()
+        public void PlayAll() => PlayAll(TimeSpan.Zero);
+
+        public void PlayAll(TimeSpan fadeIn)
         {
             ThrowExceptionIfDisposed();
             if (_defaultPlayer == null || ConnectedPlaybackSourceCount == 0) return;
 
-            if (GlobalPlaybackStatus != PlaybackStatus.Playing)
+            var wasPlaying = GlobalPlaybackStatus == PlaybackStatus.Playing;
+            Interlocked.Increment(ref _transportVersion);
+            if (fadeIn > TimeSpan.Zero)
+                _ = RampMasterAsync(wasPlaying ? _masterFade : 0, 1, fadeIn);
+            else if (!wasPlaying || IsMasterFadingOut())
+                CancelMasterRamp(1);
+
+            if (!wasPlaying)
                 _defaultPlayer.Start();
             UpdateGlobalPlaybackStatus(PlaybackStatus.Playing);
         }
@@ -420,9 +526,27 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             ThrowExceptionIfDisposed();
             if (_defaultPlayer == null) return;
 
+            Interlocked.Increment(ref _transportVersion);
             if (GlobalPlaybackStatus != PlaybackStatus.Paused)
                 _defaultPlayer.Stop();
+            CancelMasterRamp(1);
             UpdateGlobalPlaybackStatus(PlaybackStatus.Paused);
+        }
+
+        public async Task PauseAllAsync(TimeSpan fadeOut)
+        {
+            ThrowExceptionIfDisposed();
+            if (_defaultPlayer == null || GlobalPlaybackStatus != PlaybackStatus.Playing) return;
+            if (fadeOut <= TimeSpan.Zero)
+            {
+                PauseAll();
+                return;
+            }
+
+            var version = Interlocked.Increment(ref _transportVersion);
+            var completed = await RampMasterAsync(_masterFade, 0, fadeOut);
+            if (!completed || version != Volatile.Read(ref _transportVersion)) return;
+            PauseAll();
         }
 
         public void PlayPlaybackSource(IPlaybackSource playbackSource)
@@ -475,15 +599,141 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             ThrowExceptionIfDisposed();
             if (_outputNode != null)
             {
-                _outputNode.OutgoingGain = volume;
                 _volume = volume;
+                ApplyMasterGain();
             }
         }
 
         public void SetPlaybackSourceOutputVolume(double volume, IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
+            if (playbackSource is AudioGraphPlaybackSource source)
+                CancelRamp(source);
             SetPlaybackSourceGainComponent(playbackSource, volume, false);
+        }
+
+        public double GetPlaybackSourceOutputVolume(IPlaybackSource playbackSource)
+        {
+            ThrowExceptionIfDisposed();
+            GetAudioInputNodeOrThrow(playbackSource);
+            return _playbackSourceGainStates.TryGetValue((AudioGraphPlaybackSource)playbackSource, out var state)
+                ? state.GetVolume()
+                : throw new ArgumentException("PlaybackSource gain state is unavailable.", nameof(playbackSource));
+        }
+
+        public Task<bool> RampPlaybackSourceVolumeAsync(IPlaybackSource playbackSource, double target, TimeSpan duration, FadeCurve curve = FadeCurve.EqualPower)
+        {
+            ThrowExceptionIfDisposed();
+            if (double.IsNaN(target) || double.IsInfinity(target) || target < 0)
+                throw new ArgumentOutOfRangeException(nameof(target));
+
+            var node = GetAudioInputNodeOrThrow(playbackSource);
+            var source = (AudioGraphPlaybackSource)playbackSource;
+            if (!_playbackSourceGainStates.TryGetValue(source, out var state))
+                throw new ArgumentException("PlaybackSource gain state is unavailable.", nameof(playbackSource));
+
+            var ramp = new GainRamp
+            {
+                Source = source,
+                From = state.GetVolume(),
+                To = target,
+                Duration = Math.Max(0, duration.TotalSeconds),
+                Curve = curve,
+                Completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously)
+            };
+            lock (_rampLock)
+            {
+                for (var i = _ramps.Count - 1; i >= 0; i--)
+                {
+                    if (!ReferenceEquals(_ramps[i].Source, source)) continue;
+                    _ramps[i].Completion.TrySetResult(false);
+                    _ramps.RemoveAt(i);
+                }
+
+                if (ramp.Duration <= 0)
+                {
+                    state.Apply(node, target, false);
+                    ramp.Completion.TrySetResult(true);
+                }
+                else
+                {
+                    _ramps.Add(ramp);
+                }
+
+                UpdateActiveRampCount();
+            }
+
+            return ramp.Completion.Task;
+        }
+
+        private Task<bool> RampMasterAsync(double from, double to, TimeSpan duration)
+        {
+            var ramp = new GainRamp
+            {
+                From = from,
+                To = to,
+                Duration = Math.Max(0, duration.TotalSeconds),
+                Curve = FadeCurve.EqualPower,
+                Completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously)
+            };
+            lock (_rampLock)
+            {
+                _masterRamp?.Completion.TrySetResult(false);
+                _masterFade = from;
+                ApplyMasterGain();
+                _masterRamp = ramp;
+                UpdateActiveRampCount();
+            }
+
+            return ramp.Completion.Task;
+        }
+
+        private bool IsMasterFadingOut()
+        {
+            lock (_rampLock)
+            {
+                return _masterRamp != null && _masterRamp.To < _masterRamp.From;
+            }
+        }
+
+        private void CancelMasterRamp(double value)
+        {
+            lock (_rampLock)
+            {
+                _masterRamp?.Completion.TrySetResult(false);
+                _masterRamp = null;
+                _masterFade = value;
+                ApplyMasterGain();
+                UpdateActiveRampCount();
+            }
+        }
+
+        private void CancelRamp(AudioGraphPlaybackSource source)
+        {
+            lock (_rampLock)
+            {
+                for (var i = _ramps.Count - 1; i >= 0; i--)
+                {
+                    if (!ReferenceEquals(_ramps[i].Source, source)) continue;
+                    _ramps[i].Completion.TrySetResult(false);
+                    _ramps.RemoveAt(i);
+                }
+
+                UpdateActiveRampCount();
+            }
+        }
+
+        private void CancelAllRamps()
+        {
+            lock (_rampLock)
+            {
+                foreach (var ramp in _ramps) ramp.Completion.TrySetResult(false);
+                _ramps.Clear();
+                _masterRamp?.Completion.TrySetResult(false);
+                _masterRamp = null;
+                _masterFade = 1;
+                UpdateActiveRampCount();
+            }
         }
 
         public void SetPlaybackSourceAudioGain(double audioGain, IPlaybackSource playbackSource)
@@ -573,6 +823,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
             if (!_audioInputNodes.TryGetValue(source, out MediaSourceAudioInputNode node)) return;
 
+            CancelRamp(source);
+
             // Stop first: even if a later detach step fails, the source must become silent
             // before ownership can be retried by the caller.
             try
@@ -628,6 +880,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public void RemoveAllPlaybackSource()
         {
             ThrowExceptionIfDisposed();
+            CancelAllRamps();
             foreach (var source in _audioInputNodes)
             {
                 source.Value.MediaSourceCompleted -= OnMediaSourceCompleted;
@@ -783,6 +1036,14 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 lock (_syncRoot)
                 {
                     return _volume * _audioGain;
+                }
+            }
+
+            public double GetVolume()
+            {
+                lock (_syncRoot)
+                {
+                    return _volume;
                 }
             }
         }

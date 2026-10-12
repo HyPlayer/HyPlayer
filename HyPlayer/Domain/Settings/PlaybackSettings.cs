@@ -48,15 +48,26 @@ public partial class PlaybackSettings : SettingsBase
         get => GetSettings(nameof(TransitionId), "dir");
         set
         {
-            if (value is not ("dir" or "gap" or "xfd"))
+            if (value is not ("dir" or "gap" or "xfd" or "fde"))
                 throw new ArgumentOutOfRangeException(nameof(value));
 
             if (SetSettings(nameof(TransitionId), value))
+            {
                 OnPropertyChanged(nameof(IsCrossFadeTransition));
+                OnPropertyChanged(nameof(TransitionUsesDuration));
+            }
         }
     }
 
     public bool IsCrossFadeTransition => TransitionId == "xfd";
+
+    public bool TransitionUsesDuration => TransitionId is "xfd" or "fde";
+
+    public bool PlaybackFade
+    {
+        get => GetSettings(nameof(PlaybackFade), true);
+        set => SetSettings(nameof(PlaybackFade), value);
+    }
 
     /// <summary>
     ///     Duration of crossfade in seconds.
