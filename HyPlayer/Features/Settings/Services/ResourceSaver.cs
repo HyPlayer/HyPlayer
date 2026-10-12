@@ -62,6 +62,29 @@ public static class ResourceSaver
     private static ApiSettings Api => Ioc.Default.GetRequiredService<ApiSettings>();
     private static LyricSettings Lyric => Ioc.Default.GetRequiredService<LyricSettings>();
 
+    private const string RelaxedNetworkKey = "RelaxedNetwork";
+
+    private static SettingChange AudioRateChange => new()
+    {
+        Key = nameof(PlaybackSettings.AudioRate),
+        Read = () => Playback.AudioRate,
+        Write = value => Playback.AudioRate = value,
+        Target = "standard"
+    };
+
+    private static SettingChange RelaxedNetworkChange =>
+        BoolChange(RelaxedNetworkKey, () => RetryPolicies.RelaxedNetwork,
+            value => RetryPolicies.RelaxedNetwork = value, true);
+
+    private static SettingChange[] StreamingChanges => [AudioRateChange, RelaxedNetworkChange];
+
+    private static void ReapplyRelaxedNetwork()
+    {
+        foreach (var (key, _, target) in Parse(GetBackup(SaverKind.Network)))
+            if (key == RelaxedNetworkKey)
+                RetryPolicies.RelaxedNetwork = target == "1";
+    }
+
     private static SettingChange NoImageChange =>
         BoolChange(nameof(UISettings.NoImage), () => UI.NoImage, value => UI.NoImage = value, true);
 
@@ -97,6 +120,7 @@ public static class ResourceSaver
         _networkActive = HasBackup(SaverKind.Network);
         _powerActive = HasBackup(SaverKind.Power);
         if (_networkActive) StartProbing();
+        if (_networkActive) ReapplyRelaxedNetwork();
 
         _ = Task.Run(async () =>
         {
@@ -157,6 +181,13 @@ public static class ResourceSaver
     private static List<SaverOption> BuildNetworkOptions()
     {
         var options = new List<SaverOption>();
+        if (Playback.AudioRate != AudioRateChange.Target)
+            options.Add(new SaverOption
+            {
+                Title = "将在线播放音质降为 标准 (128k)",
+                Description = "从下一次加载歌曲开始生效",
+                Changes = [AudioRateChange]
+            });
         if (!UI.NoImage)
             options.Add(new SaverOption
             {
@@ -168,6 +199,13 @@ public static class ResourceSaver
             options.Add(new SaverOption { Title = "关闭歌单贪婪加载", Changes = [GreedyLoadChange] });
         if (Lyric.EnableAmllTtmlDb)
             options.Add(new SaverOption { Title = "暂停从 AMLL 歌词库获取逐字歌词", Changes = [AmllChange] });
+        if (!RetryPolicies.RelaxedNetwork)
+            options.Add(new SaverOption
+            {
+                Title = "提高请求重试次数与超时时间",
+                Description = "加载超时从 25 秒放宽到 60 秒，获取播放链接最多重试 6 次",
+                Changes = [RelaxedNetworkChange]
+            });
         return options;
     }
 
@@ -456,6 +494,7 @@ public static class ResourceSaver
         ];
         var map = new Dictionary<string, SettingChange>();
         foreach (var change in changes) map[change.Key] = change;
+        foreach (var change in StreamingChanges) map[change.Key] = change;
         return map;
     }
 

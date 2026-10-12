@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,9 +6,6 @@ namespace HyPlayer.Features.Playback.Transitions;
 
 internal sealed class NextTrackPreloader
 {
-    private static readonly long _retryDelayTicks = Stopwatch.Frequency * 8;
-    private long _retryAfter;
-
     public TransitionPreparedTrack? Prepared { get; private set; }
 
     public async Task PrepareAsync(TrackTransitionContext context, TimeSpan leadTime, CancellationToken ct)
@@ -19,26 +15,12 @@ internal sealed class NextTrackPreloader
 
         if (Prepared is not null
             || !context.CanPreload
-            || context.Duration - context.Position > leadTime
-            || Stopwatch.GetTimestamp() < _retryAfter)
+            || context.Duration - context.Position > leadTime)
             return;
 
-        TransitionPreparedTrack? prepared;
-        try
-        {
-            prepared = await context.Host.PrepareNextAsync(context, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _retryAfter = Stopwatch.GetTimestamp() + _retryDelayTicks;
-            throw;
-        }
-
+        var prepared = await context.Host.PrepareNextAsync(context, ct).ConfigureAwait(false);
         if (prepared is null)
-        {
-            _retryAfter = Stopwatch.GetTimestamp() + _retryDelayTicks;
             return;
-        }
 
         try
         {

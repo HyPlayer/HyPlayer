@@ -11,6 +11,7 @@ using Windows.Media.Devices;
 using AsyncAwaitBestPractices;
 using Depository.Abstraction.Interfaces;
 using Depository.Abstraction.Interfaces.NotificationHub;
+using HyPlayer.Application.Notifications;
 using HyPlayer.Application.Threading;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Lyrics.Services;
@@ -18,6 +19,7 @@ using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Transitions;
 using HyPlayer.Features.Settings.Services;
 using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.Platform.Network;
 using HyPlayer.Platform.Playback.AudioServices;
 using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Runtime.Background;
@@ -52,12 +54,16 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private static readonly TimeSpan _switchFadeIn = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan _switchFadeOut = TimeSpan.FromMilliseconds(140);
     private static readonly TimeSpan _switchFadeOutLimit = TimeSpan.FromMilliseconds(400);
+    private static readonly TimeSpan _loadTimeout = TimeSpan.FromSeconds(25);
+    private static readonly TimeSpan _preloadTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan _relaxedLoadTimeout = TimeSpan.FromSeconds(60);
 
     private readonly SemaphoreSlim _autoSkipLock = new(1, 1);
     private readonly SemaphoreSlim _initializeGate = new(1, 1);
     private readonly ILyricService _lyricService;
     private readonly IMediaSourceService _mediaSourceService;
     private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
+    private readonly INotificationService _notification;
     private readonly IPlaybackNotificationService _playbackNotification;
     private readonly PlayCoreBase _playCore;
     private readonly INotificationHub _playCoreNotificationHub;
@@ -83,6 +89,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private long _playbackGeneration;
     private const long PrepareRetryDelayMilliseconds = 8000;
     private long _prepareRetryAfter;
+    private bool _loadTimedOut;
     private SystemMediaTransportControls? _smtc;
     private bool _smtcSubscribed;
 
@@ -107,9 +114,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         IEnumerable<IMusicResourceProvidable> musicResourceProviders,
         ChopinAudioService audioService,
         IEnumerable<ITrackTransition> transitions,
-        IMediaSourceService mediaSourceService)
+        IMediaSourceService mediaSourceService,
+        INotificationService notification)
     {
         _mediaSourceService = mediaSourceService ?? throw new ArgumentNullException(nameof(mediaSourceService));
+        _notification = notification ?? throw new ArgumentNullException(nameof(notification));
         _player = player ?? throw new ArgumentNullException(nameof(player));
         _playCore = playCore ?? throw new ArgumentNullException(nameof(playCore));
         _playCoreNotificationHub =
@@ -244,6 +253,26 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             || Environment.TickCount64 < _prepareRetryAfter)
             return null;
 
+        try
+        {
+            return await PrepareNextTrackAsync(context, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            DeferPrepareRetry();
+            throw;
+        }
+    }
+
+    private void DeferPrepareRetry()
+    {
+        _prepareRetryAfter = Environment.TickCount64 + PrepareRetryDelayMilliseconds;
+    }
+
+    private async Task<TransitionPreparedTrack?> PrepareNextTrackAsync(
+        TrackTransitionContext context,
+        CancellationToken ct)
+    {
         var queue = await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false);
         var currentIndex = await _playCore.GetCurrentIndexAsync(ct).ConfigureAwait(false);
         if (_playCore.ActivePlayModeId == "pfm" && currentIndex + 1 >= queue.Count)
@@ -253,30 +282,34 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
 
         if (queue.Count == 0 || currentIndex < 0)
+        {
+            DeferPrepareRetry();
             return null;
+        }
 
         var queueRevision = _state.QueueRevision;
         var nextIndex = (currentIndex + 1) % queue.Count;
         var nextSong = await _playCore.GetSongAtAsync(nextIndex, ct).ConfigureAwait(false);
         if (nextSong is null)
+        {
+            DeferPrepareRetry();
             return null;
+        }
 
         _audioService.TakeLastPreparedSource();
-        PreparedPlaybackTicket? ticket;
-        try
-        {
-            ticket = await _playCore.PreparePlaybackAsync(nextSong, ct).ConfigureAwait(false);
-        }
-        catch
-        {
-            _prepareRetryAfter = Environment.TickCount64 + PrepareRetryDelayMilliseconds;
-            throw;
-        }
-
+        PreparedPlaybackTicket? ticket = null;
+        var timeout = GetLoadTimeout(nextSong, true);
+        var loaded = await TryLoadWithinAsync(
+                async token => ticket = await _playCore.PreparePlaybackAsync(nextSong, token).ConfigureAwait(false),
+                timeout,
+                ct)
+            .ConfigureAwait(false);
         var incomingSource = _audioService.TakeLastPreparedSource();
-        if (ticket is null)
+        if (!loaded)
+            ResourceSaver.ReportLoad(timeout);
+        if (!loaded || ticket is null)
         {
-            _prepareRetryAfter = Environment.TickCount64 + PrepareRetryDelayMilliseconds;
+            DeferPrepareRetry();
             return null;
         }
 
@@ -731,13 +764,26 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
             if (_playbackSettings.PlaybackFade)
                 _audioService.FadeInNextPlay(_resumeFadeIn);
+            var song = _playCore.CurrentSong;
+            var timeout = song is null ? Timeout.InfiniteTimeSpan : GetLoadTimeout(song, false);
+            bool loaded;
             try
             {
-                await _playCore.PlayAsync().ConfigureAwait(false);
+                loaded = await TryLoadWithinAsync(
+                        token => _playCore.PlayAsync(token),
+                        timeout,
+                        CancellationToken.None)
+                    .ConfigureAwait(false);
             }
             finally
             {
                 _audioService.FadeInNextPlay(TimeSpan.Zero);
+            }
+
+            if (!loaded && song is not null)
+            {
+                await HandleLoadTimeoutAsync(song, timeout).ConfigureAwait(false);
+                return;
             }
 
             if (_playCore.CurrentPlayingTicket is null)
@@ -1120,9 +1166,13 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         if (fade)
             _audioService.FadeInNextPlay(_switchFadeIn);
         var loadStarted = Stopwatch.GetTimestamp();
+        var timeout = GetLoadTimeout(song, false);
+        bool loaded;
+        _loadTimedOut = false;
         try
         {
-            await _playCore.PlayAsync(ct).ConfigureAwait(false);
+            loaded = await TryLoadWithinAsync(token => _playCore.PlayAsync(token), timeout, ct)
+                .ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -1144,11 +1194,67 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             _audioService.FadeInNextPlay(TimeSpan.Zero);
         }
 
+        if (!loaded)
+        {
+            await HandleLoadTimeoutAsync(song, timeout).ConfigureAwait(false);
+            return;
+        }
+
         if (song.ProviderId != LocalPlaybackProvider.ProviderIdValue)
             ResourceSaver.ReportLoad(Stopwatch.GetElapsedTime(loadStarted));
 
         _state.IsPlaying = _playCore.CurrentPlayingTicket is not null;
         CaptureCurrentPlaybackIdentity();
+    }
+
+    private static TimeSpan GetLoadTimeout(SingleSongBase song, bool preload)
+    {
+        if (song.ProviderId == LocalPlaybackProvider.ProviderIdValue)
+            return Timeout.InfiniteTimeSpan;
+
+        if (RetryPolicies.RelaxedNetwork)
+            return _relaxedLoadTimeout;
+
+        return preload ? _preloadTimeout : _loadTimeout;
+    }
+
+    private async Task<bool> TryLoadWithinAsync(
+        Func<CancellationToken, Task> load,
+        TimeSpan timeout,
+        CancellationToken ct)
+    {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        using var timer = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var loading = load(deadline.Token);
+        try
+        {
+            var expired = Task.Delay(timeout, timer.Token);
+            if (await Task.WhenAny(loading, expired).ConfigureAwait(false) == expired
+                && !ct.IsCancellationRequested
+                && !_audioService.IsConnecting)
+                deadline.Cancel();
+
+            await loading.ConfigureAwait(false);
+            return true;
+        }
+        catch (OperationCanceledException) when (deadline.IsCancellationRequested && !ct.IsCancellationRequested)
+        {
+            return false;
+        }
+        finally
+        {
+            timer.Cancel();
+        }
+    }
+
+    private async Task HandleLoadTimeoutAsync(SingleSongBase song, TimeSpan timeout)
+    {
+        _loadTimedOut = true;
+        await StopCoreAsync(CancellationToken.None).ConfigureAwait(false);
+        ResourceSaver.ReportLoad(timeout);
+        _notification.ShowMessage(
+            "加载超时",
+            $"网络较慢，{song.Name} 未能在 {timeout.TotalSeconds:0} 秒内加载完成。点击播放可重试，或切换到下一首");
     }
 
     private ChopinAudioTicket? FindIdleProgressiveTicket()
@@ -1289,7 +1395,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             {
                 await MoveNextAndPlayAsync(false, false).ConfigureAwait(false);
 
-                if (_playCore.CurrentPlayingTicket is not null)
+                if (_playCore.CurrentPlayingTicket is not null || _loadTimedOut)
                     return;
 
                 failuresObserved++;

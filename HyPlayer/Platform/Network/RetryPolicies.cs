@@ -126,6 +126,27 @@ public static class RetryPolicies
                     $"URL 获取重试 {retryCount}: {exception.Message}, 等待 {timespan.TotalSeconds} 秒");
             });
 
+    private static volatile bool _relaxedNetwork;
+
+    public static bool RelaxedNetwork
+    {
+        get => _relaxedNetwork;
+        set => _relaxedNetwork = value;
+    }
+
+    public static AsyncRetryPolicy UrlFetch => RelaxedNetwork ? RelaxedUrlFetchPolicy : UrlFetchPolicy;
+
+    public static AsyncRetryPolicy RelaxedUrlFetchPolicy { get; } = Policy
+        .Handle<Exception>(ex =>
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is TimeoutException ||
+            ex.Message.Contains("下载链接获取失败") ||
+            ex.Message.Contains("API 请求失败"))
+        .WaitAndRetryAsync(
+            6,
+            attempt => TimeSpan.FromMilliseconds(Math.Min(6000, 500 * Math.Pow(2, attempt - 1))));
+
     /// <summary>
     ///     NCM 文件加载重试策略
     ///     适用于 NCM 文件解析

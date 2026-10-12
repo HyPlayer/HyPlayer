@@ -32,6 +32,7 @@ public sealed class ChopinAudioService :
     private readonly object _ticketSyncRoot = new();
     private ChopinAudioTicket? _lastPreparedTicket;
     private long _pendingFadeInTicks;
+    private int _connecting;
 
     public ChopinAudioService(IPlayer player, PlaybackSettings setting)
     {
@@ -42,6 +43,8 @@ public sealed class ChopinAudioService :
     public override string Id => "hyplayer.chopin";
 
     public double PlaybackSpeed { get; set; } = 1d;
+
+    public bool IsConnecting => Volatile.Read(ref _connecting) > 0;
 
     public override string Name => "HyPlayer Chopin AudioService";
 
@@ -265,16 +268,24 @@ public sealed class ChopinAudioService :
                 await source.CreatePlaybackSource();
             }
 
-            ctk.ThrowIfCancellationRequested();
-
-            await _player.ConnectPlaybackSourceAsync(source, new PlaybackOptions
+            Interlocked.Increment(ref _connecting);
+            try
             {
-                AutoPlay = false,
-                SetAsPrimarySource = setAsPrimarySource,
-                Volume = targetVolume,
-                AudioGain = audioGain,
-                Speed = PlaybackSpeed
-            });
+                ctk.ThrowIfCancellationRequested();
+
+                await _player.ConnectPlaybackSourceAsync(source, new PlaybackOptions
+                {
+                    AutoPlay = false,
+                    SetAsPrimarySource = setAsPrimarySource,
+                    Volume = targetVolume,
+                    AudioGain = audioGain,
+                    Speed = PlaybackSpeed
+                });
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _connecting);
+            }
 
             var ticket = new ChopinAudioTicket
             {

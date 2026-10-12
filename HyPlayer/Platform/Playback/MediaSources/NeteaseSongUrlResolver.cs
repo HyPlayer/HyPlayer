@@ -39,7 +39,7 @@ public sealed class NeteaseSongUrlResolver
         var cacheKey = $"{songId}_{level}";
         if (!_cache.TryGetValue(cacheKey, out var cached) || DateTime.UtcNow - cached.FetchedAt >= _cacheLifetime)
         {
-            var item = await RetryPolicies.UrlFetchPolicy
+            var item = await RetryPolicies.UrlFetch
                 .ExecuteAsync(() => RequestAsync(songId, level, ct))
                 .ConfigureAwait(false);
             cached = new CachedSongUrl(item, DateTime.UtcNow);
