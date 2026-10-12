@@ -342,7 +342,7 @@ public partial class PlayBarViewModel : ObservableObject
         return time.ToString(@"hh\:mm\:ss");
     }
 
-    private static string GetQualityTagText(PlaybackCurrentItemSnapshot? snapshot, string qualityTag,
+    internal static string GetQualityTagText(PlaybackCurrentItemSnapshot? snapshot, string qualityTag,
         string fallbackLevel)
     {
         if (!string.IsNullOrWhiteSpace(qualityTag)) return FormatAudioLevel(qualityTag);

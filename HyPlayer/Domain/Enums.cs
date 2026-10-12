@@ -24,6 +24,12 @@ public enum ExpandedWindowMode
     LyricOnly = 2
 }
 
+public enum ExpandedControlStyle
+{
+    Apple = 0,
+    HyPlayer = 1
+}
+
 public enum UpdateSource
 {
     MicrosoftStore = 0,

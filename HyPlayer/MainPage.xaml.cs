@@ -60,6 +60,8 @@ public sealed partial class MainPage : Page
     private bool _playBarAutoHideSubscribed;
     private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
     private bool _isPlaybarOnShow = true;
+    private bool _playbarHidden;
+    private Storyboard? _playbarHideStoryboard;
     private ConnectedAnimationBatch? _collapseAnimations;
     private int _surfaceTransitionVersion;
 
@@ -95,6 +97,7 @@ public sealed partial class MainPage : Page
             OnDetachAction = weakEventListener => { _surfaceStore.PropertyChanged -= weakEventListener.OnEvent; }
         };
         _surfaceStore.PropertyChanged += _surfaceStoreChangedListener.OnEvent;
+        ApplyPlaybarVisibility();
         ApplySurfaceMode(_surfaceStore.SurfaceMode);
     }
 
@@ -132,6 +135,10 @@ public sealed partial class MainPage : Page
             case nameof(PlaybackSurfaceStore.ExpandedSurfaceRestoreRequestId):
                 EnsureExpandedPlayerFrame();
                 break;
+            case nameof(PlaybackSurfaceStore.IsPlayBarSuppressed):
+                ApplyPlaybarVisibility();
+                if (!_surfaceStore.IsPlayBarSuppressed) RestorePlaybar();
+                break;
         }
     }
 
@@ -161,6 +168,7 @@ public sealed partial class MainPage : Page
     private async void RestoreCompactSurface()
     {
         CancelCollapseTransition();
+        RestorePlaybar();
         var version = _surfaceTransitionVersion;
         var source = ExpandedPlayer.Content as ExpandedPlayer;
         var animations = UISettings.ExpandAnimation && source != null
@@ -273,9 +281,57 @@ public sealed partial class MainPage : Page
         }
     }
 
+    private void ApplyPlaybarVisibility()
+    {
+        var hidden = _surfaceStore.IsPlayBarSuppressed;
+        if (_playbarHidden == hidden) return;
+        _playbarHidden = hidden;
+        _playbarHideStoryboard?.Stop();
+        _playbarHideStoryboard = null;
+        if (!hidden)
+        {
+            PlayBarHost.IsHitTestVisible = true;
+            PlayBarHost.Visibility = Visibility.Visible;
+            PlayBarHost.Opacity = 1;
+            return;
+        }
+
+        PlayBarHost.IsHitTestVisible = false;
+        var storyboard = new Storyboard();
+        AddPlaybarAnimation(storyboard, PlayBarHost, "Opacity", 0, 250, EasingMode.EaseOut);
+        storyboard.Completed += (_, _) =>
+        {
+            if (!_playbarHidden || _playbarHideStoryboard != storyboard) return;
+            PlayBarHost.Visibility = Visibility.Collapsed;
+        };
+        _playbarHideStoryboard = storyboard;
+        storyboard.Begin();
+    }
+
+    private static void AddPlaybarAnimation(Storyboard storyboard, DependencyObject target, string property,
+        double to, int milliseconds, EasingMode easing)
+    {
+        var animation = new DoubleAnimation
+        {
+            To = to,
+            Duration = TimeSpan.FromMilliseconds(milliseconds),
+            EasingFunction = new CircleEase { EasingMode = easing }
+        };
+        Storyboard.SetTarget(animation, target);
+        Storyboard.SetTargetProperty(animation, property);
+        storyboard.Children.Add(animation);
+    }
+
+    private void RestorePlaybar()
+    {
+        _playBarAutoHide.SecondCounter = 0;
+        _playBarAutoHide.IsVisible = true;
+        ShowBar();
+    }
+
     internal void OnPlaybarVisibilityChanged(bool isActivated)
     {
-        if (!UISettings.AutoHidePlaybar) return;
+        if (!isActivated && !_playBarAutoHide.IsActive) return;
         _ = this.RunOnUIThreadAsync(() =>
         {
             if (isActivated)

@@ -94,6 +94,7 @@ public sealed partial class PlayBar
     private WeakEventListener<PlayBar, object?, EventArgs>? _enteredForegroundListener;
     private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _stateChangedListener;
     private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
+    private WeakEventListener<PlayBar, object?, PlaybackSurfaceCommandRequestedEventArgs>? _surfaceCommandListener;
     private WeakEventListener<PlayBar, object?, SongLikeStatusChangedEventArgs>? _songLikeStatusChangedListener;
     private WeakEventListener<PlayBar, object?, EventArgs>? _loginCompletedListener;
     private WeakEventListener<PlayBar, object?, EventArgs>? _muteChangedListener;
@@ -164,6 +165,51 @@ DoubleAnimation verticalAnimation;
                 break;
             case nameof(PlaybackStateService.Volume):
                 RunOnUIThread(SyncVolumeSlider);
+                break;
+        }
+    }
+
+    private void OnSurfaceCommandRequested(PlaybackSurfaceCommandRequestedEventArgs args)
+    {
+        switch (args.Command)
+        {
+            case PlaybackSurfaceCommand.TogglePlayback:
+                BtnPlayStateChange_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.MovePrevious:
+                BtnPreviousSong_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.MoveNext:
+                BtnNextSong_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.ChangePlayMode:
+                BtnPlayRollType_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.ToggleLike:
+                BtnLike_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.ShowQueue:
+                if (args.Anchor is FrameworkElement anchor)
+                {
+                    ButtonPlayList.Flyout?.ShowAt(anchor);
+                    ButtonPlayList_OnClick(this, null);
+                }
+
+                break;
+            case PlaybackSurfaceCommand.OpenDesktopLyrics:
+                ToggleButton_Click(this, null);
+                break;
+            case PlaybackSurfaceCommand.AddToSongList:
+                Btn_Sub_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.Download:
+                Btn_Down_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.OpenComments:
+                Btn_Comment_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.Share:
+                Btn_Share_OnClick(this, null);
                 break;
         }
     }
@@ -692,6 +738,7 @@ DoubleAnimation verticalAnimation;
         _enteredForegroundListener?.Detach();
         _stateChangedListener?.Detach();
         _surfaceStoreChangedListener?.Detach();
+        _surfaceCommandListener?.Detach();
         _songLikeStatusChangedListener?.Detach();
         _loginCompletedListener?.Detach();
         _enteredForegroundListener = new WeakEventListener<PlayBar, object?, EventArgs>(this)
@@ -713,6 +760,13 @@ DoubleAnimation verticalAnimation;
             OnDetachAction = weakEventListener => { _surfaceStore.PropertyChanged -= weakEventListener.OnEvent; }
         };
         _surfaceStore.PropertyChanged += _surfaceStoreChangedListener.OnEvent;
+        _surfaceCommandListener =
+            new WeakEventListener<PlayBar, object?, PlaybackSurfaceCommandRequestedEventArgs>(this)
+            {
+                OnEventAction = static (instance, _, args) => instance.OnSurfaceCommandRequested(args),
+                OnDetachAction = weakEventListener => { _surfaceStore.CommandRequested -= weakEventListener.OnEvent; }
+            };
+        _surfaceStore.CommandRequested += _surfaceCommandListener.OnEvent;
         _songLikeStatusChangedListener = new WeakEventListener<PlayBar, object?, SongLikeStatusChangedEventArgs>(this)
         {
             OnEventAction = static (instance, _, args) => instance.HyPlayList_OnSongLikeStatusChange(args.IsLiked),
@@ -886,6 +940,7 @@ DoubleAnimation verticalAnimation;
         _enteredForegroundListener?.Detach();
         _stateChangedListener?.Detach();
         _surfaceStoreChangedListener?.Detach();
+        _surfaceCommandListener?.Detach();
         _songLikeStatusChangedListener?.Detach();
         _loginCompletedListener?.Detach();
         _muteChangedListener?.Detach();

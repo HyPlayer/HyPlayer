@@ -801,6 +801,28 @@
                                         </TransitionCollection>
                                     </controls3:SettingsExpander.Transitions>
                                     <controls3:SettingsExpander.Items>
+                                        <controls3:SettingsCard Header="控制栏样式">
+                                            <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind UI.ExpandedControlStyle, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                                <ComboBoxItem Content="Apple" />
+                                                <ComboBoxItem Content="HyPlayer" />
+                                            </ComboBox>
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="仅 HyPlayer 样式生效" Header="自动收缩下方控制栏">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.ExpandedAutoCollapsePlaybar, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="自动收缩控制栏时间 (秒)" Visibility="{x:Bind UI.ExpandedAutoCollapsePlaybar, Mode=OneWay}">
+                                            <Slider
+                                                x:Name="ExpandedAutoCollapseTime"
+                                                Width="256"
+                                                HorizontalAlignment="Right"
+                                                Maximum="10"
+                                                Minimum="1"
+                                                ToolTipService.ToolTip="{x:Bind ExpandedAutoCollapseTime.Value}"
+                                                Value="{x:Bind UI.AutoHidePlaybarTime, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="背景显示设置">
                                             <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind UI.ExpandedPlayerBackgroundType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                                 <ComboBoxItem Content="专辑封面模糊" />

@@ -75,6 +75,8 @@ public sealed partial class ExpandedPlayer : Page
 {
     private const float LyricBoxRightPadding = 32;
     private const double ResponsiveBreakpointWidth = 800;
+    private const double PlaybarReservedHeight = 80;
+    private const double CollapseButtonRevealHeight = 120;
 
     public static readonly DependencyProperty NowPlaybackSpeedProperty = DependencyProperty.Register(
         "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
@@ -126,7 +128,9 @@ public sealed partial class ExpandedPlayer : Page
     private List<Color> _albumColors = [];
     private List<Vector3> _albumColorVectors = [];
     private volatile bool _isCleanedUp;
+    private bool _appleControlsActive;
     private bool _canvasResourcesReleased;
+    private bool _collapseButtonShown;
     private bool _isManualChangeMode;
     private bool _isRealClick;
     private SingleSongBase? _lastCoverSong;
@@ -201,6 +205,8 @@ public sealed partial class ExpandedPlayer : Page
         };
         _control.SeekRequested += _seekRequestedListener.OnEvent;
         Window.Current.SizeChanged += Current_SizeChanged;
+        PageContainer.AddHandler(PointerMovedEvent, new PointerEventHandler(PageContainer_PointerMoved), true);
+        PageContainer.AddHandler(PointerExitedEvent, new PointerEventHandler(PageContainer_PointerExited), true);
         _lyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         _lyricBox.OnBeforeRender += LyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked += LyricBoxOnOnRequestSeek;
@@ -296,6 +302,9 @@ public sealed partial class ExpandedPlayer : Page
             case nameof(PlaybackSurfaceStore.TransitionRequestId):
                 if (_surfaceStore.RequestedTransition == ExpandedPlayerTransition.Expand)
                     StartExpandAnimation();
+                break;
+            case nameof(PlaybackSurfaceStore.SurfaceMode):
+                if (_surfaceStore.IsExpanded) ApplyChromeState();
                 break;
             case nameof(PlaybackSurfaceStore.ExpandedFrameOffsetY):
                 // MainPage observes the same store value and moves the frame. ExpandedPlayer keeps the gesture local state here.
@@ -419,11 +428,13 @@ public sealed partial class ExpandedPlayer : Page
 
             _lastWidth = _nowWidth;
             _needsRedesign = true;
+            UpdateAlbumSizeLimit();
         }
         else if (_lastHeight != _nowHeight)
         {
             _lastHeight = _nowHeight;
             _needsRedesign = true;
+            UpdateAlbumSizeLimit();
         }
     }
 
@@ -470,8 +481,98 @@ public sealed partial class ExpandedPlayer : Page
                 break;
         }
 
+        UpdateControlStyle();
         _needsRedesign = true;
         _isRealClick = true;
+    }
+
+    private void UpdateControlStyle()
+    {
+        var apple = _uiSettings.ExpandedControlStyle == ExpandedControlStyle.Apple &&
+                    _windowMode != ExpandedWindowMode.LyricOnly;
+        if (apple && ApplePlaybackControls is null)
+        {
+            FindName(nameof(ApplePlaybackControls));
+            ApplePlaybackControls?.ViewModel = ViewModel;
+        }
+
+        ApplePlaybackControls?.Visibility = apple ? Visibility.Visible : Visibility.Collapsed;
+        LeftPanel.RowDefinitions[1].Height = apple ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
+        _appleControlsActive = apple;
+        UpdateAlbumSizeLimit();
+        if (apple) SyncControlsWidth();
+        ApplyChromeState();
+    }
+
+    private void UpdateAlbumSizeLimit()
+    {
+        if (!_appleControlsActive || _nowWidth <= 0 || _nowHeight <= 0)
+        {
+            ImageAlbum.MaxWidth = double.PositiveInfinity;
+            ImageAlbum.MaxHeight = double.PositiveInfinity;
+            return;
+        }
+
+        var columnWidth = _windowMode == ExpandedWindowMode.Both ? _nowWidth / 2.0 : _nowWidth;
+        var size = Math.Max(160, Math.Min(columnWidth * 0.62, _nowHeight * 0.46));
+        ImageAlbum.MaxWidth = size;
+        ImageAlbum.MaxHeight = size;
+    }
+
+    private void ApplyChromeState()
+    {
+        if (_isCleanedUp) return;
+        if (!_appleControlsActive) SetCollapseButtonShown(false);
+        MainGrid.Margin = new Thickness(0, 0, 0, _appleControlsActive ? 0 : PlaybarReservedHeight);
+        if (_surfaceStore.IsExpanded) _surfaceStore.IsPlayBarSuppressed = _appleControlsActive;
+    }
+
+    private static void FadeTo(UIElement? element, double to, double milliseconds = 250)
+    {
+        if (element is null) return;
+        element.IsHitTestVisible = to > 0;
+        var animation = new DoubleAnimation
+        {
+            To = to,
+            Duration = TimeSpan.FromMilliseconds(milliseconds),
+            EasingFunction = new CircleEase { EasingMode = EasingMode.EaseOut }
+        };
+        var storyboard = new Storyboard();
+        Storyboard.SetTarget(animation, element);
+        Storyboard.SetTargetProperty(animation, "Opacity");
+        storyboard.Children.Add(animation);
+        storyboard.Begin();
+    }
+
+    private void SetCollapseButtonShown(bool shown)
+    {
+        if (shown == _collapseButtonShown) return;
+        _collapseButtonShown = shown;
+        FadeTo(BtnCollapsePage, shown ? 1 : 0, 200);
+    }
+
+    private void PageContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_appleControlsActive) return;
+        SetCollapseButtonShown(e.GetCurrentPoint(PageContainer).Position.Y <= CollapseButtonRevealHeight);
+    }
+
+    private void PageContainer_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        SetCollapseButtonShown(false);
+    }
+
+    private void SyncControlsWidth()
+    {
+        if (ApplePlaybackControls is null) return;
+        var width = ImageAlbum.ActualWidth;
+        ApplePlaybackControls.MaxWidth =
+            width > 0 ? Math.Max(width, ApplePlaybackControls.MinWidth) : double.PositiveInfinity;
+    }
+
+    private void BtnCollapsePage_Click(object sender, RoutedEventArgs e)
+    {
+        _surfaceCoordinator.Collapse();
     }
 
     private void Redesign()
@@ -514,6 +615,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         ImageRotateTransform.CenterX = e.NewSize.Width / 2;
         ImageRotateTransform.CenterY = e.NewSize.Height / 2;
+        if (_appleControlsActive) SyncControlsWidth();
     }
 
     private void LuminousBackgroundContainer_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -1143,8 +1245,6 @@ public sealed partial class ExpandedPlayer : Page
 
     public Task Show()
     {
-        MainGrid.Margin = new Thickness(0, 0, 0, 80);
-
         var btnAni = new DoubleAnimation
         {
             To = 1,
@@ -1163,8 +1263,6 @@ public sealed partial class ExpandedPlayer : Page
     {
         _ = this.RunOnUIThreadAsync(() =>
         {
-            MainGrid.Margin = new Thickness(0);
-
             var btnAni = new DoubleAnimation
             {
                 To = 0,
@@ -1181,7 +1279,8 @@ public sealed partial class ExpandedPlayer : Page
 
     internal void OnPlaybarVisibilityChanged(bool isActivated)
     {
-        if (!_uiSettings.AutoHidePlaybar) return;
+        if (_appleControlsActive) return;
+        if (!isActivated && !_playBarAutoHide.IsActive) return;
         if (isActivated)
             Show();
         else

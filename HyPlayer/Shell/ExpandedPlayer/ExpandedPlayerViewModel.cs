@@ -201,6 +201,21 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
                 case nameof(PlaybackStateService.Position):
                     Position = State.Position;
                     break;
+                case nameof(PlaybackStateService.Duration):
+                    Duration = State.Duration;
+                    break;
+                case nameof(PlaybackStateService.Volume):
+                    Volume = State.Volume;
+                    break;
+                case nameof(PlaybackStateService.ActiveStrategyId):
+                    ActiveStrategyId = State.ActiveStrategyId;
+                    break;
+                case nameof(PlaybackStateService.IsInFm):
+                    IsInFm = State.IsInFm;
+                    break;
+                case nameof(PlaybackStateService.QualityTag):
+                    QualityTag = State.QualityTag;
+                    break;
                 case nameof(PlaybackStateService.LyricIndex):
                     LyricIndex = State.LyricIndex;
                     break;

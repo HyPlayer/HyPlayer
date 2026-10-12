@@ -8,6 +8,7 @@
     xmlns:controls1="using:HyPlayer.UI.Controls"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
+    xmlns:local="using:HyPlayer.Shell.ExpandedPlayer"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:CommunityToolkit.WinUI"
@@ -114,6 +115,29 @@
             Grid.Column="0"
             Background="Transparent"
             Canvas.ZIndex="1" />
+        <Button
+            x:Name="BtnCollapsePage"
+            Grid.Row="1"
+            Width="48"
+            Height="24"
+            Margin="0,2,0,0"
+            Padding="0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            AutomationProperties.Name="收起"
+            Background="Transparent"
+            BorderThickness="0"
+            Canvas.ZIndex="3"
+            Click="BtnCollapsePage_Click"
+            CornerRadius="12"
+            IsHitTestVisible="False"
+            Opacity="0"
+            ToolTipService.ToolTip="收起">
+            <FontIcon
+                FontSize="16"
+                Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
+                Glyph="&#xE70D;" />
+        </Button>
         <win2d:CanvasAnimatedControl
             x:Name="LuminousBackground"
             Grid.Row="0"
@@ -275,6 +299,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <controls1:AutoScrollView
                         Grid.Row="0"
@@ -321,6 +346,13 @@
                         </HyperlinkButton>
 
                     </alignableWrapPanel:AlignableWrapPanel>
+                    <local:ExpandedPlaybackControls
+                        x:Name="ApplePlaybackControls"
+                        Grid.Row="2"
+                        MinWidth="280"
+                        Margin="0,16,0,0"
+                        HorizontalAlignment="Stretch"
+                        x:Load="False" />
                 </Grid>
             </Grid>
             <Grid x:Name="RightPanel" Grid.Column="1" />

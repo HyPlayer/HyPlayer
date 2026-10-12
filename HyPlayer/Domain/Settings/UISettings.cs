@@ -424,4 +424,16 @@ public partial class UISettings : SettingsBase
                 MemoryLimitMB = MemoryLimitPresets[value];
         }
     }
+
+    public ExpandedControlStyle ExpandedControlStyle
+    {
+        get => GetSettings(nameof(ExpandedControlStyle), ExpandedControlStyle.Apple);
+        set => SetSettings(nameof(ExpandedControlStyle), (int)value);
+    }
+
+    public bool ExpandedAutoCollapsePlaybar
+    {
+        get => GetSettings(nameof(ExpandedAutoCollapsePlaybar), true);
+        set => SetSettings(nameof(ExpandedAutoCollapsePlaybar), value);
+    }
 }
