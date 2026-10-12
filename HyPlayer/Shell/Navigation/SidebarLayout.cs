@@ -28,6 +28,11 @@ public sealed partial class SidebarEntry : ObservableObject
     public string Name { get; }
 
     [ObservableProperty] public partial bool IsVisible { get; set; }
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }
 
 public sealed partial class SidebarSection : ObservableObject
@@ -44,6 +49,11 @@ public sealed partial class SidebarSection : ObservableObject
     public ObservableCollection<SidebarEntry> Items { get; } = [];
 
     [ObservableProperty] public partial bool IsVisible { get; set; }
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }
 
 public sealed class SidebarLayout

@@ -279,6 +279,9 @@ public partial class PlayBarViewModel : ObservableObject
                     Position = _state.Position;
                     Duration = _state.Duration;
                     break;
+                case nameof(PlaybackStateService.Duration):
+                    Duration = _state.Duration;
+                    break;
                 case nameof(PlaybackStateService.LyricIndex):
                     LyricIndex = _state.LyricIndex;
                     break;

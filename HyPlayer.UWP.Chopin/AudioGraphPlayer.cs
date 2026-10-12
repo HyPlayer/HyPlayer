@@ -144,6 +144,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         #region Events
         public delegate void PositionChangeHandler(TimeSpan position);
         public event PositionChangeHandler OnPositionChanged;
+        public event PositionChangeHandler OnIdlePositionChanged;
 
         public delegate void TrackReachesEndHandler(IPlaybackSource source);
         public event TrackReachesEndHandler OnTrackReachesEnd;
@@ -862,12 +863,28 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (source?.PlaybackSource?.Duration != null)
             {
                 var value = Math.Min(target.TotalMilliseconds, source.PlaybackSource.Duration.Value.TotalMilliseconds);
-                node.Seek(TimeSpan.FromMilliseconds(value));
+                target = TimeSpan.FromMilliseconds(value);
             }
-            else
+
+            node.Seek(target);
+            if (GlobalPlaybackStatus is PlaybackStatus.Playing || !ReferenceEquals(playbackSource, PrimaryPlaybackSource))
+                return;
+
+            _lastPosition = target;
+            OnIdlePositionChanged?.Invoke(target);
+            PublishTimeline(target, node.Duration);
+        }
+
+        private void PublishTimeline(TimeSpan position, TimeSpan duration)
+        {
+            SMTCManager?.OnPositionChange(new SystemMediaTransportControlsTimelineProperties
             {
-                node.Seek(target);
-            }
+                Position = position,
+                StartTime = TimeSpan.Zero,
+                MinSeekTime = TimeSpan.Zero,
+                EndTime = duration,
+                MaxSeekTime = duration
+            });
         }
         #endregion
 
@@ -1387,15 +1404,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             OnPositionChanged?.Invoke(position.Value);
 
             // 更新系统媒体传输控制
-            var positionProperties = new SystemMediaTransportControlsTimelineProperties
-            {
-                Position = position.Value,
-                StartTime = TimeSpan.Zero,
-                MinSeekTime = TimeSpan.Zero,
-                EndTime = track.Duration,
-                MaxSeekTime = track.Duration
-            };
-            SMTCManager?.OnPositionChange(positionProperties);
+            PublishTimeline(position.Value, track.Duration);
         }
 
         private void OnMediaSourceCompleted(MediaSourceAudioInputNode sender, object args)

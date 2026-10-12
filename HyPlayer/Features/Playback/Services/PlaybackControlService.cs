@@ -155,6 +155,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             graphPlayer.OnTrackReachesEnd += OnTrackReachesEnd;
             graphPlayer.OnGlobalPlaybackStatusChanged += OnGlobalPlaybackStatusChanged;
             graphPlayer.OnPositionChanged += OnPositionChanged;
+            graphPlayer.OnIdlePositionChanged += OnIdlePositionChanged;
             graphPlayer.OnPrimaryPlaybackSourceChanged += OnPrimaryPlaybackSourceChanged;
             graphPlayer.OnDeviceLost += OnAudioDeviceLost;
         }
@@ -1041,6 +1042,9 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     /// </summary>
     private void OnPositionChanged(TimeSpan position)
     {
+        if (_state.IsLoadingTrack)
+            return;
+
         _state.Position = position;
         _lyricService.Tick(position);
         if (_currentSource is { } source)
@@ -1050,6 +1054,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 HandleTransitionPositionAsync(source, generation, position),
                 "update track transition");
         }
+    }
+
+    private void OnIdlePositionChanged(TimeSpan position)
+    {
+        _state.Position = position;
+        _lyricService.Tick(position);
     }
 
     /// <summary>
@@ -1260,6 +1270,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         bool loaded;
         _loadTimedOut = false;
         BeginTrackLoading();
+        _state.Position = TimeSpan.Zero;
         try
         {
             loaded = await TryLoadWithinAsync(token => _playCore.PlayAsync(token), timeout, ct)
@@ -1664,6 +1675,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             graphPlayer.OnTrackReachesEnd -= OnTrackReachesEnd;
             graphPlayer.OnGlobalPlaybackStatusChanged -= OnGlobalPlaybackStatusChanged;
             graphPlayer.OnPositionChanged -= OnPositionChanged;
+            graphPlayer.OnIdlePositionChanged -= OnIdlePositionChanged;
             graphPlayer.OnPrimaryPlaybackSourceChanged -= OnPrimaryPlaybackSourceChanged;
             graphPlayer.OnDeviceLost -= OnAudioDeviceLost;
         }

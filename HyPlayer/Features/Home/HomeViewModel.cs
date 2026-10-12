@@ -271,4 +271,9 @@ public sealed class HomeContainerCardViewModel
     public string CoverUrl { get; init; } = string.Empty;
     public string CreatorName { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
+
+    public override string ToString()
+    {
+        return Name ?? string.Empty;
+    }
 }

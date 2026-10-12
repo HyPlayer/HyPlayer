@@ -151,6 +151,11 @@ public sealed partial class DownloadObject : ObservableObject
 
     public string ArtistText => string.Join(';', _downloadArtistNames);
 
+    public override string ToString()
+    {
+        return string.IsNullOrWhiteSpace(ArtistText) ? SongName : $"{SongName} - {ArtistText}";
+    }
+
     public string AlbumName { get; }
 
     public string? AlbumCover { get; private set; }

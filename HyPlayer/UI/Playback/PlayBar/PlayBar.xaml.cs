@@ -12,6 +12,7 @@ using Windows.System.Profile;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Automation;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
@@ -173,6 +174,14 @@ DoubleAnimation verticalAnimation;
                 break;
             case nameof(PlaybackStateService.IsPlaying):
                 RunOnUIThread(RefreshBackgroundBreath);
+                break;
+            case nameof(PlaybackStateService.IsInFm):
+            case nameof(PlaybackStateService.ActiveStrategyId):
+                RunOnUIThread(() =>
+                {
+                    ViewModel.SyncFromState();
+                    RefreshPlayModeDisplay();
+                });
                 break;
         }
     }
@@ -440,7 +449,10 @@ DoubleAnimation verticalAnimation;
                     : "\uE006";
             });
             if (!string.IsNullOrEmpty(songId))
+            {
                 _history.AddNCSongHistory(songId);
+                _taskRunner.Forget(_history.RememberSongAsync(songId, providerItem), "remember played song");
+            }
         }
 
         /*
@@ -462,7 +474,12 @@ DoubleAnimation verticalAnimation;
 
     private void RefreshPlayModeDisplay()
     {
-        if (_state.IsInFm)
+        var inFm = _state.IsInFm;
+        var previousText = inFm ? "退出私人 FM" : "上一首";
+        AutomationProperties.SetName(BtnPreviousSong, previousText);
+        ToolTipService.SetToolTip(BtnPreviousSong, previousText);
+        AutomationProperties.SetName(BtnPlayRollType, inFm ? "我不喜欢" : "播放顺序");
+        if (inFm)
         {
             IconPrevious.Glyph = "\uE7E8";
             IconPlayType.Glyph = "\uE107";

@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
@@ -37,7 +39,9 @@ internal sealed class PersonalFM
     private readonly PlaybackSettings _playbackSettings;
     private readonly LastFMSettings _lastFmSettings;
     private readonly IProviderSpecialContainerTypeIds _specialContainerTypeIds;
+    private readonly HashSet<string> _suppliedItemIds = new(StringComparer.Ordinal);
     private bool _isLoadingNextTrack;
+    private bool _ownsQueue;
     private string _previousStrategyId = string.Empty;
 
     private PersonalFM()
@@ -66,12 +70,37 @@ internal sealed class PersonalFM
         var fm = new PersonalFM();
         _instance = fm;
         fm._previousStrategyId = fm._playbackState.ActiveStrategyId;
-        fm._control.ClearQueueAsync().SafeFireAndForget();
         fm._control.SetPlayModeAsync("pfm").SafeFireAndForget();
         fm._playbackState.ActiveStrategyId = "pfm";
         fm._playbackSettings.ActiveStrategyId = "pfm";
         fm._playbackState.IsInFm = true;
+        fm._playbackState.PropertyChanged += fm.OnPlaybackStateChanged;
         fm.StartAsync().SafeFireAndForget();
+    }
+
+    internal static bool IsQueueReplaced(IEnumerable<string?> queueItemIds, IReadOnlySet<string> suppliedItemIds)
+    {
+        return queueItemIds.Any(itemId => itemId is null || !suppliedItemIds.Contains(itemId));
+    }
+
+    private void OnPlaybackStateChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PlaybackStateService.QueueRevision))
+            LeaveIfQueueReplacedAsync().SafeFireAndForget();
+    }
+
+    private async Task LeaveIfQueueReplacedAsync()
+    {
+        if (!IsActiveSession || !Volatile.Read(ref _ownsQueue))
+            return;
+
+        var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
+        bool replaced;
+        lock (_suppliedItemIds)
+            replaced = IsQueueReplaced(queue.Select(song => song.ItemId), _suppliedItemIds);
+
+        if (replaced && IsActiveSession)
+            DisposeInstance(false);
     }
 
     private async Task StartAsync()
@@ -79,6 +108,8 @@ internal sealed class PersonalFM
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
         try
         {
+            await _control.ClearQueueAsync().ConfigureAwait(false);
+            Volatile.Write(ref _ownsQueue, true);
             await LoadNextTrackAsync().ConfigureAwait(false);
             if (IsActiveSession && (await _playCore.GetPlaylistAsync().ConfigureAwait(false)).Count == 0)
                 notification.ShowMessage("无法开始私人 FM", "没有获取到歌曲，请检查网络与登录状态");
@@ -144,8 +175,14 @@ internal sealed class PersonalFM
             ? await LoadAiDjAsync(currentSong).ConfigureAwait(false)
             : await LoadPersonalFmAsync().ConfigureAwait(false);
 
-        if (songs.Count > 0)
-            await _playCore.InsertSongRangeAsync(songs).ConfigureAwait(false);
+        if (songs.Count == 0 || !IsActiveSession)
+            return;
+
+        lock (_suppliedItemIds)
+            foreach (var song in songs)
+                _suppliedItemIds.Add(song.ItemId);
+
+        await _playCore.InsertSongRangeAsync(songs).ConfigureAwait(false);
     }
 
     private static void DisposeInstance(bool clearPlaylist = true)
@@ -153,6 +190,7 @@ internal sealed class PersonalFM
         if (_instance is null)
             return;
 
+        _instance._playbackState.PropertyChanged -= _instance.OnPlaybackStateChanged;
         _instance._playbackState.IsInFm = false;
         if (clearPlaylist)
             _instance._control.ClearQueueAsync().SafeFireAndForget();

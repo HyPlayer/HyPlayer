@@ -18,6 +18,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <TextBlock
+            x:Name="TitleText"
             Grid.Row="0"
             Margin="0,-5,0,20"
             CharacterSpacing="90"

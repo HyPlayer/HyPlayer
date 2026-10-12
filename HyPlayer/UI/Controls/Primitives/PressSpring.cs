@@ -37,13 +37,12 @@ public sealed class PressSpring
     public void Pulse()
     {
         if (_pressed || Environment.TickCount64 - _pointerReleasedAt < 400 || !_animationsEnabled()) return;
-        Start(_button, "Scale", Vector3.One, ReleaseDamping, ReleasePeriod,
-            new Vector3(PulseScale, PulseScale, 1));
+        Start(_button, Vector3.One, ReleaseDamping, ReleasePeriod, new Vector3(PulseScale, PulseScale, 1));
     }
 
     public static void Nudge(FrameworkElement element, float direction)
     {
-        var spring = ElementCompositionPreview.GetElementVisual(element).Compositor.CreateSpringVector3Animation();
+        var spring = Window.Current.Compositor.CreateSpringVector3Animation();
         spring.Target = "Translation";
         spring.FinalValue = Vector3.Zero;
         spring.InitialVelocity = new Vector3(direction * NudgeVelocity, 0, 0);
@@ -52,24 +51,24 @@ public sealed class PressSpring
         element.StartAnimation(spring);
     }
 
-    public static void Start(FrameworkElement element, string target, Vector3 finalValue, float dampingRatio,
-        TimeSpan period, Vector3? initialValue = null)
+    public static void Start(FrameworkElement element, Vector3 finalValue, float dampingRatio, TimeSpan period,
+        Vector3? initialValue = null)
     {
-        element.CenterPoint = new Vector3((float)element.ActualWidth / 2, (float)element.ActualHeight / 2, 0);
-        var spring = ElementCompositionPreview.GetElementVisual(element).Compositor.CreateSpringVector3Animation();
-        spring.Target = target;
+        var visual = ElementCompositionPreview.GetElementVisual(element);
+        visual.CenterPoint = new Vector3((float)element.ActualWidth / 2, (float)element.ActualHeight / 2, 0);
+        var spring = visual.Compositor.CreateSpringVector3Animation();
         spring.FinalValue = finalValue;
         if (initialValue is { } start) spring.InitialValue = start;
         spring.DampingRatio = dampingRatio;
         spring.Period = period;
-        element.StartAnimation(spring);
+        visual.StartAnimation("Scale", spring);
     }
 
     private void OnPressed(object sender, PointerRoutedEventArgs e)
     {
         if (_pressed || !_button.IsEnabled || !_animationsEnabled()) return;
         _pressed = true;
-        Start(_button, "Scale", new Vector3(PressedScale, PressedScale, 1), PressDamping, PressPeriod);
+        Start(_button, new Vector3(PressedScale, PressedScale, 1), PressDamping, PressPeriod);
     }
 
     private void OnReleased(object sender, PointerRoutedEventArgs e)
@@ -77,6 +76,6 @@ public sealed class PressSpring
         if (!_pressed) return;
         _pressed = false;
         _pointerReleasedAt = Environment.TickCount64;
-        Start(_button, "Scale", Vector3.One, ReleaseDamping, ReleasePeriod);
+        Start(_button, Vector3.One, ReleaseDamping, ReleasePeriod);
     }
 }

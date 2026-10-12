@@ -4,6 +4,7 @@ using System.Numerics;
 using Windows.System.Profile;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Automation;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
@@ -23,7 +24,6 @@ public sealed partial class ExpandedPlaybackControls : UserControl
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private bool _isAttached;
     private const float IconSwapScale = 0.6f;
-    private const double IconSwapMilliseconds = 90;
 
     private long _lastElapsedSecond = -1;
     private long _lastRemainingSecond = -1;
@@ -36,8 +36,6 @@ public sealed partial class ExpandedPlaybackControls : UserControl
     private readonly PressSpring _previousSpring;
     private readonly PressSpring _playPauseSpring;
     private readonly PressSpring _nextSpring;
-    private string? _playGlyph;
-    private int _playGlyphVersion;
 
     public ExpandedPlaybackControls()
     {
@@ -174,6 +172,7 @@ public sealed partial class ExpandedPlaybackControls : UserControl
             };
         IconPlayMode.Glyph = glyph;
         ToolTipService.SetToolTip(BtnPlayMode, text);
+        AutomationProperties.SetName(BtnPlayMode, viewModel.IsInFm ? text : "播放顺序");
     }
 
     private void RefreshQuality(bool animate)
@@ -244,40 +243,25 @@ public sealed partial class ExpandedPlaybackControls : UserControl
     private void RefreshPlayState(bool animate = true)
     {
         if (ViewModel is not { } viewModel) return;
-        var glyph = viewModel.IsPlaying ? "\uF8AE" : "\uF5B0";
-        if (_playGlyph == glyph) return;
-        _playGlyph = glyph;
-        var version = ++_playGlyphVersion;
-        if (!animate || !IsLoaded || !AnimationsEnabled())
-        {
-            IconPlayPause.Glyph = glyph;
-            return;
-        }
-
-        var compositor = ElementCompositionPreview.GetElementVisual(IconPlayPause).Compositor;
-        IconPlayPause.CenterPoint = new Vector3((float)IconPlayPause.ActualWidth / 2,
-            (float)IconPlayPause.ActualHeight / 2, 0);
-        var shrink = compositor.CreateVector3KeyFrameAnimation();
-        shrink.Target = "Scale";
-        shrink.InsertKeyFrame(1f, new Vector3(IconSwapScale, IconSwapScale, 1),
-            compositor.CreateCubicBezierEasingFunction(new Vector2(0.4f, 0f), new Vector2(1f, 1f)));
-        shrink.Duration = TimeSpan.FromMilliseconds(IconSwapMilliseconds);
-        var batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        IconPlayPause.StartAnimation(shrink);
-        batch.End();
-        batch.Completed += (_, _) =>
-        {
-            if (version != _playGlyphVersion) return;
-            IconPlayPause.Glyph = glyph;
-            PressSpring.Start(IconPlayPause, "Scale", Vector3.One, PressSpring.ReleaseDamping,
-                PressSpring.ReleasePeriod);
-        };
+        var playing = viewModel.IsPlaying;
+        var glyph = playing ? "\uF8AE" : "\uF5B0";
+        var changed = IconPlayPause.Glyph != glyph;
+        IconPlayPause.Glyph = glyph;
+        var text = playing ? "暂停" : "播放";
+        AutomationProperties.SetName(BtnPlayPause, text);
+        ToolTipService.SetToolTip(BtnPlayPause, text);
+        if (!changed || !animate || !IsLoaded || !AnimationsEnabled()) return;
+        PressSpring.Start(IconPlayPause, Vector3.One, PressSpring.ReleaseDamping, PressSpring.ReleasePeriod,
+            new Vector3(IconSwapScale, IconSwapScale, 1));
     }
 
     private void RefreshFmState()
     {
         if (ViewModel is not { } viewModel) return;
         IconPrevious.Glyph = viewModel.IsInFm ? "\uE7E8" : "\uF8AC";
+        var text = viewModel.IsInFm ? "退出私人 FM" : "上一首";
+        AutomationProperties.SetName(BtnPrevious, text);
+        ToolTipService.SetToolTip(BtnPrevious, text);
     }
 
     private void RefreshVolume()
@@ -343,28 +327,28 @@ public sealed partial class ExpandedPlaybackControls : UserControl
 
     private void BtnPlayMode_Click(object sender, RoutedEventArgs e)
     {
-        _playModeSpring.Pulse();
         _surfaceStore.RequestCommand(PlaybackSurfaceCommand.ChangePlayMode);
+        _playModeSpring.Pulse();
     }
 
     private void BtnPrevious_Click(object sender, RoutedEventArgs e)
     {
+        _surfaceStore.RequestCommand(PlaybackSurfaceCommand.MovePrevious);
         _previousSpring.Pulse();
         if (AnimationsEnabled()) PressSpring.Nudge(IconPrevious, -1);
-        _surfaceStore.RequestCommand(PlaybackSurfaceCommand.MovePrevious);
     }
 
     private void BtnPlayPause_Click(object sender, RoutedEventArgs e)
     {
-        _playPauseSpring.Pulse();
         _surfaceStore.RequestCommand(PlaybackSurfaceCommand.TogglePlayback);
+        _playPauseSpring.Pulse();
     }
 
     private void BtnNext_Click(object sender, RoutedEventArgs e)
     {
+        _surfaceStore.RequestCommand(PlaybackSurfaceCommand.MoveNext);
         _nextSpring.Pulse();
         if (AnimationsEnabled()) PressSpring.Nudge(IconNext, 1);
-        _surfaceStore.RequestCommand(PlaybackSurfaceCommand.MoveNext);
     }
 
     private void RootGrid_Tapped(object sender, TappedRoutedEventArgs e)

@@ -39,4 +39,9 @@ public sealed partial class KeyboardShortcutEntry : ObservableObject
         : string.IsNullOrEmpty(Binding)
             ? "未设置"
             : Binding.Replace("+", " + ");
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }

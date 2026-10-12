@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -44,7 +45,9 @@ public sealed class ProvidableItemDisplayResolver
             Title = item.Name ?? item.ActualId ?? string.Empty,
             LineOne = string.Join(" / ", creators.Select(t => t.Name) ?? []),
             LineTwo = album,
-            LineThree = string.Join(" / ", aliases),
+            LineThree = item is NeteaseLyricSearchItem { MatchedLyrics.Count: > 0 } lyricMatch
+                ? string.Join("   ", lyricMatch.MatchedLyrics)
+                : string.Join(" / ", aliases),
             CoverUrl = coverUrl,
             RichMediaId = richMedia?.RichMediaId,
             CanOpenComments = item.TypeId == _knownTypeIds.SingleSongTypeId

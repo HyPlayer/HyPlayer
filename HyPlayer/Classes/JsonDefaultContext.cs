@@ -35,6 +35,7 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(The163KeyClass))]
     [JsonSerializable(typeof(List<string>))]
     [JsonSerializable(typeof(CurPlayingListHistoryState))]
+    [JsonSerializable(typeof(List<SongHistoryEntry>))]
     [JsonSerializable(typeof(PlaybackMemoryState))]
     [JsonSerializable(typeof(PlaybackItemIdentity))]
     [JsonSerializable(typeof(List<PlaybackItemIdentity>))]

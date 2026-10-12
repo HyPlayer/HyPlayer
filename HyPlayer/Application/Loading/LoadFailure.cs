@@ -12,6 +12,7 @@ public enum LoadFailureKind
     Cancelled,
     Offline,
     Timeout,
+    Interrupted,
     Server,
     Rejected,
     NotLoggedIn,
@@ -28,6 +29,7 @@ public static class LoadFailureClassifier
 {
     public const string OfflineReason = "无法连接到网络，请检查网络连接";
     public const string TimeoutReason = "连接超时，网络可能较慢";
+    public const string InterruptedReason = "与服务器的连接中断，请重试";
     public const string ServerReason = "服务器暂时无法响应";
     public const string RejectedReason = "服务器拒绝了请求";
     public const string NotLoggedInReason = "需要登录后才能查看";
@@ -43,7 +45,8 @@ public static class LoadFailureClassifier
         ArgumentNullException.ThrowIfNull(exception);
         var detail = Describe(exception);
         var (kind, code) = Resolve(exception, cancellationToken, 0);
-        if (!networkAvailable && kind is LoadFailureKind.Timeout or LoadFailureKind.Unknown)
+        if (!networkAvailable &&
+            kind is LoadFailureKind.Timeout or LoadFailureKind.Interrupted or LoadFailureKind.Unknown)
             kind = LoadFailureKind.Offline;
 
         return new LoadFailure(kind, ReasonOf(kind, code), detail);
@@ -56,6 +59,7 @@ public static class LoadFailureClassifier
             LoadFailureKind.Cancelled => string.Empty,
             LoadFailureKind.Offline => OfflineReason,
             LoadFailureKind.Timeout => TimeoutReason,
+            LoadFailureKind.Interrupted => InterruptedReason,
             LoadFailureKind.Server => code is { } serverCode ? $"{ServerReason}（{serverCode}）" : ServerReason,
             LoadFailureKind.Rejected => code is { } rejectedCode ? $"{RejectedReason}（{rejectedCode}）" : RejectedReason,
             LoadFailureKind.NotLoggedIn => NotLoggedInReason,
@@ -87,8 +91,13 @@ public static class LoadFailureClassifier
             case HttpRequestException http:
                 return FromHttp(http, cancellationToken, depth);
             case SocketException socket:
-                return (socket.SocketErrorCode == SocketError.TimedOut ? LoadFailureKind.Timeout : LoadFailureKind.Offline,
-                    null);
+                return (socket.SocketErrorCode switch
+                {
+                    SocketError.TimedOut => LoadFailureKind.Timeout,
+                    SocketError.ConnectionReset or SocketError.ConnectionAborted or SocketError.Shutdown =>
+                        LoadFailureKind.Interrupted,
+                    _ => LoadFailureKind.Offline
+                }, null);
             case WebException web:
                 return (web.Status == WebExceptionStatus.Timeout ? LoadFailureKind.Timeout : LoadFailureKind.Offline,
                     null);
@@ -124,10 +133,14 @@ public static class LoadFailureClassifier
         if (exception.StatusCode is { } status)
             return FromCode((int)status);
 
+        if (exception.HttpRequestError is HttpRequestError.ResponseEnded or HttpRequestError.HttpProtocolError
+            or HttpRequestError.InvalidResponse)
+            return (LoadFailureKind.Interrupted, null);
+
         if (exception.InnerException is { } inner && depth < MaxDepth)
         {
             var resolved = Resolve(inner, cancellationToken, depth + 1);
-            if (resolved.Kind is LoadFailureKind.Timeout or LoadFailureKind.Cancelled)
+            if (resolved.Kind is LoadFailureKind.Timeout or LoadFailureKind.Cancelled or LoadFailureKind.Interrupted)
                 return resolved;
         }
 

@@ -219,6 +219,12 @@ public sealed partial class Search : Page
     private void NavigationView_OnSelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
+        TitleText.Text = (sender.SelectedItem as NavigationViewItem)?.Content as string switch
+        {
+            null or "单曲" => "搜索歌曲",
+            "MV" => "搜索 MV",
+            var category => $"搜索{category}"
+        };
         _loadResultTask = LoadResult();
     }
 
