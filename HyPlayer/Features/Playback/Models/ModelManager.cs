@@ -112,7 +112,7 @@ public sealed partial class ModelManager : ObservableObject
     }
 
     public string AnalyzerSummary =>
-        $"节拍：{(IsUsable(ModelCatalog.BeatThisId) ? "Beat This!" : "内置算法")}　调性：{(IsUsable(ModelCatalog.SKeyId) ? "S-KEY" : "内置算法")}　人声：{(IsUsable(ModelCatalog.VocalId) ? "歌词时间轴 + MDX-Net" : "歌词时间轴")}";
+        $"节拍：{(IsUsable(ModelCatalog.BeatThisId) ? "Beat This!" : "内置算法")}　调性：{(IsUsable(ModelCatalog.SKeyId) ? "S-KEY" : "内置算法")}　人声：{(IsUsable(ModelCatalog.VocalId) ? "歌词时间轴 + MDX-Net" : "歌词时间轴 + 中频活动检测（内置）")}";
 
     public System.Collections.ObjectModel.ObservableCollection<ModelEntry> Entries { get; }
 

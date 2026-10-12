@@ -24,6 +24,7 @@ public sealed class BeatAnalysisResult
     public double Confidence { get; init; }
     public double[] Beats { get; init; } = Array.Empty<double>();
     public double[] Downbeats { get; init; } = Array.Empty<double>();
+    public double DownbeatConfidence { get; init; } = 1;
 }
 
 public interface IBeatAnalyzer
@@ -52,7 +53,7 @@ public interface IVocalAnalyzer
 public interface IAudioAnalysisService
 {
     Task<VocalActivity?> AnalyzeVocalsAsync(SingleSongBase item, bool outro, CancellationToken ct);
-    string? CurrentVocalAnalyzerId { get; }
+    string CurrentVocalAnalyzerId { get; }
     TrackAnalysis? TryGetCached(SingleSongBase item);
     Task<TrackAnalysis?> AnalyzeAsync(SingleSongBase item, CancellationToken ct);
     Task<IRandomAccessStream?> OpenLocalAudioAsync(SingleSongBase item);
@@ -70,6 +71,7 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
     private readonly ModelManager _models;
     private readonly IEnumerable<IVocalAnalyzer> _vocalAnalyzers;
     private readonly ConcurrentDictionary<string, Task<VocalActivity?>> _vocalInflight = new();
+    private readonly ConcurrentDictionary<string, VocalActivity> _leadMemory = new();
     private const double VocalWindowSeconds = 32;
     private readonly ConcurrentDictionary<string, TrackAnalysis> _memory = new();
     private readonly ConcurrentDictionary<string, Task<TrackAnalysis?>> _inflight = new();
@@ -84,57 +86,56 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
         _keyAnalyzers = keyAnalyzers;
     }
 
-    public string CurrentBeatAnalyzerId => BeatAnalyzer()?.Id ?? "dsp";
-    public string CurrentKeyAnalyzerId => KeyAnalyzer()?.Id ?? "dsp";
-    public string? CurrentVocalAnalyzerId => VocalAnalyzer()?.Id;
+    public string CurrentBeatAnalyzerId => BeatAnalyzer()?.Id ?? TrackAnalysis.DspAnalyzer;
+    public string CurrentKeyAnalyzerId => KeyAnalyzer()?.Id ?? TrackAnalysis.DspAnalyzer;
+    public string CurrentVocalAnalyzerId => VocalAnalyzer()?.Id ?? MidBandActivity.Id;
 
     private IVocalAnalyzer? VocalAnalyzer() => _vocalAnalyzers.FirstOrDefault(a => a.IsAvailable);
 
     public Task<VocalActivity?> AnalyzeVocalsAsync(SingleSongBase item, bool outro, CancellationToken ct)
     {
         var analyzer = VocalAnalyzer();
-        if (analyzer is null) return Task.FromResult<VocalActivity?>(null);
         var key = $"{KeyOf(item)}_{(outro ? "out" : "in")}";
         return _vocalInflight.GetOrAdd(key, _ => RunVocalsAsync(item, analyzer, outro, key, ct));
     }
 
-    private async Task<VocalActivity?> RunVocalsAsync(SingleSongBase item, IVocalAnalyzer analyzer, bool outro, string inflightKey, CancellationToken ct)
+    private async Task<VocalActivity?> RunVocalsAsync(SingleSongBase item, IVocalAnalyzer? analyzer, bool outro, string inflightKey, CancellationToken ct)
     {
         try
         {
             var analysis = await AnalyzeAsync(item, ct);
             if (analysis is null) return null;
-            var cached = analysis.VocalAnalyzer == analyzer.Id ? outro ? analysis.VocalOutroCurve : analysis.VocalIntroCurve : null;
+            var id = analyzer?.Id ?? MidBandActivity.Id;
+            var cached = analysis.VocalAnalyzer == id ? outro ? analysis.VocalOutroCurve : analysis.VocalIntroCurve : null;
             var cachedWindow = outro ? analysis.VocalOutroWindow : analysis.VocalIntroWindow;
-            if (cached is not null && cachedWindow is { Length: 2 }) return new VocalActivity(cachedWindow[0], cached);
+            if (cached is not null && cachedWindow is { Length: 2 }) return new VocalActivity(cachedWindow[0], cached) { Analyzer = id };
+            if (analyzer is null && _leadMemory.TryGetValue(inflightKey, out var remembered)) return remembered;
 
-            var from = outro ? Math.Max(0, analysis.SoundEnd - VocalWindowSeconds) : Math.Max(0, analysis.SoundStart);
-            var length = Math.Min(VocalWindowSeconds, Math.Max(0, analysis.Duration - from));
+            var (from, length) = VocalWindow(analysis.SoundStart, analysis.SoundEnd, analysis.Duration, outro);
             if (length < 5) return null;
             using var stream = await OpenLocalAudioAsync(item);
             if (stream is null) return null;
             await _worker.WaitAsync(ct);
             try
             {
-                var pcm = await AudioDecoder.DecodeAsync(stream, 44100, 2, TimeSpan.FromSeconds(from), TimeSpan.FromSeconds(length), ct);
-                var activity = await analyzer.AnalyzeAsync(pcm.Samples, pcm.SampleRate, from, ct);
-                if (activity is null) return null;
-                if (analysis.VocalAnalyzer != analyzer.Id)
+                VocalActivity? activity;
+                if (analyzer is null)
                 {
-                    analysis.VocalAnalyzer = analyzer.Id;
-                    analysis.VocalIntroCurve = analysis.VocalOutroCurve = null;
-                    analysis.VocalIntroWindow = analysis.VocalOutroWindow = null;
-                }
-                if (outro)
-                {
-                    analysis.VocalOutroCurve = activity.Values;
-                    analysis.VocalOutroWindow = [from, activity.End];
+                    var pcm = await AudioDecoder.DecodeAsync(stream, AnalysisSampleRate, 1, TimeSpan.FromSeconds(from), TimeSpan.FromSeconds(length), ct);
+                    activity = await Task.Run(() => MidBandActivity.Analyze(pcm.Samples, pcm.SampleRate, 0, pcm.Samples.Length, from, analysis.IntegratedLoudness), ct);
                 }
                 else
                 {
-                    analysis.VocalIntroCurve = activity.Values;
-                    analysis.VocalIntroWindow = [from, activity.End];
+                    var pcm = await AudioDecoder.DecodeAsync(stream, 44100, 2, TimeSpan.FromSeconds(from), TimeSpan.FromSeconds(length), ct);
+                    activity = await analyzer.AnalyzeAsync(pcm.Samples, pcm.SampleRate, from, ct);
                 }
+                if (activity is null) return null;
+                if (analyzer is null && HasModelVocals(analysis))
+                {
+                    _leadMemory[inflightKey] = activity;
+                    return activity;
+                }
+                StoreVocals(analysis, id, outro, activity);
                 await SaveAsync(KeyOf(item), analysis);
                 return activity;
             }
@@ -153,13 +154,42 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
         }
     }
 
+    private static (double from, double length) VocalWindow(double soundStart, double soundEnd, double duration, bool outro)
+    {
+        var from = outro ? Math.Max(0, soundEnd - VocalWindowSeconds) : Math.Max(0, soundStart);
+        return (from, Math.Min(VocalWindowSeconds, Math.Max(0, duration - from)));
+    }
+
+    private static bool HasModelVocals(TrackAnalysis analysis) =>
+        analysis.VocalAnalyzer.Length > 0 && analysis.VocalAnalyzer != MidBandActivity.Id;
+
+    private static void StoreVocals(TrackAnalysis analysis, string analyzer, bool outro, VocalActivity activity)
+    {
+        if (analysis.VocalAnalyzer != analyzer)
+        {
+            analysis.VocalAnalyzer = analyzer;
+            analysis.VocalIntroCurve = analysis.VocalOutroCurve = null;
+            analysis.VocalIntroWindow = analysis.VocalOutroWindow = null;
+        }
+        if (outro)
+        {
+            analysis.VocalOutroCurve = activity.Values;
+            analysis.VocalOutroWindow = [activity.Start, activity.End];
+        }
+        else
+        {
+            analysis.VocalIntroCurve = activity.Values;
+            analysis.VocalIntroWindow = [activity.Start, activity.End];
+        }
+    }
+
     private IBeatAnalyzer? BeatAnalyzer() => _beatAnalyzers.Where(a => a.IsAvailable).OrderByDescending(a => a.Priority).FirstOrDefault();
     private IKeyAnalyzer? KeyAnalyzer() => _keyAnalyzers.Where(a => a.IsAvailable).OrderByDescending(a => a.Priority).FirstOrDefault();
 
     private static string KeyOf(SingleSongBase item) => $"{item.ProviderId}_{item.ActualId}";
 
     private bool IsCurrent(TrackAnalysis analysis) =>
-        analysis.Version == TrackAnalysis.CurrentVersion &&
+        analysis.IsCurrentVersion &&
         analysis.BeatAnalyzer == CurrentBeatAnalyzerId &&
         analysis.KeyAnalyzer == CurrentKeyAnalyzerId;
 
@@ -193,7 +223,7 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
             await _worker.WaitAsync(ct);
             try
             {
-                var analysis = await Task.Run(() => AnalyzeStreamAsync(stream, key, ct), ct);
+                var analysis = await Task.Run(() => AnalyzeStreamAsync(stream, key, stored, ct), ct);
                 if (analysis is null) return null;
                 _memory[key] = analysis;
                 await SaveAsync(key, analysis);
@@ -214,8 +244,9 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
         }
     }
 
-    private async Task<TrackAnalysis?> AnalyzeStreamAsync(IRandomAccessStream stream, string key, CancellationToken ct)
+    private async Task<TrackAnalysis?> AnalyzeStreamAsync(IRandomAccessStream stream, string key, TrackAnalysis? previous, CancellationToken ct)
     {
+        if (previous is { Version: < TrackAnalysis.ModelBeatVersion }) previous = null;
         var pcm = await AudioDecoder.DecodeAsync(stream, AnalysisSampleRate, 1, TimeSpan.Zero, TimeSpan.Zero, ct);
         var mono = pcm.Samples;
         var sr = pcm.SampleRate;
@@ -246,13 +277,25 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
         if (beats is null)
         {
             var dsp = BeatTracker.Track(features);
-            beats = new BeatAnalysisResult { Analyzer = "dsp", Bpm = dsp.Bpm, Confidence = dsp.Confidence, Beats = dsp.Beats, Downbeats = dsp.Downbeats };
+            beats = new BeatAnalysisResult
+            {
+                Analyzer = TrackAnalysis.DspAnalyzer,
+                Bpm = dsp.Bpm,
+                Confidence = dsp.Confidence,
+                Beats = dsp.Beats,
+                Downbeats = dsp.Downbeats,
+                DownbeatConfidence = dsp.DownbeatConfidence
+            };
         }
         ct.ThrowIfCancellationRequested();
 
         (int key, double confidence)? keyResult = null;
         var keyAnalyzer = KeyAnalyzer();
-        if (keyAnalyzer is not null)
+        if (previous is not null && previous.KeyAnalyzer == (keyAnalyzer?.Id ?? TrackAnalysis.DspAnalyzer))
+        {
+            keyResult = (previous.Key, previous.KeyConfidence);
+        }
+        else if (keyAnalyzer is not null)
         {
             try
             {
@@ -271,11 +314,12 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
 
         var barEnergies = LevelAnalysis.BarEnergies(features, beats.Downbeats);
         var (introEnd, outroStart) = LevelAnalysis.IntroOutro(barEnergies, beats.Downbeats);
-        return new TrackAnalysis
+        var vocals = previous is not null && HasModelVocals(previous) ? previous : null;
+        var analysis = new TrackAnalysis
         {
             TrackKey = key,
-            BeatAnalyzer = beatAnalyzer?.Id ?? "dsp",
-            KeyAnalyzer = keyAnalyzer?.Id ?? "dsp",
+            BeatAnalyzer = beatAnalyzer?.Id ?? TrackAnalysis.DspAnalyzer,
+            KeyAnalyzer = keyAnalyzer?.Id ?? TrackAnalysis.DspAnalyzer,
             Duration = Math.Round(pcm.Seconds, 3),
             SoundStart = Math.Round(soundStart, 3),
             SoundEnd = Math.Round(soundEnd, 3),
@@ -284,14 +328,31 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
             BeatConfidence = beats.Confidence,
             Beats = beats.Beats.Select(b => Math.Round(b, 4)).ToArray(),
             Downbeats = beats.Downbeats.Select(b => Math.Round(b, 4)).ToArray(),
+            DownbeatConfidence = beats.DownbeatConfidence,
             BarEnergies = barEnergies,
             IntroEnd = Math.Round(introEnd, 3),
             OutroStart = Math.Round(outroStart, 3),
             Key = keyResult.Value.key,
             KeyConfidence = keyResult.Value.confidence,
             Envelope = LevelAnalysis.Envelope(features.Rms, features.HopSeconds, 10),
-            EnvelopeRate = 10
+            EnvelopeRate = 10,
+            VocalAnalyzer = vocals?.VocalAnalyzer ?? string.Empty,
+            VocalIntroWindow = vocals?.VocalIntroWindow,
+            VocalIntroCurve = vocals?.VocalIntroCurve,
+            VocalOutroWindow = vocals?.VocalOutroWindow,
+            VocalOutroCurve = vocals?.VocalOutroCurve
         };
+        if (VocalAnalyzer() is not null) return analysis;
+        foreach (var outro in new[] { false, true })
+        {
+            var (from, length) = VocalWindow(analysis.SoundStart, analysis.SoundEnd, analysis.Duration, outro);
+            if (length < 5) continue;
+            var activity = MidBandActivity.Analyze(mono, sr, (int)(from * sr), (int)(length * sr), from, loudness);
+            if (activity is null) continue;
+            if (vocals is null) StoreVocals(analysis, MidBandActivity.Id, outro, activity);
+            else _leadMemory[$"{key}_{(outro ? "out" : "in")}"] = activity;
+        }
+        return analysis;
     }
 
     public async Task<IRandomAccessStream?> OpenLocalAudioAsync(SingleSongBase item)

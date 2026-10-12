@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.Analysis;
+using HyPlayer.Features.Playback.Analysis.Dsp;
 using HyPlayer.Features.Playback.AutoMix;
 using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Runtime.Background;
@@ -39,8 +40,8 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     private TransitionPreparedTrack? _plannedFor;
     private Task<TrackAnalysis?>? _analysisA;
     private Task<TrackAnalysis?>? _analysisB;
-    private Task<IReadOnlyList<(double, double)>>? _vocalsA;
-    private Task<IReadOnlyList<(double, double)>>? _vocalsB;
+    private Task<VocalRegions>? _vocalsA;
+    private Task<VocalRegions>? _vocalsB;
     private DateTime _lastAnalysisAttempt;
     private CancellationTokenSource _cts = new();
 
@@ -323,7 +324,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         }
     }
 
-    private async Task<IReadOnlyList<(double, double)>> SafeVocals(SingleSongBase item, bool outro, CancellationToken ct)
+    private async Task<VocalRegions> SafeVocals(SingleSongBase item, bool outro, CancellationToken ct)
     {
         IReadOnlyList<(double Start, double End)> lyric;
         try
@@ -344,15 +345,17 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         {
         }
 
-        var fused = VocalActivity.Fuse(lyric, activity);
+        var regions = VocalActivity.Resolve(lyric, activity);
         if (activity is not null)
         {
             var lyricInWindow = lyric.Count(r => r.End > activity.Start && r.Start < activity.End);
-            var inWindow = fused.Where(r => r.End > activity.Start && r.Start < activity.End);
-            AutoMixLog.Write($"vocals {(outro ? "outro" : "intro")} {item.Name} {activity.Start:0.0}-{activity.End:0.0}s: lyrics {lyricInWindow} lines, model {Describe(activity.Regions(0.12, 0.06))} -> {Describe(inWindow)}");
+            var inWindow = regions.Vocals.Where(r => r.End > activity.Start && r.Start < activity.End);
+            AutoMixLog.Write(activity.IsLeadActivity
+                ? $"vocals {(outro ? "outro" : "intro")} {item.Name} {activity.Start:0.0}-{activity.End:0.0}s: lyrics {lyricInWindow} lines, mid-band {Describe(activity.Regions(MidBandActivity.EnterThreshold, MidBandActivity.ExitThreshold))} -> vocals {Describe(inWindow)} leads {Describe(regions.Leads)}"
+                : $"vocals {(outro ? "outro" : "intro")} {item.Name} {activity.Start:0.0}-{activity.End:0.0}s: lyrics {lyricInWindow} lines, model {Describe(activity.Regions(0.12, 0.06))} -> {Describe(inWindow)}");
         }
 
-        return fused.Select(r => (r.Start, r.End)).ToList();
+        return regions;
     }
 
     private static string Describe(IEnumerable<(double Start, double End)> regions)
@@ -408,12 +411,14 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         if (_analysisB is not { IsCompletedSuccessfully: true } || _analysisB.Result is not { } b)
             return;
 
-        var vocalsA = _vocalsA is { IsCompletedSuccessfully: true } ? _vocalsA.Result : Array.Empty<(double, double)>();
-        var vocalsB = _vocalsB is { IsCompletedSuccessfully: true } ? _vocalsB.Result : Array.Empty<(double, double)>();
+        var regionsA = _vocalsA is { IsCompletedSuccessfully: true } ? _vocalsA.Result : VocalRegions.Empty;
+        var regionsB = _vocalsB is { IsCompletedSuccessfully: true } ? _vocalsB.Result : VocalRegions.Empty;
+        var vocalsA = regionsA.Vocals;
+        var vocalsB = regionsB.Vocals;
         var next = prepared.Song;
         var album = current.Album?.ActualId is { Length: > 0 } albumA && albumA != "0" && next.Album?.ActualId == albumA;
-        AutoMixLog.Write($"analysis A {current.Name}: bpm {a.Bpm:0.0} conf {a.BeatConfidence:0.00} beats {a.Beats.Length} lufs {a.IntegratedLoudness:0.0} sound {a.SoundStart:0.0}-{a.SoundEnd:0.0} outro {a.OutroStart:0.0} key {a.Key} vocals {vocalsA.Count} by {a.BeatAnalyzer}/{a.KeyAnalyzer}/{_analysis.CurrentVocalAnalyzerId ?? "lyrics"}");
-        AutoMixLog.Write($"analysis B {next.Name}: bpm {b.Bpm:0.0} conf {b.BeatConfidence:0.00} beats {b.Beats.Length} lufs {b.IntegratedLoudness:0.0} sound {b.SoundStart:0.0}-{b.SoundEnd:0.0} intro {b.IntroEnd:0.0} key {b.Key} vocals {vocalsB.Count} by {b.BeatAnalyzer}/{b.KeyAnalyzer}/{_analysis.CurrentVocalAnalyzerId ?? "lyrics"}");
+        AutoMixLog.Write($"analysis A {current.Name}: bpm {a.Bpm:0.0} conf {a.BeatConfidence:0.00} bar {a.DownbeatConfidence:0.00} beats {a.Beats.Length} lufs {a.IntegratedLoudness:0.0} sound {a.SoundStart:0.0}-{a.SoundEnd:0.0} outro {a.OutroStart:0.0} key {a.Key} vocals {vocalsA.Count} leads {regionsA.Leads.Count} by {a.BeatAnalyzer}/{a.KeyAnalyzer}/{_analysis.CurrentVocalAnalyzerId}");
+        AutoMixLog.Write($"analysis B {next.Name}: bpm {b.Bpm:0.0} conf {b.BeatConfidence:0.00} bar {b.DownbeatConfidence:0.00} beats {b.Beats.Length} lufs {b.IntegratedLoudness:0.0} sound {b.SoundStart:0.0}-{b.SoundEnd:0.0} intro {b.IntroEnd:0.0} key {b.Key} vocals {vocalsB.Count} leads {regionsB.Leads.Count} by {b.BeatAnalyzer}/{b.KeyAnalyzer}/{_analysis.CurrentVocalAnalyzerId}");
         _planHadVocals = _vocalsA is { IsCompleted: true } && _vocalsB is { IsCompleted: true };
         _plan = AutoMixPlanner.Plan(a, b, vocalsA, vocalsB, new AutoMixPlannerOptions
         {
@@ -421,7 +426,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             CrossfadeSeconds = Math.Clamp(context.CrossFadeDuration.TotalSeconds, 2, 12),
             AllowTimeStretch = _settings.TimeStretch && TimeStretcher.IsAvailable,
             AlbumContinuation = album && _settings.KeepAlbumGapless
-        });
+        }, regionsA.Leads, regionsB.Leads);
         AutoMixLog.Write($"plan {_plan.Technique}: exit A {_plan.AExit:0.00}s overlap {_plan.Overlap:0.00}s entry B {_plan.BEntry:0.00}s rate {_plan.Rate:0.0000} ramp {_plan.RampBack:0.0}s gainB {_plan.GainB:0.00} ({_plan.Reason}) stretch {TimeStretcher.IsAvailable}");
     }
 

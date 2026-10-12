@@ -1,12 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HyPlayer.Features.Playback.Analysis.Dsp;
 
 namespace HyPlayer.Features.Playback.Analysis;
+
+public sealed class VocalRegions
+{
+    public static readonly VocalRegions Empty = new(Array.Empty<(double Start, double End)>(), Array.Empty<(double Start, double End)>());
+
+    public VocalRegions(IReadOnlyList<(double Start, double End)> vocals, IReadOnlyList<(double Start, double End)> leads)
+    {
+        Vocals = vocals;
+        Leads = leads;
+    }
+
+    public IReadOnlyList<(double Start, double End)> Vocals { get; }
+    public IReadOnlyList<(double Start, double End)> Leads { get; }
+}
 
 public sealed class VocalActivity
 {
     public const double Rate = 20;
+    private const double MaximumExtensionSeconds = 4;
 
     public VocalActivity(double start, double[] values)
     {
@@ -16,6 +32,8 @@ public sealed class VocalActivity
 
     public double Start { get; }
     public double[] Values { get; }
+    public string Analyzer { get; init; } = string.Empty;
+    public bool IsLeadActivity => Analyzer == MidBandActivity.Id;
     public double End => Start + Values.Length / Rate;
 
     public List<(double Start, double End)> Regions(double enter, double exit, double minimumSeconds = 0.5)
@@ -47,6 +65,42 @@ public sealed class VocalActivity
         }
         merged.RemoveAll(r => r.End - r.Start < minimumSeconds);
         return merged;
+    }
+
+    public static VocalRegions Resolve(IReadOnlyList<(double Start, double End)> lyric, VocalActivity? activity)
+    {
+        if (activity is null || !activity.IsLeadActivity)
+            return new VocalRegions(Fuse(lyric, activity), Array.Empty<(double Start, double End)>());
+
+        var active = activity.Regions(MidBandActivity.EnterThreshold, MidBandActivity.ExitThreshold);
+        if (lyric.Count == 0) return new VocalRegions(Array.Empty<(double Start, double End)>(), active);
+
+        var strong = activity.Regions(MidBandActivity.StrongEnterThreshold, MidBandActivity.StrongExitThreshold, 1);
+        var vocals = new List<(double Start, double End)>(lyric.Count);
+        for (var i = 0; i < lyric.Count; i++)
+        {
+            var (start, end) = lyric[i];
+            var extended = end;
+            foreach (var region in strong)
+                if (region.Start <= end && region.End > end && region.End - end <= MaximumExtensionSeconds)
+                    extended = region.End;
+            if (i + 1 < lyric.Count && lyric[i + 1].Start >= end) extended = Math.Min(extended, lyric[i + 1].Start);
+            vocals.Add((start, extended));
+        }
+
+        var leads = new List<(double Start, double End)>();
+        foreach (var region in active)
+        {
+            var from = region.Start;
+            foreach (var (start, end) in vocals)
+            {
+                if (end <= from || start >= region.End) continue;
+                if (start - from >= 0.5) leads.Add((from, start));
+                from = Math.Max(from, end);
+            }
+            if (region.End - from >= 0.5) leads.Add((from, region.End));
+        }
+        return new VocalRegions(vocals, leads);
     }
 
     public static List<(double Start, double End)> Fuse(IReadOnlyList<(double Start, double End)> lyric, VocalActivity? activity)

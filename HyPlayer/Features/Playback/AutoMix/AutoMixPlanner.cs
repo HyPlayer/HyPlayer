@@ -42,11 +42,17 @@ public sealed class AutoMixPlannerOptions
 
 public static class AutoMixPlanner
 {
+    private const double LeadClashWeight = 0.5;
+
     public static MixPlan Plan(TrackAnalysis a, TrackAnalysis b,
         IReadOnlyList<(double Start, double End)> vocalsA,
         IReadOnlyList<(double Start, double End)> vocalsB,
-        AutoMixPlannerOptions options)
+        AutoMixPlannerOptions options,
+        IReadOnlyList<(double Start, double End)>? leadsA = null,
+        IReadOnlyList<(double Start, double End)>? leadsB = null)
     {
+        leadsA ??= Array.Empty<(double Start, double End)>();
+        leadsB ??= Array.Empty<(double Start, double End)>();
         var soundEndA = a.SoundEnd > 0 ? a.SoundEnd : a.Duration;
         var soundStartB = Math.Max(0, b.SoundStart);
 
@@ -106,6 +112,7 @@ public static class AutoMixPlanner
             };
         }
 
+        (double Overlap, int Bars, double Exit, double Handoff)? crowded = null;
         if (technique == MixTechnique.BeatMix)
         {
             for (var bars = longest; bars >= 2; bars = bars > 4 ? bars / 2 : bars - 1)
@@ -125,8 +132,20 @@ public static class AutoMixPlanner
                 var audible = overlap * (handoff + 0.7 * (1 - handoff));
                 var clash = VocalClash(vocalsA, exit, exit + audible, vocalsB, entryB, entryB + bOverlap, rate);
                 if (clash > 1) continue;
+                if (crowded is { } kept && bars < 4) return Build(kept.Overlap, $"{kept.Bars} bars", kept.Exit, kept.Handoff);
+                var busy = VocalClash(leadsA, exit, exit + audible, vocalsB, entryB, entryB + bOverlap, rate)
+                           + VocalClash(vocalsA, exit, exit + audible, leadsB, entryB, entryB + bOverlap, rate)
+                           + VocalClash(leadsA, exit, exit + audible, leadsB, entryB, entryB + bOverlap, rate);
+                if (bars >= 4 && clash + LeadClashWeight * busy > 1)
+                {
+                    crowded ??= (overlap, bars, exit, handoff);
+                    continue;
+                }
+                if (crowded is not null) reason.Add("mid-band busy");
                 return Build(overlap, $"{bars} bars", exit, handoff);
             }
+            if (crowded is { } longestCrowded)
+                return Build(longestCrowded.Overlap, $"{longestCrowded.Bars} bars", longestCrowded.Exit, longestCrowded.Handoff);
         }
 
         var shortest = technique == MixTechnique.BeatMix ? 1 : 4;
