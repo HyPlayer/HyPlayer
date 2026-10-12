@@ -19,6 +19,7 @@ using HyPlayer.Features.Playback.Transitions;
 using HyPlayer.Features.Settings.Services;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Playback.AudioServices;
+using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
@@ -54,6 +55,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private readonly SemaphoreSlim _autoSkipLock = new(1, 1);
     private readonly SemaphoreSlim _initializeGate = new(1, 1);
     private readonly ILyricService _lyricService;
+    private readonly IMediaSourceService _mediaSourceService;
     private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
     private readonly IPlaybackNotificationService _playbackNotification;
     private readonly PlayCoreBase _playCore;
@@ -76,6 +78,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private CancellationTokenSource? _deviceRefreshCts;
     private CancellationTokenSource? _lyricCts;
     private CancellationTokenSource? _playbackCts;
+    private CancellationTokenSource? _prefetchCts;
     private long _playbackGeneration;
     private const long PrepareRetryDelayMilliseconds = 8000;
     private long _prepareRetryAfter;
@@ -102,8 +105,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         IBackgroundTaskRunner taskRunner,
         IEnumerable<IMusicResourceProvidable> musicResourceProviders,
         ChopinAudioService audioService,
-        IEnumerable<ITrackTransition> transitions)
+        IEnumerable<ITrackTransition> transitions,
+        IMediaSourceService mediaSourceService)
     {
+        _mediaSourceService = mediaSourceService ?? throw new ArgumentNullException(nameof(mediaSourceService));
         _player = player ?? throw new ArgumentNullException(nameof(player));
         _playCore = playCore ?? throw new ArgumentNullException(nameof(playCore));
         _playCoreNotificationHub =
@@ -964,7 +969,41 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             if (_state.NowPlayingProviderItem is not null)
                 _taskRunner.Forget(_playbackNotification.OnTrackChangedAsync(_state.NowPlayingProviderItem),
                     "update playback notification on track changed");
+
+            SchedulePrefetch(_state.NowPlayingProviderItem);
         }
+    }
+
+    private void SchedulePrefetch(SingleSongBase? current)
+    {
+        _prefetchCts?.Cancel();
+        if (current is null
+            || _activeTransition.Id == "dir"
+            || !_playbackSettings.EnableCache
+            || _playCore.ActivePlayModeId is "sgl" or "ltg")
+            return;
+
+        var cts = new CancellationTokenSource();
+        _prefetchCts = cts;
+        _taskRunner.Forget(PrefetchNextAsync(current, cts.Token), "prefetch next track");
+    }
+
+    private async Task PrefetchNextAsync(SingleSongBase current, CancellationToken ct)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(8), ct).ConfigureAwait(false);
+        if (!ReferenceEquals(_state.NowPlayingProviderItem, current))
+            return;
+
+        var queue = await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false);
+        var currentIndex = await _playCore.GetCurrentIndexAsync(ct).ConfigureAwait(false);
+        if (queue.Count < 2 || currentIndex < 0)
+            return;
+
+        var next = await _playCore.GetSongAtAsync((currentIndex + 1) % queue.Count, ct).ConfigureAwait(false);
+        if (next is null || SameSong(next, current))
+            return;
+
+        await _mediaSourceService.PrefetchAsync(next, ct).ConfigureAwait(false);
     }
 
     private async Task LoadLyricsSafeAsync(SingleSongBase? providerItem, CancellationToken ct)
@@ -1056,6 +1095,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         if (removeCurrentSongs)
             await StopCoreAsync(ct).ConfigureAwait(false);
 
+        _mediaSourceService.CancelTransfersExcept(song);
         await SetCurrentSongAsync(song, ct).ConfigureAwait(false);
         if (!autoPlay)
             return;
@@ -1244,6 +1284,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         if (_initialized)
             MediaDevice.DefaultAudioRenderDeviceChanged -= OnDefaultAudioRenderDeviceChanged;
         _deviceRefreshCts?.Cancel();
+        _prefetchCts?.Cancel();
         _state.PropertyChanged -= OnPlaybackStatePropertyChanged;
         _smtc?.ButtonPressed -= SMTC_ButtonPressed;
         _smtc?.PlaybackPositionChangeRequested -= SMTC_PlaybackPositionChangeRequested;

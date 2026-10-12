@@ -119,7 +119,7 @@ public static class RetryPolicies
             ex.Message.Contains("API 请求失败"))
         .WaitAndRetryAsync(
             3,
-            attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)), // 指数退避
+            attempt => TimeSpan.FromMilliseconds(attempt switch { 1 => 300, 2 => 800, _ => 1500 }),
             (exception, timespan, retryCount, context) =>
             {
                 Debug.WriteLine(

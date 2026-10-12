@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
+using HyPlayer.Domain.Settings;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
@@ -12,14 +13,49 @@ namespace HyPlayer.Platform.Playback.MediaSources;
 
 public sealed class MediaSourceService : IMediaSourceService
 {
+    private readonly PlaybackSettings _playbackSettings;
     private readonly Dictionary<string, IMediaSourceProvider> _providers;
     private readonly NeteaseSongUrlResolver _urlResolver;
 
-    public MediaSourceService(IEnumerable<IMediaSourceProvider> providers, NeteaseSongUrlResolver urlResolver)
+    public MediaSourceService(
+        IEnumerable<IMediaSourceProvider> providers,
+        NeteaseSongUrlResolver urlResolver,
+        PlaybackSettings playbackSettings)
     {
         _providers = providers?.ToDictionary(provider => provider.Id, StringComparer.Ordinal)
                      ?? throw new ArgumentNullException(nameof(providers));
         _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
+        _playbackSettings = playbackSettings ?? throw new ArgumentNullException(nameof(playbackSettings));
+    }
+
+    public async Task PrefetchAsync(SingleSongBase song, CancellationToken ct)
+    {
+        if (!IsNeteaseSong(song)
+            || !_providers.TryGetValue(SelectProviderId(), out var provider)
+            || provider is not IMediaPrefetchProvider prefetcher)
+            return;
+
+        var resolved = await _urlResolver.ResolveAsync(song.ActualId, ct).ConfigureAwait(false);
+        if (resolved is null)
+            return;
+
+        await prefetcher.PrefetchAsync(song, CreateResource(song, resolved), ct).ConfigureAwait(false);
+    }
+
+    public bool IsTransferring(SingleSongBase song)
+    {
+        foreach (var provider in _providers.Values)
+            if (provider is IMediaTransferProvider transfers && transfers.IsTransferring(song))
+                return true;
+
+        return false;
+    }
+
+    public void CancelTransfersExcept(SingleSongBase keep)
+    {
+        foreach (var provider in _providers.Values)
+            if (provider is IMediaTransferProvider transfers)
+                transfers.CancelTransfersExcept(keep);
     }
 
     public async Task<MusicResourceBase?> ResolveAsync(SingleSongBase song, CancellationToken ct)
@@ -32,6 +68,11 @@ public sealed class MediaSourceService : IMediaSourceService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            if (_providers.TryGetValue(SelectProviderId(), out var provider)
+                && provider is IMediaOfflineProvider offline
+                && await offline.FindOfflineFileAsync(song).ConfigureAwait(false) is { } offlineFile)
+                return new LocalFileMediaResource(song, offlineFile);
+
             return null;
         }
 
@@ -50,9 +91,16 @@ public sealed class MediaSourceService : IMediaSourceService
         return provider.CreateAsync(song, resource, ct);
     }
 
-    private static string SelectProviderId()
+    private string SelectProviderId()
     {
-        return NeteaseStreamingProvider.ProviderId;
+        return _playbackSettings.EnableCache
+            ? CachedNeteaseProvider.ProviderId
+            : NeteaseStreamingProvider.ProviderId;
+    }
+
+    private static bool IsNeteaseSong(SingleSongBase song)
+    {
+        return song.ProviderId == "ncm" && !string.IsNullOrWhiteSpace(song.ActualId);
     }
 
     private NeteaseMediaResource CreateResource(SingleSongBase song, ResolvedSongUrl resolved)

@@ -143,6 +143,7 @@ internal static class HyPlayerComposition
 
         depository.AddSingleton<NeteaseSongUrlResolver>();
         depository.AddSingleton<IMediaSourceProvider, NeteaseStreamingProvider>();
+        depository.AddSingleton<IMediaSourceProvider, CachedNeteaseProvider>();
         depository.AddSingleton<IMediaSourceService, MediaSourceService>();
 
         depository.AddSingleton<LastFMClient>(
