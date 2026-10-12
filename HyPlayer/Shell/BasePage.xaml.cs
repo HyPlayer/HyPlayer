@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Settings.Services;
+using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Xaml;
 using HyPlayer.Shell.Input;
@@ -46,6 +47,7 @@ public sealed partial class BasePage : Page
         Ioc.Default.GetRequiredService<IGamepadShortcutService>();
     private readonly IKeyboardShortcutService _keyboardShortcuts =
         Ioc.Default.GetRequiredService<IKeyboardShortcutService>();
+    private readonly IMemoryGovernor _memoryGovernor = Ioc.Default.GetRequiredService<IMemoryGovernor>();
     private readonly IPlaybackControlService _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly HyPlayer.Domain.Settings.UISettings _setting =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
@@ -57,6 +59,7 @@ public sealed partial class BasePage : Page
     public BasePage()
     {
         InitializeComponent();
+        if (!Windows.ApplicationModel.Package.Current.Id.Name.EndsWith(".Dev")) AppTitleBar.Subtitle = string.Empty;
         _shellHost.AppTitleBar = AppTitleBar;
         _teachingTip.Tip = TheTeachingTip;
 
@@ -177,6 +180,7 @@ public sealed partial class BasePage : Page
     private void BaseFrame_Navigated(object sender, NavigationEventArgs e)
     {
         _navigator.SyncNavigationViewSelection(e.SourcePageType, e.Parameter);
+        _memoryGovernor.ScheduleNavigationReclaim();
     }
 
     // ── TitleBar button handlers ──

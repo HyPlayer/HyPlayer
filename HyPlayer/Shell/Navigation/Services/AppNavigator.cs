@@ -380,7 +380,7 @@ public sealed partial class AppNavigator : IAppNavigator
         }
         else
         {
-            var item = new NavigationViewItem { Tag = node };
+            var item = new NavigationViewItem { Tag = node, IsExpanded = node.IsExpanded };
             UpdateNavigationViewItem(item, node);
             AddNavigationNodes(item.MenuItems, node.Children);
             navigationObject = item;

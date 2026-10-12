@@ -13,5 +13,7 @@ public interface IMemoryGovernor
 
     void OnLeavingBackground();
 
+    void ScheduleNavigationReclaim();
+
     Task<ulong> ReclaimAsync();
 }

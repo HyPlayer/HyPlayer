@@ -22,6 +22,7 @@ public sealed partial class NavigationNode : ObservableObject
     public bool IsHeader { get; set; }
     public bool IsSeparator { get; set; }
     public bool SelectsOnInvoked { get; set; } = true;
+    public bool IsExpanded { get; init; }
 
     [ObservableProperty] public partial bool IsVisible { get; set; } = true;
 

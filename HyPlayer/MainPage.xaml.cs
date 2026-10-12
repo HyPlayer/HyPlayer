@@ -27,6 +27,7 @@ using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Playlist;
 using HyPlayer.Features.Search;
 using HyPlayer.Features.User;
+using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
@@ -58,6 +59,7 @@ public sealed partial class MainPage : Page
     private readonly IShellHostStateService _shellHost = Ioc.Default.GetRequiredService<IShellHostStateService>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private readonly PlaybackStateService _playbackState = Ioc.Default.GetRequiredService<PlaybackStateService>();
+    private readonly IMemoryGovernor _memoryGovernor = Ioc.Default.GetRequiredService<IMemoryGovernor>();
     private bool _playBarAutoHideSubscribed;
     private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
     private bool _isPlaybarOnShow = true;
@@ -189,6 +191,7 @@ public sealed partial class MainPage : Page
             case nameof(PlaybackSurfaceStore.SurfaceMode):
                 ApplySurfaceMode(_surfaceStore.SurfaceMode);
                 UpdateHomePlaybar();
+                _memoryGovernor.ScheduleNavigationReclaim();
                 break;
             case nameof(PlaybackSurfaceStore.ExpandedFrameOffsetY):
                 ExpandedPlayerPositionOffset.Y = _surfaceStore.ExpandedFrameOffsetY;

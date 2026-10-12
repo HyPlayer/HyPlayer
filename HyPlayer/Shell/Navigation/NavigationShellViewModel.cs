@@ -80,12 +80,12 @@ public partial class NavigationShellViewModel : ObservableObject
         _podcastCreatedNode = new NavigationNode
         {
             Key = "podcast-created", Title = "我创建的播客", Icon = new FontIcon { Glyph = "\uE720" },
-            SelectsOnInvoked = false, IsVisible = false
+            SelectsOnInvoked = false, IsVisible = false, IsExpanded = true
         };
         _podcastSubscribedNode = new NavigationNode
         {
             Key = "podcast-subscribed", Title = "我收藏的播客", Icon = new FontIcon { Glyph = "\uEC05" },
-            SelectsOnInvoked = false, IsVisible = false
+            SelectsOnInvoked = false, IsVisible = false, IsExpanded = true
         };
 
         BuildMenuItems();

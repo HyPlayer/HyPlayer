@@ -60,6 +60,8 @@ public sealed class MemoryGovernor : IMemoryGovernor
     private const ulong MB = 1024 * 1024;
     private const ulong RegrowthBeforeRetry = 256 * MB;
     private const ulong IneffectiveReclaim = 64 * MB;
+    private const long NavigationReclaimGrowth = 48 * 1024 * 1024;
+    private static readonly TimeSpan NavigationReclaimDelay = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan BaseCooldown = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan MaxCooldown = TimeSpan.FromMinutes(15);
@@ -78,6 +80,8 @@ public sealed class MemoryGovernor : IMemoryGovernor
     private ulong _workingSetAfterReclaim;
     private volatile bool _windowInactive;
     private volatile bool _appInBackground;
+    private int _navigationReclaimVersion;
+    private long _managedBytesAfterNavigationReclaim;
 
     public MemoryGovernor(
         UISettings settings,
@@ -124,6 +128,33 @@ public sealed class MemoryGovernor : IMemoryGovernor
     {
         _appInBackground = false;
         if (!_windowInactive) CancelInactiveTimer();
+    }
+
+    public void ScheduleNavigationReclaim()
+    {
+        var version = Interlocked.Increment(ref _navigationReclaimVersion);
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(NavigationReclaimDelay);
+            if (version != Volatile.Read(ref _navigationReclaimVersion)) return;
+            if (IsBusy())
+            {
+                ScheduleNavigationReclaim();
+                return;
+            }
+
+            var managed = GC.GetTotalMemory(false);
+            var baseline = Interlocked.Read(ref _managedBytesAfterNavigationReclaim);
+            if (managed < baseline)
+            {
+                Interlocked.Exchange(ref _managedBytesAfterNavigationReclaim, managed);
+                return;
+            }
+
+            if (managed - baseline < NavigationReclaimGrowth) return;
+            GC.Collect(2, GCCollectionMode.Forced, blocking: false);
+            Interlocked.Exchange(ref _managedBytesAfterNavigationReclaim, GC.GetTotalMemory(false));
+        });
     }
 
     public Task<ulong> ReclaimAsync() => Task.Run(Reclaim);
