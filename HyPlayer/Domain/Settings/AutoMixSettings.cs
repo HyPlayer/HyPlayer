@@ -20,6 +20,12 @@ public partial class AutoMixSettings : SettingsBase
         set => SetSettings(nameof(TimeStretch), value);
     }
 
+    public bool TempoGlide
+    {
+        get => GetSettings(nameof(TempoGlide), true);
+        set => SetSettings(nameof(TempoGlide), value);
+    }
+
     public bool KeepAlbumGapless
     {
         get => GetSettings(nameof(KeepAlbumGapless), true);

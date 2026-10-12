@@ -37,6 +37,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     private readonly NextTrackPreloader _preloader = new();
     private readonly CrossFadeTransition _fallback;
     private readonly MixRetryBudget _retries = new();
+    private readonly MixHistory _history = new();
 
     private IPlaybackSource? _analyzedFor;
     private TransitionPreparedTrack? _plannedFor;
@@ -53,6 +54,8 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     private DateTime _aheadPeek;
 
     private MixPlan? _plan;
+    private MixPair _planPair;
+    private FallbackFade? _fading;
     private bool _planHadVocals;
     private volatile bool _planBlocked;
     private volatile bool _reloadIncoming;
@@ -85,6 +88,10 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
 
     private AudioGraphPlayer Graph => (AudioGraphPlayer)_player;
 
+    internal MixPlan? Plan => _plan;
+
+    internal MixHistory History => _history;
+
     public async Task OnPositionChangedAsync(TrackTransitionContext context, CancellationToken ct)
     {
         if (Volatile.Read(ref _session) is { } session)
@@ -93,9 +100,17 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             return;
         }
 
+        if (_fading is { } fading && ReferenceEquals(context.Source, fading.Incoming))
+        {
+            _fading = null;
+            RecordPerformed(fading.Pair, MixTechnique.Crossfade);
+        }
+
         if (_fallback.IsActive)
         {
             await _fallback.OnPositionChangedAsync(context, ct).ConfigureAwait(false);
+            if (!_fallback.IsActive)
+                _fading = null;
             return;
         }
 
@@ -146,7 +161,35 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             UpdatePlan(context, current, prepared, remaining);
 
         if (_plan is null && !decoding)
+        {
             await _fallback.OnPositionChangedAsync(context, ct).ConfigureAwait(false);
+            TrackFallback(prepared);
+        }
+    }
+
+    private void TrackFallback(TransitionPreparedTrack? prepared)
+    {
+        if (!_fallback.IsActive)
+        {
+            _fading = null;
+            return;
+        }
+
+        if (_fading is not null
+            || prepared?.IncomingSource is not { } incoming
+            || _analysisA is not { IsCompletedSuccessfully: true, Result: { } a }
+            || _analysisB is not { IsCompletedSuccessfully: true, Result: { } b })
+            return;
+
+        _fading = new FallbackFade(incoming, new MixPair(a.TrackKey, b.TrackKey));
+    }
+
+    internal void RecordPerformed(MixPair pair, MixTechnique technique)
+    {
+        if (pair.Outgoing is not { Length: > 0 } outgoing || pair.Incoming is not { Length: > 0 } incoming)
+            return;
+
+        _history.Record(outgoing, incoming, technique);
     }
 
     public async Task OnTrackCompletedAsync(TrackTransitionContext context, CancellationToken ct)
@@ -207,6 +250,8 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         if (_fallback.IsActive)
         {
             await _fallback.OnSeekAsync(context, target, ct).ConfigureAwait(false);
+            if (!_fallback.IsActive)
+                _fading = null;
             return;
         }
 
@@ -256,6 +301,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             await AbortAsync(session).ConfigureAwait(false);
 
         await _fallback.CancelAsync(ct).ConfigureAwait(false);
+        _fading = null;
         _plan = null;
         _planBlocked = false;
         _blockedFor = null;
@@ -409,7 +455,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
 
         Volatile.Write(ref _decoding, 1);
         _taskRunner.Forget(
-            DecodeAsync(context, plan, current, prepared, Volatile.Read(ref _epoch), _cts.Token),
+            DecodeAsync(context, plan, _planPair, current, prepared, Volatile.Read(ref _epoch), _cts.Token),
             "prepare automix transition");
     }
 
@@ -437,16 +483,21 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         AutoMixLog.Write($"analysis A {current.Name}: bpm {a.Bpm:0.0} conf {a.BeatConfidence:0.00} bar {a.DownbeatConfidence:0.00} beats {a.Beats.Length} lufs {a.IntegratedLoudness:0.0} sound {a.SoundStart:0.0}-{a.SoundEnd:0.0} outro {a.OutroStart:0.0} key {a.Key} vocals {vocalsA.Count} leads {regionsA.Leads.Count} by {a.BeatAnalyzer}/{a.KeyAnalyzer}/{_analysis.CurrentVocalAnalyzerId}");
         AutoMixLog.Write($"analysis B {next.Name}: bpm {b.Bpm:0.0} conf {b.BeatConfidence:0.00} bar {b.DownbeatConfidence:0.00} beats {b.Beats.Length} lufs {b.IntegratedLoudness:0.0} sound {b.SoundStart:0.0}-{b.SoundEnd:0.0} intro {b.IntroEnd:0.0} key {b.Key} vocals {vocalsB.Count} leads {regionsB.Leads.Count} by {b.BeatAnalyzer}/{b.KeyAnalyzer}/{_analysis.CurrentVocalAnalyzerId}");
         _planHadVocals = _vocalsA is { IsCompleted: true } && _vocalsB is { IsCompleted: true };
+        _planPair = new MixPair(a.TrackKey, b.TrackKey);
         _plan = AutoMixPlanner.Plan(a, b, vocalsA, vocalsB, new AutoMixPlannerOptions
         {
             MaxOverlapSeconds = Math.Clamp(_settings.MaxOverlap, 8, 60),
             CrossfadeSeconds = Math.Clamp(context.CrossFadeDuration.TotalSeconds, 2, 12),
             AllowTimeStretch = _settings.TimeStretch && TimeStretcher.IsAvailable,
+            AllowGlide = _settings.TempoGlide,
             AlbumContinuation = album && _settings.KeepAlbumGapless,
             TailEffects = _settings.TailEffects,
-            PlaybackOffsetDb = PlaybackOffsetDb(context.Source, prepared.IncomingSource)
+            PlaybackOffsetDb = PlaybackOffsetDb(context.Source, prepared.IncomingSource),
+            EarliestExit = EarliestPreparableExit(context.Position.TotalSeconds),
+            History = _history,
+            RecordPlanned = false
         }, regionsA.Leads, regionsB.Leads);
-        AutoMixLog.Write($"plan {_plan.Technique}: exit A {_plan.AExit:0.00}s overlap {_plan.Overlap:0.00}s entry B {_plan.BEntry:0.00}s rate {_plan.Rate:0.0000} ramp {_plan.RampBack:0.0}s gainB {_plan.GainB:0.00} ({_plan.Reason}) stretch {TimeStretcher.IsAvailable}");
+        AutoMixLog.Write($"plan {_plan.Technique}: exit A {_plan.AExit:0.00}s overlap {_plan.Overlap:0.00}s entry B {_plan.BEntry:0.00}s rate {_plan.Rate:0.0000} ramp {_plan.RampBack:0.0}s gainB {_plan.GainB:0.00} ({_plan.Reason}) stretch {TimeStretcher.IsAvailable} glide {MixGlide.Describe(_plan)}");
         if (_plan.Loudness is { } loudness)
             AutoMixLog.Write($"plan loudness: {loudness.Describe()}");
         if (_plan.Tail != MixTail.None)
@@ -473,6 +524,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     private async Task DecodeAsync(
         TrackTransitionContext context,
         MixPlan plan,
+        MixPair pair,
         SingleSongBase current,
         TransitionPreparedTrack prepared,
         int epoch,
@@ -533,7 +585,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             }
 
             if (epoch == Volatile.Read(ref _epoch))
-                Volatile.Write(ref _pending, new PendingMix(plan, regionA, regionB, prepared, epoch));
+                Volatile.Write(ref _pending, new PendingMix(plan, pair, regionA, regionB, prepared, epoch));
         }
         catch (OperationCanceledException)
         {
@@ -596,6 +648,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
                 Outgoing = outgoing,
                 Incoming = incoming,
                 Prepared = pending.Prepared,
+                Pair = pending.Pair,
                 RegionA = pending.RegionA,
                 RegionB = pending.RegionB,
                 Renderer = renderer
@@ -837,6 +890,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         }
 
         session.Promotion = promotion;
+        RecordPerformed(session.Pair, session.Engine.Plan.Technique);
     }
 
     private async Task SettleOutgoingAsync(MixSession session)
@@ -992,6 +1046,17 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             }
         }
 
+        if (engine.Glides)
+        {
+            try
+            {
+                graph.SetPlaybackSourceSpeed(1, session.Outgoing);
+            }
+            catch
+            {
+            }
+        }
+
         _ = session.Host.RampVolumeAsync(session.Outgoing, engine.NodeVolumeA, _restoreTime);
         if (session.KeepPrepared)
         {
@@ -1054,6 +1119,11 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         return positionSeconds <= exitSeconds - RetryLeadSeconds;
     }
 
+    internal static double EarliestPreparableExit(double positionSeconds)
+    {
+        return positionSeconds + RetryLeadSeconds;
+    }
+
     internal sealed class MixRetryBudget
     {
         internal const int MaxRetries = 2;
@@ -1093,8 +1163,13 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         }
     }
 
+    internal readonly record struct MixPair(string Outgoing, string Incoming);
+
+    private sealed record FallbackFade(IPlaybackSource Incoming, MixPair Pair);
+
     private sealed record PendingMix(
         MixPlan Plan,
+        MixPair Pair,
         MixRegion RegionA,
         MixRegion RegionB,
         TransitionPreparedTrack Prepared,
@@ -1107,6 +1182,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         public required AudioGraphPlaybackSource Outgoing { get; init; }
         public required AudioGraphPlaybackSource Incoming { get; init; }
         public required TransitionPreparedTrack Prepared { get; init; }
+        public required MixPair Pair { get; init; }
         public required MixRegion RegionA { get; init; }
         public required MixRegion RegionB { get; init; }
         public required MixRenderer Renderer { get; init; }

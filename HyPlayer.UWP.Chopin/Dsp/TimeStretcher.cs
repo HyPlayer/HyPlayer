@@ -7,7 +7,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
     public sealed unsafe class TimeStretcher : IDisposable
     {
         private static readonly object LoadLock = new();
-        private static bool _loadAttempted;
+        private static volatile bool _loadAttempted;
         private static delegate* unmanaged[Cdecl]<int, float, int, nint> _create;
         private static delegate* unmanaged[Cdecl]<nint, void> _destroy;
         private static delegate* unmanaged[Cdecl]<nint, void> _reset;
@@ -34,28 +34,39 @@ namespace HyPlayer.UWP.Chopin.Dsp
             lock (LoadLock)
             {
                 if (_loadAttempted) return;
-                _loadAttempted = true;
-                var baseDir = AppContext.BaseDirectory;
-                var candidates = new[]
+                try
                 {
-                    Path.Combine(baseDir, "hyp_stretch.dll"),
-                    Path.Combine(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar)) ?? baseDir, "hyp_stretch.dll"),
-                    "hyp_stretch.dll"
-                };
-                foreach (var candidate in candidates)
-                {
-                    if (!NativeLibrary.TryLoad(candidate, out var library)) continue;
-                    if (!NativeLibrary.TryGetExport(library, "hyp_stretch_create", out var create)) continue;
-                    _destroy = (delegate* unmanaged[Cdecl]<nint, void>)NativeLibrary.GetExport(library, "hyp_stretch_destroy");
-                    _reset = (delegate* unmanaged[Cdecl]<nint, void>)NativeLibrary.GetExport(library, "hyp_stretch_reset");
-                    _outputSeekLength = (delegate* unmanaged[Cdecl]<nint, float, int>)NativeLibrary.GetExport(library, "hyp_stretch_output_seek_length");
-                    _outputSeek = (delegate* unmanaged[Cdecl]<nint, float*, int, void>)NativeLibrary.GetExport(library, "hyp_stretch_output_seek");
-                    _process = (delegate* unmanaged[Cdecl]<nint, float*, int, float*, int, void>)NativeLibrary.GetExport(library, "hyp_stretch_process");
-                    if (NativeLibrary.TryGetExport(library, "hyp_stretch_set_transpose", out var transpose))
-                        _setTranspose = (delegate* unmanaged[Cdecl]<nint, float, void>)transpose;
-                    _create = (delegate* unmanaged[Cdecl]<int, float, int, nint>)create;
-                    return;
+                    Load();
                 }
+                finally
+                {
+                    _loadAttempted = true;
+                }
+            }
+        }
+
+        private static void Load()
+        {
+            var baseDir = AppContext.BaseDirectory;
+            var candidates = new[]
+            {
+                Path.Combine(baseDir, "hyp_stretch.dll"),
+                Path.Combine(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar)) ?? baseDir, "hyp_stretch.dll"),
+                "hyp_stretch.dll"
+            };
+            foreach (var candidate in candidates)
+            {
+                if (!NativeLibrary.TryLoad(candidate, out var library)) continue;
+                if (!NativeLibrary.TryGetExport(library, "hyp_stretch_create", out var create)) continue;
+                _destroy = (delegate* unmanaged[Cdecl]<nint, void>)NativeLibrary.GetExport(library, "hyp_stretch_destroy");
+                _reset = (delegate* unmanaged[Cdecl]<nint, void>)NativeLibrary.GetExport(library, "hyp_stretch_reset");
+                _outputSeekLength = (delegate* unmanaged[Cdecl]<nint, float, int>)NativeLibrary.GetExport(library, "hyp_stretch_output_seek_length");
+                _outputSeek = (delegate* unmanaged[Cdecl]<nint, float*, int, void>)NativeLibrary.GetExport(library, "hyp_stretch_output_seek");
+                _process = (delegate* unmanaged[Cdecl]<nint, float*, int, float*, int, void>)NativeLibrary.GetExport(library, "hyp_stretch_process");
+                if (NativeLibrary.TryGetExport(library, "hyp_stretch_set_transpose", out var transpose))
+                    _setTranspose = (delegate* unmanaged[Cdecl]<nint, float, void>)transpose;
+                _create = (delegate* unmanaged[Cdecl]<int, float, int, nint>)create;
+                return;
             }
         }
 

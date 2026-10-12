@@ -42,6 +42,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     public const double CrossfadeSeconds = 0.2;
     public const double AbortFadeSeconds = 0.01;
     public const double TailDuck = 0.25;
+    public const double GlideBlendSeconds = 0.05;
     private const double TailBloomLead = 0.15;
     private const double TailBloomSeconds = 0.2;
     private const int HistoryLength = 64;
@@ -68,6 +69,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     private readonly long[] _historyRendered = new long[HistoryLength];
     private readonly double[] _historyContent = new double[HistoryLength];
     private readonly double[] _historyRate = new double[HistoryLength];
+    private readonly MixRatePoint[]? _glide;
 
     private MixVoice? _voiceA;
     private MixVoice? _voiceB;
@@ -100,6 +102,9 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     private double _renderProgress;
     private double _playedContentB = double.NaN;
     private double _nodeSpeedB = double.NaN;
+    private double _nodeSpeedA = double.NaN;
+    private double _glideLead;
+    private int _glideCursor;
     private double _chaseDelta;
     private long _chasePlayed;
     private bool _chasing;
@@ -133,6 +138,11 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         _entryFadeFrames = plan.EntryFade > 0 ? Math.Max(1, (long)Math.Round(plan.EntryFade * _sampleRate)) : 0;
         _cutIndexA = _exitIndexA + _overlapFrames;
         _tailFrames = Math.Max(1, (long)Math.Round(plan.TailLength * _sampleRate));
+        if (plan.Glide is { Count: > 0 } glide && TimeStretcher.IsAvailable)
+        {
+            _glide = new MixRatePoint[glide.Count];
+            for (var i = 0; i < _glide.Length; i++) _glide[i] = glide[i];
+        }
     }
 
     public PlaybackTap? TapA { get; set; }
@@ -159,6 +169,13 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     public bool HandBackForced { get; private set; }
     public int HandBackChases { get; private set; }
     public double HandBackMeasured { get; private set; } = double.NaN;
+    public bool Glides => _glide is not null;
+    public long GlideFrames { get; private set; }
+    public double GlideSeconds => GlideFrames / (double)_sampleRate;
+    public double GlideFirstRateA { get; private set; } = double.NaN;
+    public double GlideLastRateA { get; private set; } = double.NaN;
+    public double GlideLastRateB { get; private set; } = double.NaN;
+    public double GlideDeviation { get; private set; }
 
     public void RequestAbort() => _pendingAbort = true;
 
@@ -264,11 +281,13 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
             }
 
             if (Stage is AutoMixStage.Overlap or AutoMixStage.RampBack && !_chasing) SetNodeSpeed(rate);
+            if (_glide is not null && _fadeA is null && !OutgoingFinished) SetOutgoingSpeed(rate / _plan.Rate);
         }
 
         if (!OutgoingFinished && _overlapEndRendered >= 0 && played >= _overlapEndRendered)
         {
             OutgoingFinished = true;
+            if (!double.IsNaN(_nodeSpeedA)) SetOutgoingSpeed(1);
             Progress = 0;
             if (Stage == AutoMixStage.Overlap) Stage = AutoMixStage.RampBack;
         }
@@ -321,6 +340,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     private MixVoice CreateVoiceA(double contentSeconds)
     {
         var voice = new MixVoice(_regionA, contentSeconds, false);
+        if (_glide is not null) voice.PrepareStretch();
         voice.SetGainImmediate(_volumeA);
         var wet = _volumeA * (_plan.TailBloom > 0 ? TailDuck : 1);
         if (_plan.Tail == MixTail.Reverb) voice.EnableSend(MixSendSettings.ReverbTail(_plan.TailDelay), wet);
@@ -337,6 +357,19 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         try
         {
             _player.SetSpeed(_sourceB, speed);
+        }
+        catch
+        {
+        }
+    }
+
+    private void SetOutgoingSpeed(double speed)
+    {
+        if (Math.Abs(speed - _nodeSpeedA) < 1e-6) return;
+        _nodeSpeedA = speed;
+        try
+        {
+            _player.SetSpeed(_sourceA, speed);
         }
         catch
         {
@@ -402,6 +435,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         if (cut) _cutFrames = Math.Max(1, (int)(AbortFadeSeconds * _sampleRate));
         try
         {
+            if (!double.IsNaN(_nodeSpeedA)) SetOutgoingSpeed(1);
             if (_handoverStart >= 0 && !OutgoingFinished && !MidpointReached)
                 _player.SetVolume(_sourceA, _nodeVolumeA);
             if (BStarted && MidpointReached)
@@ -459,7 +493,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         if (remaining > 0)
         {
             var slice = mix.Slice(offset * 2, remaining * 2);
-            UpdateOverlap();
+            UpdateOverlap(remaining);
             UpdateSend(remaining);
             RenderA(slice, remaining, offset);
             RenderB(slice, remaining, offset);
@@ -515,16 +549,17 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         if (_voiceB.ContentIndex > _regionB.Frames - _sampleRate * 1.5) NeedsForcedHandBack = true;
         if (_rampBackEndRendered >= 0) return;
         var elapsed = (_rendered - _overlapEndRendered) / (double)_sampleRate;
-        var t = _plan.RampBack <= 0 ? 1 : Math.Clamp(elapsed / _plan.RampBack, 0, 1);
+        var t = _plan.RampBack <= 0 || _glide is not null ? 1 : Math.Clamp(elapsed / _plan.RampBack, 0, 1);
         var smooth = t * t * (3 - 2 * t);
-        _voiceB.Rate = _plan.Rate + (1 - _plan.Rate) * smooth;
+        _voiceB.Rate = _glide is not null ? 1 : _plan.Rate + (1 - _plan.Rate) * smooth;
         var gainT = Math.Clamp(elapsed / Math.Max(0.05, _plan.GainRelease), 0, 1);
         var ease = EntryEase();
         _voiceB.TargetGain = _volumeB * (_plan.GainB + (1 - _plan.GainB) * gainT) * ease;
         if (t < 1 || gainT < 1 || ease < 1 || _tail is not null) return;
         if (_voiceB.IsStretching)
         {
-            _voiceB.BeginRawBlend(0.05);
+            if (_glide is not null && !_voiceB.Settled) return;
+            _voiceB.BeginRawBlend(0.05, _glide is not null);
             return;
         }
 
@@ -626,8 +661,10 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     {
         if (_voiceB is not null) return;
         var stretch = Math.Abs(_plan.Rate - 1) > 0.0005;
-        _voiceB = new MixVoice(_regionB, _plan.BEntry, stretch);
+        _voiceB = _glide is null ? new MixVoice(_regionB, _plan.BEntry, stretch) : new MixVoice(_regionB, _plan.BEntry, true, _plan.Rate);
         _voiceB.Rate = _plan.Rate;
+        if (_glide is not null && _voiceA is not null && _voiceA.BeginStretch(GlideBlendSeconds))
+            _glideLead = _voiceA.StretchLatency / (double)_overlapFrames;
         _voiceB.SetGainImmediate(0);
         if (_plan.Technique == MixTechnique.BeatMix) _voiceB.LowShelfDb = -24;
         var started = _rendered + split;
@@ -639,7 +676,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         Volatile.Write(ref _startRenderedB, started);
     }
 
-    private void UpdateOverlap()
+    private void UpdateOverlap(int frames)
     {
         if (_voiceA is null || _voiceB is null)
         {
@@ -648,6 +685,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         }
         var x = Math.Clamp((_voiceA.ContentIndex - _exitIndexA) / _overlapFrames, 0, 1);
         _renderProgress = x;
+        if (_glide is not null && _voiceA.IsStretching) Glide(x, frames);
         var gainB = _volumeB * _plan.GainB;
         var handoff = Math.Clamp(_plan.Handoff, 0, 0.95);
         var release = x < handoff ? 0 : (x - handoff) / (1 - handoff);
@@ -694,6 +732,18 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
                 break;
         }
         if (x >= 1) _voiceA.TargetGain = 0;
+    }
+
+    private void Glide(double x, int frames)
+    {
+        MixGlide.Rates(_glide!, x + _glideLead, ref _glideCursor, out var rateA, out var rateB);
+        _voiceA!.Rate = rateA;
+        _voiceB!.Rate = rateB;
+        GlideFrames += frames;
+        if (double.IsNaN(GlideFirstRateA)) GlideFirstRateA = rateA;
+        GlideLastRateA = rateA;
+        GlideLastRateB = rateB;
+        GlideDeviation = Math.Max(GlideDeviation, Math.Max(Math.Abs(rateA - 1), Math.Abs(rateB - 1)));
     }
 
     private void ReleaseVoices()

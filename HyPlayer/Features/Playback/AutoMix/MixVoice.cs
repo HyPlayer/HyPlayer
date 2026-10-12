@@ -31,8 +31,15 @@ public sealed class MixVoice : IDisposable
     private MixSend? _sendPath;
     private int _rawBlendFrames;
     private int _rawBlendDone = -1;
+    private bool _idle;
+    private int _latency;
+    private int _latencyOut;
+    private long _unity;
+    private long _engageIndex;
+    private int _engageFrames;
+    private int _engageDone;
 
-    public MixVoice(MixRegion region, double startContentSeconds, bool useStretcher)
+    public MixVoice(MixRegion region, double startContentSeconds, bool useStretcher, double seekRate = 1)
     {
         _region = region;
         _sampleRate = region.SampleRate;
@@ -40,17 +47,15 @@ public sealed class MixVoice : IDisposable
         if (useStretcher && TimeStretcher.IsAvailable)
         {
             _stretcher = new TimeStretcher(2, _sampleRate);
-            var seek = _stretcher.OutputSeekLength(1);
-            var start = (long)Math.Clamp(ContentIndex, 0, region.Frames);
-            var length = (int)Math.Min(seek, region.Frames - start);
-            if (length > 0) _stretcher.OutputSeek(new ReadOnlySpan<float>(region.Samples, (int)start * 2, length * 2));
-            _feedIndex = start + length;
+            Seek(seekRate);
         }
     }
 
     public double ContentIndex { get; private set; }
     public double ContentSeconds => _region.StartSeconds + ContentIndex / _sampleRate;
-    public bool IsStretching => _stretcher is not null && _rawBlendDone < 0;
+    public bool IsStretching => _stretcher is not null && !_idle && _rawBlendDone < 0;
+    public int StretchLatency => _latencyOut;
+    public bool Settled => _stretcher is not null && !_idle && _unity >= _latencyOut;
     public double Rate { get; set; } = 1;
     public double TargetGain { get; set; }
     public double HighPassHz { get; set; }
@@ -84,9 +89,44 @@ public sealed class MixVoice : IDisposable
         TargetGain = gain;
     }
 
-    public void BeginRawBlend(double seconds)
+    public void PrepareStretch()
+    {
+        if (_stretcher is not null || !TimeStretcher.IsAvailable) return;
+        _stretcher = new TimeStretcher(2, _sampleRate);
+        _idle = true;
+        _latency = _stretcher.OutputSeekLength(1);
+        _latencyOut = _latency - _stretcher.OutputSeekLength(0);
+    }
+
+    public bool BeginStretch(double blendSeconds)
+    {
+        if (_stretcher is null || !_idle) return false;
+        ContentIndex = Math.Round(ContentIndex);
+        Seek(1);
+        _rateCarry = 0;
+        _unity = 0;
+        _idle = false;
+        _engageIndex = (long)ContentIndex;
+        _engageFrames = Math.Max(1, (int)(blendSeconds * _sampleRate));
+        _engageDone = 0;
+        return true;
+    }
+
+    private void Seek(double rate)
+    {
+        var seek = _stretcher!.OutputSeekLength(rate);
+        var start = (long)Math.Clamp(ContentIndex, 0, _region.Frames);
+        var length = (int)Math.Min(seek, _region.Frames - start);
+        if (length > 0) _stretcher.OutputSeek(new ReadOnlySpan<float>(_region.Samples, (int)start * 2, length * 2));
+        _feedIndex = start + length;
+        _latency = _stretcher.OutputSeekLength(1);
+        _latencyOut = _latency - _stretcher.OutputSeekLength(0);
+    }
+
+    public void BeginRawBlend(double seconds, bool settled = false)
     {
         if (_stretcher is null || _rawBlendDone >= 0) return;
+        if (settled && Settled) ContentIndex = _feedIndex - _latency;
         _rawBlendFrames = Math.Max(1, (int)(seconds * _sampleRate));
         _rawBlendDone = 0;
         Rate = 1;
@@ -110,6 +150,7 @@ public sealed class MixVoice : IDisposable
             if (available > 0) new ReadOnlySpan<float>(_region.Samples, (int)_feedIndex * 2, available * 2).CopyTo(input);
             _stretcher!.Process(input, stretched);
             _feedIndex += inputFrames;
+            _unity = Rate == 1 ? _unity + frames : 0;
 
             if (_rawBlendDone >= 0)
             {
@@ -127,6 +168,18 @@ public sealed class MixVoice : IDisposable
                     _stretcher.Dispose();
                     _stretcher = null;
                 }
+            }
+            else if (_engageDone < _engageFrames)
+            {
+                ReadRaw(dry, frames, _engageIndex + _engageDone);
+                for (var i = 0; i < frames; i++)
+                {
+                    var w = Math.Min(1.0, (_engageDone + i + 1) / (double)_engageFrames);
+                    dry[i * 2] = (float)(dry[i * 2] * (1 - w) + stretched[i * 2] * w);
+                    dry[i * 2 + 1] = (float)(dry[i * 2 + 1] * (1 - w) + stretched[i * 2 + 1] * w);
+                }
+                _engageDone += frames;
+                ContentIndex += frames * Rate;
             }
             else
             {

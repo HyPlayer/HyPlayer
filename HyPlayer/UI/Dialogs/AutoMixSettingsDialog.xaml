@@ -44,6 +44,13 @@
                     IsEnabled="{x:Bind CanTimeStretch}"
                     IsOn="{x:Bind Settings.TimeStretch, Mode=TwoWay}" />
             </controls3:SettingsCard>
+            <controls3:SettingsCard Description="拍对齐过渡时两首歌一起从上一首的速度平滑滑到下一首的速度，过渡结束时下一首已回到原速；关闭后只让下一首贴合上一首的速度，过渡后再恢复" Header="同步速度滑变">
+                <ToggleSwitch
+                    MinWidth="10"
+                    HorizontalAlignment="Right"
+                    IsEnabled="{x:Bind CanGlide(Settings.TimeStretch), Mode=OneWay}"
+                    IsOn="{x:Bind Settings.TempoGlide, Mode=TwoWay}" />
+            </controls3:SettingsCard>
             <controls3:SettingsCard Description="歌曲硬收尾或人声唱到最后时用混响尾音衔接下一首，在人声结束后的小节线切换时用一拍回声收尾" Header="尾音效果">
                 <ToggleSwitch
                     MinWidth="10"

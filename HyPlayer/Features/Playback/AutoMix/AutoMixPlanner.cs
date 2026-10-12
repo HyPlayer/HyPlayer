@@ -60,12 +60,14 @@ public sealed class AutoMixPlannerOptions
     public int PreferredBars { get; init; } = 16;
     public double CrossfadeSeconds { get; init; } = 6;
     public bool AllowTimeStretch { get; init; } = true;
+    public bool AllowGlide { get; init; }
     public double MaxTempoDeviation { get; init; } = 0.06;
     public bool AlbumContinuation { get; init; }
     public double PlaybackOffsetDb { get; init; }
     public bool TailEffects { get; init; } = true;
     public double EarliestExit { get; init; }
     public MixHistory? History { get; init; } = MixHistory.Shared;
+    public bool RecordPlanned { get; init; } = true;
     public Action<string>? Log { get; init; }
 }
 
@@ -109,7 +111,7 @@ public sealed record MixCandidate(MixTemplate Template, string Anchor, MixPlan P
     internal IReadOnlyList<string> Tail { get; init; } = Array.Empty<string>();
 
     public string Describe() => FormattableString.Invariant(
-        $"{Template.Name} [{Anchor}] {Plan.Bars} bars exit A {Plan.AExit:0.00}s overlap {Plan.Overlap:0.00}s entry B {Plan.BEntry:0.00}s rate {Plan.Rate:0.0000} handoff {Plan.Handoff:0.00}{(Crowded ? " crowded" : string.Empty)}");
+        $"{Template.Name} [{Anchor}] {Plan.Bars} bars exit A {Plan.AExit:0.00}s overlap {Plan.Overlap:0.00}s entry B {Plan.BEntry:0.00}s rate {Plan.Rate:0.0000}{(Plan.HasGlide ? " glide" : string.Empty)} handoff {Plan.Handoff:0.00}{(Crowded ? " crowded" : string.Empty)}");
 }
 
 public sealed class MixDecision
@@ -179,7 +181,7 @@ public static class AutoMixPlanner
         var identified = a.TrackKey.Length > 0 && b.TrackKey.Length > 0;
         var history = identified ? options.History : null;
         var decision = Decide(a, b, vocalsA, vocalsB, options, leadsA, leadsB, history?.PreviousFor(a.TrackKey, b.TrackKey));
-        history?.Record(a.TrackKey, b.TrackKey, decision.Plan.Technique);
+        if (options.RecordPlanned) history?.Record(a.TrackKey, b.TrackKey, decision.Plan.Technique);
         var log = options.Log ?? (identified ? AutoMixLog.Write : null);
         if (log is not null)
             foreach (var line in decision.Explain()) log(line);
@@ -500,6 +502,7 @@ public static class AutoMixPlanner
                 continue;
             }
 
+            var glide = options.AllowGlide && template.Synced && options.AllowTimeStretch ? MixGlide.Plan(rate, overlap, pairing.MaxDeviation) : null;
             var bOverlap = overlap * rate;
             var audible = overlap * (handoff + 0.7 * (1 - handoff));
             var clash = VocalClash(scene.VocalsA, exit, exit + audible, scene.VocalsB, entryB, entryB + bOverlap, rate);
@@ -519,6 +522,7 @@ public static class AutoMixPlanner
                 $"bpm {bpmA:0.0}->{bpmB:0.0} x{multiplier:0.##}",
                 $"rate {rate:0.000}"
             };
+            if (glide is not null) head.Add($"glide to {bpmB * multiplier:0.0} bpm");
             var keyDistance = KeyEstimator.CamelotDistance(a.Key, b.Key);
             if (keyDistance > 2 && a.KeyConfidence > MixScoring.TrustedKeyConfidence && b.KeyConfidence > MixScoring.TrustedKeyConfidence)
                 head.Add($"key distance {keyDistance}");
@@ -536,11 +540,12 @@ public static class AutoMixPlanner
                 Overlap = overlap,
                 BEntry = Refine(entryB, tempoB),
                 Rate = rate,
-                RampBack = Math.Abs(rate - 1) > 0.0005 ? Math.Min(16 * 4 * 60 / (bpmB * multiplier), 20) : 0,
+                RampBack = glide is null && Math.Abs(rate - 1) > 0.0005 ? Math.Min(16 * 4 * 60 / (bpmB * multiplier), 20) : 0,
                 Handoff = handoff,
                 Bars = (int)Math.Round(overlap / bar),
                 TempoA = bpmA,
-                TempoB = bpmB
+                TempoB = bpmB,
+                Glide = glide
             };
             var cut = whole && template.Technique == MixTechnique.FilterCut && options.TailEffects
                 ? EchoCut(a, exit + overlap, scene.VocalEndA, beat)

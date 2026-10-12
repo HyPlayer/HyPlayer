@@ -35,6 +35,8 @@ public sealed partial class AutoMixSettingsDialog : ContentDialog
 
     public bool CanTimeStretch => TimeStretcher.IsAvailable;
 
+    public bool CanGlide(bool timeStretch) => timeStretch && CanTimeStretch;
+
     private static ModelEntry? ModelOf(object sender)
     {
         return sender is FrameworkElement element ? element.Tag as ModelEntry ?? element.DataContext as ModelEntry : null;
