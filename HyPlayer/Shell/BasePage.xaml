@@ -8,7 +8,8 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:pages="using:HyPlayer.Shell.Search"
     xmlns:shellAccount="using:HyPlayer.Shell.Account"
-    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="{x:Bind _setting.AcrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource ReversedBooleanConverter}}"
+    Background="{x:Bind GetWindowBackground(_setting.AcrylicBackgroundStatus), Mode=OneWay}"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Grid>

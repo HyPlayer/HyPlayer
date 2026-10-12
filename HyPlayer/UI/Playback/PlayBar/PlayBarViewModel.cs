@@ -27,6 +27,7 @@ namespace HyPlayer.UI.Playback.PlayBar;
 public partial class PlayBarViewModel : ObservableObject
 {
     private int _playlistRefreshVersion;
+    private long _lastNotifiedSecond = -1;
     private readonly IAuthService _authService;
     private readonly IPlaybackControlService _control;
     private readonly ILyricService _lyricService;
@@ -298,7 +299,13 @@ public partial class PlayBarViewModel : ObservableObject
 
     partial void OnPositionChanged(TimeSpan value)
     {
-        OnPropertyChanged(nameof(NowTimeText));
+        var second = (long)value.TotalSeconds;
+        if (second != _lastNotifiedSecond)
+        {
+            _lastNotifiedSecond = second;
+            OnPropertyChanged(nameof(NowTimeText));
+        }
+
         OnPropertyChanged(nameof(ProgressMilliseconds));
     }
 

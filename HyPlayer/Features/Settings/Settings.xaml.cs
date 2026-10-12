@@ -568,6 +568,30 @@ public sealed partial class Settings : Page
         Lyric.KaraokeLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
     }
 
+    private void ApplyNewAcrylic()
+    {
+        if (PreviewAcrylic is null || TintOpacitySlider is null || TintOpacityLuminositySlider is null) return;
+        var tintColor = (Windows.UI.Color)Windows.UI.Xaml.Application.Current.Resources["SystemRevealAltHighColor"];
+        PreviewAcrylic.Fill = new Microsoft.UI.Xaml.Media.AcrylicBrush
+        {
+            BackgroundSource = Microsoft.UI.Xaml.Media.AcrylicBackgroundSource.HostBackdrop,
+            TintColor = tintColor,
+            TintOpacity = TintOpacitySlider.Value,
+            TintLuminosityOpacity = TintOpacityLuminositySlider.Value,
+            FallbackColor = tintColor
+        };
+    }
+
+    private void TintOpacity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        ApplyNewAcrylic();
+    }
+
+    private void TintOpacityLuminosity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        ApplyNewAcrylic();
+    }
+
     private async void AboutRomaji_Click(object sender, RoutedEventArgs e)
     {
         await AboutRomajiDialog.ShowAsync();

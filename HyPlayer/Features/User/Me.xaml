@@ -8,10 +8,12 @@
     xmlns:core="using:Microsoft.Xaml.Interactivity"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:settings="using:HyPlayer.Domain.Settings"
     xmlns:ui="using:CommunityToolkit.WinUI"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
@@ -141,8 +143,8 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0">
-                    <Grid x:Name="AcrylicGrid">
-                        <Border x:Name="RectangleImageBack">
+                    <Grid x:Name="AcrylicGrid" Visibility="{x:Bind settings:UISettings.AcrylicAvailability}">
+                        <Border x:Name="RectangleImageBack" x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ListHeaderAcrylicBlur}">
                             <Border.Background>
                                 <ImageBrush Stretch="UniformToFill">
                                     <ImageBrush.ImageSource>
@@ -151,8 +153,20 @@
                                 </ImageBrush>
                             </Border.Background>
                         </Border>
-                        <Border x:Name="RectangleImageAcrylic" Background="{ThemeResource MePageAcrylicBrush}" />
+                        <Border
+                            x:Name="RectangleImageAcrylic"
+                            x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ListHeaderAcrylicBlur}"
+                            Background="{ThemeResource MePageAcrylicBrush}" />
                     </Grid>
+                    <Border x:Name="RectangleImageFallback" Visibility="{x:Bind settings:UISettings.AcrylicAvailability, Converter={StaticResource BoolToVisibilityInverseConverter}}">
+                        <Border.Background>
+                            <ImageBrush Stretch="UniformToFill">
+                                <ImageBrush.ImageSource>
+                                    <BitmapImage UriSource="{x:Bind ViewModel.User.AvatarUrl, Mode=OneWay}" />
+                                </ImageBrush.ImageSource>
+                            </ImageBrush>
+                        </Border.Background>
+                    </Border>
 
                     <controls:DockPanel
                         x:Name="GridPersonalInformation"
@@ -164,7 +178,8 @@
                             Height="120"
                             Margin="20"
                             controls:DockPanel.Dock="Left"
-                            ProfilePicture="{x:Bind ViewModel.User.AvatarUrl, Mode=OneWay}">
+                            ProfilePicture="{x:Bind ViewModel.User.AvatarUrl, Mode=OneWay}"
+                            RightTapped="UserAvatar_OnRightTapped">
                             <ui:Effects.Shadow>
                                 <media:AttachedCardShadow
                                     CornerRadius="60"

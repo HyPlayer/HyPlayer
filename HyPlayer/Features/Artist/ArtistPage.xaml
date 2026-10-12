@@ -5,6 +5,7 @@
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:controls1="using:HyPlayer.UI.Lists"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:ui="using:CommunityToolkit.WinUI"
@@ -39,7 +40,8 @@
                     <Rectangle
                         x:Name="RectangleImageBack"
                         Grid.RowSpan="2"
-                        Margin="-32">
+                        Margin="-32"
+                        x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ListHeaderAcrylicBlur}">
                         <Rectangle.Fill>
                             <ImageBrush
                                 x:Name="ImageRect1"
@@ -51,6 +53,7 @@
                         x:Name="RectangleImageBackAcrylic"
                         Grid.RowSpan="2"
                         Margin="-32"
+                        x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ListHeaderAcrylicBlur}"
                         Fill="{ThemeResource SystemControlAcrylicElementBrush}" />
                     <controls:DockPanel
                         x:Name="GridPersonalInformation"

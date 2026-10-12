@@ -36,9 +36,11 @@ using HyPlayer.UI.TeachingTips;
 using Kawazu;
 using Microsoft.Gaming.XboxGameBar;
 using WinRT;
+using ControlsResourcesVersion = Microsoft.UI.Xaml.Controls.ControlsResourcesVersion;
 using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 using WidgetPage = HyPlayer.Features.Widgets.WidgetPage;
 using WidgetSettingsPage = HyPlayer.Features.Widgets.WidgetSettingsPage;
+using XamlControlsResources = Microsoft.UI.Xaml.Controls.XamlControlsResources;
 
 #endregion
 
@@ -71,6 +73,17 @@ public sealed partial class App : Windows.UI.Xaml.Application
         DownloadedTrackIndex.ScheduleScan(TimeSpan.FromSeconds(40));
         StorageMaintenance.ScheduleTrim(TimeSpan.FromSeconds(30));
         var uiSettings = AppDepository.Resolve<UISettings>();
+        if (uiSettings.XboxHidePointer)
+        {
+            RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
+            FocusVisualKind = FocusVisualKind.Reveal;
+        }
+
+        if (uiSettings.IsOldThemeEnabled)
+            foreach (var dictionary in Resources.MergedDictionaries)
+                if (dictionary is XamlControlsResources controlsResources)
+                    controlsResources.ControlsResourcesVersion = ControlsResourcesVersion.Version1;
+
         if (uiSettings.ThemeRequest != ThemeRequest.Auto)
             RequestedTheme = uiSettings.ThemeRequest == ThemeRequest.Light
                 ? ApplicationTheme.Light

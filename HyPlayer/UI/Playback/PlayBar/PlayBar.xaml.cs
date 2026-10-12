@@ -102,6 +102,7 @@ public sealed partial class PlayBar
 
     private SolidColorBrush _backgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding;
+    private bool _playBarStyleApplied;
     private TimeSpan _startingTimeSpan = TimeSpan.Zero;
     public HyPlayer.Domain.Settings.UISettings UISettings { get; } =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
@@ -166,7 +167,57 @@ DoubleAnimation verticalAnimation;
             case nameof(PlaybackStateService.Volume):
                 RunOnUIThread(SyncVolumeSlider);
                 break;
+            case nameof(PlaybackStateService.IsPlaying):
+                RunOnUIThread(RefreshBackgroundBreath);
+                break;
         }
+    }
+
+    private Brush? GetBarBackground(bool acrylic)
+    {
+        return acrylic
+            ? Windows.UI.Xaml.Application.Current.Resources["SystemControlAcrylicWindowBrush"]?.As<Brush>()
+            : null;
+    }
+
+    private void RefreshBackgroundBreath()
+    {
+        if (_state.IsPlaying && UISettings.PlaybarBackgroundBreath)
+            PlayBarBackgroundAni.Begin();
+        else
+            PlayBarBackgroundAni.Stop();
+    }
+
+    private void ApplyPlayBarStyle()
+    {
+        if (_playBarStyleApplied) return;
+        _playBarStyleApplied = true;
+        if (!UISettings.PlaybarButtonsTransparent)
+        {
+            BtnPlayRollType.Background = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));
+            BtnPreviousSong.Background = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));
+            BtnPlayStateChange.Background = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));
+            BtnNextSong.Background = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));
+            BtnLike.Background = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));
+        }
+
+        if (UISettings.PlayButtonAccentColor)
+        {
+            BtnPlayStateChange.Background = Resources["SolidPlayButtonColor"]?.As<Brush>();
+            PlayStateIcon.Foreground = Resources["SolidPlayButtonIconColor"]?.As<Brush>();
+        }
+        else
+        {
+            PlayBarBackgroundAni.Children.RemoveAt(2);
+        }
+
+        if (!UISettings.PlaybarBackgroundElay) return;
+        PointerEntered += (_, _) =>
+        {
+            if (_surfaceStore.IsExpanded && UISettings.PlaybarBackgroundElay)
+                GridThis.Background = _backgroundElayBrush;
+        };
+        PointerExited += (_, _) => { GridThis.Background = new SolidColorBrush(Colors.Transparent); };
     }
 
     private void OnSurfaceCommandRequested(PlaybackSurfaceCommandRequestedEventArgs args)
@@ -223,9 +274,15 @@ DoubleAnimation verticalAnimation;
                 break;
             case nameof(PlaybackSurfaceStore.Theme):
                 if (store.IsExpanded)
+                {
                     ApplyPlaybackTheme(store.Theme);
+                    if (UISettings.PlaybarBackgroundElay) SetPlayBarIdleBackground(store.Theme.IdleBrush);
+                }
                 else
+                {
                     ApplyCompactPlaybackTheme();
+                }
+
                 break;
         }
     }
@@ -254,6 +311,10 @@ DoubleAnimation verticalAnimation;
             GridSongInfo.Visibility = projection.ShowSongInfo ? Visibility.Visible : Visibility.Collapsed;
             GridSongAdvancedOperation.Visibility =
                 projection.ShowAdvancedOperations ? Visibility.Visible : Visibility.Collapsed;
+            if (isExpanded)
+                PlayBarBackgroundFadeOut.Begin();
+            else
+                PlayBarBackgroundFadeIn.Begin();
 
             if (!isExpanded)
                 ApplyCompactPlaybackTheme();
@@ -728,6 +789,9 @@ DoubleAnimation verticalAnimation;
         ActualThemeChanged -= PlayBar_ActualThemeChanged;
         ActualThemeChanged += PlayBar_ActualThemeChanged;
         InitializedAni.Begin();
+        PlayBarBackgroundFadeIn.Begin();
+        ApplyPlayBarStyle();
+        RefreshBackgroundBreath();
         if (!_surfaceStore.IsExpanded)
             ApplyCompactPlaybackTheme();
 

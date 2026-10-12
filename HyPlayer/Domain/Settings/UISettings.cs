@@ -448,4 +448,86 @@ public partial class UISettings : SettingsBase
         get => GetSettings(nameof(PlaybarProgressiveBlur), true);
         set => SetSettings(nameof(PlaybarProgressiveBlur), value);
     }
+
+    public bool XboxHidePointer
+    {
+        get => GetSettings(nameof(XboxHidePointer), false);
+        set => SetSettings(nameof(XboxHidePointer), value);
+    }
+
+    public bool IsOldThemeEnabled
+    {
+        get => GetSettings(nameof(IsOldThemeEnabled), false);
+        set => SetSettings(nameof(IsOldThemeEnabled), value);
+    }
+
+    public bool ListHeaderAcrylicBlur
+    {
+        get => GetSettings(nameof(ListHeaderAcrylicBlur), true);
+        set => SetSettings(nameof(ListHeaderAcrylicBlur), value);
+    }
+
+    public bool ItemOfListBackgroundAcrylicBlur
+    {
+        get => GetSettings(nameof(ItemOfListBackgroundAcrylicBlur), false);
+        set => SetSettings(nameof(ItemOfListBackgroundAcrylicBlur), value);
+    }
+
+    public bool PlaybarBackgroundAcrylic
+    {
+        get => GetSettings(nameof(PlaybarBackgroundAcrylic), false);
+        set => SetSettings(nameof(PlaybarBackgroundAcrylic), value);
+    }
+
+    public bool PlaybarBackgroundBreath
+    {
+        get => GetSettings(nameof(PlaybarBackgroundBreath), false);
+        set => SetSettings(nameof(PlaybarBackgroundBreath), value);
+    }
+
+    public bool PlaybarBackgroundElay
+    {
+        get => GetSettings(nameof(PlaybarBackgroundElay), false);
+        set => SetSettings(nameof(PlaybarBackgroundElay), value);
+    }
+
+    public bool PlaybarButtonsTransparent
+    {
+        get => GetSettings(nameof(PlaybarButtonsTransparent), true);
+        set => SetSettings(nameof(PlaybarButtonsTransparent), value);
+    }
+
+    public bool PlayButtonAccentColor
+    {
+        get => GetSettings(nameof(PlayButtonAccentColor), false);
+        set => SetSettings(nameof(PlayButtonAccentColor), value);
+    }
+
+    public bool AcrylicBackgroundStatus
+    {
+        get => GetSettings(nameof(AcrylicBackgroundStatus), false);
+        set => SetSettings(nameof(AcrylicBackgroundStatus), value);
+    }
+
+    public bool CustomAcrylic
+    {
+        get => GetSettings(nameof(CustomAcrylic), false);
+        set => SetSettings(nameof(CustomAcrylic), value);
+    }
+
+    public double CustomTintOpacity
+    {
+        get => CustomAcrylic ? GetSettings(nameof(CustomTintOpacity), 3d) : 0d;
+        set => SetSettings(nameof(CustomTintOpacity), value);
+    }
+
+    public double CustomTintLuminosityOpacity
+    {
+        get => CustomAcrylic ? GetSettings(nameof(CustomTintLuminosityOpacity), 3d) : 0d;
+        set => SetSettings(nameof(CustomTintLuminosityOpacity), value);
+    }
+
+    public static bool AcrylicAvailability =>
+        new Windows.UI.ViewManagement.UISettings().AdvancedEffectsEnabled &&
+        Windows.UI.Composition.CompositionCapabilities.GetForCurrentView().AreEffectsFast();
 }

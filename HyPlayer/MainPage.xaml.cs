@@ -122,6 +122,10 @@ public sealed partial class MainPage : Page
             {
                 if (args.PropertyName == nameof(HyPlayer.Domain.Settings.UISettings.HidePlaybarOnHome))
                     instance.UpdateHomePlaybar();
+                if (args.PropertyName is nameof(HyPlayer.Domain.Settings.UISettings.PlaybarBackgroundAcrylic)
+                        or nameof(HyPlayer.Domain.Settings.UISettings.AcrylicBackgroundStatus) &&
+                    !instance._surfaceStore.IsExpanded)
+                    instance.GridPlayBar.Background = instance.GetCompactPlayBarBackground();
             },
             OnDetachAction = weakEventListener => { UISettings.PropertyChanged -= weakEventListener.OnEvent; }
         };
@@ -240,8 +244,7 @@ public sealed partial class MainPage : Page
         _shellHost.AppTitleBar?.ReleasePointerCaptures();
         ExpandedPlayer.IsHitTestVisible = false;
         GridPlayBar.BorderThickness = new Thickness(1);
-        GridPlayBar.Background = Windows.UI.Xaml.Application.Current
-            .Resources["SystemControlAcrylicElementMediumHighBrush"].As<Brush>();
+        GridPlayBar.Background = GetCompactPlayBarBackground();
         MainFrame.Visibility = Visibility.Visible;
 
         if (_shellHost.AppTitleBar is { } titleBar)
@@ -282,6 +285,15 @@ public sealed partial class MainPage : Page
                 ExpandedPlayerPositionOffset.Y = 0;
             }
         }
+    }
+
+    private Brush? GetCompactPlayBarBackground()
+    {
+        if (UISettings.PlaybarBackgroundAcrylic) return null;
+        return Windows.UI.Xaml.Application.Current
+            .Resources[UISettings.AcrylicBackgroundStatus
+                ? "GridPlayBarBackgroundAcrylic"
+                : "SystemControlAcrylicElementMediumHighBrush"].As<Brush>();
     }
 
     private void CancelCollapseTransition()

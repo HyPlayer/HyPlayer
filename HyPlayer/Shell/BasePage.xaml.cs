@@ -5,6 +5,7 @@ using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
@@ -118,6 +119,22 @@ public sealed partial class BasePage : Page
             if (_surfaceStore.IsExpanded && _surfaceStore.RequestEscape()) return;
             CollapseExpandedPlayerIfNeeded();
         }
+    }
+
+    private Brush? GetWindowBackground(bool acrylic)
+    {
+        if (!acrylic) return null;
+        if (!_setting.CustomAcrylic)
+            return Windows.UI.Xaml.Application.Current.Resources["NormalWindowBackgroundAcrylic"] as Brush;
+        var tintColor = (Windows.UI.Color)Windows.UI.Xaml.Application.Current.Resources["SystemRevealAltHighColor"];
+        return new AcrylicBrush
+        {
+            BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
+            TintColor = tintColor,
+            TintOpacity = _setting.CustomTintOpacity,
+            TintLuminosityOpacity = _setting.CustomTintLuminosityOpacity,
+            FallbackColor = tintColor
+        };
     }
 
     private bool CollapseExpandedPlayerIfNeeded()

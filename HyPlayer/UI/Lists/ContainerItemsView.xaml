@@ -5,6 +5,7 @@
     xmlns:behaviors="using:CommunityToolkit.WinUI.Behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:lists="using:HyPlayer.UI.Lists"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -248,6 +249,28 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="80" />
                             </Grid.ColumnDefinitions>
+                            <frieren:ImageEx
+                                x:Name="RectangleImageBack"
+                                Grid.ColumnSpan="4"
+                                Height="64"
+                                Margin="2,0,2,0"
+                                x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ItemOfListBackgroundAcrylicBlur}"
+                                CornerRadius="12"
+                                IsCacheEnabled="False"
+                                Opacity="1"
+                                Stretch="Fill">
+                                <frieren:ImageEx.Source>
+                                    <BitmapImage UriSource="{x:Bind Cover}" />
+                                </frieren:ImageEx.Source>
+                            </frieren:ImageEx>
+                            <Rectangle
+                                x:Name="RectangleImageAcrylic"
+                                Grid.ColumnSpan="4"
+                                Margin="1,0,1,0"
+                                x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ItemOfListBackgroundAcrylicBlur}"
+                                Fill="{ThemeResource SystemControlBaseLowAcrylicElementBrush}"
+                                RadiusX="10"
+                                RadiusY="10" />
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <frieren:ImageEx
                                     x:Name="ImageRect"

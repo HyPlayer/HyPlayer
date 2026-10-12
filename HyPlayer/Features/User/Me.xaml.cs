@@ -48,6 +48,14 @@ public sealed partial class Me : Page
             ViewModel.InitializeUserInfo(currentUserId).SafeFireAndForget();
     }
 
+    private void UserAvatar_OnRightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        var uiSettings = Ioc.Default.GetRequiredService<UISettings>();
+        if (!uiSettings.IsOldThemeEnabled) return;
+        uiSettings.IsOldThemeEnabled = false;
+        _notification.ShowMessage("已重置, 请重启");
+    }
+
     private void SonglistItem_Tapped(object sender, TappedRoutedEventArgs e)
     {
         if ((sender as FrameworkElement)?.Tag is not AppRoute target) return;

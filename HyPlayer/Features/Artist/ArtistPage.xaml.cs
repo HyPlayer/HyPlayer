@@ -54,8 +54,8 @@ public sealed partial class ArtistPage : Page
     {
         var progress = ArtistPivotView.HeaderScrollProgress;
         GridPersonalInformation.Opacity = Math.Clamp(1 - progress * 1.4, 0, 1);
-        RectangleImageBack.Opacity = Math.Clamp(1 - progress * 1.1, 0, 1);
-        RectangleImageBackAcrylic.Opacity = Math.Clamp(1 - progress * 1.1, 0, 1);
+        RectangleImageBack?.Opacity = Math.Clamp(1 - progress * 1.1, 0, 1);
+        RectangleImageBackAcrylic?.Opacity = Math.Clamp(1 - progress * 1.1, 0, 1);
         TextBlockDesc.Opacity = Math.Clamp(1 - progress * 0.8, 0, 1);
 
         UserScale.ScaleX = UserScale.ScaleY = Math.Clamp(1 - progress * 0.8, 0, 1);
