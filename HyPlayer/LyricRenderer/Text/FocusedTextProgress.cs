@@ -1,10 +1,6 @@
-namespace HyPlayer.LyricEffects.Models;
-
-public enum GlyphLiftMotion
-{
-    Hold,
-    Pulse
-}
+using System;
+using HyPlayer.LyricRenderer.Abstraction;
+namespace HyPlayer.LyricRenderer.Text;
 
 public static class FocusedTextProgress
 {

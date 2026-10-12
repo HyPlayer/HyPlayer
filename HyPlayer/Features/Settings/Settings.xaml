@@ -385,13 +385,13 @@
                                         <FontIcon Glyph="&#xE794;" />
                                     </controls3:SettingsExpander.HeaderIcon>
                                     <controls3:SettingsExpander.Items>
-                                        <controls3:SettingsCard Description="对完整歌词行应用辉光、渐隐、模糊、变换与绘图脚本" Header="歌词整体特效链">
+                                        <controls3:SettingsCard Description="选择行切换预设，调整景深、辉光与缩放" Header="行切换特效">
                                             <Button
                                                 HorizontalAlignment="Right"
                                                 Click="OpenLyricEffectSettings_Click"
                                                 Content="编辑整体链" />
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="分别编辑正文、音译和翻译的高亮状态；Reveal 与 Glyph 动画可同时启用" Header="聚焦歌词特效链">
+                                        <controls3:SettingsCard Description="选择高亮歌词预设，调整羽化扫词与逐字抬升" Header="高亮歌词特效">
                                             <Button
                                                 HorizontalAlignment="Right"
                                                 Click="OpenFocusedLyricEffectSettings_Click"

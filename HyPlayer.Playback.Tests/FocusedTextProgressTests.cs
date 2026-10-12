@@ -1,7 +1,9 @@
 using AwesomeAssertions;
-using HyPlayer.LyricEffects.Models;
+using HyPlayer.LyricRenderer.Text;
+using HyPlayer.LyricRenderer.Abstraction;
+using TUnit.Core;
 
-namespace HyPlayer.LyricEffects.Tests;
+namespace HyPlayer.Playback.Tests;
 
 public class FocusedTextProgressTests
 {

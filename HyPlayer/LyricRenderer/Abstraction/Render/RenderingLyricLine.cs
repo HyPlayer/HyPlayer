@@ -1,7 +1,8 @@
-﻿#nullable enable
+#nullable enable
 using ALRC.Abstraction;
-using HyPlayer.LyricEffects.Expressions;
-using HyPlayer.LyricRenderer.Pipeline;
+using HyPlayer.LyricRenderer.Animator;
+using Microsoft.Graphics.Canvas.Effects;
+using Windows.Foundation;
 using Microsoft.Graphics.Canvas;
 using System;
 using System.Collections.Generic;
@@ -69,128 +70,146 @@ public abstract class RenderingLyricLine : IDisposable
 
     public bool IsFinished { get; private set; }
 
-    private LyricRenderPipelineInstance? _renderPipeline;
-    private readonly LyricRenderFrameResourceScope _frameResources = new();
-    private readonly LyricRenderOperationContext _operationContext = new();
-    private ALRCStyle? _cachedExpressionStyle;
-    private string _cachedStylePosition = "Undefined";
-    private string _cachedStyleType = "Normal";
-
-    protected LyricExpressionLine CurrentExpressionLine { get; private set; }
-
-    protected LyricExpressionFrame CurrentExpressionFrame { get; private set; }
-
-    public virtual string ExpressionText => string.Empty;
+    private GaussianBlurEffect? _blur;
+    private ShadowEffect? _glow;
+    private Transform3DEffect? _perspective;
+    private LyricScalarTransition _opacityTransition;
+    private LyricScalarTransition _scaleTransition;
+    private LyricScalarTransition _blurTransition;
+    private LyricScalarTransition _glowTransition;
+    private LyricScalarTransition _angleTransition;
 
     public virtual bool IsTextLine => false;
 
+    internal int LastFrameCommandListCount { get; private set; }
+
+    /// <summary>Draws a line directly; only spatial image effects record its content.</summary>
     public bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
-        CurrentExpressionLine = CreateExpressionLine(context, offset);
-        CurrentExpressionFrame = CreateExpressionFrame(context);
-        var hasStaticSource = TryGetStaticSourceImage(session, context, out var staticSourceImage);
-
-        // A line without an effect pipeline can render directly into the target
-        // session. The previous path recorded the line into a transient command
-        // list and immediately submitted that list, adding one allocation and one
-        // extra image pass for every active line on every frame.
-        if (context.EffectProfile is null && !hasStaticSource)
-        {
-            var originalTransform = session.Transform;
-            try
-            {
-                var lineTransform = Matrix3x2.CreateTranslation(offset.X, offset.Y) * originalTransform;
-                session.Transform = lineTransform;
-                var directResult = RenderCore(session, context);
-                if (context.Debug)
-                {
-                    session.Transform = lineTransform;
-                    session.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})",
-                        0, 0, Colors.Red);
-                    session.DrawText(RuntimeIndex.ToString(), 0, 15, Colors.Red);
-                    session.DrawRectangle(0, 0, RenderingWidth, RenderingHeight, Colors.Yellow);
-                }
-
-                return directResult;
-            }
-            finally
-            {
-                session.Transform = originalTransform;
-            }
-        }
-
-        CanvasCommandList? transientSource = null;
-        ICanvasImage sourceImage;
-        bool result;
-        if (hasStaticSource)
-        {
-            sourceImage = staticSourceImage;
-            result = true;
-        }
-        else
-        {
-            transientSource = new CanvasCommandList(session);
-            sourceImage = transientSource;
-            using var currentLineSession = transientSource.CreateDrawingSession();
-            result = RenderCore(currentLineSession, context);
-        }
-
+        LastFrameCommandListCount = 0;
+        var settings = context.Settings.Line;
+        var currentY = (uint)context.CurrentLyricLineIndex < (uint)context.RenderOffsets.Count
+            ? context.RenderOffsets[context.CurrentLyricLineIndex].Y : offset.Y;
+        var distance = IsActive || context.ViewHeight <= 0 ? 0 : Math.Abs((currentY - offset.Y) / context.ViewHeight);
+        var time = context.CurrentLyricTime;
+        var enabled = settings.Preset != LyricLinePreset.None;
+        var opacityTarget = IsActive ? 1 : Math.Clamp(settings.NearOpacity + (settings.FarOpacity - settings.NearOpacity) * distance, settings.FarOpacity, 1);
+        if (settings.Preset == LyricLinePreset.Layered && context.IsScrolling) opacityTarget = Math.Max(opacityTarget, 0.4f);
+        var opacity = _opacityTransition.Update(enabled ? opacityTarget : 1, time, IsActive ? 0 : 500, context.IsSeek);
+        var scaleTarget = enabled ? Math.Max(0.1f, 1 + (settings.DistantScale - 1) * distance) : 1;
+        if (context.IsScrolling) scaleTarget = Math.Max(scaleTarget, 0.8f);
+        var scale = _scaleTransition.Update(scaleTarget, time, 500, context.IsSeek);
+        var blur = _blurTransition.Update(enabled && !context.IsScrolling ? Math.Min(250, settings.MaximumBlur * distance) : 0, time, 500, context.IsSeek);
+        var glow = _glowTransition.Update(enabled && IsTextLine && IsActive ? settings.GlowOpacity : 0, time, 500, context.IsSeek);
+        var relativeIndex = GroupIndex - (context.CurrentLyricLine?.GroupIndex ?? GroupIndex);
+        var angle = _angleTransition.Update(settings.Preset == LyricLinePreset.Layered && !context.IsScrolling && !IsActive
+            ? Math.Clamp(-15 * relativeIndex, -60, 60) : 0, time, 1000, context.IsSeek);
+        var alignment = TypographySelector(static t => t?.Alignment, context)!.Value;
+        var anchor = new Vector2(alignment switch { TextAlignment.Center => RenderingWidth / 2, TextAlignment.Right => RenderingWidth, _ => 0 }, RenderingHeight / 2);
+        var originalTransform = session.Transform;
+        var transform = Matrix3x2.CreateScale(scale, anchor) * Matrix3x2.CreateTranslation(offset.X, offset.Y) * originalTransform;
+        CanvasCommandList? recorded = null;
         try
         {
-            ICanvasImage finalImage;
-            if (context.EffectProfile is { } profile)
+            session.Transform = transform;
+            if (settings.Background)
+                session.FillRoundedRectangle(0, 0, RenderingWidth, RenderingHeight, 6, 6, Color.FromArgb(10, 255, 255, 255));
+
+            var hasStatic = TryGetStaticSourceImage(session, context, out var cached);
+            var needsImage = blur > 0.001f || glow > 0.001f && settings.GlowRadius > 0 || Math.Abs(angle) > 0.001f;
+            bool result;
+            if (needsImage)
             {
-                if (_renderPipeline?.Version != profile.Version)
+                ICanvasImage content;
+                if (hasStatic) { content = cached; result = true; }
+                else
                 {
-                    _renderPipeline?.Dispose();
-                    _renderPipeline = profile.CreatePipeline();
+                    recorded = new CanvasCommandList(session);
+                    LastFrameCommandListCount = 1;
+                    using var lineSession = recorded.CreateDrawingSession();
+                    result = RenderCore(lineSession, context);
+                    content = recorded;
                 }
-
-                if (context.EmptyPipelineImage is null)
+                if (glow > 0.001f && settings.GlowRadius > 0)
                 {
-                    context.EmptyPipelineImage = new CanvasCommandList(session);
-                    using var emptySession = context.EmptyPipelineImage.CreateDrawingSession();
+                    _glow ??= new ShadowEffect();
+                    _glow.Source = content;
+                    _glow.BlurAmount = settings.GlowRadius;
+                    _glow.ShadowColor = TypographySelector(static t => t?.FocusingColor, context)!.Value;
+                    var glowOutset = settings.GlowRadius * 3;
+                    session.DrawImage(_glow, -glowOutset, -glowOutset,
+                        new Rect(-glowOutset, -glowOutset, RenderingWidth + 2 * glowOutset, RenderingHeight + 2 * glowOutset), opacity * glow);
                 }
-
-                _operationContext.SourceImage = sourceImage;
-                _operationContext.TargetSession = session;
-                _operationContext.Resources = _frameResources;
-                _operationContext.Line = CurrentExpressionLine;
-                _operationContext.Frame = CurrentExpressionFrame;
-                _operationContext.OffsetX = offset.X;
-                _operationContext.OffsetY = offset.Y;
-                _operationContext.DebugEnabled = context.Debug;
-                _operationContext.GeometryBounds = new Windows.Foundation.Rect(0, 0, RenderingWidth, RenderingHeight);
-                _operationContext.HasContent = false;
-                try
+                ICanvasImage image = content;
+                if (blur > 0.001f)
                 {
-                    finalImage = _renderPipeline!.Apply(context.EmptyPipelineImage, _operationContext);
-                    session.DrawImage(finalImage, offset.X, offset.Y);
+                    _blur ??= new GaussianBlurEffect { BorderMode = EffectBorderMode.Soft };
+                    _blur.Source = image;
+                    _blur.BlurAmount = blur;
+                    image = _blur;
                 }
-                finally
+                if (Math.Abs(angle) > 0.001f)
                 {
-                    _frameResources.Dispose();
+                    _perspective ??= new Transform3DEffect();
+                    var projection = Matrix4x4.Identity;
+                    projection.M34 = 1f / 3000;
+                    var center = new Vector3(anchor, 0);
+                    _perspective.Source = image;
+                    _perspective.TransformMatrix = Matrix4x4.CreateTranslation(-center) *
+                        Matrix4x4.CreateRotationY(angle * MathF.PI / 180) * projection * Matrix4x4.CreateTranslation(center);
+                    image = _perspective;
                 }
+                // SourceRectangle must include filter outsets; a tight text rectangle clips glow/blur.
+                var outset = Math.Max(blur, settings.GlowRadius) * 3;
+                session.DrawImage(image, -outset, -outset,
+                    new Rect(-outset, -outset, RenderingWidth + 2 * outset, RenderingHeight + 2 * outset), opacity);
+            }
+            else if (hasStatic)
+            {
+                session.DrawImage(cached, 0, 0, new Rect(0, 0, RenderingWidth, RenderingHeight), opacity);
+                result = true;
             }
             else
             {
-                session.DrawImage(sourceImage, offset.X, offset.Y);
-                // 配置服务尚未初始化时保留调试回退绘制。
-                if (!context.Debug) return result;
-                session.DrawText($"(X{offset.X},Y{offset.Y},W{RenderingWidth},H{RenderingHeight})", offset.X, offset.Y, Colors.Red);
-                session.DrawText(RuntimeIndex.ToString(), offset.X, offset.Y + 15, Colors.Red);
-                session.DrawRectangle(offset.X, offset.Y, RenderingWidth, RenderingHeight, Colors.Yellow);
+                // A layer supplies uniform line opacity without recording a command list.
+                using var layer = opacity < 0.9999f ? session.CreateLayer(opacity) : null;
+                result = RenderCore(session, context);
             }
-
+            if (settings.HoverBackground && ReactionState == ReactionState.Enter && !Hidden)
+                session.FillRoundedRectangle(0, 0, RenderingWidth + 2, RenderingHeight + 8, 6, 6, Color.FromArgb(10, 255, 255, 255));
+            if (settings.ProgressUnderline && IsActive)
+            {
+                var progress = EndTime <= StartTime ? 1 : Math.Clamp((time - StartTime) / (float)(EndTime - StartTime), 0, 1);
+                session.DrawLine(0, RenderingHeight + 4, RenderingWidth * progress, RenderingHeight + 4, Color.FromArgb(204, 255, 255, 255), 2);
+            }
+            if (context.Debug)
+            {
+                session.DrawText(RuntimeIndex.ToString(), 0, 15, Colors.Red);
+                session.DrawRectangle(0, 0, RenderingWidth, RenderingHeight, Colors.Yellow);
+            }
             return result;
         }
         finally
         {
-            transientSource?.Dispose();
+            session.Transform = originalTransform;
+            if (_glow is not null) _glow.Source = null;
+            if (_blur is not null) _blur.Source = null;
+            if (_perspective is not null) _perspective.Source = null;
+            recorded?.Dispose();
         }
     }
 
-
+    protected void ReleaseDrawingResources()
+    {
+        _blur?.Dispose(); _blur = null;
+        _glow?.Dispose(); _glow = null;
+        _perspective?.Dispose(); _perspective = null;
+        _opacityTransition = default;
+        _scaleTransition = default;
+        _blurTransition = default;
+        _glowTransition = default;
+        _angleTransition = default;
+    }
 
     public void GoToReactionState(ReactionState state, RenderContext context)
     {
@@ -209,6 +228,7 @@ public abstract class RenderingLyricLine : IDisposable
 
     protected virtual void OnRenderingChanged(bool rendering)
     {
+        if (!rendering) ReleaseDrawingResources();
     }
 
     public void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
@@ -231,112 +251,15 @@ public abstract class RenderingLyricLine : IDisposable
     {
 
     }
-    public virtual void Dispose()
+    public virtual void Dispose() => ReleaseDrawingResources();
+
+    public T TypographySelector<T>(Func<RenderTypography?, T?> selector, RenderContext context)
     {
-        _renderPipeline?.Dispose();
-        _renderPipeline = null;
-        _frameResources.Dispose();
-    }
-
-    protected LyricExpressionLine CreateExpressionLine(RenderContext context, LineRenderOffset offset)
-    {
-        var currentGroupIndex = context.CurrentLyricLine?.GroupIndex ?? GroupIndex;
-        var relativeIndex = GroupIndex - currentGroupIndex;
-        var currentFactoIndex = context.CurrentLyricLine?.FactoIndex ?? FactoIndex;
-        var factoRelativeIndex = FactoIndex - currentFactoIndex;
-        var currentOffsetY = (uint)context.CurrentLyricLineIndex < (uint)context.RenderOffsets.Count
-            ? context.RenderOffsets[context.CurrentLyricLineIndex].Y
-            : offset.Y;
-        var viewportDistance = context.ViewHeight <= 0
-            ? 0
-            : Math.Abs((currentOffsetY - offset.Y) / context.ViewHeight);
-        if (IsActive) viewportDistance = 0;
-
-        var duration = EndTime - StartTime;
-        var progress = duration <= 0
-            ? (IsStarted ? 1f : 0f)
-            : Math.Clamp((context.CurrentLyricTime - StartTime) / (float)duration, 0, 1);
-        var alignment = TypographySelector(t => t?.Alignment, context)!.Value;
-        var anchorX = alignment switch
-        {
-            TextAlignment.Center => RenderingWidth / 2,
-            TextAlignment.Right => RenderingWidth,
-            _ => 0
-        };
-        var idle = TypographySelector(t => t?.IdleColor, context)!.Value;
-        var focusing = TypographySelector(t => t?.FocusingColor, context)!.Value;
-        var source = SourceLine;
-        var style = SourceStyle;
-        if (!ReferenceEquals(style, _cachedExpressionStyle))
-        {
-            _cachedExpressionStyle = style;
-            _cachedStylePosition = style?.Position?.ToString() ?? "Undefined";
-            _cachedStyleType = style?.Type?.ToString() ?? "Normal";
-        }
-        var styleColor = SourceStyleColor ?? default;
-
-        return new LyricExpressionLine(
-            GroupIndex,
-            relativeIndex,
-            Math.Abs(relativeIndex),
-            new LyricExpressionLineFacto(FactoIndex, factoRelativeIndex, Math.Abs(factoRelativeIndex)),
-            viewportDistance,
-            IsActive,
-            IsStarted,
-            IsFinished,
-            ReactionState == ReactionState.Enter,
-            Hidden,
-            IsTextLine,
-            StartTime,
-            EndTime,
-            progress,
-            RenderingWidth,
-            RenderingHeight,
-            anchorX,
-            RenderingHeight / 2,
-            ExpressionText,
-            ToExpressionColor(idle),
-            ToExpressionColor(focusing),
-            source?.Id ?? string.Empty,
-            source?.ParentLineId ?? string.Empty,
-            source?.LineStyle ?? string.Empty,
-            source?.Comment ?? string.Empty,
-            source?.RawText ?? string.Empty,
-            source?.Transliteration ?? string.Empty,
-            source?.Translation ?? string.Empty,
-            new LyricExpressionLineStyle(
-                style is not null,
-                _cachedStylePosition,
-                SourceStyleColor.HasValue,
-                ToExpressionColor(styleColor),
-                _cachedStyleType,
-                style?.HiddenOnBlur == true));
-    }
-
-    protected static LyricExpressionFrame CreateExpressionFrame(RenderContext context) =>
-        new(
-            context.CurrentLyricLine?.GroupIndex ?? 0,
-            context.CurrentLyricTime,
-            context.RenderTick / TimeSpan.TicksPerMillisecond,
-            context.IsPlaying,
-            context.IsScrolling,
-            context.IsSeek,
-            context.ScrollingDelta,
-            context.ViewWidth,
-            context.ViewHeight,
-            context.Dpi,
-            context.BeatPerMinute);
-
-    private static LyricColorValue ToExpressionColor(Color color) =>
-        new(color.A, color.R, color.G, color.B);
-
-    public T TypographySelector<T>(Func<RenderTypography?, T?> expression, RenderContext context)
-    {
-        return (expression(Typography) ??
+        return (selector(Typography) ??
                 (SourceStyle?.Type == ALRCStyleAccent.Background
-                    ? expression(context.SublineTypography)
+                    ? selector(context.SublineTypography)
                     : default) ??
-                expression(context.PreferTypography) ?? expression(RenderTypography.Default))!;
+                selector(context.PreferTypography) ?? selector(RenderTypography.Default))!;
     }
 }
 public enum ReactionState

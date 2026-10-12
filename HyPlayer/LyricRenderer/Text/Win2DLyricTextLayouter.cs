@@ -1,6 +1,6 @@
 #nullable enable
 
-using HyPlayer.LyricEffects.Models;
+using HyPlayer.LyricRenderer.Abstraction;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System;
@@ -20,7 +20,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
     {
         var tokens = request.Tokens.Count > 0
             ? request.Tokens
-            : ShouldInferWords(request.Context.EffectProfile?.FocusedText.Definition)
+            : request.Context.Settings.Focused.InferWords
                 ? InferredLyricWordTokenizer.Infer(
                     request.Text,
                     request.Transliteration,
@@ -233,7 +233,7 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             MapInferredTokenClusters(inferredTranslationTokens, translationGlyphClusters);
         }
 
-        return new LyricTextLayoutSnapshot
+        var snapshot = new LyricTextLayoutSnapshot
         {
             Text = actualText,
             Tokens = tokens.ToArray(),
@@ -265,24 +265,11 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             TransliterationGlyphClusters = transliterationGlyphClusters,
             TranslationGlyphClusters = translationGlyphClusters
         };
+        snapshot.PrepareDirectDrawing(request.LineStartTime, request.LineEndTime);
+        return snapshot;
     }
 
-    private static bool ShouldInferWords(FocusedTextEffectDefinition? definition)
-    {
-        if (definition is null) return false;
-        foreach (var operation in definition.Operations)
-        {
-            if (operation.TypeId == HyPlayer.LyricEffects.Presets.FocusedTextBuiltInOperationTypes.HighlightReveal &&
-                operation.Options.TryGetValue("untimedMode", out var highlightMode) &&
-                highlightMode.Equals(nameof(UntimedHighlightMode.InferWords), StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (operation.TypeId == HyPlayer.LyricEffects.Presets.FocusedTextBuiltInOperationTypes.GlyphLift &&
-                operation.Options.TryGetValue("untimedMode", out var liftMode) &&
-                liftMode.Equals(nameof(UntimedLiftMode.InferWords), StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-        return false;
-    }
+
 
     private static long[] CreateTokenStartTimes(IReadOnlyList<LyricTextToken> tokens)
     {

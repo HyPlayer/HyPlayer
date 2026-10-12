@@ -19,12 +19,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
 public partial class TextRenderingLyricLine : RenderingLyricLine
 {
-    private const long ScaleAnimationDuration = 500;
-
-    private readonly CustomElasticEase _elasticEase = new() { Springiness = 6 };
     private readonly ILyricTextLayouter _layouter;
-    private readonly ITextProgressResolver _progressResolver;
-    private readonly ITextHighlightEffectRenderer _highlightEffectRenderer;
     private readonly FocusedLyricTextRenderer _focusedTextRenderer = new();
     private CanvasCommandList? _idleLineCache;
 
@@ -42,25 +37,21 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
     private bool _wasActive;
 
     public TextRenderingLyricLine()
-        : this(new Win2DLyricTextLayouter(), new DefaultTextProgressResolver(), new DefaultTokenScanEffectRenderer())
+        : this(new Win2DLyricTextLayouter())
     {
     }
 
     public TextRenderingLyricLine(
-        ILyricTextLayouter layouter,
-        ITextProgressResolver progressResolver,
-        ITextHighlightEffectRenderer highlightEffectRenderer)
+        ILyricTextLayouter layouter)
     {
+        ArgumentNullException.ThrowIfNull(layouter);
         _layouter = layouter;
-        _progressResolver = progressResolver;
-        _highlightEffectRenderer = highlightEffectRenderer;
     }
 
     public const float TextPadding = 16;
     public const float LiftAmount = 3;
 
     public string? Text { get; set; }
-    public override string ExpressionText => Text ?? string.Empty;
     public override bool IsTextLine => true;
     public List<LyricTextToken> Tokens { get; set; } = [];
     public string? Transliteration { get; set; }
@@ -71,52 +62,21 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
     protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
         if (_layout is null) return true;
-        session.DrawImage(_layout.StaticPersistCache, 0, 0, _layout.SizePixelRect, 1);
-
-        if (IsActive && context.EffectProfile is { } effectProfile)
-        {
-            _focusedTextRenderer.Render(
-                session,
-                _layout,
-                context,
-                effectProfile.FocusedText,
-                CurrentExpressionLine,
-                CurrentExpressionFrame);
-        }
-        else if (IsActive && (Tokens.Count > 0 || context.Effects.SimpleLineScanning))
-        {
-            var frame = _progressResolver.Resolve(context.CurrentLyricTime, StartTime, EndTime, _layout);
-            _highlightEffectRenderer.Render(session, _layout, frame, context);
-            if (_layout.DefaultTranslationPersistCache is not null)
-            {
-                session.DrawImage(
-                    _layout.DefaultTranslationPersistCache,
-                    0,
-                    _layout.TranslationRenderActualTop,
-                    _layout.SizePixelRect,
-                    1);
-            }
-        }
+        if (IsActive)
+            _focusedTextRenderer.Render(session, _layout, context);
         else
-        {
-            if (_layout.DefaultTransliterationPersistCache is not null)
-            {
-                session.DrawImage(_layout.DefaultTransliterationPersistCache, 0, 0, _layout.SizePixelRect, 1);
-            }
-
-            session.DrawImage(_layout.DefaultTextPersistCache, 0, _layout.TextRenderActualTop, _layout.SizePixelRect, 1);
-            if (_layout.DefaultTranslationPersistCache is not null)
-            {
-                session.DrawImage(
-                    _layout.DefaultTranslationPersistCache,
-                    0,
-                    _layout.TranslationRenderActualTop,
-                    _layout.SizePixelRect,
-                    1);
-            }
-        }
-
+            DrawIdle(session, _layout);
         return true;
+    }
+
+    private static void DrawIdle(CanvasDrawingSession session, LyricTextLayoutSnapshot layout)
+    {
+        session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
+        if (layout.DefaultTransliterationPersistCache is not null)
+            session.DrawImage(layout.DefaultTransliterationPersistCache, 0, 0, layout.SizePixelRect, 1);
+        session.DrawImage(layout.DefaultTextPersistCache, 0, layout.TextRenderActualTop, layout.SizePixelRect, 1);
+        if (layout.DefaultTranslationPersistCache is not null)
+            session.DrawImage(layout.DefaultTranslationPersistCache, 0, layout.TranslationRenderActualTop, layout.SizePixelRect, 1);
     }
 
     protected override bool TryGetStaticSourceImage(
@@ -138,13 +98,15 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
     protected override void OnRenderingChanged(bool rendering)
     {
         if (rendering) return;
+        ReleaseDrawingResources();
+        _focusedTextRenderer.Dispose();
         _idleLineCache?.Dispose();
         _idleLineCache = null;
     }
 
     protected override void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
     {
-        if (_wasActive && !IsActive) _focusedTextRenderer.ReleaseRasterCache();
+        if (_wasActive && !IsActive) _focusedTextRenderer.Dispose();
         _wasActive = IsActive;
         if (_canvasWidth == 0.0f) return;
         if (_layout is null)
@@ -166,7 +128,8 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
-        _focusedTextRenderer.ReleaseRasterCache();
+        ReleaseDrawingResources();
+        _focusedTextRenderer.Dispose();
         _idleLineCache?.Dispose();
         _idleLineCache = null;
         _cachedAlignment = TypographySelector(t => t?.Alignment, context)!.Value;
@@ -231,7 +194,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
 
     public override void Dispose()
     {
-        _focusedTextRenderer.ReleaseRasterCache();
+        _focusedTextRenderer.Dispose();
         _idleLineCache?.Dispose();
         _idleLineCache = null;
         _layout?.Dispose();

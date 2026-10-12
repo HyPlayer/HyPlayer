@@ -100,7 +100,7 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 | [HyPlayer.NeteaseProvider](https://github.com/HyPlayer/HyPlayer.NeteaseProvider) | 网易云音乐服务与 API；API 实现源自 [NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) | MIT |
 | [HyPlayer.PlayCore](https://github.com/HyPlayer/HyPlayer.PlayCore) | 播放核心及抽象 | MIT |
 | [HyPlayer.Frieren](https://github.com/HyPlayer/HyPlayer.Frieren) | UWP 控件、通知及辅助代码，部分代码源自 Windows Community Toolkit | MIT |
-| `HyPlayer.UWP.Chopin`、`HyPlayer.LyricEffects` | 本仓库中的播放实现与歌词特效项目 | GPL-3.0（本仓库） |
+| `HyPlayer.UWP.Chopin` | 本仓库中的播放实现项目 | GPL-3.0（本仓库） |
 | [Kawazu](https://github.com/HyPlayer/Kawazu)（源自 [Cutano/Kawazu](https://github.com/Cutano/Kawazu)） | 日文分词 | MIT |
 | [Impressionist](https://github.com/Storyteller-Studios/Impressionist) | 图像取色与量化 | MIT |
 | [ObservableCollections](https://github.com/Cysharp/ObservableCollections) | 高性能可观察集合；为适配 UWP XAML/CsWinRT，源码被单独提取到 [`ObservableCollections/`](ObservableCollections/)，加入了基于 `ObservableList<T>` 的 CommunityToolkit 增量加载实现，并在 `CoreCompile` 前生成 WinRT 闭合泛型暴露信息，**没有直接引用上游 NuGet 包或原程序集**。详见 [兼容性与修改说明](ObservableCollections-CsWinRT-Fix.md) | MIT |
@@ -117,7 +117,6 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 | [CommunityToolkit Labs UWP TitleBar](https://github.com/CommunityToolkit/Labs-Windows) | 0.1.251217-build.2433 | MIT |
 | [ComputeSharp](https://github.com/Sergio0694/ComputeSharp)（`ComputeSharp.D2D1.Uwp`） | 3.2.0 | MIT |
 | [Depository](https://github.com/kengwang/Depository)（含 Abstraction、DependencyInjection 扩展） | 4.0.1 | MIT |
-| [Dynamic Expresso](https://github.com/dynamicexpresso/DynamicExpresso) | 2.19.3 | MIT |
 | [StringSimilarity.NET](https://github.com/feature23/StringSimilarity.NET) | 7.0.1 | MIT |
 | [LibNMeCab](https://github.com/komutan/NMeCab) | 0.10.2 | GPL-2.0-or-later OR LGPL-2.1-or-later |
 | [LiteFM](https://github.com/Storyteller-Studios/LiteFM) | 1.0.3 | MIT |

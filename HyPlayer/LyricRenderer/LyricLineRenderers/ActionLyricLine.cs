@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
@@ -23,7 +23,6 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     public string Text { get; set; }
     public string ActionUri { get; set; }
-    public override string ExpressionText => Text ?? string.Empty;
 
 
     protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
@@ -49,6 +48,7 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
+        ReleaseDrawingResources();
         _textFormat?.Dispose();
         _textLayout?.Dispose();
         _staticPersistCache?.Dispose();

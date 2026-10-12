@@ -1,3 +1,27 @@
+# Lyric performance probes
+
+## Direct drawing
+
+`Measure-DirectLyricDrawing.ps1 -BaselineDirectory <managed-b649fb4c-output>` builds isolated
+before/after Win2D probes against already-built app assemblies. Build the product with
+VS/MSBuild first. Preserve the baseline app DLL and dependencies before rebuilding the checkout.
+The output directory is `artifacts/performance/lyrics-direct`.
+
+It measures actual Win2D command submission for timed words, long wrapped text, multiple
+lines, scrolling, and the retained line presets. Five fresh process pairs alternate order;
+each process warms 300 frames then measures 200 frames. The two appearances are SoftDepth
+and SoftLift in the default cases. Readback drains the GPU after measurement.
+
+`median_us` and `p95_us` are CPU submission times, not end-to-end compositor frame times.
+`bytes_per_frame` is thread-local managed allocation, `cpu_ms` is process CPU time, and
+`private_bytes` is process private memory, not VRAM. GPU/compositor pacing and VRAM require
+an application trace and are not inferred from these probes. See `DirectLyricDrawingResults.md`.
+
+## Historical glyph-layout probe
+
+The following results predate the removal of the expression pipeline. Its pruning probe
+has been removed along with that pipeline.
+
 # Lyric CPU component probe
 
 Run from a fresh PowerShell 7 process on Windows:
@@ -40,8 +64,7 @@ and other heavy workloads before collecting comparable measurements.
 
 `LyricGlyphBoundaryTests` checks both the exact read-count budget and equivalence
 against a full-scan oracle. Existing focused reveal/timeline tests cover rendering
-math. The lyric JSON path already uses `LyricEffectJsonContext`; this change does
-not require a new generator or reflection-based serialization.
+math. The old expression-profile JSON context has since been removed. Numeric settings now use the app source-generated context.
 
 Remaining candidates require separate measurement: wheel-event `IndexOf` scans,
 per-glyph profile dispatch, native glyph resource creation, feathered masks, and

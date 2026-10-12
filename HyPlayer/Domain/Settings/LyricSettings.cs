@@ -11,6 +11,13 @@ public partial class LyricSettings : SettingsBase
 {
     protected override string SectionName => "lyric";
 
+    /// <summary>Numeric render settings. Stored separately from legacy expression profiles.</summary>
+    public string DirectRenderSettingsJson
+    {
+        get => GetSettings(nameof(DirectRenderSettingsJson), string.Empty);
+        set => SetSettings(nameof(DirectRenderSettingsJson), value);
+    }
+
     public string LyricFontFamily
     {
         get => GetSettings(nameof(LyricFontFamily), "Microsoft YaHei UI");

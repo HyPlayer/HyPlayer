@@ -1,13 +1,11 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using HyPlayer.LyricRenderer.Abstraction.Render;
-using HyPlayer.LyricRenderer.Pipeline;
 using Microsoft.Graphics.Canvas;
 
 namespace HyPlayer.LyricRenderer.Abstraction;
 
 public class RenderContext
 {
-    internal CanvasCommandList? EmptyPipelineImage { get; set; }
 
     /// <summary>
     ///     是否正在播放
@@ -129,9 +127,9 @@ public class RenderContext
     public RenderEffects Effects { get; set; } = new();
 
     /// <summary>
-    ///     当前歌词特效配置的不可变编译快照。
+    ///     当前歌词的不可变数值设置快照。
     /// </summary>
-    public CompiledLyricEffectProfile? EffectProfile { get; set; }
+    public LyricRenderSettings Settings { get; set; } = LyricRenderSettings.Default;
 
 
     /// <summary>

@@ -102,7 +102,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
         try
         {
             await SimpleCacher.InitializeAsync();
-            await AppDepository.Resolve<ILyricEffectProfileService>().InitializeAsync();
+            await AppDepository.Resolve<ILyricRenderSettingsService>().InitializeAsync();
             var sf = await ApplicationData.Current.LocalFolder.TryGetItemAsync("Romaji");
             if (sf != null) AppDepository.Resolve<IKawazuStateService>().Converter = new KawazuConverter(sf.Path);
         }

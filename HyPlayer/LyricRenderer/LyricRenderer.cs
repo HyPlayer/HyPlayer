@@ -1,9 +1,8 @@
-﻿using HyPlayer.LyricRenderer.Abstraction;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using Microsoft.Graphics.Canvas;
-using HyPlayer.LyricRenderer.Pipeline;
 using Microsoft.Graphics.Canvas.UI;
 using System;
 using System.Collections.Generic;
@@ -59,7 +58,7 @@ namespace HyPlayer.LyricRenderer
                     _resourcesReleased = true;
                     while (_pendingMutations.TryDequeue(out var mutation)) mutation();
                     ClearCore();
-                    _pendingEffectProfile = null;
+                    _pendingSettings = null;
                 }
             }
         }
@@ -76,12 +75,14 @@ namespace HyPlayer.LyricRenderer
 
         private readonly CustomCircleEase _circleEase = new() { EasingMode = EasingMode.EaseOut };
 
-        private CompiledLyricEffectProfile? _pendingEffectProfile;
+        private LyricRenderSettings? _pendingSettings;
 
-        public void SetEffectProfile(CompiledLyricEffectProfile profile)
+        /// <summary>Queues immutable numeric settings for the next render frame.</summary>
+        /// <param name="settings">The line and highlight settings snapshots.</param>
+        public void SetRenderSettings(LyricRenderSettings settings)
         {
-            ArgumentNullException.ThrowIfNull(profile);
-            Interlocked.Exchange(ref _pendingEffectProfile, profile);
+            ArgumentNullException.ThrowIfNull(settings);
+            Interlocked.Exchange(ref _pendingSettings, settings);
         }
 
         private bool _pointerPressed;
@@ -284,8 +285,7 @@ namespace HyPlayer.LyricRenderer
                 line.Dispose();
             }
 
-            Context.EmptyPipelineImage?.Dispose();
-            Context.EmptyPipelineImage = null;
+
 
             Context.LyricLines.Clear();
             Context.RenderingLyricLines.Clear();
@@ -329,8 +329,8 @@ namespace HyPlayer.LyricRenderer
             _pendingKeyFrames.Add(time);
         }
 
-        private CanvasTransition _scrollTranslation = new CanvasTransition { 
-            Duration = TimeSpan.FromSeconds(0.15), 
+        private CanvasTransition _scrollTranslation = new CanvasTransition {
+            Duration = TimeSpan.FromSeconds(0.15),
             Easing = new CustomCircleEase { EasingMode = EasingMode.EaseOut } };
 
 
@@ -505,12 +505,13 @@ namespace HyPlayer.LyricRenderer
                 Context.RenderTick = timing.TotalTime.Ticks;
                 if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return;
                 OnBeforeRender?.Invoke(this);
-                if (Interlocked.Exchange(ref _pendingEffectProfile, null) is { } pendingProfile)
+                if (Interlocked.Exchange(ref _pendingSettings, null) is { } pendingSettings)
                 {
-                    Context.EffectProfile = pendingProfile;
-                    // InferWords 会改变布局中的 Word/Glyph 映射；预览或提交配置后必须重建快照。
-                    _isTypographyChanged = true;
-                    _needRecalculate = true;
+                    var inferChanged = Context.Settings.Focused.InferWords != pendingSettings.Focused.InferWords;
+                    Context.Settings = pendingSettings;
+                    // Only token inference changes the layout; numeric changes retain GPU resources.
+                    _isTypographyChanged |= inferChanged;
+                    _needRecalculate |= inferChanged;
                 }
                 // 鼠标滚轮时间 5 s 清零
                 if ((Context.ScrollingDelta != 0 || (Context.IsScrolling && !_pointerPressed)) &&

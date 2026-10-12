@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace HyPlayer.LyricRenderer.Animator.EaseFunctions;
 
@@ -8,7 +8,7 @@ public class CustomElasticEase : EaseFunctionBase
     public float Oscillations = 1;
 
     protected override double EaseInCore(double normalizedTime)
-        => HyPlayer.LyricEffects.Models.FocusedTextProgress.GetElasticProgress(
+        => HyPlayer.LyricRenderer.Text.FocusedTextProgress.GetElasticProgress(
             normalizedTime,
             Springiness,
             Oscillations);

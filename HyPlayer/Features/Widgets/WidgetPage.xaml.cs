@@ -48,8 +48,8 @@ public sealed partial class WidgetPage : Page
     private readonly AudioGraphPlayer _player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
     private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
 
-    private readonly ILyricEffectProfileService _lyricEffectProfiles =
-        Ioc.Default.GetRequiredService<ILyricEffectProfileService>();
+    private readonly ILyricRenderSettingsService _lyricRenderSettings =
+        Ioc.Default.GetRequiredService<ILyricRenderSettingsService>();
 
     private bool _eventsRegistered;
     private bool _windowClosedRegistered;
@@ -73,8 +73,8 @@ public sealed partial class WidgetPage : Page
             OnDetachAction = weakEventListener => { _control.SeekRequested -= weakEventListener.OnEvent; }
         };
         _gameBarSettings = new GameBarSettings(Dispatcher);
-        _lyricBox.SetEffectProfile(_lyricEffectProfiles.EffectiveProfile);
-        _lyricEffectProfiles.ProfileChanged += OnLyricEffectProfileChanged;
+        _lyricBox.SetRenderSettings(_lyricRenderSettings.Current);
+        _lyricRenderSettings.SettingsChanged += OnLyricEffectSettingsChanged;
         Instance = this;
         Window.Current.Closed += WidgetPage_Closed;
         _windowClosedRegistered = true;
@@ -190,7 +190,7 @@ public sealed partial class WidgetPage : Page
             Instance = null;
         DetachLyricEvents();
         _lyricBox.Clear();
-        _lyricEffectProfiles.ProfileChanged -= OnLyricEffectProfileChanged;
+        _lyricRenderSettings.SettingsChanged -= OnLyricEffectSettingsChanged;
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, LyricView.RemoveFromVisualTree);
     }
 
@@ -295,9 +295,9 @@ public sealed partial class WidgetPage : Page
         if (args.HotkeySetDown) _control.TogglePlayPause();
     }
 
-    private void OnLyricEffectProfileChanged(object? sender, LyricEffectProfileChangedEventArgs args)
+    private void OnLyricEffectSettingsChanged(object? sender, LyricRenderSettingsChangedEventArgs args)
     {
-        _lyricBox.SetEffectProfile(args.Profile);
+        _lyricBox.SetRenderSettings(args.Settings);
     }
 
     public void UpdateLyricViewSettings()

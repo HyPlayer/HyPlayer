@@ -91,8 +91,8 @@ public sealed partial class ExpandedPlayer : Page
     private readonly IAppLifecycleStateService _lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
     private readonly LyricRenderView _lyricBox = new();
 
-    private readonly ILyricEffectProfileService _lyricEffectProfiles =
-        Ioc.Default.GetRequiredService<ILyricEffectProfileService>();
+    private readonly ILyricRenderSettingsService _lyricRenderSettings =
+        Ioc.Default.GetRequiredService<ILyricRenderSettingsService>();
 
     private readonly LyricsLayer _lyricsLayer;
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
@@ -150,8 +150,8 @@ public sealed partial class ExpandedPlayer : Page
         InitializeComponent();
         _lyricBox.EnableRenderThreadUpdates();
         ViewModel = Ioc.Default.GetRequiredService<ExpandedPlayerViewModel>();
-        _lyricBox.SetEffectProfile(_lyricEffectProfiles.EffectiveProfile);
-        _lyricEffectProfiles.ProfileChanged += OnLyricEffectProfileChanged;
+        _lyricBox.SetRenderSettings(_lyricRenderSettings.Current);
+        _lyricRenderSettings.SettingsChanged += OnLyricEffectSettingsChanged;
         _canvasState.LyricBox = _lyricBox;
         SyncCanvasState();
         _isolationBackgroundLayer = new IsolationBackgroundLayer(_canvasState, _lyricSettings);
@@ -1285,9 +1285,9 @@ public sealed partial class ExpandedPlayer : Page
             _lyricBox.LyricView_PointerReleased(sender, e);
     }
 
-    private void OnLyricEffectProfileChanged(object? sender, LyricEffectProfileChangedEventArgs args)
+    private void OnLyricEffectSettingsChanged(object? sender, LyricRenderSettingsChangedEventArgs args)
     {
-        _lyricBox.SetEffectProfile(args.Profile);
+        _lyricBox.SetRenderSettings(args.Settings);
     }
 
     private void Page_Unloaded(object sender, RoutedEventArgs e)
@@ -1311,7 +1311,7 @@ public sealed partial class ExpandedPlayer : Page
         _surfaceStoreChangedListener.Detach();
         _seekRequestedListener.Detach();
         ViewModel.Dispose();
-        _lyricEffectProfiles.ProfileChanged -= OnLyricEffectProfileChanged;
+        _lyricRenderSettings.SettingsChanged -= OnLyricEffectSettingsChanged;
         Window.Current.SizeChanged -= Current_SizeChanged;
         _lyricBox.OnBeforeRender -= LyricBox_OnBeforeRender;
         _lyricBox.OnLyricLineClicked -= LyricBoxOnOnRequestSeek;

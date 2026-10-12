@@ -10,7 +10,7 @@ using HyPlayer.Features.Downloads.Services;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Services;
-using HyPlayer.LyricEffects.Models;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Widgets.Services;
@@ -46,14 +46,7 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(CommentUserInfo))]
     [JsonSerializable(typeof(LatestApplicationUpdate))]
     [JsonSerializable(typeof(GitHubReleaseResponse))]
-    [JsonSerializable(typeof(LyricEffectProfileDocument))]
-    [JsonSerializable(typeof(FocusedTextEffectDefinition))]
-    [JsonSerializable(typeof(FocusedTextOperationDefinition))]
-    [JsonSerializable(typeof(LyricRenderOperationDefinition))]
-    [JsonSerializable(typeof(LyricOperationParameterDefinition))]
-    [JsonSerializable(typeof(LyricTransitionDefinition))]
-    [JsonSerializable(typeof(List<LyricRenderOperationDefinition>))]
-    [JsonSerializable(typeof(List<FocusedTextOperationDefinition>))]
+    [JsonSerializable(typeof(LyricRenderSettings))]
     public partial class JsonDefaultContext : JsonSerializerContext
     {
     }

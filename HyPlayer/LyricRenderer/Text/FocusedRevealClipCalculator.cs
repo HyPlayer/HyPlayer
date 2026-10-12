@@ -1,4 +1,6 @@
-namespace HyPlayer.LyricEffects.Models;
+using System;
+using HyPlayer.LyricRenderer.Abstraction;
+namespace HyPlayer.LyricRenderer.Text;
 
 public readonly record struct FocusedEffectOutsets(float Left, float Top, float Right, float Bottom)
 {

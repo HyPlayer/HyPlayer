@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using Windows.Foundation;
 using Windows.UI.Xaml.Media.Animation;
@@ -121,6 +121,7 @@ public partial class ProgressBarRenderingLyricLine : RenderingLyricLine
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
+        ReleaseDrawingResources();
         OnRenderSizeChanged(session, context);
     }
 
