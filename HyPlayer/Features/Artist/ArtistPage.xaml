@@ -98,6 +98,7 @@
                         Margin="0,12,0,0"
                         FontSize="15"
                         Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                        ExpandedMaxHeight="280"
                         MaxLines="2"
                         Selectable="True"
                         Text="{x:Bind ViewModel.Artist.Description, Mode=OneWay}"

@@ -49,6 +49,7 @@ public sealed partial class Comments : Page
     private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _normalCommentsView;
     private Task _commentLoaderTask;
     private int _delayedUiVersion;
+    private DateTime _suppressHotSwitchUntil;
     private Task _hotCommentLoaderTask;
     private int _hotCommentsLoadVersion;
     private bool _isUnloaded;
@@ -266,25 +267,23 @@ public sealed partial class Comments : Page
         }
     }
 
-    private void ScrollTop()
+    private async void ScrollTop()
     {
         var delayedUiVersion = _delayedUiVersion;
-        var transform = AllCmtsTB.TransformToVisual(_mainScroll);
-        var point = transform.TransformPoint(new Point(0, -1000000)); //一定要这么大
-        var y = point.Y + _mainScroll.VerticalOffset;
-        _mainScroll.ChangeView(null, y, null, false);
-        var delay = TimeSpan.FromMilliseconds(320); //稍微等等再滚回去，免得回到热评区域
-        var delayTimer = ThreadPoolTimer.CreateTimer(
-            source =>
+        _suppressHotSwitchUntil = DateTime.UtcNow.AddSeconds(1.5);
+        _mainScroll?.ChangeView(null, 0, null, true);
+        if (_commentLoaderTask is { } loader)
+            try
             {
-                _ = this.RunOnUIThreadAsync(() =>
-                {
-                    if (!IsCurrentDelayedUi(delayedUiVersion)) return;
-                    point = transform.TransformPoint(new Point(0, 25)); //要超过判定区域，还要预留一点
-                    y = point.Y + _mainScroll.VerticalOffset;
-                    _mainScroll.ChangeView(null, y, null, false);
-                });
-            }, delay);
+                await loader;
+            }
+            catch
+            {
+            }
+
+        if (!IsCurrentDelayedUi(delayedUiVersion)) return;
+        _suppressHotSwitchUntil = DateTime.UtcNow.AddSeconds(1.5);
+        _mainScroll?.ChangeView(null, 0, null, true);
     }
 
     private void BackToTop_Click(object sender, RoutedEventArgs e)
@@ -300,6 +299,7 @@ public sealed partial class Comments : Page
         if ((sender?.As<ScrollViewer>()).VerticalOffset > y + 25)
             BackToTop.Visibility = Visibility.Visible;
         else BackToTop.Visibility = Visibility.Collapsed;
+        if (DateTime.UtcNow < _suppressHotSwitchUntil) return;
         if ((sender?.As<ScrollViewer>()).VerticalOffset < 15)
         {
             var delayedUiVersion = _delayedUiVersion;
@@ -310,7 +310,8 @@ public sealed partial class Comments : Page
                     _ = this.RunOnUIThreadAsync(() =>
                     {
                         if (!IsCurrentDelayedUi(delayedUiVersion)) return;
-                        if ((sender?.As<ScrollViewer>()).VerticalOffset < 15)
+                        if (DateTime.UtcNow >= _suppressHotSwitchUntil &&
+                            (sender?.As<ScrollViewer>()).VerticalOffset < 15)
                             ShiftCommentList(false); //回到热评
                     });
                 }, delay);

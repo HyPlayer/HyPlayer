@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Application.State;
+using HyPlayer.Domain.Navigation;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Services;
@@ -30,6 +31,7 @@ public partial class HomeViewModel : ObservableObject
     private readonly PlayCoreBase _playCore;
     private readonly IPlaybackControlService _control;
     private readonly INavigationService _navigation;
+    private readonly IAppNavigator _appNavigator;
     private readonly IUserLibraryStateService _userLibraryState;
     private List<SingleSongBase> _recommendedProviderSongs = [];
     private Task? _loadDataTask;
@@ -50,6 +52,7 @@ public partial class HomeViewModel : ObservableObject
         PlayCoreBase playCore,
         IPlaybackControlService control,
         INavigationService navigation,
+        IAppNavigator appNavigator,
         IUserLibraryStateService userLibraryState)
     {
         _itemProvider = itemProvider;
@@ -57,6 +60,7 @@ public partial class HomeViewModel : ObservableObject
         _playCore = playCore;
         _control = control;
         _navigation = navigation;
+        _appNavigator = appNavigator;
         _userLibraryState = userLibraryState;
     }
 
@@ -163,6 +167,12 @@ public partial class HomeViewModel : ObservableObject
     {
         if (_userLibraryState.LikedSongsPlaylist is { ActualId: { Length: > 0 } likedSongs })
             _navigation.Navigate(typeof(SongListDetail), likedSongs);
+    }
+
+    [RelayCommand]
+    private Task OnDailyRecommendClickedAsync()
+    {
+        return _appNavigator.NavigateAsync(new AppRoute.DailyRecommend());
     }
 
     [RelayCommand]

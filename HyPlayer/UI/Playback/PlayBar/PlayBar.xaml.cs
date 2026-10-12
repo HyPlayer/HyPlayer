@@ -116,6 +116,29 @@ DoubleAnimation verticalAnimation;
     {
         PlayItems = ViewModel.PlaylistItems.ToNotifyCollectionChanged();
         InitializeComponent();
+        SizeChanged += (_, _) => UpdateProgressClearance();
+        SongInfoTag.SizeChanged += (_, _) => UpdateProgressClearance();
+        SongInfoText.SizeChanged += (_, _) => UpdateProgressClearance();
+        PlayProgress.SizeChanged += (_, _) => UpdateProgressClearance();
+    }
+
+    private void UpdateProgressClearance()
+    {
+        if (!IsLoaded || SongInfoTag.ActualWidth <= 0 || PlayProgress.ActualWidth <= 0) return;
+        try
+        {
+            var tag = SongInfoTag.TransformToVisual(this)
+                .TransformBounds(new Windows.Foundation.Rect(0, 0, SongInfoTag.ActualWidth, SongInfoTag.ActualHeight));
+            var progress = PlayProgress.TransformToVisual(this)
+                .TransformBounds(new Windows.Foundation.Rect(0, 0, PlayProgress.ActualWidth, PlayProgress.ActualHeight));
+            var overlapsVertically = tag.Bottom > progress.Top && tag.Top < progress.Bottom;
+            var clearance = overlapsVertically ? Math.Max(0, tag.Right + 14 - progress.Left) : 0;
+            if (Math.Abs(PlayProgress.Padding.Left - clearance) > 0.5)
+                PlayProgress.Padding = new Thickness(clearance, 0, 0, 0);
+        }
+        catch
+        {
+        }
     }
 
     private void PlayBar_ActualThemeChanged(FrameworkElement sender, object args)
