@@ -1,5 +1,6 @@
 ﻿using HyPlayer.UWP.Chopin.Abstractions.Models;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces
@@ -8,7 +9,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces
     {
         double Volume { get; }
         Task InitializePlayer(IAudioSettings settings);
-        Task ConnectPlaybackSourceAsync(IPlaybackSource playbackSource, PlaybackOptions options);
+        Task ConnectPlaybackSourceAsync(IPlaybackSource playbackSource, PlaybackOptions options, CancellationToken cancellationToken = default);
         void DisconnectPlaybackSource(IPlaybackSource playbackSource);
         void RemoveAllPlaybackSource();
         void PlayAll();

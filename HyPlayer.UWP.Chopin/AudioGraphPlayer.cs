@@ -1146,9 +1146,10 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         #endregion
 
         #region Playback Source Management
-        public async Task ConnectPlaybackSourceAsync(IPlaybackSource playbackSource, PlaybackOptions options = null)
+        public async Task ConnectPlaybackSourceAsync(IPlaybackSource playbackSource, PlaybackOptions options = null, CancellationToken cancellationToken = default)
         {
             ThrowExceptionIfDisposed();
+            cancellationToken.ThrowIfCancellationRequested();
             options ??= new PlaybackOptions();
 
             // 验证播放源类型
@@ -1164,9 +1165,16 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             // 确保播放源已创建
             if (source.PlaybackSource == null)
                 await playbackSource.CreatePlaybackSource();
+            cancellationToken.ThrowIfCancellationRequested();
 
             // 创建音频输入节点
             var nodeResult = await _defaultPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                if (nodeResult.Node is { } abandoned) DisposeInBackground(abandoned);
+                throw new OperationCanceledException(cancellationToken);
+            }
+
             if (nodeResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
                 throw nodeResult.ExtendedError;
 

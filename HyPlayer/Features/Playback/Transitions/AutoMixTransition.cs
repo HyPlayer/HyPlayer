@@ -20,6 +20,7 @@ namespace HyPlayer.Features.Playback.Transitions;
 public sealed class AutoMixTransition : ITrackTransition, IDisposable
 {
     private static readonly TimeSpan _preloadLead = TimeSpan.FromSeconds(80);
+    private static readonly TimeSpan _seekMargin = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan _catchUpTime = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan _restoreTime = TimeSpan.FromMilliseconds(200);
     private static readonly TimeSpan _forcedHandBackTime = TimeSpan.FromMilliseconds(60);
@@ -176,6 +177,37 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         Interlocked.Increment(ref _epoch);
         Volatile.Write(ref _pending, null);
         await _fallback.OnTrackCompletedAsync(context, ct).ConfigureAwait(false);
+    }
+
+    public async Task OnSeekAsync(TrackTransitionContext context, TimeSpan target, CancellationToken ct)
+    {
+        if (Volatile.Read(ref _session) is { } session)
+        {
+            Interlocked.Increment(ref _epoch);
+            Volatile.Write(ref _pending, null);
+            await AbortAsync(session).ConfigureAwait(false);
+            _plan = null;
+            _planBlocked = false;
+            _blockedFor = null;
+            return;
+        }
+
+        if (_fallback.IsActive)
+        {
+            await _fallback.OnSeekAsync(context, target, ct).ConfigureAwait(false);
+            return;
+        }
+
+        if (target >= context.Duration - _preloadLead - _seekMargin)
+            return;
+
+        Interlocked.Increment(ref _epoch);
+        Volatile.Write(ref _pending, null);
+        await _preloader.DiscardAsync().ConfigureAwait(false);
+        _plan = null;
+        _plannedFor = null;
+        _analysisB = null;
+        _vocalsB = null;
     }
 
     public async Task CancelAsync(CancellationToken ct)

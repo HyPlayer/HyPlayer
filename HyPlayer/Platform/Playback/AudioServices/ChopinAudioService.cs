@@ -32,7 +32,6 @@ public sealed class ChopinAudioService :
     private readonly object _ticketSyncRoot = new();
     private ChopinAudioTicket? _lastPreparedTicket;
     private long _pendingFadeInTicks;
-    private int _connecting;
 
     public ChopinAudioService(IPlayer player, PlaybackSettings setting)
     {
@@ -43,8 +42,6 @@ public sealed class ChopinAudioService :
     public override string Id => "hyplayer.chopin";
 
     public double PlaybackSpeed { get; set; } = 1d;
-
-    public bool IsConnecting => Volatile.Read(ref _connecting) > 0;
 
     public override string Name => "HyPlayer Chopin AudioService";
 
@@ -161,7 +158,8 @@ public sealed class ChopinAudioService :
             musicResource,
             false,
             ctk: ctk).ConfigureAwait(false);
-        Volatile.Write(ref _lastPreparedTicket, ticket);
+        if (!ctk.IsCancellationRequested)
+            Volatile.Write(ref _lastPreparedTicket, ticket);
         return ticket;
     }
 
@@ -276,25 +274,16 @@ public sealed class ChopinAudioService :
                 await source.CreatePlaybackSource();
             }
 
-            Interlocked.Increment(ref _connecting);
-            try
+            ctk.ThrowIfCancellationRequested();
+            await _player.ConnectPlaybackSourceAsync(source, new PlaybackOptions
             {
-                ctk.ThrowIfCancellationRequested();
-
-                await _player.ConnectPlaybackSourceAsync(source, new PlaybackOptions
-                {
-                    AutoPlay = false,
-                    SetAsPrimarySource = setAsPrimarySource,
-                    Volume = targetVolume,
-                    AudioGain = audioGain,
-                    Speed = PlaybackSpeed,
-                    PreservePitch = !_setting.SpeedChangesPitch
-                });
-            }
-            finally
-            {
-                Interlocked.Decrement(ref _connecting);
-            }
+                AutoPlay = false,
+                SetAsPrimarySource = setAsPrimarySource,
+                Volume = targetVolume,
+                AudioGain = audioGain,
+                Speed = PlaybackSpeed,
+                PreservePitch = !_setting.SpeedChangesPitch
+            }, ctk);
 
             var ticket = new ChopinAudioTicket
             {

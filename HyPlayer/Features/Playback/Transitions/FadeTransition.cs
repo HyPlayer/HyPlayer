@@ -58,6 +58,7 @@ public sealed class FadeTransition : ITrackTransition
 
         ClearFading();
         var prepared = _preloader.Take();
+        _preloader.CancelLoading();
         if (prepared is not null)
         {
             PreparedPlaybackPromotion? promotion;
@@ -90,18 +91,29 @@ public sealed class FadeTransition : ITrackTransition
         await context.Host.AdvanceDirectAsync(context, ct).ConfigureAwait(false);
     }
 
+    public async Task OnSeekAsync(TrackTransitionContext context, TimeSpan target, CancellationToken ct)
+    {
+        await SettlePromotionAsync().ConfigureAwait(false);
+        RestoreFading();
+        if (target < context.Duration - context.CrossFadeDuration - _preloadLead)
+            await _preloader.DiscardAsync().ConfigureAwait(false);
+    }
+
     public async Task CancelAsync(CancellationToken ct)
     {
         await SettlePromotionAsync().ConfigureAwait(false);
-
-        if (_fadingSource is { } source && _fadingHost is { } host)
-        {
-            var volume = _fadingVolume;
-            ClearFading();
-            _ = host.RampVolumeAsync(source, volume, _restoreTime);
-        }
-
+        RestoreFading();
         await _preloader.DiscardAsync().ConfigureAwait(false);
+    }
+
+    private void RestoreFading()
+    {
+        if (_fadingSource is not { } source || _fadingHost is not { } host)
+            return;
+
+        var volume = _fadingVolume;
+        ClearFading();
+        _ = host.RampVolumeAsync(source, volume, _restoreTime);
     }
 
     private static async Task FadeInAsync(TrackTransitionContext context, TransitionPreparedTrack prepared)

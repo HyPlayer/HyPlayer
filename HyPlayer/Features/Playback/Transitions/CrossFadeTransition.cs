@@ -98,6 +98,7 @@ public sealed class CrossFadeTransition : ITrackTransition
         }
 
         var prepared = _preloader.Take();
+        _preloader.CancelLoading();
         if (prepared is not null)
         {
             PreparedPlaybackPromotion? promotion;
@@ -133,7 +134,26 @@ public sealed class CrossFadeTransition : ITrackTransition
         await context.Host.AdvanceDirectAsync(context, ct).ConfigureAwait(false);
     }
 
+    public async Task OnSeekAsync(TrackTransitionContext context, TimeSpan target, CancellationToken ct)
+    {
+        if (_fade is not null)
+        {
+            await StopFadeAsync().ConfigureAwait(false);
+            return;
+        }
+
+        await SettleAsync().ConfigureAwait(false);
+        if (target < context.Duration - context.CrossFadeDuration - _preloadLead)
+            await _preloader.DiscardAsync().ConfigureAwait(false);
+    }
+
     public async Task CancelAsync(CancellationToken ct)
+    {
+        await StopFadeAsync().ConfigureAwait(false);
+        await _preloader.DiscardAsync().ConfigureAwait(false);
+    }
+
+    private async Task StopFadeAsync()
     {
         if (_fade is { } fade)
         {
@@ -144,7 +164,6 @@ public sealed class CrossFadeTransition : ITrackTransition
         }
 
         await SettleAsync().ConfigureAwait(false);
-        await _preloader.DiscardAsync().ConfigureAwait(false);
     }
 
     private async Task BeginFadeAsync(TrackTransitionContext context, TimeSpan remaining, CancellationToken ct)
