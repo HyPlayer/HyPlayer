@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.UWP.Chopin.Dsp;
 using Windows.Storage;
 
 namespace HyPlayer.Features.Playback.AutoMix;
@@ -16,6 +17,21 @@ public static class AutoMixLog
         Pending.Enqueue($"{DateTime.Now:HH:mm:ss.fff} {message}");
         if (Interlocked.Exchange(ref _flushing, 1) == 1) return;
         _ = Task.Run(FlushAsync);
+    }
+
+    public static void WriteSummary(AutoMixEngine engine, MixPumpStats stats) => Write(Describe(engine, stats));
+
+    public static string Describe(AutoMixEngine engine, MixPumpStats stats)
+    {
+        var quantum = Math.Max(1, stats.QuantumFrames);
+        var starvedQuanta = (stats.StarvedFrames + quantum - 1) / quantum;
+        var starvedMs = stats.StarvedFrames * 1000.0 / Math.Max(1, stats.SampleRate);
+        var handOver = engine.HandOverCrossfaded ? "hand-over crossfade" : "no hand-over";
+        var handBack = engine.HandBackForced ? "hand-back forced"
+            : engine.HandBackCrossfaded ? FormattableString.Invariant($"hand-back crossfade (measured {engine.HandBackMeasured:0} frames off, {engine.HandBackChases} chases)")
+            : "no hand-back";
+        return FormattableString.Invariant(
+            $"mix thread: {engine.Stage}, {handOver}, {handBack}, starved {starvedQuanta} quanta ({starvedMs:0.0} ms), below low-water {stats.LowWaterWakes} of {stats.Wakes} wake-ups (empty {stats.EmptyWakes}), lead min {stats.MinLeadMs:0} ms / median {stats.MedianLeadMs:0} ms, longest wake gap {stats.MaxWakeGapMs:0.0} ms, audio-thread callbacks {stats.AudioThreadCallbacks}{(stats.Failed ? ", sink failed" : "")}");
     }
 
     private static async Task FlushAsync()

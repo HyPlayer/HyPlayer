@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using HyPlayer.UWP.Chopin.Utils;
 using Windows.Media;
@@ -6,11 +7,6 @@ using Windows.Media.Audio;
 
 namespace HyPlayer.UWP.Chopin.Dsp
 {
-    public interface IMixRenderSource
-    {
-        void Render(Span<float> interleavedStereo, int frames);
-    }
-
     internal sealed class CallbackGate
     {
         private int _active;
@@ -37,18 +33,33 @@ namespace HyPlayer.UWP.Chopin.Dsp
         }
     }
 
+    internal static class AudioThreadCallbacks
+    {
+        private static long _count;
+
+        public static long Count => Interlocked.Read(ref _count);
+
+        public static void Mark() => Interlocked.Increment(ref _count);
+    }
+
     public sealed class PlaybackTap
     {
         private readonly float[] _ring;
         private readonly int _capacityFrames;
         private long _totalFrames;
         private readonly Lock _lock = new();
+        private readonly Action<PlaybackTap> _pull;
 
-        internal PlaybackTap(AudioFrameOutputNode node, int sampleRate, double seconds)
+        public PlaybackTap(int sampleRate, double seconds, Action<PlaybackTap> pull = null)
+        {
+            _capacityFrames = Math.Max(1, (int)(sampleRate * seconds));
+            _ring = new float[_capacityFrames * 2];
+            _pull = pull;
+        }
+
+        internal PlaybackTap(AudioFrameOutputNode node, int sampleRate, double seconds) : this(sampleRate, seconds)
         {
             Node = node;
-            _capacityFrames = (int)(sampleRate * seconds);
-            _ring = new float[_capacityFrames * 2];
         }
 
         internal AudioFrameOutputNode Node { get; }
@@ -62,12 +73,18 @@ namespace HyPlayer.UWP.Chopin.Dsp
             }
         }
 
-        internal void Pull()
+        public bool Pull()
         {
-            if (!Gate.TryEnter()) return;
+            if (!Gate.TryEnter()) return false;
             try
             {
-                PullCore();
+                if (Node != null) PullCore();
+                else _pull?.Invoke(this);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
             finally
             {
@@ -83,15 +100,19 @@ namespace HyPlayer.UWP.Chopin.Dsp
             reference.GetBuffer(out var bytes, out _);
             var data = (float*)bytes;
             var samples = (int)(buffer.Length / 4);
-            var span = new ReadOnlySpan<float>(data, samples);
+            Append(new ReadOnlySpan<float>(data, samples));
+        }
+
+        public void Append(ReadOnlySpan<float> interleavedStereo)
+        {
             lock (_lock)
             {
-                var frames = samples / 2;
+                var frames = interleavedStereo.Length / 2;
                 for (var i = 0; i < frames; i++)
                 {
                     var slot = (int)((_totalFrames + i) % _capacityFrames) * 2;
-                    _ring[slot] = span[i * 2];
-                    _ring[slot + 1] = span[i * 2 + 1];
+                    _ring[slot] = interleavedStereo[i * 2];
+                    _ring[slot + 1] = interleavedStereo[i * 2 + 1];
                 }
                 _totalFrames += frames;
             }
@@ -114,68 +135,119 @@ namespace HyPlayer.UWP.Chopin.Dsp
         }
     }
 
-    public sealed class MixRenderer
+    public sealed class MixRenderer : IMixSink
     {
-        private readonly IMixRenderSource _source;
-        private readonly CallbackGate _gate = new();
-        private float[] _scratch = new float[4096];
+        private const int WakeMilliseconds = 5;
+        private const int JoinMilliseconds = 2000;
+        private readonly AudioGraph _graph;
+        private readonly IMixPumpSource _source;
+        private readonly MixPump _pump;
+        private readonly Thread _thread;
+        private readonly PreciseWait _wait = new();
+        private readonly int _quantum;
+        private readonly long _callbacksAtStart = AudioThreadCallbacks.Count;
+        private volatile bool _stop;
+        private int _state;
+        private int _unit = 1;
 
-        internal MixRenderer(AudioFrameInputNode node, AudioSubmixNode bus, IMixRenderSource source)
+        internal MixRenderer(AudioGraph graph, AudioFrameInputNode node, AudioSubmixNode bus, IMixPumpSource source)
         {
+            _graph = graph;
             Node = node;
             Bus = bus;
             _source = source;
-            node.QuantumStarted += OnQuantumStarted;
+            _quantum = Math.Max(1, graph.SamplesPerQuantum);
+            _pump = new MixPump(this, source, (int)graph.EncodingProperties.SampleRate);
+            _thread = new Thread(Run)
+            {
+                IsBackground = true,
+                Priority = ThreadPriority.AboveNormal,
+                Name = "AutoMix render"
+            };
         }
 
         internal AudioFrameInputNode Node { get; }
         internal AudioSubmixNode Bus { get; }
 
-        public long RenderedFrames { get; private set; }
+        public MixPumpStats Stats => _pump.Snapshot() with { AudioThreadCallbacks = AudioThreadCallbacks.Count - _callbacksAtStart };
 
-        private void OnQuantumStarted(AudioFrameInputNode sender, FrameInputNodeQuantumStartedEventArgs args)
-        {
-            if (!_gate.TryEnter()) return;
-            try
-            {
-                RenderQuantum(sender, args.RequiredSamples);
-            }
-            finally
-            {
-                _gate.Exit();
-            }
-        }
+        int IMixSink.QuantumFrames => _quantum;
+        long IMixSink.QueuedFrames => (long)Node.QueuedSampleCount / _unit;
+        long IMixSink.ClockFrames => (long)_graph.CompletedQuantumCount * _quantum;
 
-        private unsafe void RenderQuantum(AudioFrameInputNode sender, int frames)
+        unsafe void IMixSink.Write(ReadOnlySpan<float> interleavedStereo)
         {
-            if (frames <= 0) return;
-            var samples = frames * 2;
-            if (_scratch.Length < samples) _scratch = new float[samples * 2];
-            var span = new Span<float>(_scratch, 0, samples);
-            span.Clear();
-            try
-            {
-                _source.Render(span, frames);
-            }
-            catch
-            {
-                span.Clear();
-            }
-            using var frame = new AudioFrame((uint)(samples * 4));
+            using var frame = new AudioFrame((uint)(interleavedStereo.Length * 4));
             using (var buffer = frame.LockBuffer(AudioBufferAccessMode.Write))
             using (var reference = buffer.CreateReference())
             {
                 reference.GetBuffer(out var bytes, out _);
-                span.CopyTo(new Span<float>((float*)bytes, samples));
+                interleavedStereo.CopyTo(new Span<float>((float*)bytes, interleavedStereo.Length));
             }
-            sender.AddFrame(frame);
-            RenderedFrames += frames;
+
+            Node.AddFrame(frame);
         }
 
-        internal void Detach()
+        void IMixSink.Discard() => Node.DiscardQueuedFrames();
+
+        internal void Start()
         {
-            _gate.CloseAndDrain();
-            Node.QuantumStarted -= OnQuantumStarted;
+            if (Interlocked.CompareExchange(ref _state, 1, 0) != 0) return;
+            _thread.Start();
+        }
+
+        private void Run()
+        {
+            try
+            {
+                var clock = Stopwatch.StartNew();
+                _pump.Step(clock.Elapsed.TotalMilliseconds);
+                try
+                {
+                    var written = _pump.WrittenFrames;
+                    if (written > 0 && (long)Node.QueuedSampleCount >= written * 2) _unit = 2;
+                    Node.Start();
+                }
+                catch
+                {
+                }
+
+                while (!_stop)
+                {
+                    _wait.Wait(WakeMilliseconds);
+                    if (_stop) break;
+                    _pump.Step(clock.Elapsed.TotalMilliseconds);
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        internal void Shutdown(bool failed)
+        {
+            var previous = Interlocked.Exchange(ref _state, 2);
+            if (previous == 2) return;
+            _stop = true;
+            var own = ReferenceEquals(Thread.CurrentThread, _thread);
+            var joined = previous == 0 || !own && _thread.Join(JoinMilliseconds);
+            if (joined) _wait.Dispose();
+            try
+            {
+                Node.DiscardQueuedFrames();
+            }
+            catch
+            {
+            }
+
+            if (!failed) return;
+            try
+            {
+                _source.Fail();
+            }
+            catch
+            {
+            }
         }
     }
 }

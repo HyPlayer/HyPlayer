@@ -46,8 +46,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private readonly List<PlaybackTap> _taps = new();
         private readonly Dictionary<PlaybackTap, AudioGraphPlaybackSource> _tapSources = new();
         private readonly List<MixRenderer> _renderers = new();
-        private readonly List<Action> _quantumHooks = new();
-        private long _quantumIndex;
         private readonly object _callbackLock = new();
         private AudioGraph _callbackGraph;
         private AudioFrameOutputNode _runningFrameOutput;
@@ -76,9 +74,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public bool PlayerCreated => _defaultPlayer != null;
         public double Volume => _volume;
         public uint SampleRate => _defaultPlayer?.EncodingProperties.SampleRate ?? 0;
-        public long QuantumIndex => Interlocked.Read(ref _quantumIndex);
         public int SamplesPerQuantum => _defaultPlayer?.SamplesPerQuantum ?? 0;
-        public bool RealtimeCallbacksActive => Volatile.Read(ref _callbackGraph) != null;
+        public bool RealtimeCallbacksActive => Volatile.Read(ref _callbackGraph) != null || MixWorkActive();
 
         public bool IsMuted
         {
@@ -254,33 +251,16 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private void GraphOnQuantumStarted(AudioGraph sender, object args)
         {
             if (!_callbackGate.TryEnter()) return;
+            AudioThreadCallbacks.Mark();
             _inGraphCallback = true;
             try
             {
-                Interlocked.Increment(ref _quantumIndex);
                 AdvanceRamps(sender);
-                RunQuantumHooks();
             }
             finally
             {
                 _inGraphCallback = false;
                 _callbackGate.Exit();
-            }
-        }
-
-        private void RunQuantumHooks()
-        {
-            Action[] hooks;
-            lock (_quantumHooks) hooks = _quantumHooks.Count == 0 ? Array.Empty<Action>() : _quantumHooks.ToArray();
-            foreach (var hook in hooks)
-            {
-                try
-                {
-                    hook();
-                }
-                catch
-                {
-                }
             }
         }
 
@@ -323,13 +303,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         private bool CallbacksNeeded() => _enableFftProcessing || TransientCallbacksNeeded();
 
-        private bool TransientCallbacksNeeded()
+        private bool TransientCallbacksNeeded() => Volatile.Read(ref _activeRampCount) > 0;
+
+        private bool MixWorkActive()
         {
             lock (_taps)
                 if (_taps.Count > 0) return true;
-            lock (_quantumHooks)
-                if (_quantumHooks.Count > 0) return true;
-            return Volatile.Read(ref _activeRampCount) > 0;
+            lock (_renderers) return _renderers.Count > 0;
         }
 
         private void RefreshCallbacks()
@@ -344,7 +324,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             {
                 var graph = _defaultPlayer;
                 var needed = graph != null && CallbacksNeeded();
-                RealtimeGcGuard.Set(graph != null && TransientCallbacksNeeded());
+                RealtimeGcGuard.Set(graph != null && (TransientCallbacksNeeded() || MixWorkActive()));
                 var target = needed ? graph : null;
                 if (ReferenceEquals(target, _callbackGraph)
                     && ReferenceEquals(_runningFrameOutput, needed ? _frameOutputNode : null))
@@ -375,18 +355,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 target.QuantumProcessed += GraphOnQuantumProcessed;
                 _callbackGraph = target;
             }
-        }
-
-        public void AddQuantumHook(Action hook)
-        {
-            lock (_quantumHooks) _quantumHooks.Add(hook);
-            RefreshCallbacks();
-        }
-
-        public void RemoveQuantumHook(Action hook)
-        {
-            lock (_quantumHooks) _quantumHooks.Remove(hook);
-            RefreshCallbacks();
         }
 
         public PlaybackTap AttachTap(IPlaybackSource playbackSource, double seconds = 4)
@@ -441,19 +409,22 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             foreach (var tap in orphanTaps) DetachTap(source, tap);
         }
 
-        public MixRenderer CreateMixRenderer(IMixRenderSource source)
+        public MixRenderer CreateMixRenderer(IMixPumpSource source)
         {
             ThrowExceptionIfDisposed();
-            var properties = Windows.Media.MediaProperties.AudioEncodingProperties.CreatePcm(_defaultPlayer.EncodingProperties.SampleRate, 2, 32);
+            var graph = _defaultPlayer;
+            var properties = Windows.Media.MediaProperties.AudioEncodingProperties.CreatePcm(graph.EncodingProperties.SampleRate, 2, 32);
             properties.Subtype = Windows.Media.MediaProperties.MediaEncodingSubtypes.Float;
-            var node = _defaultPlayer.CreateFrameInputNode(properties);
-            var bus = _defaultPlayer.CreateSubmixNode();
+            var node = graph.CreateFrameInputNode(properties);
+            node.Stop();
+            var bus = graph.CreateSubmixNode();
             bus.AddOutgoingConnection(_outputNode);
             bus.AddOutgoingConnection(_frameOutputNode);
             node.AddOutgoingConnection(bus);
-            var renderer = new MixRenderer(node, bus, source);
+            var renderer = new MixRenderer(graph, node, bus, source);
             lock (_renderers) _renderers.Add(renderer);
-            node.Start();
+            RefreshCallbacks();
+            renderer.Start();
             return renderer;
         }
 
@@ -461,7 +432,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         {
             if (renderer == null) return;
             lock (_renderers) _renderers.Remove(renderer);
-            renderer.Detach();
+            renderer.Shutdown(false);
+            RefreshCallbacks();
             try
             {
                 renderer.Node.Stop();
@@ -516,6 +488,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private void GraphOnQuantumProcessed(AudioGraph sender, object args)
         {
             if (!_callbackGate.TryEnter()) return;
+            AudioThreadCallbacks.Mark();
             _inGraphCallback = true;
             try
             {
@@ -530,19 +503,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         private void ProcessQuantumEnd()
         {
-            PlaybackTap[] taps;
-            lock (_taps) taps = _taps.Count == 0 ? Array.Empty<PlaybackTap>() : _taps.ToArray();
-            foreach (var tap in taps)
-            {
-                try
-                {
-                    tap.Pull();
-                }
-                catch
-                {
-                }
-            }
-
             using var frame = _frameOutputNode.GetFrame();
             if (!EnableFFTProcessing) return;
             try
@@ -679,7 +639,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                         _tapSources.Clear();
                     }
 
-                    lock (_renderers) _renderers.Clear();
+                    ShutdownMixRenderers(true);
                     RefreshCallbacks();
 
                     _currentDeviceId = audioGraphSetting.ResolvedDeviceId;
@@ -737,6 +697,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
             var player = _defaultPlayer;
             CancelAllRamps();
+            ShutdownMixRenderers(false);
             DetachCallbacks();
             RealtimeGcGuard.Set(false);
             foreach (var corrector in _pitchCorrectors.Values) corrector.Dispose();
@@ -763,6 +724,18 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             _primaryPlaybackSource = null;
             player?.Dispose();
             _disposedValue = true;
+        }
+
+        private void ShutdownMixRenderers(bool failed)
+        {
+            MixRenderer[] stale;
+            lock (_renderers)
+            {
+                stale = _renderers.ToArray();
+                _renderers.Clear();
+            }
+
+            foreach (var renderer in stale) renderer.Shutdown(failed);
         }
 
         private void DetachCallbacks()

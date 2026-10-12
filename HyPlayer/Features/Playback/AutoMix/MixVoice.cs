@@ -68,7 +68,7 @@ public sealed class MixVoice : IDisposable
         Rate = 1;
     }
 
-    public void Render(Span<float> mix, int frames, int rampFrames)
+    public void Render(Span<float> mix, int frames, ReadOnlySpan<float> envelope = default)
     {
         if (frames <= 0) return;
         EnsureCapacity(frames);
@@ -124,31 +124,15 @@ public sealed class MixVoice : IDisposable
 
         var startGain = _gain;
         var endGain = TargetGain;
+        var shaped = envelope.Length >= frames;
         for (var i = 0; i < frames; i++)
         {
-            var t = rampFrames > 0 && i < rampFrames ? (i + 1) / (double)rampFrames : 1;
             var g = startGain + (endGain - startGain) * Math.Min(1, (i + 1) / (double)frames);
-            if (rampFrames > 0) g *= t;
+            if (shaped) g *= envelope[i];
             mix[i * 2] += (float)(dry[i * 2] * g);
             mix[i * 2 + 1] += (float)(dry[i * 2 + 1] * g);
         }
         _gain = endGain;
-    }
-
-    public void RenderRampOut(Span<float> mix, int frames, int rampFrames)
-    {
-        EnsureCapacity(frames);
-        var dry = new Span<float>(_raw, 0, frames * 2);
-        ReadRaw(dry, frames, ContentIndex);
-        for (var i = 0; i < Math.Min(frames, rampFrames); i++)
-        {
-            var g = _gain * (1 - (i + 1) / (double)rampFrames);
-            mix[i * 2] += (float)(dry[i * 2] * g);
-            mix[i * 2 + 1] += (float)(dry[i * 2 + 1] * g);
-        }
-        ContentIndex += frames;
-        _gain = 0;
-        TargetGain = 0;
     }
 
     private void ReadRaw(Span<float> destination, int frames, double index)

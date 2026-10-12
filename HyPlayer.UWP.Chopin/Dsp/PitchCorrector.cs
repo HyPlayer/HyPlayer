@@ -34,6 +34,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
         private void OnQuantumStarted(AudioFrameInputNode sender, FrameInputNodeQuantumStartedEventArgs args)
         {
             if (!_gate.TryEnter()) return;
+            AudioThreadCallbacks.Mark();
             try
             {
                 Process(sender, args.RequiredSamples);

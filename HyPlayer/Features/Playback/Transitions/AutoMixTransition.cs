@@ -544,7 +544,6 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             graph.SetPlaybackSourceOutputVolume(0, incoming);
             graph.SeekPlaybackSource(TimeSpan.FromSeconds(plan.BEntry), incoming);
             renderer = graph.CreateMixRenderer(engine);
-            Action hook = engine.OnQuantum;
             var session = new MixSession
             {
                 Host = context.Host,
@@ -554,8 +553,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
                 Prepared = pending.Prepared,
                 RegionA = pending.RegionA,
                 RegionB = pending.RegionB,
-                Renderer = renderer,
-                Hook = hook
+                Renderer = renderer
             };
             session.GraphRebuilt = engine.RequestAbort;
             timer = new Timer(
@@ -565,7 +563,6 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
                 200);
             session.Timer = timer;
             _preloader.Take();
-            graph.AddQuantumHook(hook);
             graph.OnGraphRebuilt += session.GraphRebuilt;
             Volatile.Write(ref _session, session);
             var rate = (double)pending.RegionA.SampleRate;
@@ -862,8 +859,8 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
 
         var graph = Graph;
         var engine = session.Engine;
+        AutoMixLog.WriteSummary(engine, session.Renderer.Stats);
         session.Timer?.Dispose();
-        graph.RemoveQuantumHook(session.Hook);
         if (session.GraphRebuilt is { } rebuilt)
             graph.OnGraphRebuilt -= rebuilt;
         if (engine.TapA is { } tapA)
@@ -1068,7 +1065,6 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         public required MixRegion RegionA { get; init; }
         public required MixRegion RegionB { get; init; }
         public required MixRenderer Renderer { get; init; }
-        public required Action Hook { get; init; }
         public Action? GraphRebuilt;
         public Timer? Timer;
         public PreparedPlaybackPromotion? Promotion;
