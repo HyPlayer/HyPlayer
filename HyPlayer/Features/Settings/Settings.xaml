@@ -1208,6 +1208,7 @@
                                                     <DataTemplate x:DataType="shellNavigation:SidebarSection">
                                                         <Border
                                                             Padding="12,8"
+                                                            AutomationProperties.Name="{x:Bind Name}"
                                                             Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
                                                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                                             BorderThickness="1"
@@ -1232,6 +1233,7 @@
                                                                     <ToggleSwitch
                                                                         Grid.Column="2"
                                                                         MinWidth="0"
+                                                                        AutomationProperties.Name="{x:Bind Name}"
                                                                         IsOn="{x:Bind IsVisible, Mode=TwoWay}"
                                                                         OffContent=""
                                                                         OnContent="" />
@@ -1252,7 +1254,7 @@
                                                                     </ListView.ItemContainerStyle>
                                                                     <ListView.ItemTemplate>
                                                                         <DataTemplate x:DataType="shellNavigation:SidebarEntry">
-                                                                            <Grid ColumnSpacing="12">
+                                                                            <Grid AutomationProperties.Name="{x:Bind Name}" ColumnSpacing="12">
                                                                                 <Grid.ColumnDefinitions>
                                                                                     <ColumnDefinition Width="Auto" />
                                                                                     <ColumnDefinition Width="*" />
@@ -1270,6 +1272,7 @@
                                                                                 <CheckBox
                                                                                     Grid.Column="2"
                                                                                     MinWidth="0"
+                                                                                    AutomationProperties.Name="{x:Bind Name}"
                                                                                     IsChecked="{x:Bind IsVisible, Mode=TwoWay}" />
                                                                             </Grid>
                                                                         </DataTemplate>

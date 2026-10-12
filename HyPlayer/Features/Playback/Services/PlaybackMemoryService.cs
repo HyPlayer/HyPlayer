@@ -11,6 +11,7 @@ using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.History.Services;
+using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Serialization;
 using HyPlayer.Platform.Storage;
 using HyPlayer.PlayCore.Abstraction;
@@ -42,6 +43,9 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
     private readonly PlaybackStateService _state;
     private bool _initialized;
     private int _lastSavedPositionBucket = -1;
+    private PlaybackItemIdentity? _qualityItem;
+    private string? _qualityRequest;
+    private string? _qualityTag;
     private bool _restoring;
     private CancellationTokenSource? _saveDebounceCts;
 
@@ -178,6 +182,13 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
 
         await _control.LoadAndPlayAsync(currentSong, false, false).ConfigureAwait(false);
         await _playCore.MovePointerToIndexAsync(index).ConfigureAwait(false);
+        if (GetRestorableQualityTag(memory, currentSong, _playbackSettings.AudioRate) is { } qualityTag)
+        {
+            _qualityItem = memory.CurrentItem;
+            _qualityTag = qualityTag;
+            _qualityRequest = memory.QualityRequest;
+            _state.QualityTag = qualityTag;
+        }
 
         var restorePosition = _playbackSettings.RememberPlaybackPosition
             ? GetRestorePosition(memory.PositionMilliseconds, currentSong.Duration)
@@ -273,6 +284,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
         var currentIndex = _state.NowPlayingIndex >= 0
             ? _state.NowPlayingIndex
             : await _playCore.GetCurrentIndexAsync().ConfigureAwait(false);
+        var rememberQuality = RefreshRememberedQuality(currentItem);
         var state = new PlaybackMemoryState(
             StateVersion,
             string.IsNullOrWhiteSpace(_playCore.PlaySourceId) ? null : _playCore.PlaySourceId,
@@ -283,9 +295,40 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
             currentIndex,
             Math.Max(0, (long)_state.Position.TotalMilliseconds),
             string.IsNullOrWhiteSpace(_state.ActiveStrategyId) ? null : _state.ActiveStrategyId,
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            rememberQuality ? _qualityTag : null,
+            rememberQuality ? _qualityRequest : null);
 
         await WriteStateAsync(state).ConfigureAwait(false);
+    }
+
+    private bool RefreshRememberedQuality(SingleSongBase? currentItem)
+    {
+        if (currentItem is null)
+            return false;
+
+        if (_playCore.CurrentPlayingTicket?.MusicResource is NeteaseMediaResource { Level: { Length: > 0 } level } resource
+            && Matches(currentItem, CreateIdentity(resource.Song)))
+        {
+            _qualityItem = CreateIdentity(resource.Song);
+            _qualityTag = level;
+            _qualityRequest = resource.RequestedLevel;
+        }
+
+        return _qualityItem is not null && Matches(currentItem, _qualityItem);
+    }
+
+    internal static string? GetRestorableQualityTag(
+        PlaybackMemoryState memory,
+        SingleSongBase currentSong,
+        string audioRate)
+    {
+        return !string.IsNullOrEmpty(memory.QualityTag)
+               && memory.CurrentItem is { } rememberedItem
+               && Matches(currentSong, rememberedItem)
+               && string.Equals(memory.QualityRequest, audioRate, StringComparison.Ordinal)
+            ? memory.QualityTag
+            : null;
     }
 
     private async Task WriteStateAsync(PlaybackMemoryState state)

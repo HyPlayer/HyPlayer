@@ -654,9 +654,14 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         _audioService.SetAudioGainEnabled(enabled);
     }
 
+    internal static double NormalizePlaybackSpeed(double speed)
+    {
+        return Math.Round(Math.Clamp(speed, 0.5, 2.0), 1);
+    }
+
     public void SetPlaybackSpeed(double speed)
     {
-        speed = Math.Round(Math.Clamp(speed, 0.5, 2.0), 1);
+        speed = NormalizePlaybackSpeed(speed);
         _state.PlaybackSpeed = speed;
         _audioService.PlaybackSpeed = speed;
         if (_player.PrimaryPlaybackSource is not { } source)
@@ -949,6 +954,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 await _playCore.SeekAsync((long)target.TotalMilliseconds);
                 if (reload)
                     CaptureCurrentPlaybackIdentity();
+                else if (_playCore.CurrentPlayingTicket is not null)
+                    PublishQualityTag();
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -1467,6 +1474,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             ? ticket.PlaybackSource
             : _player.PrimaryPlaybackSource;
         _playbackGeneration++;
+        PublishQualityTag();
+    }
+
+    private void PublishQualityTag()
+    {
         _state.QualityTag = _playCore.CurrentPlayingTicket?.MusicResource is NeteaseMusicResource { Level: { } level }
             ? level
             : string.Empty;
@@ -1528,8 +1540,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 return;
             }
 
-            var failuresObserved = 1;
-            while (failuresObserved < queue.Count)
+            var skipLimit = new PlaybackFailureSkipLimit(queue.Count);
+            while (skipLimit.CanSkip(queue.Count))
             {
                 await MoveNextAndPlayAsync(false, false).ConfigureAwait(false);
 
@@ -1544,7 +1556,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                     return;
                 }
 
-                failuresObserved++;
+                skipLimit.RecordFailure();
                 queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
                 if (queue.Count == 0)
                 {

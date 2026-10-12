@@ -46,7 +46,9 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
         if (resolved is null)
             return;
 
-        await prefetcher.PrefetchAsync(song, CreateResource(song, resolved), ct).ConfigureAwait(false);
+        await prefetcher
+            .PrefetchAsync(song, CreateResource(song, resolved, _playbackSettings.AudioRate), ct)
+            .ConfigureAwait(false);
     }
 
     public bool IsTransferring(SingleSongBase song)
@@ -89,7 +91,9 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
         }
 
         return resolved is null
-               || await transfers.IsCachedAsync(song, CreateResource(song, resolved), ct).ConfigureAwait(false);
+               || await transfers
+                   .IsCachedAsync(song, CreateResource(song, resolved, _playbackSettings.AudioRate), ct)
+                   .ConfigureAwait(false);
     }
 
     public async Task<IRandomAccessStream?> OpenLocalAudioAsync(SingleSongBase song, CancellationToken ct)
@@ -114,7 +118,7 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
             return null;
 
         var cached = await transfers
-            .FindCachedFileAsync(song, CreateResource(song, resolved), ct)
+            .FindCachedFileAsync(song, CreateResource(song, resolved, _playbackSettings.AudioRate), ct)
             .ConfigureAwait(false);
         return cached is null ? null : await cached.OpenReadAsync();
     }
@@ -158,12 +162,15 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
             && await DownloadedTrackIndex.TryGetAsync(NeteaseTrack.IdOf(song)).ConfigureAwait(false) is { } downloaded)
             return new LocalFileMediaResource(song, downloaded);
 
+        var requestedLevel = qualityTag is NeteaseMusicQualityTag tag && !string.IsNullOrWhiteSpace(tag.Quality)
+            ? tag.Quality
+            : _playbackSettings.AudioRate;
         ResolvedSongUrl? resolved;
         try
         {
-            resolved = qualityTag is NeteaseMusicQualityTag tag && !string.IsNullOrWhiteSpace(tag.Quality)
-                ? await _urlResolver.ResolveAsync(NeteaseTrack.IdOf(song), tag.Quality, ct).ConfigureAwait(false)
-                : await _urlResolver.ResolveAsync(NeteaseTrack.IdOf(song), ct).ConfigureAwait(false);
+            resolved = await _urlResolver
+                .ResolveAsync(NeteaseTrack.IdOf(song), requestedLevel, ct)
+                .ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -175,7 +182,7 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
             return null;
         }
 
-        return resolved is null ? null : CreateResource(song, resolved);
+        return resolved is null ? null : CreateResource(song, resolved, requestedLevel);
     }
 
     public Task<MediaSource?> CreateMediaSourceAsync(
@@ -202,11 +209,12 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
         return song.ProviderId == "ncm" && !string.IsNullOrWhiteSpace(NeteaseTrack.IdOf(song));
     }
 
-    private NeteaseMediaResource CreateResource(SingleSongBase song, ResolvedSongUrl resolved)
+    private NeteaseMediaResource CreateResource(SingleSongBase song, ResolvedSongUrl resolved, string requestedLevel)
     {
         var songUrl = resolved.Item;
         return new NeteaseMediaResource(song, this)
         {
+            RequestedLevel = requestedLevel,
             Md5 = songUrl.Md5,
             Size = songUrl.Size,
             BitRate = songUrl.BitRate,

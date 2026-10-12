@@ -189,6 +189,7 @@
                 Height="352"
                 Margin="2,10"
                 HorizontalAlignment="Center"
+                AutomationProperties.Name="{x:Bind AccessibleName}"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
@@ -293,6 +294,7 @@
                                     Width="125"
                                     Height="60"
                                     Padding="16"
+                                    AutomationProperties.Name="心动模式"
                                     Command="{x:Bind ViewModel.HeartBeatModeClickedCommand, Mode=OneWay}"
                                     CornerRadius="6">
                                     <StackPanel Orientation="Horizontal" Spacing="12">
@@ -307,6 +309,7 @@
                                     Width="125"
                                     Height="60"
                                     Padding="16"
+                                    AutomationProperties.Name="每日推荐"
                                     Command="{x:Bind ViewModel.DailyRecommendClickedCommand, Mode=OneWay}"
                                     CornerRadius="6">
                                     <StackPanel Orientation="Horizontal" Spacing="12">
@@ -321,6 +324,7 @@
                                     Width="125"
                                     Height="60"
                                     Padding="16"
+                                    AutomationProperties.Name="私人电台"
                                     Command="{x:Bind ViewModel.PersonalFmClickedCommand, Mode=OneWay}"
                                     CornerRadius="6">
                                     <StackPanel Orientation="Horizontal" Spacing="12">

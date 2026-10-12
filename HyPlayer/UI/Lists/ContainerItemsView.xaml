@@ -242,7 +242,7 @@
             </ListView.ContextFlyout>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="lists:ProvidableItemRowViewModel">
-                    <Border>
+                    <Border AutomationProperties.Name="{x:Bind AccessibleName}">
                         <Grid
                             Margin="0,8,0,8"
                             HorizontalAlignment="Stretch"

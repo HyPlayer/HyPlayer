@@ -20,6 +20,8 @@ public sealed class NeteaseMediaResource : NeteaseMusicResource, IChopinPlayback
 
     public SingleSongBase Song { get; }
 
+    public string RequestedLevel { get; init; } = string.Empty;
+
     public double? SuggestedVolume => null;
 
     public async Task<AudioGraphPlaybackSource?> CreatePlaybackSourceAsync(CancellationToken ctk = default)

@@ -195,10 +195,11 @@ public partial class NavigationShellViewModel : ObservableObject
                 section.Key,
                 section.Header.Title,
                 section.Nodes
-                    .Where(node => node.Key is not null)
+                    .Where(node => node.Key is not null && node.IsVisible)
                     .GroupBy(node => node.Key!)
                     .Select(group => new SidebarEntryDefinition(group.Key, group.First().Title))
                     .ToList()))
+            .Where(section => section.Items.Count > 0)
             .ToList());
         ApplyLayout();
     }
@@ -380,7 +381,7 @@ public partial class NavigationShellViewModel : ObservableObject
         var version = ++_podcastLoadVersion;
         _podcastLikedNode.IsVisible = true;
         _podcastCollectedNode.IsVisible = true;
-        ApplyLayout();
+        RefreshLayout();
 
         var created = await LoadPodcastChannelsAsync(_podcastLibrary.GetCreatedChannelsAsync());
         if (version != _podcastLoadVersion) return;
@@ -416,7 +417,7 @@ public partial class NavigationShellViewModel : ObservableObject
                 Icon = new FontIcon { Glyph = "\uE720" }
             }));
         group.IsVisible = group.Children.Count > 0;
-        ApplyLayout();
+        RefreshLayout();
     }
 
     private void ClearPodcastNodes()
@@ -428,7 +429,7 @@ public partial class NavigationShellViewModel : ObservableObject
         _podcastSubscribedNode.IsVisible = false;
         _podcastCreatedNode.Children.Clear();
         _podcastSubscribedNode.Children.Clear();
-        ApplyLayout();
+        RefreshLayout();
     }
 
     private void ClearProviderLibraryNodes()

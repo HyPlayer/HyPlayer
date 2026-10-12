@@ -25,6 +25,7 @@
                     Style="{StaticResource TitleTextBlockStyle}"
                     Text="欢迎使用 HyPlayer!" />
                 <TextBlock
+                    x:Name="TBSettingsHint"
                     FontSize="18"
                     Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                     Text="推荐您在登录后进入设置进行个性化" />
