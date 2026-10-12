@@ -18,6 +18,7 @@ public sealed class ExpandedCanvasState
     public float RandomValue { get; set; } = -1;
     public float LyricRenderXOffset { get; set; }
     public float LyricRenderYOffset { get; set; }
+    public float LyricOpacity { get; set; } = 1;
     public ExpandedWindowMode WindowMode { get; set; } = ExpandedWindowMode.Both;
     public IReadOnlyList<Vector3> AlbumColorVectors { get; set; } = [];
     public LyricRenderView? LyricBox { get; set; }

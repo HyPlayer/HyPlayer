@@ -113,7 +113,11 @@ public sealed partial class BasePage : Page
     private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
     {
         if (args.VirtualKey == VirtualKey.Escape)
+        {
+            var surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
+            if (surfaceStore.IsExpanded && surfaceStore.RequestEscape()) return;
             CollapseExpandedPlayerIfNeeded();
+        }
     }
 
     private bool CollapseExpandedPlayerIfNeeded()

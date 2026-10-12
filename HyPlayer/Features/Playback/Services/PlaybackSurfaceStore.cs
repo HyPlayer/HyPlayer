@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace HyPlayer.Features.Playback.Services;
@@ -28,6 +29,8 @@ public partial class PlaybackSurfaceStore : ObservableObject
     [ObservableProperty] public partial bool IsPlayBarSuppressed { get; set; }
 
     public event EventHandler<PlaybackSurfaceCommandRequestedEventArgs>? CommandRequested;
+
+    public event EventHandler<HandledEventArgs>? EscapeRequested;
 
     /// <summary>Convenience: true when the surface is in Expanded mode.</summary>
     public bool IsExpanded => SurfaceMode == PlaybackSurfaceMode.Expanded;
@@ -89,5 +92,12 @@ public partial class PlaybackSurfaceStore : ObservableObject
     public void RequestCommand(PlaybackSurfaceCommand command, object? anchor = null)
     {
         CommandRequested?.Invoke(this, new PlaybackSurfaceCommandRequestedEventArgs(command, anchor));
+    }
+
+    public bool RequestEscape()
+    {
+        var args = new HandledEventArgs();
+        EscapeRequested?.Invoke(this, args);
+        return args.Handled;
     }
 }

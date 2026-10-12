@@ -404,4 +404,20 @@ public partial class LyricSettings : SettingsBase
         get => GetSettings(nameof(IsolationLightWave), false);
         set => SetSettings(nameof(IsolationLightWave), value);
     }
+
+    public bool AutoHideLyricPanel
+    {
+        get => GetSettings(nameof(AutoHideLyricPanel), true);
+        set => SetSettings(nameof(AutoHideLyricPanel), value);
+    }
+
+    public double AutoHideLyricPanelLines
+    {
+        get => Math.Max(GetSettings(nameof(AutoHideLyricPanelLines), 3d), 0d);
+        set
+        {
+            if (double.IsNaN(value)) return;
+            SetSettings(nameof(AutoHideLyricPanelLines), Math.Max(Math.Round(value), 0d));
+        }
+    }
 }

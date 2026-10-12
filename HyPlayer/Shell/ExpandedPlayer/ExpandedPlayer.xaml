@@ -74,6 +74,36 @@
                 To="0"
                 Duration="0:0:0.25" />
         </Storyboard>
+        <Storyboard x:Name="ImmersiveHintStoryboard">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="ImmersiveHintOffset" Storyboard.TargetProperty="Y">
+                <LinearDoubleKeyFrame KeyTime="0:0:0" Value="-8" />
+                <EasingDoubleKeyFrame KeyTime="0:0:0.35" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CircleEase EasingMode="EaseOut" />
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+                <LinearDoubleKeyFrame KeyTime="0:0:2.8" Value="0" />
+                <EasingDoubleKeyFrame KeyTime="0:0:3.3" Value="-8">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CircleEase EasingMode="EaseIn" />
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="ImmersiveHint" Storyboard.TargetProperty="Opacity">
+                <LinearDoubleKeyFrame KeyTime="0:0:0" Value="0" />
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CircleEase EasingMode="EaseOut" />
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+                <LinearDoubleKeyFrame KeyTime="0:0:2.8" Value="1" />
+                <EasingDoubleKeyFrame KeyTime="0:0:3.3" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CircleEase EasingMode="EaseIn" />
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
         <Storyboard x:Name="ShowAni" />
         <Storyboard x:Name="CollapseAni" />
 
@@ -138,6 +168,26 @@
                 Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
                 Glyph="&#xE70D;" />
         </Button>
+        <Border
+            x:Name="ImmersiveHint"
+            Grid.Row="1"
+            Margin="0,24,0,0"
+            Padding="18,10"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            Background="#B3000000"
+            Canvas.ZIndex="4"
+            CornerRadius="10"
+            IsHitTestVisible="False"
+            Opacity="0">
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="ImmersiveHintOffset" />
+            </Border.RenderTransform>
+            <TextBlock
+                FontSize="14"
+                Foreground="White"
+                Text="已进入沉浸模式，按 Esc 退出" />
+        </Border>
         <win2d:CanvasAnimatedControl
             x:Name="LuminousBackground"
             Grid.Row="0"
@@ -232,6 +282,9 @@
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Center"
                 Tapped="LeftPanel_Tapped">
+                <Grid.RenderTransform>
+                    <CompositeTransform x:Name="LeftPanelTransform" />
+                </Grid.RenderTransform>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="2*" />
                     <RowDefinition Height="1*" />
@@ -433,6 +486,16 @@
                             Text="歌词界面">
                             <ToggleMenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE1A1;" />
+                            </ToggleMenuFlyoutItem.Icon>
+                        </ToggleMenuFlyoutItem>
+                        <ToggleMenuFlyoutItem
+                            x:Name="BtnToggleImmersive"
+                            HorizontalContentAlignment="Left"
+                            Background="Transparent"
+                            Click="BtnToggleImmersive_Click"
+                            Text="沉浸模式">
+                            <ToggleMenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE740;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />

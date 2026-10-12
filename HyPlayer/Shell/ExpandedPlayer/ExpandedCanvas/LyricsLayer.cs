@@ -39,6 +39,9 @@ public sealed class LyricsLayer : IExpandedCanvasLayer
         var box = _state.LyricBox;
         if (box is null) return;
 
+        var opacity = _state.LyricOpacity;
+        if (opacity <= 0.001f) return;
+        using var fadeLayer = opacity < 0.999f ? session.CreateLayer(opacity) : null;
         var originalTransform = session.Transform;
         try
         {

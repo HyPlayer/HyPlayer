@@ -7,8 +7,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Input;
+using Windows.Foundation;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using Windows.System;
@@ -77,6 +79,8 @@ public sealed partial class ExpandedPlayer : Page
     private const double ResponsiveBreakpointWidth = 800;
     private const double PlaybarReservedHeight = 80;
     private const double CollapseButtonRevealHeight = 120;
+    private const double LyricFadeMilliseconds = 300;
+    private const double LeftPanelShiftMilliseconds = 500;
 
     public static readonly DependencyProperty NowPlaybackSpeedProperty = DependencyProperty.Register(
         "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
@@ -87,6 +91,7 @@ public sealed partial class ExpandedPlayer : Page
     private readonly LikeAppleBackgroundLayer _likeAppleBackgroundLayer;
     private readonly ExpandedCanvasState _canvasState = new();
     private readonly WeakEventListener<ExpandedPlayer, object?, EventArgs> _enteredForegroundListener;
+    private readonly WeakEventListener<ExpandedPlayer, object?, HandledEventArgs> _escapeRequestedListener;
     private readonly ExpandedCanvasHost _expandedCanvasHost = new();
     private readonly IGlobalTimerService _globalTimer = Ioc.Default.GetRequiredService<IGlobalTimerService>();
     private readonly HttpClient _httpClient = Ioc.Default.GetRequiredService<HttpClient>();
@@ -130,7 +135,16 @@ public sealed partial class ExpandedPlayer : Page
     private volatile bool _isCleanedUp;
     private bool _appleControlsActive;
     private bool _canvasResourcesReleased;
+    private bool _chromeStateApplied;
     private bool _collapseButtonShown;
+    private bool _isImmersive;
+    private bool _lyricsSuppressed;
+    private bool _lyricAvailabilityApplied;
+    private int _lyricPanelVersion;
+    private float _lyricFadeFrom = 1;
+    private float _lyricFadeTo = 1;
+    private long _lyricFadeStart;
+    private Storyboard? _leftPanelShiftStoryboard;
     private bool _isManualChangeMode;
     private bool _isRealClick;
     private SingleSongBase? _lastCoverSong;
@@ -198,6 +212,12 @@ public sealed partial class ExpandedPlayer : Page
             OnDetachAction = weakEventListener => { _surfaceStore.PropertyChanged -= weakEventListener.OnEvent; }
         };
         _surfaceStore.PropertyChanged += _surfaceStoreChangedListener.OnEvent;
+        _escapeRequestedListener = new WeakEventListener<ExpandedPlayer, object?, HandledEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.OnEscapeRequested(args),
+            OnDetachAction = weakEventListener => { _surfaceStore.EscapeRequested -= weakEventListener.OnEvent; }
+        };
+        _surfaceStore.EscapeRequested += _escapeRequestedListener.OnEvent;
         _seekRequestedListener = new WeakEventListener<ExpandedPlayer, object?, SeekRequestedEventArgs>(this)
         {
             OnEventAction = static (instance, _, _) => instance.HyPlayList_OnManualSeek(),
@@ -272,6 +292,7 @@ public sealed partial class ExpandedPlayer : Page
             _canvasState.BackgroundType == BackgroundType.LikeApple;
         _canvasState.WindowMode = _windowMode;
         _canvasState.AlbumColorVectors = _albumColorVectors;
+        _canvasState.LyricOpacity = GetLyricOpacity();
     }
 
     private void OnPlaybackStatePropertyChanged(string? propertyName)
@@ -305,6 +326,7 @@ public sealed partial class ExpandedPlayer : Page
                 break;
             case nameof(PlaybackSurfaceStore.SurfaceMode):
                 if (_surfaceStore.IsExpanded) ApplyChromeState();
+                else ExitImmersive();
                 break;
             case nameof(PlaybackSurfaceStore.ExpandedFrameOffsetY):
                 // MainPage observes the same store value and moves the frame. ExpandedPlayer keeps the gesture local state here.
@@ -482,8 +504,145 @@ public sealed partial class ExpandedPlayer : Page
         }
 
         UpdateControlStyle();
+        if (_windowMode != ExpandedWindowMode.CoverOnly) StartLyricFade(1);
         _needsRedesign = true;
         _isRealClick = true;
+    }
+
+    private float GetLyricOpacity()
+    {
+        var start = Volatile.Read(ref _lyricFadeStart);
+        if (start == 0) return _lyricFadeTo;
+        var progress = (float)Math.Clamp(
+            Stopwatch.GetElapsedTime(start).TotalMilliseconds / LyricFadeMilliseconds, 0, 1);
+        var eased = progress * progress * (3 - 2 * progress);
+        return _lyricFadeFrom + (_lyricFadeTo - _lyricFadeFrom) * eased;
+    }
+
+    private void StartLyricFade(float to, float? from = null)
+    {
+        var current = from ?? GetLyricOpacity();
+        if (Math.Abs(current - to) < 0.001f && Math.Abs(_lyricFadeTo - to) < 0.001f) return;
+        _lyricFadeFrom = current;
+        _lyricFadeTo = to;
+        Volatile.Write(ref _lyricFadeStart, Stopwatch.GetTimestamp());
+    }
+
+    private int CountEffectiveLyricLines()
+    {
+        var info = _state.LyricInfo;
+        if (info?.PureLyricInfo is HyALRCLyricInfo alrcLyricInfo)
+            return alrcLyricInfo.ALRC?.Lines?.Count(line =>
+                !string.IsNullOrWhiteSpace(line.RawText) ||
+                (line.Words?.Any(word => !string.IsNullOrWhiteSpace(word.Word)) ?? false)) ?? 0;
+        return info?.Lyrics?.Count(lyric => !string.IsNullOrWhiteSpace(lyric.LyricLine?.CurrentLyric)) ?? 0;
+    }
+
+    private void ApplyLyricAvailability()
+    {
+        var suppress = _lyricSettings.AutoHideLyricPanel &&
+                       CountEffectiveLyricLines() <= (int)_lyricSettings.AutoHideLyricPanelLines;
+        var animate = IsLoaded && _lyricAvailabilityApplied;
+        _lyricAvailabilityApplied = true;
+        if (suppress == _lyricsSuppressed) return;
+        _lyricsSuppressed = suppress;
+        var version = ++_lyricPanelVersion;
+        if (suppress)
+        {
+            if (_windowMode != ExpandedWindowMode.Both) return;
+            if (!animate)
+            {
+                _windowMode = ExpandedWindowMode.CoverOnly;
+                ChangeWindowMode();
+                return;
+            }
+
+            _ = HideLyricPanelAsync(version);
+            return;
+        }
+
+        if (_windowMode != ExpandedWindowMode.CoverOnly || _isManualChangeMode ||
+            _nowWidth <= ResponsiveBreakpointWidth)
+        {
+            StartLyricFade(1);
+            return;
+        }
+
+        if (!animate)
+        {
+            _windowMode = ExpandedWindowMode.Both;
+            ChangeWindowMode();
+            return;
+        }
+
+        StartLyricFade(0, 0);
+        ShiftLeftPanel(() =>
+        {
+            _windowMode = ExpandedWindowMode.Both;
+            ChangeWindowMode();
+        });
+    }
+
+    private async Task HideLyricPanelAsync(int version)
+    {
+        StartLyricFade(0);
+        await Task.Delay(TimeSpan.FromMilliseconds(LyricFadeMilliseconds));
+        if (version != _lyricPanelVersion || _isCleanedUp || _windowMode != ExpandedWindowMode.Both) return;
+        ShiftLeftPanel(() =>
+        {
+            _windowMode = ExpandedWindowMode.CoverOnly;
+            ChangeWindowMode();
+        });
+    }
+
+    private void ShiftLeftPanel(Action changeLayout)
+    {
+        var before = GetAlbumBounds(PageContainer);
+        _leftPanelShiftStoryboard?.Stop();
+        _leftPanelShiftStoryboard = null;
+        changeLayout();
+        UpdateLayout();
+        var after = GetAlbumBounds(PageContainer);
+        if (before is not { } from || after is not { } to || to.Width <= 0 || to.Height <= 0) return;
+
+        var center = ImageAlbum.TransformToVisual(LeftPanel)
+            .TransformPoint(new Point(ImageAlbum.ActualWidth / 2, ImageAlbum.ActualHeight / 2));
+        LeftPanelTransform.CenterX = center.X;
+        LeftPanelTransform.CenterY = center.Y;
+        var scale = from.Width / to.Width;
+        var deltaX = from.X + from.Width / 2 - (to.X + to.Width / 2);
+        var deltaY = from.Y + from.Height / 2 - (to.Y + to.Height / 2);
+        if (Math.Abs(deltaX) < 0.5 && Math.Abs(deltaY) < 0.5 && Math.Abs(scale - 1) < 0.001) return;
+
+        var storyboard = new Storyboard();
+        AddShiftAnimation(storyboard, "TranslateX", deltaX, 0);
+        AddShiftAnimation(storyboard, "TranslateY", deltaY, 0);
+        AddShiftAnimation(storyboard, "ScaleX", scale, 1);
+        AddShiftAnimation(storyboard, "ScaleY", scale, 1);
+        _leftPanelShiftStoryboard = storyboard;
+        storyboard.Begin();
+    }
+
+    private void AddShiftAnimation(Storyboard storyboard, string property, double from, double to)
+    {
+        var animation = new DoubleAnimation
+        {
+            From = from,
+            To = to,
+            Duration = TimeSpan.FromMilliseconds(LeftPanelShiftMilliseconds),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+        };
+        Storyboard.SetTarget(animation, LeftPanelTransform);
+        Storyboard.SetTargetProperty(animation, property);
+        storyboard.Children.Add(animation);
+    }
+
+    private Rect? GetAlbumBounds(UIElement relativeTo)
+    {
+        if (LeftPanel.Visibility != Visibility.Visible || ImageAlbum.ActualWidth <= 0 ||
+            ImageAlbum.ActualHeight <= 0) return null;
+        return ImageAlbum.TransformToVisual(relativeTo)
+            .TransformBounds(new Rect(0, 0, ImageAlbum.ActualWidth, ImageAlbum.ActualHeight));
     }
 
     private void UpdateControlStyle()
@@ -498,10 +657,11 @@ public sealed partial class ExpandedPlayer : Page
 
         ApplePlaybackControls?.Visibility = apple ? Visibility.Visible : Visibility.Collapsed;
         LeftPanel.RowDefinitions[1].Height = apple ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
+        var changed = apple != _appleControlsActive || !_chromeStateApplied;
         _appleControlsActive = apple;
         UpdateAlbumSizeLimit();
         if (apple) SyncControlsWidth();
-        ApplyChromeState();
+        if (changed) ApplyChromeState();
     }
 
     private void UpdateAlbumSizeLimit()
@@ -522,9 +682,13 @@ public sealed partial class ExpandedPlayer : Page
     private void ApplyChromeState()
     {
         if (_isCleanedUp) return;
-        if (!_appleControlsActive) SetCollapseButtonShown(false);
+        _chromeStateApplied = true;
+        var chromeVisible = !_isImmersive;
+        FadeTo(MoreBtn, chromeVisible ? 1 : 0);
+        FadeTo(ApplePlaybackControls, chromeVisible ? 1 : 0);
+        if (!chromeVisible || !_appleControlsActive) SetCollapseButtonShown(false);
         MainGrid.Margin = new Thickness(0, 0, 0, _appleControlsActive ? 0 : PlaybarReservedHeight);
-        if (_surfaceStore.IsExpanded) _surfaceStore.IsPlayBarSuppressed = _appleControlsActive;
+        if (_surfaceStore.IsExpanded) _surfaceStore.IsPlayBarSuppressed = _appleControlsActive || _isImmersive;
     }
 
     private static void FadeTo(UIElement? element, double to, double milliseconds = 250)
@@ -553,13 +717,44 @@ public sealed partial class ExpandedPlayer : Page
 
     private void PageContainer_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
-        if (!_appleControlsActive) return;
+        if (!_appleControlsActive || _isImmersive) return;
         SetCollapseButtonShown(e.GetCurrentPoint(PageContainer).Position.Y <= CollapseButtonRevealHeight);
     }
 
     private void PageContainer_PointerExited(object sender, PointerRoutedEventArgs e)
     {
         SetCollapseButtonShown(false);
+    }
+
+    private void BtnToggleImmersive_Click(object sender, RoutedEventArgs e)
+    {
+        if (BtnToggleImmersive.IsChecked) EnterImmersive();
+        else ExitImmersive();
+    }
+
+    private void EnterImmersive()
+    {
+        if (_isImmersive) return;
+        _isImmersive = true;
+        BtnToggleImmersive.IsChecked = true;
+        ApplyChromeState();
+        ImmersiveHintStoryboard.Begin();
+    }
+
+    private void ExitImmersive()
+    {
+        if (!_isImmersive) return;
+        _isImmersive = false;
+        BtnToggleImmersive.IsChecked = false;
+        ImmersiveHintStoryboard.Stop();
+        ApplyChromeState();
+    }
+
+    private void OnEscapeRequested(HandledEventArgs args)
+    {
+        if (args.Handled || !_isImmersive) return;
+        ExitImmersive();
+        args.Handled = true;
     }
 
     private void SyncControlsWidth()
@@ -603,7 +798,8 @@ public sealed partial class ExpandedPlayer : Page
                 _windowMode = ExpandedWindowMode.CoverOnly;
                 ChangeWindowMode();
             }
-            else if (_nowWidth > ResponsiveBreakpointWidth && _windowMode != ExpandedWindowMode.Both)
+            else if (_nowWidth > ResponsiveBreakpointWidth && _windowMode != ExpandedWindowMode.Both &&
+                     !_lyricsSuppressed)
             {
                 _windowMode = ExpandedWindowMode.Both;
                 ChangeWindowMode();
@@ -656,6 +852,7 @@ public sealed partial class ExpandedPlayer : Page
             _lyricBox.ReflowTime(0);
             if (_state.NowPlayingProviderItem == null) return;
             RefreshUIColor();
+            ApplyLyricAvailability();
             Redesign();
             _lyricHasBeenLoaded = true;
         });
@@ -792,6 +989,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (!_isRealClick) return;
         _isManualChangeMode = true;
+        _lyricPanelVersion++;
         if (BtnToggleAlbum.IsChecked && BtnToggleLyric.IsChecked)
             _windowMode = ExpandedWindowMode.Both;
         else if (BtnToggleAlbum.IsChecked)
@@ -1279,7 +1477,7 @@ public sealed partial class ExpandedPlayer : Page
 
     internal void OnPlaybarVisibilityChanged(bool isActivated)
     {
-        if (_appleControlsActive) return;
+        if (_appleControlsActive || _isImmersive) return;
         if (!isActivated && !_playBarAutoHide.IsActive) return;
         if (isActivated)
             Show();
@@ -1404,6 +1602,7 @@ public sealed partial class ExpandedPlayer : Page
         _playBarVisibilityListener.Detach();
         _stateChangedListener.Detach();
         _surfaceStoreChangedListener.Detach();
+        _escapeRequestedListener.Detach();
         _seekRequestedListener.Detach();
         ViewModel.Dispose();
         _lyricRenderSettings.SettingsChanged -= OnLyricEffectSettingsChanged;

@@ -823,6 +823,24 @@
                                                 ToolTipService.ToolTip="{x:Bind ExpandedAutoCollapseTime.Value}"
                                                 Value="{x:Bind UI.AutoHidePlaybarTime, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="无歌词或歌词行数过少时仅显示封面" Header="自动收起歌词界面">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Lyric.AutoHideLyricPanel, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard
+                                            Description="歌词行数不超过该值时视为无歌词"
+                                            Header="歌词行数检测"
+                                            Visibility="{x:Bind Lyric.AutoHideLyricPanel, Mode=OneWay}">
+                                            <controls:NumberBox
+                                                Width="64"
+                                                HorizontalAlignment="Right"
+                                                Maximum="20"
+                                                Minimum="0"
+                                                SmallChange="1"
+                                                Value="{x:Bind Lyric.AutoHideLyricPanelLines, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="背景显示设置">
                                             <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind UI.ExpandedPlayerBackgroundType, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                                 <ComboBoxItem Content="专辑封面模糊" />
