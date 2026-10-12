@@ -34,11 +34,17 @@ public sealed class LyricsLayer : IExpandedCanvasLayer
     /// <inheritdoc />
     public void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing)
     {
-        if (_state.WindowMode == ExpandedWindowMode.CoverOnly) return;
-
         var box = _state.LyricBox;
         if (box is null) return;
 
+        if (_state.WindowMode == ExpandedWindowMode.CoverOnly)
+        {
+            box.CancelScrolling();
+            return;
+        }
+
+        box.RenderOriginX = _state.LyricRenderXOffset;
+        box.RenderOriginY = _state.LyricRenderYOffset;
         var opacity = _state.LyricOpacity;
         if (opacity <= 0.001f) return;
         using var fadeLayer = opacity < 0.999f ? session.CreateLayer(opacity) : null;

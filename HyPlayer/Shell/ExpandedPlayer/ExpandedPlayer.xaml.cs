@@ -365,6 +365,8 @@ public sealed partial class ExpandedPlayer : Page
         }
     }
 
+    private readonly LyricClock _lyricClock = new();
+
     private void LyricBox_OnBeforeRender(LyricRenderView view)
     {
         view.Context.IsPlaying = _state.IsPlaying;
@@ -375,7 +377,8 @@ public sealed partial class ExpandedPlayer : Page
             return;
         }
 
-        var positionMilliseconds = (long)primaryAudioInputNode.Position.TotalMilliseconds;
+        var positionMilliseconds = _lyricClock.Next(primaryAudioInputNode.Position.TotalMilliseconds,
+            _player.GlobalPlaybackStatus == PlaybackStatus.Playing, primaryAudioInputNode.PlaybackSpeedFactor);
         if (positionMilliseconds < view.Context.CurrentLyricTime)
         {
             view.Context.CurrentLyricTime = positionMilliseconds;
@@ -816,8 +819,6 @@ public sealed partial class ExpandedPlayer : Page
             _canvasState.LyricRenderXOffset = lyricOffset.X;
             _canvasState.LyricRenderYOffset = lyricOffset.Y;
             _lastRedesignHeight = _nowHeight;
-            _lyricBox.RenderOriginX = lyricOffset.X;
-            _lyricBox.RenderOriginY = lyricOffset.Y;
             _lyricBox.Redesign((float)LyricWidth, _nowHeight, LuminousBackground.Dpi);
             _lyricBox.ChangeRenderFontSize((float)LyricShowSize,
                 _lyricSettings.TranslationSize > 0 ? _lyricSettings.TranslationSize : (float)LyricShowSize / 2,
@@ -1063,12 +1064,12 @@ public sealed partial class ExpandedPlayer : Page
         e.Handled = true;
     }
 
-    private void LyricBox_ScrollPreviewChanged(bool previewing)
+    private void LyricBox_ScrollPreviewChanged()
     {
         _ = this.RunOnUIThreadAsync(() =>
         {
             if (_isCleanedUp) return;
-            ShowLyricPreviewHint(previewing);
+            ShowLyricPreviewHint(_lyricBox.IsScrollPreviewing);
         });
     }
 

@@ -1,8 +1,10 @@
+using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.LyricRenderer;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
@@ -13,6 +15,8 @@ namespace HyPlayer.UI.Playback.LyricControl;
 
 public sealed partial class LyricControl : UserControl
 {
+    private readonly LyricClock _lyricClock = new();
+
     public LyricRenderOption? LyricRenderOption { get; set; }
 
     public LyricControl()
@@ -30,8 +34,9 @@ public sealed partial class LyricControl : UserControl
     {
         var lyric = Ioc.Default.GetRequiredService<ILyricService>();
         var player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
+        var node = player.PrimaryAudioInputNode;
         if (lyric.CurrentLyricIndex < 0 || lyric.CurrentLyricIndex >= lyric.CurrentLyricInfo.Lyrics.Count ||
-            player.PrimaryAudioInputNode == null)
+            node == null)
             return;
         LyricRenderOption ??= new LyricRenderOption
         {
@@ -49,7 +54,9 @@ public sealed partial class LyricControl : UserControl
         };
         LyricRenderComposer.RenderOnDrawingSession(args.DrawingSession,
             lyric.CurrentLyricInfo.Lyrics[lyric.CurrentLyricIndex],
-            player.PrimaryAudioInputNode.Position, LyricRenderOption.GetValueOrDefault(),
+            TimeSpan.FromMilliseconds(_lyricClock.Next(node.Position.TotalMilliseconds,
+                player.GlobalPlaybackStatus == PlaybackStatus.Playing, node.PlaybackSpeedFactor)),
+            LyricRenderOption.GetValueOrDefault(),
             sender.Size, QuickRenderMode);
     }
 

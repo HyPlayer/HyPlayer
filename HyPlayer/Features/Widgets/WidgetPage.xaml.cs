@@ -348,13 +348,15 @@ public sealed partial class WidgetPage : Page
         _lyricEventsRegistered = false;
     }
 
+    private readonly LyricClock _lyricClock = new();
+
     private void LyricBox_OnBeforeRender(LyricRenderView view)
     {
-        if (_player.PrimaryAudioInputNode == null) return;
+        var node = _player.PrimaryAudioInputNode;
+        if (node == null) return;
         _lyricBox.Context.IsPlaying = _state.IsPlaying;
-        long position = 0;
-        if (_player.PrimaryAudioInputNode != null)
-            position = (long)_player.PrimaryAudioInputNode.Position.TotalMilliseconds;
+        var position = _lyricClock.Next(node.Position.TotalMilliseconds,
+            _player.GlobalPlaybackStatus == PlaybackStatus.Playing, node.PlaybackSpeedFactor);
         if (position < _lyricBox.Context.CurrentLyricTime)
         {
             _lyricBox.Context.CurrentLyricTime = position;

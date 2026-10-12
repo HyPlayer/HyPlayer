@@ -81,6 +81,8 @@ public abstract class RenderingLyricLine : IDisposable
 
     public virtual bool IsTextLine => false;
 
+    protected virtual float ContentTop => 0;
+
     internal int LastFrameCommandListCount { get; private set; }
 
     /// <summary>Draws a line directly; only spatial image effects record its content.</summary>
@@ -176,7 +178,7 @@ public abstract class RenderingLyricLine : IDisposable
                 result = RenderCore(session, context);
             }
             if (settings.HoverBackground && ReactionState == ReactionState.Enter && !Hidden)
-                session.FillRoundedRectangle(0, 0, RenderingWidth + 2, RenderingHeight + 8, 6, 6, Color.FromArgb(10, 255, 255, 255));
+                session.FillRoundedRectangle(0, ContentTop, RenderingWidth + 2, RenderingHeight + 8 - ContentTop, 6, 6, Color.FromArgb(10, 255, 255, 255));
             if (settings.ProgressUnderline && IsActive)
             {
                 var progress = EndTime <= StartTime ? 1 : Math.Clamp((time - StartTime) / (float)(EndTime - StartTime), 0, 1);

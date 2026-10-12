@@ -348,7 +348,9 @@ namespace HyPlayer.LyricRenderer
             Context.CurrentLyricLineIndex = currentGroup.RuntimeIndex;
             Context.CurrentLyricLine = Context.LyricLines[Context.CurrentLyricLineIndex];
             Context.RenderingLyricLines.Clear();
-            var theoryRenderAfterPosition = Context.LyricPaddingTopRatio * Context.ViewHeight + _scrollTranslation.Animate(Context.CurrentLyricTime,Context.ScrollingDelta);
+            var scrollOffset = _scrollTranslation.Animate(Context.RenderTick / TimeSpan.TicksPerMillisecond, Context.ScrollingDelta);
+            if (Math.Abs(scrollOffset - Context.ScrollingDelta) > Epsilon) _needRecalculate = true;
+            var theoryRenderAfterPosition = Context.LyricPaddingTopRatio * Context.ViewHeight + scrollOffset;
             var theoryRenderBeforePosition = theoryRenderAfterPosition;
             var renderedAfterStartPosition = theoryRenderAfterPosition;
             var renderedBeforeStartPosition = theoryRenderAfterPosition;
@@ -503,7 +505,6 @@ namespace HyPlayer.LyricRenderer
                     Volatile.Write(ref _renderThreadId, 0);
                 }
             }
-
             RaiseScrollPreviewChanged();
         }
 
@@ -524,8 +525,7 @@ namespace HyPlayer.LyricRenderer
                 }
                 // 鼠标滚轮时间 5 s 清零
                 if ((Context.ScrollingDelta != 0 || (Context.IsScrolling && !_pointerPressed)) &&
-                    Context.RenderTick - _lastWheelTime > 50000000 && (Context.IsPlaying || _forceScrollReset) ||
-                    Context.IsSeek)
+                    Context.RenderTick - _lastWheelTime > 50000000 && (Context.IsPlaying || _forceScrollReset) || Context.IsSeek)
                 {
                     // 缓动来一下吧
                     // 0.5 秒缓动到 0
@@ -537,7 +537,7 @@ namespace HyPlayer.LyricRenderer
                         _lastWheelTime = 0;
                         Context.ScrollingDelta = 0;
                         _forceScrollReset = false;
-                        SetScrollPreviewing(false);
+                        _scrollPreviewing = false;
                     }
 
                     _needRecalculate = true;
@@ -546,7 +546,7 @@ namespace HyPlayer.LyricRenderer
                 if (_scrollPreviewing && Context.ScrollingDelta == 0 && !Context.IsScrolling)
                 {
                     _forceScrollReset = false;
-                    SetScrollPreviewing(false);
+                    _scrollPreviewing = false;
                 }
 
                 if (_isTypographyChanged)
@@ -653,35 +653,22 @@ namespace HyPlayer.LyricRenderer
 
         private long _lastWheelTime;
         private bool _forceScrollReset;
-        private bool _scrollPreviewing;
-        private volatile bool _scrollPreviewChangePending;
+        private volatile bool _scrollPreviewing;
+        private int _scrollPreviewNotified;
 
-        public event Action<bool> ScrollPreviewChanged;
+        public event Action ScrollPreviewChanged;
 
         public bool IsScrollPreviewing => _scrollPreviewing;
 
         public float RenderOriginX { get; set; }
-        public float RenderOriginY { get; set; }
 
-        private void SetScrollPreviewing(bool previewing)
-        {
-            if (_scrollPreviewing == previewing) return;
-            _scrollPreviewing = previewing;
-            _scrollPreviewChangePending = true;
-        }
+        public float RenderOriginY { get; set; }
 
         private void RaiseScrollPreviewChanged()
         {
-            if (!_scrollPreviewChangePending) return;
-            bool previewing;
-            lock (_frameGate)
-            {
-                if (!_scrollPreviewChangePending) return;
-                _scrollPreviewChangePending = false;
-                previewing = _scrollPreviewing;
-            }
-
-            ScrollPreviewChanged?.Invoke(previewing);
+            var previewing = _scrollPreviewing ? 1 : 0;
+            if (Interlocked.Exchange(ref _scrollPreviewNotified, previewing) != previewing)
+                ScrollPreviewChanged?.Invoke();
         }
 
         public void ResetScrolling()
@@ -697,9 +684,25 @@ namespace HyPlayer.LyricRenderer
             }
         }
 
+        public void CancelScrolling()
+        {
+            if (!_scrollPreviewing) return;
+            lock (_frameGate)
+            {
+                if (_resourcesReleased) return;
+                Context.ScrollingDelta = 0;
+                Context.IsScrolling = false;
+                _lastWheelTime = 0;
+                _forceScrollReset = false;
+                _scrollPreviewing = false;
+                _needRecalculate = true;
+            }
+            RaiseScrollPreviewChanged();
+        }
+
         private bool IsPointInLine(int index, Point point)
         {
-            if (index < 0 || index >= Context.RenderOffsets.Count || index >= Context.LyricLines.Count) return false;
+            if ((uint)index >= (uint)Context.RenderOffsets.Count || index >= Context.LyricLines.Count) return false;
             var offset = Context.RenderOffsets[index];
             var line = Context.LyricLines[index];
             var x = point.X - RenderOriginX;
@@ -716,9 +719,9 @@ namespace HyPlayer.LyricRenderer
             while (low <= high)
             {
                 var mid = (low + high) / 2;
-                var offset = Context.RenderOffsets[mid];
-                if (y < offset.Y) high = mid - 1;
-                else if (y > offset.Y + Context.LyricLines[mid].RenderingHeight) low = mid + 1;
+                var top = Context.RenderOffsets[mid].Y;
+                if (y < top) high = mid - 1;
+                else if (y > top + Context.LyricLines[mid].RenderingHeight) low = mid + 1;
                 else return IsPointInLine(mid, point) ? mid : -1;
             }
 
@@ -731,7 +734,6 @@ namespace HyPlayer.LyricRenderer
             {
                 if (!_resourcesReleased) LyricView_OnPointerWheelChangedCore(sender, e);
             }
-
             RaiseScrollPreviewChanged();
         }
 
@@ -753,7 +755,7 @@ namespace HyPlayer.LyricRenderer
             _lastWheelTime = Context.RenderTick;
             _forceScrollReset = false;
             _needRecalculate = true;
-            SetScrollPreviewing(true);
+            _scrollPreviewing = true;
         }
 
 
@@ -763,7 +765,6 @@ namespace HyPlayer.LyricRenderer
             {
                 if (!_resourcesReleased) LyricView_OnPointerMovedCore(sender, e);
             }
-
             RaiseScrollPreviewChanged();
         }
 
@@ -802,7 +803,7 @@ namespace HyPlayer.LyricRenderer
                 _forceScrollReset = false;
                 _needRecalculate = true;
                 _lastPointerPressedYValue = yValue;
-                SetScrollPreviewing(true);
+                _scrollPreviewing = true;
             }
             else if (_lastPointerPressedYValue == null)
             {
@@ -863,9 +864,9 @@ namespace HyPlayer.LyricRenderer
                 if (_resourcesReleased) return;
                 clicked = OnDoubleTappedCore(sender, e);
             }
+            RaiseScrollPreviewChanged();
             // Navigation can unload the canvas and join its game loop. Do not
             // hold the frame gate while invoking application callbacks.
-            RaiseScrollPreviewChanged();
             if (clicked is not null) OnLyricLineClicked?.Invoke(clicked);
         }
 
@@ -888,7 +889,7 @@ namespace HyPlayer.LyricRenderer
 
             Context.ScrollingDelta = 0;
             _pointerPressed = true;
-            SetScrollPreviewing(false);
+            _scrollPreviewing = false;
             return clicked;
         }
 

@@ -16,6 +16,7 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     // 新增：用于记录文本排版的实际起始 X 坐标
     private float _renderStartX;
+    private float _topPadding;
 
     private ICanvasImage _staticPersistCache;
     private CanvasTextFormat _textFormat;
@@ -24,11 +25,12 @@ public partial class ActionLyricLine : RenderingLyricLine
     public string Text { get; set; }
     public string ActionUri { get; set; }
 
+    protected override float ContentTop => _topPadding;
 
     protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
         if (_textLayout is null) return true;
-        session.DrawImage(_staticPersistCache, 0, 0);
+        session.DrawImage(_staticPersistCache, 0, _topPadding);
         return true;
     }
 
@@ -76,7 +78,8 @@ public partial class ActionLyricLine : RenderingLyricLine
             Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
         _renderStartX = (float)_textLayout.LayoutBounds.X;
 
-        RenderingHeight = (float)(_textLayout?.LayoutBounds.Height ?? 0);
+        _topPadding = TypographySelector(t => t?.LyricFontSize, context)!.Value * 0.5f;
+        RenderingHeight = (float)(_textLayout?.LayoutBounds.Height ?? 0) + _topPadding;
         RenderingWidth = (float)(_textLayout?.LayoutBounds.Width ?? 0) + 32; // 加上 32 作为左右各 16 的 Padding 留白
 
         CanvasDrawingSession pstDs;
@@ -89,7 +92,7 @@ public partial class ActionLyricLine : RenderingLyricLine
         else
         {
             var staticPersistCacheTarget =
-                new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+                new CanvasRenderTarget(session, RenderingWidth, RenderingHeight - _topPadding, context.Dpi);
             _staticPersistCache = staticPersistCacheTarget;
             pstDs = staticPersistCacheTarget.CreateDrawingSession();
         }
