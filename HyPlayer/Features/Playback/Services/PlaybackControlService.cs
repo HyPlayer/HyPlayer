@@ -301,6 +301,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             return null;
         }
 
+        _lyricService.PreloadLyrics(nextSong);
         PreparedPlaybackTicket? ticket = null;
         IPlaybackSource? incomingSource;
         bool loaded;
@@ -1007,6 +1008,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         _lyricCts?.Cancel();
         _lyricCts?.Dispose();
         _lyricCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        _taskRunner.Forget(LoadLyricsSafeAsync(song, _lyricCts.Token), "load lyrics for current song");
 
         await _playCoreNotificationHub.PublishNotificationAsync(
             new CurrentSongChangedNotification { CurrentPlayingSong = song },
@@ -1107,17 +1109,16 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     {
         _prefetchCts?.Cancel();
         if (current is null
-            || _activeTransition.Id == "dir"
-            || !_playbackSettings.EnableCache
             || _playCore.ActivePlayModeId is "sgl" or "ltg")
             return;
 
         var cts = new CancellationTokenSource();
         _prefetchCts = cts;
-        _taskRunner.Forget(PrefetchNextAsync(current, cts.Token), "prefetch next track");
+        var prefetchAudio = _activeTransition.Id != "dir" && _playbackSettings.EnableCache;
+        _taskRunner.Forget(PrefetchNextAsync(current, prefetchAudio, cts.Token), "prefetch next track");
     }
 
-    private async Task PrefetchNextAsync(SingleSongBase current, CancellationToken ct)
+    private async Task PrefetchNextAsync(SingleSongBase current, bool prefetchAudio, CancellationToken ct)
     {
         await Task.Delay(TimeSpan.FromSeconds(8), ct).ConfigureAwait(false);
         if (!ReferenceEquals(_state.NowPlayingProviderItem, current))
@@ -1132,7 +1133,9 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         if (next is null || SameSong(next, current))
             return;
 
-        await _mediaSourceService.PrefetchAsync(next, ct).ConfigureAwait(false);
+        _lyricService.PreloadLyrics(next);
+        if (prefetchAudio)
+            await _mediaSourceService.PrefetchAsync(next, ct).ConfigureAwait(false);
     }
 
     private async Task LoadLyricsSafeAsync(SingleSongBase? providerItem, CancellationToken ct)

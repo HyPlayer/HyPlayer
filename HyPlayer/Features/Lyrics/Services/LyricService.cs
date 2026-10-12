@@ -49,8 +49,86 @@ public sealed partial class LyricService(
     /// <inheritdoc />
     public TimeSpan LyricOffset { get; set; }
 
+    private readonly object _loadSync = new();
+    private LyricLoad? _currentLoad;
+    private LyricLoad? _preloadedLoad;
+
     /// <inheritdoc />
     public async Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default)
+    {
+        LyricLoad load;
+        int version;
+        lock (_loadSync)
+        {
+            if (_currentLoad is { } current && !(current.Reusable && current.Matches(providerItem)))
+            {
+                current.Cancel();
+                _currentLoad = null;
+            }
+
+            if (_currentLoad is null && _preloadedLoad is { } preloaded && preloaded.Matches(providerItem))
+            {
+                _preloadedLoad = null;
+                if (preloaded.Reusable) _currentLoad = preloaded;
+                else preloaded.Cancel();
+            }
+
+            load = _currentLoad ??= StartLoad(providerItem);
+            version = load.Attach(PublishLyrics, PublishPendingLyrics);
+        }
+
+        try
+        {
+            await load.Completion.WaitAsync(ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            load.Detach(version);
+            throw;
+        }
+    }
+
+    public void PreloadLyrics(SingleSongBase providerItem)
+    {
+        lock (_loadSync)
+        {
+            if (_currentLoad is { Reusable: true } current && current.Matches(providerItem)) return;
+            if (_preloadedLoad is { } preloaded)
+            {
+                if (preloaded.Reusable && preloaded.Matches(providerItem)) return;
+                preloaded.Cancel();
+            }
+
+            _preloadedLoad = StartLoad(providerItem);
+        }
+    }
+
+    private LyricLoad StartLoad(SingleSongBase providerItem)
+    {
+        var load = new LyricLoad(providerItem, (owner, token) => ResolveLyricsAsync(providerItem, owner, token));
+        taskRunner.Forget(load.Completion, "resolve lyrics");
+        return load;
+    }
+
+    private void PublishLyrics(HyLyricInfo lyricInfo)
+    {
+        if (!ReferenceEquals(state.LyricInfo, lyricInfo))
+        {
+            state.LyricInfo = lyricInfo;
+            state.LyricIndex = 0;
+        }
+
+        state.IsLyricPending = false;
+    }
+
+    private void PublishPendingLyrics()
+    {
+        state.IsLyricPending = true;
+        state.LyricInfo = new HyLyricInfo();
+        state.LyricIndex = 0;
+    }
+
+    private async Task ResolveLyricsAsync(SingleSongBase providerItem, LyricLoad load, CancellationToken ct)
     {
         var cacheId = providerItem.ActualId;
         var canUseHyLyricInfoCache = providerItem is not NeteaseRadioProgram && !string.IsNullOrWhiteSpace(cacheId);
@@ -79,10 +157,9 @@ public sealed partial class LyricService(
                             "refresh lyric cache after karaoke preference change");
                     }
 
-                    state.LyricInfo = cached;
-                    state.LyricIndex = 0;
+                    load.Report(cached);
                     if (cached.PureLyricInfo is not HyALRCLyricInfo)
-                        await TryLoadAmllTtmlAsync(providerItem, ct);
+                        await TryLoadAmllTtmlAsync(providerItem, load, ct);
                     return;
                 }
 
@@ -94,12 +171,11 @@ public sealed partial class LyricService(
         {
             LocalSong localSong => await LoadLocalLyricAsync(localSong),
             NeteaseRadioProgram => new PureLyricInfo(),
-            _ => await LoadProviderLyricAsync(providerItem, ct)
+            _ => await LoadProviderLyricAsync(providerItem, ct, load)
         };
         var lyricInfo = await ConvertPureLyricInfoAsync(pureLyricInfo, GetArtistText(providerItem));
 
-        state.LyricInfo = lyricInfo;
-        state.LyricIndex = 0;
+        load.Report(lyricInfo);
 
         if (canUseHyLyricInfoCache && HasCacheableLyrics(lyricInfo, providerItem))
             taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
@@ -109,7 +185,7 @@ public sealed partial class LyricService(
                     cancellationToken: ct),
                 "cache provider lyric info");
 
-        await TryLoadAmllTtmlAsync(providerItem, ct);
+        await TryLoadAmllTtmlAsync(providerItem, load, ct);
     }
 
     /// <inheritdoc />
@@ -163,8 +239,15 @@ public sealed partial class LyricService(
     {
         var content = await FileIO.ReadTextAsync(lyricFile).AsTask(ct);
         var lyricInfo = await ConvertAlrcLyricAsync(content, lyricFile.FileType, "本地歌词", lyricFile.Path);
+        lock (_loadSync)
+        {
+            if (currentSong is not null && _currentLoad is { } current && current.Matches(currentSong))
+                current.Override(lyricInfo);
+        }
+
         state.LyricInfo = lyricInfo;
         state.LyricIndex = 0;
+        state.IsLyricPending = false;
 
         var cacheSongId = currentSong?.ActualId;
         if (!string.IsNullOrEmpty(cacheSongId))
@@ -273,7 +356,8 @@ public sealed partial class LyricService(
 
     #region Private helpers
 
-    private async Task<PureLyricInfo> LoadProviderLyricAsync(SingleSongBase providerItem, CancellationToken ct)
+    private async Task<PureLyricInfo> LoadProviderLyricAsync(SingleSongBase providerItem, CancellationToken ct,
+        LyricLoad? load = null)
     {
         try
         {
@@ -283,7 +367,10 @@ public sealed partial class LyricService(
             var lyricResult = await lyricProvider.GetLyricInfoAsync(providerItem, ct);
 
             if (lyricResult is null)
+            {
+                load?.MarkDegraded();
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 歌词获取失败" };
+            }
 
             if (lyricResult.Count == 0)
                 return new PureLyricInfo { PureLyrics = "[00:00.000] 无歌词 请欣赏" };
@@ -297,6 +384,7 @@ public sealed partial class LyricService(
         catch (Exception ex)
         {
             Debug.WriteLine($"Lyric error: {ex.Message}");
+            load?.MarkDegraded();
             return new PureLyricInfo();
         }
     }
@@ -637,7 +725,7 @@ public sealed partial class LyricService(
         return null;
     }
 
-    private async Task TryLoadAmllTtmlAsync(SingleSongBase item, CancellationToken ct)
+    private async Task TryLoadAmllTtmlAsync(SingleSongBase item, LyricLoad load, CancellationToken ct)
     {
         try
         {
@@ -655,8 +743,8 @@ public sealed partial class LyricService(
                 "amll-ttml-db",
                 $"https://github.com/amll-dev/amll-ttml-db/blob/main/ncm-lyrics/{item.ActualId}.ttml",
                 true);
-            state.LyricInfo = importedLyric;
-            state.LyricIndex = 0;
+            ct.ThrowIfCancellationRequested();
+            load.Report(importedLyric);
 
             if (HasCacheableLyrics(importedLyric, item))
                 taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(

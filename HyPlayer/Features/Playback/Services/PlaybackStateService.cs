@@ -58,6 +58,9 @@ public partial class PlaybackStateService : ObservableObject
     [ObservableProperty]
     public partial HyLyricInfo LyricInfo { get; set; } = new();
 
+    [ObservableProperty]
+    public partial bool IsLyricPending { get; set; }
+
     /// <summary>当前歌词行索引</summary>
     [ObservableProperty]
     public partial int LyricIndex { get; set; }

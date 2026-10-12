@@ -27,6 +27,8 @@ public interface ILyricService
     /// </summary>
     Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default);
 
+    void PreloadLyrics(SingleSongBase providerItem);
+
     /// <summary>
     ///     导入本地歌词并写入当前播放歌曲的歌词状态/缓存。
     /// </summary>

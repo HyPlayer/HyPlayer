@@ -164,6 +164,7 @@ public sealed partial class ExpandedPlayer : Page
     private int _lastRedesignHeight;
     private int _lastWidth;
     private bool _lyricHasBeenLoaded;
+    private int _lyricApplyQueued;
     private readonly List<SongLyric> _lyricList = [];
     private bool _needsRedesign = true;
     private DispatcherQueueTimer? _redesignTimer;
@@ -336,6 +337,7 @@ public sealed partial class ExpandedPlayer : Page
                 RefreshAlbumCover(_state.NowPlayingProviderItem);
                 break;
             case nameof(PlaybackStateService.LyricInfo):
+            case nameof(PlaybackStateService.IsLyricPending):
                 WakeLyricCanvas();
                 HyPlayList_OnLyricLoaded();
                 break;
@@ -501,6 +503,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void HyPlayList_OnLyricLoaded()
     {
+        if (Interlocked.Exchange(ref _lyricApplyQueued, 1) == 1) return;
         LoadLyricsBox();
         _needsRedesign = true;
     }
@@ -933,13 +936,18 @@ public sealed partial class ExpandedPlayer : Page
     {
         _ = this.RunOnUIThreadAsync(() =>
         {
+            Volatile.Write(ref _lyricApplyQueued, 0);
             if (_isCleanedUp || _canvasResourcesReleased) return;
-            if (_state.LyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
+            var pending = _state.IsLyricPending;
+            var lyricInfo = _state.LyricInfo;
+            var duration = _state.Duration > TimeSpan.Zero
+                ? _state.Duration.TotalMilliseconds
+                : _player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0;
+            if (lyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
                 _lyricBox.SetLyricLines(LrcConverter.Convert(
-                    Utils.ConvertToALRC(_state.LyricInfo.Lyrics,
-                        _player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0),
-                    _state.LyricInfo.LyricMetadata,
-                    _state.LyricInfo.SongMetadata,
+                    Utils.ConvertToALRC(lyricInfo.Lyrics, duration),
+                    lyricInfo.LyricMetadata,
+                    lyricInfo.SongMetadata,
                     _lyricSettings.OptimizeLyric));
             else
                 _lyricBox.SetLyricLines(LrcConverter.Convert(
@@ -956,7 +964,7 @@ public sealed partial class ExpandedPlayer : Page
             _lyricBox.ReflowTime(0);
             if (_state.NowPlayingProviderItem == null) return;
             RefreshUIColor();
-            ApplyLyricAvailability();
+            if (!pending) ApplyLyricAvailability();
             Redesign();
             _lyricHasBeenLoaded = true;
         });
