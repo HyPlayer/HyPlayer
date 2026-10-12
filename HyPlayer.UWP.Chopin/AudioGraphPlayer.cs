@@ -783,6 +783,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 throw nodeResult.ExtendedError;
 
             var node = nodeResult.Node;
+            if (Math.Abs(options.Speed - 1) > 0.001) node.PlaybackSpeedFactor = options.Speed;
 
             // 配置节点
             var gainState = new PlaybackSourceGainState(options.Volume, options.AudioGain);

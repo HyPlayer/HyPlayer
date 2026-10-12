@@ -573,6 +573,23 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         _audioService.SetAudioGainEnabled(enabled);
     }
 
+    public void SetPlaybackSpeed(double speed)
+    {
+        speed = Math.Round(Math.Clamp(speed, 0.5, 2.0), 1);
+        _state.PlaybackSpeed = speed;
+        _audioService.PlaybackSpeed = speed;
+        if (_player.PrimaryPlaybackSource is not { } source)
+            return;
+
+        try
+        {
+            _player.SetPlaybackSourceSpeed(speed, source);
+        }
+        catch (ArgumentException)
+        {
+        }
+    }
+
     /// <inheritdoc />
     public async Task InitializeAsync()
     {

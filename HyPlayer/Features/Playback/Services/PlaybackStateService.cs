@@ -39,6 +39,9 @@ public partial class PlaybackStateService : ObservableObject
     [ObservableProperty]
     public partial double Volume { get; set; }
 
+    [ObservableProperty]
+    public partial double PlaybackSpeed { get; set; } = 1d;
+
     /// <summary>当前播放策略 Id (seq/sgl/shf/shn/pfm/ltg)</summary>
     [ObservableProperty]
     public partial string ActiveStrategyId { get; set; } = "seq";

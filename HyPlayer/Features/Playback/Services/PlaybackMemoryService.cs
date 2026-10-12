@@ -179,9 +179,14 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
         await _control.LoadAndPlayAsync(currentSong, false, false).ConfigureAwait(false);
         await _playCore.MovePointerToIndexAsync(index).ConfigureAwait(false);
 
-        var restorePosition = GetRestorePosition(memory.PositionMilliseconds, currentSong.Duration);
+        var restorePosition = _playbackSettings.RememberPlaybackPosition
+            ? GetRestorePosition(memory.PositionMilliseconds, currentSong.Duration)
+            : TimeSpan.Zero;
         if (restorePosition > TimeSpan.Zero)
             await _control.SeekAsync(restorePosition).ConfigureAwait(false);
+
+        if (_playbackSettings.AutoPlayOnLaunch)
+            _control.Play();
     }
 
     private async Task<bool> TryRestoreQueueFromSourceAsync(PlaybackMemoryState memory)

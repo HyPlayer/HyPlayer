@@ -571,8 +571,7 @@ public sealed partial class ExpandedPlayer : Page
         _ = this.RunOnUIThreadAsync(() =>
         {
             ViewModel.SyncFromState();
-            if (_player.PrimaryPlaybackSource != null)
-                NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_player.PrimaryPlaybackSource);
+            NowPlaybackSpeed = FormatPlaybackSpeed(_state.PlaybackSpeed);
         });
     }
 
@@ -821,32 +820,30 @@ public sealed partial class ExpandedPlayer : Page
         return finalResult;
     }
 
+    private static string FormatPlaybackSpeed(double speed)
+    {
+        return "x" + speed.ToString("0.0#", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private void ApplyPlaybackSpeed(double speed)
+    {
+        _control.SetPlaybackSpeed(speed);
+        NowPlaybackSpeed = FormatPlaybackSpeed(_state.PlaybackSpeed);
+    }
+
     private void BtnSpeedMinusClick(object sender, RoutedEventArgs e)
     {
-        var playbackSource = _player.PrimaryPlaybackSource;
-        if (playbackSource == null) return;
-        var currentSpeed = _player.GetPlaybackSourceSpeed(playbackSource);
-        var newSpeed = Math.Max(0.5, currentSpeed - 0.1);
-        _player.SetPlaybackSourceSpeed(newSpeed, playbackSource);
-        NowPlaybackSpeed = "x" + newSpeed;
+        ApplyPlaybackSpeed(_state.PlaybackSpeed - 0.1);
     }
 
     private void BtnSpeedPlusClick(object sender, RoutedEventArgs e)
     {
-        var playbackSource = _player.PrimaryPlaybackSource;
-        if (playbackSource == null) return;
-        var currentSpeed = _player.GetPlaybackSourceSpeed(playbackSource);
-        var newSpeed = Math.Min(2.0, currentSpeed + 0.1);
-        _player.SetPlaybackSourceSpeed(newSpeed, playbackSource);
-        NowPlaybackSpeed = "x" + newSpeed;
+        ApplyPlaybackSpeed(_state.PlaybackSpeed + 0.1);
     }
 
     private void TbNowSpeed_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        var playbackSource = _player.PrimaryPlaybackSource;
-        if (playbackSource == null) return;
-        _player.SetPlaybackSourceSpeed(1, playbackSource);
-        NowPlaybackSpeed = "x1";
+        ApplyPlaybackSpeed(1);
     }
 
     private void BtnCopyLyricClicked(object sender, RoutedEventArgs e)
@@ -929,8 +926,7 @@ public sealed partial class ExpandedPlayer : Page
             _luminousColorsRotateStoryBoard.Begin();
         }
 
-        if (_player.PrimaryPlaybackSource != null)
-            NowPlaybackSpeed = "x" + _player.GetPlaybackSourceSpeed(_player.PrimaryPlaybackSource);
+        NowPlaybackSpeed = FormatPlaybackSpeed(_state.PlaybackSpeed);
         switch (_uiSettings.ExpandedPlayerBackgroundType)
         {
             case BackgroundType.CoverBlur: // Default

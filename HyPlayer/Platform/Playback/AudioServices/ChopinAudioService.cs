@@ -41,6 +41,8 @@ public sealed class ChopinAudioService :
 
     public override string Id => "hyplayer.chopin";
 
+    public double PlaybackSpeed { get; set; } = 1d;
+
     public override string Name => "HyPlayer Chopin AudioService";
 
     public Task<List<AudioTicketBase>> GetAudioTicketListAsync(CancellationToken ctk = default)
@@ -270,7 +272,8 @@ public sealed class ChopinAudioService :
                 AutoPlay = false,
                 SetAsPrimarySource = setAsPrimarySource,
                 Volume = targetVolume,
-                AudioGain = audioGain
+                AudioGain = audioGain,
+                Speed = PlaybackSpeed
             });
 
             var ticket = new ChopinAudioTicket

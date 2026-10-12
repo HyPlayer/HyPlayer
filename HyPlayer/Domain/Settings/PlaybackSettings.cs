@@ -69,6 +69,18 @@ public partial class PlaybackSettings : SettingsBase
         set => SetSettings(nameof(PlaybackFade), value);
     }
 
+    public bool AutoPlayOnLaunch
+    {
+        get => GetSettings(nameof(AutoPlayOnLaunch), false);
+        set => SetSettings(nameof(AutoPlayOnLaunch), value);
+    }
+
+    public bool RememberPlaybackPosition
+    {
+        get => GetSettings(nameof(RememberPlaybackPosition), true);
+        set => SetSettings(nameof(RememberPlaybackPosition), value);
+    }
+
     /// <summary>
     ///     Duration of crossfade in seconds.
     /// </summary>
