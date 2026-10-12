@@ -362,7 +362,9 @@ public sealed partial class Settings : Page
         };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
-        if (folder != null && await FolderAccessGuard.EnsureWritableAsync(folder, "下载的歌曲"))
+        if (folder != null && await FolderAccessGuard.EnsureWritableAsync(folder, "下载的歌曲")
+            && await StorageMigrationPrompt.OfferAsync("下载的歌曲", await Download.GetDownloadDirectoryAsync(), folder,
+                StorageContentKind.Music))
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("downloadFolder", folder);
             Download.DownloadDirectory = folder.Path;
@@ -438,10 +440,13 @@ public sealed partial class Settings : Page
         };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
-        if (folder != null && await FolderAccessGuard.EnsureWritableAsync(folder, "缓存"))
+        if (folder != null && await FolderAccessGuard.EnsureWritableAsync(folder, "缓存")
+            && await StorageMigrationPrompt.OfferAsync("缓存", Playback.CacheDirectory, folder,
+                StorageContentKind.Cache))
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("cacheFolder", folder);
             Playback.CacheDirectory = folder.Path;
+            _ = RefreshCacheUsageAsync();
         }
     }
 
@@ -610,11 +615,8 @@ public sealed partial class Settings : Page
     private async void BtnClearCache_Click(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ClearAllCacheAsync();
-        var folder = await StorageFolder.GetFolderFromPathAsync(Playback.CacheDirectory);
-        var files = await folder.GetFilesAsync();
-        foreach (var file in files)
-            if (file.FileType == ".flac" || file.FileType == ".mp3")
-                await file.DeleteAsync();
+        await StorageMaintenance.ClearAudioCacheAsync();
+        _ = RefreshCacheUsageAsync();
     }
 
     private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)

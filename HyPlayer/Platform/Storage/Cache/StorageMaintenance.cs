@@ -13,10 +13,27 @@ using HyPlayer.Domain.Settings;
 
 namespace HyPlayer.Platform.Storage.Cache;
 
+public enum StorageContentKind
+{
+    Music,
+    Cache
+}
+
 public sealed record StorageItemInfo(StorageFile File, string RelativeFolder, ulong Size, DateTimeOffset Modified);
+
+public sealed record StorageMigrationResult(int Moved, int Skipped, int Failed, int Remaining, int OriginalsKept);
 
 public static class StorageMaintenance
 {
+    private const int MaxMusicDepth = 4;
+    private const string StagedSuffix = ".hymove";
+
+    private static readonly string[] _musicExtensions =
+    [
+        ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav", ".ogg", ".opus", ".aac", ".lrc", ".yrc", ".ttml", ".alrc",
+        ".lys"
+    ];
+
     private static readonly string[] _cacheAudioExtensions = [".flac", ".mp3", ".m4a", ".ogg", ".aac", ".wav"];
 
     private static readonly HashSet<string> _cacheFolderNames =
@@ -48,35 +65,191 @@ public static class StorageMaintenance
         return await folder.CreateFileQueryWithOptions(options).GetFilesAsync();
     }
 
+    private static bool IsMusicFile(string name)
+    {
+        var extension = Path.GetExtension(name);
+        return Array.FindIndex(_musicExtensions, e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)) >= 0;
+    }
+
     public static async Task<List<StorageItemInfo>> CollectCacheAsync(
         StorageFolder root,
+        string? excludePath = null,
         CancellationToken ct = default)
     {
         var result = new List<StorageItemInfo>();
-        await AddFilesAsync(root, "", IsCacheAudioFile).ConfigureAwait(false);
+        await AddFilesAsync(result, root, "", IsCacheAudioFile, ct).ConfigureAwait(false);
         foreach (var folder in await root.GetFoldersAsync())
         {
-            if (!IsCacheFolderName(folder.Name)) continue;
-            await AddFilesAsync(folder, folder.Name, _ => true).ConfigureAwait(false);
+            if (!IsCacheFolderName(folder.Name) || FolderAccess.IsSamePath(folder.Path, excludePath)) continue;
+            await AddFilesAsync(result, folder, folder.Name, _ => true, ct).ConfigureAwait(false);
         }
 
         return result;
+    }
 
-        async Task AddFilesAsync(StorageFolder folder, string relative, Func<string, bool> filter)
+    public static async Task<List<StorageItemInfo>> CollectAsync(
+        StorageFolder root,
+        StorageContentKind kind,
+        string? excludePath = null,
+        CancellationToken ct = default)
+    {
+        if (kind == StorageContentKind.Cache)
+            return await CollectCacheAsync(root, excludePath, ct).ConfigureAwait(false);
+
+        var result = new List<StorageItemInfo>();
+        var cacheFolder = await GetCacheFolderAsync().ConfigureAwait(false);
+        var sharesCacheRoot = FolderAccess.IsSamePath(root.Path, cacheFolder.Path);
+        await WalkAsync(root, "", 0).ConfigureAwait(false);
+        return result;
+
+        async Task WalkAsync(StorageFolder folder, string relative, int depth)
         {
-            foreach (var file in await GetFilesWithPropertiesAsync(folder).ConfigureAwait(false))
+            var atCacheRoot = sharesCacheRoot && depth == 0;
+            await AddFilesAsync(
+                    result,
+                    folder,
+                    relative,
+                    name => IsMusicFile(name) && !(atCacheRoot && IsCacheAudioFile(name)),
+                    ct)
+                .ConfigureAwait(false);
+            if (depth >= MaxMusicDepth) return;
+            foreach (var child in await folder.GetFoldersAsync())
             {
-                ct.ThrowIfCancellationRequested();
-                if (!filter(file.Name)) continue;
-                try
+                if (FolderAccess.IsSamePath(child.Path, excludePath)
+                    || (atCacheRoot && IsCacheFolderName(child.Name)))
+                    continue;
+
+                await WalkAsync(
+                        child,
+                        relative.Length == 0 ? child.Name : Path.Combine(relative, child.Name),
+                        depth + 1)
+                    .ConfigureAwait(false);
+            }
+        }
+    }
+
+    private static async Task AddFilesAsync(
+        List<StorageItemInfo> result,
+        StorageFolder folder,
+        string relative,
+        Func<string, bool> filter,
+        CancellationToken ct)
+    {
+        foreach (var file in await GetFilesWithPropertiesAsync(folder).ConfigureAwait(false))
+        {
+            ct.ThrowIfCancellationRequested();
+            if (!filter(file.Name)) continue;
+            try
+            {
+                var properties = await file.GetBasicPropertiesAsync();
+                result.Add(new StorageItemInfo(file, relative, properties.Size, properties.DateModified));
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    public static async Task<StorageMigrationResult> MigrateAsync(
+        StorageFolder from,
+        StorageFolder to,
+        IReadOnlyList<StorageItemInfo> items,
+        bool deleteOriginal,
+        IProgress<int>? progress = null,
+        CancellationToken ct = default)
+    {
+        int moved = 0, skipped = 0, failed = 0, originalsKept = 0, done = 0;
+        var folders = new Dictionary<string, StorageFolder>(StringComparer.OrdinalIgnoreCase) { [""] = to };
+        var touched = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in items)
+        {
+            if (ct.IsCancellationRequested) break;
+            try
+            {
+                var destination = await GetFolderAsync(item.RelativeFolder).ConfigureAwait(false);
+                if (await destination.TryGetItemAsync(item.File.Name) is not null)
                 {
-                    var properties = await file.GetBasicPropertiesAsync();
-                    result.Add(new StorageItemInfo(file, relative, properties.Size, properties.DateModified));
+                    skipped++;
                 }
-                catch
+                else
                 {
+                    await CopyVerifiedAsync(item.File, destination).ConfigureAwait(false);
+                    moved++;
+                    if (deleteOriginal && !await TryDeleteAsync(item.File).ConfigureAwait(false))
+                        originalsKept++;
+                    else if (deleteOriginal && item.RelativeFolder.Length > 0)
+                        touched.Add(item.RelativeFolder);
                 }
             }
+            catch
+            {
+                failed++;
+            }
+
+            progress?.Report(++done);
+        }
+
+        foreach (var relative in touched.OrderByDescending(r => r.Length))
+            try
+            {
+                var current = relative;
+                while (current.Length > 0)
+                {
+                    if (await from.TryGetItemAsync(current) is not StorageFolder folder) break;
+                    if ((await folder.GetItemsAsync(0, 1)).Count > 0) break;
+                    await folder.DeleteAsync(StorageDeleteOption.PermanentDelete);
+                    current = Path.GetDirectoryName(current) ?? "";
+                }
+            }
+            catch
+            {
+            }
+
+        return new StorageMigrationResult(moved, skipped, failed, items.Count - done, originalsKept);
+
+        async Task<StorageFolder> GetFolderAsync(string relative)
+        {
+            if (folders.TryGetValue(relative, out var cached)) return cached;
+            var parent = await GetFolderAsync(Path.GetDirectoryName(relative) ?? "").ConfigureAwait(false);
+            var created = await parent.CreateFolderAsync(
+                Path.GetFileName(relative),
+                CreationCollisionOption.OpenIfExists);
+            folders[relative] = created;
+            return created;
+        }
+    }
+
+    private static async Task CopyVerifiedAsync(StorageFile source, StorageFolder destination)
+    {
+        var staged = await source.CopyAsync(
+            destination,
+            source.Name + StagedSuffix,
+            NameCollisionOption.ReplaceExisting);
+        try
+        {
+            var expected = (await source.GetBasicPropertiesAsync()).Size;
+            if ((await staged.GetBasicPropertiesAsync()).Size != expected)
+                throw new IOException();
+
+            await staged.RenameAsync(source.Name, NameCollisionOption.FailIfExists);
+        }
+        catch
+        {
+            await TryDeleteAsync(staged).ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    private static async Task<bool> TryDeleteAsync(StorageFile file)
+    {
+        try
+        {
+            await file.DeleteAsync(StorageDeleteOption.PermanentDelete);
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 
@@ -94,12 +267,22 @@ public static class StorageMaintenance
     {
         try
         {
-            return await StorageFolder.GetFolderFromPathAsync(AppDepository.Resolve<PlaybackSettings>().CacheDirectory);
+            var custom = AppDepository.Resolve<PlaybackSettings>().CustomCacheDirectory;
+            if (await FolderAccess.OpenAsync(custom).ConfigureAwait(false) is { } folder) return folder;
         }
         catch
         {
-            return ApplicationData.Current.LocalCacheFolder;
         }
+
+        return ApplicationData.Current.LocalCacheFolder;
+    }
+
+    public static async Task ClearAudioCacheAsync()
+    {
+        var root = await GetCacheFolderAsync().ConfigureAwait(false);
+        foreach (var file in await root.GetFilesAsync())
+            if (IsCacheAudioFile(file.Name))
+                await TryDeleteAsync(file).ConfigureAwait(false);
     }
 
     public static async Task<ulong> GetCacheUsageAsync()

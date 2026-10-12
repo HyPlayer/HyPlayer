@@ -138,6 +138,7 @@ public partial class PlaybackSettings : SettingsBase
             FolderAccess.Forget(value);
             if (!SetSettings(nameof(CacheDirectory), value))
                 OnPropertyChanged();
+            SimpleCacher.Reset();
         }
     }
 

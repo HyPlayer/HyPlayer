@@ -35,6 +35,40 @@ public static class FolderAccess
         if (!string.IsNullOrEmpty(path)) AccessCache.TryRemove(path, out _);
     }
 
+    public static event Action<string>? AccessLost;
+
+    public static async Task<StorageFolder?> OpenAsync(string? path)
+    {
+        if (string.IsNullOrEmpty(path) || !await ProbeAsync(path).ConfigureAwait(false)) return null;
+        try
+        {
+            return await StorageFolder.GetFolderFromPathAsync(path).AsTask().ConfigureAwait(false);
+        }
+        catch
+        {
+            if (AccessCache.TryUpdate(path, false, true)) NotifyLost(path);
+            return null;
+        }
+    }
+
+    private static void NotifyLost(string path)
+    {
+        try
+        {
+            AccessLost?.Invoke(path);
+        }
+        catch
+        {
+        }
+    }
+
+    public static bool IsSamePath(string? a, string? b)
+    {
+        return a is not null && b is not null &&
+               string.Equals(Path.TrimEndingDirectorySeparator(a), Path.TrimEndingDirectorySeparator(b),
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
     private static async Task<bool> CheckAsync(string path)
     {
         try

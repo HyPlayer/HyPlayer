@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
-using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Network;
 using HyPlayer.Platform.Runtime.Background;
@@ -31,16 +30,13 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
     private readonly BackgroundDownloader _downloader = new();
     private readonly ConcurrentDictionary<string, DownloadOperation> _downloadOperations = new();
     private readonly HttpClient _httpClient;
-    private readonly PlaybackSettings _playbackSettings;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _transferCancellations = new();
 
     public CachedNeteaseProvider(
-        PlaybackSettings playbackSettings,
         HttpClient httpClient,
         IBackgroundTaskRunner taskRunner)
     {
-        _playbackSettings = playbackSettings ?? throw new ArgumentNullException(nameof(playbackSettings));
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _taskRunner = taskRunner ?? throw new ArgumentNullException(nameof(taskRunner));
     }
@@ -121,7 +117,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
             if (_downloadOperations.ContainsKey(song.ActualId))
                 return null;
 
-            var cacheFolder = await GetCacheFolderAsync();
+            var cacheFolder = await StorageMaintenance.GetCacheFolderAsync();
             foreach (var extension in _offlineExtensions)
             {
                 var fileName = string.Format(CacheFileNameFormat, song.ActualId, extension);
@@ -182,21 +178,9 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
         return source;
     }
 
-    private async Task<StorageFolder> GetCacheFolderAsync()
-    {
-        try
-        {
-            return await StorageFolder.GetFolderFromPathAsync(_playbackSettings.CacheDirectory);
-        }
-        catch
-        {
-            return ApplicationData.Current.LocalCacheFolder;
-        }
-    }
-
     private async Task<StorageFile> CreateCacheFileAsync(SingleSongBase song, MusicResourceBase resource)
     {
-        var cacheFolder = await GetCacheFolderAsync();
+        var cacheFolder = await StorageMaintenance.GetCacheFolderAsync();
         var fileName = string.Format(CacheFileNameFormat, song.ActualId, GetExtension(resource));
         return await cacheFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
     }
@@ -212,7 +196,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
             if (_downloadOperations.ContainsKey(song.ActualId))
                 return null;
 
-            var cacheFolder = await GetCacheFolderAsync();
+            var cacheFolder = await StorageMaintenance.GetCacheFolderAsync();
             var fileName = string.Format(CacheFileNameFormat, song.ActualId, GetExtension(resource));
             if (await cacheFolder.TryGetItemAsync(fileName) is not StorageFile cacheFile)
                 return null;

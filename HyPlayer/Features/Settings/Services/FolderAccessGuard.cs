@@ -1,13 +1,16 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Threading;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Shell.Navigation.Services;
 
@@ -16,6 +19,8 @@ namespace HyPlayer.Features.Settings.Services;
 public static class FolderAccessGuard
 {
     private static readonly TimeSpan DialogRetryDelay = TimeSpan.FromSeconds(3);
+    private static int _watching;
+    private static int _checking;
 
     public static async Task<bool> EnsureWritableAsync(StorageFolder folder, string what)
     {
@@ -35,6 +40,28 @@ public static class FolderAccessGuard
     }
 
     public static async Task CheckSavedFoldersAsync()
+    {
+        if (Interlocked.Exchange(ref _watching, 1) == 0)
+            FolderAccess.AccessLost += OnAccessLost;
+        if (Interlocked.Exchange(ref _checking, 1) == 1) return;
+        try
+        {
+            await PromptLostFoldersAsync();
+        }
+        finally
+        {
+            Volatile.Write(ref _checking, 0);
+        }
+    }
+
+    private static void OnAccessLost(string path)
+    {
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(
+            Ioc.Default.GetRequiredService<IUIThreadDispatcher>().TryRunAsync(CheckSavedFoldersAsync),
+            "check saved folder access");
+    }
+
+    private static async Task PromptLostFoldersAsync()
     {
         var lost = new List<string>();
         await AddIfLostAsync(lost, "缓存目录",
