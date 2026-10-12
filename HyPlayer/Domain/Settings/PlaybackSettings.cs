@@ -49,7 +49,7 @@ public partial class PlaybackSettings : SettingsBase
         get => GetSettings(nameof(TransitionId), "dir");
         set
         {
-            if (value is not ("dir" or "gap" or "xfd" or "fde"))
+            if (value is not ("dir" or "gap" or "xfd" or "fde" or "mix"))
                 throw new ArgumentOutOfRangeException(nameof(value));
 
             if (SetSettings(nameof(TransitionId), value))
@@ -62,7 +62,7 @@ public partial class PlaybackSettings : SettingsBase
 
     public bool IsCrossFadeTransition => TransitionId == "xfd";
 
-    public bool TransitionUsesDuration => TransitionId is "xfd" or "fde";
+    public bool TransitionUsesDuration => TransitionId is "xfd" or "fde" or "mix";
 
     public bool PlaybackFade
     {

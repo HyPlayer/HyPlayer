@@ -506,6 +506,7 @@
                                                 <ComboBoxItem Content="淡入淡出" Tag="fde" />
                                                 <ComboBoxItem Content="提前准备" Tag="gap" />
                                                 <ComboBoxItem Content="交叉淡化" Tag="xfd" />
+                                                <ComboBoxItem Content="自动混音" Tag="mix" />
                                             </ComboBox>
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="过渡时长 单位: s" Visibility="{x:Bind Playback.TransitionUsesDuration, Mode=OneWay}">

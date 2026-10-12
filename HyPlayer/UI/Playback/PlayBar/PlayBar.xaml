@@ -903,6 +903,7 @@
                             BorderBrush="Red"
                             BorderThickness="1.5"
                             CornerRadius="4">
+                            <Border x:Name="TransitionTagGlowHost" IsHitTestVisible="False" />
                             <TextBlock
                                 x:Name="TbSongTag"
                                 x:FieldModifier="public"
@@ -910,6 +911,13 @@
                                 FontWeight="Bold"
                                 Foreground="Red"
                                 Text="{x:Bind ViewModel.QualityTagText, Mode=OneWay}" />
+                            <TextBlock
+                                x:Name="TbTransitionTag"
+                                HorizontalAlignment="Center"
+                                FontSize="11"
+                                FontWeight="Bold"
+                                IsHitTestVisible="False"
+                                Text="过渡" />
                         </Grid>
                     </Grid>
 

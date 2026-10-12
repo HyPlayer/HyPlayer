@@ -282,6 +282,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IKeyAnalyzer, SKeyAnalyzer>();
         depository.AddSingleton<IVocalAnalyzer, MdxVocalAnalyzer>();
         depository.AddSingleton<IAudioAnalysisService, AudioAnalysisService>();
+        depository.AddSingleton<ITrackTransition, AutoMixTransition>();
         depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
         depository.Add(
             typeof(INotificationSubscriber<PlaybackRequestFailedNotification>),

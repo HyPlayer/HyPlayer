@@ -12,11 +12,23 @@ public sealed class CrossFadeTransition : ITrackTransition
     private static readonly TimeSpan _minimumRemaining = TimeSpan.FromMilliseconds(300);
     private static readonly TimeSpan _restoreTime = TimeSpan.FromMilliseconds(200);
     private static readonly TimeSpan _catchUpTime = TimeSpan.FromMilliseconds(250);
-    private readonly NextTrackPreloader _preloader = new();
+    private readonly NextTrackPreloader _preloader;
     private ActiveFade? _fade;
     private PreparedPlaybackPromotion? _settling;
 
+    public CrossFadeTransition()
+        : this(new NextTrackPreloader())
+    {
+    }
+
+    internal CrossFadeTransition(NextTrackPreloader preloader)
+    {
+        _preloader = preloader;
+    }
+
     public string Id => "xfd";
+
+    internal bool IsActive => _fade is not null || _settling is not null;
 
     public async Task OnPositionChangedAsync(TrackTransitionContext context, CancellationToken ct)
     {
@@ -68,6 +80,7 @@ public sealed class CrossFadeTransition : ITrackTransition
             if (await CommitAsync(fade, ct).ConfigureAwait(false))
             {
                 _fade = null;
+                fade.Host.SetTransitioning(false);
                 _settling = fade.Promotion;
                 _ = fade.Host.RampVolumeAsync(fade.IncomingSource, fade.Incoming.Ticket.TargetVolume, _catchUpTime);
                 await SettleAsync().ConfigureAwait(false);
@@ -172,6 +185,7 @@ public sealed class CrossFadeTransition : ITrackTransition
             HalfSpan = remaining / 2,
             FadeOut = context.Host.RampVolumeAsync(context.Source, 0, duration)
         };
+        context.Host.SetTransitioning(true);
     }
 
     private async Task<bool> CommitAsync(ActiveFade fade, CancellationToken ct)
@@ -206,6 +220,7 @@ public sealed class CrossFadeTransition : ITrackTransition
         if (ReferenceEquals(_fade, fade))
             _fade = null;
 
+        fade.Host.SetTransitioning(false);
         _ = fade.Host.RampVolumeAsync(fade.Outgoing, fade.OutgoingVolume, _restoreTime);
         await fade.Incoming.Ticket.DisposeAsync().ConfigureAwait(false);
     }
@@ -215,6 +230,7 @@ public sealed class CrossFadeTransition : ITrackTransition
         if (ReferenceEquals(_fade, fade))
             _fade = null;
 
+        fade.Host.SetTransitioning(false);
         if (fade.Promotion is not { } promotion)
             return;
 

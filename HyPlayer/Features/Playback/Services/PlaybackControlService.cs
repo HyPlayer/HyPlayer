@@ -332,6 +332,19 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         };
     }
 
+    private async Task<SingleSongBase?> PeekNextCoreAsync(TrackTransitionContext context, CancellationToken ct)
+    {
+        if (!IsCurrentGeneration(context.Source, context.Generation) || !context.CanPreload)
+            return null;
+
+        var queue = await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false);
+        var currentIndex = await _playCore.GetCurrentIndexAsync(ct).ConfigureAwait(false);
+        if (queue.Count < 2 || currentIndex < 0)
+            return null;
+
+        return await _playCore.GetSongAtAsync((currentIndex + 1) % queue.Count, ct).ConfigureAwait(false);
+    }
+
     private async Task<PreparedPlaybackPromotion?> PromoteCoreAsync(
         TransitionPreparedTrack prepared,
         CancellationToken ct)
@@ -489,6 +502,16 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         public double GetVolume(IPlaybackSource source)
         {
             return _owner._audioService.GetVolume(source);
+        }
+
+        public Task<SingleSongBase?> PeekNextAsync(TrackTransitionContext context, CancellationToken ct)
+        {
+            return _owner.PeekNextCoreAsync(context, ct);
+        }
+
+        public void SetTransitioning(bool transitioning)
+        {
+            _owner._state.IsTransitioning = transitioning;
         }
     }
 
@@ -1360,7 +1383,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             CanPreload = _playCore.ActivePlayModeId is not ("sgl" or "ltg")
                          && duration >= TimeSpan.FromSeconds(30),
             PlaybackRate = _player.GetPlaybackSourceSpeed(source),
-            CrossFadeDuration = TimeSpan.FromSeconds(Math.Clamp(_playbackSettings.CrossFadeTime, 3d, 10d))
+            CrossFadeDuration = TimeSpan.FromSeconds(Math.Clamp(_playbackSettings.CrossFadeTime, 3d, 10d)),
+            Song = _state.NowPlayingProviderItem
         };
     }
 

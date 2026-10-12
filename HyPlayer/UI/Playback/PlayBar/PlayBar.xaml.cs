@@ -167,6 +167,9 @@ DoubleAnimation verticalAnimation;
             case nameof(PlaybackStateService.Volume):
                 RunOnUIThread(SyncVolumeSlider);
                 break;
+            case nameof(PlaybackStateService.IsTransitioning):
+                RunOnUIThread(RefreshTransitionEffect);
+                break;
             case nameof(PlaybackStateService.IsPlaying):
                 RunOnUIThread(RefreshBackgroundBreath);
                 break;
@@ -263,6 +266,16 @@ DoubleAnimation verticalAnimation;
                 Btn_Share_OnClick(this, null);
                 break;
         }
+    }
+
+    private HyPlayer.UI.Controls.Primitives.PlayBarTransitionEffect _transitionEffect;
+
+    private void RefreshTransitionEffect()
+    {
+        if (!IsLoaded) return;
+        _transitionEffect ??= new HyPlayer.UI.Controls.Primitives.PlayBarTransitionEffect(
+            SliderProgress, SongInfoTag, TbSongTag, TbTransitionTag, TransitionTagGlowHost);
+        _transitionEffect.SetActive(_state.IsTransitioning);
     }
 
     private void OnSurfaceStorePropertyChanged(PlaybackSurfaceStore store, string? propertyName)
@@ -799,6 +812,7 @@ DoubleAnimation verticalAnimation;
         SliderAudioRate.Value = _playbackSettings.Volume;
         ViewModel.SyncFromState();
         RefreshPlayModeDisplay();
+        RefreshTransitionEffect();
         _enteredForegroundListener?.Detach();
         _stateChangedListener?.Detach();
         _surfaceStoreChangedListener?.Detach();
