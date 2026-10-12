@@ -1017,6 +1017,60 @@
                                 <controls3:SettingsExpander
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Stretch"
+                                    Header="内存管理"
+                                    IsExpanded="True">
+                                    <controls3:SettingsExpander.HeaderIcon>
+                                        <FontIcon Glyph="&#xE9D9;" />
+                                    </controls3:SettingsExpander.HeaderIcon>
+                                    <controls3:SettingsExpander.Transitions>
+                                        <TransitionCollection>
+                                            <RepositionThemeTransition />
+                                        </TransitionCollection>
+                                    </controls3:SettingsExpander.Transitions>
+                                    <controls3:SettingsExpander.Items>
+                                        <controls3:SettingsCard Description="窗口失去焦点或进入后台超过设定时间后，整理并释放内存" Header="后台释放内存">
+                                            <ComboBox
+                                                MinWidth="120"
+                                                HorizontalAlignment="Right"
+                                                AutomationProperties.Name="后台释放内存"
+                                                SelectedIndex="{x:Bind UI.BackgroundReleaseIndex, Mode=TwoWay}">
+                                                <ComboBoxItem Content="30 秒" />
+                                                <ComboBoxItem Content="1 分钟" />
+                                                <ComboBoxItem Content="5 分钟" />
+                                                <ComboBoxItem Content="10 分钟" />
+                                                <ComboBoxItem Content="从不" />
+                                            </ComboBox>
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="默认根据应用与系统的内存占用判断是否清理" Header="内存上限">
+                                            <ComboBox
+                                                MinWidth="120"
+                                                HorizontalAlignment="Right"
+                                                AutomationProperties.Name="内存上限"
+                                                SelectedIndex="{x:Bind UI.MemoryLimitIndex, Mode=TwoWay}">
+                                                <ComboBoxItem Content="自动" />
+                                                <ComboBoxItem Content="512 MB" />
+                                                <ComboBoxItem Content="1 GB" />
+                                                <ComboBoxItem Content="2 GB" />
+                                                <ComboBoxItem Content="3 GB" />
+                                                <ComboBoxItem Content="4 GB" />
+                                                <ComboBoxItem Content="不限制" />
+                                            </ComboBox>
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard
+                                            x:Name="MemoryNowCard"
+                                            Header="手动清理内存"
+                                            Loaded="MemoryNowCard_Loaded">
+                                            <Button
+                                                HorizontalAlignment="Right"
+                                                Click="ReclaimMemory_Click"
+                                                Content="清理" />
+                                        </controls3:SettingsCard>
+                                    </controls3:SettingsExpander.Items>
+                                </controls3:SettingsExpander>
+
+                                <controls3:SettingsExpander
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
                                     Header="名称设置"
                                     HeaderIcon="Rename"
                                     IsExpanded="True">

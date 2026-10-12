@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Windows.Storage;
+using HyPlayer.Platform.Storage;
 
 namespace HyPlayer.Domain.Settings;
 
@@ -7,10 +8,22 @@ public partial class LocalLibrarySettings(DownloadSettings downloadSettings) : S
 {
     protected override string SectionName => "library";
 
+    public string? CustomSearchDirectory =>
+        TryGetSettings<string>(nameof(SearchDirectory), out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : null;
+
     public string SearchDirectory
     {
-        get => GetSettings(nameof(SearchDirectory), downloadSettings.DownloadDirectory);
-        set => SetSettings(nameof(SearchDirectory), value);
+        get => CustomSearchDirectory is { } custom && FolderAccess.IsUsable(custom)
+            ? custom
+            : downloadSettings.DownloadDirectory;
+        set
+        {
+            FolderAccess.Forget(value);
+            if (!SetSettings(nameof(SearchDirectory), value))
+                OnPropertyChanged();
+        }
     }
 
     public List<string> ScanLocalFolders

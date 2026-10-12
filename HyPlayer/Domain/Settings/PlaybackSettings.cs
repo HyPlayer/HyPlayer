@@ -2,6 +2,7 @@ using System;
 using Windows.Storage;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Features.Playback.Services;
+using HyPlayer.Platform.Storage;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Domain.Settings;
@@ -99,15 +100,27 @@ public partial class PlaybackSettings : SettingsBase
         {
             try
             {
-                return GetSettings(nameof(CacheDirectory), ApplicationData.Current.LocalCacheFolder.Path);
+                return CustomCacheDirectory is { } custom && FolderAccess.IsUsable(custom)
+                    ? custom
+                    : ApplicationData.Current.LocalCacheFolder.Path;
             }
             catch
             {
                 return ApplicationData.Current.LocalCacheFolder.Path;
             }
         }
-        set => SetSettings(nameof(CacheDirectory), value);
+        set
+        {
+            FolderAccess.Forget(value);
+            if (!SetSettings(nameof(CacheDirectory), value))
+                OnPropertyChanged();
+        }
     }
+
+    public string? CustomCacheDirectory =>
+        TryGetSettings<string>(nameof(CacheDirectory), out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : null;
 
     /// <summary>
     ///     Audio render device identifier.

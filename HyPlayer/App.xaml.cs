@@ -128,11 +128,14 @@ public sealed partial class App : Windows.UI.Xaml.Application
             lifecycle.IsInBackground = false;
             lifecycle.NotifyEnteredForeground();
         }
+
+        AppDepository.Resolve<IMemoryGovernor>().OnLeavingBackground();
     }
 
     private void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
     {
         AppDepository.Resolve<IAppLifecycleStateService>().IsInBackground = true;
+        AppDepository.Resolve<IMemoryGovernor>().OnEnteredBackground();
     }
 
     protected override void OnActivated(IActivatedEventArgs args)
@@ -247,6 +250,8 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
             Window.Current.Content = _rootFrame;
         }
+
+        AppDepository.Resolve<IMemoryGovernor>().Attach(Window.Current);
 
         // 直接启动
         if (args is LaunchActivatedEventArgs)

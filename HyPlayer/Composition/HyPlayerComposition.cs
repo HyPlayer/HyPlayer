@@ -287,6 +287,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IDiagnosticsStateService, DiagnosticsStateService>();
         depository.AddSingleton<IGameBarWidgetService, GameBarWidgetService>();
         depository.AddSingleton<IGlobalTimerService, GlobalTimerService>();
+        depository.AddSingleton<IMemoryGovernor, MemoryGovernor>();
         depository.AddSingleton<ITeachingTipService, TeachingTipService>();
         depository.AddSingleton<IPlayBarAutoHideService, PlayBarAutoHideService>();
         depository.AddSingleton<IPlaylistCollectionChangeNotifier, PlaylistCollectionChangeNotifier>();

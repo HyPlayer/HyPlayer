@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Windows.Storage;
+using HyPlayer.Platform.Storage;
 
 namespace HyPlayer.Domain.Settings;
 
@@ -26,18 +27,28 @@ public partial class DownloadSettings : SettingsBase
         set => SetSettings(nameof(DownloadNameOccupySolution), value);
     }
 
+    public string? CustomDownloadDirectory =>
+        TryGetSettings<string>(nameof(DownloadDirectory), out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : null;
+
     public string DownloadDirectory
     {
-        get => TryGetSettings<string>(nameof(DownloadDirectory), out var value)
-            ? value!
+        get => CustomDownloadDirectory is { } custom && FolderAccess.IsUsable(custom)
+            ? custom
             : ApplicationData.Current.LocalCacheFolder.Path;
-        set => SetSettings(nameof(DownloadDirectory), value);
+        set
+        {
+            FolderAccess.Forget(value);
+            if (!SetSettings(nameof(DownloadDirectory), value))
+                OnPropertyChanged();
+        }
     }
 
     public async Task<string> GetDownloadDirectoryAsync()
     {
-        if (TryGetSettings<string>(nameof(DownloadDirectory), out var value) && !string.IsNullOrWhiteSpace(value))
-            return value!;
+        if (CustomDownloadDirectory is { } custom && await FolderAccess.ProbeAsync(custom))
+            return custom;
 
         try
         {

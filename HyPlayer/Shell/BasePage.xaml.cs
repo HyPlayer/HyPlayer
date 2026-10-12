@@ -118,6 +118,7 @@ public sealed partial class BasePage : Page
         }
 
         _ = UpdateManager.PopupVersionCheck(true);
+        _taskRunner.Forget(FolderAccessGuard.CheckSavedFoldersAsync(), "check saved folder access");
         _ = _loginService.TryLoadSavedLoginAsync();
     }
 

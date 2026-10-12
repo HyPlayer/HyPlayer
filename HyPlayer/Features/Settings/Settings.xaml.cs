@@ -30,6 +30,7 @@ using HyPlayer.Features.History.Services;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Settings.Services;
+using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.Platform.SystemServices;
@@ -70,6 +71,7 @@ public sealed partial class Settings : Page
 
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly ITileService _tileService = Ioc.Default.GetRequiredService<ITileService>();
+    private readonly IMemoryGovernor _memoryGovernor = Ioc.Default.GetRequiredService<IMemoryGovernor>();
     private int _elapse = 10;
 
     private bool _isUpdatingControls;
@@ -259,7 +261,7 @@ public sealed partial class Settings : Page
         };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
-        if (folder != null)
+        if (folder != null && await FolderAccessGuard.EnsureWritableAsync(folder, "下载的歌曲"))
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("downloadFolder", folder);
             Download.DownloadDirectory = folder.Path;
@@ -335,7 +337,7 @@ public sealed partial class Settings : Page
         };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
-        if (folder != null)
+        if (folder != null && await FolderAccessGuard.EnsureWritableAsync(folder, "缓存"))
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("cacheFolder", folder);
             Playback.CacheDirectory = folder.Path;
@@ -504,6 +506,30 @@ public sealed partial class Settings : Page
     private void BtnClearTileCache_Click(object sender, RoutedEventArgs e)
     {
         _tileService.ClearAllTiles();
+    }
+
+    private static string FormatMemorySize(ulong bytes) => bytes >= 1024UL * 1024 * 1024
+        ? $"{bytes / 1024d / 1024 / 1024:0.##} GB"
+        : $"{bytes / 1024d / 1024:0.#} MB";
+
+    private void RefreshMemoryUsage(string prefix = null)
+    {
+        var usage = $"当前占用 {FormatMemorySize(_memoryGovernor.WorkingSetBytes)}";
+        MemoryNowCard.Description = prefix is null ? usage : $"{prefix}，{usage}";
+    }
+
+    private void MemoryNowCard_Loaded(object sender, RoutedEventArgs e)
+    {
+        RefreshMemoryUsage();
+    }
+
+    private async void ReclaimMemory_Click(object sender, RoutedEventArgs e)
+    {
+        var button = (Button)sender;
+        button.IsEnabled = false;
+        var freed = await _memoryGovernor.ReclaimAsync();
+        RefreshMemoryUsage($"已释放 {FormatMemorySize(freed)}");
+        button.IsEnabled = true;
     }
 
     private async void OpenLyricEffectSettings_Click(object sender, RoutedEventArgs e)
