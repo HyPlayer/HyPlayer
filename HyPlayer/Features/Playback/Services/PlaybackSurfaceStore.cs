@@ -28,6 +28,8 @@ public partial class PlaybackSurfaceStore : ObservableObject
 
     [ObservableProperty] public partial bool IsPlayBarSuppressed { get; set; }
 
+    [ObservableProperty] public partial bool IsPlayBarSpaceReserved { get; set; } = true;
+
     public event EventHandler<PlaybackSurfaceCommandRequestedEventArgs>? CommandRequested;
 
     public event EventHandler<HandledEventArgs>? EscapeRequested;

@@ -49,6 +49,7 @@ public sealed partial class BasePage : Page
     private readonly HyPlayer.Domain.Settings.UISettings _setting =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
     private readonly IShellHostStateService _shellHost = Ioc.Default.GetRequiredService<IShellHostStateService>();
+    private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly ITeachingTipService _teachingTip = Ioc.Default.GetRequiredService<ITeachingTipService>();
 
@@ -114,8 +115,7 @@ public sealed partial class BasePage : Page
     {
         if (args.VirtualKey == VirtualKey.Escape)
         {
-            var surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
-            if (surfaceStore.IsExpanded && surfaceStore.RequestEscape()) return;
+            if (_surfaceStore.IsExpanded && _surfaceStore.RequestEscape()) return;
             CollapseExpandedPlayerIfNeeded();
         }
     }

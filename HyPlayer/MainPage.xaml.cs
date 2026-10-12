@@ -57,11 +57,16 @@ public sealed partial class MainPage : Page
     private readonly ApiSettings _apiSettings = Ioc.Default.GetRequiredService<ApiSettings>();
     private readonly IShellHostStateService _shellHost = Ioc.Default.GetRequiredService<IShellHostStateService>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
+    private readonly PlaybackStateService _playbackState = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private bool _playBarAutoHideSubscribed;
     private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
     private bool _isPlaybarOnShow = true;
     private bool _playbarHidden;
+    private bool _playbarHiddenWhenIdle;
     private Storyboard? _playbarHideStoryboard;
+    private DispatcherTimer? _idleHideTimer;
+    private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _playbackStateChangedListener;
+    private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _uiSettingsChangedListener;
     private ConnectedAnimationBatch? _collapseAnimations;
     private int _surfaceTransitionVersion;
 
@@ -84,7 +89,9 @@ public sealed partial class MainPage : Page
         AttachPlayBarAutoHideListener();
         AttachSurfaceStoreListener();
         UIElement playBarMarginRect = PlayBarMarginBackground?.As<UIElement>();
-        SetPlayBarMarginBlurEffect(playBarMarginRect);
+        if (UISettings.PlaybarProgressiveBlur)
+            SetPlayBarMarginBlurEffect(playBarMarginRect);
+        Loaded += (_, _) => UpdateHomePlaybar();
         if (UISettings.DisplayMaintain) Ioc.Default.GetRequiredService<IDisplayKeepAwakeService>().RequestActive();
     }
 
@@ -97,8 +104,60 @@ public sealed partial class MainPage : Page
             OnDetachAction = weakEventListener => { _surfaceStore.PropertyChanged -= weakEventListener.OnEvent; }
         };
         _surfaceStore.PropertyChanged += _surfaceStoreChangedListener.OnEvent;
-        ApplyPlaybarVisibility();
+        _playbackStateChangedListener?.Detach();
+        _playbackStateChangedListener = new WeakEventListener<MainPage, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) =>
+            {
+                if (args.PropertyName == nameof(PlaybackStateService.IsPlaying))
+                    _ = instance.RunOnUIThreadAsync(instance.OnPlaybackStateChanged);
+            },
+            OnDetachAction = weakEventListener => { _playbackState.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _playbackState.PropertyChanged += _playbackStateChangedListener.OnEvent;
+        _uiSettingsChangedListener?.Detach();
+        _uiSettingsChangedListener = new WeakEventListener<MainPage, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) =>
+            {
+                if (args.PropertyName == nameof(HyPlayer.Domain.Settings.UISettings.HidePlaybarOnHome))
+                    instance.UpdateHomePlaybar();
+            },
+            OnDetachAction = weakEventListener => { UISettings.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        UISettings.PropertyChanged += _uiSettingsChangedListener.OnEvent;
+        ApplyPlaybarVisibility(false);
         ApplySurfaceMode(_surfaceStore.SurfaceMode);
+    }
+
+    private void OnPlaybackStateChanged()
+    {
+        _idleHideTimer?.Stop();
+        if (_playbackState.IsPlaying)
+        {
+            UpdateHomePlaybar();
+            return;
+        }
+
+        if (_idleHideTimer == null)
+        {
+            _idleHideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1500) };
+            _idleHideTimer.Tick += (_, _) =>
+            {
+                _idleHideTimer.Stop();
+                UpdateHomePlaybar();
+            };
+        }
+
+        _idleHideTimer.Start();
+    }
+
+    private void UpdateHomePlaybar()
+    {
+        var hidden = UISettings.HidePlaybarOnHome && !_surfaceStore.IsExpanded && !_playbackState.IsPlaying;
+        if (hidden == _playbarHiddenWhenIdle) return;
+        _playbarHiddenWhenIdle = hidden;
+        ApplyPlaybarVisibility(true);
     }
 
     private void AttachPlayBarAutoHideListener()
@@ -125,6 +184,7 @@ public sealed partial class MainPage : Page
         {
             case nameof(PlaybackSurfaceStore.SurfaceMode):
                 ApplySurfaceMode(_surfaceStore.SurfaceMode);
+                UpdateHomePlaybar();
                 break;
             case nameof(PlaybackSurfaceStore.ExpandedFrameOffsetY):
                 ExpandedPlayerPositionOffset.Y = _surfaceStore.ExpandedFrameOffsetY;
@@ -136,7 +196,7 @@ public sealed partial class MainPage : Page
                 EnsureExpandedPlayerFrame();
                 break;
             case nameof(PlaybackSurfaceStore.IsPlayBarSuppressed):
-                ApplyPlaybarVisibility();
+                ApplyPlaybarVisibility(false);
                 if (!_surfaceStore.IsPlayBarSuppressed) RestorePlaybar();
                 break;
         }
@@ -252,6 +312,11 @@ public sealed partial class MainPage : Page
         base.OnNavigatedFrom(e);
         _surfaceStoreChangedListener?.Detach();
         _surfaceStoreChangedListener = null;
+        _playbackStateChangedListener?.Detach();
+        _playbackStateChangedListener = null;
+        _uiSettingsChangedListener?.Detach();
+        _uiSettingsChangedListener = null;
+        _idleHideTimer?.Stop();
         DetachPlayBarAutoHideListener();
     }
 
@@ -281,28 +346,63 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void ApplyPlaybarVisibility()
+    private void ApplyPlaybarVisibility(bool slide)
     {
-        var hidden = _surfaceStore.IsPlayBarSuppressed;
+        var hidden = _surfaceStore.IsPlayBarSuppressed || _playbarHiddenWhenIdle;
         if (_playbarHidden == hidden) return;
         _playbarHidden = hidden;
-        _playbarHideStoryboard?.Stop();
-        _playbarHideStoryboard = null;
+        var storyboard = new Storyboard();
         if (!hidden)
         {
             PlayBarHost.IsHitTestVisible = true;
             PlayBarHost.Visibility = Visibility.Visible;
-            PlayBarHost.Opacity = 1;
+            if (!_surfaceStore.IsExpanded) GridPlayBarMarginBlur.Visibility = Visibility.Visible;
+            _surfaceStore.IsPlayBarSpaceReserved = true;
+            if (!slide)
+            {
+                _playbarHideStoryboard?.Stop();
+                _playbarHideStoryboard = null;
+                PlayBarHost.Opacity = 1;
+                PlayBarHostOffset.Y = 0;
+                GridPlayBarMarginBlur.Opacity = 1;
+                return;
+            }
+
+            AddPlaybarAnimation(storyboard, PlayBarHost, "Opacity", 1, 350, EasingMode.EaseOut);
+            AddPlaybarAnimation(storyboard, PlayBarHostOffset, "Y", 0, 350, EasingMode.EaseOut);
+            AddPlaybarAnimation(storyboard, GridPlayBarMarginBlur, "Opacity", 1, 350, EasingMode.EaseOut);
+            storyboard.Completed += (_, _) =>
+            {
+                if (_playbarHidden || _playbarHideStoryboard != storyboard) return;
+                PlayBarHost.Opacity = 1;
+                PlayBarHostOffset.Y = 0;
+                GridPlayBarMarginBlur.Opacity = 1;
+            };
+            _playbarHideStoryboard = storyboard;
+            storyboard.Begin();
             return;
         }
 
         PlayBarHost.IsHitTestVisible = false;
-        var storyboard = new Storyboard();
-        AddPlaybarAnimation(storyboard, PlayBarHost, "Opacity", 0, 250, EasingMode.EaseOut);
+        AddPlaybarAnimation(storyboard, PlayBarHost, "Opacity", 0, slide ? 400 : 250,
+            slide ? EasingMode.EaseIn : EasingMode.EaseOut);
+        if (slide)
+        {
+            AddPlaybarAnimation(storyboard, PlayBarHostOffset, "Y", 80, 400, EasingMode.EaseIn);
+            AddPlaybarAnimation(storyboard, GridPlayBarMarginBlur, "Opacity", 0, 400, EasingMode.EaseIn);
+        }
+
         storyboard.Completed += (_, _) =>
         {
             if (!_playbarHidden || _playbarHideStoryboard != storyboard) return;
             PlayBarHost.Visibility = Visibility.Collapsed;
+            PlayBarHost.Opacity = 0;
+            if (!slide) return;
+            PlayBarHostOffset.Y = 80;
+            GridPlayBarMarginBlur.Opacity = 0;
+            if (!_playbarHiddenWhenIdle) return;
+            GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;
+            _surfaceStore.IsPlayBarSpaceReserved = false;
         };
         _playbarHideStoryboard = storyboard;
         storyboard.Begin();

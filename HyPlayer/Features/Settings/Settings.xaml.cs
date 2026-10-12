@@ -23,6 +23,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Classes;
 using HyPlayer.Domain.Settings;
@@ -41,12 +42,16 @@ using HyPlayer.Shell;
 using HyPlayer.Shell.Input;
 using HyPlayer.Shell.Navigation;
 using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.UI.Controls.Primitives;
 using HyPlayer.UI.Dialogs;
 using Kawazu;
 using LiteFM;
 using Microsoft.Graphics.Canvas.Text;
 using WinRT;
+using ItemsRepeater = Microsoft.UI.Xaml.Controls.ItemsRepeater;
 using Point = Windows.Foundation.Point;
+using SettingsExpander = CommunityToolkit.WinUI.Controls.SettingsExpander;
+using StackLayout = Microsoft.UI.Xaml.Controls.StackLayout;
 
 #endregion
 
@@ -216,6 +221,32 @@ public sealed partial class Settings : Page
         FontBox.ItemsSource = null;
         UiFontBox.ItemsSource = null;
         _keyboardShortcuts.CancelCapture();
+    }
+
+    private void Pivot_OnPivotItemLoaded(Pivot sender, PivotItemEventArgs args)
+    {
+        var item = args.Item;
+        _ = Dispatcher.RunIdleAsync(_ =>
+        {
+            foreach (var expander in item.FindDescendants().OfType<SettingsExpander>())
+            {
+                expander.Expanded -= SettingsExpander_OnExpanded;
+                expander.Expanded += SettingsExpander_OnExpanded;
+                UseNonVirtualizingLayout(expander);
+            }
+        });
+    }
+
+    private void SettingsExpander_OnExpanded(object sender, EventArgs e)
+    {
+        UseNonVirtualizingLayout((DependencyObject)sender);
+    }
+
+    private static void UseNonVirtualizingLayout(DependencyObject root)
+    {
+        foreach (var repeater in root.FindDescendants().OfType<ItemsRepeater>())
+            if (repeater.Layout is StackLayout stackLayout)
+                repeater.Layout = new NonVirtualizingStackLayout { Spacing = stackLayout.Spacing };
     }
 
     private static List<FontInfo> GetAllFonts()

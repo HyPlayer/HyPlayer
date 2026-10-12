@@ -436,4 +436,16 @@ public partial class UISettings : SettingsBase
         get => GetSettings(nameof(ExpandedAutoCollapsePlaybar), true);
         set => SetSettings(nameof(ExpandedAutoCollapsePlaybar), value);
     }
+
+    public bool HidePlaybarOnHome
+    {
+        get => GetSettings(nameof(HidePlaybarOnHome), false);
+        set => SetSettings(nameof(HidePlaybarOnHome), value);
+    }
+
+    public bool PlaybarProgressiveBlur
+    {
+        get => GetSettings(nameof(PlaybarProgressiveBlur), true);
+        set => SetSettings(nameof(PlaybarProgressiveBlur), value);
+    }
 }

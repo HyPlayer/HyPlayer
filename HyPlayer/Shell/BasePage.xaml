@@ -76,7 +76,7 @@
                 PaneDisplayMode="Auto"
                 Style="{StaticResource LeftNavViewDefaultStyle}">
                 <muxc:NavigationView.PaneFooter>
-                    <Grid Height="120" />
+                    <Grid Height="120" Visibility="{x:Bind _surfaceStore.IsPlayBarSpaceReserved, Mode=OneWay}" />
                 </muxc:NavigationView.PaneFooter>
                 <Grid>
                     <Frame

@@ -47,7 +47,7 @@
             FontWeight="SemiBold"
             Text="设置" />
         <uiControls:PivotView Grid.Row="1">
-            <uiControls:PivotEx>
+            <uiControls:PivotEx PivotItemLoaded="Pivot_OnPivotItemLoaded">
                 <PivotItem Header="歌词设置">
                     <Grid>
                         <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
@@ -913,7 +913,7 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind UI.AlbumRound, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="唱片旋转">
+                                        <controls3:SettingsCard Header="唱片旋转" Visibility="{x:Bind UI.AlbumRound, Mode=OneWay}">
                                             <ToggleSwitch
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
@@ -1017,6 +1017,18 @@
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind UI.PlayBarMargin, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="未在播放时收起主界面底部的 PlayBar" Header="在主界面隐藏 PlayBar">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.HidePlaybarOnHome, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="关闭可降低显卡占用, 需重启应用" Header="播放栏渐变模糊">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.PlaybarProgressiveBlur, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="歌词界面专辑封面不裁剪为正方形">
                                             <ToggleSwitch
