@@ -33,19 +33,25 @@ namespace HyPlayer.LyricRenderer
 
         private void Mutate(Action action)
         {
+            var onRenderThread = Volatile.Read(ref _renderThreadId) == Environment.CurrentManagedThreadId;
+            var queued = false;
             lock (_mutationGate)
             {
                 if (_resourcesReleased) return;
-                if (_queueRenderUpdates && Volatile.Read(ref _renderThreadId) != Environment.CurrentManagedThreadId)
+                if (_queueRenderUpdates && !onRenderThread)
                 {
                     _pendingMutations.Enqueue(action);
-                    return;
+                    queued = true;
                 }
             }
-            lock (_frameGate)
+            if (!queued)
             {
-                if (!_resourcesReleased) action();
+                lock (_frameGate)
+                {
+                    if (!_resourcesReleased) action();
+                }
             }
+            if (!onRenderThread) OnChanged?.Invoke();
         }
 
         // Called after the canvas stops; also serializes against a final in-flight frame.
@@ -74,6 +80,19 @@ namespace HyPlayer.LyricRenderer
 
         public event LyricLineClickedDelegate OnLyricLineClicked;
 
+        public event Action OnChanged;
+
+        public bool NeedsFrames
+        {
+            get
+            {
+                if (!_pendingMutations.IsEmpty) return true;
+                if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return false;
+                return Volatile.Read(ref _pendingSettings) is not null || _isTypographyChanged ||
+                       _needRecalculateSize || _forceScrollReset || _scrollSettling;
+            }
+        }
+
         private readonly CustomCircleEase _circleEase = new() { EasingMode = EasingMode.EaseOut };
 
         private LyricRenderSettings? _pendingSettings;
@@ -84,6 +103,7 @@ namespace HyPlayer.LyricRenderer
         {
             ArgumentNullException.ThrowIfNull(settings);
             Interlocked.Exchange(ref _pendingSettings, settings);
+            OnChanged?.Invoke();
         }
 
         private bool _pointerPressed;
@@ -307,6 +327,7 @@ namespace HyPlayer.LyricRenderer
             Context.PointerFocusingIndex = -1;
             Context.ScrollingDelta = 0;
             Context.IsScrolling = false;
+            _scrollSettling = false;
             _needRecalculate = false;
             _needRecalculateSize = false;
             _isTypographyChanged = true;
@@ -349,7 +370,8 @@ namespace HyPlayer.LyricRenderer
             Context.CurrentLyricLine = Context.LyricLines[Context.CurrentLyricLineIndex];
             Context.RenderingLyricLines.Clear();
             var scrollOffset = _scrollTranslation.Animate(Context.RenderTick / TimeSpan.TicksPerMillisecond, Context.ScrollingDelta);
-            if (Math.Abs(scrollOffset - Context.ScrollingDelta) > Epsilon) _needRecalculate = true;
+            _scrollSettling = Math.Abs(scrollOffset - Context.ScrollingDelta) > Epsilon;
+            if (_scrollSettling) _needRecalculate = true;
             var theoryRenderAfterPosition = Context.LyricPaddingTopRatio * Context.ViewHeight + scrollOffset;
             var theoryRenderBeforePosition = theoryRenderAfterPosition;
             var renderedAfterStartPosition = theoryRenderAfterPosition;
@@ -653,6 +675,7 @@ namespace HyPlayer.LyricRenderer
 
         private long _lastWheelTime;
         private bool _forceScrollReset;
+        private bool _scrollSettling;
         private volatile bool _scrollPreviewing;
         private int _scrollPreviewNotified;
 
@@ -682,6 +705,7 @@ namespace HyPlayer.LyricRenderer
                 _forceScrollReset = true;
                 _needRecalculate = true;
             }
+            OnChanged?.Invoke();
         }
 
         public void CancelScrolling()
@@ -740,6 +764,7 @@ namespace HyPlayer.LyricRenderer
                 if (!_resourcesReleased) ScrollByCore(delta);
             }
             RaiseScrollPreviewChanged();
+            OnChanged?.Invoke();
         }
 
         private void ScrollByCore(int delta)
@@ -770,6 +795,7 @@ namespace HyPlayer.LyricRenderer
                 if (!_resourcesReleased) LyricView_OnPointerMovedCore(sender, e);
             }
             RaiseScrollPreviewChanged();
+            OnChanged?.Invoke();
         }
 
         private void LyricView_OnPointerMovedCore(object sender, PointerRoutedEventArgs e)
@@ -821,6 +847,7 @@ namespace HyPlayer.LyricRenderer
             {
                 if (!_resourcesReleased) LyricView_OnPointerExitedCore(sender, e);
             }
+            OnChanged?.Invoke();
         }
 
         private void LyricView_OnPointerExitedCore(object sender, PointerRoutedEventArgs e)
@@ -869,6 +896,7 @@ namespace HyPlayer.LyricRenderer
                 clicked = OnDoubleTappedCore(sender, e);
             }
             RaiseScrollPreviewChanged();
+            OnChanged?.Invoke();
             // Navigation can unload the canvas and join its game loop. Do not
             // hold the frame gate while invoking application callbacks.
             if (clicked is not null) OnLyricLineClicked?.Invoke(clicked);

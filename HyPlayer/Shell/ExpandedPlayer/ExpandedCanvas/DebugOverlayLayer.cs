@@ -36,6 +36,7 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
 
     public string LayerName => "Debug overlay";
     public int Order => int.MaxValue;
+    public bool NeedsFrames => _state.ShowDebugOverlay;
 
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
     {

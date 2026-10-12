@@ -41,6 +41,7 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
 
     public string LayerName => "LikeAppleBackground";
     public int Order => 0;
+    public bool NeedsFrames => _state.BackgroundType == BackgroundType.LikeApple;
 
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
     {

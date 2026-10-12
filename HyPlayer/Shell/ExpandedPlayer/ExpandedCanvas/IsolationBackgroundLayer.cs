@@ -33,6 +33,7 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
 
     public string LayerName => "IsolationBackground";
     public int Order => 0;
+    public bool NeedsFrames => _state.BackgroundType == BackgroundType.Isolation;
 
     /// <inheritdoc />
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)

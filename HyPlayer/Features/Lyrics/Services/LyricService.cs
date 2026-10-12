@@ -66,7 +66,7 @@ public sealed partial class LyricService(
             {
                 if (!HasLegacyNeteaseSourceMetadata(cached))
                 {
-                    if (HasKaraokePreferenceMismatch(cached))
+                    if (HasKaraokePreferenceMismatch(cached) || HasUnusedWordTranslation(cached))
                     {
                         var converted = await ConvertPureLyricInfoAsync(cached.PureLyricInfo,
                             GetArtistText(providerItem));
@@ -365,6 +365,16 @@ public sealed partial class LyricService(
                !string.IsNullOrWhiteSpace(karaoke.KaraokLyric) &&
                !string.IsNullOrWhiteSpace(karaoke.PureLyrics) &&
                lyricInfo.Lyrics.Any(t => t.LyricLine is KaraokeLyricsLine) != setting.KaraokeLyric;
+    }
+
+    private bool HasUnusedWordTranslation(HyLyricInfo lyricInfo)
+    {
+        return !setting.KaraokeLyric &&
+               lyricInfo.PureLyricInfo is KaraokLyricInfo karaoke &&
+               !string.IsNullOrWhiteSpace(karaoke.PureLyrics) &&
+               string.IsNullOrWhiteSpace(karaoke.TrLyrics) &&
+               !string.IsNullOrWhiteSpace(karaoke.YrTrLyrics) &&
+               !lyricInfo.Lyrics.Any(t => t.HaveTranslation);
     }
 
     private static string GetArtistText(SingleSongBase providerItem)

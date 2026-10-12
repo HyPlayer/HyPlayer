@@ -81,6 +81,7 @@ public sealed partial class ExpandedPlayer : Page
     private const double CollapseButtonRevealHeight = 120;
     private const double LyricFadeMilliseconds = 300;
     private const double LeftPanelShiftMilliseconds = 500;
+    private const double LyricCanvasIdlePauseMs = 1000;
 
     public static readonly DependencyProperty NowPlaybackSpeedProperty = DependencyProperty.Register(
         "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
@@ -144,6 +145,8 @@ public sealed partial class ExpandedPlayer : Page
     private float _lyricFadeFrom = 1;
     private float _lyricFadeTo = 1;
     private long _lyricFadeStart;
+    private long _lyricActivityTimestamp = Stopwatch.GetTimestamp();
+    private int _lyricCanvasPausePending;
     private Storyboard? _leftPanelShiftStoryboard;
     private Storyboard? _lyricPreviewHintStoryboard;
     private bool _isManualChangeMode;
@@ -228,11 +231,18 @@ public sealed partial class ExpandedPlayer : Page
         };
         _control.SeekRequested += _seekRequestedListener.OnEvent;
         Window.Current.SizeChanged += Current_SizeChanged;
+        var wakeHandler = new PointerEventHandler((_, _) => WakeLyricCanvas());
+        LuminousBackground.AddHandler(PointerMovedEvent, wakeHandler, true);
+        LuminousBackground.AddHandler(PointerWheelChangedEvent, wakeHandler, true);
+        LuminousBackground.AddHandler(PointerPressedEvent, wakeHandler, true);
+        LuminousBackground.AddHandler(PointerReleasedEvent, wakeHandler, true);
+        LuminousBackground.AddHandler(PointerExitedEvent, wakeHandler, true);
         PageContainer.AddHandler(PointerMovedEvent, new PointerEventHandler(PageContainer_PointerMoved), true);
         PageContainer.AddHandler(PointerExitedEvent, new PointerEventHandler(PageContainer_PointerExited), true);
         _lyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         _lyricBox.OnBeforeRender += LyricBox_OnBeforeRender;
         _lyricBox.ScrollPreviewChanged += LyricBox_ScrollPreviewChanged;
+        _lyricBox.OnChanged += WakeLyricCanvas;
         _lyricBox.OnLyricLineClicked += LyricBoxOnOnRequestSeek;
         _lyricBox.Context.LyricWidthRatio = _lyricSettings.LyricRenderWidthRatio / 100f;
         _lyricBox.Context.LyricPaddingTopRatio = _lyricSettings.LyricPaddingTopRatio / 100f;
@@ -304,17 +314,21 @@ public sealed partial class ExpandedPlayer : Page
         switch (propertyName)
         {
             case nameof(PlaybackStateService.IsPlaying):
+                WakeLyricCanvas();
                 if (_state.IsPlaying) HyPlayList_OnPlay();
                 else HyPlayList_OnPause();
                 break;
             case nameof(PlaybackStateService.NowPlayingProviderItem):
             case nameof(PlaybackStateService.NowPlayingSnapshot):
+                WakeLyricCanvas();
                 OnSongChange();
                 break;
             case nameof(PlaybackStateService.CoverStream):
+                WakeLyricCanvas();
                 RefreshAlbumCover(_state.NowPlayingProviderItem);
                 break;
             case nameof(PlaybackStateService.LyricInfo):
+                WakeLyricCanvas();
                 HyPlayList_OnLyricLoaded();
                 break;
         }
@@ -325,10 +339,12 @@ public sealed partial class ExpandedPlayer : Page
         switch (propertyName)
         {
             case nameof(PlaybackSurfaceStore.TransitionRequestId):
+                WakeLyricCanvas();
                 if (_surfaceStore.RequestedTransition == ExpandedPlayerTransition.Expand)
                     StartExpandAnimation();
                 break;
             case nameof(PlaybackSurfaceStore.SurfaceMode):
+                WakeLyricCanvas();
                 if (_surfaceStore.IsExpanded) ApplyChromeState();
                 else ExitImmersive();
                 break;
@@ -340,6 +356,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void HyPlayList_OnManualSeek()
     {
+        WakeLyricCanvas();
         _positionChangedBySeeking = true;
     }
 
@@ -434,8 +451,44 @@ public sealed partial class ExpandedPlayer : Page
         if (_needsRedesign)
         {
             _needsRedesign = false;
+            WakeLyricCanvas();
             RunOnUIThread(Redesign);
         }
+    }
+
+    private void WakeLyricCanvas()
+    {
+        Volatile.Write(ref _lyricActivityTimestamp, Stopwatch.GetTimestamp());
+        if (Dispatcher.HasThreadAccess)
+        {
+            if (LuminousBackground is { Paused: true }) LuminousBackground.Paused = false;
+        }
+        else
+        {
+            _ = Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+            {
+                if (LuminousBackground is { Paused: true }) LuminousBackground.Paused = false;
+            });
+        }
+    }
+
+    private bool IsLyricCanvasIdle()
+    {
+        return !_state.IsPlaying && _player.GlobalPlaybackStatus != PlaybackStatus.Playing &&
+               Stopwatch.GetElapsedTime(Volatile.Read(ref _lyricActivityTimestamp)).TotalMilliseconds >=
+               LyricCanvasIdlePauseMs;
+    }
+
+    private void TryPauseIdleLyricCanvas()
+    {
+        if (!IsLyricCanvasIdle() || _expandedCanvasHost.NeedsFrames) return;
+        if (Interlocked.Exchange(ref _lyricCanvasPausePending, 1) == 1) return;
+        _ = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+        {
+            _lyricCanvasPausePending = 0;
+            if (_isCleanedUp || LuminousBackground is null || !IsLyricCanvasIdle()) return;
+            LuminousBackground.Paused = true;
+        });
     }
 
     private void HyPlayList_OnLyricLoaded()
@@ -446,6 +499,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void Current_SizeChanged(object? sender, WindowSizeChangedEventArgs? e)
     {
+        WakeLyricCanvas();
         _nowWidth = e is null ? (int)Window.Current.Bounds.Width : (int)e.Size.Width;
         _nowHeight = e is null ? (int)Window.Current.Bounds.Height : (int)e.Size.Height;
         if (_lastWidth != _nowWidth)
@@ -481,6 +535,7 @@ public sealed partial class ExpandedPlayer : Page
             {
                 if (!_needsRedesign || _isCleanedUp || _lifecycle.IsInBackground) return;
                 _needsRedesign = false;
+                WakeLyricCanvas();
                 Redesign();
             };
         }
@@ -498,6 +553,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void ChangeWindowMode()
     {
+        WakeLyricCanvas();
         _isRealClick = false;
         _canvasState.WindowMode = _windowMode;
 
@@ -554,6 +610,7 @@ public sealed partial class ExpandedPlayer : Page
         _lyricFadeFrom = current;
         _lyricFadeTo = to;
         Volatile.Write(ref _lyricFadeStart, Stopwatch.GetTimestamp());
+        WakeLyricCanvas();
     }
 
     private int CountEffectiveLyricLines()
@@ -899,6 +956,7 @@ public sealed partial class ExpandedPlayer : Page
 
     internal void OnEnteringForeground()
     {
+        WakeLyricCanvas();
         OnSongChange();
         RefreshAlbumCover(_state.NowPlayingProviderItem);
         if (!_lyricHasBeenLoaded) HyPlayList_OnLyricLoaded();
@@ -1430,6 +1488,7 @@ public sealed partial class ExpandedPlayer : Page
         if (_isCleanedUp || _canvasResourcesReleased || _state.CoverStream == null || _lifecycle.IsInBackground) return;
         using var stream = _state.CoverStream.CloneStream();
         var isBright = await IsBrightAsync(stream);
+        WakeLyricCanvas();
         _ = this.RunOnUIThreadAsync(async () =>
         {
             if (_isCleanedUp || _canvasResourcesReleased) return;
@@ -1489,6 +1548,8 @@ public sealed partial class ExpandedPlayer : Page
                         using var likeAppleCover = _state.CoverStream.CloneStream();
                         await _likeAppleBackgroundLayer.SetArtworkAsync(likeAppleCover);
                     }
+
+                    WakeLyricCanvas();
                 }
                 catch
                 {
@@ -1568,6 +1629,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void LuminousBackground_SizeChanged(object sender, SizeChangedEventArgs e)
     {
+        WakeLyricCanvas();
         UpdateShaderResolution();
     }
 
@@ -1601,6 +1663,7 @@ public sealed partial class ExpandedPlayer : Page
         if (_isCleanedUp) return;
         SyncCanvasState();
         _expandedCanvasHost.Update(sender, args);
+        TryPauseIdleLyricCanvas();
     }
 
     private void LuminousBackground_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
@@ -1685,6 +1748,7 @@ public sealed partial class ExpandedPlayer : Page
         Window.Current.SizeChanged -= Current_SizeChanged;
         _lyricBox.OnBeforeRender -= LyricBox_OnBeforeRender;
         _lyricBox.ScrollPreviewChanged -= LyricBox_ScrollPreviewChanged;
+        _lyricBox.OnChanged -= WakeLyricCanvas;
         _lyricBox.OnLyricLineClicked -= LyricBoxOnOnRequestSeek;
         if (_uiSettings.AlbumRotate)
             RotateAnimationSet.Stop();

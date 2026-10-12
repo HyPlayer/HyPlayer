@@ -56,6 +56,18 @@ public class ExpandedCanvasHost : IExpandedCanvasHost
             layer.Draw(sender, session, args.Timing);
     }
 
+    public bool NeedsFrames
+    {
+        get
+        {
+            foreach (var layer in _layers)
+                if (layer.NeedsFrames)
+                    return true;
+
+            return false;
+        }
+    }
+
     /// <inheritdoc />
     public bool TryHandlePointer(PointerRoutedEventArgs args)
     {

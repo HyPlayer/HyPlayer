@@ -28,6 +28,7 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
 
     public string LayerName => "Spectrum";
     public int Order => 10;
+    public bool NeedsFrames => _state.ShowSpectrum && _visibility > 0f;
 
     /// <inheritdoc />
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)

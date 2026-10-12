@@ -21,6 +21,18 @@ public sealed class LyricsLayer : IExpandedCanvasLayer
     public string LayerName => "Lyrics";
     public int Order => 20;
 
+    public bool NeedsFrames
+    {
+        get
+        {
+            var box = _state.LyricBox;
+            if (box is null || _state.WindowMode == ExpandedWindowMode.CoverOnly) return false;
+            var opacity = _state.LyricOpacity;
+            if (opacity <= 0.001f) return false;
+            return opacity < 0.999f || box.NeedsFrames;
+        }
+    }
+
     /// <inheritdoc />
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
     {
