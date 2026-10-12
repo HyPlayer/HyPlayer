@@ -17,7 +17,7 @@ namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposable
 {
     private const float OverlayWidth = 300;
-    private const float OverlayHeight = 378;
+    private const float OverlayHeight = 395;
     private const int WindowSeconds = 10;
     private const double TextRefreshMilliseconds = 250;
     private const double TrackChangeMilliseconds = 1500;
@@ -165,6 +165,7 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
             $"托管堆 / 大对象  {last.HeapSizeBytes / 1048576.0,6:F0} / {largeObjects / 1048576.0:F0} MB\n" +
             $"进程分配速率     {_processAllocationRate / 1048576.0,8:F2} MB/s\n" +
             $"系统内存负载     {memoryLoad,5:F0} % (高 {highLoad:F0} %)\n" +
+            $"解码缓冲 建/还   {System.Threading.Interlocked.Read(ref HyPlayer.Platform.Playback.MediaSources.DecodeBufferStatistics.Created)} / {System.Threading.Interlocked.Read(ref HyPlayer.Platform.Playback.MediaSources.DecodeBufferStatistics.Returned)}\n" +
             $"最差帧           {window.WorstMarkers.Describe()}";
     }
 

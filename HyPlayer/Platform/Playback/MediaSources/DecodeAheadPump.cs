@@ -5,6 +5,12 @@ using System.Threading;
 
 namespace HyPlayer.Platform.Playback.MediaSources;
 
+internal static class DecodeBufferStatistics
+{
+    public static long Created;
+    public static long Returned;
+}
+
 internal class DecodedChunk
 {
     public nint Data;
@@ -109,6 +115,8 @@ internal sealed class DecodeAheadPump : IDisposable
         {
             if (!_disposed) _free.Push(chunk);
         }
+
+        Interlocked.Increment(ref DecodeBufferStatistics.Returned);
     }
 
     public void Seek(TimeSpan position, Action completed)

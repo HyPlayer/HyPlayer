@@ -263,6 +263,7 @@ public static class RechunkedAudioSource
         public SampleChunk(int capacity, DecodeAheadPump pump)
         {
             _buffer = new Windows.Storage.Streams.Buffer((uint)capacity);
+            Interlocked.Increment(ref DecodeBufferStatistics.Created);
             GC.AddMemoryPressure(capacity);
             _pressure = capacity;
             _processed = (sender, args) => pump.Return(this);
