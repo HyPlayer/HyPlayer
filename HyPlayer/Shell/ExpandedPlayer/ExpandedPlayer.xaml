@@ -288,6 +288,12 @@
                 Grid.Row="2"
                 Grid.Column="2" />
         </Grid>
+        <Border
+            x:Name="BrightDimmer"
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            Canvas.ZIndex="-1"
+            IsHitTestVisible="False" />
         <Grid
             x:Name="MainGrid"
             Grid.Row="1"

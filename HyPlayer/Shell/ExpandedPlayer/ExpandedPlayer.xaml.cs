@@ -80,6 +80,7 @@ public sealed partial class ExpandedPlayer : Page
     private const double PlaybarReservedHeight = 80;
     private const double CollapseButtonRevealHeight = 120;
     private const double LyricFadeMilliseconds = 300;
+    private const float MaxBackgroundDim = 0.38f;
     private const double LeftPanelShiftMilliseconds = 500;
     private const double LyricCanvasIdlePauseMs = 1000;
 
@@ -152,6 +153,13 @@ public sealed partial class ExpandedPlayer : Page
     private bool _isManualChangeMode;
     private bool _isRealClick;
     private SingleSongBase? _lastCoverSong;
+    private string? _lastSongTitle;
+    private int _coverRefreshVersion;
+    private int _coverSwapVersion;
+    private bool _hasDisplayedCover;
+    private double _coverLuminance;
+    private Windows.UI.Composition.SpriteVisual? _dimBlur;
+    private Windows.UI.Composition.SpriteVisual? _dimTint;
     private int _lastHeight;
     private int _lastRedesignHeight;
     private int _lastWidth;
@@ -967,6 +975,10 @@ public sealed partial class ExpandedPlayer : Page
         _ = this.RunOnUIThreadAsync(() =>
         {
             ViewModel.SyncFromState();
+            var title = ViewModel.SongName;
+            var titleChanged = _lastSongTitle is not null && _lastSongTitle != title;
+            _lastSongTitle = title;
+            if (titleChanged && _uiSettings.ExpandAnimation && !_isCleanedUp) FadeInSongInfo();
             NowPlaybackSpeed = FormatPlaybackSpeed(_state.PlaybackSpeed);
         });
     }
@@ -1185,7 +1197,12 @@ public sealed partial class ExpandedPlayer : Page
         }
     }
 
-    private async Task<bool> IsBrightAsync(IRandomAccessStream stream)
+    private bool IsStaleCoverRefresh(int version)
+    {
+        return version != Volatile.Read(ref _coverRefreshVersion);
+    }
+
+    private async Task<bool> IsBrightAsync(IRandomAccessStream stream, int version)
     {
         _lastCoverSong = _state.NowPlayingProviderItem;
         var finalResult = false; //在不手动指定背景类型为2至5时需要执行颜色采样
@@ -1199,15 +1216,22 @@ public sealed partial class ExpandedPlayer : Page
         if (_state.NowPlayingProviderItem == null) return false;
         try
         {
-            var theme = await ColorHelper.ExtractThemeColorFromStream(stream, _uiSettings.ColorGeneratorType);
-            _albumMainColor = theme;
-            stream.Seek(0);
-            if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated ||
-                _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation ||
-                _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
+            var generatorType = _uiSettings.ColorGeneratorType;
+            var useLab = _lyricSettings.ImpressionistLABSpace;
+            var usesPalette = _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated ||
+                              _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation ||
+                              _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple;
+            var (theme, palette) = await Task.Run(async () =>
             {
-                var palette = await ColorHelper.ExtractPaletteFromStream(stream, _uiSettings.ColorGeneratorType,
-                    _lyricSettings.ImpressionistLABSpace);
+                var themeColor = await ColorHelper.ExtractThemeColorFromStream(stream, generatorType);
+                if (!usesPalette) return (themeColor, (List<Vector3>?)null);
+                stream.Seek(0);
+                return (themeColor, await ColorHelper.ExtractPaletteFromStream(stream, generatorType, useLab));
+            });
+            if (IsStaleCoverRefresh(version)) return finalResult;
+            _albumMainColor = theme;
+            if (palette is not null)
+            {
                 if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated)
                 {
                     _albumColors =
@@ -1230,6 +1254,7 @@ public sealed partial class ExpandedPlayer : Page
             if (_uiSettings.ExpandedPlayerBackgroundType is BackgroundType.CoverTheme)
                 PageContainer.Background =
                     new SolidColorBrush(_albumMainColor!.Value);
+            _coverLuminance = (0.2126 * theme.R + 0.7152 * theme.G + 0.0722 * theme.B) / 255;
             if (!resultGenerated)
             {
                 finalResult = !new Vector3(theme.R, theme.G, theme.B).RGBVectorLStarIsDark();
@@ -1487,8 +1512,11 @@ public sealed partial class ExpandedPlayer : Page
     public async void RefreshAlbumCover(SingleSongBase? playItem)
     {
         if (_isCleanedUp || _canvasResourcesReleased || _state.CoverStream == null || _lifecycle.IsInBackground) return;
+        if (playItem is not null && !ReferenceEquals(playItem, _state.NowPlayingProviderItem)) return;
+        var version = Interlocked.Increment(ref _coverRefreshVersion);
         using var stream = _state.CoverStream.CloneStream();
-        var isBright = await IsBrightAsync(stream);
+        var isBright = await IsBrightAsync(stream, version);
+        if (IsStaleCoverRefresh(version)) return;
         WakeLyricCanvas();
         _ = this.RunOnUIThreadAsync(async () =>
         {
@@ -1497,12 +1525,13 @@ public sealed partial class ExpandedPlayer : Page
                 try
                 {
                     if (!ReferenceEquals(playItem, _state.NowPlayingProviderItem) ||
-                        !ReferenceEquals(playItem, _lastCoverSong)) return;
+                        !ReferenceEquals(playItem, _lastCoverSong) || IsStaleCoverRefresh(version)) return;
                     using var cover = _state.CoverStream.CloneStream();
                     var bitmap = new BitmapImage();
                     await bitmap.SetSourceAsync(cover);
-                    if (_isCleanedUp || _canvasResourcesReleased) return;
-                    ViewModel.Cover = bitmap;
+                    if (_isCleanedUp || _canvasResourcesReleased || IsStaleCoverRefresh(version)) return;
+                    await SwapCoverAsync(bitmap, version);
+                    if (_isCleanedUp || _canvasResourcesReleased || IsStaleCoverRefresh(version)) return;
                     if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.CoverBlur &&
                         Background is not ImageBrush)
                     {
@@ -1519,7 +1548,10 @@ public sealed partial class ExpandedPlayer : Page
                         BlackCover.Fill = new SolidColorBrush(Color.FromArgb(80, 255, 255, 255));
                     else if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated && !isBright)
                         BlackCover.Fill = new SolidColorBrush(Color.FromArgb(80, 0, 0, 0));
-                    ApplyPlaybackTheme(ExpandedPlayerThemeFactory.Create(_uiSettings, _lyricSettings, _albumMainColor, isBright));
+                    var dimBackground = isBright && UsesBrightDimmer();
+                    AnimateBrightDimmer(dimBackground);
+                    ApplyPlaybackTheme(ExpandedPlayerThemeFactory.Create(_uiSettings, _lyricSettings, _albumMainColor,
+                        isBright && !dimBackground));
                     if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
                         _likeAppleBackgroundLayer.SetLightTheme(isBright);
 
@@ -1558,6 +1590,111 @@ public sealed partial class ExpandedPlayer : Page
         });
     }
 
+
+    private bool UsesBrightDimmer()
+    {
+        return _uiSettings.LyricColor != LyricColor.Black &&
+               _uiSettings.ExpandedPlayerBackgroundType != BackgroundType.LikeApple;
+    }
+
+    private void AnimateBrightDimmer(bool dim)
+    {
+        var amount = dim
+            ? (float)Math.Clamp((_coverLuminance - 0.35) / 0.65 * 0.45, 0.08, MaxBackgroundDim)
+            : 0f;
+        if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation)
+        {
+            _isolationBackgroundLayer.SetBrightDim(dim, amount);
+            dim = false;
+            amount = 0;
+        }
+
+        if (!dim && _dimTint is null) return;
+        EnsureBackgroundDimmer();
+        var compositor = _dimTint!.Compositor;
+        var ease = compositor.CreateCubicBezierEasingFunction(new Vector2(0.25f, 0.1f), new Vector2(0.25f, 1f));
+        StartDimmerFade(_dimBlur!, dim ? 1f : 0f, ease);
+        StartDimmerFade(_dimTint, amount, ease);
+    }
+
+    private static void StartDimmerFade(
+        Windows.UI.Composition.SpriteVisual visual,
+        float target,
+        Windows.UI.Composition.CompositionEasingFunction ease)
+    {
+        var fade = visual.Compositor.CreateScalarKeyFrameAnimation();
+        fade.InsertKeyFrame(1f, target, ease);
+        fade.Duration = TimeSpan.FromMilliseconds(900);
+        visual.StartAnimation("Opacity", fade);
+    }
+
+    private void EnsureBackgroundDimmer()
+    {
+        if (_dimBlur is not null) return;
+        var compositor = ElementCompositionPreview.GetElementVisual(BrightDimmer).Compositor;
+        var blur = new Microsoft.Graphics.Canvas.Effects.GaussianBlurEffect
+        {
+            Name = "Blur",
+            BlurAmount = 16,
+            BorderMode = Microsoft.Graphics.Canvas.Effects.EffectBorderMode.Hard,
+            Source = new Windows.UI.Composition.CompositionEffectSourceParameter("backdrop")
+        };
+        var blurBrush = compositor.CreateEffectFactory(blur).CreateBrush();
+        blurBrush.SetSourceParameter("backdrop", compositor.CreateBackdropBrush());
+        _dimBlur = compositor.CreateSpriteVisual();
+        _dimBlur.Brush = blurBrush;
+        _dimBlur.RelativeSizeAdjustment = Vector2.One;
+        _dimBlur.Opacity = 0;
+        _dimTint = compositor.CreateSpriteVisual();
+        _dimTint.Brush = compositor.CreateColorBrush(Colors.Black);
+        _dimTint.RelativeSizeAdjustment = Vector2.One;
+        _dimTint.Opacity = 0;
+        var root = compositor.CreateContainerVisual();
+        root.RelativeSizeAdjustment = Vector2.One;
+        root.Children.InsertAtTop(_dimBlur);
+        root.Children.InsertAtTop(_dimTint);
+        ElementCompositionPreview.SetElementChildVisual(BrightDimmer, root);
+    }
+
+    private void FadeInSongInfo()
+    {
+        foreach (var element in (UIElement[])[TextBlockSongTitle, SingerHyperlinkBtn, AlbumHyperlinkBtn])
+        {
+            var visual = ElementCompositionPreview.GetElementVisual(element);
+            var compositor = visual.Compositor;
+            var fadeIn = compositor.CreateScalarKeyFrameAnimation();
+            fadeIn.InsertKeyFrame(0f, 0f);
+            fadeIn.InsertKeyFrame(1f, 1f,
+                compositor.CreateCubicBezierEasingFunction(new Vector2(0f, 0f), new Vector2(0.2f, 1f)));
+            fadeIn.Duration = TimeSpan.FromMilliseconds(480);
+            visual.StartAnimation("Opacity", fadeIn);
+        }
+    }
+
+    private async Task SwapCoverAsync(BitmapImage bitmap, int version)
+    {
+        var swap = ++_coverSwapVersion;
+        var visual = ElementCompositionPreview.GetElementVisual(ImageAlbum);
+        var compositor = visual.Compositor;
+        if (_hasDisplayedCover && ImageAlbum.ActualWidth > 0 && _uiSettings.ExpandAnimation)
+        {
+            var fadeOut = compositor.CreateScalarKeyFrameAnimation();
+            fadeOut.InsertKeyFrame(1f, 0f,
+                compositor.CreateCubicBezierEasingFunction(new Vector2(0.4f, 0f), new Vector2(1f, 1f)));
+            fadeOut.Duration = TimeSpan.FromMilliseconds(160);
+            visual.StartAnimation("Opacity", fadeOut);
+            await Task.Delay(160);
+            if (swap != _coverSwapVersion || IsStaleCoverRefresh(version) || _isCleanedUp) return;
+        }
+
+        ViewModel.Cover = bitmap;
+        _hasDisplayedCover = true;
+        var fadeIn = compositor.CreateScalarKeyFrameAnimation();
+        fadeIn.InsertKeyFrame(1f, 1f,
+            compositor.CreateCubicBezierEasingFunction(new Vector2(0f, 0f), new Vector2(0.2f, 1f)));
+        fadeIn.Duration = TimeSpan.FromMilliseconds(420);
+        visual.StartAnimation("Opacity", fadeIn);
+    }
 
     private void LuminousBackground_OnUnloaded(object sender, RoutedEventArgs e)
     {
