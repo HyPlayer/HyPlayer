@@ -17,7 +17,7 @@ namespace HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposable
 {
     private const float OverlayWidth = 300;
-    private const float OverlayHeight = 310;
+    private const float OverlayHeight = 378;
     private const int WindowSeconds = 10;
     private const double TextRefreshMilliseconds = 250;
     private const double TrackChangeMilliseconds = 1500;
@@ -39,6 +39,9 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
     private double _typicalInterval;
     private LyricFrameActivity _previousActivity;
     private string _text = string.Empty;
+    private long _processAllocatedBytes;
+    private long _processAllocatedTimestamp;
+    private double _processAllocationRate;
 
     public DebugOverlayLayer(ExpandedCanvasState state)
     {
@@ -117,6 +120,29 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
         var timingMode = sender.IsFixedTimeStep ? "Fixed" : "Variable";
         var runningState = timing.IsRunningSlowly ? "SLOW" : "OK";
         var window = _window.Summarize();
+        var now = Stopwatch.GetTimestamp();
+        var processAllocated = GC.GetTotalAllocatedBytes(false);
+        if (_processAllocatedTimestamp != 0)
+        {
+            var seconds = Stopwatch.GetElapsedTime(_processAllocatedTimestamp, now).TotalSeconds;
+            if (seconds > 0)
+                _processAllocationRate = _processAllocationRate * 0.75 +
+                                         (processAllocated - _processAllocatedBytes) / seconds * 0.25;
+        }
+
+        _processAllocatedBytes = processAllocated;
+        _processAllocatedTimestamp = now;
+        var last = GC.GetGCMemoryInfo(GCKind.Any);
+        var lastPause = 0.0;
+        foreach (var pause in last.PauseDurations) lastPause += pause.TotalMilliseconds;
+        var lastKind = last.Concurrent ? "后台" : last.Compacted ? "阻塞压缩" : "阻塞";
+        var largeObjects = last.GenerationInfo.Length > 3 ? last.GenerationInfo[3].SizeAfterBytes : 0;
+        var memoryLoad = last.TotalAvailableMemoryBytes > 0
+            ? 100.0 * last.MemoryLoadBytes / last.TotalAvailableMemoryBytes
+            : 0;
+        var highLoad = last.TotalAvailableMemoryBytes > 0
+            ? 100.0 * last.HighMemoryLoadThresholdBytes / last.TotalAvailableMemoryBytes
+            : 0;
         return
             $"ExpandedPlayer / Win2D\n" +
             $"FPS (Draw)       {_framesPerSecond,8:F1}\n" +
@@ -135,6 +161,10 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
             $"每帧分配         {window.AllocatedPerFrame,8:F0} B\n" +
             $"GC 0/1/2 代      {window.Generation0,4} / {window.Generation1} / {window.Generation2}\n" +
             $"GC 暂停          {window.PauseMilliseconds,8:F2} ms\n" +
+            $"上次 GC          {last.Generation} 代 {lastKind} {lastPause:F1} ms\n" +
+            $"托管堆 / 大对象  {last.HeapSizeBytes / 1048576.0,6:F0} / {largeObjects / 1048576.0:F0} MB\n" +
+            $"进程分配速率     {_processAllocationRate / 1048576.0,8:F2} MB/s\n" +
+            $"系统内存负载     {memoryLoad,5:F0} % (高 {highLoad:F0} %)\n" +
             $"最差帧           {window.WorstMarkers.Describe()}";
     }
 

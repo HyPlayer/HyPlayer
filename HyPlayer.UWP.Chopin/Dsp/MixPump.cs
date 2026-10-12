@@ -105,11 +105,12 @@ namespace HyPlayer.UWP.Chopin.Dsp
         private readonly float[] _shadow;
         private readonly int _shadowFrames;
         private readonly ClockOffsetEstimator _drift = new();
+        private readonly Action<long> _quantaElapsed;
         private readonly long[] _leadHistogram = new long[LeadBuckets];
         private long _written;
         private bool _primed;
         private bool _frozen;
-        private bool _failed;
+        private volatile bool _failed;
         private bool _hasBaseline;
         private long _baseline;
         private long _starved;
@@ -119,9 +120,13 @@ namespace HyPlayer.UWP.Chopin.Dsp
         private long _minLead = long.MaxValue;
         private double _lastWakeMs = double.NaN;
         private double _maxGapMs;
+        private long _clockQuanta = -1;
+        private long _offset = long.MinValue;
+        private bool _resuming;
 
-        public MixPump(IMixSink sink, IMixPumpSource source, int sampleRate)
+        public MixPump(IMixSink sink, IMixPumpSource source, int sampleRate, Action<long> quantaElapsed = null)
         {
+            _quantaElapsed = quantaElapsed;
             _sink = sink ?? throw new ArgumentNullException(nameof(sink));
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _sampleRate = Math.Max(1, sampleRate);
@@ -168,6 +173,8 @@ namespace HyPlayer.UWP.Chopin.Dsp
             var stable = before == clock;
             var played = _written - queued;
             Observe(queued, clock - played, stable);
+            TrackUnderrun(queued, clock - played, stable);
+            ReportQuanta(clock);
             _source.Advance(new MixClock(played, _block, stable));
             if (_source.TakeCut(out var fadeFrames)) Cut(fadeFrames);
             while (_written - played < _targetLead)
@@ -183,6 +190,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
                     span.Clear();
                 }
 
+                if (_resuming) FadeIn(span);
                 _sink.Write(span);
                 Remember(span);
                 _written += _block;
@@ -211,6 +219,40 @@ namespace HyPlayer.UWP.Chopin.Dsp
             else if (value - _baseline > _starved)
             {
                 _starved = value - _baseline;
+            }
+        }
+
+        private void TrackUnderrun(long queued, long offset, bool stable)
+        {
+            if (!_primed || _frozen || !stable) return;
+            if (queued > 0) _offset = offset;
+            else if (_offset != long.MinValue && offset > _offset) _resuming = true;
+        }
+
+        private void FadeIn(Span<float> block)
+        {
+            _resuming = false;
+            var frames = block.Length / 2;
+            for (var i = 0; i < frames; i++)
+            {
+                var gain = (i + 1) / (float)frames;
+                block[i * 2] *= gain;
+                block[i * 2 + 1] *= gain;
+            }
+        }
+
+        private void ReportQuanta(long clock)
+        {
+            var quanta = clock / _block;
+            var elapsed = _clockQuanta < 0 ? 0 : quanta - _clockQuanta;
+            _clockQuanta = quanta;
+            if (elapsed <= 0 || _quantaElapsed == null) return;
+            try
+            {
+                _quantaElapsed(elapsed);
+            }
+            catch
+            {
             }
         }
 

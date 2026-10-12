@@ -18,8 +18,9 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
     /// 基于 AudioGraph 的音频播放器实现
     /// 提供多音轨播放、设备切换、音量控制等功能
     /// </summary>
-    public partial class AudioGraphPlayer : IPlayer, IDisposable
+    public partial class AudioGraphPlayer : IPlayer, IDisposable, IMixRendererHost
     {
+        private const long MaxRampQuantaPerWake = 2;
         #region Private Fields
         private readonly ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new();
         private readonly ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new();
@@ -257,7 +258,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             _inGraphCallback = true;
             try
             {
-                AdvanceRamps(sender);
+                AdvanceRamps(sender, 1);
             }
             finally
             {
@@ -266,12 +267,44 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
         }
 
-        private void AdvanceRamps(AudioGraph sender)
+        void IMixRendererHost.MixQuantaElapsed(MixRenderer renderer, long quanta)
+        {
+            if (Volatile.Read(ref _activeRampCount) == 0 || !ReferenceEquals(RampDriver(), renderer)) return;
+            var graph = _defaultPlayer;
+            if (graph != null) AdvanceRamps(graph, Math.Min(quanta, MaxRampQuantaPerWake));
+        }
+
+        void IMixRendererHost.MixRendererStopped()
+        {
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    if (!_disposedValue) RefreshCallbacks();
+                }
+                catch
+                {
+                }
+            });
+        }
+
+        private MixRenderer RampDriver()
+        {
+            lock (_renderers)
+            {
+                foreach (var renderer in _renderers)
+                    if (renderer.DrivesRamps) return renderer;
+            }
+
+            return null;
+        }
+
+        private void AdvanceRamps(AudioGraph sender, long quanta)
         {
             if (Volatile.Read(ref _activeRampCount) == 0) return;
             var sampleRate = sender.EncodingProperties.SampleRate;
             if (sampleRate == 0) return;
-            var step = sender.SamplesPerQuantum / (double)sampleRate;
+            var step = quanta * sender.SamplesPerQuantum / (double)sampleRate;
             List<GainRamp> finished = null;
             lock (_rampLock)
             {
@@ -300,10 +333,10 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
             if (finished == null) return;
             foreach (var ramp in finished) ramp.Completion.TrySetResult(true);
-            RefreshCallbacks();
+            ThreadPool.QueueUserWorkItem(_ => RefreshCallbacks());
         }
 
-        private bool TransientCallbacksNeeded() => Volatile.Read(ref _activeRampCount) > 0;
+        private bool TransientCallbacksNeeded() => Volatile.Read(ref _activeRampCount) > 0 && RampDriver() == null;
 
         private bool MixWorkActive()
         {
@@ -431,7 +464,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             bus.AddOutgoingConnection(_outputNode);
             ConnectFrameOutput(bus);
             node.AddOutgoingConnection(bus);
-            var renderer = new MixRenderer(graph, node, bus, source);
+            var renderer = new MixRenderer(graph, node, bus, source, this);
             lock (_renderers) _renderers.Add(renderer);
             RefreshCallbacks();
             renderer.Start();
@@ -442,6 +475,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         {
             if (renderer == null) return;
             lock (_renderers) _renderers.Remove(renderer);
+            RefreshCallbacks();
             renderer.Shutdown(false);
             RefreshCallbacks();
             try

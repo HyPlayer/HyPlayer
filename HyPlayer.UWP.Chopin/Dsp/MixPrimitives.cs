@@ -135,29 +135,38 @@ namespace HyPlayer.UWP.Chopin.Dsp
         }
     }
 
+    internal interface IMixRendererHost
+    {
+        void MixQuantaElapsed(MixRenderer renderer, long quanta);
+        void MixRendererStopped();
+    }
+
     public sealed class MixRenderer : IMixSink
     {
         private const int WakeMilliseconds = 5;
         private const int JoinMilliseconds = 2000;
         private readonly AudioGraph _graph;
         private readonly IMixPumpSource _source;
+        private readonly IMixRendererHost _host;
         private readonly MixPump _pump;
         private readonly Thread _thread;
         private readonly PreciseWait _wait = new();
         private readonly int _quantum;
         private readonly long _callbacksAtStart = AudioThreadCallbacks.Count;
         private volatile bool _stop;
+        private volatile bool _exited;
         private int _state;
         private int _unit = 1;
 
-        internal MixRenderer(AudioGraph graph, AudioFrameInputNode node, AudioSubmixNode bus, IMixPumpSource source)
+        internal MixRenderer(AudioGraph graph, AudioFrameInputNode node, AudioSubmixNode bus, IMixPumpSource source, IMixRendererHost host)
         {
             _graph = graph;
             Node = node;
             Bus = bus;
             _source = source;
+            _host = host;
             _quantum = Math.Max(1, graph.SamplesPerQuantum);
-            _pump = new MixPump(this, source, (int)graph.EncodingProperties.SampleRate);
+            _pump = new MixPump(this, source, (int)graph.EncodingProperties.SampleRate, quanta => _host.MixQuantaElapsed(this, quanta));
             _thread = new Thread(Run)
             {
                 IsBackground = true,
@@ -168,6 +177,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
 
         internal AudioFrameInputNode Node { get; }
         internal AudioSubmixNode Bus { get; }
+        internal bool DrivesRamps => !_exited && Volatile.Read(ref _state) != 2 && !_pump.Failed;
 
         public MixPumpStats Stats => _pump.Snapshot() with { AudioThreadCallbacks = AudioThreadCallbacks.Count - _callbacksAtStart };
 
@@ -212,12 +222,32 @@ namespace HyPlayer.UWP.Chopin.Dsp
                 {
                 }
 
+                var failed = false;
                 while (!_stop)
                 {
                     _wait.Wait(WakeMilliseconds);
                     if (_stop) break;
                     _pump.Step(clock.Elapsed.TotalMilliseconds);
+                    if (failed || !_pump.Failed) continue;
+                    failed = true;
+                    NotifyStopped();
                 }
+            }
+            catch
+            {
+            }
+            finally
+            {
+                _exited = true;
+                NotifyStopped();
+            }
+        }
+
+        private void NotifyStopped()
+        {
+            try
+            {
+                _host.MixRendererStopped();
             }
             catch
             {

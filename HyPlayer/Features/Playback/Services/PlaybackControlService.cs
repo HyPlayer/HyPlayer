@@ -305,6 +305,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             return null;
 
         _lyricService.PreloadLyrics(nextSong);
+        _playbackNotification.PreloadCover(nextSong);
         PreparedPlaybackTicket? ticket = null;
         IPlaybackSource? incomingSource;
         bool loaded;
@@ -666,17 +667,30 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     public void SetPlaybackSpeed(double speed)
     {
         speed = NormalizePlaybackSpeed(speed);
+        var changed = Math.Abs(_state.PlaybackSpeed - speed) > 0.001;
         _state.PlaybackSpeed = speed;
         _audioService.PlaybackSpeed = speed;
-        if (_player.PrimaryPlaybackSource is not { } source)
+        if (!changed && Math.Abs(speed - 1) <= 0.001)
             return;
 
+        _taskRunner.Forget(ApplyPlaybackSpeedAsync(changed), "apply playback speed");
+    }
+
+    private async Task ApplyPlaybackSpeedAsync(bool changed)
+    {
+        await _transitionGate.WaitAsync().ConfigureAwait(false);
         try
         {
-            _audioService.ApplyPlaybackSpeed(source, speed);
+            if (changed)
+                await _activeTransition.OnPlaybackRateChangedAsync(CancellationToken.None).ConfigureAwait(false);
         }
-        catch (ArgumentException)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
+        }
+        finally
+        {
+            _audioService.ApplyPlaybackSpeedToAll(_state.PlaybackSpeed);
+            _transitionGate.Release();
         }
     }
 
@@ -1140,6 +1154,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             return;
 
         _lyricService.PreloadLyrics(next);
+        _playbackNotification.PreloadCover(next);
         if (prefetchAudio)
             await _mediaSourceService.PrefetchAsync(next, ct).ConfigureAwait(false);
     }

@@ -12,6 +12,7 @@ internal sealed class NextTrackPreloader
     private Task<TransitionPreparedTrack?>? _loading;
     private CancellationTokenSource? _loadingCts;
     private IPlaybackSource? _loadingFor;
+    private double _loadingRate;
     private long _retryAfter;
 
     public NextTrackPreloader(bool startSilent = true)
@@ -35,7 +36,7 @@ internal sealed class NextTrackPreloader
         if (_loading is { } pending)
         {
             if (pending.IsCompleted)
-                await AdoptAsync(pending).ConfigureAwait(false);
+                await AdoptAsync(pending, context, ct).ConfigureAwait(false);
             return;
         }
 
@@ -49,8 +50,9 @@ internal sealed class NextTrackPreloader
         _loading = loading;
         _loadingCts = cts;
         _loadingFor = context.Source;
+        _loadingRate = context.PlaybackRate;
         if (loading.IsCompleted)
-            await AdoptAsync(loading).ConfigureAwait(false);
+            await AdoptAsync(loading, context, ct).ConfigureAwait(false);
     }
 
     public TransitionPreparedTrack? Take()
@@ -85,7 +87,10 @@ internal sealed class NextTrackPreloader
             Prepared = null;
     }
 
-    private async Task AdoptAsync(Task<TransitionPreparedTrack?> loading)
+    private async Task AdoptAsync(
+        Task<TransitionPreparedTrack?> loading,
+        TrackTransitionContext context,
+        CancellationToken ct)
     {
         _loading = null;
         _loadingFor = null;
@@ -93,7 +98,21 @@ internal sealed class NextTrackPreloader
         _loadingCts = null;
         try
         {
-            Prepared = await loading.ConfigureAwait(false);
+            var prepared = await loading.ConfigureAwait(false);
+            if (prepared is not null && Math.Abs(context.PlaybackRate - _loadingRate) > 0.001)
+            {
+                try
+                {
+                    await prepared.Ticket.SetPlaybackRateAsync(context.PlaybackRate, ct).ConfigureAwait(false);
+                }
+                catch
+                {
+                    await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
+                    throw;
+                }
+            }
+
+            Prepared = prepared;
         }
         catch (OperationCanceledException)
         {

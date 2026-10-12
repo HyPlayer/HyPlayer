@@ -150,6 +150,34 @@ public sealed class ChopinAudioService :
             _player.SetPlaybackSourceSpeed(playbackSpeed, source);
     }
 
+    public void ApplyPlaybackSpeedToAll(double playbackSpeed)
+    {
+        List<IPlaybackSource> sources;
+        lock (_ticketSyncRoot)
+        {
+            sources = new List<IPlaybackSource>(_tickets.Count + 1);
+            foreach (var ticket in _tickets)
+                sources.Add(ticket.PlaybackSource);
+        }
+
+        if (_player.PrimaryPlaybackSource is { } primary && !sources.Contains(primary))
+            sources.Add(primary);
+
+        foreach (var source in sources)
+        {
+            try
+            {
+                ApplyPlaybackSpeed(source, playbackSpeed);
+            }
+            catch (ArgumentException)
+            {
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+        }
+    }
+
     public async Task<AudioTicketBase> GetPreparedAudioTicketAsync(
         MusicResourceBase musicResource,
         CancellationToken ctk = default)

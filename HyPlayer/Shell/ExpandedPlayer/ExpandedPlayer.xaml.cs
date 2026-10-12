@@ -443,16 +443,18 @@ public sealed partial class ExpandedPlayer : Page
     }
 
     private readonly LyricClock _lyricClock = new();
+    private readonly LyricTrackGuard _lyricTrackGuard = new();
+    private SingleSongBase? _lyricEventSong;
 
     private void LyricBox_OnBeforeRender(LyricRenderView view)
     {
         view.Context.IsPlaying = _state.IsPlaying;
+        if (_lyricTrackGuard.Holds(_state.NowPlayingProviderItem, Stopwatch.GetTimestamp()))
+            return;
+
         var primaryAudioInputNode = _player.PrimaryAudioInputNode;
         if (primaryAudioInputNode == null)
-        {
-            view.Context.CurrentLyricTime = 0;
             return;
-        }
 
         var precisePosition = Math.Max(0, _lyricClock.NextPrecise(primaryAudioInputNode.Position.TotalMilliseconds,
             _player.GlobalPlaybackStatus == PlaybackStatus.Playing, primaryAudioInputNode.PlaybackSpeedFactor));
@@ -555,6 +557,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void HyPlayList_OnLyricLoaded()
     {
+        Volatile.Write(ref _lyricEventSong, _state.NowPlayingProviderItem);
         if (Interlocked.Exchange(ref _lyricApplyQueued, 1) == 1) return;
         LoadLyricsBox();
         _needsRedesign = true;
@@ -984,10 +987,12 @@ public sealed partial class ExpandedPlayer : Page
 
     public void LoadLyricsBox()
     {
+        Volatile.Write(ref _lyricEventSong, _state.NowPlayingProviderItem);
         _ = this.RunOnUIThreadAsync(() =>
         {
             Volatile.Write(ref _lyricApplyQueued, 0);
             if (_isCleanedUp || _canvasResourcesReleased) return;
+            var lyricOwner = Volatile.Read(ref _lyricEventSong);
             var pending = _state.IsLyricPending;
             var lyricInfo = _state.LyricInfo;
             var duration = _state.Duration > TimeSpan.Zero
@@ -1012,6 +1017,7 @@ public sealed partial class ExpandedPlayer : Page
                 _ => TextAlignment.Left
             });
             _lyricBox.ReflowTime(0);
+            _lyricTrackGuard.Adopt(lyricOwner);
             if (_state.NowPlayingProviderItem == null) return;
             RefreshUIColor();
             if (!pending) ApplyLyricAvailability();

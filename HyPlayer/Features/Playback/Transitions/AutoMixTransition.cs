@@ -236,6 +236,18 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         await CancelAsync(ct).ConfigureAwait(false);
     }
 
+    public async Task OnPlaybackRateChangedAsync(CancellationToken ct)
+    {
+        Interlocked.Increment(ref _epoch);
+        Volatile.Write(ref _pending, null);
+        _plan = null;
+        if (Volatile.Read(ref _session) is not { } session)
+            return;
+
+        AutoMixLog.Write("playback speed changed, leaving the mix");
+        await AbortAsync(session).ConfigureAwait(false);
+    }
+
     public async Task CancelAsync(CancellationToken ct)
     {
         Interlocked.Increment(ref _epoch);

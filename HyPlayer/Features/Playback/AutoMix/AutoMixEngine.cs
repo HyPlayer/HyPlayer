@@ -99,7 +99,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     private double _tailRate = 1;
     private double _renderProgress;
     private double _playedContentB = double.NaN;
-    private double _nodeSpeedB = 1;
+    private double _nodeSpeedB = double.NaN;
     private double _chaseDelta;
     private long _chasePlayed;
     private bool _chasing;

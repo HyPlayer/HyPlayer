@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
@@ -350,12 +351,14 @@ public sealed partial class WidgetPage : Page
     }
 
     private readonly LyricClock _lyricClock = new();
+    private readonly LyricTrackGuard _lyricTrackGuard = new();
 
     private void LyricBox_OnBeforeRender(LyricRenderView view)
     {
+        _lyricBox.Context.IsPlaying = _state.IsPlaying;
+        if (_lyricTrackGuard.Holds(_state.NowPlayingProviderItem, Stopwatch.GetTimestamp())) return;
         var node = _player.PrimaryAudioInputNode;
         if (node == null) return;
-        _lyricBox.Context.IsPlaying = _state.IsPlaying;
         var position = _lyricClock.Next(node.Position.TotalMilliseconds,
             _player.GlobalPlaybackStatus == PlaybackStatus.Playing, node.PlaybackSpeedFactor);
         if (position < _lyricBox.Context.CurrentLyricTime)
@@ -413,6 +416,7 @@ public sealed partial class WidgetPage : Page
                 alrcLyricInfo.SongMetadata,
                 _setting.OptimizeLyric));
         _lyricBox.ReflowTime(0);
+        _lyricTrackGuard.Adopt(_state.NowPlayingProviderItem);
         _ = Dispatcher.RunAsync(
             CoreDispatcherPriority.Normal,
             () => { _lyricBox.Redesign((float)LyricView.ActualWidth, (float)LyricView.ActualHeight, LyricView.Dpi); });
