@@ -21,6 +21,8 @@ public enum MixTail
     Echo
 }
 
+public readonly record struct MixRatePoint(double Position, double RateA, double RateB);
+
 public sealed record MixPlan
 {
     public MixTechnique Technique { get; init; }
@@ -43,6 +45,10 @@ public sealed record MixPlan
     public double TailLength { get; init; }
     public int Bars { get; init; }
     public string Reason { get; init; } = string.Empty;
+    public double TempoA { get; init; }
+    public double TempoB { get; init; }
+    public IReadOnlyList<MixRatePoint>? Glide { get; init; }
+    public bool HasGlide => Glide is { Count: > 0 };
     public double AFadeEnd => AExit + Overlap;
     public double BContentAtOverlapEnd => BEntry + Overlap * Rate;
     public double Settle => Math.Max(Math.Max(RampBack, GainRelease), Tail == MixTail.None ? 0 : TailLength);
@@ -58,6 +64,88 @@ public sealed class AutoMixPlannerOptions
     public bool AlbumContinuation { get; init; }
     public double PlaybackOffsetDb { get; init; }
     public bool TailEffects { get; init; } = true;
+    public double EarliestExit { get; init; }
+    public MixHistory? History { get; init; } = MixHistory.Shared;
+    public Action<string>? Log { get; init; }
+}
+
+public sealed class MixHistory
+{
+    private readonly object _gate = new();
+    private string _pair = string.Empty;
+    private MixTechnique? _technique;
+    private MixTechnique? _before;
+
+    public static MixHistory Shared { get; } = new();
+
+    public MixTechnique? PreviousFor(string outgoing, string incoming)
+    {
+        lock (_gate) return Pair(outgoing, incoming) == _pair ? _before : _technique;
+    }
+
+    public void Record(string outgoing, string incoming, MixTechnique technique)
+    {
+        lock (_gate)
+        {
+            var pair = Pair(outgoing, incoming);
+            if (pair != _pair)
+            {
+                _before = _technique;
+                _pair = pair;
+            }
+
+            _technique = technique;
+        }
+    }
+
+    private static string Pair(string outgoing, string incoming) => outgoing + "|" + incoming;
+}
+
+public sealed record MixCandidate(MixTemplate Template, string Anchor, MixPlan Plan, MixScore Score, bool Crowded = false, string? Rejected = null)
+{
+    public double Clash { get; init; }
+
+    internal IReadOnlyList<string> Head { get; init; } = Array.Empty<string>();
+    internal IReadOnlyList<string> Tail { get; init; } = Array.Empty<string>();
+
+    public string Describe() => FormattableString.Invariant(
+        $"{Template.Name} [{Anchor}] {Plan.Bars} bars exit A {Plan.AExit:0.00}s overlap {Plan.Overlap:0.00}s entry B {Plan.BEntry:0.00}s rate {Plan.Rate:0.0000} handoff {Plan.Handoff:0.00}{(Crowded ? " crowded" : string.Empty)}");
+}
+
+public sealed class MixDecision
+{
+    public const int ExplainedCandidates = 5;
+
+    public required MixPlan Plan { get; init; }
+    public required IReadOnlyList<MixCandidate> Candidates { get; init; }
+    public required IReadOnlyList<MixCandidate> Rejected { get; init; }
+    public required int Chosen { get; init; }
+    public int Choices { get; init; } = 1;
+    public MixTechnique? Previous { get; init; }
+
+    public IReadOnlyList<string> Explain()
+    {
+        var lines = new List<string>
+        {
+            FormattableString.Invariant(
+                $"plan candidates: {Candidates.Count} accepted, {Rejected.Count} rejected, previous {(Previous is { } previous ? previous.ToString() : "none")}, chose #{Chosen + 1} of {Choices} within {MixScoring.VarietyMargin:0.0} of the best")
+        };
+        for (var i = 0; i < Candidates.Count; i++)
+        {
+            if (i >= ExplainedCandidates && i != Chosen) continue;
+            lines.Add($"plan candidate #{i + 1}{(i == Chosen ? " (chosen)" : string.Empty)}: {Candidates[i].Describe()} score {Candidates[i].Score.Describe()}");
+        }
+
+        if (Rejected.Count > 0)
+        {
+            var reasons = new List<string>();
+            foreach (var group in Rejected.GroupBy(candidate => candidate.Rejected))
+                reasons.Add($"{group.Key} x{group.Count()}");
+            lines.Add("plan rejected: " + string.Join(", ", reasons));
+        }
+
+        return lines;
+    }
 }
 
 public static class AutoMixPlanner
@@ -73,6 +161,13 @@ public static class AutoMixPlanner
     private const double ReverbTailLength = 3.5;
     private const double ReverbOpenSeconds = 1.5;
     private const double ReverbFullSeconds = 0.3;
+    private const double RefineFloor = 0.001;
+    private const double ExitWindowSeconds = 45;
+    private const double MaximumVocalClash = 1;
+    private const double AvoidableVocalClash = 0.25;
+    private const string NoStableTempo = "no stable tempo";
+    private const string ExitPassed = "exit already passed";
+    private const string StillSinging = "A still singing at the end of the overlap";
 
     public static MixPlan Plan(TrackAnalysis a, TrackAnalysis b,
         IReadOnlyList<(double Start, double End)> vocalsA,
@@ -81,10 +176,477 @@ public static class AutoMixPlanner
         IReadOnlyList<(double Start, double End)>? leadsA = null,
         IReadOnlyList<(double Start, double End)>? leadsB = null)
     {
-        leadsA ??= Array.Empty<(double Start, double End)>();
-        leadsB ??= Array.Empty<(double Start, double End)>();
-        var plan = Layout(a, b, vocalsA, vocalsB, options, leadsA, leadsB);
-        return plan.Technique == MixTechnique.Gapless ? plan : MatchLoudness(plan, a, b, options);
+        var identified = a.TrackKey.Length > 0 && b.TrackKey.Length > 0;
+        var history = identified ? options.History : null;
+        var decision = Decide(a, b, vocalsA, vocalsB, options, leadsA, leadsB, history?.PreviousFor(a.TrackKey, b.TrackKey));
+        history?.Record(a.TrackKey, b.TrackKey, decision.Plan.Technique);
+        var log = options.Log ?? (identified ? AutoMixLog.Write : null);
+        if (log is not null)
+            foreach (var line in decision.Explain()) log(line);
+        return decision.Plan;
+    }
+
+    public static MixDecision Decide(TrackAnalysis a, TrackAnalysis b,
+        IReadOnlyList<(double Start, double End)> vocalsA,
+        IReadOnlyList<(double Start, double End)> vocalsB,
+        AutoMixPlannerOptions options,
+        IReadOnlyList<(double Start, double End)>? leadsA = null,
+        IReadOnlyList<(double Start, double End)>? leadsB = null,
+        MixTechnique? previous = null)
+    {
+        var scene = new Scene(a, b, vocalsA, vocalsB, leadsA ?? Array.Empty<(double Start, double End)>(),
+            leadsB ?? Array.Empty<(double Start, double End)>(), options, previous);
+
+        if (options.AlbumContinuation && a.Duration - scene.SoundEndA < 0.4 && scene.SoundStartB < 0.4)
+        {
+            var gapless = new MixPlan { Technique = MixTechnique.Gapless, AExit = a.Duration, Overlap = 0, BEntry = 0, Reason = "album continuation" };
+            var only = new MixCandidate(MixScoring.Template(MixShape.Gapless), "album", gapless, default);
+            return new MixDecision { Plan = gapless, Candidates = [only], Rejected = [], Chosen = 0, Previous = previous };
+        }
+
+        var fadeReason = Blends(scene);
+        scene.Add(Fade(scene, fadeReason));
+
+        var least = scene.Accepted.Min(candidate => candidate.Clash);
+        foreach (var candidate in scene.Accepted)
+            if (candidate.Clash > least + AvoidableVocalClash) scene.Rejected.Add(candidate with { Rejected = "avoidable vocal clash" });
+        scene.Accepted.RemoveAll(candidate => candidate.Clash > least + AvoidableVocalClash);
+
+        var ordered = scene.Accepted.OrderByDescending(candidate => candidate.Score.Total).ToList();
+        var best = ordered[0].Score.Total;
+        var choices = 1;
+        var chosen = 0;
+        if (a.TrackKey.Length > 0 && b.TrackKey.Length > 0)
+        {
+            while (choices < ordered.Count && ordered[choices].Score.Total >= best - MixScoring.VarietyMargin) choices++;
+            chosen = (int)(Seed(a.TrackKey, b.TrackKey) % (uint)choices);
+        }
+
+        var pick = ordered[chosen];
+        var parts = new List<string>(pick.Head);
+        if (pick.Template.Shape == MixShape.BeatBlend && !pick.Crowded
+            && ordered.Any(other => other.Template.Shape == MixShape.BeatBlend && other.Crowded && other.Plan.Bars > pick.Plan.Bars))
+            parts.Add("mid-band busy");
+        parts.AddRange(pick.Tail);
+        var plan = parts.Count > 0 ? pick.Plan with { Reason = string.Join(", ", parts) } : pick.Plan;
+        ordered[chosen] = pick with { Plan = plan };
+        return new MixDecision
+        {
+            Plan = plan,
+            Candidates = ordered,
+            Rejected = scene.Rejected,
+            Chosen = chosen,
+            Choices = choices,
+            Previous = previous
+        };
+    }
+
+    public static uint Seed(string outgoing, string incoming)
+    {
+        var hash = 2166136261u;
+        foreach (var c in outgoing)
+        {
+            hash ^= c;
+            hash *= 16777619u;
+        }
+
+        hash ^= 10;
+        hash *= 16777619u;
+        foreach (var c in incoming)
+        {
+            hash ^= c;
+            hash *= 16777619u;
+        }
+
+        hash ^= hash >> 15;
+        hash *= 2246822519u;
+        hash ^= hash >> 13;
+        return hash;
+    }
+
+    private sealed class Scene
+    {
+        public Scene(TrackAnalysis a, TrackAnalysis b,
+            IReadOnlyList<(double Start, double End)> vocalsA, IReadOnlyList<(double Start, double End)> vocalsB,
+            IReadOnlyList<(double Start, double End)> leadsA, IReadOnlyList<(double Start, double End)> leadsB,
+            AutoMixPlannerOptions options, MixTechnique? previous)
+        {
+            A = a;
+            B = b;
+            VocalsA = vocalsA;
+            VocalsB = vocalsB;
+            LeadsA = leadsA;
+            LeadsB = leadsB;
+            Options = options;
+            Previous = previous;
+            SoundEndA = a.SoundEnd > 0 ? a.SoundEnd : a.Duration;
+            SoundStartB = Math.Max(0, b.SoundStart);
+            VocalEndA = LastVocalEnd(vocalsA, SoundEndA);
+        }
+
+        public TrackAnalysis A { get; }
+        public TrackAnalysis B { get; }
+        public IReadOnlyList<(double Start, double End)> VocalsA { get; }
+        public IReadOnlyList<(double Start, double End)> VocalsB { get; }
+        public IReadOnlyList<(double Start, double End)> LeadsA { get; }
+        public IReadOnlyList<(double Start, double End)> LeadsB { get; }
+        public AutoMixPlannerOptions Options { get; }
+        public MixTechnique? Previous { get; }
+        public double SoundEndA { get; }
+        public double SoundStartB { get; }
+        public double VocalEndA { get; }
+        public List<MixCandidate> Accepted { get; } = new();
+        public List<MixCandidate> Rejected { get; } = new();
+
+        public void Add(MixCandidate candidate)
+        {
+            foreach (var other in Accepted)
+            {
+                var x = other.Plan;
+                var y = candidate.Plan;
+                if (x.Technique == y.Technique && x.AExit == y.AExit && x.Overlap == y.Overlap && x.BEntry == y.BEntry
+                    && x.Rate == y.Rate && x.Handoff == y.Handoff && x.Tail == y.Tail && x.EntryFade == y.EntryFade) return;
+            }
+
+            Accepted.Add(candidate);
+        }
+
+        public void Reject(MixTemplate template, string anchor, int bars, double exit, double overlap, double entry, string reason)
+        {
+            var plan = new MixPlan { Technique = template.Technique, AExit = exit, Overlap = overlap, BEntry = entry, Bars = bars };
+            Rejected.Add(new MixCandidate(template, anchor, plan, default, false, reason));
+        }
+    }
+
+    private readonly record struct Pairing(double Beat, double Bar, double BarB, double Tolerance, double MaxDeviation, double EntryBpm);
+
+    private static string Blends(Scene scene)
+    {
+        var a = scene.A;
+        var b = scene.B;
+        var options = scene.Options;
+        var beatOk = a.HasBeatGrid && b.HasBeatGrid && a.BeatConfidence >= TrustedBeatConfidence && b.BeatConfidence >= TrustedBeatConfidence &&
+                     a.Downbeats.Length >= 8 && b.Downbeats.Length >= 8;
+        if (!beatOk) return "beat grid unreliable";
+
+        var exitBpm = MixStructure.ExitBpm(a, scene.SoundEndA - ExitWindowSeconds);
+        var entryBpm = MixStructure.EntryBpm(b, b.Duration * 0.4);
+        var (rate, multiplier) = BestRate(exitBpm, entryBpm);
+        var maxDeviation = options.AllowTimeStretch ? options.MaxTempoDeviation : 0.008;
+        var synced = Math.Abs(rate - 1) <= maxDeviation;
+
+        var beat = 60 / exitBpm;
+        var bar = 4 * beat;
+        var outroBars = a.OutroStart > 0 ? (scene.SoundEndA - a.OutroStart) / bar : 8;
+        var firstDownbeatB = b.Downbeats.FirstOrDefault(d => d >= scene.SoundStartB - 0.05);
+        var barB = 4 * 60 / (entryBpm * multiplier);
+        var introBars = b.IntroEnd > firstDownbeatB ? (b.IntroEnd - firstDownbeatB) / barB : 8;
+        var limit = Math.Min(options.PreferredBars, Math.Floor(options.MaxOverlapSeconds / bar));
+        limit = Math.Min(limit, Math.Max(4, outroBars));
+        limit = Math.Min(limit, Math.Max(4, introBars));
+        var longestBeat = synced ? SnapBars(limit) : 0;
+        var longestFilter = SnapBars(Math.Min(limit, 8));
+        var longest = synced ? longestBeat : longestFilter;
+        if (longest < 4 || longest * bar > options.MaxOverlapSeconds) return "overlap too short for beat mix";
+
+        var tolerance = Math.Min(beat, 0.8);
+        var pairing = new Pairing(beat, bar, barB, tolerance, maxDeviation, entryBpm);
+        var beatBlend = MixScoring.Template(MixShape.BeatBlend);
+        var filterBlend = MixScoring.Template(MixShape.FilterBlend);
+
+        if (synced)
+        {
+            foreach (var bars in beatBlend.Bars)
+            {
+                if (bars > longestBeat || bars < 2 || bars > 4 && !IsPowerOfTwo(bars)) continue;
+                var overlap = bars * bar;
+                var exit = ChooseExit(a, scene.SoundEndA, overlap, double.MinValue);
+                if (exit < 0 || scene.VocalEndA + beat > exit + overlap)
+                {
+                    var covering = ChooseCoveringExit(a, overlap, scene.VocalEndA + beat, a.Duration + bar);
+                    if (covering >= 0) exit = covering;
+                    else if (scene.VocalEndA > exit + overlap + tolerance) exit = -1;
+                }
+
+                if (exit < 0) continue;
+                var handoff = scene.VocalEndA > exit ? Math.Clamp((scene.VocalEndA - exit) / overlap, 0.5, 0.9) : 0.5;
+                Blend(scene, beatBlend, pairing, bars, 0, exit, handoff, "phrase", null);
+            }
+
+            foreach (var bars in beatBlend.Bars)
+            {
+                if (bars > longestBeat || bars > 4 && !IsPowerOfTwo(bars)) continue;
+                var exit = ChooseExit(a, scene.SoundEndA, bars * bar, scene.VocalEndA - tolerance);
+                if (exit >= 0) Blend(scene, beatBlend, pairing, bars, 0, exit, 0.5, "after vocals", null);
+            }
+        }
+
+        foreach (var bars in filterBlend.Bars)
+        {
+            if (bars > longestFilter) continue;
+            var exit = ChooseExit(a, scene.SoundEndA, bars * bar, scene.VocalEndA - tolerance);
+            if (exit >= 0) Blend(scene, filterBlend, pairing, bars, 0, exit, 0.5, "after vocals", null);
+        }
+
+        if (longestFilter >= 4)
+        {
+            var from = Math.Max(scene.VocalEndA - tolerance, scene.SoundEndA - longestFilter * bar);
+            var exit = a.Beats.FirstOrDefault(t => t >= from, -1);
+            var beats = exit < 0 ? 0 : (int)Math.Floor((scene.SoundEndA - exit) / beat);
+            if (beats >= 2) Blend(scene, MixScoring.Template(MixShape.FilterBeats), pairing, 0, beats, exit, 0.5, "after vocals", null);
+        }
+
+        if (a.Sections is { Length: > 1 } sections)
+        {
+            var earliest = Math.Max(Math.Max(0, a.Duration - ExitWindowSeconds), scene.SoundEndA - options.MaxOverlapSeconds);
+            for (var index = 1; index < sections.Length; index++)
+            {
+                if (sections[index].Start < earliest) continue;
+                var exit = MixStructure.NearestDownbeat(a, sections[index].Start, 0.5 * bar);
+                if (exit < 0) continue;
+                var note = FormattableString.Invariant($"exit at section {exit:0.0}s");
+                foreach (var template in new[] { beatBlend, filterBlend })
+                {
+                    if (template.Synced && !synced) continue;
+                    foreach (var bars in template.Bars)
+                    {
+                        if (bars < 4 || bars > (template.Synced ? longestBeat : longestFilter) || !IsPowerOfTwo(bars)) continue;
+                        var overlap = bars * bar;
+                        if (exit + overlap > scene.SoundEndA + tolerance) continue;
+                        var handoff = 0.5;
+                        if (template.Synced && scene.VocalEndA > exit)
+                        {
+                            if (scene.VocalEndA + beat > exit + overlap)
+                            {
+                                scene.Reject(template, "section", bars, exit, overlap, firstDownbeatB, StillSinging);
+                                continue;
+                            }
+
+                            handoff = Math.Clamp((scene.VocalEndA - exit) / overlap, 0.5, 0.9);
+                        }
+
+                        Blend(scene, template, pairing, bars, 0, exit, handoff, "section", note);
+                    }
+                }
+            }
+        }
+
+        if (scene.Accepted.Count > 0) return "instead of a beat-aligned mix";
+        if (scene.Rejected.Count > 0 && scene.Rejected.All(candidate => candidate.Rejected!.StartsWith(NoStableTempo, StringComparison.Ordinal)))
+            return "no stable tempo at the mix points";
+        return scene.Rejected.Count > 0 && scene.Rejected.All(candidate => candidate.Rejected == ExitPassed)
+            ? "beat-aligned exits already passed"
+            : "vocals run to the end";
+    }
+
+    private static bool IsPowerOfTwo(int value) => value > 0 && (value & (value - 1)) == 0;
+
+    private static void Blend(Scene scene, MixTemplate template, Pairing pairing, int bars, int beats, double exit, double handoff,
+        string anchor, string? note)
+    {
+        var a = scene.A;
+        var b = scene.B;
+        var options = scene.Options;
+        var whole = beats == 0;
+        var nominal = whole ? bars * pairing.Bar : beats * pairing.Beat;
+        var firstDownbeatB = b.Downbeats.FirstOrDefault(d => d >= scene.SoundStartB - 0.05);
+
+        if (exit < options.EarliestExit)
+        {
+            scene.Reject(template, anchor, bars, exit, nominal, firstDownbeatB, ExitPassed);
+            return;
+        }
+
+        if (MixStructure.Stable(a, exit, exit + nominal, false) is not { } tempoA)
+        {
+            scene.Reject(template, anchor, bars, exit, nominal, firstDownbeatB, NoStableTempo + " at A's exit");
+            return;
+        }
+
+        var bpmA = MixStructure.LocalBpm(a, tempoA, exit, exit + nominal);
+        var beat = 60 / bpmA;
+        var bar = 4 * beat;
+        var overlap = whole ? bars * bar : beats * beat;
+        var (nominalRate, _) = BestRate(bpmA, pairing.EntryBpm);
+        if (!template.Synced || !options.AllowTimeStretch) nominalRate = 1;
+
+        var first = ChooseEntry(b, scene.VocalsB, firstDownbeatB, overlap * nominalRate, pairing.BarB);
+        var entries = new List<(double Entry, string? Note, string Anchor)> { (first, null, anchor) };
+        if (MixStructure.Stable(b, first, first + overlap * nominalRate, true) is null)
+            foreach (var later in LaterEntries(scene, first, overlap * nominalRate, pairing.BarB))
+                entries.Add((later.Entry, later.Note, anchor + ", " + later.Anchor));
+
+        foreach (var (entryB, entryNote, entryAnchor) in entries)
+        {
+            if (MixStructure.Stable(b, entryB, entryB + overlap * nominalRate, true) is not { } tempoB)
+            {
+                scene.Reject(template, entryAnchor, bars, exit, overlap, entryB, NoStableTempo + " at B's entry");
+                continue;
+            }
+
+            var bpmB = MixStructure.LocalBpm(b, tempoB, entryB, entryB + overlap * nominalRate);
+            var (rate, multiplier) = BestRate(bpmA, bpmB);
+            if (template.Synced && Math.Abs(rate - 1) > pairing.MaxDeviation)
+            {
+                scene.Reject(template, entryAnchor, bars, exit, overlap, entryB, "tempo difference beyond the stretch limit");
+                continue;
+            }
+
+            if (!template.Synced || !options.AllowTimeStretch) rate = 1;
+            if (!template.Synced && exit < scene.VocalEndA - pairing.Tolerance - 1e-9
+                || scene.VocalEndA > exit + overlap + pairing.Tolerance + 1e-9)
+            {
+                scene.Reject(template, entryAnchor, bars, exit, overlap, entryB, StillSinging);
+                continue;
+            }
+
+            var bOverlap = overlap * rate;
+            var audible = overlap * (handoff + 0.7 * (1 - handoff));
+            var clash = VocalClash(scene.VocalsA, exit, exit + audible, scene.VocalsB, entryB, entryB + bOverlap, rate);
+            if (clash > MaximumVocalClash)
+            {
+                scene.Reject(template, entryAnchor, bars, exit, overlap, entryB, "vocal clash");
+                continue;
+            }
+
+            var busy = VocalClash(scene.LeadsA, exit, exit + audible, scene.VocalsB, entryB, entryB + bOverlap, rate)
+                       + VocalClash(scene.VocalsA, exit, exit + audible, scene.LeadsB, entryB, entryB + bOverlap, rate)
+                       + VocalClash(scene.LeadsA, exit, exit + audible, scene.LeadsB, entryB, entryB + bOverlap, rate);
+            var crowded = whole && bars >= 4 && clash + LeadClashWeight * busy > 1;
+
+            var head = new List<string>
+            {
+                $"bpm {bpmA:0.0}->{bpmB:0.0} x{multiplier:0.##}",
+                $"rate {rate:0.000}"
+            };
+            var keyDistance = KeyEstimator.CamelotDistance(a.Key, b.Key);
+            if (keyDistance > 2 && a.KeyConfidence > MixScoring.TrustedKeyConfidence && b.KeyConfidence > MixScoring.TrustedKeyConfidence)
+                head.Add($"key distance {keyDistance}");
+            if (scene.VocalEndA > 0) head.Add($"vocals end {scene.VocalEndA:0.0}s");
+            var tail = new List<string>();
+            if (note is not null) tail.Add(note);
+            if (entryNote is not null) tail.Add(entryNote);
+            else if (entryB > firstDownbeatB + 0.05) tail.Add($"skip intro to {entryB:0.0}s");
+            tail.Add(whole ? $"{bars} bars" : $"{beats} beats");
+
+            var plan = new MixPlan
+            {
+                Technique = template.Technique,
+                AExit = Refine(exit, tempoA),
+                Overlap = overlap,
+                BEntry = Refine(entryB, tempoB),
+                Rate = rate,
+                RampBack = Math.Abs(rate - 1) > 0.0005 ? Math.Min(16 * 4 * 60 / (bpmB * multiplier), 20) : 0,
+                Handoff = handoff,
+                Bars = (int)Math.Round(overlap / bar),
+                TempoA = bpmA,
+                TempoB = bpmB
+            };
+            var cut = whole && template.Technique == MixTechnique.FilterCut && options.TailEffects
+                ? EchoCut(a, exit + overlap, scene.VocalEndA, beat)
+                : -1;
+            if (cut > exit)
+            {
+                tail.Add("echo out");
+                plan = plan with
+                {
+                    Overlap = cut - plan.AExit,
+                    RampBack = 0,
+                    Tail = MixTail.Echo,
+                    TailDelay = beat,
+                    TailOpen = cut - beat,
+                    TailFull = cut - 0.75 * beat,
+                    TailLength = Math.Clamp(6 * beat + 0.5, 2, 5)
+                };
+            }
+
+            plan = MatchLoudness(plan with { Reason = string.Join(", ", head.Concat(tail)) }, a, b, options);
+            var seconds = plan.Overlap;
+            var exitDb = MixLevels.Relative(a, exit - 2, Math.Min(scene.SoundEndA, exit + Math.Max(2, 0.5 * seconds)), out var exitSeconds);
+            var entryDb = MixLevels.Relative(b, entryB + 0.5 * bOverlap, entryB + bOverlap + 4, out var entrySeconds);
+            var score = new MixScore(
+                template.Prior,
+                MixScoring.Length(template.Shape, whole ? bars : 0),
+                MixScoring.Tempo(template.Shape, rate, multiplier, bpmA, bpmB, seconds),
+                MixScoring.Key(template.Technique, a.Key, a.KeyConfidence, b.Key, b.KeyConfidence, seconds),
+                MixScoring.Vocals(clash),
+                MixScoring.Crowd(crowded),
+                MixScoring.Hold(handoff),
+                MixScoring.Energy(exitDb, exitSeconds, entryDb, entrySeconds),
+                MixScoring.Exit(a, exit, beat, scene.VocalsA) + MixScoring.Phrase(OnPhrase(a, exit)),
+                MixScoring.Entry(b, entryB, pairing.BarB),
+                MixScoring.Cut(scene.SoundEndA - plan.AFadeEnd, entryB - firstDownbeatB),
+                MixScoring.Loudness(plan.Loudness),
+                MixScoring.Repeat(template.Technique, scene.Previous));
+            scene.Add(new MixCandidate(template, entryAnchor, plan, score, crowded) { Head = head, Tail = tail, Clash = clash });
+        }
+    }
+
+    private static double Refine(double time, TempoFit fit)
+    {
+        var snapped = fit.Snap(time);
+        var shift = Math.Abs(snapped - time);
+        return shift < RefineFloor || shift > 2 * TempoRuns.ToleranceSeconds ? time : snapped;
+    }
+
+    private static IEnumerable<(double Entry, string Note, string Anchor)> LaterEntries(Scene scene, double first, double bOverlap, double barB)
+    {
+        var b = scene.B;
+        var latest = b.Duration * 0.4;
+        var found = -1.0;
+        if (b.TempoRuns is { Length: > 0 } runs)
+        {
+            foreach (var run in runs)
+            {
+                if (run.End - run.Start < bOverlap || run.Start <= first) continue;
+                var entry = b.Downbeats.FirstOrDefault(d => d >= run.Start - 0.05, -1);
+                if (entry < 0 || entry > latest) break;
+                found = entry;
+                yield return (entry, FormattableString.Invariant($"enter at stable tempo {entry:0.0}s"), "stable run");
+                break;
+            }
+        }
+
+        if (b.Sections is not { Length: > 1 } sections) yield break;
+        for (var index = 1; index < sections.Length; index++)
+        {
+            if (sections[index].Start <= first || sections[index].Start > latest) continue;
+            var entry = MixStructure.NearestDownbeat(b, sections[index].Start, 0.5 * barB);
+            if (entry < 0 || entry == found) continue;
+            if (MixStructure.Stable(b, entry, entry + bOverlap, true) is null) continue;
+            yield return (entry, FormattableString.Invariant($"enter at section {entry:0.0}s"), "section entry");
+            yield break;
+        }
+    }
+
+    private static MixCandidate Fade(Scene scene, string reason)
+    {
+        var a = scene.A;
+        var b = scene.B;
+        var plan = Crossfade(a, scene.VocalsB, scene.SoundEndA, scene.SoundStartB, scene.VocalEndA, scene.Options, reason);
+        plan = MatchLoudness(plan, a, b, scene.Options);
+        var shape = plan.Tail == MixTail.Reverb ? MixShape.ReverbTail : plan.EntryFade > 0 ? MixShape.PlayOut : MixShape.Crossfade;
+        var template = MixScoring.Template(shape);
+        var measured = a.HasBeatGrid && b.HasBeatGrid && a.BeatConfidence >= TrustedBeatConfidence && b.BeatConfidence >= TrustedBeatConfidence;
+        var shared = shape == MixShape.Crossfade ? plan.Overlap : Math.Min(plan.Overlap, Math.Max(plan.EntryFade, MinimumEntryFade));
+        var clash = VocalClash(scene.VocalsA, plan.AExit, plan.AFadeEnd, scene.VocalsB, plan.BEntry, plan.BEntry + plan.Overlap, 1);
+        var exitDb = MixLevels.Relative(a, plan.AExit - 2, Math.Min(scene.SoundEndA, plan.AExit + Math.Max(2, 0.5 * plan.Overlap)), out var exitSeconds);
+        var entryDb = MixLevels.Relative(b, plan.BEntry + 0.5 * plan.Overlap, plan.BEntry + plan.Overlap + 4, out var entrySeconds);
+        var score = new MixScore(
+            template.Prior,
+            0,
+            MixScoring.Tempo(shape, 1, 1, measured ? a.Bpm : 0, measured ? b.Bpm : 0, shared),
+            MixScoring.Key(MixTechnique.Crossfade, a.Key, a.KeyConfidence, b.Key, b.KeyConfidence, shared),
+            MixScoring.Vocals(clash),
+            0,
+            0,
+            shape == MixShape.Crossfade ? MixScoring.Energy(exitDb, exitSeconds, entryDb, entrySeconds) : 0,
+            0,
+            0,
+            0,
+            MixScoring.Loudness(plan.Loudness),
+            MixScoring.Repeat(MixTechnique.Crossfade, scene.Previous));
+        return new MixCandidate(template, "ending", plan, score) { Clash = clash };
     }
 
     private static MixPlan MatchLoudness(MixPlan plan, TrackAnalysis a, TrackAnalysis b, AutoMixPlannerOptions options)
@@ -103,149 +665,6 @@ public static class AutoMixPlanner
             GainRelease = loudness.Release,
             Loudness = loudness
         };
-    }
-
-    private static MixPlan Layout(TrackAnalysis a, TrackAnalysis b,
-        IReadOnlyList<(double Start, double End)> vocalsA,
-        IReadOnlyList<(double Start, double End)> vocalsB,
-        AutoMixPlannerOptions options,
-        IReadOnlyList<(double Start, double End)> leadsA,
-        IReadOnlyList<(double Start, double End)> leadsB)
-    {
-        var soundEndA = a.SoundEnd > 0 ? a.SoundEnd : a.Duration;
-        var soundStartB = Math.Max(0, b.SoundStart);
-
-        if (options.AlbumContinuation && a.Duration - soundEndA < 0.4 && soundStartB < 0.4)
-            return new MixPlan { Technique = MixTechnique.Gapless, AExit = a.Duration, Overlap = 0, BEntry = 0, Reason = "album continuation" };
-
-        var vocalEndA = LastVocalEnd(vocalsA, soundEndA);
-        var beatOk = a.HasBeatGrid && b.HasBeatGrid && a.BeatConfidence >= 0.55 && b.BeatConfidence >= 0.55 &&
-                     a.Downbeats.Length >= 8 && b.Downbeats.Length >= 8;
-        if (!beatOk) return Crossfade(a, vocalsB, soundEndA, soundStartB, vocalEndA, options, "beat grid unreliable");
-
-        var (rate, multiplier) = BestRate(a.Bpm, b.Bpm);
-        var maxDeviation = options.AllowTimeStretch ? options.MaxTempoDeviation : 0.008;
-        var technique = Math.Abs(rate - 1) <= maxDeviation ? MixTechnique.BeatMix : MixTechnique.FilterCut;
-        if (technique == MixTechnique.FilterCut) rate = 1;
-        if (!options.AllowTimeStretch) rate = 1;
-
-        var beat = 60 / a.Bpm;
-        var bar = 4 * beat;
-        var outroBars = a.OutroStart > 0 ? (soundEndA - a.OutroStart) / bar : 8;
-        var firstDownbeatB = b.Downbeats.FirstOrDefault(d => d >= soundStartB - 0.05);
-        var barB = 4 * 60 / (b.Bpm * multiplier);
-        var introBars = b.IntroEnd > firstDownbeatB ? (b.IntroEnd - firstDownbeatB) / barB : 8;
-        var limit = Math.Min(options.PreferredBars, Math.Floor(options.MaxOverlapSeconds / bar));
-        limit = Math.Min(limit, Math.Max(4, outroBars));
-        limit = Math.Min(limit, Math.Max(4, introBars));
-        var keyDistance = KeyEstimator.CamelotDistance(a.Key, b.Key);
-        var keyClash = keyDistance > 2 && a.KeyConfidence > 0.03 && b.KeyConfidence > 0.03;
-        if (keyClash || technique == MixTechnique.FilterCut) limit = Math.Min(limit, 8);
-        var longest = SnapBars(limit);
-        if (longest < 4 || longest * bar > options.MaxOverlapSeconds)
-            return Crossfade(a, vocalsB, soundEndA, soundStartB, vocalEndA, options, "overlap too short for beat mix");
-
-        var reason = new List<string> { $"bpm {a.Bpm:0.0}->{b.Bpm:0.0} x{multiplier:0.##}", $"rate {rate:0.000}" };
-        if (keyClash) reason.Add($"key distance {keyDistance}");
-        if (vocalEndA > 0) reason.Add($"vocals end {vocalEndA:0.0}s");
-        var tolerance = Math.Min(beat, 0.8);
-
-        MixPlan Build(double overlap, string span, double exit, double handoff, bool wholeBars = true)
-        {
-            var entryB = ChooseEntry(b, vocalsB, firstDownbeatB, overlap * rate, barB);
-            if (entryB > firstDownbeatB + 0.05) reason.Add($"skip intro to {entryB:0.0}s");
-            reason.Add(span);
-            var cut = wholeBars && technique == MixTechnique.FilterCut && options.TailEffects
-                ? EchoCut(a, exit + overlap, vocalEndA, beat)
-                : -1;
-            if (cut > exit)
-            {
-                reason.Add("echo out");
-                return new MixPlan
-                {
-                    Technique = technique,
-                    AExit = exit,
-                    Overlap = cut - exit,
-                    BEntry = entryB,
-                    Rate = rate,
-                    Handoff = handoff,
-                    Bars = (int)Math.Round(overlap / bar),
-                    Tail = MixTail.Echo,
-                    TailDelay = beat,
-                    TailOpen = cut - beat,
-                    TailFull = cut - 0.75 * beat,
-                    TailLength = Math.Clamp(6 * beat + 0.5, 2, 5),
-                    Reason = string.Join(", ", reason)
-                };
-            }
-
-            return new MixPlan
-            {
-                Technique = technique,
-                AExit = exit,
-                Overlap = overlap,
-                BEntry = entryB,
-                Rate = rate,
-                RampBack = Math.Abs(rate - 1) > 0.0005 ? Math.Min(16 * barB, 20) : 0,
-                Handoff = handoff,
-                Bars = (int)Math.Round(overlap / bar),
-                Reason = string.Join(", ", reason)
-            };
-        }
-
-        (double Overlap, int Bars, double Exit, double Handoff)? crowded = null;
-        if (technique == MixTechnique.BeatMix)
-        {
-            for (var bars = longest; bars >= 2; bars = bars > 4 ? bars / 2 : bars - 1)
-            {
-                var overlap = bars * bar;
-                var exit = ChooseExit(a, soundEndA, overlap, double.MinValue);
-                if (exit < 0 || vocalEndA + beat > exit + overlap)
-                {
-                    var covering = ChooseCoveringExit(a, overlap, vocalEndA + beat, a.Duration + bar);
-                    if (covering >= 0) exit = covering;
-                    else if (vocalEndA > exit + overlap + tolerance) exit = -1;
-                }
-                if (exit < 0) continue;
-                var handoff = vocalEndA > exit ? Math.Clamp((vocalEndA - exit) / overlap, 0.5, 0.9) : 0.5;
-                var bOverlap = overlap * rate;
-                var entryB = ChooseEntry(b, vocalsB, firstDownbeatB, bOverlap, barB);
-                var audible = overlap * (handoff + 0.7 * (1 - handoff));
-                var clash = VocalClash(vocalsA, exit, exit + audible, vocalsB, entryB, entryB + bOverlap, rate);
-                if (clash > 1) continue;
-                if (crowded is { } kept && bars < 4) return Build(kept.Overlap, $"{kept.Bars} bars", kept.Exit, kept.Handoff);
-                var busy = VocalClash(leadsA, exit, exit + audible, vocalsB, entryB, entryB + bOverlap, rate)
-                           + VocalClash(vocalsA, exit, exit + audible, leadsB, entryB, entryB + bOverlap, rate)
-                           + VocalClash(leadsA, exit, exit + audible, leadsB, entryB, entryB + bOverlap, rate);
-                if (bars >= 4 && clash + LeadClashWeight * busy > 1)
-                {
-                    crowded ??= (overlap, bars, exit, handoff);
-                    continue;
-                }
-                if (crowded is not null) reason.Add("mid-band busy");
-                return Build(overlap, $"{bars} bars", exit, handoff);
-            }
-            if (crowded is { } longestCrowded)
-                return Build(longestCrowded.Overlap, $"{longestCrowded.Bars} bars", longestCrowded.Exit, longestCrowded.Handoff);
-        }
-
-        var shortest = technique == MixTechnique.BeatMix ? 1 : 4;
-        for (var bars = longest; bars >= shortest; bars = bars > 4 ? bars / 2 : bars - 1)
-        {
-            var exit = ChooseExit(a, soundEndA, bars * bar, vocalEndA - tolerance);
-            if (exit < 0) continue;
-            return Build(bars * bar, $"{bars} bars", exit, 0.5);
-        }
-
-        if (technique == MixTechnique.FilterCut)
-        {
-            var from = Math.Max(vocalEndA - tolerance, soundEndA - longest * bar);
-            var exit = a.Beats.FirstOrDefault(t => t >= from, -1);
-            var beats = exit < 0 ? 0 : (int)Math.Floor((soundEndA - exit) / beat);
-            if (beats >= 2) return Build(beats * beat, $"{beats} beats", exit, 0.5, false);
-        }
-
-        return Crossfade(a, vocalsB, soundEndA, soundStartB, vocalEndA, options, "vocals run to the end");
     }
 
     private static MixPlan Crossfade(TrackAnalysis a, IReadOnlyList<(double Start, double End)> vocalsB, double soundEndA, double soundStartB,
@@ -391,12 +810,21 @@ public static class AutoMixPlanner
         return 0;
     }
 
+    private static bool OnPhrase(TrackAnalysis a, double exit)
+    {
+        var downbeats = a.Downbeats;
+        var index = Array.FindIndex(downbeats, d => Math.Abs(d - exit) < 0.02);
+        if (index < 0) return false;
+        var anchor = a.OutroStart > 0 ? Array.FindIndex(downbeats, d => d >= a.OutroStart - 0.05) : -1;
+        return ((index - Math.Max(0, anchor)) % 4 + 4) % 4 == 0;
+    }
+
     private static double ChooseExit(TrackAnalysis a, double soundEndA, double overlap, double earliest)
     {
         var downbeats = a.Downbeats;
         var anchor = a.OutroStart > 0 ? Array.FindIndex(downbeats, d => d >= a.OutroStart - 0.05) : -1;
         var limit = soundEndA - overlap;
-        var minimum = Math.Max(Math.Max(0, a.Duration - 45), earliest);
+        var minimum = Math.Max(Math.Max(0, a.Duration - ExitWindowSeconds), earliest);
         var candidates = new List<int>();
         for (var i = downbeats.Length - 1; i >= 0; i--)
         {
@@ -412,7 +840,7 @@ public static class AutoMixPlanner
 
     private static double ChooseCoveringExit(TrackAnalysis a, double overlap, double cover, double latestEnd)
     {
-        var minimum = Math.Max(0, a.Duration - 45);
+        var minimum = Math.Max(0, a.Duration - ExitWindowSeconds);
         foreach (var downbeat in a.Downbeats)
         {
             if (downbeat < minimum || downbeat + overlap < cover) continue;

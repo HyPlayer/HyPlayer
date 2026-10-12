@@ -4,8 +4,9 @@ namespace HyPlayer.Features.Playback.Analysis;
 
 public sealed class TrackAnalysis
 {
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 5;
     public const int ModelBeatVersion = 3;
+    public const int DspBeatVersion = 4;
     public const string DspAnalyzer = "dsp";
 
     public int Version { get; set; } = CurrentVersion;
@@ -33,7 +34,10 @@ public sealed class TrackAnalysis
     public double[]? VocalIntroCurve { get; set; }
     public double[]? VocalOutroWindow { get; set; }
     public double[]? VocalOutroCurve { get; set; }
+    public TempoRun[]? TempoRuns { get; set; }
+    public TrackSection[]? Sections { get; set; }
 
     public bool HasBeatGrid => Beats.Length >= 16 && Bpm > 0;
-    public bool IsCurrentVersion => Version == CurrentVersion || Version == ModelBeatVersion && BeatAnalyzer != DspAnalyzer;
+    public bool IsCurrentVersion => Version == CurrentVersion;
+    public bool HasCurrentBeats => Version >= DspBeatVersion || Version == ModelBeatVersion && BeatAnalyzer != DspAnalyzer;
 }

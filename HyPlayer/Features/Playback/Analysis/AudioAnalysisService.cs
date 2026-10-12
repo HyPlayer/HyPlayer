@@ -263,7 +263,20 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
 
         BeatAnalysisResult? beats = null;
         var beatAnalyzer = BeatAnalyzer();
-        if (beatAnalyzer is not null)
+        var beatAnalyzerId = beatAnalyzer?.Id ?? TrackAnalysis.DspAnalyzer;
+        if (previous is { HasCurrentBeats: true, HasBeatGrid: true } && previous.BeatAnalyzer == beatAnalyzerId)
+        {
+            beats = new BeatAnalysisResult
+            {
+                Analyzer = previous.BeatAnalyzer,
+                Bpm = previous.Bpm,
+                Confidence = previous.BeatConfidence,
+                Beats = previous.Beats,
+                Downbeats = previous.Downbeats,
+                DownbeatConfidence = previous.DownbeatConfidence
+            };
+        }
+        else if (beatAnalyzer is not null)
         {
             try
             {
@@ -318,11 +331,12 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
 
         var barEnergies = LevelAnalysis.BarEnergies(features, beats.Downbeats);
         var (introEnd, outroStart) = LevelAnalysis.IntroOutro(barEnergies, beats.Downbeats);
+        var (tempoRuns, sections) = await AnalysisWorker.Run(() => Structure(mono, sr, features, beats, soundStart, soundEnd), ct);
         var vocals = previous is not null && HasModelVocals(previous) ? previous : null;
         var analysis = new TrackAnalysis
         {
             TrackKey = key,
-            BeatAnalyzer = beatAnalyzer?.Id ?? TrackAnalysis.DspAnalyzer,
+            BeatAnalyzer = beatAnalyzerId,
             KeyAnalyzer = keyAnalyzer?.Id ?? TrackAnalysis.DspAnalyzer,
             Duration = Math.Round(pcm.Seconds, 3),
             SoundStart = Math.Round(soundStart, 3),
@@ -344,7 +358,9 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
             VocalIntroWindow = vocals?.VocalIntroWindow,
             VocalIntroCurve = vocals?.VocalIntroCurve,
             VocalOutroWindow = vocals?.VocalOutroWindow,
-            VocalOutroCurve = vocals?.VocalOutroCurve
+            VocalOutroCurve = vocals?.VocalOutroCurve,
+            TempoRuns = tempoRuns,
+            Sections = sections
         };
         if (VocalAnalyzer() is not null) return analysis;
         foreach (var outro in new[] { false, true })
@@ -357,6 +373,15 @@ public sealed class AudioAnalysisService : IAudioAnalysisService
             else _leadMemory[$"{key}_{(outro ? "out" : "in")}"] = activity;
         }
         return analysis;
+    }
+
+    internal static (TempoRun[] Runs, TrackSection[] Sections) Structure(float[] mono, int sampleRate, SpectralFeatures features,
+        BeatAnalysisResult beats, double soundStart, double soundEnd)
+    {
+        var runs = beats.Analyzer == TrackAnalysis.DspAnalyzer ? TempoRuns.Find(beats.Beats, features) : TempoRuns.Find(beats.Beats);
+        var sections = SectionAnalysis.Analyze(mono, sampleRate, soundStart, soundEnd, beats.Beats, beats.Downbeats,
+            beats.DownbeatConfidence >= SectionAnalysis.TrustedBarConfidence);
+        return (runs, sections);
     }
 
     public async Task<IRandomAccessStream?> OpenLocalAudioAsync(SingleSongBase item)
