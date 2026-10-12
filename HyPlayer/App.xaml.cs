@@ -25,6 +25,7 @@ using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Settings.Services;
 using HyPlayer.Features.Widgets.Services;
 using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Downloads;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.Storage.Cache;
@@ -67,6 +68,8 @@ public sealed partial class App : Windows.UI.Xaml.Application
         InitializeCommonServices();
         AppDepository.Resolve<IHistoryService>().InitializeHistoryTrack();
         _ = AppDepository.Resolve<IPlaybackMemoryService>().InitializeAsync();
+        DownloadedTrackIndex.ScheduleScan(TimeSpan.FromSeconds(40));
+        StorageMaintenance.ScheduleTrim(TimeSpan.FromSeconds(30));
         var uiSettings = AppDepository.Resolve<UISettings>();
         if (uiSettings.ThemeRequest != ThemeRequest.Auto)
             RequestedTheme = uiSettings.ThemeRequest == ThemeRequest.Light

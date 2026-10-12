@@ -156,8 +156,21 @@ public sealed partial class Settings : Page
             "change track transition");
     }
 
+    private async Task RefreshCacheUsageAsync()
+    {
+        try
+        {
+            var used = await StorageMaintenance.GetCacheUsageAsync();
+            CacheLimitCard.Description = $"当前已使用 {StorageMaintenance.FormatSize(used)}，超出上限时自动清理最早的缓存";
+        }
+        catch
+        {
+        }
+    }
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
+        _ = RefreshCacheUsageAsync();
         var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>();
         RomajiStatus.Header = kawazu.Converter == null ? "请下载Kawazu资源文件" : "可以转换";
         ButtonDownloadRomaji.Visibility = kawazu.Converter == null ? Visibility.Visible : Visibility.Collapsed;

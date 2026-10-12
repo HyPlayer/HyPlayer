@@ -46,6 +46,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 {
     private readonly ChopinAudioService _audioService;
 
+    private static readonly TimeSpan _progressiveSeekWait = TimeSpan.FromSeconds(20);
     private static readonly TimeSpan _resumeFadeIn = TimeSpan.FromMilliseconds(220);
     private static readonly TimeSpan _pauseFadeOut = TimeSpan.FromMilliseconds(180);
     private static readonly TimeSpan _switchFadeIn = TimeSpan.FromMilliseconds(250);
@@ -820,13 +821,29 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     /// <inheritdoc />
     public async Task SeekAsync(TimeSpan target)
     {
+        try
+        {
+            if (!await EnsureSeekableAsync().ConfigureAwait(false))
+                return;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return;
+        }
+
         await _transitionGate.WaitAsync().ConfigureAwait(false);
         try
         {
             await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
+                var reload = FindIdleProgressiveTicket() is not null;
+                if (reload)
+                    await StopCoreAsync(CancellationToken.None).ConfigureAwait(false);
+
                 await _playCore.SeekAsync((long)target.TotalMilliseconds);
+                if (reload)
+                    CaptureCurrentPlaybackIdentity();
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -1132,6 +1149,63 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
         _state.IsPlaying = _playCore.CurrentPlayingTicket is not null;
         CaptureCurrentPlaybackIdentity();
+    }
+
+    private ChopinAudioTicket? FindIdleProgressiveTicket()
+    {
+        return _playCore.CurrentPlayingTicket is ChopinAudioTicket
+        {
+            PlaybackSource: AudioGraphPlaybackSource
+            {
+                PlaybackStatus: not PlaybackStatus.Playing
+            } source
+        } ticket && MediaSourceTraits.IsProgressive(source.PlaybackSource)
+            ? ticket
+            : null;
+    }
+
+    private async Task<bool> EnsureSeekableAsync()
+    {
+        SingleSongBase? song;
+        var ticket = _playCore.CurrentPlayingTicket;
+        if (ticket is null)
+        {
+            song = _playCore.CurrentSong ?? _state.NowPlayingProviderItem;
+            if (song is null
+                || await _mediaSourceService
+                    .CanSeekBeforePlaybackAsync(song, CancellationToken.None)
+                    .ConfigureAwait(false))
+                return true;
+
+            await _mediaSourceService.PrefetchAsync(song, CancellationToken.None).ConfigureAwait(false);
+        }
+        else
+        {
+            if (FindIdleProgressiveTicket() is not { } idle)
+                return true;
+            if (idle.MusicResource is not NeteaseMediaResource resource)
+                return false;
+
+            song = resource.Song;
+        }
+
+        var deadline = Stopwatch.GetTimestamp() + _progressiveSeekWait.Ticks * Stopwatch.Frequency / TimeSpan.TicksPerSecond;
+        while (_mediaSourceService.IsTransferring(song))
+        {
+            if (Stopwatch.GetTimestamp() > deadline)
+                return false;
+
+            await Task.Delay(250).ConfigureAwait(false);
+            var current = _playCore.CurrentPlayingTicket;
+            if (ticket is not null && !ReferenceEquals(current, ticket))
+                return false;
+            if (current is ChopinAudioTicket { PlaybackSource.PlaybackStatus: PlaybackStatus.Playing })
+                return true;
+        }
+
+        return await _mediaSourceService
+            .CanSeekBeforePlaybackAsync(song, CancellationToken.None)
+            .ConfigureAwait(false);
     }
 
     private async Task FadeOutCurrentAsync()

@@ -11,6 +11,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Network;
 using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
@@ -107,6 +108,12 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
         }
     }
 
+    public async Task<bool> IsCachedAsync(SingleSongBase song, MusicResourceBase resource, CancellationToken ct)
+    {
+        return !_downloadOperations.ContainsKey(song.ActualId)
+               && await GetCacheFileAsync(song, resource, ct) is not null;
+    }
+
     public async Task<StorageFile?> FindOfflineFileAsync(SingleSongBase song)
     {
         try
@@ -153,6 +160,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
             _downloadOperations.TryRemove(new KeyValuePair<string, DownloadOperation>(id, operation));
             _transferCancellations.TryRemove(new KeyValuePair<string, CancellationTokenSource>(id, cancellation));
             cancellation.Dispose();
+            StorageMaintenance.ScheduleTrim();
         }
     }
 

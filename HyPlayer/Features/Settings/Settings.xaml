@@ -1255,6 +1255,37 @@
                                                     Content="选择" />
                                             </StackPanel>
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard
+                                            x:Name="CacheLimitCard"
+                                            Description="超出上限时自动清理最早的缓存"
+                                            Header="最大缓存大小">
+                                            <StackPanel
+                                                HorizontalAlignment="Right"
+                                                Orientation="Horizontal"
+                                                Spacing="8">
+                                                <controls:NumberBox
+                                                    Width="120"
+                                                    AutomationProperties.Name="自定义缓存大小 (GB)"
+                                                    Maximum="4096"
+                                                    Minimum="0.5"
+                                                    PlaceholderText="GB"
+                                                    SmallChange="1"
+                                                    SpinButtonPlacementMode="Compact"
+                                                    Visibility="{x:Bind Playback.CacheLimitIsCustom, Mode=OneWay}"
+                                                    Value="{x:Bind Playback.CacheLimitGB, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                                <ComboBox
+                                                    MinWidth="120"
+                                                    AutomationProperties.Name="最大缓存大小"
+                                                    SelectedIndex="{x:Bind Playback.CacheLimitIndex, Mode=TwoWay}">
+                                                    <ComboBoxItem Content="1 GB" />
+                                                    <ComboBoxItem Content="5 GB" />
+                                                    <ComboBoxItem Content="10 GB" />
+                                                    <ComboBoxItem Content="15 GB" />
+                                                    <ComboBoxItem Content="20 GB" />
+                                                    <ComboBoxItem Content="自定义" />
+                                                </ComboBox>
+                                            </StackPanel>
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="清理所有缓存">
                                             <Button
                                                 HorizontalAlignment="Right"
@@ -1408,6 +1439,12 @@
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind Download.Write163Info, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="播放网易云歌曲时，如果已经下载过就直接播放本地文件" Header="优先播放已下载的歌曲">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Download.PreferDownloadedFile, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="最大同时下载任务数">
                                             <controls:NumberBox

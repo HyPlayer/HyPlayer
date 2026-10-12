@@ -22,6 +22,7 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.LocalMusic;
+using HyPlayer.Platform.Downloads;
 using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Storage.Audio;
 using HyPlayer.Platform.Xaml;
@@ -259,6 +260,8 @@ public sealed partial class DownloadObject : ObservableObject
                     Status = DownloadStatus.Error;
                 else if (!_removed)
                 {
+                    if (_providerSong.ProviderId == "ncm")
+                        await DownloadedTrackIndex.RecordAsync(_downloadSongId, ResultFile).ConfigureAwait(false);
                     Status = DownloadStatus.Finished;
                     await _uiThreadDispatcher.TryRunAsync(() =>
                     {

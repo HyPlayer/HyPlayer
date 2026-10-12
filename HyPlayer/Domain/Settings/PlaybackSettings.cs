@@ -3,6 +3,7 @@ using Windows.Storage;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Domain.Settings;
@@ -144,6 +145,52 @@ public partial class PlaybackSettings : SettingsBase
         TryGetSettings<string>(nameof(CacheDirectory), out var value) && !string.IsNullOrWhiteSpace(value)
             ? value
             : null;
+
+    public static readonly double[] CacheLimitPresets = [1, 5, 10, 15, 20];
+
+    public double CacheLimitGB
+    {
+        get => GetSettings(nameof(CacheLimitGB), 5d);
+        set
+        {
+            if (double.IsNaN(value))
+                return;
+
+            if (SetSettings(nameof(CacheLimitGB), Math.Clamp(value, 0.5, 4096)))
+                StorageMaintenance.ScheduleTrim(TimeSpan.FromSeconds(2));
+        }
+    }
+
+    public bool CacheLimitCustom
+    {
+        get => GetSettings(nameof(CacheLimitCustom), false);
+        set => SetSettings(nameof(CacheLimitCustom), value);
+    }
+
+    public int CacheLimitIndex
+    {
+        get
+        {
+            if (CacheLimitCustom)
+                return CacheLimitPresets.Length;
+
+            var index = Array.IndexOf(CacheLimitPresets, CacheLimitGB);
+            return index < 0 ? CacheLimitPresets.Length : index;
+        }
+        set
+        {
+            if (value < 0 || value > CacheLimitPresets.Length)
+                return;
+
+            CacheLimitCustom = value == CacheLimitPresets.Length;
+            if (value < CacheLimitPresets.Length)
+                CacheLimitGB = CacheLimitPresets[value];
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CacheLimitIsCustom));
+        }
+    }
+
+    public bool CacheLimitIsCustom => CacheLimitIndex == CacheLimitPresets.Length;
 
     /// <summary>
     ///     Audio render device identifier.

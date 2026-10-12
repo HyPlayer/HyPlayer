@@ -24,6 +24,8 @@ public interface IMediaTransferProvider
     bool IsTransferring(SingleSongBase song);
 
     void CancelTransfersExcept(SingleSongBase keep);
+
+    Task<bool> IsCachedAsync(SingleSongBase song, MusicResourceBase resource, CancellationToken ct);
 }
 
 public interface IMediaOfflineProvider
@@ -57,6 +59,8 @@ public interface IMediaSourceService
     bool IsTransferring(SingleSongBase song);
 
     void CancelTransfersExcept(SingleSongBase keep);
+
+    Task<bool> CanSeekBeforePlaybackAsync(SingleSongBase song, CancellationToken ct);
 
     Task<MusicResourceBase?> ResolveAsync(SingleSongBase song, CancellationToken ct);
 

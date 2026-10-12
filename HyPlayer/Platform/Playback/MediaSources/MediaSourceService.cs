@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Platform.Downloads;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
@@ -32,7 +33,8 @@ public sealed class MediaSourceService : IMediaSourceService
     {
         if (!IsNeteaseSong(song)
             || !_providers.TryGetValue(SelectProviderId(), out var provider)
-            || provider is not IMediaPrefetchProvider prefetcher)
+            || provider is not IMediaPrefetchProvider prefetcher
+            || await DownloadedTrackIndex.TryGetAsync(song.ActualId).ConfigureAwait(false) is not null)
             return;
 
         var resolved = await _urlResolver.ResolveAsync(song.ActualId, ct).ConfigureAwait(false);
@@ -58,9 +60,40 @@ public sealed class MediaSourceService : IMediaSourceService
                 transfers.CancelTransfersExcept(keep);
     }
 
+    public async Task<bool> CanSeekBeforePlaybackAsync(SingleSongBase song, CancellationToken ct)
+    {
+        if (!IsNeteaseSong(song)
+            || !_providers.TryGetValue(SelectProviderId(), out var provider)
+            || provider is not IMediaTransferProvider transfers)
+            return true;
+
+        if (await DownloadedTrackIndex.TryGetAsync(song.ActualId).ConfigureAwait(false) is not null)
+            return true;
+
+        if (transfers.IsTransferring(song))
+            return false;
+
+        ResolvedSongUrl? resolved;
+        try
+        {
+            resolved = await _urlResolver.ResolveAsync(song.ActualId, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return true;
+        }
+
+        return resolved is null
+               || await transfers.IsCachedAsync(song, CreateResource(song, resolved), ct).ConfigureAwait(false);
+    }
+
     public async Task<MusicResourceBase?> ResolveAsync(SingleSongBase song, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
+        if (IsNeteaseSong(song)
+            && await DownloadedTrackIndex.TryGetAsync(song.ActualId).ConfigureAwait(false) is { } downloaded)
+            return new LocalFileMediaResource(song, downloaded);
+
         ResolvedSongUrl? resolved;
         try
         {

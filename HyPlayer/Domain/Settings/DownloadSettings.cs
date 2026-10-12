@@ -73,6 +73,12 @@ public partial class DownloadSettings : SettingsBase
         set => SetSettings(nameof(DownloadAudioRate), value);
     }
 
+    public bool PreferDownloadedFile
+    {
+        get => GetSettings(nameof(PreferDownloadedFile), true);
+        set => SetSettings(nameof(PreferDownloadedFile), value);
+    }
+
     public int MaxDownloadCount
     {
         get => GetSettings(nameof(MaxDownloadCount), 1);
