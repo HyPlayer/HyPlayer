@@ -26,6 +26,7 @@ using HyPlayer.Features.Settings.Services;
 using HyPlayer.Features.Widgets.Services;
 using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Downloads;
+using HyPlayer.Platform.Playback.LocalProvider;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.Storage.Cache;
@@ -66,6 +67,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
         InitializeComponent();
+        System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.SustainedLowLatency;
         InitializeServices();
         InitializeCommonServices();
         AppDepository.Resolve<IHistoryService>().InitializeHistoryTrack();
@@ -302,23 +304,28 @@ public sealed partial class App : Windows.UI.Xaml.Application
             NavigateToRootPage();
             Window.Current.Activate();
             var control = AppDepository.Resolve<IPlaybackControlService>();
-            AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
-                control.InitializeAsync(),
-                "initialize player for file activation");
+            await control.InitializeAsync();
+            await control.StopAsync();
+            await control.ClearQueueAsync();
+            LocalSong firstOpened = null;
             foreach (var storageItem in (args?.As<FileActivatedEventArgs>()).Files)
             {
-                var file = (StorageFile)storageItem;
+                if (storageItem is not StorageFile file) continue;
                 await localFileImport.RegisterFutureAccessAsync(file);
                 var item = await localFileImport.LoadStorageFileAsync(file);
                 await playCore.InsertSongAsync(item);
+                firstOpened ??= item;
             }
 
             playCore.PlaySourceId = "local";
-            if ((await playCore.GetPlaylistAsync()).Count > 0)
+            if (firstOpened is not null)
             {
-                await playCore.MovePointerToIndexAsync(0);
+                await playCore.MovePointerToAsync(firstOpened);
                 if (playCore.CurrentSong is { } song)
+                {
                     await control.LoadAndPlayAsync(song, removeCurrentSongs: false);
+                    AppDepository.Resolve<IPlaybackSurfaceCoordinator>().Expand();
+                }
             }
         }
     }

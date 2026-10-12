@@ -52,13 +52,29 @@ public sealed class ShellLoginService
 
     public async Task ShowLoginRequiredDialogAsync()
     {
+        if (_navigationShell.IsAutoLoginPending && !_auth.IsLoggedIn)
+        {
+            _notification.ShowMessage("正在登录", "正在连接至网易云，请稍候");
+            return;
+        }
+
         await _auth.ClearRuntimeCookiesAsync();
         await ShowPreLoginHintAsync();
     }
 
     public async Task TryLoadSavedLoginAsync()
     {
-        var result = await _auth.TryLoadSavedLoginAsync();
+        AuthResult result;
+        _navigationShell.SetAutoLoginPending(true);
+        try
+        {
+            result = await _auth.TryLoadSavedLoginAsync();
+        }
+        finally
+        {
+            _navigationShell.SetAutoLoginPending(false);
+        }
+
         if (!result.IsSuccess)
         {
             if (!string.IsNullOrEmpty(result.ErrorMessage))

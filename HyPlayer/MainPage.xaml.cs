@@ -20,6 +20,7 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI;
 using CommunityToolkit.WinUI.Helpers;
+using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Library;
@@ -225,7 +226,21 @@ public sealed partial class MainPage : Page
         ExpandedPlayerPositionOffset.Y = 0;
         ExpandedPlayer.IsHitTestVisible = true;
         ExpandedPlayer.Visibility = Visibility.Visible;
-        EnsureExpandedPlayerFrame();
+        try
+        {
+            EnsureExpandedPlayerFrame();
+        }
+        catch (Exception ex)
+        {
+            ExpandedPlayer.Content = null;
+            ExpandedPlayer.IsHitTestVisible = false;
+            ExpandedPlayer.Visibility = Visibility.Collapsed;
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("无法打开歌词页面", ex.Message);
+            _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                () => Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>().Collapse());
+            return;
+        }
+
         GridPlayBar.BorderThickness = new Thickness(0);
         MainFrame.Visibility = Visibility.Collapsed;
         GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;

@@ -404,6 +404,7 @@
 
                         <HyperlinkButton
                             Name="SingerHyperlinkBtn"
+                            AutomationProperties.Name="歌手"
                             Click="TextBlockSinger_OnTapped"
                             FontSize="20"
                             Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
@@ -414,6 +415,7 @@
                         </HyperlinkButton>
                         <HyperlinkButton
                             Name="AlbumHyperlinkBtn"
+                            AutomationProperties.Name="专辑"
                             Click="AlbumHyperlinkBtn_OnTapped"
                             FontSize="20"
                             Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
@@ -447,11 +449,13 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 x:FieldModifier="public"
+                AutomationProperties.Name="更多"
                 Background="Transparent"
                 BorderThickness="0"
                 Canvas.ZIndex="2"
                 CornerRadius="30"
-                Style="{StaticResource ButtonRevealStyle}">
+                Style="{StaticResource ButtonRevealStyle}"
+                ToolTipService.ToolTip="更多">
                 <Button.Flyout>
                     <MenuFlyout>
                         <ToggleMenuFlyoutItem

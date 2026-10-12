@@ -689,6 +689,8 @@
                     Visibility="Collapsed">
                     <Button
                         x:Name="Btn_Collapse"
+                        AutomationProperties.Name="收起歌词页"
+                        ToolTipService.ToolTip="收起歌词页"
                         Width="40"
                         Height="40"
                         Padding="-5"
@@ -700,6 +702,7 @@
                     </Button>
                     <Button
                         x:Name="Btn_Sub"
+                        AutomationProperties.Name="添加到歌单"
                         Width="40"
                         Height="40"
                         Padding="-5"
@@ -713,6 +716,7 @@
                     </Button>
                     <Button
                         x:Name="Btn_Down"
+                        AutomationProperties.Name="下载音乐"
                         Width="40"
                         Height="40"
                         Padding="-5"
@@ -726,6 +730,7 @@
                     </Button>
                     <Button
                         x:Name="Btn_Comment"
+                        AutomationProperties.Name="查看评论"
                         Width="40"
                         Height="40"
                         Padding="-5"
@@ -740,6 +745,7 @@
                     </Button>
                     <Button
                         x:Name="Btn_Share"
+                        AutomationProperties.Name="分享"
                         Width="40"
                         Height="40"
                         Padding="-5"
@@ -950,6 +956,7 @@
 
                     <Button
                         x:Name="BtnPlayRollType"
+                        AutomationProperties.Name="播放顺序"
                         Grid.Column="2"
                         Width="38"
                         Height="38"
@@ -968,6 +975,8 @@
                     </Button>
                     <Button
                         x:Name="BtnPreviousSong"
+                        AutomationProperties.Name="上一首"
+                        ToolTipService.ToolTip="上一首"
                         Grid.Column="3"
                         Width="40"
                         Height="40"
@@ -985,6 +994,8 @@
                     </Button>
                     <Button
                         x:Name="BtnPlayStateChange"
+                        AutomationProperties.Name="播放/暂停"
+                        ToolTipService.ToolTip="播放/暂停"
                         Grid.Column="4"
                         Width="50"
                         Height="50"
@@ -1016,6 +1027,8 @@
                     </Button>
                     <Button
                         x:Name="BtnNextSong"
+                        AutomationProperties.Name="下一首"
+                        ToolTipService.ToolTip="下一首"
                         Grid.Column="5"
                         Width="40"
                         Height="40"
@@ -1032,6 +1045,8 @@
                     </Button>
                     <Button
                         x:Name="BtnLike"
+                        AutomationProperties.Name="喜欢"
+                        ToolTipService.ToolTip="喜欢"
                         Grid.Column="6"
                         Width="40"
                         Height="40"
@@ -1112,6 +1127,7 @@
                 CornerRadius="20">
                 <ToggleButton
                     x:Name="ButtonDesktopLyrics"
+                    AutomationProperties.Name="桌面歌词"
                     Width="40"
                     Height="40"
                     Padding="-5"
@@ -1132,6 +1148,8 @@
                 </ToggleButton>
                 <Button
                     x:Name="BtnVolume"
+                    AutomationProperties.Name="音量"
+                    ToolTipService.ToolTip="音量"
                     Width="40"
                     Height="40"
                     Padding="-5"
@@ -1148,6 +1166,8 @@
                 </Button>
                 <Button
                     x:Name="ButtonPlayList"
+                    AutomationProperties.Name="播放列表"
+                    ToolTipService.ToolTip="播放列表"
                     Width="40"
                     Height="40"
                     Padding="-5"
@@ -1162,6 +1182,7 @@
                                 <controls:DockPanel LastChildFill="True">
                                     <Button
                                         x:Name="BtnReverse"
+                                        AutomationProperties.Name="倒序播放列表"
                                         Background="Transparent"
                                         BorderBrush="Transparent"
                                         Click="BtnReverse_Click"
@@ -1244,6 +1265,8 @@
             </controls:UniformGrid>
             <Button
                 x:Name="ButtonExpand"
+                AutomationProperties.Name="展开歌词页"
+                ToolTipService.ToolTip="展开歌词页"
                 Grid.Column="3"
                 Width="40"
                 Height="40"
@@ -1263,6 +1286,8 @@
             </Button>
             <Button
                 x:Name="ButtonCollapse"
+                AutomationProperties.Name="收起歌词页"
+                ToolTipService.ToolTip="收起歌词页"
                 Grid.Column="3"
                 Width="40"
                 Height="40"
@@ -1280,6 +1305,8 @@
             </Button>
             <Button
                 x:Name="BtnMore"
+                AutomationProperties.Name="更多"
+                ToolTipService.ToolTip="更多"
                 Grid.Column="3"
                 Width="40"
                 Height="40"

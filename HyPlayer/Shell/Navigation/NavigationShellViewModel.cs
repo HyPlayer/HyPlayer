@@ -111,6 +111,15 @@ public partial class NavigationShellViewModel : ObservableObject
 
     [ObservableProperty] public partial Visibility AccountSignOutVisibility { get; set; } = Visibility.Collapsed;
 
+    public bool IsAutoLoginPending { get; private set; }
+
+    public void SetAutoLoginPending(bool pending)
+    {
+        if (IsAutoLoginPending == pending) return;
+        IsAutoLoginPending = pending;
+        _ = UpdateAccountStatusAsync();
+    }
+
     private void BuildMenuItems()
     {
         _sections.AddRange([
@@ -304,9 +313,9 @@ public partial class NavigationShellViewModel : ObservableObject
 
         AccountAvatarSource = null;
         AccountInitials = "HP";
-        AccountName = "未登录";
-        AccountSubtitle = "登录以同步歌单与收藏";
-        AccountProfileButtonText = "登录";
+        AccountName = IsAutoLoginPending ? "正在登录…" : "未登录";
+        AccountSubtitle = IsAutoLoginPending ? "正在连接至网易云，网络较慢时可能需要一些时间" : "登录以同步歌单与收藏";
+        AccountProfileButtonText = IsAutoLoginPending ? "正在登录…" : "登录";
         AccountSignOutVisibility = Visibility.Collapsed;
     }
 
