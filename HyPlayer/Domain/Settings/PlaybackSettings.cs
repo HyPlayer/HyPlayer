@@ -70,6 +70,12 @@ public partial class PlaybackSettings : SettingsBase
         set => SetSettings(nameof(PlaybackFade), value);
     }
 
+    public bool SpeedChangesPitch
+    {
+        get => GetSettings(nameof(SpeedChangesPitch), false);
+        set => SetSettings(nameof(SpeedChangesPitch), value);
+    }
+
     public bool AutoPlayOnLaunch
     {
         get => GetSettings(nameof(AutoPlayOnLaunch), false);

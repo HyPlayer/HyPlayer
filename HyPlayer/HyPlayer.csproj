@@ -110,5 +110,22 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
+    <Target Name="BuildHyPlayerNative" BeforeTargets="AssignTargetPaths" Condition="'$(Platform)' == 'x64' Or '$(Platform)' == 'arm64'">
+        <PropertyGroup>
+            <HyPlayerNativePlatform Condition="'$(Platform)' == 'arm64'">ARM64</HyPlayerNativePlatform>
+            <HyPlayerNativePlatform Condition="'$(Platform)' == 'x64'">x64</HyPlayerNativePlatform>
+            <HyPlayerNativeDll>$(MSBuildThisFileDirectory)..\HyPlayer.Native\out\$(HyPlayerNativePlatform)\hyp_stretch.dll</HyPlayerNativeDll>
+        </PropertyGroup>
+        <MSBuild Projects="$(MSBuildThisFileDirectory)..\HyPlayer.Native\HyPlayer.Native.vcxproj" Properties="Configuration=Release;Platform=$(HyPlayerNativePlatform)" RemoveProperties="RuntimeIdentifier;TargetFramework;SelfContained;PublishProfile;PublishDir;_IsPublishing" ContinueOnError="WarnAndContinue" />
+        <ItemGroup Condition="Exists('$(HyPlayerNativeDll)')">
+            <Content Include="$(HyPlayerNativeDll)" Link="hyp_stretch.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+        </ItemGroup>
+    </Target>
+    <Target Name="PublishHyPlayerNative" AfterTargets="ComputeResolvedFilesToPublishList" DependsOnTargets="BuildHyPlayerNative" Condition="'$(Platform)' == 'x64' Or '$(Platform)' == 'arm64'">
+        <ItemGroup Condition="Exists('$(HyPlayerNativeDll)')">
+            <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Filename)%(Extension)' == 'hyp_stretch.dll'" />
+            <ResolvedFileToPublish Include="$(HyPlayerNativeDll)" RelativePath="hyp_stretch.dll" TargetPath="hyp_stretch.dll" CopyToPublishDirectory="PreserveNewest" />
+        </ItemGroup>
+    </Target>
     <Import Project="..\ObservableCollections\src\ObservableCollections.SourceGenerator\build\ObservableCollections.SourceGenerator.targets" />
 </Project>

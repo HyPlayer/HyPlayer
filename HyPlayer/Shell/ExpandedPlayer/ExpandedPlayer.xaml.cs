@@ -1215,6 +1215,13 @@ public sealed partial class ExpandedPlayer : Page
         ApplyPlaybackSpeed(1);
     }
 
+    private void SpeedChangesPitch_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleMenuFlyoutItem item)
+            _playbackSettings.SpeedChangesPitch = item.IsChecked;
+        ApplyPlaybackSpeed(_state.PlaybackSpeed);
+    }
+
     private void BtnCopyLyricClicked(object sender, RoutedEventArgs e)
     {
         _shareSave?.ShowLyricShareDialog();

@@ -622,7 +622,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
         try
         {
-            _player.SetPlaybackSourceSpeed(speed, source);
+            _audioService.ApplyPlaybackSpeed(source, speed);
         }
         catch (ArgumentException)
         {

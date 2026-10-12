@@ -550,6 +550,11 @@
                                 </ControlTemplate>
                             </MenuFlyoutItem.Template>
                         </MenuFlyoutItem>
+                        <ToggleMenuFlyoutItem
+                            HorizontalContentAlignment="Left"
+                            Click="SpeedChangesPitch_Click"
+                            IsChecked="{x:Bind ViewModel.PlaybackSettings.SpeedChangesPitch, Mode=OneWay}"
+                            Text="变调" />
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>

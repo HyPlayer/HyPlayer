@@ -140,9 +140,17 @@ public sealed class ChopinAudioService :
     {
         ctk.ThrowIfCancellationRequested();
         if (ticket is ChopinAudioTicket chopinTicket)
-            _player.SetPlaybackSourceSpeed(playbackSpeed, chopinTicket.PlaybackSource);
+            ApplyPlaybackSpeed(chopinTicket.PlaybackSource, playbackSpeed);
 
         return Task.CompletedTask;
+    }
+
+    public void ApplyPlaybackSpeed(IPlaybackSource source, double playbackSpeed)
+    {
+        if (_player is AudioGraphPlayer graphPlayer)
+            graphPlayer.SetUserPlaybackSpeed(playbackSpeed, source, !_setting.SpeedChangesPitch);
+        else
+            _player.SetPlaybackSourceSpeed(playbackSpeed, source);
     }
 
     public async Task<AudioTicketBase> GetPreparedAudioTicketAsync(
@@ -279,7 +287,8 @@ public sealed class ChopinAudioService :
                     SetAsPrimarySource = setAsPrimarySource,
                     Volume = targetVolume,
                     AudioGain = audioGain,
-                    Speed = PlaybackSpeed
+                    Speed = PlaybackSpeed,
+                    PreservePitch = !_setting.SpeedChangesPitch
                 });
             }
             finally

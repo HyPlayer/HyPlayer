@@ -7,5 +7,6 @@
         public double Volume { get; set; } = 1d;
         public double AudioGain { get; set; } = 1d;
         public double Speed { get; set; } = 1d;
+        public bool PreservePitch { get; set; } = true;
     }
 }
