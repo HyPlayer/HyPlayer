@@ -5,6 +5,7 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Grid>
@@ -26,15 +27,43 @@
                     Text="欢迎使用 HyPlayer!" />
                 <TextBlock
                     x:Name="TBSettingsHint"
+                    MaxWidth="460"
+                    HorizontalAlignment="Left"
                     FontSize="18"
                     Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                    Text="推荐您在登录后进入设置进行个性化" />
+                    Text="推荐您在登录后进入设置进行个性化"
+                    TextWrapping="Wrap" />
                 <Button x:Name="LoginBtn" Click="LoginBtn_Click">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon FontSize="14" Glyph="&#xE0AD;" />
                         <TextBlock Text="登录" />
                     </StackPanel>
                 </Button>
+                <StackPanel
+                    x:Name="LoginPendingPanel"
+                    Orientation="Horizontal"
+                    Spacing="10"
+                    Visibility="Collapsed">
+                    <muxc:ProgressRing
+                        x:Name="LoginPendingRing"
+                        Width="20"
+                        Height="20"
+                        IsActive="False" />
+                    <TextBlock VerticalAlignment="Center" Text="正在登录…" />
+                </StackPanel>
+                <StackPanel
+                    x:Name="LoginRetryPanel"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    Visibility="Collapsed">
+                    <Button Click="RetryBtn_Click" Style="{StaticResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                            <TextBlock Text="重试" />
+                        </StackPanel>
+                    </Button>
+                    <Button Click="ReloginBtn_Click" Content="重新登录" />
+                </StackPanel>
             </StackPanel>
         </StackPanel>
 

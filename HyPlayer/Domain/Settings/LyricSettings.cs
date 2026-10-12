@@ -202,7 +202,7 @@ public partial class LyricSettings : SettingsBase
     }
 
     public const string DefaultAmllTtmlMirrorUrl =
-        "https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/[NCM_ID].ttml";
+        "https://amll-ttml-db.gbclstudio.cn/ncm-lyrics/[NCM_ID].ttml";
 
     /// <summary>
     ///     AMLL TTML mirror URL.

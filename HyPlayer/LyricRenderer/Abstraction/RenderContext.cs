@@ -38,7 +38,29 @@ public class RenderContext
     /// <summary>
     ///     播放时间 单位毫秒
     /// </summary>
-    public long CurrentLyricTime { get; set; }
+    public long CurrentLyricTime
+    {
+        get => _currentLyricTime;
+        set
+        {
+            _currentLyricTime = value;
+            _lyricTimeFraction = 0;
+        }
+    }
+
+    public double PreciseLyricTime
+    {
+        get => _currentLyricTime + _lyricTimeFraction;
+        set
+        {
+            var whole = System.Math.Floor(value);
+            _currentLyricTime = (long)whole;
+            _lyricTimeFraction = value - whole;
+        }
+    }
+
+    private long _currentLyricTime;
+    private double _lyricTimeFraction;
 
     /// <summary>
     ///     渲染时间刻 单位微秒

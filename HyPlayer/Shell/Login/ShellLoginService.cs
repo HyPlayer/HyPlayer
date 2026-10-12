@@ -1,11 +1,13 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Networking.Connectivity;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using HyPlayer.Application.Notifications;
+using HyPlayer.Application.Threading;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Account.Services;
@@ -22,15 +24,21 @@ namespace HyPlayer.Shell.Login;
 /// </summary>
 public sealed class ShellLoginService
 {
+    private static readonly TimeSpan PendingPageDelay = TimeSpan.FromMilliseconds(800);
+
     private readonly IAuthService _auth;
+    private readonly AutoLoginFlow _autoLogin;
     private readonly INavigationService _navigation;
     private readonly NavigationShellViewModel _navigationShell;
+    private readonly NetworkStatusChangedEventHandler _networkStatusChanged;
     private readonly IAppNavigator _navigator;
     private readonly INotificationService _notification;
     private readonly UISettings _setting;
+    private readonly IUIThreadDispatcher _uiThreadDispatcher;
 
     private ContentDialog? _currentLoginDialog;
     private ContentDialog? _currentPreLoginDialog;
+    private bool _watchingNetwork;
 
     public ShellLoginService(
         IAuthService auth,
@@ -38,7 +46,8 @@ public sealed class ShellLoginService
         INavigationService navigation,
         IAppNavigator navigator,
         NavigationShellViewModel navigationShell,
-        UISettings setting)
+        UISettings setting,
+        IUIThreadDispatcher uiThreadDispatcher)
     {
         _auth = auth;
         _notification = notification;
@@ -46,48 +55,142 @@ public sealed class ShellLoginService
         _navigator = navigator;
         _navigationShell = navigationShell;
         _setting = setting;
+        _uiThreadDispatcher = uiThreadDispatcher;
+        _networkStatusChanged = OnNetworkStatusChanged;
+        _autoLogin = new AutoLoginFlow(token => _auth.TryLoadSavedLoginAsync(token), Task.Delay);
+        _autoLogin.StateChanged += OnAutoLoginStateChanged;
+        _autoLogin.SlowDetected += OnAutoLoginSlow;
+        _autoLogin.AttemptCompleted += OnAutoLoginAttemptCompleted;
     }
 
     public event EventHandler<QrLoginStatusChangedEventArgs>? QrLoginStatusChanged;
 
     public async Task ShowLoginRequiredDialogAsync()
     {
-        if (_navigationShell.IsAutoLoginPending && !_auth.IsLoggedIn)
+        if (_navigationShell.IsAutoLoginUnreachable)
+        {
+            await RetrySavedLoginAsync();
+            return;
+        }
+
+        await ShowReloginDialogAsync();
+    }
+
+    public async Task ShowReloginDialogAsync()
+    {
+        if (_navigationShell.IsAutoLoginPending)
         {
             _notification.ShowMessage("正在登录", "正在连接至网易云，请稍候");
             return;
         }
 
+        _autoLogin.Stop();
         await _auth.ClearRuntimeCookiesAsync();
         await ShowPreLoginHintAsync();
     }
 
-    public async Task TryLoadSavedLoginAsync()
+    public Task RetrySavedLoginAsync()
     {
-        AuthResult result;
-        _navigationShell.SetAutoLoginPending(true);
-        try
+        if (_navigationShell.IsAutoLoginPending)
         {
-            result = await _auth.TryLoadSavedLoginAsync();
-        }
-        finally
-        {
-            _navigationShell.SetAutoLoginPending(false);
+            _notification.ShowMessage("正在登录", "正在连接至网易云，请稍候");
+            return Task.CompletedTask;
         }
 
-        if (!result.IsSuccess)
+        return _autoLogin.RetryAsync();
+    }
+
+    public async Task TryLoadSavedLoginAsync()
+    {
+        var attempt = _autoLogin.StartAsync();
+        if (!attempt.IsCompleted)
+            await Task.WhenAny(attempt, Task.Delay(PendingPageDelay));
+        if (_navigationShell.AutoLoginState != AutoLoginState.None)
+            ShowWelcomeWhenEmpty();
+        await attempt;
+    }
+
+    private void OnAutoLoginStateChanged(AutoLoginState state)
+    {
+        _navigationShell.SetAutoLoginState(state);
+        WatchNetwork(state != AutoLoginState.None);
+    }
+
+    private void OnAutoLoginSlow()
+    {
+        if (!_auth.IsLoggedIn)
+            _notification.ShowMessage("正在登录", "网络较慢，仍在连接至网易云，请稍候");
+    }
+
+    private void OnAutoLoginAttemptCompleted(SavedLoginResult result, AutoLoginTrigger trigger)
+    {
+        if (result.Status == SavedLoginStatus.Succeeded)
         {
-            if (!string.IsNullOrEmpty(result.ErrorMessage))
-                _notification.ShowMessage("自动登录失败", result.ErrorMessage);
-            _navigation.Navigate(typeof(Welcome));
+            _ = FinishAutoLoginAsync();
             return;
         }
 
-        await FinishSuccessfulLoginAsync();
+        if (_auth.IsLoggedIn)
+        {
+            _autoLogin.Stop();
+            ShowWelcomeWhenEmpty();
+            return;
+        }
+
+        switch (result.Status)
+        {
+            case SavedLoginStatus.Unreachable when trigger != AutoLoginTrigger.Automatic:
+                _notification.ShowMessage("自动登录未完成",
+                    "可能是网络较慢或登录已失效，网络恢复后会自动重试，也可点击头像菜单中的「重试登录」");
+                break;
+            case SavedLoginStatus.Rejected:
+                _notification.ShowMessage("自动登录失败", "登录已失效，请重新登录");
+                break;
+        }
+
+        ShowWelcomeWhenEmpty();
+    }
+
+    private void ShowWelcomeWhenEmpty()
+    {
+        if (_navigation.RootFrame is { Content: null })
+            _navigation.Navigate(typeof(Welcome));
+    }
+
+    private void WatchNetwork(bool watch)
+    {
+        if (_watchingNetwork == watch) return;
+
+        _watchingNetwork = watch;
+        if (watch)
+            NetworkInformation.NetworkStatusChanged += _networkStatusChanged;
+        else
+            NetworkInformation.NetworkStatusChanged -= _networkStatusChanged;
+    }
+
+    private void OnNetworkStatusChanged(object sender)
+    {
+        if (!HasInternetAccess()) return;
+
+        _ = _uiThreadDispatcher.TryRunAsync(_autoLogin.NotifyNetworkAvailable);
+    }
+
+    private static bool HasInternetAccess()
+    {
+        try
+        {
+            return NetworkInformation.GetInternetConnectionProfile()?.GetNetworkConnectivityLevel() ==
+                   NetworkConnectivityLevel.InternetAccess;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async Task LogoutAsync()
     {
+        _autoLogin.Stop();
         var result = await _auth.LogoutAsync();
         if (!result.IsSuccess && !string.IsNullOrEmpty(result.ErrorMessage))
             _notification.ShowMessage("清除登录缓存失败", result.ErrorMessage);
@@ -270,11 +373,40 @@ public sealed class ShellLoginService
 
     private async Task FinishSuccessfulLoginAsync()
     {
+        _autoLogin.Stop();
+        await ApplySuccessfulLoginAsync();
+        await NavigateAfterLoginAsync();
+    }
+
+    private async Task FinishAutoLoginAsync()
+    {
+        await ApplySuccessfulLoginAsync();
+        var frame = _navigation.RootFrame;
+        if (frame is null) return;
+
+        if (frame.Content is not (null or Welcome))
+        {
+            _notification.ShowMessage("登录成功", "已恢复登录状态");
+            return;
+        }
+
+        var replacesWelcome = frame.Content is Welcome;
+        await NavigateAfterLoginAsync();
+        if (replacesWelcome && frame.Content is not Welcome && frame.BackStack.Count > 0 &&
+            frame.BackStack[^1].SourcePageType == typeof(Welcome))
+            frame.BackStack.RemoveAt(frame.BackStack.Count - 1);
+    }
+
+    private async Task ApplySuccessfulLoginAsync()
+    {
         _navigationShell.UpdateAfterLogin();
         await _navigationShell.RefreshPlaylistsAsync();
         _currentLoginDialog?.Hide();
         _currentPreLoginDialog?.Hide();
+    }
 
+    private async Task NavigateAfterLoginAsync()
+    {
         if (_setting.NoImage)
             _navigation.Navigate(typeof(Welcome));
         else

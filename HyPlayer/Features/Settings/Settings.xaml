@@ -213,7 +213,7 @@
                                                 IsOn="{x:Bind Lyric.EnableAmllTtmlDb, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard
-                                            Description=" [NCM_ID] 为网易云音乐 ID 占位符"
+                                            Description=" [NCM_ID] 为网易云音乐 ID 占位符，默认使用国内源，请求不到时自动尝试备用源"
                                             Header="AMLL TTML 镜像地址"
                                             Visibility="{x:Bind Lyric.EnableAmllTtmlDb, Mode=OneWay}">
                                             <TextBox HorizontalAlignment="Left" Text="{x:Bind Lyric.AmllTtmlMirrorUrl, Mode=TwoWay}" />
@@ -341,11 +341,13 @@
                                                 Value="{x:Bind Lyric.LyricRenderWidthRatio, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
 
-                                        <controls3:SettingsCard Header="歌词行间距">
+                                        <controls3:SettingsCard Description="在默认行距上增减的像素数，0 为默认。负数收紧（最多收紧到相邻行不重叠），正数拉开，修改后立即作用于已打开的歌词页" Header="歌词行间距">
                                             <controls:NumberBox
                                                 MinWidth="100"
                                                 HorizontalAlignment="Right"
                                                 LargeChange="5"
+                                                Maximum="200"
+                                                Minimum="-30"
                                                 SmallChange="1"
                                                 SpinButtonPlacementMode="Compact"
                                                 Value="{x:Bind Lyric.LyricLineSpacing, Mode=TwoWay}" />

@@ -28,6 +28,7 @@ internal sealed class NetworkWatchHandler : DelegatingHandler
         {
             var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
             _report(Stopwatch.GetElapsedTime(started), (int)response.StatusCode >= 500);
+            NetworkAnswerProbe.Report(response.IsSuccessStatusCode);
             return response;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

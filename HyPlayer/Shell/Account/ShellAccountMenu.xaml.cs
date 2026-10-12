@@ -36,6 +36,11 @@ public sealed partial class ShellAccountMenu : UserControl
         await _navigator.NavigateAsync(new AppRoute.Me());
     }
 
+    private async void Relogin_Click(object sender, RoutedEventArgs e)
+    {
+        await _loginService.ShowReloginDialogAsync();
+    }
+
     private async void OpenSettings_Click(object sender, RoutedEventArgs e)
     {
         await _navigator.NavigateAsync(new AppRoute.Settings());

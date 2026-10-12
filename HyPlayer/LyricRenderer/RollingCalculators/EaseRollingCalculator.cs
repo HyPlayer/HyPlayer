@@ -21,13 +21,13 @@ public abstract class EaseRollingCalculator : LineRollingCalculator
         if (!(fromY < targetY) && gap >= 0)
         {
             var theoryTime = AnimationDuration * ((float)Math.Log10(Math.Max(gap, MaxEasingPercent)) + 1);
-            progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
+            progress = Math.Clamp((float)(context.PreciseLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
             progress = (float)EaseFunction.Ease(progress);
         }
         else
         {
             var theoryTime = AnimationDuration * ((float)Math.Log10(Math.Max(gap, MaxEasingPercent)) + 1);
-            progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
+            progress = Math.Clamp((float)(context.PreciseLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
             progress = (float)EaseFunction.Ease(progress);
         }
         return fromY + (targetY - fromY) * progress;

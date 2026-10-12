@@ -677,8 +677,8 @@ public sealed partial class LyricService(
 
     private static readonly string[] AmllFallbackMirrors =
     [
-        "https://amll-ttml-db.gbclstudio.cn/ncm-lyrics/[NCM_ID].ttml",
         LyricSettings.DefaultAmllTtmlMirrorUrl,
+        "https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/[NCM_ID].ttml",
         "https://amll-ttml-db.stevexmh.net/ncm/[NCM_ID]"
     ];
 

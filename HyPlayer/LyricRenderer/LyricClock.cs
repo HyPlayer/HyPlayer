@@ -13,7 +13,10 @@ public sealed class LyricClock
     private double _outputMs;
     private long _lastTimestamp;
 
-    public long Next(double positionMs, bool isPlaying, double speed)
+    public long Next(double positionMs, bool isPlaying, double speed) =>
+        (long)NextPrecise(positionMs, isPlaying, speed);
+
+    public double NextPrecise(double positionMs, bool isPlaying, double speed)
     {
         var now = Stopwatch.GetTimestamp();
         if (!isPlaying || !_hasAnchor)
@@ -28,14 +31,14 @@ public sealed class LyricClock
 
         var rate = 1 + Math.Clamp(drift * RateGainPerMs, -MaxRateAdjust, MaxRateAdjust);
         _outputMs += elapsedMs * speed * rate;
-        return (long)_outputMs;
+        return _outputMs;
     }
 
-    private long Reset(double positionMs, long now, bool keepAnchor)
+    private double Reset(double positionMs, long now, bool keepAnchor)
     {
         _hasAnchor = keepAnchor;
         _outputMs = positionMs;
         _lastTimestamp = now;
-        return (long)positionMs;
+        return positionMs;
     }
 }

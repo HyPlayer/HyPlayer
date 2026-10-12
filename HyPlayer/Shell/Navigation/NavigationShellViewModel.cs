@@ -16,6 +16,7 @@ using HyPlayer.Features.Radio.Services;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
+using HyPlayer.Shell.Login;
 using ObservableCollections;
 
 namespace HyPlayer.Shell.Navigation;
@@ -43,6 +44,7 @@ public partial class NavigationShellViewModel : ObservableObject
     private readonly IUserLibraryNavigationProvidable _userLibraryNavigationProvider;
     private readonly IUserLibraryStateService _userLibraryState;
     private readonly IUserLibraryTypeIds _userLibraryTypeIds;
+    private AutoLoginState _autoLoginState;
     private Task? _loadPlaylistsTask;
     private int _podcastLoadVersion;
 
@@ -111,12 +113,16 @@ public partial class NavigationShellViewModel : ObservableObject
 
     [ObservableProperty] public partial Visibility AccountSignOutVisibility { get; set; } = Visibility.Collapsed;
 
-    public bool IsAutoLoginPending { get; private set; }
+    public AutoLoginState AutoLoginState => _auth.IsLoggedIn ? AutoLoginState.None : _autoLoginState;
 
-    public void SetAutoLoginPending(bool pending)
+    public bool IsAutoLoginPending => AutoLoginState == AutoLoginState.Pending;
+
+    public bool IsAutoLoginUnreachable => AutoLoginState == AutoLoginState.Unreachable;
+
+    public void SetAutoLoginState(AutoLoginState state)
     {
-        if (IsAutoLoginPending == pending) return;
-        IsAutoLoginPending = pending;
+        if (_autoLoginState == state) return;
+        _autoLoginState = state;
         _ = UpdateAccountStatusAsync();
     }
 
@@ -299,6 +305,9 @@ public partial class NavigationShellViewModel : ObservableObject
 
     private async Task UpdateAccountStatusAsync()
     {
+        OnPropertyChanged(nameof(AutoLoginState));
+        OnPropertyChanged(nameof(IsAutoLoginPending));
+        OnPropertyChanged(nameof(IsAutoLoginUnreachable));
         if (_auth.IsLoggedIn && _auth.CurrentUser is { } user)
         {
             AccountAvatarSource = await TryCreateAvatarSourceAsync(user);
@@ -314,9 +323,24 @@ public partial class NavigationShellViewModel : ObservableObject
 
         AccountAvatarSource = null;
         AccountInitials = "HP";
-        AccountName = IsAutoLoginPending ? "正在登录…" : "未登录";
-        AccountSubtitle = IsAutoLoginPending ? "正在连接至网易云，网络较慢时可能需要一些时间" : "登录以同步歌单与收藏";
-        AccountProfileButtonText = IsAutoLoginPending ? "正在登录…" : "登录";
+        AccountName = AutoLoginState switch
+        {
+            AutoLoginState.Pending => "正在登录…",
+            AutoLoginState.Unreachable => "自动登录未完成",
+            _ => "未登录"
+        };
+        AccountSubtitle = AutoLoginState switch
+        {
+            AutoLoginState.Pending => "正在连接至网易云，网络较慢时可能需要一些时间",
+            AutoLoginState.Unreachable => "可能是网络较慢或登录已失效，网络恢复后会自动重试",
+            _ => "登录以同步歌单与收藏"
+        };
+        AccountProfileButtonText = AutoLoginState switch
+        {
+            AutoLoginState.Pending => "正在登录…",
+            AutoLoginState.Unreachable => "重试登录",
+            _ => "登录"
+        };
         AccountSignOutVisibility = Visibility.Collapsed;
     }
 

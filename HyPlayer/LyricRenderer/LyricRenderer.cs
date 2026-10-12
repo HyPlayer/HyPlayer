@@ -208,6 +208,16 @@ namespace HyPlayer.LyricRenderer
             _needRecalculateSize = true;
         }
 
+        public void ChangeLineSpacing(int spacing)
+        {
+            Mutate(() =>
+            {
+                if (Context.LineSpacing == spacing) return;
+                Context.LineSpacing = spacing;
+                _needRecalculate = true;
+            });
+        }
+
         public void ChangeBeatPerMinute(float beatPerMinute)
         {
             Mutate(() => ChangeBeatPerMinuteCore(beatPerMinute));

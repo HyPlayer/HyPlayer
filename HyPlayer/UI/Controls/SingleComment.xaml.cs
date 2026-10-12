@@ -19,6 +19,8 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Shell.Login;
+using HyPlayer.Shell.Navigation;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.UI.Lists.IncrementalLoading;
 using ObservableCollections;
@@ -163,7 +165,8 @@ public sealed partial class SingleComment : UserControl
         }
         else
         {
-            var dlg = new MessageDialog("请先登录");
+            var autoLoginState = Ioc.Default.GetRequiredService<NavigationShellViewModel>().AutoLoginState;
+            var dlg = new MessageDialog(autoLoginState == AutoLoginState.None ? "请先登录" : "登录尚未完成，请稍候再试");
             await dlg.ShowAsync();
         }
     }

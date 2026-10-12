@@ -41,6 +41,7 @@ using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.LyricRenderer;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
@@ -120,6 +121,7 @@ public sealed partial class ExpandedPlayer : Page
     private readonly ExpandedPlayerShareSaveController? _shareSave;
     private readonly SpectrumLayer _spectrumLayer;
     private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs> _stateChangedListener;
+    private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs> _lyricSettingsChangedListener;
 
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator =
         Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
@@ -270,7 +272,13 @@ public sealed partial class ExpandedPlayer : Page
         _lyricBox.Context.Effects.SimpleLineScanning = _lyricSettings.LyricRenderSimpleLineScanning;
         _lyricBox.Context.Effects.ScanStyle = _lyricSettings.LyricRenderScanStyle;
         _lyricBox.Context.PreferTypography.Font = _lyricSettings.LyricFontFamily;
-        _lyricBox.Context.LineSpacing = _lyricSettings.LyricLineSpacing;
+        _lyricBox.Context.LineSpacing = LyricLineSpacingRule.Resolve(_lyricSettings.LyricLineSpacing, (float)LyricShowSize);
+        _lyricSettingsChangedListener = new WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs>(this)
+        {
+            OnEventAction = static (instance, _, args) => instance.OnLyricSettingsPropertyChanged(args.PropertyName),
+            OnDetachAction = weakEventListener => { _lyricSettings.PropertyChanged -= weakEventListener.OnEvent; }
+        };
+        _lyricSettings.PropertyChanged += _lyricSettingsChangedListener.OnEvent;
 
         _expandedCanvasHost.AddLayer(_isolationBackgroundLayer);
         _expandedCanvasHost.AddLayer(_likeAppleBackgroundLayer);
@@ -344,6 +352,17 @@ public sealed partial class ExpandedPlayer : Page
         }
     }
 
+    private void OnLyricSettingsPropertyChanged(string? propertyName)
+    {
+        if (propertyName == nameof(LyricSettings.LyricLineSpacing)) ApplyLyricLineSpacing();
+    }
+
+    private void ApplyLyricLineSpacing()
+    {
+        _lyricBox.ChangeLineSpacing(
+            LyricLineSpacingRule.Resolve(_lyricSettings.LyricLineSpacing, (float)LyricShowSize));
+    }
+
     private void OnSurfaceStorePropertyChanged(string? propertyName)
     {
         switch (propertyName)
@@ -404,16 +423,17 @@ public sealed partial class ExpandedPlayer : Page
             return;
         }
 
-        var positionMilliseconds = _lyricClock.Next(primaryAudioInputNode.Position.TotalMilliseconds,
-            _player.GlobalPlaybackStatus == PlaybackStatus.Playing, primaryAudioInputNode.PlaybackSpeedFactor);
+        var precisePosition = Math.Max(0, _lyricClock.NextPrecise(primaryAudioInputNode.Position.TotalMilliseconds,
+            _player.GlobalPlaybackStatus == PlaybackStatus.Playing, primaryAudioInputNode.PlaybackSpeedFactor));
+        var positionMilliseconds = (long)precisePosition;
         if (positionMilliseconds < view.Context.CurrentLyricTime)
         {
-            view.Context.CurrentLyricTime = positionMilliseconds;
+            view.Context.PreciseLyricTime = precisePosition;
             _lyricBox.ReflowTime(0);
         }
         else
         {
-            view.Context.CurrentLyricTime = positionMilliseconds;
+            view.Context.PreciseLyricTime = precisePosition;
         }
 
         view.Context.IsSeek = _positionChangedBySeeking;
@@ -484,6 +504,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private bool IsLyricCanvasIdle()
     {
+        if (_lifecycle.IsInBackground) return true;
         return !_state.IsPlaying && _player.GlobalPlaybackStatus != PlaybackStatus.Playing &&
                Stopwatch.GetElapsedTime(Volatile.Read(ref _lyricActivityTimestamp)).TotalMilliseconds >=
                LyricCanvasIdlePauseMs;
@@ -491,7 +512,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void TryPauseIdleLyricCanvas()
     {
-        if (!IsLyricCanvasIdle() || _expandedCanvasHost.NeedsFrames) return;
+        if (!IsLyricCanvasIdle() || !_lifecycle.IsInBackground && _expandedCanvasHost.NeedsFrames) return;
         if (Interlocked.Exchange(ref _lyricCanvasPausePending, 1) == 1) return;
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
         {
@@ -879,6 +900,7 @@ public sealed partial class ExpandedPlayer : Page
         // 这个函数里面放无法用XAML实现的页面布局方式
         BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
 
+        ApplyLyricLineSpacing();
         var lyricOffset = RightPanel.ActualOffset;
         if (Math.Abs(_lastChangedLyricWidth - LyricWidth) > 0.001f || _lastRedesignHeight != _nowHeight ||
             Math.Abs(_canvasState.LyricRenderXOffset - lyricOffset.X) > 0.001f ||
@@ -1886,6 +1908,7 @@ public sealed partial class ExpandedPlayer : Page
         _enteredForegroundListener.Detach();
         _playBarVisibilityListener.Detach();
         _stateChangedListener.Detach();
+        _lyricSettingsChangedListener.Detach();
         _surfaceStoreChangedListener.Detach();
         _escapeRequestedListener.Detach();
         _seekRequestedListener.Detach();
