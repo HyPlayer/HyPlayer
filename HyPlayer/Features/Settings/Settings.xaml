@@ -950,6 +950,111 @@
                                 </controls3:SettingsExpander>
 
                                 <controls3:SettingsExpander
+                                    xmlns:shellNavigation="using:HyPlayer.Shell.Navigation"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    Header="自定义侧边栏">
+                                    <controls3:SettingsExpander.HeaderIcon>
+                                        <FontIcon Glyph="&#xE700;" />
+                                    </controls3:SettingsExpander.HeaderIcon>
+                                    <Button Click="SidebarReset_Click" Content="恢复默认" />
+                                    <controls3:SettingsExpander.Items>
+                                        <controls3:SettingsCard HorizontalContentAlignment="Stretch" ContentAlignment="Vertical">
+                                            <ListView
+                                                HorizontalAlignment="Stretch"
+                                                AllowDrop="True"
+                                                CanDragItems="True"
+                                                CanReorderItems="True"
+                                                ItemsSource="{x:Bind SidebarSections}"
+                                                SelectionMode="None">
+                                                <ListView.ItemContainerStyle>
+                                                    <Style TargetType="ListViewItem">
+                                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                        <Setter Property="Padding" Value="0" />
+                                                        <Setter Property="Margin" Value="0,4" />
+                                                    </Style>
+                                                </ListView.ItemContainerStyle>
+                                                <ListView.ItemTemplate>
+                                                    <DataTemplate x:DataType="shellNavigation:SidebarSection">
+                                                        <Border
+                                                            Padding="12,8"
+                                                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="6">
+                                                            <StackPanel Spacing="4">
+                                                                <Grid ColumnSpacing="12">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <FontIcon
+                                                                        VerticalAlignment="Center"
+                                                                        FontSize="14"
+                                                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                                        Glyph="&#xE76F;" />
+                                                                    <TextBlock
+                                                                        Grid.Column="1"
+                                                                        VerticalAlignment="Center"
+                                                                        FontWeight="SemiBold"
+                                                                        Text="{x:Bind Name}" />
+                                                                    <ToggleSwitch
+                                                                        Grid.Column="2"
+                                                                        MinWidth="0"
+                                                                        IsOn="{x:Bind IsVisible, Mode=TwoWay}"
+                                                                        OffContent=""
+                                                                        OnContent="" />
+                                                                </Grid>
+                                                                <ListView
+                                                                    Margin="20,0,0,0"
+                                                                    AllowDrop="True"
+                                                                    CanDragItems="True"
+                                                                    CanReorderItems="True"
+                                                                    IsEnabled="{x:Bind IsVisible, Mode=OneWay}"
+                                                                    ItemsSource="{x:Bind Items}"
+                                                                    SelectionMode="None">
+                                                                    <ListView.ItemContainerStyle>
+                                                                        <Style TargetType="ListViewItem">
+                                                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                                            <Setter Property="MinHeight" Value="36" />
+                                                                        </Style>
+                                                                    </ListView.ItemContainerStyle>
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate x:DataType="shellNavigation:SidebarEntry">
+                                                                            <Grid ColumnSpacing="12">
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="Auto" />
+                                                                                    <ColumnDefinition Width="*" />
+                                                                                    <ColumnDefinition Width="Auto" />
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <FontIcon
+                                                                                    VerticalAlignment="Center"
+                                                                                    FontSize="12"
+                                                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                                                    Glyph="&#xE76F;" />
+                                                                                <TextBlock
+                                                                                    Grid.Column="1"
+                                                                                    VerticalAlignment="Center"
+                                                                                    Text="{x:Bind Name}" />
+                                                                                <CheckBox
+                                                                                    Grid.Column="2"
+                                                                                    MinWidth="0"
+                                                                                    IsChecked="{x:Bind IsVisible, Mode=TwoWay}" />
+                                                                            </Grid>
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ListView.ItemTemplate>
+                                            </ListView>
+                                        </controls3:SettingsCard>
+                                    </controls3:SettingsExpander.Items>
+                                </controls3:SettingsExpander>
+
+                                <controls3:SettingsExpander
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Stretch"
                                     Header="特效设置"

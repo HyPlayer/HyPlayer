@@ -278,6 +278,12 @@ public partial class UISettings : SettingsBase
         set => SetSettings(nameof(KeyboardShortcutBindings), value);
     }
 
+    public string SidebarLayout
+    {
+        get => GetSettings(nameof(SidebarLayout), string.Empty);
+        set => SetSettings(nameof(SidebarLayout), value);
+    }
+
     /// <summary>
     ///     Whether animation adapts to BPM.
     /// </summary>

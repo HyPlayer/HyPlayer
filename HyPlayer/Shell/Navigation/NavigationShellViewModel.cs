@@ -25,11 +25,15 @@ namespace HyPlayer.Shell.Navigation;
 /// </summary>
 public partial class NavigationShellViewModel : ObservableObject
 {
+    private const string LibrarySectionKey = "library";
+
     private readonly IAuthService _auth;
     private readonly IProviderKnownTypeIds _knownTypeIds;
+    private readonly SidebarLayout _layout;
     private readonly INotificationService _notification;
 
     private readonly List<NavigationNode> _providerLibraryNodes = [];
+    private readonly List<NavigationSection> _sections = [];
     private readonly IUserLibraryNavigationProvidable _userLibraryNavigationProvider;
     private readonly IUserLibraryStateService _userLibraryState;
     private readonly IUserLibraryTypeIds _userLibraryTypeIds;
@@ -42,7 +46,8 @@ public partial class NavigationShellViewModel : ObservableObject
         IUserLibraryNavigationProvidable userLibraryNavigationProvider,
         IUserLibraryStateService userLibraryState,
         IProviderKnownTypeIds knownTypeIds,
-        IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier)
+        IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier,
+        SidebarLayout layout)
     {
         MenuItemsView = MenuItems.ToNotifyCollectionChanged();
         _auth = auth;
@@ -51,6 +56,8 @@ public partial class NavigationShellViewModel : ObservableObject
         _userLibraryNavigationProvider = userLibraryNavigationProvider;
         _userLibraryState = userLibraryState;
         _knownTypeIds = knownTypeIds;
+        _layout = layout;
+        _layout.Changed += (_, _) => ApplyLayout();
 
         BuildMenuItems();
         UpdateAccountStatus();
@@ -77,40 +84,116 @@ public partial class NavigationShellViewModel : ObservableObject
 
     private void BuildMenuItems()
     {
-        MenuItems.AddRange([
-            new NavigationNode { Title = "发现", IsHeader = true },
-            new NavigationNode
-                { Title = "主页", Icon = new FontIcon { Glyph = "\uE80F" }, Route = new AppRoute.Home() },
-            new NavigationNode
-                { Title = "每日推荐", Icon = new FontIcon { Glyph = "\uE787" }, Route = new AppRoute.DailyRecommend() },
-            new NavigationNode
-        {
-            Title = "私人FM", Icon = new FontIcon { Glyph = "\uF12E" }, Action = AppNavigationAction.PersonalFM,
-            SelectsOnInvoked = false
-        },
-            new NavigationNode
-        {
-            Title = "心动模式", Icon = new FontIcon { Glyph = "\uEB51" }, Action = AppNavigationAction.HeartBeat,
-            SelectsOnInvoked = false
-        },
-            new NavigationNode { IsSeparator = true },
-            new NavigationNode { Title = "音乐", IsHeader = true },
-            new NavigationNode
-                { Title = "离线音乐", Icon = new FontIcon { Glyph = "\uEC50" }, Route = new AppRoute.LocalMusic() },
-            new NavigationNode
-                { Title = "播放历史", Icon = new FontIcon { Glyph = "\uE81C" }, Route = new AppRoute.History() },
-            new NavigationNode
-                { Title = "我的收藏", Icon = new FontIcon { Glyph = "\uE728" }, Route = new AppRoute.Favorite() },
-            new NavigationNode
-                { Title = "我的云盘", Icon = new FontIcon { Glyph = "\uE753" }, Route = new AppRoute.MusicCloud() },
-            new NavigationNode { IsSeparator = true },
-            new NavigationNode { Title = "资料库", IsHeader = true },
-            new NavigationNode
-        {
-            Title = "创建歌单", Icon = new SymbolIcon { Symbol = Symbol.Add }, Action = AppNavigationAction.CreatePlaylist,
-            SelectsOnInvoked = false
-        }
+        _sections.AddRange([
+            new NavigationSection("discover", "发现",
+            [
+                new NavigationNode
+                {
+                    Key = "home", Title = "主页", Icon = new FontIcon { Glyph = "\uE80F" },
+                    Route = new AppRoute.Home()
+                },
+                new NavigationNode
+                {
+                    Key = "daily", Title = "每日推荐", Icon = new FontIcon { Glyph = "\uE787" },
+                    Route = new AppRoute.DailyRecommend()
+                },
+                new NavigationNode
+                {
+                    Key = "fm", Title = "私人FM", Icon = new FontIcon { Glyph = "\uF12E" },
+                    Action = AppNavigationAction.PersonalFM, SelectsOnInvoked = false
+                },
+                new NavigationNode
+                {
+                    Key = "heartbeat", Title = "心动模式", Icon = new FontIcon { Glyph = "\uEB51" },
+                    Action = AppNavigationAction.HeartBeat, SelectsOnInvoked = false
+                }
+            ]),
+            new NavigationSection("music", "音乐",
+            [
+                new NavigationNode
+                {
+                    Key = "local", Title = "离线音乐", Icon = new FontIcon { Glyph = "\uEC50" },
+                    Route = new AppRoute.LocalMusic()
+                },
+                new NavigationNode
+                {
+                    Key = "history", Title = "播放历史", Icon = new FontIcon { Glyph = "\uE81C" },
+                    Route = new AppRoute.History()
+                },
+                new NavigationNode
+                {
+                    Key = "favorite", Title = "我的收藏", Icon = new FontIcon { Glyph = "\uE728" },
+                    Route = new AppRoute.Favorite()
+                },
+                new NavigationNode
+                {
+                    Key = "cloud", Title = "我的云盘", Icon = new FontIcon { Glyph = "\uE753" },
+                    Route = new AppRoute.MusicCloud()
+                }
+            ]),
+            new NavigationSection(LibrarySectionKey, "资料库",
+            [
+                new NavigationNode
+                {
+                    Key = "create-playlist", Title = "创建歌单", Icon = new SymbolIcon { Symbol = Symbol.Add },
+                    Action = AppNavigationAction.CreatePlaylist, SelectsOnInvoked = false
+                }
+            ])
         ]);
+        RefreshLayout();
+    }
+
+    private void RefreshLayout()
+    {
+        _layout.Update(_sections
+            .Select(section => new SidebarSectionDefinition(
+                section.Key,
+                section.Header.Title,
+                section.Nodes
+                    .Where(node => node.Key is not null)
+                    .GroupBy(node => node.Key!)
+                    .Select(group => new SidebarEntryDefinition(group.Key, group.First().Title))
+                    .ToList()))
+            .ToList());
+        ApplyLayout();
+    }
+
+    private void ApplyLayout()
+    {
+        var desired = new List<NavigationNode>();
+        foreach (var layoutSection in _layout.Sections)
+        {
+            if (!layoutSection.IsVisible) continue;
+
+            var section = _sections.FirstOrDefault(candidate => candidate.Key == layoutSection.Key);
+            if (section is null) continue;
+
+            var nodes = layoutSection.Items
+                .Where(entry => entry.IsVisible)
+                .SelectMany(entry => section.Nodes.Where(node => node.Key == entry.Key))
+                .ToList();
+            if (!nodes.Any(node => node.IsVisible)) continue;
+
+            if (desired.Count > 0)
+                desired.Add(section.Separator);
+            desired.Add(section.Header);
+            desired.AddRange(nodes);
+        }
+
+        for (var i = MenuItems.Count - 1; i >= 0; i--)
+            if (!desired.Contains(MenuItems[i]))
+                MenuItems.RemoveAt(i);
+
+        for (var i = 0; i < desired.Count; i++)
+        {
+            if (i < MenuItems.Count && ReferenceEquals(MenuItems[i], desired[i])) continue;
+
+            var currentIndex = MenuItems.IndexOf(desired[i]);
+            if (currentIndex >= 0)
+                MenuItems.Move(currentIndex, i);
+            else
+                MenuItems.Insert(i, desired[i]);
+        }
     }
 
     /// <summary>根据导航后的页面类型和参数找到对应的 NavigationNode</summary>
@@ -233,6 +316,7 @@ public partial class NavigationShellViewModel : ObservableObject
             ClearProviderLibraryNodes();
             _userLibraryState.UpdateFromNavigationGroups(groups);
             RenderProviderLibraryGroups(groups);
+            RefreshLayout();
         }
         catch (Exception ex)
         {
@@ -246,14 +330,14 @@ public partial class NavigationShellViewModel : ObservableObject
 
     private void ClearProviderLibraryNodes()
     {
-        if (_providerLibraryNodes.Count > 0)
-        {
-            var firstIndex = MenuItems.IndexOf(_providerLibraryNodes[0]);
-            if (firstIndex >= 0)
-                MenuItems.RemoveRange(firstIndex, _providerLibraryNodes.Count);
-        }
+        if (_providerLibraryNodes.Count == 0) return;
+
+        var library = _sections.First(section => section.Key == LibrarySectionKey);
+        foreach (var node in _providerLibraryNodes)
+            library.Nodes.Remove(node);
 
         _providerLibraryNodes.Clear();
+        RefreshLayout();
     }
 
     private void RenderProviderLibraryGroups(IReadOnlyList<ProviderLibraryNavigationGroup> groups)
@@ -265,6 +349,7 @@ public partial class NavigationShellViewModel : ObservableObject
                 AddProviderLibraryNodes(group.Items
                     .Select(item => CreateProviderLibraryItemNode(
                         item,
+                        group.Id,
                         group.Id == _userLibraryTypeIds.LikedSongsTypeId))
                     .OfType<NavigationNode>());
 
@@ -273,12 +358,13 @@ public partial class NavigationShellViewModel : ObservableObject
 
             var groupNode = new NavigationNode
             {
+                Key = group.Id,
                 Title = group.Title,
                 Icon = new SymbolIcon { Symbol = Symbol.List }
             };
 
             groupNode.Children.AddRange(group.Items
-                .Select(item => CreateProviderLibraryItemNode(item, false))
+                .Select(item => CreateProviderLibraryItemNode(item, null, false))
                 .OfType<NavigationNode>());
 
             if (groupNode.Children.Count > 0)
@@ -290,10 +376,10 @@ public partial class NavigationShellViewModel : ObservableObject
     {
         var materializedNodes = nodes.ToList();
         _providerLibraryNodes.AddRange(materializedNodes);
-        MenuItems.AddRange(materializedNodes);
+        _sections.First(section => section.Key == LibrarySectionKey).Nodes.AddRange(materializedNodes);
     }
 
-    private NavigationNode? CreateProviderLibraryItemNode(ContainerBase item, bool isLikedSongs)
+    private NavigationNode? CreateProviderLibraryItemNode(ContainerBase item, string? key, bool isLikedSongs)
     {
         if (string.IsNullOrEmpty(item.ActualId) || string.IsNullOrEmpty(item.Name))
             return null;
@@ -304,6 +390,7 @@ public partial class NavigationShellViewModel : ObservableObject
 
         return new NavigationNode
         {
+            Key = key,
             Title = isLikedSongs ? "我喜欢的音乐" : item.Name,
             Route = route,
             Icon = new FontIcon { Glyph = isLikedSongs ? "\uE006" : "\uE142" }
@@ -322,5 +409,20 @@ public partial class NavigationShellViewModel : ObservableObject
             return new AppRoute.Radio(item.ActualId);
 
         return null;
+    }
+
+    private sealed class NavigationSection
+    {
+        public NavigationSection(string key, string title, IEnumerable<NavigationNode> nodes)
+        {
+            Key = key;
+            Header = new NavigationNode { Title = title, IsHeader = true };
+            Nodes.AddRange(nodes);
+        }
+
+        public string Key { get; }
+        public NavigationNode Header { get; }
+        public NavigationNode Separator { get; } = new() { IsSeparator = true };
+        public List<NavigationNode> Nodes { get; } = [];
     }
 }

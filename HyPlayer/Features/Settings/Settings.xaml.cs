@@ -38,6 +38,7 @@ using HyPlayer.Platform.Tiles;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Shell;
 using HyPlayer.Shell.Input;
+using HyPlayer.Shell.Navigation;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.UI.Dialogs;
 using Kawazu;
@@ -110,6 +111,16 @@ public sealed partial class Settings : Page
     private void ShortcutResetAll_Click(object sender, RoutedEventArgs e)
     {
         _keyboardShortcuts.ResetAll();
+    }
+
+    private readonly SidebarLayout _sidebarLayout = Ioc.Default.GetRequiredService<SidebarLayout>();
+
+    public System.Collections.ObjectModel.ObservableCollection<SidebarSection> SidebarSections =>
+        _sidebarLayout.Sections;
+
+    private void SidebarReset_Click(object sender, RoutedEventArgs e)
+    {
+        _sidebarLayout.ResetToDefault();
     }
 
     private void TransitionMode_SelectionChanged(object sender, SelectionChangedEventArgs e)

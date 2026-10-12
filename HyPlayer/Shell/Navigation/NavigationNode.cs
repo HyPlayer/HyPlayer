@@ -16,6 +16,7 @@ public sealed partial class NavigationNode : ObservableObject
 
     [ObservableProperty] public partial IconElement? Icon { get; set; }
 
+    public string? Key { get; init; }
     public AppRoute? Route { get; set; }
     public AppNavigationAction? Action { get; set; }
     public bool IsHeader { get; set; }
