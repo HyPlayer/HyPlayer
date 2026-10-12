@@ -6,6 +6,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Platform.Network;
+using HyPlayer.Platform.Storage.Cache;
 
 namespace HyPlayer.Platform.Playback.MediaSources;
 
@@ -43,10 +44,18 @@ public sealed class NeteaseSongUrlResolver
         var cacheKey = $"{songId}_{level}";
         if (!_cache.TryGetValue(cacheKey, out var cached) || DateTime.UtcNow - cached.FetchedAt >= _cacheLifetime)
         {
-            var item = await RetryPolicies.UrlFetch
-                .ExecuteAsync(() => RequestAsync(songId, level, ct))
+            cached = await SimpleCacher
+                .GetOrCreateCacheAsync<CachedSongUrl>(
+                    CacheType.SongUrl,
+                    cacheKey,
+                    () => FetchAsync(songId, level, ct),
+                    _cacheLifetime,
+                    cancellationToken: ct)
                 .ConfigureAwait(false);
-            cached = new CachedSongUrl(item, DateTime.UtcNow);
+            ct.ThrowIfCancellationRequested();
+            if (cached is null)
+                throw new InvalidOperationException(FetchFailedMessage);
+
             _cache[cacheKey] = cached;
             PruneExpired();
         }
@@ -65,6 +74,14 @@ public sealed class NeteaseSongUrlResolver
         return Uri.TryCreate(url, UriKind.Absolute, out var uri)
             ? new ResolvedSongUrl(uri, songUrl)
             : null;
+    }
+
+    private async Task<CachedSongUrl?> FetchAsync(string songId, string level, CancellationToken ct)
+    {
+        var item = await RetryPolicies.UrlFetch
+            .ExecuteAsync(() => RequestAsync(songId, level, ct))
+            .ConfigureAwait(false);
+        return new CachedSongUrl(item, DateTime.UtcNow);
     }
 
     private async Task<SongUrlResponse.SongUrlItem> RequestAsync(string songId, string level, CancellationToken ct)
@@ -91,7 +108,8 @@ public sealed class NeteaseSongUrlResolver
                 _cache.TryRemove(pair);
     }
 
-    private readonly record struct CachedSongUrl(SongUrlResponse.SongUrlItem Item, DateTime FetchedAt);
 }
+
+public sealed record CachedSongUrl(SongUrlResponse.SongUrlItem Item, DateTime FetchedAt);
 
 public sealed record ResolvedSongUrl(Uri Uri, SongUrlResponse.SongUrlItem Item);

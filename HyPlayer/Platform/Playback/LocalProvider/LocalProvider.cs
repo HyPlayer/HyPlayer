@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
@@ -24,6 +26,27 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
     public const string ProviderIdValue = "lcl";
     public const string LocalSongTypeId = "sg";
     public const string LocalNcmSongTypeId = "ncm";
+
+    private static readonly SemaphoreSlim _ncmDecryptGate = new(1, 1);
+
+    private static readonly ConcurrentDictionary<string, WeakReference<AudioGraphPlaybackSource>> _ncmSources =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly ConditionalWeakTable<AudioGraphPlaybackSource, InMemoryRandomAccessStream> _ncmStreams = new();
+
+    internal static IRandomAccessStream? TryOpenDecryptedNcm(string path)
+    {
+        if (!_ncmSources.TryGetValue(path, out var reference))
+            return null;
+
+        if (reference.TryGetTarget(out var source)
+            && source.PlaybackSource is not null
+            && _ncmStreams.TryGetValue(source, out var stream))
+            return stream.CloneStream();
+
+        _ncmSources.TryRemove(new KeyValuePair<string, WeakReference<AudioGraphPlaybackSource>>(path, reference));
+        return null;
+    }
 
     public override string Name => "本地音乐";
     public override string Id => ProviderIdValue;
@@ -51,6 +74,7 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
 
             MusicResourceBase resource = new LocalMusicResource
             {
+                SourcePath = path,
                 Uri = new Uri(path),
                 ResourceName = song.Name,
                 HasContent = true,
@@ -70,6 +94,8 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
     {
         public required string TypeId { get; init; }
 
+        public required string SourcePath { get; init; }
+
         public double? SuggestedVolume => 1d;
 
         public async Task<AudioGraphPlaybackSource?> CreatePlaybackSourceAsync(CancellationToken ctk = default)
@@ -80,20 +106,35 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
 
             var file = await StorageFile.GetFileFromPathAsync(Uri.LocalPath);
             MediaSource mediaSource;
+            InMemoryRandomAccessStream? decrypted = null;
             if (TypeId == "ncm")
             {
                 using var stream = await file.OpenStreamForReadAsync();
                 if (!NCMFile.IsCorrectNCMFile(stream))
                     return null;
 
-                var info = NCMFile.GetNCMMusicInfo(stream);
                 var playableStream = new InMemoryRandomAccessStream();
-                await NCMFile.CopyDecryptedContentToAsync(stream, playableStream.AsStreamForWrite(), ctk);
+                string mimeType;
+                await _ncmDecryptGate.WaitAsync(ctk);
+                try
+                {
+                    var info = NCMFile.GetNCMMusicInfo(stream);
+                    NCMFile.GetCoverByteArray(stream);
+                    var target = playableStream.AsStreamForWrite();
+                    await NCMFile.CopyDecryptedContentToAsync(stream, target, ctk);
+                    await target.FlushAsync(ctk);
+                    mimeType = MIMEHelper.GetNCMFileMimeType(info.Format);
+                }
+                finally
+                {
+                    _ncmDecryptGate.Release();
+                }
+
                 playableStream.Seek(0);
-                var mimeType = MIMEHelper.GetNCMFileMimeType(info.Format);
                 mediaSource = await RechunkedAudioSource.FromStreamAsync(
                     playableStream,
                     () => MediaSource.CreateFromStream(playableStream, mimeType));
+                decrypted = playableStream;
             }
             else
             {
@@ -102,7 +143,14 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
                     : MediaSource.CreateFromStorageFile(file);
             }
 
-            return new AudioGraphPlaybackSource(mediaSource);
+            var source = new AudioGraphPlaybackSource(mediaSource);
+            if (decrypted is not null)
+            {
+                _ncmStreams.Add(source, decrypted);
+                _ncmSources[SourcePath] = new WeakReference<AudioGraphPlaybackSource>(source);
+            }
+
+            return source;
         }
 
         public override Task<ResourceResultBase> GetResourceAsync(

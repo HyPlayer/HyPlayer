@@ -121,10 +121,12 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
 
     private static async Task<IRandomAccessStream?> OpenLocalSongAsync(SingleSongBase song)
     {
-        if (song.TypeId == LocalProvider.LocalProvider.LocalNcmSongTypeId
-            || string.IsNullOrWhiteSpace(song.ActualId)
+        if (string.IsNullOrWhiteSpace(song.ActualId)
             || !System.IO.Path.IsPathFullyQualified(song.ActualId))
             return null;
+
+        if (song.TypeId == LocalProvider.LocalProvider.LocalNcmSongTypeId)
+            return LocalProvider.LocalProvider.TryOpenDecryptedNcm(song.ActualId);
 
         var file = await StorageFile.GetFileFromPathAsync(song.ActualId);
         return await file.OpenReadAsync();
@@ -144,11 +146,6 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
         return provider is NeteaseProvider.NeteaseProvider
             ? ResolveAsync(song, qualityTag, ctk)
             : provider.GetMusicResourceAsync(song, qualityTag, ctk);
-    }
-
-    public Task<MusicResourceBase?> ResolveAsync(SingleSongBase song, CancellationToken ct)
-    {
-        return ResolveAsync(song, null, ct);
     }
 
     private async Task<MusicResourceBase?> ResolveAsync(

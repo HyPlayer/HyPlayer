@@ -167,13 +167,23 @@ public static class StorageMaintenance
             try
             {
                 var destination = await GetFolderAsync(item.RelativeFolder).ConfigureAwait(false);
-                if (await destination.TryGetItemAsync(item.File.Name) is not null)
+                var migrated = false;
+                if (await destination.TryGetItemAsync(item.File.Name) is { } existing)
                 {
-                    skipped++;
+                    if (existing is StorageFile existingFile
+                        && (await existingFile.GetBasicPropertiesAsync()).Size == item.Size)
+                        migrated = true;
+                    else
+                        skipped++;
                 }
                 else
                 {
                     await CopyVerifiedAsync(item.File, destination).ConfigureAwait(false);
+                    migrated = true;
+                }
+
+                if (migrated)
+                {
                     moved++;
                     if (deleteOriginal && !await TryDeleteAsync(item.File).ConfigureAwait(false))
                         originalsKept++;

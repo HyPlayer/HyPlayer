@@ -67,7 +67,5 @@ public interface IMediaSourceService
 
     Task<IRandomAccessStream?> OpenLocalAudioAsync(SingleSongBase song, CancellationToken ct);
 
-    Task<MusicResourceBase?> ResolveAsync(SingleSongBase song, CancellationToken ct);
-
     Task<MediaSource?> CreateMediaSourceAsync(SingleSongBase song, MusicResourceBase resource, CancellationToken ct);
 }

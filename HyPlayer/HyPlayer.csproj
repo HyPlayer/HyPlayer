@@ -11,7 +11,7 @@
         <EnableMsixTooling>true</EnableMsixTooling>
         <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <PublishAot>true</PublishAot>
+        <PublishAot Condition="'$(Configuration)' != 'Debug'">true</PublishAot>
         <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
         <NoWarn>IL2026;IL3050</NoWarn>
         <PublishProfile>win-$(Platform).pubxml</PublishProfile>
