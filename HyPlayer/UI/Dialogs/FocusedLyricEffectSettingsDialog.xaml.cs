@@ -56,6 +56,7 @@ public sealed partial class FocusedLyricEffectSettingsDialog : ContentDialog
         LyricRenderSettingsEditor.Choice(EditorPanel, "无逐字时间的抬升", _draft.UntimedLift,
             new (string, UntimedLiftMode)[] { ("不抬升", UntimedLiftMode.DoNotLift), ("整行抬升", UntimedLiftMode.WholeLine), ("推断词时间", UntimedLiftMode.InferWords) },
             value => { _draft = _draft with { UntimedLift = value }; Preview(); });
+        LyricRenderSettingsEditor.Toggle(EditorPanel, "长音强调", _draft.LongNoteEmphasis, value => { _draft = _draft with { LongNoteEmphasis = value }; Preview(); });
     }
 
     private LyricRenderSettings Draft() => _settings.Current with { Focused = _draft.Normalize() };

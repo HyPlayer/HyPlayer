@@ -33,6 +33,12 @@ public partial class LyricSettings : SettingsBase
         set => SetSettings(nameof(LyricRomajiSource), (int)value);
     }
 
+    public bool KaraokeLyric
+    {
+        get => GetSettings(nameof(KaraokeLyric), true);
+        set => SetSettings(nameof(KaraokeLyric), value);
+    }
+
     /// <summary>
     ///     Whether to show composer info in lyrics.
     /// </summary>

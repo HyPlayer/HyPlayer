@@ -200,6 +200,12 @@
                                     </controls3:SettingsExpander.Transitions>
 
                                     <controls3:SettingsExpander.Items>
+                                        <controls3:SettingsCard Description="关闭后网易云的逐字歌词按逐行显示（不影响 AMLL TTML 与导入的歌词），下次加载歌词时生效" Header="使用逐字歌词">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Lyric.KaraokeLyric, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="使用 AMLL TTML Database">
                                             <ToggleSwitch
                                                 MinWidth="10"

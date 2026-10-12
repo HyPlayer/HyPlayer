@@ -66,6 +66,19 @@ public sealed partial class LyricService(
             {
                 if (!HasLegacyNeteaseSourceMetadata(cached))
                 {
+                    if (HasKaraokePreferenceMismatch(cached))
+                    {
+                        var converted = await ConvertPureLyricInfoAsync(cached.PureLyricInfo,
+                            GetArtistText(providerItem));
+                        cached = converted;
+                        taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
+                                CacheType.HyLyricInfo, cacheId,
+                                () => Task.FromResult(converted),
+                                forceRefresh: true,
+                                cancellationToken: ct),
+                            "refresh lyric cache after karaoke preference change");
+                    }
+
                     state.LyricInfo = cached;
                     state.LyricIndex = 0;
                     if (cached.PureLyricInfo is not HyALRCLyricInfo)
@@ -198,6 +211,17 @@ public sealed partial class LyricService(
     private async Task<HyLyricInfo> ConvertPureLyricInfoAsync(PureLyricInfo pureLyricInfo, string artistText)
     {
         var lyricInfo = new HyLyricInfo();
+        var sourceLyricInfo = pureLyricInfo;
+        if (!setting.KaraokeLyric && pureLyricInfo is KaraokLyricInfo &&
+            !string.IsNullOrWhiteSpace(pureLyricInfo.PureLyrics))
+            pureLyricInfo = new PureLyricInfo
+            {
+                PureLyrics = pureLyricInfo.PureLyrics,
+                TrLyrics = pureLyricInfo.TrLyrics,
+                NeteaseRomaji = pureLyricInfo.NeteaseRomaji,
+                SongMetadata = pureLyricInfo.SongMetadata,
+                LyricMetadata = pureLyricInfo.LyricMetadata
+            };
         var karaokeLyricInfo = pureLyricInfo as KaraokLyricInfo;
         var hasKaraokeLyrics = !string.IsNullOrWhiteSpace(karaokeLyricInfo?.KaraokLyric);
 
@@ -236,8 +260,16 @@ public sealed partial class LyricService(
 
         lyricInfo.LyricMetadata = pureLyricInfo.LyricMetadata;
         lyricInfo.SongMetadata = pureLyricInfo.SongMetadata;
-        lyricInfo.PureLyricInfo = pureLyricInfo;
+        lyricInfo.PureLyricInfo = sourceLyricInfo;
         return lyricInfo;
+    }
+
+    private bool HasKaraokePreferenceMismatch(HyLyricInfo lyricInfo)
+    {
+        return lyricInfo.PureLyricInfo is KaraokLyricInfo karaoke &&
+               !string.IsNullOrWhiteSpace(karaoke.KaraokLyric) &&
+               !string.IsNullOrWhiteSpace(karaoke.PureLyrics) &&
+               lyricInfo.Lyrics.Any(t => t.LyricLine is KaraokeLyricsLine) != setting.KaraokeLyric;
     }
 
     private static string GetArtistText(SingleSongBase providerItem)

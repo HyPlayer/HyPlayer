@@ -2,6 +2,7 @@
 using HyPlayer.LyricRenderer.Abstraction;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Brushes;
+using Microsoft.Graphics.Canvas.Effects;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -20,6 +21,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     private Color _solidColor;
     private float _rampStart = float.NaN;
     private float _rampEnd = float.NaN;
+    private Dictionary<int, ShadowEffect>? _emphasisGlows;
 
     /// <summary>Draws all three text layers. Translation remains independent of the scan.</summary>
     public void Render(CanvasDrawingSession session, LyricTextLayoutSnapshot layout, RenderContext context)
@@ -65,6 +67,9 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     {
         var useWords = layout.HasRealWords || settings.UntimedHighlight == UntimedHighlightMode.InferWords;
         var wholeLine = transliteration && (settings.Transliteration == TransliterationProgressMode.WholeLine || !scanTransliteration);
+        var emphasis = transliteration || !settings.LongNoteEmphasis ? null : layout.Emphasis;
+        var baseTransform = session.Transform;
+        var transformed = false;
         foreach (var line in lines)
         {
             var timeline = line.Timeline;
@@ -72,11 +77,22 @@ public sealed class FocusedLyricTextRenderer : IDisposable
             var sample = timeline.Sample(sampleTime);
             for (var index = line.Start; index < line.End; index++)
             {
+                if (transformed)
+                {
+                    session.Transform = baseTransform;
+                    transformed = false;
+                }
                 var cluster = clusters[index];
                 var tokenIndex = cluster.TokenStartIndex;
                 var token = (uint)tokenIndex < (uint)layout.Tokens.Count ? layout.Tokens[tokenIndex] : null;
                 var lift = transliteration ? 0 : CalculateLift(cluster, token, layout, time, settings);
                 var origin = cluster.BaseState.Origin - new Vector2(0, lift);
+                if (emphasis is not null && emphasis.TrySample(index, time, cluster.BaseState.FontSize, out var emphasized))
+                {
+                    session.Transform = CreateEmphasisTransform(cluster, emphasized) * baseTransform;
+                    transformed = true;
+                    DrawEmphasisGlow(session, index, cluster, layout.FocusingColor, emphasized, lift);
+                }
                 if (wholeLine || !useWords || token is null)
                 {
                     DrawSolid(session, cluster, origin, wholeLine || settings.UntimedHighlight == UntimedHighlightMode.WholeLine
@@ -116,6 +132,64 @@ public sealed class FocusedLyricTextRenderer : IDisposable
                     rtl, left, right, settings.FeatherDip);
             }
         }
+        if (transformed) session.Transform = baseTransform;
+    }
+
+    internal static bool HasActiveEmphasis(LyricTextLayoutSnapshot layout, RenderContext context) =>
+        context.Settings.Focused.LongNoteEmphasis && layout.Emphasis?.IsActiveAt(context.CurrentLyricTime) == true;
+
+    internal void RenderEmphasisTail(CanvasDrawingSession session, LyricTextLayoutSnapshot layout, RenderContext context)
+    {
+        EnsureBrushes(session, layout);
+        session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
+        if (layout.DefaultTransliterationPersistCache is not null)
+            session.DrawImage(layout.DefaultTransliterationPersistCache, 0, 0, layout.SizePixelRect, 1);
+        var emphasis = layout.Emphasis;
+        var clusters = layout.LyricGlyphClusters;
+        var time = context.CurrentLyricTime;
+        var baseTransform = session.Transform;
+        for (var index = 0; index < clusters.Count; index++)
+        {
+            var cluster = clusters[index];
+            if (emphasis is null || !emphasis.TrySample(index, time, cluster.BaseState.FontSize, out var emphasized))
+            {
+                DrawSolid(session, cluster, cluster.BaseState.Origin, layout.IdleColor);
+                continue;
+            }
+            session.Transform = CreateEmphasisTransform(cluster, emphasized) * baseTransform;
+            DrawEmphasisGlow(session, index, cluster, layout.FocusingColor, emphasized, 0);
+            DrawSolid(session, cluster, cluster.BaseState.Origin, layout.IdleColor);
+            session.Transform = baseTransform;
+        }
+        if (layout.DefaultTranslationPersistCache is not null)
+            session.DrawImage(layout.DefaultTranslationPersistCache, 0, layout.TranslationRenderActualTop, layout.SizePixelRect, 1);
+    }
+
+    private static Matrix3x2 CreateEmphasisTransform(LyricGlyphCluster cluster, LyricEmphasisSample sample)
+    {
+        var center = new Vector2((cluster.VisualLeft + cluster.VisualRight) / 2, (cluster.VisualTop + cluster.VisualBottom) / 2);
+        return Matrix3x2.CreateScale(sample.Scale, center) * Matrix3x2.CreateTranslation(sample.OffsetX, sample.OffsetY);
+    }
+
+    private void DrawEmphasisGlow(CanvasDrawingSession session, int index, LyricGlyphCluster cluster, Color color,
+        LyricEmphasisSample sample, float lift)
+    {
+        if (sample.GlowOpacity <= 0.01f || sample.GlowRadius <= 0.1f) return;
+        _emphasisGlows ??= [];
+        if (!_emphasisGlows.TryGetValue(index, out var glow))
+        {
+            var glyphs = new CanvasCommandList(session);
+            using (var glyphSession = glyphs.CreateDrawingSession())
+            {
+                SetSolidColor(color);
+                DrawGlyphRun(glyphSession, cluster.BaseState, cluster.BaseState.Origin, _solid!);
+            }
+            glow = new ShadowEffect { Source = glyphs };
+            _emphasisGlows.Add(index, glow);
+        }
+        glow.BlurAmount = sample.GlowRadius / 2;
+        glow.ShadowColor = Color.FromArgb((byte)(Math.Clamp(sample.GlowOpacity, 0, 1) * 255), color.R, color.G, color.B);
+        session.DrawImage(glow, 0, -lift);
     }
 
     private static float CalculateLift(LyricGlyphCluster cluster, LyricTextToken? token,
@@ -202,6 +276,16 @@ public sealed class FocusedLyricTextRenderer : IDisposable
         _solid?.Dispose(); _solid = null;
         _highlight?.Dispose(); _highlight = null;
         _pending?.Dispose(); _pending = null;
+        if (_emphasisGlows is not null)
+        {
+            foreach (var glow in _emphasisGlows.Values)
+            {
+                var glyphs = glow.Source as IDisposable;
+                glow.Dispose();
+                glyphs?.Dispose();
+            }
+            _emphasisGlows = null;
+        }
         _brushLayout = null;
         _rampStart = _rampEnd = float.NaN;
     }

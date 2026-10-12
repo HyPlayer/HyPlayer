@@ -711,7 +711,7 @@ namespace HyPlayer.LyricRenderer
                    x >= offset.X && x <= offset.X + line.RenderingWidth;
         }
 
-        private int FindLineAt(Point point)
+        internal int FindLineAt(Point point)
         {
             var y = point.Y - RenderOriginY;
             var low = 0;
@@ -730,16 +730,20 @@ namespace HyPlayer.LyricRenderer
 
         public void LyricView_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
+            ScrollBy(e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta);
+        }
+
+        internal void ScrollBy(int delta)
+        {
             lock (_frameGate)
             {
-                if (!_resourcesReleased) LyricView_OnPointerWheelChangedCore(sender, e);
+                if (!_resourcesReleased) ScrollByCore(delta);
             }
             RaiseScrollPreviewChanged();
         }
 
-        private void LyricView_OnPointerWheelChangedCore(object sender, PointerRoutedEventArgs e)
+        private void ScrollByCore(int delta)
         {
-            var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
             double before = 0;
             double after = 0;
             for (var index = 0; index < Context.LyricLines.Count; index++)

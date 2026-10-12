@@ -13,6 +13,7 @@ public sealed partial class LyricTextLayoutSnapshot
     internal DirectLyricVisualLine[] TransliterationVisualLines { get; private set; } = [];
     internal long StartTimeMs { get; private set; }
     internal long EndTimeMs { get; private set; }
+    internal LyricEmphasisPlan? Emphasis { get; private set; }
 
     internal void PrepareDirectDrawing(long start, long end)
     {
@@ -20,6 +21,7 @@ public sealed partial class LyricTextLayoutSnapshot
         EndTimeMs = end;
         LyricVisualLines = PrepareLines(LyricGlyphClusters, start, end);
         TransliterationVisualLines = PrepareLines(TransliterationGlyphClusters, start, end);
+        Emphasis = HasRealWords ? LyricEmphasisPlan.Create(Tokens, LyricGlyphClusters) : null;
     }
 
     private DirectLyricVisualLine[] PrepareLines(IReadOnlyList<LyricGlyphCluster> clusters, long start, long end)

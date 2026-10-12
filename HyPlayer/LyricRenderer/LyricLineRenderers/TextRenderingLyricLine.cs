@@ -35,6 +35,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
     private Color _cachedIdleColor;
     private Color _cachedFocusingColor;
     private bool _wasActive;
+    private bool _emphasisTail;
 
     public TextRenderingLyricLine()
         : this(new Win2DLyricTextLayouter())
@@ -64,6 +65,8 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         if (_layout is null) return true;
         if (IsActive)
             _focusedTextRenderer.Render(session, _layout, context);
+        else if (_emphasisTail)
+            _focusedTextRenderer.RenderEmphasisTail(session, _layout, context);
         else
             DrawIdle(session, _layout);
         return true;
@@ -86,9 +89,15 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
     {
         if (!IsActive && _layout is not null)
         {
-            _idleLineCache ??= CreateIdleLineCache(session, _layout);
-            image = _idleLineCache;
-            return true;
+            var emphasisTail = FocusedLyricTextRenderer.HasActiveEmphasis(_layout, context);
+            if (_emphasisTail && !emphasisTail) _focusedTextRenderer.Dispose();
+            _emphasisTail = emphasisTail;
+            if (!emphasisTail)
+            {
+                _idleLineCache ??= CreateIdleLineCache(session, _layout);
+                image = _idleLineCache;
+                return true;
+            }
         }
 
         image = null!;
