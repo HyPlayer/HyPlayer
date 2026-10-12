@@ -188,6 +188,26 @@
                 Foreground="White"
                 Text="已进入沉浸模式，按 Esc 退出" />
         </Border>
+        <Border
+            x:Name="LyricPreviewHint"
+            Grid.Row="1"
+            Margin="0,24,0,0"
+            Padding="18,10"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            Background="#B3000000"
+            Canvas.ZIndex="4"
+            CornerRadius="10"
+            IsHitTestVisible="False"
+            Opacity="0">
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="LyricPreviewHintOffset" Y="-8" />
+            </Border.RenderTransform>
+            <TextBlock
+                FontSize="14"
+                Foreground="White"
+                Text="当前正在预览歌词，按下鼠标右键或 Esc 以快速复位" />
+        </Border>
         <win2d:CanvasAnimatedControl
             x:Name="LuminousBackground"
             Grid.Row="0"

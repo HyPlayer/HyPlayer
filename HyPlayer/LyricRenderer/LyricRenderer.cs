@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using Windows.Foundation;
 using Windows.UI;
 using System.Threading;
 using Windows.UI.Xaml;
@@ -157,15 +158,21 @@ namespace HyPlayer.LyricRenderer
             float sublineTranslationSize = 0,
             float sublineTransliterationSize = 0)
         {
+            if (sublineLyricSize <= 0) sublineLyricSize = lyricSize / 2;
+            if (sublineTranslationSize <= 0) sublineTranslationSize = lyricSize / 2;
+            if (sublineTransliterationSize <= 0) sublineTransliterationSize = lyricSize / 2;
+            if (Context.PreferTypography.LyricFontSize == lyricSize &&
+                Context.PreferTypography.TranslationFontSize == translationSize &&
+                Context.PreferTypography.TransliterationFontSize == transliterationSize &&
+                Context.SublineTypography.LyricFontSize == sublineLyricSize &&
+                Context.SublineTypography.TranslationFontSize == sublineTranslationSize &&
+                Context.SublineTypography.TransliterationFontSize == sublineTransliterationSize) return;
             Context.PreferTypography.LyricFontSize = lyricSize;
             Context.PreferTypography.TranslationFontSize = translationSize;
             Context.PreferTypography.TransliterationFontSize = transliterationSize;
-            Context.SublineTypography.LyricFontSize =
-                sublineLyricSize > 0 ? sublineLyricSize : lyricSize / 2;
-            Context.SublineTypography.TranslationFontSize =
-                sublineTranslationSize > 0 ? sublineTranslationSize : lyricSize / 2;
-            Context.SublineTypography.TransliterationFontSize =
-                sublineTransliterationSize > 0 ? sublineTransliterationSize : lyricSize / 2;
+            Context.SublineTypography.LyricFontSize = sublineLyricSize;
+            Context.SublineTypography.TranslationFontSize = sublineTranslationSize;
+            Context.SublineTypography.TransliterationFontSize = sublineTransliterationSize;
             _isTypographyChanged = true;
         }
 
@@ -496,6 +503,8 @@ namespace HyPlayer.LyricRenderer
                     Volatile.Write(ref _renderThreadId, 0);
                 }
             }
+
+            RaiseScrollPreviewChanged();
         }
 
         private void DrawCore(CanvasDrawingSession session, CanvasTimingInformation timing)
@@ -515,20 +524,29 @@ namespace HyPlayer.LyricRenderer
                 }
                 // 鼠标滚轮时间 5 s 清零
                 if ((Context.ScrollingDelta != 0 || (Context.IsScrolling && !_pointerPressed)) &&
-                    Context.RenderTick - _lastWheelTime > 50000000 && Context.IsPlaying || Context.IsSeek)
+                    Context.RenderTick - _lastWheelTime > 50000000 && (Context.IsPlaying || _forceScrollReset) ||
+                    Context.IsSeek)
                 {
                     // 缓动来一下吧
                     // 0.5 秒缓动到 0
                     Context.IsScrolling = false;
                     var progress = Math.Clamp((Context.RenderTick - _lastWheelTime - 50000000) / 5000000.0, 0, 1);
                     Context.ScrollingDelta = (int)(Context.ScrollingDelta * _circleEase.Ease(1 - progress));
-                    if (Math.Abs(progress - 1) < Epsilon || Context.IsSeek)
+                    if (Math.Abs(progress - 1) < Epsilon || Context.IsSeek || Context.ScrollingDelta == 0)
                     {
                         _lastWheelTime = 0;
                         Context.ScrollingDelta = 0;
+                        _forceScrollReset = false;
+                        SetScrollPreviewing(false);
                     }
 
                     _needRecalculate = true;
+                }
+
+                if (_scrollPreviewing && Context.ScrollingDelta == 0 && !Context.IsScrolling)
+                {
+                    _forceScrollReset = false;
+                    SetScrollPreviewing(false);
                 }
 
                 if (_isTypographyChanged)
@@ -634,6 +652,78 @@ namespace HyPlayer.LyricRenderer
 
 
         private long _lastWheelTime;
+        private bool _forceScrollReset;
+        private bool _scrollPreviewing;
+        private volatile bool _scrollPreviewChangePending;
+
+        public event Action<bool> ScrollPreviewChanged;
+
+        public bool IsScrollPreviewing => _scrollPreviewing;
+
+        public float RenderOriginX { get; set; }
+        public float RenderOriginY { get; set; }
+
+        private void SetScrollPreviewing(bool previewing)
+        {
+            if (_scrollPreviewing == previewing) return;
+            _scrollPreviewing = previewing;
+            _scrollPreviewChangePending = true;
+        }
+
+        private void RaiseScrollPreviewChanged()
+        {
+            if (!_scrollPreviewChangePending) return;
+            bool previewing;
+            lock (_frameGate)
+            {
+                if (!_scrollPreviewChangePending) return;
+                _scrollPreviewChangePending = false;
+                previewing = _scrollPreviewing;
+            }
+
+            ScrollPreviewChanged?.Invoke(previewing);
+        }
+
+        public void ResetScrolling()
+        {
+            lock (_frameGate)
+            {
+                if (_resourcesReleased || !_scrollPreviewing) return;
+                _pointerPressed = false;
+                _lastPointerPressedYValue = null;
+                _lastWheelTime = Context.RenderTick - 50000000;
+                _forceScrollReset = true;
+                _needRecalculate = true;
+            }
+        }
+
+        private bool IsPointInLine(int index, Point point)
+        {
+            if (index < 0 || index >= Context.RenderOffsets.Count || index >= Context.LyricLines.Count) return false;
+            var offset = Context.RenderOffsets[index];
+            var line = Context.LyricLines[index];
+            var x = point.X - RenderOriginX;
+            var y = point.Y - RenderOriginY;
+            return y >= offset.Y && y <= offset.Y + line.RenderingHeight &&
+                   x >= offset.X && x <= offset.X + line.RenderingWidth;
+        }
+
+        private int FindLineAt(Point point)
+        {
+            var y = point.Y - RenderOriginY;
+            var low = 0;
+            var high = Math.Min(Context.RenderOffsets.Count, Context.LyricLines.Count) - 1;
+            while (low <= high)
+            {
+                var mid = (low + high) / 2;
+                var offset = Context.RenderOffsets[mid];
+                if (y < offset.Y) high = mid - 1;
+                else if (y > offset.Y + Context.LyricLines[mid].RenderingHeight) low = mid + 1;
+                else return IsPointInLine(mid, point) ? mid : -1;
+            }
+
+            return -1;
+        }
 
         public void LyricView_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
@@ -641,6 +731,8 @@ namespace HyPlayer.LyricRenderer
             {
                 if (!_resourcesReleased) LyricView_OnPointerWheelChangedCore(sender, e);
             }
+
+            RaiseScrollPreviewChanged();
         }
 
         private void LyricView_OnPointerWheelChangedCore(object sender, PointerRoutedEventArgs e)
@@ -659,7 +751,9 @@ namespace HyPlayer.LyricRenderer
             Context.ScrollingDelta = Math.Clamp(Context.ScrollingDelta + delta, min, max); //限制滚动范围
             Context.IsScrolling = true;
             _lastWheelTime = Context.RenderTick;
+            _forceScrollReset = false;
             _needRecalculate = true;
+            SetScrollPreviewing(true);
         }
 
 
@@ -669,6 +763,8 @@ namespace HyPlayer.LyricRenderer
             {
                 if (!_resourcesReleased) LyricView_OnPointerMovedCore(sender, e);
             }
+
+            RaiseScrollPreviewChanged();
         }
 
         private void LyricView_OnPointerMovedCore(object sender, PointerRoutedEventArgs e)
@@ -677,56 +773,13 @@ namespace HyPlayer.LyricRenderer
             // 获取在指针范围的行（二分法查找）
             if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
             {
-                var focusingLine = -1;
-                int firstPosition = 0;
-                int lastPosition = Context.RenderOffsets.Count - 1;
-                int maximumAttempts = (int)Math.Ceiling(Math.Log(lastPosition + 1)) + 3;
-                int attemptCount = 1;
-                while (attemptCount <= maximumAttempts)
-                {
-                    attemptCount += 1;
-                    int renderOffsetsKey = (firstPosition + lastPosition) / 2;
-                    if (Context.RenderOffsets[renderOffsetsKey].Y <= e.GetCurrentPoint((UIElement)sender).Position.Y &&
-                        Context.RenderOffsets[renderOffsetsKey].Y +
-                        Context.LyricLines[renderOffsetsKey].RenderingHeight >=
-                        e.GetCurrentPoint((UIElement)sender).Position.Y)
-                    {
-                        if (Context.PointerFocusingIndex == renderOffsetsKey) return;
-                        Context.LyricLines[renderOffsetsKey].GoToReactionState(ReactionState.Enter, Context);
-                        focusingLine = renderOffsetsKey;
-                        break;
-                    }
-                    else if (lastPosition - firstPosition == 1) //结束时刻前面是下取整，两个都不是那就是没移到上面
-                    {
-                        if (Context.RenderOffsets[renderOffsetsKey + 1].Y <= e.GetCurrentPoint((UIElement)sender).Position.Y &&
-                            Context.RenderOffsets[renderOffsetsKey + 1].Y +
-                            Context.LyricLines[renderOffsetsKey + 1].RenderingHeight >=
-                            e.GetCurrentPoint((UIElement)sender).Position.Y)
-                        {
-                            if (Context.PointerFocusingIndex == renderOffsetsKey + 1) return;
-                            Context.LyricLines[renderOffsetsKey + 1].GoToReactionState(ReactionState.Enter, Context);
-                            focusingLine = renderOffsetsKey + 1;
-                        }
-
-                        break;
-                    }
-                    else
-                    {
-                        if (Context.RenderOffsets[renderOffsetsKey].Y <= e.GetCurrentPoint((UIElement)sender).Position.Y)
-                        {
-                            firstPosition = renderOffsetsKey;
-                        }
-                        else lastPosition = renderOffsetsKey;
-                    }
-                }
-
-                if (Context.PointerFocusingIndex != focusingLine)
-                {
-                    if (Context.PointerFocusingIndex != -1 && Context.LyricLines.Count > (Context.PointerFocusingIndex))
-                        Context.LyricLines[Context.PointerFocusingIndex]
-                            .GoToReactionState(ReactionState.Leave, Context);
-                    Context.PointerFocusingIndex = focusingLine;
-                }
+                var focusingLine = FindLineAt(e.GetCurrentPoint((UIElement)sender).Position);
+                if (Context.PointerFocusingIndex == focusingLine) return;
+                if (Context.PointerFocusingIndex != -1 && Context.LyricLines.Count > Context.PointerFocusingIndex)
+                    Context.LyricLines[Context.PointerFocusingIndex].GoToReactionState(ReactionState.Leave, Context);
+                if (focusingLine != -1)
+                    Context.LyricLines[focusingLine].GoToReactionState(ReactionState.Enter, Context);
+                Context.PointerFocusingIndex = focusingLine;
             }
             else if (_pointerPressed == true && _lastPointerPressedYValue != null)
             {
@@ -746,8 +799,10 @@ namespace HyPlayer.LyricRenderer
                 //Debug.WriteLine(Context.ScrollingDelta);
                 Context.IsScrolling = true;
                 _lastWheelTime = Context.RenderTick;
+                _forceScrollReset = false;
                 _needRecalculate = true;
                 _lastPointerPressedYValue = yValue;
+                SetScrollPreviewing(true);
             }
             else if (_lastPointerPressedYValue == null)
             {
@@ -810,19 +865,19 @@ namespace HyPlayer.LyricRenderer
             }
             // Navigation can unload the canvas and join its game loop. Do not
             // hold the frame gate while invoking application callbacks.
+            RaiseScrollPreviewChanged();
             if (clicked is not null) OnLyricLineClicked?.Invoke(clicked);
         }
 
         private RenderingLyricLine? OnDoubleTappedCore(object sender, DoubleTappedRoutedEventArgs e)
         {
             RenderingLyricLine? clicked = null;
+            var position = e.GetPosition((UIElement)sender);
             for (var renderOffsetsKey = 0; renderOffsetsKey < Context.RenderOffsets.Count; renderOffsetsKey++)
             {
                 if (Context.LyricLines[renderOffsetsKey].Hidden)
                     continue;
-                if (Context.RenderOffsets[renderOffsetsKey].Y <= e.GetPosition((UIElement)sender).Y &&
-                    Context.RenderOffsets[renderOffsetsKey].Y + Context.LyricLines[renderOffsetsKey].RenderingHeight >=
-                    e.GetPosition((UIElement)sender).Y)
+                if (IsPointInLine(renderOffsetsKey, position))
                 {
                     Context.LyricLines[renderOffsetsKey].GoToReactionState(ReactionState.Press, Context);
                     clicked = Context.LyricLines[renderOffsetsKey];
@@ -833,6 +888,7 @@ namespace HyPlayer.LyricRenderer
 
             Context.ScrollingDelta = 0;
             _pointerPressed = true;
+            SetScrollPreviewing(false);
             return clicked;
         }
 

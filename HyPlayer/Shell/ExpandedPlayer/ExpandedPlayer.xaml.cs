@@ -145,14 +145,17 @@ public sealed partial class ExpandedPlayer : Page
     private float _lyricFadeTo = 1;
     private long _lyricFadeStart;
     private Storyboard? _leftPanelShiftStoryboard;
+    private Storyboard? _lyricPreviewHintStoryboard;
     private bool _isManualChangeMode;
     private bool _isRealClick;
     private SingleSongBase? _lastCoverSong;
     private int _lastHeight;
+    private int _lastRedesignHeight;
     private int _lastWidth;
     private bool _lyricHasBeenLoaded;
     private readonly List<SongLyric> _lyricList = [];
     private bool _needsRedesign = true;
+    private DispatcherQueueTimer? _redesignTimer;
     private int _nowHeight;
     private int _nowWidth;
     private bool _positionChangedBySeeking;
@@ -229,6 +232,7 @@ public sealed partial class ExpandedPlayer : Page
         PageContainer.AddHandler(PointerExitedEvent, new PointerEventHandler(PageContainer_PointerExited), true);
         _lyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         _lyricBox.OnBeforeRender += LyricBox_OnBeforeRender;
+        _lyricBox.ScrollPreviewChanged += LyricBox_ScrollPreviewChanged;
         _lyricBox.OnLyricLineClicked += LyricBoxOnOnRequestSeek;
         _lyricBox.Context.LyricWidthRatio = _lyricSettings.LyricRenderWidthRatio / 100f;
         _lyricBox.Context.LyricPaddingTopRatio = _lyricSettings.LyricPaddingTopRatio / 100f;
@@ -458,6 +462,27 @@ public sealed partial class ExpandedPlayer : Page
             _needsRedesign = true;
             UpdateAlbumSizeLimit();
         }
+
+        if (_needsRedesign) ScheduleRedesign();
+    }
+
+    private void ScheduleRedesign()
+    {
+        if (_redesignTimer is null)
+        {
+            _redesignTimer = DispatcherQueue.GetForCurrentThread()?.CreateTimer();
+            if (_redesignTimer is null) return;
+            _redesignTimer.Interval = TimeSpan.FromMilliseconds(60);
+            _redesignTimer.IsRepeating = false;
+            _redesignTimer.Tick += (_, _) =>
+            {
+                if (!_needsRedesign || _isCleanedUp || _lifecycle.IsInBackground) return;
+                _needsRedesign = false;
+                Redesign();
+            };
+        }
+
+        if (!_redesignTimer.IsRunning) _redesignTimer.Start();
     }
 
     private double CalculateLyricWidth()
@@ -752,7 +777,15 @@ public sealed partial class ExpandedPlayer : Page
 
     private void OnEscapeRequested(HandledEventArgs args)
     {
-        if (args.Handled || !_isImmersive) return;
+        if (args.Handled) return;
+        if (_lyricBox.IsScrollPreviewing)
+        {
+            _lyricBox.ResetScrolling();
+            args.Handled = true;
+            return;
+        }
+
+        if (!_isImmersive) return;
         ExitImmersive();
         args.Handled = true;
     }
@@ -775,11 +808,16 @@ public sealed partial class ExpandedPlayer : Page
         // 这个函数里面放无法用XAML实现的页面布局方式
         BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
 
-        if (Math.Abs(_lastChangedLyricWidth - LyricWidth) > 0.001f &&
-            Math.Abs(_canvasState.LyricRenderXOffset - RightPanel.ActualOffset.X) > 0.001f)
+        var lyricOffset = RightPanel.ActualOffset;
+        if (Math.Abs(_lastChangedLyricWidth - LyricWidth) > 0.001f || _lastRedesignHeight != _nowHeight ||
+            Math.Abs(_canvasState.LyricRenderXOffset - lyricOffset.X) > 0.001f ||
+            Math.Abs(_canvasState.LyricRenderYOffset - lyricOffset.Y) > 0.001f)
         {
-            _canvasState.LyricRenderXOffset = RightPanel.ActualOffset.X;
-            _canvasState.LyricRenderYOffset = RightPanel.ActualOffset.Y;
+            _canvasState.LyricRenderXOffset = lyricOffset.X;
+            _canvasState.LyricRenderYOffset = lyricOffset.Y;
+            _lastRedesignHeight = _nowHeight;
+            _lyricBox.RenderOriginX = lyricOffset.X;
+            _lyricBox.RenderOriginY = lyricOffset.Y;
             _lyricBox.Redesign((float)LyricWidth, _nowHeight, LuminousBackground.Dpi);
             _lyricBox.ChangeRenderFontSize((float)LyricShowSize,
                 _lyricSettings.TranslationSize > 0 ? _lyricSettings.TranslationSize : (float)LyricShowSize / 2,
@@ -1020,6 +1058,36 @@ public sealed partial class ExpandedPlayer : Page
     private void LyricBoxContainer_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
         //_lyricBox.ContextFlyout.ShowAt(_lyricBox);
+        if (!_lyricBox.IsScrollPreviewing) return;
+        _lyricBox.ResetScrolling();
+        e.Handled = true;
+    }
+
+    private void LyricBox_ScrollPreviewChanged(bool previewing)
+    {
+        _ = this.RunOnUIThreadAsync(() =>
+        {
+            if (_isCleanedUp) return;
+            ShowLyricPreviewHint(previewing);
+        });
+    }
+
+    private void ShowLyricPreviewHint(bool show)
+    {
+        _lyricPreviewHintStoryboard?.Pause();
+        var duration = TimeSpan.FromMilliseconds(show ? 320 : 240);
+        EasingFunctionBase easing = new CircleEase { EasingMode = show ? EasingMode.EaseOut : EasingMode.EaseIn };
+        var opacity = new DoubleAnimation { To = show ? 1 : 0, Duration = duration, EasingFunction = easing };
+        var offset = new DoubleAnimation { To = show ? 0 : -8, Duration = duration, EasingFunction = easing };
+        Storyboard.SetTarget(opacity, LyricPreviewHint);
+        Storyboard.SetTargetProperty(opacity, "Opacity");
+        Storyboard.SetTarget(offset, LyricPreviewHintOffset);
+        Storyboard.SetTargetProperty(offset, "Y");
+        var storyboard = new Storyboard();
+        storyboard.Children.Add(opacity);
+        storyboard.Children.Add(offset);
+        _lyricPreviewHintStoryboard = storyboard;
+        storyboard.Begin();
     }
 
     private async void BtnLoadLocalLyric(object sender, RoutedEventArgs e)
@@ -1608,12 +1676,14 @@ public sealed partial class ExpandedPlayer : Page
         _lyricRenderSettings.SettingsChanged -= OnLyricEffectSettingsChanged;
         Window.Current.SizeChanged -= Current_SizeChanged;
         _lyricBox.OnBeforeRender -= LyricBox_OnBeforeRender;
+        _lyricBox.ScrollPreviewChanged -= LyricBox_ScrollPreviewChanged;
         _lyricBox.OnLyricLineClicked -= LyricBoxOnOnRequestSeek;
         if (_uiSettings.AlbumRotate)
             RotateAnimationSet.Stop();
         if (_uiSettings.ExpandAlbumBreath) ImageAlbumAni?.Stop();
         _expandedPlayerWindow?.Closed -= ExpandedPlayerClosed;
         _expandedPlayerWindow = null;
+        _redesignTimer?.Stop();
         _player.EnableFFTProcessing = _playbackSettings.EnableFFT || _playbackSettings.ShowSpectrum;
     }
 }
