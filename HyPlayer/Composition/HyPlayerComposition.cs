@@ -244,6 +244,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IQueueSourceProvider, RadioQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, DailyRecommendQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, SingerHotQueueSourceProvider>();
+        depository.AddSingleton<IQueueSourceProvider, ArtistSongsQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, SingleSongQueueSourceProvider>();
         depository.AddSingleton<ILocalFileImportService, LocalFileImportService>();
         depository.AddSingleton<ITrackTransition, DirectTransition>();

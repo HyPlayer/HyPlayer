@@ -85,6 +85,21 @@
                                 Style="{StaticResource TitleTextBlockStyle}"
                                 Text="{x:Bind ViewModel.Artist.Name, Mode=OneWay}"
                                 TextWrapping="Wrap" />
+                            <Button
+                                Margin="0,12,0,0"
+                                AutomationProperties.Name="播放全部歌曲"
+                                Command="{x:Bind ViewModel.PlayAllSongsCommand}"
+                                Style="{StaticResource AccentButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE768;" />
+                                    <TextBlock Text="播放全部" />
+                                    <ProgressRing
+                                        Width="14"
+                                        Height="14"
+                                        IsActive="{x:Bind ViewModel.IsPlayingAll, Mode=OneWay}"
+                                        Visibility="{x:Bind ViewModel.IsPlayingAll, Mode=OneWay}" />
+                                </StackPanel>
+                            </Button>
 
                             <StackPanel.RenderTransform>
                                 <ScaleTransform x:Name="UserInfoScale" CenterY="125" />

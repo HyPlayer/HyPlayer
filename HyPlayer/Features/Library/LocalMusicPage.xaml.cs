@@ -77,10 +77,15 @@ public sealed partial class LocalMusicPage : Page
         }
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         DownloadPageFrame.Navigate(typeof(DownloadPage));
+        if (await LocalMusicCache.LoadAsync() is not { Count: > 0 } cached) return;
+        if (_isNavigatedAway || _currentFileScanTask is not null || ViewModel.LocalItems.Count > 0) return;
+
+        ViewModel.LocalItems.AddRange(cached);
+        ViewModel.NotificationText = $"共 {cached.Count} 首音乐（上次扫描的结果，点击“开始扫描”可刷新）";
     }
 
     private async void Playall_Click(object sender, RoutedEventArgs e)
@@ -169,6 +174,7 @@ public sealed partial class LocalMusicPage : Page
             }
             _cancellationToken.ThrowIfCancellationRequested();
             ViewModel.NotificationText = "扫描完成, 共 " + ViewModel.LocalItems.Count + " 首音乐";
+            _taskRunner.Forget(LocalMusicCache.SaveAsync(ViewModel.LocalItems.ToList()), "save local music cache");
         }
         catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
         {
