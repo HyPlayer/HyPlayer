@@ -1,19 +1,23 @@
-<h1 align="center">
-  <br>
-  <img src="https://raw.githubusercontent.com/kengwang/HyPlayer/master/HyPlayer/Assets/icon.png" width="150"/>
-  <br>
-  HyPlayer
-  <br>
-</h1>
-<h4 align="center">第三方网易云音乐播放器</h4>
-<h4 align="center">A Third-party Netease Cloud Music Player</h4>
-<p align="center">
-	<img alt="Using GPL-v3" src="https://img.shields.io/github/license/kengwang/HyPlayer">
-	<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/kengwang/HyPlayer">
-    <img alt="GitHub issues" src="https://img.shields.io/github/issues/HyPlayer/HyPlayer">
-    <h4 align="center">本软件仅供学习交流使用  请勿用于其他用途<br /><br />下载后请在 24 小时内删除
-</h4>
-</p>
+<div align="center">
+
+  <img
+    alt="HyPlayer"
+    src="https://socialify.git.ci/HyPlayer/HyPlayer/image?custom_description=%E7%AC%AC%E4%B8%89%E6%96%B9%E7%BD%91%E6%98%93%E4%BA%91%E9%9F%B3%E4%B9%90%E6%92%AD%E6%94%BE%E5%99%A8+%7C+A+Netease+Cloud+Music+Player&description=1&font=Bitter&forks=1&issues=1&logo=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2FHyPlayer%2FHyPlayer%2FAssets%2FNewIcon.png&name=1&pattern=Diagonal+Stripes&pulls=1&stargazers=1&theme=Auto"
+  />
+
+  <br />
+
+  <img alt="Using GPL-v3" src="https://img.shields.io/github/license/kengwang/HyPlayer" />
+  <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/kengwang/HyPlayer" />
+  <img alt="GitHub issues" src="https://img.shields.io/github/issues/HyPlayer/HyPlayer" />
+
+  <h4>
+    本软件仅供学习交流使用 请勿用于其他用途
+    <br /><br />
+    下载后请在 24 小时内删除
+  </h4>
+
+</div>
 
 
 
