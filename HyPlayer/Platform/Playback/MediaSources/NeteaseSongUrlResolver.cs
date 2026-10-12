@@ -29,13 +29,17 @@ public sealed class NeteaseSongUrlResolver
         _apiSettings = apiSettings ?? throw new ArgumentNullException(nameof(apiSettings));
     }
 
-    public async Task<ResolvedSongUrl?> ResolveAsync(string songId, CancellationToken ct)
+    public Task<ResolvedSongUrl?> ResolveAsync(string songId, CancellationToken ct)
+    {
+        return ResolveAsync(songId, _playbackSettings.AudioRate, ct);
+    }
+
+    public async Task<ResolvedSongUrl?> ResolveAsync(string songId, string level, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(songId))
             return null;
 
-        var level = _playbackSettings.AudioRate;
         var cacheKey = $"{songId}_{level}";
         if (!_cache.TryGetValue(cacheKey, out var cached) || DateTime.UtcNow - cached.FetchedAt >= _cacheLifetime)
         {

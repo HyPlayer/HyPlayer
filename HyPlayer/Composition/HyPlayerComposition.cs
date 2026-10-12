@@ -34,6 +34,7 @@ using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.AudioServices;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Playback;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Notifications;
 using HyPlayer.PlayCore.PlayListControllers;
@@ -84,7 +85,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<LocalLibrarySettings>(localLibrarySettings);
         depository.AddSingleton<Setting>(legacySettings);
 
-        var neteaseProvider = new NeteasePlaybackProvider();
+        var neteaseProvider = new NeteaseProvider.NeteaseProvider();
         neteaseProvider.ConfigureHttpClient(apiSettings.EnableProxy);
         var client = new HttpClient(
             new NetworkWatchHandler(
@@ -144,7 +145,12 @@ internal static class HyPlayerComposition
         depository.AddSingleton<NeteaseSongUrlResolver>();
         depository.AddSingleton<IMediaSourceProvider, NeteaseStreamingProvider>();
         depository.AddSingleton<IMediaSourceProvider, CachedNeteaseProvider>();
-        depository.AddSingleton<IMediaSourceService, MediaSourceService>();
+        depository.AddSingleton<MediaSourceService>();
+        depository.Add(
+            typeof(IMediaSourceService),
+            typeof(MediaSourceService),
+            DependencyLifetime.Singleton,
+            implementationFactory: dep => dep.Resolve<MediaSourceService>());
 
         depository.AddSingleton<LastFMClient>(
             new LastFMClient(
@@ -161,6 +167,16 @@ internal static class HyPlayerComposition
     private static void ConfigurePlayCore(IDepository depository)
     {
         depository.AddSingleton<INotificationHub, PlayCoreNotificationHub>();
+        depository.Add(
+            typeof(IPlaybackQualitySelector),
+            typeof(MediaSourceService),
+            DependencyLifetime.Singleton,
+            implementationFactory: dep => dep.Resolve<MediaSourceService>());
+        depository.Add(
+            typeof(IPlaybackResourceResolver),
+            typeof(MediaSourceService),
+            DependencyLifetime.Singleton,
+            implementationFactory: dep => dep.Resolve<MediaSourceService>());
         depository.AddSingleton<DefaultPlayListManager>();
         depository.Add(
             typeof(PlayListManagerBase),

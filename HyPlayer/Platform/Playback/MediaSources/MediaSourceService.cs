@@ -6,13 +6,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
 using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Downloads;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Playback;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
 namespace HyPlayer.Platform.Playback.MediaSources;
 
-public sealed class MediaSourceService : IMediaSourceService
+public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySelector, IPlaybackResourceResolver
 {
     private readonly PlaybackSettings _playbackSettings;
     private readonly Dictionary<string, IMediaSourceProvider> _providers;
@@ -87,7 +90,31 @@ public sealed class MediaSourceService : IMediaSourceService
                || await transfers.IsCachedAsync(song, CreateResource(song, resolved), ct).ConfigureAwait(false);
     }
 
-    public async Task<MusicResourceBase?> ResolveAsync(SingleSongBase song, CancellationToken ct)
+    public ResourceQualityTag? GetPlaybackQualityTag(SingleSongBase song)
+    {
+        return IsNeteaseSong(song) ? new NeteaseMusicQualityTag(_playbackSettings.AudioRate) : null;
+    }
+
+    public Task<MusicResourceBase?> ResolvePlaybackResourceAsync(
+        SingleSongBase song,
+        IMusicResourceProvidable provider,
+        ResourceQualityTag? qualityTag,
+        CancellationToken ctk = default)
+    {
+        return provider is NeteaseProvider.NeteaseProvider
+            ? ResolveAsync(song, qualityTag, ctk)
+            : provider.GetMusicResourceAsync(song, qualityTag, ctk);
+    }
+
+    public Task<MusicResourceBase?> ResolveAsync(SingleSongBase song, CancellationToken ct)
+    {
+        return ResolveAsync(song, null, ct);
+    }
+
+    private async Task<MusicResourceBase?> ResolveAsync(
+        SingleSongBase song,
+        ResourceQualityTag? qualityTag,
+        CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         if (IsNeteaseSong(song)
@@ -97,7 +124,9 @@ public sealed class MediaSourceService : IMediaSourceService
         ResolvedSongUrl? resolved;
         try
         {
-            resolved = await _urlResolver.ResolveAsync(song.ActualId, ct).ConfigureAwait(false);
+            resolved = qualityTag is NeteaseMusicQualityTag tag && !string.IsNullOrWhiteSpace(tag.Quality)
+                ? await _urlResolver.ResolveAsync(song.ActualId, tag.Quality, ct).ConfigureAwait(false)
+                : await _urlResolver.ResolveAsync(song.ActualId, ct).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
