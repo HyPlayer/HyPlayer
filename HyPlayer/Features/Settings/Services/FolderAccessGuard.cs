@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
@@ -32,11 +33,16 @@ public static class FolderAccessGuard
             Content = new TextBlock
             {
                 TextWrapping = TextWrapping.Wrap,
-                Text = $"HyPlayer 没有「{folder.Path}」的写入权限，{what}将无法保存到这里，请换一个文件夹。"
+                Text = $"HyPlayer 没有「{folder.Path}」的写入权限，{what}将无法保存到这里。\n\n" +
+                       "可以换一个文件夹，或者在 Windows 设置里允许 HyPlayer 访问文件系统后再选一次。"
             },
-            CloseButtonText = "知道了"
+            PrimaryButtonText = "打开权限设置",
+            SecondaryButtonText = "重新选择",
+            CloseButtonText = "取消",
+            DefaultButton = ContentDialogButton.Secondary
         };
-        await dialog.ShowAsync();
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            await Launcher.LaunchUriAsync(new Uri("ms-settings:privacy-broadfilesystemaccess"));
         return false;
     }
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -14,6 +15,7 @@ using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Application.Threading;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Playback.Models;
 using HyPlayer.Platform.Network;
 
@@ -64,6 +66,7 @@ public static class ResourceSaver
     private static LyricSettings Lyric => Ioc.Default.GetRequiredService<LyricSettings>();
 
     private const string RelaxedNetworkKey = "RelaxedNetwork";
+    private const string LyricBlurKey = "LyricMaximumBlur";
 
     private static SettingChange AudioRateChange => new()
     {
@@ -267,6 +270,22 @@ public static class ResourceSaver
             () => Ioc.Default.GetRequiredService<AutoMixSettings>().ModelsSuspended,
             value => Ioc.Default.GetRequiredService<AutoMixSettings>().ModelsSuspended = value, true);
 
+    private static ILyricRenderSettingsService LyricEffects =>
+        Ioc.Default.GetRequiredService<ILyricRenderSettingsService>();
+
+    private static SettingChange LyricBlurChange => new()
+    {
+        Key = LyricBlurKey,
+        Read = () => LyricEffects.Current.Line.MaximumBlur.ToString(CultureInfo.InvariantCulture),
+        Write = value =>
+        {
+            if (!float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var blur)) return;
+            var current = LyricEffects.Current;
+            LyricEffects.Commit(current with { Line = current.Line with { MaximumBlur = blur } });
+        },
+        Target = "0"
+    };
+
     private static List<SaverOption> BuildPowerOptions()
     {
         var options = new List<SaverOption>();
@@ -283,6 +302,8 @@ public static class ResourceSaver
                 Title = "关闭频谱可视化与音频信息输出",
                 Changes = [ShowSpectrumChange, EnableFftChange]
             });
+        if (LyricEffects.Current.Line.MaximumBlur > 0)
+            options.Add(new SaverOption { Title = "关闭歌词模糊效果", Changes = [LyricBlurChange] });
         var breath = new List<SettingChange>();
         if (UI.PlaybarBackgroundBreath) breath.Add(PlaybarBreathChange);
         if (UI.ExpandAlbumBreath) breath.Add(AlbumBreathChange);
@@ -516,6 +537,7 @@ public static class ResourceSaver
         foreach (var change in changes) map[change.Key] = change;
         foreach (var change in StreamingChanges) map[change.Key] = change;
         map[ModelAnalysisChange.Key] = ModelAnalysisChange;
+        map[LyricBlurChange.Key] = LyricBlurChange;
         return map;
     }
 

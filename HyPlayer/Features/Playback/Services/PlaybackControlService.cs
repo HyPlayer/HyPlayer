@@ -301,6 +301,9 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             return null;
         }
 
+        if (nextIndex == currentIndex || SameSong(nextSong, context.Song))
+            return null;
+
         _lyricService.PreloadLyrics(nextSong);
         PreparedPlaybackTicket? ticket = null;
         IPlaybackSource? incomingSource;

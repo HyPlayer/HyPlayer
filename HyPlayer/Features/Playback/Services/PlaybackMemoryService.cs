@@ -30,6 +30,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
     private const int SaveDebounceMilliseconds = 1500;
     private const int SavePositionStepMilliseconds = 5000;
     private const int EndPositionResetThresholdMilliseconds = 5000;
+    private const int StartPositionResetThresholdMilliseconds = 3000;
     private readonly IPlaybackControlService _control;
     private readonly IHistoryService _history;
     private readonly SemaphoreSlim _ioLock = new(1, 1);
@@ -497,7 +498,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
 
     private static TimeSpan GetRestorePosition(long positionMilliseconds, long durationMilliseconds)
     {
-        if (positionMilliseconds <= 0)
+        if (positionMilliseconds <= StartPositionResetThresholdMilliseconds)
             return TimeSpan.Zero;
 
         if (durationMilliseconds > 0

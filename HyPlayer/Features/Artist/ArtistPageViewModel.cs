@@ -10,6 +10,7 @@ using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Playback.Services;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
@@ -27,8 +28,10 @@ public partial class ArtistPageViewModel : ObservableObject
     private readonly ObservableList<ProvidableItemBase> _hotSongs = [];
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly IProviderKnownTypeIds _knownTypeIds;
+    private readonly IPlaybackControlService _control;
     private readonly IAppNavigator _navigator;
     private readonly INotificationService _notification;
+    private readonly IPlaybackQueueLoader _queueLoader;
     private readonly UISettings _uiSettings;
     private string _artistId = string.Empty;
     private Task<List<ContainerBase>>? _artistSubContainersTask;
@@ -42,6 +45,8 @@ public partial class ArtistPageViewModel : ObservableObject
         INotificationService notification,
         UISettings uiSettings,
         IAppNavigator navigator,
+        IPlaybackQueueLoader queueLoader,
+        IPlaybackControlService control,
         ILoadEnvironment loadEnvironment)
     {
         ArtistLoad = new LoadState("歌手信息", loadEnvironment) { EmptyText = "没有找到这位歌手" };
@@ -51,6 +56,8 @@ public partial class ArtistPageViewModel : ObservableObject
         _notification = notification;
         _uiSettings = uiSettings;
         _navigator = navigator;
+        _queueLoader = queueLoader;
+        _control = control;
     }
 
     [ObservableProperty] public partial PersonBase? Artist { get; set; }
@@ -71,7 +78,15 @@ public partial class ArtistPageViewModel : ObservableObject
         IsPlayingAll = true;
         try
         {
-            await _navigator.PlayAsync(new MusicResource.Artist(artistId));
+            var result = await _queueLoader.LoadSourceByKindAsync(SongListQueueScopeKind.Artist, artistId);
+            var songs = result.Batches.SelectMany(batch => batch).ToList();
+            if (!result.Success || songs.Count == 0) return;
+
+            await _control.StopAsync();
+            await _control.ClearQueueAsync();
+            _navigator.SetPlaybackSource(new MusicResource.Artist(artistId));
+            await _queueLoader.AppendSongsAsync(songs);
+            await _control.MoveNextAndPlayAsync(true);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
