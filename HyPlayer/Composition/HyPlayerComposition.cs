@@ -18,6 +18,7 @@ using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Playback.Transitions;
+using HyPlayer.Features.Radio.Services;
 using HyPlayer.Features.Settings.Services;
 using HyPlayer.Features.Widgets.Services;
 using HyPlayer.Platform.Network;
@@ -89,6 +90,7 @@ internal static class HyPlayerComposition
                 NeteaseApi.NeteaseCloudMusicApiHandler.HttpClientHandler,
                 ResourceSaver.ReportRequest));
         neteaseProvider.Handler.HttpClient = client;
+        PodcastListApi.Register(neteaseProvider.Handler.Option);
 
         ConfigureProviders(depository, neteaseProvider, client);
         ConfigurePlayCore(depository);
@@ -298,6 +300,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<ITeachingTipService, TeachingTipService>();
         depository.AddSingleton<IPlayBarAutoHideService, PlayBarAutoHideService>();
         depository.AddSingleton<IPlaylistCollectionChangeNotifier, PlaylistCollectionChangeNotifier>();
+        depository.AddSingleton<IPodcastLibraryService, PodcastLibraryService>();
         depository.AddSingleton<ILastFmService, LastFmService>();
         depository.AddSingleton<ITileService, TileService>();
         depository.AddSingleton<ILyricRenderSettingsService, LyricRenderSettingsService>();

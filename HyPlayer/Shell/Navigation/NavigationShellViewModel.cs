@@ -12,6 +12,7 @@ using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Radio.Services;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -31,6 +32,11 @@ public partial class NavigationShellViewModel : ObservableObject
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly SidebarLayout _layout;
     private readonly INotificationService _notification;
+    private readonly NavigationNode _podcastCollectedNode;
+    private readonly NavigationNode _podcastCreatedNode;
+    private readonly IPodcastLibraryService _podcastLibrary;
+    private readonly NavigationNode _podcastLikedNode;
+    private readonly NavigationNode _podcastSubscribedNode;
 
     private readonly List<NavigationNode> _providerLibraryNodes = [];
     private readonly List<NavigationSection> _sections = [];
@@ -38,6 +44,7 @@ public partial class NavigationShellViewModel : ObservableObject
     private readonly IUserLibraryStateService _userLibraryState;
     private readonly IUserLibraryTypeIds _userLibraryTypeIds;
     private Task? _loadPlaylistsTask;
+    private int _podcastLoadVersion;
 
     public NavigationShellViewModel(
         IAuthService auth,
@@ -47,7 +54,8 @@ public partial class NavigationShellViewModel : ObservableObject
         IUserLibraryStateService userLibraryState,
         IProviderKnownTypeIds knownTypeIds,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier,
-        SidebarLayout layout)
+        SidebarLayout layout,
+        IPodcastLibraryService podcastLibrary)
     {
         MenuItemsView = MenuItems.ToNotifyCollectionChanged();
         _auth = auth;
@@ -58,6 +66,27 @@ public partial class NavigationShellViewModel : ObservableObject
         _knownTypeIds = knownTypeIds;
         _layout = layout;
         _layout.Changed += (_, _) => ApplyLayout();
+        _podcastLibrary = podcastLibrary;
+        _podcastLikedNode = new NavigationNode
+        {
+            Key = "podcast-liked", Title = "点赞的单集", Icon = new FontIcon { Glyph = "\uE8E1" },
+            Route = new AppRoute.PodcastEpisodes(PodcastEpisodeKinds.Liked), IsVisible = false
+        };
+        _podcastCollectedNode = new NavigationNode
+        {
+            Key = "podcast-collected", Title = "收藏的单集", Icon = new FontIcon { Glyph = "\uE734" },
+            Route = new AppRoute.PodcastEpisodes(PodcastEpisodeKinds.Collected), IsVisible = false
+        };
+        _podcastCreatedNode = new NavigationNode
+        {
+            Key = "podcast-created", Title = "我创建的播客", Icon = new FontIcon { Glyph = "\uE720" },
+            SelectsOnInvoked = false, IsVisible = false
+        };
+        _podcastSubscribedNode = new NavigationNode
+        {
+            Key = "podcast-subscribed", Title = "我收藏的播客", Icon = new FontIcon { Glyph = "\uEC05" },
+            SelectsOnInvoked = false, IsVisible = false
+        };
 
         BuildMenuItems();
         UpdateAccountStatus();
@@ -138,6 +167,13 @@ public partial class NavigationShellViewModel : ObservableObject
                     Key = "create-playlist", Title = "创建歌单", Icon = new SymbolIcon { Symbol = Symbol.Add },
                     Action = AppNavigationAction.CreatePlaylist, SelectsOnInvoked = false
                 }
+            ]),
+            new NavigationSection("podcast", "播客",
+            [
+                _podcastLikedNode,
+                _podcastCollectedNode,
+                _podcastCreatedNode,
+                _podcastSubscribedNode
             ])
         ]);
         RefreshLayout();
@@ -228,6 +264,7 @@ public partial class NavigationShellViewModel : ObservableObject
         if (_auth.CurrentUser is null) return;
 
         _ = UpdateAccountStatusAsync();
+        _ = LoadPodcastsAsync();
     }
 
     public Task RefreshPlaylistsAsync()
@@ -238,6 +275,7 @@ public partial class NavigationShellViewModel : ObservableObject
     public void UpdateAfterLogout()
     {
         ClearProviderLibraryNodes();
+        ClearPodcastNodes();
         _userLibraryState.Clear();
 
         IsLoading = false;
@@ -326,6 +364,62 @@ public partial class NavigationShellViewModel : ObservableObject
         {
             IsLoading = false;
         }
+    }
+
+    private async Task LoadPodcastsAsync()
+    {
+        var version = ++_podcastLoadVersion;
+        _podcastLikedNode.IsVisible = true;
+        _podcastCollectedNode.IsVisible = true;
+        ApplyLayout();
+
+        var created = await LoadPodcastChannelsAsync(_podcastLibrary.GetCreatedChannelsAsync());
+        if (version != _podcastLoadVersion) return;
+        FillPodcastGroup(_podcastCreatedNode, created);
+
+        var subscribed = await LoadPodcastChannelsAsync(_podcastLibrary.GetSubscribedChannelsAsync());
+        if (version != _podcastLoadVersion) return;
+        FillPodcastGroup(_podcastSubscribedNode, subscribed);
+    }
+
+    private static async Task<IReadOnlyList<ContainerBase>> LoadPodcastChannelsAsync(
+        Task<IReadOnlyList<ContainerBase>> loader)
+    {
+        try
+        {
+            return await loader;
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private void FillPodcastGroup(NavigationNode group, IReadOnlyList<ContainerBase> channels)
+    {
+        group.Children.Clear();
+        group.Children.AddRange(channels
+            .Where(channel => !string.IsNullOrEmpty(channel.ActualId) && !string.IsNullOrEmpty(channel.Name))
+            .Select(channel => new NavigationNode
+            {
+                Title = channel.Name,
+                Route = new AppRoute.Radio(channel.ActualId!),
+                Icon = new FontIcon { Glyph = "\uE720" }
+            }));
+        group.IsVisible = group.Children.Count > 0;
+        ApplyLayout();
+    }
+
+    private void ClearPodcastNodes()
+    {
+        _podcastLoadVersion++;
+        _podcastLikedNode.IsVisible = false;
+        _podcastCollectedNode.IsVisible = false;
+        _podcastCreatedNode.IsVisible = false;
+        _podcastSubscribedNode.IsVisible = false;
+        _podcastCreatedNode.Children.Clear();
+        _podcastSubscribedNode.Children.Clear();
+        ApplyLayout();
     }
 
     private void ClearProviderLibraryNodes()

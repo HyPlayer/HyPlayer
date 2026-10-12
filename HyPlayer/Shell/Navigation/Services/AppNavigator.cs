@@ -140,6 +140,8 @@ public sealed partial class AppNavigator : IAppNavigator
             AppRoute.MusicCloud => NavigatePage(typeof(MusicCloudPage)),
             AppRoute.MV mv => NavigatePage(typeof(MVPage), mv.Id),
             AppRoute.Playlist playlist => NavigatePage(typeof(SongListDetail), playlist.Id),
+            AppRoute.PodcastEpisodes podcastEpisodes => NavigatePage(typeof(PodcastEpisodesPage),
+                podcastEpisodes.Kind),
             AppRoute.Radio radio => NavigatePage(typeof(RadioPage), radio.Id),
             AppRoute.Settings => NavigatePage(typeof(Settings)),
             AppRoute.Song song => PlaySongAsync(song.Id),
@@ -165,6 +167,8 @@ public sealed partial class AppNavigator : IAppNavigator
         if (pageType == typeof(ArtistPage)) return new AppRoute.Artist(parameter?.ToString() ?? "");
         if (pageType == typeof(MVPage)) return new AppRoute.MV(parameter?.ToString() ?? "");
         if (pageType == typeof(RadioPage)) return new AppRoute.Radio(parameter?.ToString() ?? "");
+        if (pageType == typeof(PodcastEpisodesPage))
+            return new AppRoute.PodcastEpisodes(parameter?.ToString() ?? "");
         if (pageType == typeof(SongListDetail))
         {
             var playlistId = parameter switch
