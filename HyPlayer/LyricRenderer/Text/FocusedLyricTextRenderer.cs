@@ -814,7 +814,9 @@ public sealed class FocusedLyricTextRenderer
         // edge and may spill into the next token; it must never pull the solid edge
         // back inside the token that has just completed.
         var rampStart = boundaryProgress;
-        var rampEnd = boundaryProgress + normalizedFeather;
+        // Contract the feather at the line end. Raising the opacity of the
+        // entire remaining line would light its final glyphs before the scan.
+        var rampEnd = Math.Min(1, boundaryProgress + normalizedFeather);
         var rampMiddle = (rampStart + rampEnd) / 2;
         var firstStop = isRightToLeft
             ? 1 - Math.Clamp(rampEnd, 0, 1)
@@ -836,11 +838,7 @@ public sealed class FocusedLyricTextRenderer
                     : MathF.Pow(
                         (rampEnd - scanPosition) / Math.Max(rampEnd - rampStart, float.Epsilon),
                         4f);
-            // Settle the final visual line frames toward a fully solid mask without
-            // strengthening feather spill at ordinary token boundaries.
-            var terminalGain = MathF.Pow(boundaryProgress, 8);
-            var highlightOpacity = terminalGain + (1 - terminalGain) * featherOpacity;
-            return highlighted ? highlightOpacity : 1 - highlightOpacity;
+            return highlighted ? featherOpacity : 1 - featherOpacity;
         }
 
         return new RectangleMaskPlan(

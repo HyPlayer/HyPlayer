@@ -10,6 +10,27 @@ namespace HyPlayer.Playback.Tests;
 public sealed class FocusedVectorRevealTests
 {
     [Test]
+    public void CjkLineTail_ShouldRemainPendingBeyondFeather()
+    {
+        // Ten 40-DIP CJK glyphs: at 70%, the last two glyphs are still
+        // beyond the 40-DIP feather and must not receive a line-wide glow.
+        foreach (var rtl in new[] { false, true })
+        foreach (var progress in new[] { 0.7f, 0.8f, 0.95f, 0.99f })
+        {
+            var highlighted = FocusedLyricTextRenderer.CreateRectangleMaskPlan(
+                progress, true, rtl, 40, 400);
+            var pending = FocusedLyricTextRenderer.CreateRectangleMaskPlan(
+                progress, false, rtl, 40, 400);
+            var tailOpacity = rtl ? highlighted.StartOpacity : highlighted.EndOpacity;
+            var pendingTailOpacity = rtl ? pending.StartOpacity : pending.EndOpacity;
+            var featherEndOpacity = rtl ? highlighted.FirstOpacity : highlighted.SecondOpacity;
+            if (tailOpacity != 0 || pendingTailOpacity != 1 || featherEndOpacity != 0)
+                throw new InvalidOperationException(
+                    $"CJK tail is lit before the scan reaches it: progress={progress}, RTL={rtl}, alpha={tailOpacity}.");
+        }
+    }
+
+    [Test]
     public void HighlightReveal_ShouldApplyToLyricsButNotTranslationWithoutTargets()
     {
         IReadOnlySet<string> noTargets = new HashSet<string>();
@@ -189,10 +210,11 @@ public sealed class FocusedVectorRevealTests
         var last60FpsSample = FocusedLyricTextRenderer.CreateRectangleMaskPlan(
             reveal: 233f / 250f, highlighted: true, isRightToLeft: false, feather: 40, width: 80);
 
-        if (nearEnd.FirstStop <= 0.95f || nearEnd.EndOpacity <= 0.95f ||
-            last60FpsSample.EndOpacity <= 0.75f)
+        if (nearEnd.FirstStop <= 0.95f || nearEnd.SecondStop != 1 ||
+            nearEnd.EndOpacity != 0 || last60FpsSample.EndOpacity != 0 ||
+            nearEnd.SecondStop - nearEnd.FirstStop >= nearStart.SecondStop - nearStart.FirstStop)
             throw new InvalidOperationException(
-                $"羽化扫词在端点附近仍保留固定宽度暗尾：start={nearStart.FirstStop:P1}..{nearStart.SecondStop:P1}, " +
+                $"羽化扫词没有在行尾收缩，或未扫到的末端提前点亮：start={nearStart.FirstStop:P1}..{nearStart.SecondStop:P1}, " +
                 $"end={nearEnd.FirstStop:P1}..{nearEnd.SecondStop:P1}, " +
                 $"lastSampleAlpha={last60FpsSample.EndOpacity:P1}。");
     }
