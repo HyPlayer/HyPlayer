@@ -23,6 +23,20 @@ public sealed class StereoBiquad
         Set((1 + cos) / 2 / a0, -(1 + cos) / a0, (1 + cos) / 2 / a0, -2 * cos / a0, (1 - alpha) / a0);
     }
 
+    public void SetLowPass(double frequency, double sampleRate, double q = 0.7071)
+    {
+        var w0 = 2 * Math.PI * Math.Clamp(frequency, 10, sampleRate * 0.45) / sampleRate;
+        var cos = Math.Cos(w0);
+        var alpha = Math.Sin(w0) / (2 * q);
+        var a0 = 1 + alpha;
+        Set((1 - cos) / 2 / a0, (1 - cos) / a0, (1 - cos) / 2 / a0, -2 * cos / a0, (1 - alpha) / a0);
+    }
+
+    public void Reset()
+    {
+        _x1L = _x2L = _y1L = _y2L = _x1R = _x2R = _y1R = _y2R = 0;
+    }
+
     public void SetLowShelf(double frequency, double gainDb, double sampleRate)
     {
         if (Math.Abs(gainDb) < 0.01)

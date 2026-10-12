@@ -44,6 +44,12 @@
                     IsEnabled="{x:Bind CanTimeStretch}"
                     IsOn="{x:Bind Settings.TimeStretch, Mode=TwoWay}" />
             </controls3:SettingsCard>
+            <controls3:SettingsCard Description="歌曲硬收尾或人声唱到最后时用混响尾音衔接下一首，在人声结束后的小节线切换时用一拍回声收尾" Header="尾音效果">
+                <ToggleSwitch
+                    MinWidth="10"
+                    HorizontalAlignment="Right"
+                    IsOn="{x:Bind Settings.TailEffects, Mode=TwoWay}" />
+            </controls3:SettingsCard>
             <controls3:SettingsCard Header="同一专辑连续播放时保持无缝">
                 <ToggleSwitch
                     MinWidth="10"

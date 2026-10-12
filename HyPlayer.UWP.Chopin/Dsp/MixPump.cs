@@ -89,8 +89,8 @@ namespace HyPlayer.UWP.Chopin.Dsp
 
     public sealed class MixPump
     {
-        public const double TargetLeadSeconds = 0.2;
-        public const double LowWaterSeconds = 0.05;
+        public const double TargetLeadSeconds = 0.35;
+        public const double LowWaterSeconds = 0.1;
         private const double ShadowSeconds = 0.6;
         private const int LeadBucketMs = 5;
         private const int LeadBuckets = 128;

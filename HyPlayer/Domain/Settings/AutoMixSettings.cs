@@ -26,6 +26,12 @@ public partial class AutoMixSettings : SettingsBase
         set => SetSettings(nameof(KeepAlbumGapless), value);
     }
 
+    public bool TailEffects
+    {
+        get => GetSettings(nameof(TailEffects), true);
+        set => SetSettings(nameof(TailEffects), value);
+    }
+
     public string ModelFolder
     {
         get => GetSettings(nameof(ModelFolder), string.Empty);

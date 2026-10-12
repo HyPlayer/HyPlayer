@@ -430,9 +430,32 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             MaxOverlapSeconds = Math.Clamp(_settings.MaxOverlap, 8, 60),
             CrossfadeSeconds = Math.Clamp(context.CrossFadeDuration.TotalSeconds, 2, 12),
             AllowTimeStretch = _settings.TimeStretch && TimeStretcher.IsAvailable,
-            AlbumContinuation = album && _settings.KeepAlbumGapless
+            AlbumContinuation = album && _settings.KeepAlbumGapless,
+            TailEffects = _settings.TailEffects,
+            PlaybackOffsetDb = PlaybackOffsetDb(context.Source, prepared.IncomingSource)
         }, regionsA.Leads, regionsB.Leads);
         AutoMixLog.Write($"plan {_plan.Technique}: exit A {_plan.AExit:0.00}s overlap {_plan.Overlap:0.00}s entry B {_plan.BEntry:0.00}s rate {_plan.Rate:0.0000} ramp {_plan.RampBack:0.0}s gainB {_plan.GainB:0.00} ({_plan.Reason}) stretch {TimeStretcher.IsAvailable}");
+        if (_plan.Loudness is { } loudness)
+            AutoMixLog.Write($"plan loudness: {loudness.Describe()}");
+        if (_plan.Tail != MixTail.None)
+            AutoMixLog.Write($"plan tail {_plan.Tail}: delay {_plan.TailDelay:0.000}s send opens at A {_plan.TailOpen:0.00}s full at {_plan.TailFull:0.00}s wet released at {_plan.TailBloom:0.00}s dry ends at {_plan.AFadeEnd:0.00}s tail up to {_plan.TailLength:0.0}s");
+    }
+
+    private double PlaybackOffsetDb(IPlaybackSource outgoing, IPlaybackSource? incoming)
+    {
+        try
+        {
+            if (incoming is null)
+                return 0;
+
+            var gainA = Graph.GetPlaybackSourceAudioGain(outgoing);
+            var gainB = Graph.GetPlaybackSourceAudioGain(incoming);
+            return gainA > 0 && gainB > 0 ? 20 * Math.Log10(gainA / gainB) : 0;
+        }
+        catch
+        {
+            return 0;
+        }
     }
 
     private async Task DecodeAsync(
@@ -484,7 +507,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             var pcmA = await AudioDecoder
                 .DecodeAsync(streamA, (uint)rate, 2, TimeSpan.FromSeconds(handoverStart), TimeSpan.Zero, ct)
                 .ConfigureAwait(false);
-            var bLength = plan.BEntry + plan.Overlap * plan.Rate + plan.RampBack * Math.Max(1, plan.Rate) + 20;
+            var bLength = plan.BEntry + plan.Overlap * plan.Rate + plan.Settle * Math.Max(1, plan.Rate) + 20;
             var bStart = Math.Max(0, plan.BEntry - 1);
             var pcmB = await AudioDecoder
                 .DecodeAsync(streamB, (uint)rate, 2, TimeSpan.FromSeconds(bStart), TimeSpan.FromSeconds(bLength - bStart), ct)
@@ -742,7 +765,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         if (engine.Stage is AutoMixStage.Done or AutoMixStage.Aborted)
             return;
 
-        var limit = engine.Plan.Overlap + engine.Plan.RampBack + 16;
+        var limit = engine.Plan.Overlap + engine.Plan.Settle + 16;
         var elapsed = engine.SecondsSinceBStarted;
         if (elapsed > limit + 8)
         {

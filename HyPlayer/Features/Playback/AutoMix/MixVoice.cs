@@ -26,6 +26,9 @@ public sealed class MixVoice : IDisposable
     private readonly StereoBiquad _highPass = new();
     private readonly StereoBiquad _lowShelf = new();
     private double _gain;
+    private double _send;
+    private double _wet = 1;
+    private MixSend? _sendPath;
     private int _rawBlendFrames;
     private int _rawBlendDone = -1;
 
@@ -52,7 +55,28 @@ public sealed class MixVoice : IDisposable
     public double TargetGain { get; set; }
     public double HighPassHz { get; set; }
     public double LowShelfDb { get; set; }
+    public double SendGain { get; set; }
+    public double WetGain { get; set; } = 1;
     public bool Finished => ContentIndex >= _region.Frames - 1;
+    public bool TailActive => _sendPath is { Active: true };
+
+    public void EnableSend(MixSendSettings settings, double wetGain)
+    {
+        _sendPath = new MixSend(_sampleRate, settings);
+        _wet = wetGain;
+        WetGain = wetGain;
+    }
+
+    public void BeginTail(long maxFrames)
+    {
+        _sendPath?.Release(maxFrames);
+    }
+
+    public void RenderTail(Span<float> mix, int frames)
+    {
+        _sendPath?.Process(default, frames, 0, 0, mix, _wet, WetGain);
+        _wet = WetGain;
+    }
 
     public void SetGainImmediate(double gain)
     {
@@ -121,6 +145,12 @@ public sealed class MixVoice : IDisposable
         _highPass.Process(dry, frames);
         _lowShelf.SetLowShelf(180, LowShelfDb, _sampleRate);
         _lowShelf.Process(dry, frames);
+        if (_sendPath is { } send)
+        {
+            send.Process(dry, frames, _send, SendGain, mix, _wet, WetGain);
+            _send = SendGain;
+            _wet = WetGain;
+        }
 
         var startGain = _gain;
         var endGain = TargetGain;

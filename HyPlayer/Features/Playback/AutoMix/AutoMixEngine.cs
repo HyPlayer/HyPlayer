@@ -41,6 +41,9 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
 {
     public const double CrossfadeSeconds = 0.2;
     public const double AbortFadeSeconds = 0.01;
+    public const double TailDuck = 0.25;
+    private const double TailBloomLead = 0.15;
+    private const double TailBloomSeconds = 0.2;
     private const int HistoryLength = 64;
 
     private readonly IAutoMixHost _player;
@@ -57,6 +60,9 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     private readonly long _exitIndexA;
     private readonly long _overlapFrames;
     private readonly long _handoverIndexA;
+    private readonly long _entryFadeFrames;
+    private readonly long _cutIndexA;
+    private readonly long _tailFrames;
     private readonly ClockOffsetEstimator _clockA = new();
     private readonly ClockOffsetEstimator _clockB = new();
     private readonly long[] _historyRendered = new long[HistoryLength];
@@ -65,6 +71,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
 
     private MixVoice? _voiceA;
     private MixVoice? _voiceB;
+    private MixVoice? _tail;
     private NodeCrossfade? _fadeA;
     private NodeCrossfade? _fadeB;
     private PlaybackTap? _clockTapA;
@@ -103,6 +110,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     private int _historyCount;
     private int _historyNext;
     private int _cutFrames = -1;
+    private bool _cutA;
 
     public AutoMixEngine(IAutoMixHost player, MixPlan plan, MixRegion regionA, MixRegion regionB,
         AudioGraphPlaybackSource sourceA, AudioGraphPlaybackSource sourceB, double volumeA, double volumeB,
@@ -122,6 +130,9 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         _exitIndexA = regionA.IndexOf(plan.AExit);
         _overlapFrames = Math.Max(1, (long)Math.Round(plan.Overlap * _sampleRate));
         _handoverIndexA = Math.Max(0, _exitIndexA - _sampleRate * 2);
+        _entryFadeFrames = plan.EntryFade > 0 ? Math.Max(1, (long)Math.Round(plan.EntryFade * _sampleRate)) : 0;
+        _cutIndexA = _exitIndexA + _overlapFrames;
+        _tailFrames = Math.Max(1, (long)Math.Round(plan.TailLength * _sampleRate));
     }
 
     public PlaybackTap? TapA { get; set; }
@@ -159,8 +170,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
 
     public void StartOffline(long regionIndexA)
     {
-        _voiceA = new MixVoice(_regionA, _regionA.StartSeconds + regionIndexA / (double)_sampleRate, false);
-        _voiceA.SetGainImmediate(_volumeA);
+        _voiceA = CreateVoiceA(_regionA.StartSeconds + regionIndexA / (double)_sampleRate);
         _renderStage = AutoMixStage.Handover;
         Stage = AutoMixStage.Handover;
     }
@@ -300,13 +310,22 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         var shift = (long)Math.Round(MapA) + offset;
         var start = NodeCrossfade.AlignUp(_rendered, clock.Played, clock.Quantum);
         if (start + shift < _handoverIndexA) return;
-        _voiceA = new MixVoice(_regionA, _regionA.StartSeconds + (_rendered + shift) / (double)_sampleRate, false);
-        _voiceA.SetGainImmediate(_volumeA);
+        _voiceA = CreateVoiceA(_regionA.StartSeconds + (_rendered + shift) / (double)_sampleRate);
         _fadeA = new NodeCrossfade(start, clock.Quantum, FadeSteps(clock.Quantum), _sampleRate, false);
         _appliedA = _nodeVolumeA;
         _handoverStart = start;
         _renderStage = AutoMixStage.Handover;
         HandOverCrossfaded = true;
+    }
+
+    private MixVoice CreateVoiceA(double contentSeconds)
+    {
+        var voice = new MixVoice(_regionA, contentSeconds, false);
+        voice.SetGainImmediate(_volumeA);
+        var wet = _volumeA * (_plan.TailBloom > 0 ? TailDuck : 1);
+        if (_plan.Tail == MixTail.Reverb) voice.EnableSend(MixSendSettings.ReverbTail(_plan.TailDelay), wet);
+        else if (_plan.Tail == MixTail.Echo) voice.EnableSend(MixSendSettings.EchoOut(_plan.TailDelay), wet);
+        return voice;
     }
 
     private int FadeSteps(int quantum) => Math.Max(1, (int)Math.Round(CrossfadeSeconds * _sampleRate / Math.Max(1, quantum)));
@@ -429,6 +448,7 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
             if (_voiceB is null && aIndex + frames > _exitIndexA)
             {
                 var split = (int)Math.Clamp(_exitIndexA - aIndex, 0, frames);
+                UpdateSend(split);
                 RenderA(mix, split, 0);
                 StartB(split);
                 offset = split;
@@ -440,8 +460,10 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         {
             var slice = mix.Slice(offset * 2, remaining * 2);
             UpdateOverlap();
+            UpdateSend(remaining);
             RenderA(slice, remaining, offset);
             RenderB(slice, remaining, offset);
+            _tail?.RenderTail(slice, remaining);
         }
 
         Limit(mix, frames);
@@ -453,18 +475,36 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
             _tailRate = _voiceB.Rate;
         }
 
-        if (_voiceA is not null && (_voiceA.Finished || _renderProgress >= 1 && _voiceA.TargetGain <= 0.0001))
+        if (_voiceA is not null && (_voiceA.Finished || (_renderProgress >= 1 || _cutA) && _voiceA.TargetGain <= 0.0001))
         {
-            _voiceA.Dispose();
+            if (_voiceA.TailActive)
+            {
+                _tail = _voiceA;
+                _tail.WetGain = _volumeA;
+                _tail.BeginTail(_tailFrames);
+            }
+            else
+            {
+                _voiceA.Dispose();
+            }
+
             _voiceA = null;
             if (_overlapEndRendered < 0) _overlapEndRendered = _rendered;
             if (_renderStage == AutoMixStage.Overlap) _renderStage = AutoMixStage.RampBack;
+        }
+
+        if (_tail is not null && !_tail.TailActive)
+        {
+            _tail.Dispose();
+            _tail = null;
         }
 
         if (_voiceB is not null && _fadeB is { } fade && _rendered >= fade.End)
         {
             _voiceB.Dispose();
             _voiceB = null;
+            _tail?.Dispose();
+            _tail = null;
             _renderStage = AutoMixStage.Done;
         }
     }
@@ -478,9 +518,10 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         var t = _plan.RampBack <= 0 ? 1 : Math.Clamp(elapsed / _plan.RampBack, 0, 1);
         var smooth = t * t * (3 - 2 * t);
         _voiceB.Rate = _plan.Rate + (1 - _plan.Rate) * smooth;
-        var gainT = Math.Clamp(elapsed / 2.0, 0, 1);
-        _voiceB.TargetGain = _volumeB * (_plan.GainB + (1 - _plan.GainB) * gainT);
-        if (t < 1 || gainT < 1) return;
+        var gainT = Math.Clamp(elapsed / Math.Max(0.05, _plan.GainRelease), 0, 1);
+        var ease = EntryEase();
+        _voiceB.TargetGain = _volumeB * (_plan.GainB + (1 - _plan.GainB) * gainT) * ease;
+        if (t < 1 || gainT < 1 || ease < 1 || _tail is not null) return;
         if (_voiceB.IsStretching)
         {
             _voiceB.BeginRawBlend(0.05);
@@ -557,6 +598,30 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
         return nextContent;
     }
 
+    private void UpdateSend(int frames)
+    {
+        if (_voiceA is null || _plan.Tail == MixTail.None) return;
+        var end = _voiceA.ContentSeconds + frames / (double)_sampleRate;
+        var t = Math.Clamp((end - _plan.TailOpen) / Math.Max(1e-3, _plan.TailFull - _plan.TailOpen), 0, 1);
+        _voiceA.SendGain = t * t * (3 - 2 * t);
+        if (_plan.TailBloom > 0)
+        {
+            var bloom = Math.Clamp((end - (_plan.TailBloom - TailBloomLead)) / TailBloomSeconds, 0, 1);
+            _voiceA.WetGain = _volumeA * (TailDuck + (1 - TailDuck) * bloom);
+        }
+        if (_plan.Tail != MixTail.Echo || _voiceB is null || _voiceA.ContentIndex + 2 * frames < _cutIndexA) return;
+        _cutA = true;
+        _voiceA.SendGain = 0;
+        _voiceA.TargetGain = 0;
+    }
+
+    private double EntryEase()
+    {
+        if (_entryFadeFrames <= 0) return 1;
+        var t = Math.Clamp((_rendered - Volatile.Read(ref _startRenderedB)) / (double)_entryFadeFrames, 0, 1);
+        return 0.5 - 0.5 * Math.Cos(Math.PI * t);
+    }
+
     private void StartB(int split)
     {
         if (_voiceB is not null) return;
@@ -598,11 +663,24 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
                 }
                 break;
             case MixTechnique.FilterCut:
+                if (_plan.Tail == MixTail.Echo)
+                {
+                    _voiceA.HighPassHz = 300 * Math.Pow(8.0 / 3, x);
+                    _voiceA.TargetGain = _volumeA * (x < 0.5 ? 1 : 0.8 + 0.2 * Math.Cos((x - 0.5) / 0.5 * Math.PI));
+                    _voiceB.TargetGain = gainB * (x < 0.4 ? 0 : x < 0.9 ? Math.Sin((x - 0.4) / 0.5 * Math.PI / 2) : 1);
+                    break;
+                }
                 _voiceA.HighPassHz = 300 * Math.Pow(60, x);
                 _voiceA.TargetGain = _volumeA * (x < 0.7 ? 1 : Math.Cos((x - 0.7) / 0.3 * Math.PI / 2));
                 _voiceB.TargetGain = gainB * (x < 0.5 ? 0 : Math.Sin((x - 0.5) / 0.5 * Math.PI / 2));
                 break;
             default:
+                if (_entryFadeFrames > 0)
+                {
+                    _voiceA.TargetGain = _volumeA;
+                    _voiceB.TargetGain = gainB * EntryEase();
+                    break;
+                }
                 if (handoff < 0.1)
                 {
                     _voiceA.TargetGain = _volumeA * Math.Cos(x * Math.PI / 2);
@@ -622,8 +700,10 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     {
         _voiceA?.Dispose();
         _voiceB?.Dispose();
+        _tail?.Dispose();
         _voiceA = null;
         _voiceB = null;
+        _tail = null;
     }
 
     public void Dispose() => ReleaseVoices();
