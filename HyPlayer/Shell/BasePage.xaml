@@ -12,6 +12,21 @@
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Grid>
+        <Image
+            x:Name="CustomBackgroundImage"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsHitTestVisible="False"
+            Visibility="Collapsed" />
+        <Rectangle
+            x:Name="CustomBackgroundBlur"
+            xmlns:media="using:CommunityToolkit.WinUI.Media"
+            IsHitTestVisible="False"
+            Visibility="Collapsed">
+            <Rectangle.Fill>
+                <media:BackdropBlurBrush x:Name="CustomBackgroundBlurBrush" Amount="0" />
+            </Rectangle.Fill>
+        </Rectangle>
         <Grid x:Name="MainGrid">
             <Grid.RowDefinitions>
                 <RowDefinition Height="48" />

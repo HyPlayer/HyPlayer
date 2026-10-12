@@ -11,6 +11,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Settings.Services;
 using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.Shell.Input;
 using HyPlayer.Shell.Login;
 using HyPlayer.Shell.Navigation;
@@ -39,6 +40,7 @@ public sealed partial class BasePage : Page
         Ioc.Default.GetRequiredService<NavigationShellViewModel>();
 
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
+    private readonly AppearanceCustomizer _appearance = Ioc.Default.GetRequiredService<AppearanceCustomizer>();
     private readonly IGamepadShortcutService _gamepad =
         Ioc.Default.GetRequiredService<IGamepadShortcutService>();
     private readonly IKeyboardShortcutService _keyboardShortcuts =
@@ -65,6 +67,24 @@ public sealed partial class BasePage : Page
         _keyboardShortcuts.Attach(Window.Current.CoreWindow);
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
+        _setting.PropertyChanged += OnAppearanceSettingChanged;
+        _appearance.ApplyBackground(CustomBackgroundImage, CustomBackgroundBlur, CustomBackgroundBlurBrush);
+    }
+
+    private void OnAppearanceSettingChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(HyPlayer.Domain.Settings.UISettings.CustomUiFontFamily):
+                _appearance.ApplyFont();
+                break;
+            case nameof(HyPlayer.Domain.Settings.UISettings.BackgroundImagePath):
+            case nameof(HyPlayer.Domain.Settings.UISettings.BackgroundImageOpacity):
+            case nameof(HyPlayer.Domain.Settings.UISettings.BackgroundImageBlur):
+            case nameof(HyPlayer.Domain.Settings.UISettings.BackgroundImageStretch):
+                _appearance.ApplyBackground(CustomBackgroundImage, CustomBackgroundBlur, CustomBackgroundBlurBrush);
+                break;
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -76,6 +96,7 @@ public sealed partial class BasePage : Page
         _keyboardShortcuts.Detach(Window.Current.CoreWindow);
         Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
+        _setting.PropertyChanged -= OnAppearanceSettingChanged;
         _shellHost.ClearReference(AppTitleBar);
         if (ReferenceEquals(_teachingTip.Tip, TheTeachingTip))
             _teachingTip.Tip = null;

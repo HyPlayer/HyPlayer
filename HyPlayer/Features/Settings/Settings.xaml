@@ -886,6 +886,53 @@
                                         </TransitionCollection>
                                     </controls3:SettingsExpander.Transitions>
                                     <controls3:SettingsExpander.Items>
+                                        <controls3:SettingsCard Description="部分控件需重启应用后生效" Header="界面字体">
+                                            <ComboBox
+                                                x:Name="UiFontBox"
+                                                MinWidth="200"
+                                                HorizontalAlignment="Right"
+                                                DisplayMemberPath="Name"
+                                                SelectedValue="{x:Bind UI.CustomUiFontFamily, Mode=TwoWay}"
+                                                SelectedValuePath="Value" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="自定义主页面背景图">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <Button Click="PickBackgroundImage_Click" Content="选择图片" />
+                                                <Button
+                                                    Click="RemoveBackgroundImage_Click"
+                                                    Content="移除"
+                                                    Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}" />
+                                            </StackPanel>
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="背景图不透明度 (%)" Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}">
+                                            <Slider
+                                                Width="256"
+                                                HorizontalAlignment="Right"
+                                                Maximum="100"
+                                                Minimum="5"
+                                                StepFrequency="1"
+                                                Value="{x:Bind UI.BackgroundImageOpacity, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="背景图模糊" Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}">
+                                            <Slider
+                                                Width="256"
+                                                HorizontalAlignment="Right"
+                                                Maximum="60"
+                                                Minimum="0"
+                                                StepFrequency="1"
+                                                Value="{x:Bind UI.BackgroundImageBlur, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="背景图填充方式" Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}">
+                                            <ComboBox
+                                                MinWidth="120"
+                                                HorizontalAlignment="Right"
+                                                SelectedIndex="{x:Bind UI.BackgroundImageStretch, Mode=TwoWay}">
+                                                <ComboBoxItem Content="填充" />
+                                                <ComboBoxItem Content="适应" />
+                                                <ComboBoxItem Content="拉伸" />
+                                                <ComboBoxItem Content="原始大小" />
+                                            </ComboBox>
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Description="需重启应用" Header="无图模式">
                                             <ToggleSwitch
                                                 MinWidth="10"

@@ -310,6 +310,7 @@ internal static class HyPlayerComposition
     private static void ConfigureShellServices(IDepository depository)
     {
         depository.AddSingleton<SidebarLayout>();
+        depository.AddSingleton<AppearanceCustomizer>();
         depository.AddSingleton<NavigationShellViewModel>();
         depository.AddSingleton<IShellHostStateService, ShellHostStateService>();
         depository.AddSingleton<PlaybackSurfaceStore>();

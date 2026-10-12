@@ -35,6 +35,7 @@ using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Tiles;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Shell;
 using HyPlayer.Shell.Input;
@@ -123,6 +124,25 @@ public sealed partial class Settings : Page
         _sidebarLayout.ResetToDefault();
     }
 
+    private readonly AppearanceCustomizer _appearance = Ioc.Default.GetRequiredService<AppearanceCustomizer>();
+
+    private async void PickBackgroundImage_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await _appearance.PickBackgroundAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("设置背景图失败", ex.Message);
+        }
+    }
+
+    private async void RemoveBackgroundImage_Click(object sender, RoutedEventArgs e)
+    {
+        await _appearance.RemoveBackgroundAsync();
+    }
+
     private void TransitionMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (TransitionMode.SelectedValue is not string transitionId
@@ -168,6 +188,8 @@ public sealed partial class Settings : Page
         VersionCode.Text += " Debug";
 #endif
         FontBox.ItemsSource = GetAllFonts();
+        UiFontBox.ItemsSource = (List<FontInfo>)
+            [new FontInfo { Name = "默认", Value = string.Empty }, .. (List<FontInfo>)FontBox.ItemsSource];
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -179,6 +201,7 @@ public sealed partial class Settings : Page
         // observed as dead by a later settings change.
         Bindings.StopTracking();
         FontBox.ItemsSource = null;
+        UiFontBox.ItemsSource = null;
         _keyboardShortcuts.CancelCapture();
     }
 

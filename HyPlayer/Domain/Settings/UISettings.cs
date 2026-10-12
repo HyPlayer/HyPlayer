@@ -284,6 +284,46 @@ public partial class UISettings : SettingsBase
         set => SetSettings(nameof(SidebarLayout), value);
     }
 
+    public string CustomUiFontFamily
+    {
+        get => GetSettings(nameof(CustomUiFontFamily), string.Empty);
+        set => SetSettings(nameof(CustomUiFontFamily), value ?? string.Empty);
+    }
+
+    public string BackgroundImagePath
+    {
+        get => GetSettings(nameof(BackgroundImagePath), string.Empty);
+        set
+        {
+            if (SetSettings(nameof(BackgroundImagePath), value ?? string.Empty))
+                OnPropertyChanged(nameof(HasCustomBackground));
+        }
+    }
+
+    public bool HasCustomBackground => !string.IsNullOrEmpty(BackgroundImagePath);
+
+    public double BackgroundImageOpacity
+    {
+        get => GetSettings(nameof(BackgroundImageOpacity), 35d);
+        set => SetSettings(nameof(BackgroundImageOpacity), value);
+    }
+
+    public double BackgroundImageBlur
+    {
+        get => GetSettings(nameof(BackgroundImageBlur), 0d);
+        set => SetSettings(nameof(BackgroundImageBlur), value);
+    }
+
+    public int BackgroundImageStretch
+    {
+        get => GetSettings(nameof(BackgroundImageStretch), 0);
+        set
+        {
+            if (value >= 0)
+                SetSettings(nameof(BackgroundImageStretch), value);
+        }
+    }
+
     /// <summary>
     ///     Whether animation adapts to BPM.
     /// </summary>

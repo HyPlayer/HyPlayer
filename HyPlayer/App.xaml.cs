@@ -250,6 +250,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
             }
 
             Window.Current.Content = _rootFrame;
+            AppDepository.Resolve<HyPlayer.Platform.Xaml.AppearanceCustomizer>().ApplyFont();
         }
 
         AppDepository.Resolve<IMemoryGovernor>().Attach(Window.Current);
