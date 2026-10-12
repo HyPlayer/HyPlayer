@@ -109,6 +109,10 @@ public static class ResourceSaver
         BoolChange(nameof(UISettings.ExpandAlbumBreath), () => UI.ExpandAlbumBreath,
             value => UI.ExpandAlbumBreath = value, false);
 
+    private static SettingChange PlaybarBreathChange =>
+        BoolChange(nameof(UISettings.PlaybarBackgroundBreath), () => UI.PlaybarBackgroundBreath,
+            value => UI.PlaybarBackgroundBreath = value, false);
+
     public static void Attach()
     {
         if (_attached) return;
@@ -186,7 +190,6 @@ public static class ResourceSaver
             options.Add(new SaverOption
             {
                 Title = "将在线播放音质降为 标准 (128k)",
-                Description = "从下一次加载歌曲开始生效",
                 Changes = [AudioRateChange]
             });
         if (!UI.NoImage)
@@ -280,8 +283,11 @@ public static class ResourceSaver
                 Title = "关闭频谱可视化与音频信息输出",
                 Changes = [ShowSpectrumChange, EnableFftChange]
             });
-        if (UI.ExpandAlbumBreath)
-            options.Add(new SaverOption { Title = "关闭封面的呼吸动画", Changes = [AlbumBreathChange] });
+        var breath = new List<SettingChange>();
+        if (UI.PlaybarBackgroundBreath) breath.Add(PlaybarBreathChange);
+        if (UI.ExpandAlbumBreath) breath.Add(AlbumBreathChange);
+        if (breath.Count > 0)
+            options.Add(new SaverOption { Title = "关闭封面与播放栏的呼吸动画", Changes = [.. breath] });
         if (Api.GreedilyLoadPlayContainerItems)
             options.Add(new SaverOption { Title = "关闭歌单贪婪加载", Changes = [GreedyLoadChange] });
         return options;
@@ -503,7 +509,8 @@ public static class ResourceSaver
     {
         SettingChange[] changes =
         [
-            NoImageChange, GreedyLoadChange, AmllChange, ShowSpectrumChange, EnableFftChange, AlbumBreathChange
+            NoImageChange, GreedyLoadChange, AmllChange, ShowSpectrumChange, EnableFftChange, AlbumBreathChange,
+            PlaybarBreathChange
         ];
         var map = new Dictionary<string, SettingChange>();
         foreach (var change in changes) map[change.Key] = change;

@@ -166,16 +166,20 @@ public sealed partial class Settings : Page
         try
         {
             var used = await StorageMaintenance.GetCacheUsageAsync();
-            CacheLimitCard.Description = $"当前已使用 {StorageMaintenance.FormatSize(used)}，超出上限时自动清理最早的缓存";
+            CacheLimitCard.Description = $"当前已使用 {StorageMaintenance.FormatSize(used)}";
         }
         catch
         {
         }
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    private void CacheLimitCard_Loaded(object sender, RoutedEventArgs e)
     {
         _ = RefreshCacheUsageAsync();
+    }
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
         var kawazu = Ioc.Default.GetRequiredService<IKawazuStateService>();
         RomajiStatus.Header = kawazu.Converter == null ? "请下载Kawazu资源文件" : "可以转换";
         ButtonDownloadRomaji.Visibility = kawazu.Converter == null ? Visibility.Visible : Visibility.Collapsed;

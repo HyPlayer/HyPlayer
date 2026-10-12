@@ -21,10 +21,9 @@ public sealed class PlayBarAutoHideService : IPlayBarAutoHideService
     public int SecondCounter { get; set; }
     public bool IsVisible { get; set; } = true;
 
-    public bool IsActive => _setting.AutoHidePlaybar ||
-                            (_surfaceStore.IsExpanded &&
-                             _setting.ExpandedControlStyle == ExpandedControlStyle.HyPlayer &&
-                             _setting.ExpandedAutoCollapsePlaybar);
+    public bool IsActive => _surfaceStore.IsExpanded
+        ? _setting.ExpandedControlStyle == ExpandedControlStyle.HyPlayer && _setting.ExpandedAutoCollapsePlaybar
+        : _setting.AutoHidePlaybar;
 
     public void Tick()
     {

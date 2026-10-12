@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Threading;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Playback.Models;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Shell.Navigation.Services;
@@ -71,6 +72,9 @@ public static class FolderAccessGuard
             Ioc.Default.GetRequiredService<DownloadSettings>().CustomDownloadDirectory);
         await AddIfLostAsync(lost, "本地音乐搜索目录",
             Ioc.Default.GetRequiredService<LocalLibrarySettings>().CustomSearchDirectory);
+        var models = Ioc.Default.GetRequiredService<ModelManager>();
+        var modelFolderLost = models.IsCustomFolder && !models.IsCustomFolderAccessible;
+        if (modelFolderLost) lost.Add($"• 分析模型目录：{models.FolderPath}");
         if (lost.Count == 0) return;
 
         await Task.Delay(DialogRetryDelay);
@@ -81,7 +85,8 @@ public static class FolderAccessGuard
             {
                 TextWrapping = TextWrapping.Wrap,
                 Text = "以下自定义文件夹已失去访问权限，暂时改用默认位置：\n\n" + string.Join("\n", lost) +
-                       "\n\n在 设置 → 存储设置 中重新选择一次这些文件夹即可恢复。"
+                       "\n\n在 设置 → 存储设置 中重新选择一次这些文件夹即可恢复。" +
+                       (modelFolderLost ? "分析模型目录请在 设置 → 播放设置 → 自动混音 中重新选择。" : string.Empty)
             },
             PrimaryButtonText = "去设置",
             CloseButtonText = "稍后",

@@ -899,6 +899,12 @@
                                                 <ComboBoxItem Content="PattleCNN" />
                                             </ComboBox>
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="关闭则为RGB空间，背景取色为 PattleCNN 时不生效" Header="Impressionist (背景取色) 使用LAB空间">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Lyric.ImpressionistLABSpace, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="歌词页面渲染帧率">
                                             <controls:NumberBox
                                                 Width="64"
@@ -1429,7 +1435,8 @@
                                         <controls3:SettingsCard
                                             x:Name="CacheLimitCard"
                                             Description="超出上限时自动清理最早的缓存"
-                                            Header="最大缓存大小">
+                                            Header="最大缓存大小"
+                                            Loaded="CacheLimitCard_Loaded">
                                             <StackPanel
                                                 HorizontalAlignment="Right"
                                                 Orientation="Horizontal"
@@ -1484,7 +1491,7 @@
                                             <ComboBox
                                                 MinWidth="120"
                                                 HorizontalAlignment="Right"
-                                                AutomationProperties.Name="后台释放内存"
+                                                AutomationProperties.Name="后台释放资源"
                                                 SelectedIndex="{x:Bind UI.BackgroundReleaseIndex, Mode=TwoWay}">
                                                 <ComboBoxItem Content="30 秒" />
                                                 <ComboBoxItem Content="1 分钟" />

@@ -1206,7 +1206,8 @@ public sealed partial class ExpandedPlayer : Page
                 _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation ||
                 _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
             {
-                var palette = await ColorHelper.ExtractPaletteFromStream(stream, _uiSettings.ColorGeneratorType);
+                var palette = await ColorHelper.ExtractPaletteFromStream(stream, _uiSettings.ColorGeneratorType,
+                    _lyricSettings.ImpressionistLABSpace);
                 if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated)
                 {
                     _albumColors =

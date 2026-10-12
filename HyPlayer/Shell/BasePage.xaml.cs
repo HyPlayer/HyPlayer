@@ -160,6 +160,7 @@ public sealed partial class BasePage : Page
                 DefaultButton = ContentDialogButton.Primary
             };
             dialog.CloseButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
+            dialog.PrimaryButtonClick += (_, _) => _setting.DisablePopUp = true;
             _ = dialog.ShowAsync();
         }
 

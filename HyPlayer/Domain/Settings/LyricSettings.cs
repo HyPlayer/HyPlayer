@@ -428,4 +428,10 @@ public partial class LyricSettings : SettingsBase
             SetSettings(nameof(AutoHideLyricPanelLines), Math.Max(Math.Round(value), 0d));
         }
     }
+
+    public bool ImpressionistLABSpace
+    {
+        get => GetSettings(nameof(ImpressionistLABSpace), true);
+        set => SetSettings(nameof(ImpressionistLABSpace), value);
+    }
 }

@@ -32,6 +32,25 @@
                     <DataTemplate x:Key="ListItemTemplate" x:DataType="classes:SimpleListItem">
                         <ListViewItem CornerRadius="0" Style="{StaticResource ListViewItemStyle}">
                             <Grid Margin="0,5" HorizontalAlignment="Stretch">
+                                <frieren:ImageEx
+                                    x:Name="RectangleImageBack"
+                                    Height="82"
+                                    Margin="0"
+                                    x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ItemOfListBackgroundAcrylicBlur}"
+                                    CornerRadius="12"
+                                    IsCacheEnabled="False"
+                                    Stretch="UniformToFill">
+                                    <frieren:ImageEx.Source>
+                                        <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}" />
+                                    </frieren:ImageEx.Source>
+                                </frieren:ImageEx>
+                                <Rectangle
+                                    x:Name="RectangleImageAcrylic"
+                                    Margin="0,-1,0,-1"
+                                    x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ItemOfListBackgroundAcrylicBlur}"
+                                    Fill="{ThemeResource SystemControlAcrylicElementBrush}"
+                                    RadiusX="10"
+                                    RadiusY="10" />
                                 <Grid
                                     Grid.Column="0"
                                     Background="Transparent"
