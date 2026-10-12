@@ -10,7 +10,11 @@ public static class LevelAnalysis
     {
         var (pb, pa) = HighShelf(sampleRate);
         var (rb, ra) = HighPass(sampleRate);
-        var filtered = new double[mono.Length];
+        var block = (int)(0.4 * sampleRate);
+        var step = (int)(0.1 * sampleRate);
+        if (block <= 0 || step <= 0) return -70;
+        var recent = new double[block];
+        var powers = new List<double>();
         double x1 = 0, x2 = 0, y1 = 0, y2 = 0, u1 = 0, u2 = 0, z1 = 0, z2 = 0;
         for (var i = 0; i < mono.Length; i++)
         {
@@ -19,16 +23,14 @@ public static class LevelAnalysis
             x2 = x1; x1 = x; y2 = y1; y1 = y;
             var z = rb[0] * y + rb[1] * u1 + rb[2] * u2 - ra[1] * z1 - ra[2] * z2;
             u2 = u1; u1 = y; z2 = z1; z1 = z;
-            filtered[i] = z;
-        }
+            recent[i % block] = z;
 
-        var block = (int)(0.4 * sampleRate);
-        var step = (int)(0.1 * sampleRate);
-        var powers = new List<double>();
-        for (var start = 0; start + block <= filtered.Length; start += step)
-        {
+            var start = i + 1 - block;
+            if (start < 0 || start % step != 0) continue;
+            var head = start % block;
             double acc = 0;
-            for (var i = start; i < start + block; i++) acc += filtered[i] * filtered[i];
+            for (var k = head; k < block; k++) acc += recent[k] * recent[k];
+            for (var k = 0; k < head; k++) acc += recent[k] * recent[k];
             powers.Add(acc / block);
         }
         if (powers.Count == 0) return -70;

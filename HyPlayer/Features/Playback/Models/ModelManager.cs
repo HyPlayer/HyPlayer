@@ -613,6 +613,7 @@ public sealed partial class ModelManager : ObservableObject
             EnableCpuMemArena = false,
             EnableMemoryPattern = false
         };
+        options.AddSessionConfigEntry("session.intra_op.allow_spinning", "0");
         if (gpu)
         {
             foreach (var (name, value) in descriptor.FixedDimensions) options.AddFreeDimensionOverrideByName(name, value);

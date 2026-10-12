@@ -14,6 +14,28 @@ using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Platform.Runtime;
 
+internal enum DeferredReclaim
+{
+    Wait,
+    Run,
+    Drop
+}
+
+internal static class ReclaimPolicy
+{
+    public const int SettledPolls = 2;
+
+    public static bool IsFull(bool manual, bool playing) => manual || !playing;
+
+    public static bool AllowsBackgroundCollect(bool realtimeCallbacks, bool transitioning) => !realtimeCallbacks && !transitioning;
+
+    public static DeferredReclaim Deferred(bool pending, int pollsWithoutPlayback, bool busy, bool inactive, bool overLimit)
+    {
+        if (!pending || pollsWithoutPlayback < SettledPolls || busy) return DeferredReclaim.Wait;
+        return inactive || overLimit ? DeferredReclaim.Run : DeferredReclaim.Drop;
+    }
+}
+
 public sealed class MemoryGovernor : IMemoryGovernor
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -79,6 +101,8 @@ public sealed class MemoryGovernor : IMemoryGovernor
     private ulong _workingSetAfterReclaim;
     private volatile bool _windowInactive;
     private volatile bool _appInBackground;
+    private volatile bool _fullReclaimPending;
+    private int _pollsWithoutPlayback;
     private int _collectVersion;
 
     public MemoryGovernor(
@@ -142,7 +166,7 @@ public sealed class MemoryGovernor : IMemoryGovernor
 
     private void Collect()
     {
-        if (_player.RealtimeCallbacksActive)
+        if (!ReclaimPolicy.AllowsBackgroundCollect(_player.RealtimeCallbacksActive, _playbackState.IsTransitioning))
         {
             ScheduleNavigationReclaim();
             return;
@@ -151,7 +175,7 @@ public sealed class MemoryGovernor : IMemoryGovernor
         GC.Collect(2, GCCollectionMode.Forced, blocking: false);
     }
 
-    public Task<ulong> ReclaimAsync() => Task.Run(Reclaim);
+    public Task<ulong> ReclaimAsync() => Task.Run(() => Reclaim(true));
 
     private void OnWindowActivated(object sender, WindowActivatedEventArgs e)
     {
@@ -183,7 +207,7 @@ public sealed class MemoryGovernor : IMemoryGovernor
                 return;
             }
 
-            if (IsInactive && CooldownElapsed()) Reclaim();
+            if (IsInactive && CooldownElapsed()) Reclaim(false);
         });
     }
 
@@ -205,17 +229,34 @@ public sealed class MemoryGovernor : IMemoryGovernor
     {
         try
         {
+            _pollsWithoutPlayback = _playbackState.IsPlaying ? 0 : Math.Min(_pollsWithoutPlayback + 1, ReclaimPolicy.SettledPolls);
             var limitMb = _settings.MemoryLimitMB;
-            if (limitMb == 0 || !CooldownElapsed() || IsBusy()) return;
+            var busy = IsBusy();
+            if (_fullReclaimPending)
+            {
+                var overLimit = limitMb != 0 && WorkingSetBytes > Threshold(limitMb);
+                switch (ReclaimPolicy.Deferred(true, _pollsWithoutPlayback, busy, IsInactive, overLimit))
+                {
+                    case DeferredReclaim.Run:
+                        Reclaim(false);
+                        return;
+                    case DeferredReclaim.Drop:
+                        _fullReclaimPending = false;
+                        break;
+                }
+            }
+
+            if (limitMb == 0 || !CooldownElapsed() || busy) return;
             var workingSet = WorkingSetBytes;
             if (workingSet < _workingSetAfterReclaim + RegrowthBeforeRetry) return;
-            var threshold = limitMb > 0 ? (ulong)limitMb * MB : AutoThreshold();
-            if (workingSet > threshold) Reclaim();
+            if (workingSet > Threshold(limitMb)) Reclaim(false);
         }
         catch
         {
         }
     }
+
+    private ulong Threshold(int limitMb) => limitMb > 0 ? (ulong)limitMb * MB : AutoThreshold();
 
     private unsafe ulong AutoThreshold()
     {
@@ -229,11 +270,12 @@ public sealed class MemoryGovernor : IMemoryGovernor
         return Math.Max(2048 * MB, total / 5);
     }
 
-    private ulong Reclaim()
+    private ulong Reclaim(bool manual)
     {
         if (Interlocked.Exchange(ref _reclaiming, 1) == 1) return 0;
         var before = WorkingSetBytes;
         ulong freed = 0;
+        var full = ReclaimPolicy.IsFull(manual, _playbackState.IsPlaying);
         try
         {
             try
@@ -244,18 +286,17 @@ public sealed class MemoryGovernor : IMemoryGovernor
             {
             }
 
-            if (_playbackState.IsPlaying)
-            {
-                GC.Collect(2, GCCollectionMode.Forced, blocking: false);
-            }
-            else
+            if (full)
             {
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                 GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
                 GC.WaitForPendingFinalizers();
+                K32EmptyWorkingSet(GetCurrentProcess());
             }
-
-            K32EmptyWorkingSet(GetCurrentProcess());
+            else if (ReclaimPolicy.AllowsBackgroundCollect(_player.RealtimeCallbacksActive, _playbackState.IsTransitioning))
+            {
+                GC.Collect(2, GCCollectionMode.Forced, blocking: false);
+            }
         }
         catch
         {
@@ -269,6 +310,7 @@ public sealed class MemoryGovernor : IMemoryGovernor
                 : BaseCooldown;
             _workingSetAfterReclaim = after;
             _lastReclaim = DateTime.UtcNow;
+            _fullReclaimPending = !full;
             Volatile.Write(ref _reclaiming, 0);
         }
 

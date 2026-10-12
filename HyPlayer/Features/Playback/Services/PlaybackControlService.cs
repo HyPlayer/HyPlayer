@@ -1121,6 +1121,9 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private async Task PrefetchNextAsync(SingleSongBase current, bool prefetchAudio, CancellationToken ct)
     {
         await Task.Delay(TimeSpan.FromSeconds(8), ct).ConfigureAwait(false);
+        while (_mediaSourceService.IsTransferring(current))
+            await Task.Delay(TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
+
         if (!ReferenceEquals(_state.NowPlayingProviderItem, current))
             return;
 

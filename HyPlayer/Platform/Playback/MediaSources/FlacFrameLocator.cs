@@ -13,7 +13,7 @@ public sealed class FlacFrameLocator
     private static readonly byte[] Crc8 = BuildCrc8();
 
     private readonly IRandomAccessStream _stream;
-    private readonly byte[] _buffer = new byte[Window];
+    private byte[] _buffer = [];
     private readonly int _fixedBlockSize;
 
     private FlacFrameLocator(IRandomAccessStream stream, long audioStart, long size, int sampleRate, int minBlock, int maxBlock, long totalSamples, bool hasSeekTable)
@@ -235,6 +235,7 @@ public sealed class FlacFrameLocator
     private int Read(long offset, int count)
     {
         count = (int)Math.Min(count, Size - offset);
+        if (_buffer.Length == 0) _buffer = new byte[Window];
         var filled = 0;
         while (filled < count)
         {

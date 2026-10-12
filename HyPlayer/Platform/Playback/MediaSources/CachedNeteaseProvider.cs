@@ -48,9 +48,12 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
         ct.ThrowIfCancellationRequested();
         var playUri = resource.Uri;
         if (_downloadOperations.TryGetValue(NeteaseTrack.IdOf(song), out var pendingOperation))
+        {
+            Prioritize(pendingOperation);
             return pendingOperation.IsRandomAccessRequired || playUri is null
                 ? await CreateFromDownloadAsync(resource, pendingOperation)
                 : MediaSource.CreateFromUri(playUri);
+        }
 
         var cacheFile = await GetCacheFileAsync(song, resource, ct);
         if (cacheFile is not null)
@@ -76,6 +79,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
         var destinationFile = await CreateCacheFileAsync(song, resource);
         var operation = _downloader.CreateDownload(playUri, destinationFile);
         operation.IsRandomAccessRequired = supportsRandomAccess;
+        operation.Priority = BackgroundTransferPriority.Low;
         if (!_downloadOperations.TryAdd(NeteaseTrack.IdOf(song), operation))
             return;
 
@@ -165,6 +169,18 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
         }
     }
 
+    private static void Prioritize(DownloadOperation operation)
+    {
+        try
+        {
+            if (operation.Priority != BackgroundTransferPriority.High)
+                operation.Priority = BackgroundTransferPriority.High;
+        }
+        catch
+        {
+        }
+    }
+
     private static string GetExtension(MusicResourceBase resource)
     {
         return string.IsNullOrWhiteSpace(resource.ExtensionName)
@@ -244,12 +260,16 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
         CancellationToken ct)
     {
         if (_downloadOperations.TryGetValue(NeteaseTrack.IdOf(song), out var existingOperation))
+        {
+            Prioritize(existingOperation);
             return await CreateFromDownloadAsync(resource, existingOperation);
+        }
 
         var supportsRandomAccess = await SupportsRandomAccessAsync(playUri, ct);
         var destinationFile = await CreateCacheFileAsync(song, resource);
         var operation = _downloader.CreateDownload(playUri, destinationFile);
         operation.IsRandomAccessRequired = supportsRandomAccess;
+        operation.Priority = BackgroundTransferPriority.High;
         _downloadOperations[NeteaseTrack.IdOf(song)] = operation;
         StartTransfer(NeteaseTrack.IdOf(song), operation);
 

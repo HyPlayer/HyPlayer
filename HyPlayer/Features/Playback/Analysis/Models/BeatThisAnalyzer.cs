@@ -38,11 +38,11 @@ public sealed class BeatThisAnalyzer : IBeatAnalyzer
     {
         if (sampleRate != SampleRate || mono.Length < SampleRate * 5) return null;
         await EnsureFilterbankAsync();
-        var spect = await Task.Run(() => MelSpectrogram(mono, ct), ct);
+        var spect = await AnalysisWorker.Run(() => MelSpectrogram(mono, ct), ct);
         var frames = spect.Length / Bins;
         float[] beatLogits, downLogits;
         using (var lease = await _models.AcquireSessionAsync(ModelCatalog.BeatThisId))
-            (beatLogits, downLogits) = await Task.Run(() => Infer(lease.Session, spect, frames, ct), ct);
+            (beatLogits, downLogits) = await AnalysisWorker.Run(() => Infer(lease.Session, spect, frames, ct), ct);
 
         var peaks = PickPeaks(beatLogits);
         if (peaks.Count < 8) return null;

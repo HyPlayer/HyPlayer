@@ -30,7 +30,7 @@ public sealed class SKeyAnalyzer : IKeyAnalyzer
         var length = Math.Min(mono.Length, SampleRate * MaxSeconds);
         var start = (mono.Length - length) / 2;
         using var lease = await _models.AcquireSessionAsync(ModelCatalog.SKeyId);
-        var scores = await Task.Run(() =>
+        var scores = await AnalysisWorker.Run(() =>
         {
             ct.ThrowIfCancellationRequested();
             var input = new DenseTensor<float>(mono.AsMemory(start, length), [1, length]);

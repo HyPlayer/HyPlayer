@@ -33,8 +33,11 @@ public sealed class MdxVocalAnalyzer : IVocalAnalyzer
     {
         if (sampleRate != SampleRate || stereo.Length < SampleRate * 2 * 3) return null;
         using var lease = await _models.AcquireSessionAsync(ModelCatalog.VocalId);
-        var (vocal, mix) = await Task.Run(() => Separate(lease.Session, stereo, ct), ct);
-        return Measure(vocal, mix, offsetSeconds);
+        return await AnalysisWorker.Run(() =>
+        {
+            var (vocal, mix) = Separate(lease.Session, stereo, ct);
+            return Measure(vocal, mix, offsetSeconds);
+        }, ct);
     }
 
     private static (double[] vocal, double[] mix) Separate(InferenceSession session, float[] stereo, CancellationToken ct)

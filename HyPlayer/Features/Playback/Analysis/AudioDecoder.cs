@@ -21,6 +21,8 @@ public sealed class PcmBuffer
 
 public static class AudioDecoder
 {
+    private static readonly TimeSpan StopMargin = TimeSpan.FromSeconds(0.5);
+
     public static async Task<uint> GetNativeSampleRateAsync(IRandomAccessStream source)
     {
         var profile = await MediaEncodingProfile.CreateFromStreamAsync(source.CloneStream());
@@ -31,6 +33,7 @@ public static class AudioDecoder
     {
         if (sampleRate == 0) sampleRate = await GetNativeSampleRateAsync(source);
         var transcoder = new MediaTranscoder { TrimStartTime = start, HardwareAccelerationEnabled = false };
+        if (length > TimeSpan.Zero) transcoder.TrimStopTime = start + length + StopMargin;
         var profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.High);
         profile.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channels, 32);
         profile.Audio.Subtype = MediaEncodingSubtypes.Float;
