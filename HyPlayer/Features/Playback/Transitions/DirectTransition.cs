@@ -23,6 +23,11 @@ public sealed class DirectTransition : ITrackTransition
         return Task.CompletedTask;
     }
 
+    public Task OnQueueChangedAsync(CancellationToken ct)
+    {
+        return Task.CompletedTask;
+    }
+
     public Task CancelAsync(CancellationToken ct)
     {
         return Task.CompletedTask;

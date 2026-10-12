@@ -537,6 +537,15 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind Playback.PlaybackFade, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="歌曲无法获取音源或打开失败时的处理方式，加载超时始终停下并提示" Header="播放失败时">
+                                            <ComboBox
+                                                MinWidth="180"
+                                                HorizontalAlignment="Right"
+                                                SelectedIndex="{x:Bind Playback.PlaybackFailureAction, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                                <ComboBoxItem Content="自动跳到下一首" />
+                                                <ComboBoxItem Content="停下并提示" />
+                                            </ComboBox>
+                                        </controls3:SettingsCard>
                                     </controls3:SettingsExpander.Items>
                                 </controls3:SettingsExpander>
 

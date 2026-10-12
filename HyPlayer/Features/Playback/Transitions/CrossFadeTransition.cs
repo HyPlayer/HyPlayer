@@ -147,6 +147,15 @@ public sealed class CrossFadeTransition : ITrackTransition
             await _preloader.DiscardAsync().ConfigureAwait(false);
     }
 
+    public async Task OnQueueChangedAsync(CancellationToken ct)
+    {
+        if (_fade is { Promotion: null } fade)
+            await AbortAsync(fade).ConfigureAwait(false);
+        if (_fade is null)
+            await SettleAsync().ConfigureAwait(false);
+        await _preloader.DiscardAsync().ConfigureAwait(false);
+    }
+
     public async Task CancelAsync(CancellationToken ct)
     {
         await StopFadeAsync().ConfigureAwait(false);

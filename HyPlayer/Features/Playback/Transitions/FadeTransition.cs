@@ -99,6 +99,12 @@ public sealed class FadeTransition : ITrackTransition
             await _preloader.DiscardAsync().ConfigureAwait(false);
     }
 
+    public async Task OnQueueChangedAsync(CancellationToken ct)
+    {
+        await SettlePromotionAsync().ConfigureAwait(false);
+        await _preloader.DiscardAsync().ConfigureAwait(false);
+    }
+
     public async Task CancelAsync(CancellationToken ct)
     {
         await SettlePromotionAsync().ConfigureAwait(false);

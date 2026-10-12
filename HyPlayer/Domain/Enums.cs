@@ -55,6 +55,12 @@ public enum OccupySolution
     UpdateInfo = 3
 }
 
+public enum PlaybackFailureAction
+{
+    SkipToNext = 0,
+    Stop = 1
+}
+
 public enum LyricAlignment
 {
     Left = 0,

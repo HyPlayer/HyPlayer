@@ -24,6 +24,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     private static readonly TimeSpan _catchUpTime = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan _restoreTime = TimeSpan.FromMilliseconds(200);
     private static readonly TimeSpan _forcedHandBackTime = TimeSpan.FromMilliseconds(60);
+    private const double RetryLeadSeconds = 6;
 
     private readonly AutoMixSettings _settings;
     private readonly IPlayer _player;
@@ -32,6 +33,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly NextTrackPreloader _preloader = new();
     private readonly CrossFadeTransition _fallback;
+    private readonly MixRetryBudget _retries = new();
 
     private IPlaybackSource? _analyzedFor;
     private TransitionPreparedTrack? _plannedFor;
@@ -51,6 +53,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     private bool _planHadVocals;
     private volatile bool _planBlocked;
     private volatile bool _reloadIncoming;
+    private volatile bool _replan;
     private volatile IPlaybackSource? _blockedFor;
     private SingleSongBase? _reloadedIncoming;
     private long _decodeRetryAfter;
@@ -107,6 +110,12 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         {
             _reloadIncoming = false;
             await _preloader.DiscardAsync().ConfigureAwait(false);
+        }
+
+        if (_replan)
+        {
+            _replan = false;
+            _plan = null;
         }
 
         await _preloader.PrepareAsync(context, _preloadLead, ct).ConfigureAwait(false);
@@ -208,6 +217,20 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         _plannedFor = null;
         _analysisB = null;
         _vocalsB = null;
+    }
+
+    public async Task OnQueueChangedAsync(CancellationToken ct)
+    {
+        if (Volatile.Read(ref _session) is { Promotion: not null })
+            return;
+
+        if (Volatile.Read(ref _session) is null && _fallback.IsActive)
+        {
+            await _fallback.OnQueueChangedAsync(ct).ConfigureAwait(false);
+            return;
+        }
+
+        await CancelAsync(ct).ConfigureAwait(false);
     }
 
     public async Task CancelAsync(CancellationToken ct)
@@ -350,7 +373,8 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         if (_plan is not { } plan || prepared is null)
             return;
 
-        if (remaining <= context.CrossFadeDuration + TimeSpan.FromMilliseconds(500))
+        if (remaining <= context.CrossFadeDuration + TimeSpan.FromMilliseconds(500)
+            || _retries.HasFailed(context.Source) && !CanPrepareRetry(context.Position.TotalSeconds, plan.AExit))
         {
             AutoMixLog.Write("mix could not be prepared in time, using crossfade");
             _planBlocked = true;
@@ -824,6 +848,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     private async Task AbortAsync(MixSession session)
     {
         var engine = session.Engine;
+        session.Cancelled = true;
         engine.RequestAbort();
         for (var i = 0; i < 20 && engine.Stage is not (AutoMixStage.Aborted or AutoMixStage.Done); i++)
             await Task.Delay(15).ConfigureAwait(false);
@@ -902,8 +927,29 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             return;
         }
 
-        _blockedFor = session.Outgoing;
-        _planBlocked = true;
+        if (session.Cancelled)
+        {
+            _blockedFor = session.Outgoing;
+            _planBlocked = true;
+        }
+        else
+        {
+            var failures = _retries.RegisterFailure(session.Outgoing);
+            if (failures <= MixRetryBudget.MaxRetries)
+            {
+                AutoMixLog.Write($"transition aborted, retrying mix ({failures}/{MixRetryBudget.MaxRetries})");
+                Interlocked.Increment(ref _epoch);
+                Volatile.Write(ref _pending, null);
+                _replan = true;
+            }
+            else
+            {
+                AutoMixLog.Write($"transition aborted after {MixRetryBudget.MaxRetries} retries, using crossfade for this track");
+                _blockedFor = session.Outgoing;
+                _planBlocked = true;
+            }
+        }
+
         _ = session.Host.RampVolumeAsync(session.Outgoing, engine.NodeVolumeA, _restoreTime);
         if (session.KeepPrepared)
         {
@@ -942,6 +988,8 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         _planBlocked = false;
         _blockedFor = null;
         _reloadIncoming = false;
+        _replan = false;
+        _retries.Reset();
         _plannedFor = null;
         _analyzedFor = null;
         _aheadFor = null;
@@ -957,6 +1005,50 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         _disposed = true;
         Volatile.Read(ref _session)?.Timer?.Dispose();
         _cts.Cancel();
+    }
+
+    internal static bool CanPrepareRetry(double positionSeconds, double exitSeconds)
+    {
+        return positionSeconds <= exitSeconds - RetryLeadSeconds;
+    }
+
+    internal sealed class MixRetryBudget
+    {
+        internal const int MaxRetries = 2;
+        private readonly object _sync = new();
+        private object? _track;
+        private int _failures;
+
+        public int RegisterFailure(object track)
+        {
+            lock (_sync)
+            {
+                if (!ReferenceEquals(_track, track))
+                {
+                    _track = track;
+                    _failures = 0;
+                }
+
+                return ++_failures;
+            }
+        }
+
+        public bool HasFailed(object track)
+        {
+            lock (_sync)
+            {
+                return _failures > 0 && ReferenceEquals(_track, track);
+            }
+        }
+
+        public void Reset()
+        {
+            lock (_sync)
+            {
+                _track = null;
+                _failures = 0;
+            }
+        }
     }
 
     private sealed record PendingMix(
@@ -983,6 +1075,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         public int Supervising;
         public volatile bool MapBusy;
         public volatile bool KeepPrepared;
+        public volatile bool Cancelled;
         public bool Transitioning;
         public bool CommitFailed;
         public bool OutgoingSettled;

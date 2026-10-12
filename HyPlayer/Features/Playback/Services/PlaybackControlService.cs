@@ -13,6 +13,7 @@ using Depository.Abstraction.Interfaces;
 using Depository.Abstraction.Interfaces.NotificationHub;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.Threading;
+using HyPlayer.Domain;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Netease.Legacy;
@@ -821,6 +822,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                         CancellationToken.None)
                     .ConfigureAwait(false);
             }
+            catch (Exception ex) when (opensSource && ex is not OperationCanceledException)
+            {
+                await PublishOpenFailureAsync(song!, ex).ConfigureAwait(false);
+                return;
+            }
             finally
             {
                 _audioService.FadeInNextPlay(TimeSpan.Zero);
@@ -1058,7 +1064,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         await _transitionGate.WaitAsync().ConfigureAwait(false);
         try
         {
-            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+            await _activeTransition.OnQueueChangedAsync(CancellationToken.None).ConfigureAwait(false);
         }
         finally
         {
@@ -1230,17 +1236,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _currentSource = null;
-            _playbackGeneration++;
-            _state.IsPlaying = false;
-            await _playCoreNotificationHub.PublishNotificationAsync(
-                new PlaybackRequestFailedNotification
-                {
-                    Song = song,
-                    Reason = ex.Message,
-                    Exception = ex
-                },
-                CancellationToken.None).ConfigureAwait(false);
+            await PublishOpenFailureAsync(song, ex).ConfigureAwait(false);
             return;
         }
         finally
@@ -1260,6 +1256,21 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
         _state.IsPlaying = _playCore.CurrentPlayingTicket is not null;
         CaptureCurrentPlaybackIdentity();
+    }
+
+    private async Task PublishOpenFailureAsync(SingleSongBase song, Exception ex)
+    {
+        _currentSource = null;
+        _playbackGeneration++;
+        _state.IsPlaying = false;
+        await _playCoreNotificationHub.PublishNotificationAsync(
+            new PlaybackRequestFailedNotification
+            {
+                Song = song,
+                Reason = ex.Message,
+                Exception = ex
+            },
+            CancellationToken.None).ConfigureAwait(false);
     }
 
     private void BeginTrackLoading()
@@ -1489,11 +1500,11 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         if (!IsCurrentPlaybackFailure(notification.Song))
             return Task.CompletedTask;
 
-        _taskRunner.Forget(AutoSkipPlaybackFailureAsync(notification), "auto skip failed playback request");
+        _taskRunner.Forget(HandlePlaybackFailureAsync(notification), "handle failed playback request");
         return Task.CompletedTask;
     }
 
-    private async Task AutoSkipPlaybackFailureAsync(PlaybackRequestFailedNotification notification)
+    private async Task HandlePlaybackFailureAsync(PlaybackRequestFailedNotification notification)
     {
         if (!await _autoSkipLock.WaitAsync(0).ConfigureAwait(false))
             return;
@@ -1503,11 +1514,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             if (!IsCurrentPlaybackFailure(notification.Song))
                 return;
 
-            var failedName = notification.Song?.Name;
-            if (notification.Exception is { } failure)
-                _notification.ShowMessage("歌曲播放失败", $"{failedName}: {failure.Message}");
-            else
-                _notification.ShowMessage("歌曲无法播放", $"未能获取 {failedName} 的音源");
+            AnnouncePlaybackFailure(notification.Song, notification.Exception);
+            if (StopsOnPlaybackFailure)
+            {
+                await StopFailedPlaybackAsync(notification.Song).ConfigureAwait(false);
+                return;
+            }
 
             var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
             if (queue.Count == 0)
@@ -1523,6 +1535,14 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
                 if (_playCore.CurrentPlayingTicket is not null || _loadTimedOut)
                     return;
+
+                if (StopsOnPlaybackFailure)
+                {
+                    var stoppedAt = _state.NowPlayingProviderItem;
+                    AnnouncePlaybackFailure(stoppedAt, null);
+                    await StopFailedPlaybackAsync(stoppedAt).ConfigureAwait(false);
+                    return;
+                }
 
                 failuresObserved++;
                 queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
@@ -1546,6 +1566,33 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         finally
         {
             _autoSkipLock.Release();
+        }
+    }
+
+    private bool StopsOnPlaybackFailure => _playbackSettings.PlaybackFailureAction == PlaybackFailureAction.Stop;
+
+    private void AnnouncePlaybackFailure(SingleSongBase? failedSong, Exception? failure)
+    {
+        if (failure is not null)
+            _notification.ShowMessage("歌曲播放失败", $"{failedSong?.Name}: {failure.Message}");
+        else
+            _notification.ShowMessage("歌曲无法播放", $"未能获取 {failedSong?.Name} 的音源");
+    }
+
+    private async Task StopFailedPlaybackAsync(SingleSongBase? failedSong)
+    {
+        await _transitionGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (!IsCurrentPlaybackFailure(failedSong) || IsCurrentTicketSource(_currentSource))
+                return;
+
+            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+            await StopCoreAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+        finally
+        {
+            _transitionGate.Release();
         }
     }
 

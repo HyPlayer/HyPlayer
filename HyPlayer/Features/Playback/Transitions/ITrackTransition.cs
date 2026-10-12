@@ -13,5 +13,6 @@ public interface ITrackTransition
     Task OnPositionChangedAsync(TrackTransitionContext context, CancellationToken ct);
     Task OnTrackCompletedAsync(TrackTransitionContext context, CancellationToken ct);
     Task OnSeekAsync(TrackTransitionContext context, TimeSpan target, CancellationToken ct);
+    Task OnQueueChangedAsync(CancellationToken ct);
     Task CancelAsync(CancellationToken ct);
 }

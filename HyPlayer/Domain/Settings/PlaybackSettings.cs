@@ -91,6 +91,12 @@ public partial class PlaybackSettings : SettingsBase
         set => SetSettings(nameof(RememberPlaybackPosition), value);
     }
 
+    public PlaybackFailureAction PlaybackFailureAction
+    {
+        get => GetSettings(nameof(PlaybackFailureAction), PlaybackFailureAction.SkipToNext);
+        set => SetSettings(nameof(PlaybackFailureAction), value);
+    }
+
     /// <summary>
     ///     Duration of crossfade in seconds.
     /// </summary>

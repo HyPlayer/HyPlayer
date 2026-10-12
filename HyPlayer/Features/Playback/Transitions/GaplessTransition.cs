@@ -89,6 +89,11 @@ public sealed class GaplessTransition : ITrackTransition
             await _preloader.DiscardAsync().ConfigureAwait(false);
     }
 
+    public Task OnQueueChangedAsync(CancellationToken ct)
+    {
+        return CancelAsync(ct);
+    }
+
     public async Task CancelAsync(CancellationToken ct)
     {
         await SettlePromotionAsync().ConfigureAwait(false);
