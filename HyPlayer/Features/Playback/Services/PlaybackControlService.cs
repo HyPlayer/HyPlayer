@@ -14,6 +14,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Transitions;
+using HyPlayer.Features.Settings.Services;
 using HyPlayer.Platform.Playback.AudioServices;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.PlayCore.Abstraction;
@@ -24,6 +25,7 @@ using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
+using LocalPlaybackProvider = HyPlayer.Platform.Playback.LocalProvider.LocalProvider;
 
 namespace HyPlayer.Features.Playback.Services;
 
@@ -65,6 +67,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private CancellationTokenSource? _lyricCts;
     private CancellationTokenSource? _playbackCts;
     private long _playbackGeneration;
+    private const long PrepareRetryDelayMilliseconds = 8000;
+    private long _prepareRetryAfter;
     private SystemMediaTransportControls? _smtc;
     private bool _smtcSubscribed;
 
@@ -219,7 +223,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         CancellationToken ct)
     {
         if (!IsCurrentGeneration(context.Source, context.Generation)
-            || !context.CanPreload)
+            || !context.CanPreload
+            || Environment.TickCount64 < _prepareRetryAfter)
             return null;
 
         var queue = await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false);
@@ -239,9 +244,23 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         if (nextSong is null)
             return null;
 
-        var ticket = await _playCore.PreparePlaybackAsync(nextSong, ct).ConfigureAwait(false);
+        PreparedPlaybackTicket? ticket;
+        try
+        {
+            ticket = await _playCore.PreparePlaybackAsync(nextSong, ct).ConfigureAwait(false);
+        }
+        catch
+        {
+            _prepareRetryAfter = Environment.TickCount64 + PrepareRetryDelayMilliseconds;
+            throw;
+        }
+
         if (ticket is null)
+        {
+            _prepareRetryAfter = Environment.TickCount64 + PrepareRetryDelayMilliseconds;
             return null;
+        }
+
         if (queueRevision != _state.QueueRevision
             || !IsCurrentGeneration(context.Source, context.Generation))
         {
@@ -926,7 +945,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         if (!autoPlay)
             return;
 
+        var loadStarted = Stopwatch.GetTimestamp();
         await _playCore.PlayAsync(ct).ConfigureAwait(false);
+        if (song.ProviderId != LocalPlaybackProvider.ProviderIdValue)
+            ResourceSaver.ReportLoad(Stopwatch.GetElapsedTime(loadStarted));
         _state.IsPlaying = _playCore.CurrentPlayingTicket is not null;
         CaptureCurrentPlaybackIdentity();
     }

@@ -180,6 +180,30 @@ public partial class PlaybackSettings : SettingsBase
         set => SetSettings(nameof(ActiveStrategyId), value);
     }
 
+    public bool PromptWeakNetwork
+    {
+        get => GetSettings(nameof(PromptWeakNetwork), true);
+        set => SetSettings(nameof(PromptWeakNetwork), value);
+    }
+
+    public bool PromptPowerSaving
+    {
+        get => GetSettings(nameof(PromptPowerSaving), true);
+        set => SetSettings(nameof(PromptPowerSaving), value);
+    }
+
+    public string WeakNetworkBackup
+    {
+        get => GetSettings(nameof(WeakNetworkBackup), string.Empty);
+        set => SetSettings(nameof(WeakNetworkBackup), value);
+    }
+
+    public string PowerSavingBackup
+    {
+        get => GetSettings(nameof(PowerSavingBackup), string.Empty);
+        set => SetSettings(nameof(PowerSavingBackup), value);
+    }
+
     // TODO(settings-applier): PlaybackSettings still applies several playback side effects directly
     // (EnableAudioGain, AudioRenderDevice, EnableFFT/ShowSpectrum).
     // Keep the current behavior for compatibility; migrate these setters behind a dedicated

@@ -22,6 +22,7 @@ using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Settings.Services;
 using HyPlayer.Features.Widgets.Services;
 using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Runtime.Background;
@@ -252,6 +253,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
         }
 
         AppDepository.Resolve<IMemoryGovernor>().Attach(Window.Current);
+        ResourceSaver.Attach();
 
         // 直接启动
         if (args is LaunchActivatedEventArgs)

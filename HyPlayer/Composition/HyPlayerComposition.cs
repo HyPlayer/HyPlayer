@@ -18,7 +18,9 @@ using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Playback.Transitions;
+using HyPlayer.Features.Settings.Services;
 using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Network;
 using HyPlayer.Platform.Playback.AudioServices;
 using HyPlayer.Platform.Playback.LocalProvider;
 using HyPlayer.Platform.Runtime;
@@ -81,7 +83,12 @@ internal static class HyPlayerComposition
         depository.AddSingleton<Setting>(legacySettings);
 
         var neteaseProvider = new NeteaseProvider.NeteaseProvider();
-        var client = neteaseProvider.ConfigureHttpClient(apiSettings.EnableProxy);
+        neteaseProvider.ConfigureHttpClient(apiSettings.EnableProxy);
+        var client = new HttpClient(
+            new NetworkWatchHandler(
+                NeteaseApi.NeteaseCloudMusicApiHandler.HttpClientHandler,
+                ResourceSaver.ReportRequest));
+        neteaseProvider.Handler.HttpClient = client;
 
         ConfigureProviders(depository, neteaseProvider, client);
         ConfigurePlayCore(depository);
