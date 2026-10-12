@@ -195,13 +195,15 @@ public partial class LyricSettings : SettingsBase
         set => SetSettings(nameof(EnableAmllTtmlDb), value);
     }
 
+    public const string DefaultAmllTtmlMirrorUrl =
+        "https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/[NCM_ID].ttml";
+
     /// <summary>
     ///     AMLL TTML mirror URL.
     /// </summary>
     public string AmllTtmlMirrorUrl
     {
-        get => GetSettings(nameof(AmllTtmlMirrorUrl),
-            "https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/[NCM_ID].ttml");
+        get => GetSettings(nameof(AmllTtmlMirrorUrl), DefaultAmllTtmlMirrorUrl);
         set => SetSettings(nameof(AmllTtmlMirrorUrl), value);
     }
 
