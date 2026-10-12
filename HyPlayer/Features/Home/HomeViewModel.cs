@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using HyPlayer.Application.State;
+using HyPlayer.Domain;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Netease.Legacy;
@@ -127,6 +128,15 @@ public partial class HomeViewModel : ObservableObject
             : [];
     }
 
+    private static string GetCardCoverUrl(Uri? coverUri)
+    {
+        if (coverUri is null) return string.Empty;
+        var url = coverUri.ToString();
+        return url.StartsWith("http", StringComparison.OrdinalIgnoreCase) && !url.Contains('?')
+            ? url + "?param=" + StaticSource.PicSizeHomeCardCover
+            : url;
+    }
+
     private static async Task<HomeContainerCardViewModel> CreateContainerCardAsync(ContainerBase container)
     {
         var creators = container is IHasCreators creatorsProvider
@@ -142,7 +152,7 @@ public partial class HomeViewModel : ObservableObject
             Container = container,
             Name = container.Name,
             ActualId = container.ActualId,
-            CoverUrl = coverUri?.ToString() ?? string.Empty,
+            CoverUrl = GetCardCoverUrl(coverUri),
             CreatorName = creators?.FirstOrDefault()?.Name ?? string.Empty,
             Description = container is IHasDescription descriptionProvider
                 ? descriptionProvider.Description ?? string.Empty

@@ -9,6 +9,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using HyPlayer.Features.Account.Services;
+using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Shell.Playback;
@@ -302,7 +303,10 @@ public sealed class KeyboardShortcutService : IKeyboardShortcutService
                 _playback.TogglePlayPause();
                 return true;
             case KeyboardShortcutAction.PreviousTrack:
-                _backgroundTasks.Forget(_playback.MovePreviousAndPlayAsync(), "keyboard previous track");
+                if (_playbackState.IsInFm)
+                    PersonalFM.ExitFm();
+                else
+                    _backgroundTasks.Forget(_playback.MovePreviousAndPlayAsync(), "keyboard previous track");
                 return true;
             case KeyboardShortcutAction.NextTrack:
                 _backgroundTasks.Forget(_playback.MoveNextAndPlayAsync(true), "keyboard next track");

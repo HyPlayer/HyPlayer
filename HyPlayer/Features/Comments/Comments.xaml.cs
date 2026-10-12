@@ -300,7 +300,8 @@ public sealed partial class Comments : Page
             BackToTop.Visibility = Visibility.Visible;
         else BackToTop.Visibility = Visibility.Collapsed;
         if (DateTime.UtcNow < _suppressHotSwitchUntil) return;
-        if ((sender?.As<ScrollViewer>()).VerticalOffset < 15)
+        if ((sender?.As<ScrollViewer>()).VerticalOffset < 15 &&
+            AllCommentsContainer.Visibility == Visibility.Visible)
         {
             var delayedUiVersion = _delayedUiVersion;
             var delay = TimeSpan.FromMilliseconds(90); //先别急，如果是回到顶部触发的会滚回去一点
@@ -386,6 +387,10 @@ public sealed partial class Comments : Page
 
     private void ShiftCommentList(bool direction)
     {
+        if (direction
+                ? AllCommentsContainer.Visibility == Visibility.Visible
+                : HotCommentsContainer.Visibility == Visibility.Visible)
+            return;
         _isShiftingPage = true;
         if (direction)
         {
