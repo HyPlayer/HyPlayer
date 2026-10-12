@@ -39,7 +39,10 @@
                 x:Name="ItemContainer"
                 Grid.Row="1"
                 Margin="-15,0,0,0"
-                Container="{x:Bind ViewModel.ContentContainer, Mode=OneWay}" />
+                Container="{x:Bind ViewModel.ContentContainer, Mode=OneWay}"
+                ContainerLoad="{x:Bind ViewModel.Load}"
+                EmptyText="这里还没有收藏"
+                LoadingText="正在加载收藏…" />
         </Grid>
     </Grid>
 

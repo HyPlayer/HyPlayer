@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.Application.Loading;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -149,8 +151,20 @@ public sealed partial class SwitchingIncrementalSource<T> : IIncrementalSource<T
         using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
             cancellationToken,
             sourceCancellation);
-        var items = await source.GetPagedItemsAsync(pageIndex, pageSize, linkedCancellation.Token);
+        var probe = LoadRequestProbe.Begin();
+        IEnumerable<T> items;
+        try
+        {
+            items = await source.GetPagedItemsAsync(pageIndex, pageSize, linkedCancellation.Token);
+        }
+        catch (OperationCanceledException exception) when (!linkedCancellation.IsCancellationRequested)
+        {
+            throw new TimeoutException(exception.Message, exception);
+        }
+
         linkedCancellation.Token.ThrowIfCancellationRequested();
+        if (!items.Any())
+            probe.ThrowIfFailed();
 
         lock (_gate)
             return generation == _generation ? items : [];

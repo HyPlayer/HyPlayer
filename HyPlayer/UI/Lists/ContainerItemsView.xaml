@@ -10,6 +10,7 @@
     xmlns:lists="using:HyPlayer.UI.Lists"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:uiControls="using:HyPlayer.UI.Controls"
     x:Name="Root"
     d:DesignHeight="300"
     Loaded="ContainerItemsView_Loaded"
@@ -133,6 +134,13 @@
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         Text="{x:Bind State.LoadingMoreText, Mode=OneWay}"
                         Visibility="{x:Bind State.IsLoadingMore, Mode=OneWay}" />
+                    <TextBlock
+                        Margin="0,0,0,8"
+                        HorizontalAlignment="Center"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="{x:Bind State.LoadMoreFailureText, Mode=OneWay}"
+                        TextWrapping="Wrap"
+                        Visibility="{x:Bind State.HasLoadMoreFailure, Mode=OneWay}" />
                     <Button
                         x:Name="LoadMoreButton"
                         HorizontalAlignment="Center"
@@ -383,25 +391,15 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <StackPanel
+        <uiControls:LoadStateView
             x:Name="LoadingPanel"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            IsHitTestVisible="False"
-            Spacing="14"
-            Visibility="Collapsed">
-            <StackPanel.RenderTransform>
+            RingSize="44"
+            State="{x:Bind State.ActiveLoad, Mode=OneWay}">
+            <uiControls:LoadStateView.RenderTransform>
                 <TranslateTransform x:Name="LoadingPanelOffset" />
-            </StackPanel.RenderTransform>
-            <ProgressRing
-                x:Name="LoadingRing"
-                Width="44"
-                Height="44"
-                IsActive="False" />
-            <TextBlock
-                x:Name="LoadingTextBlock"
-                HorizontalAlignment="Center"
-                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-        </StackPanel>
+            </uiControls:LoadStateView.RenderTransform>
+        </uiControls:LoadStateView>
     </Grid>
 </UserControl>

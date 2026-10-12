@@ -7,6 +7,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Music;
@@ -80,7 +81,7 @@ public sealed partial class PlaylistItem : UserControl
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("公开歌单失败", ex.Message);
+            _notification.ShowFailure("公开歌单失败", ex);
         }
     }
 
@@ -95,7 +96,7 @@ public sealed partial class PlaylistItem : UserControl
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("删除歌单失败", ex.Message);
+            _notification.ShowFailure("删除歌单失败", ex);
         }
     }
 

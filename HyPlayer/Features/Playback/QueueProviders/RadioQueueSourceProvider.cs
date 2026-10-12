@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
@@ -76,7 +77,7 @@ internal sealed class RadioQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _notification.ShowMessage("AppendRadioList时发生错误", ex.Message);
+            _notification.ShowFailure("加载电台节目失败", ex);
         }
 
         return ProviderQueueSourceLoadResult.Failed;

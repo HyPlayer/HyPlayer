@@ -46,7 +46,8 @@
             Container="{x:Bind ViewModel.PlayList, Mode=OneWay}"
             ExtraItemActions="{x:Bind ItemActions}"
             GreedyLoad="{x:Bind ViewModel.GreedyLoad, Mode=OneWay}"
-            IsLoading="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
+            ContainerLoad="{x:Bind ViewModel.PageLoad}"
+            EmptyText="歌单里还没有歌曲"
             IsMySongList="{x:Bind ViewModel.IsMySongList, Mode=OneWay}"
             IsSearchEnabled="True"
             LoadingText="正在加载歌曲…">

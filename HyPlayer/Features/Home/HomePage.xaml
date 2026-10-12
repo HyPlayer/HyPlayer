@@ -380,6 +380,10 @@
                                             </ItemsPanelTemplate>
                                         </ListView.ItemsPanel>
                                     </ListView>
+                                    <controls:LoadStateView
+                                        Grid.Row="1"
+                                        MinHeight="148"
+                                        State="{x:Bind ViewModel.OfficialLoad}" />
                                 </Grid>
                                 <Grid Grid.Row="1" Margin="8,16">
                                     <Grid.RowDefinitions>
@@ -408,6 +412,10 @@
                                             </ItemsPanelTemplate>
                                         </ListView.ItemsPanel>
                                     </ListView>
+                                    <controls:LoadStateView
+                                        Grid.Row="1"
+                                        MinHeight="148"
+                                        State="{x:Bind ViewModel.RecommendedPlaylistLoad}" />
                                 </Grid>
                             </Grid>
 
@@ -469,6 +477,11 @@
                                         SelectedPageIndex="{x:Bind RecommendedSongsFlipView.SelectedIndex, Mode=OneWay}" />
 
                                 </StackPanel>
+                                <controls:LoadStateView
+                                    Grid.Row="1"
+                                    Height="380"
+                                    VerticalAlignment="Top"
+                                    State="{x:Bind ViewModel.RecommendedSongsLoad}" />
                             </Grid>
                         </Grid>
                         <Grid Grid.Row="2" Margin="8,16">
@@ -498,6 +511,10 @@
                                     </ItemsPanelTemplate>
                                 </ListView.ItemsPanel>
                             </ListView>
+                            <controls:LoadStateView
+                                Grid.Row="1"
+                                MinHeight="148"
+                                State="{x:Bind ViewModel.ToplistLoad}" />
                         </Grid>
                     </Grid>
                 </Grid>

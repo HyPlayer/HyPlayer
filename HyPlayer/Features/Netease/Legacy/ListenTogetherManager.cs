@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Playback.Services;
@@ -130,7 +131,7 @@ internal sealed class ListenTogetherManager
         }
         catch (Exception ex)
         {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取一起听房间信息失败", ex.Message);
+            Ioc.Default.GetRequiredService<INotificationService>().ShowFailure("获取一起听房间信息失败", ex);
             return false;
         }
     }

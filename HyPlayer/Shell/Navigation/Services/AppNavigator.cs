@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Domain.Music;
@@ -395,11 +396,14 @@ public sealed partial class AppNavigator : IAppNavigator
 
     private void UpdateNavigationObject(NavigationNode node)
     {
-        if (!_navigationObjects.TryGetValue(node, out var navigationObject)) return;
+        RunOnNavigationViewThread(() =>
+        {
+            if (!_navigationObjects.TryGetValue(node, out var navigationObject)) return;
 
-        if (navigationObject is NavigationViewItemHeader header)
-            header.Content = node.Title;
-        else if (navigationObject is NavigationViewItem item) UpdateNavigationViewItem(item, node);
+            if (navigationObject is NavigationViewItemHeader header)
+                header.Content = node.Title;
+            else if (navigationObject is NavigationViewItem item) UpdateNavigationViewItem(item, node);
+        });
     }
 
     private void ApplyChildCollectionChanges(NavigationNode node, NotifyCollectionChangedEventArgs e)
@@ -564,14 +568,20 @@ public sealed partial class AppNavigator : IAppNavigator
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("导航失败", ex.Message);
+            _notification.ShowFailure("导航失败", ex);
         }
     }
 
-    private static void InvokeAction(AppNavigationAction action)
+    private void InvokeAction(AppNavigationAction action)
     {
         switch (action)
         {
+            case AppNavigationAction.ReloadLibrary:
+                _ = _shellViewModel?.RefreshPlaylistsAsync();
+                break;
+            case AppNavigationAction.ReloadPodcasts:
+                _ = _shellViewModel?.RefreshPodcastsAsync();
+                break;
             case AppNavigationAction.CreatePlaylist:
                 _ = new CreateSonglistDialog().ShowAsync();
                 break;

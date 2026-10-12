@@ -8,6 +8,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Domain.Navigation;
@@ -32,11 +33,15 @@ public partial class NavigationShellViewModel : ObservableObject
     private readonly IAuthService _auth;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly SidebarLayout _layout;
+    private readonly NavigationNode _libraryStatusNode;
     private readonly INotificationService _notification;
     private readonly NavigationNode _podcastCollectedNode;
     private readonly NavigationNode _podcastCreatedNode;
     private readonly IPodcastLibraryService _podcastLibrary;
     private readonly NavigationNode _podcastLikedNode;
+    private readonly NavigationNode _podcastStatusNode;
+    private readonly FontIcon _statusLoadingIcon = new() { Glyph = "\uE895" };
+    private readonly FontIcon _statusRetryIcon = new() { Glyph = "\uE72C" };
     private readonly NavigationNode _podcastSubscribedNode;
 
     private readonly List<NavigationNode> _providerLibraryNodes = [];
@@ -46,7 +51,6 @@ public partial class NavigationShellViewModel : ObservableObject
     private readonly IUserLibraryTypeIds _userLibraryTypeIds;
     private AutoLoginState _autoLoginState;
     private Task? _loadPlaylistsTask;
-    private int _podcastLoadVersion;
 
     public NavigationShellViewModel(
         IAuthService auth,
@@ -57,9 +61,30 @@ public partial class NavigationShellViewModel : ObservableObject
         IProviderKnownTypeIds knownTypeIds,
         IPlaylistCollectionChangeNotifier playlistCollectionChangeNotifier,
         SidebarLayout layout,
-        IPodcastLibraryService podcastLibrary)
+        IPodcastLibraryService podcastLibrary,
+        ILoadEnvironment loadEnvironment)
     {
         MenuItemsView = MenuItems.ToNotifyCollectionChanged();
+        LibraryLoad = new LoadState("歌单", loadEnvironment);
+        PodcastLoad = new LoadState("播客", loadEnvironment);
+        _libraryStatusNode = new NavigationNode
+        {
+            Key = "library-status", IsStatus = true, SelectsOnInvoked = false, IsVisible = false,
+            Action = AppNavigationAction.ReloadLibrary
+        };
+        _podcastStatusNode = new NavigationNode
+        {
+            Key = "podcast-status", IsStatus = true, SelectsOnInvoked = false, IsVisible = false,
+            Action = AppNavigationAction.ReloadPodcasts
+        };
+        LibraryLoad.PropertyChanged += (_, e) =>
+        {
+            IsLoading = LibraryLoad.IsLoading;
+            UpdateStatusNode(_libraryStatusNode, LibraryLoad);
+            if (e.PropertyName == nameof(LoadState.Phase) && LibraryLoad is { IsFailed: true, Failure: { } failure })
+                _notification.ShowMessage("获取歌单失败", failure.Reason);
+        };
+        PodcastLoad.PropertyChanged += (_, _) => UpdateStatusNode(_podcastStatusNode, PodcastLoad);
         _auth = auth;
         _notification = notification;
         _userLibraryTypeIds = userLibraryTypeIds;
@@ -98,6 +123,8 @@ public partial class NavigationShellViewModel : ObservableObject
 
     public ObservableList<NavigationNode> MenuItems { get; } = [];
     public NotifyCollectionChangedSynchronizedViewList<NavigationNode> MenuItemsView { get; }
+    public LoadState LibraryLoad { get; }
+    public LoadState PodcastLoad { get; }
 
     [ObservableProperty] public partial bool IsLoading { get; set; }
 
@@ -181,14 +208,16 @@ public partial class NavigationShellViewModel : ObservableObject
                 {
                     Key = "create-playlist", Title = "创建歌单", Icon = new SymbolIcon { Symbol = Symbol.Add },
                     Action = AppNavigationAction.CreatePlaylist, SelectsOnInvoked = false
-                }
+                },
+                _libraryStatusNode
             ]),
             new NavigationSection("podcast", "播客",
             [
                 _podcastLikedNode,
                 _podcastCollectedNode,
                 _podcastCreatedNode,
-                _podcastSubscribedNode
+                _podcastSubscribedNode,
+                _podcastStatusNode
             ])
         ]);
         RefreshLayout();
@@ -201,7 +230,7 @@ public partial class NavigationShellViewModel : ObservableObject
                 section.Key,
                 section.Header.Title,
                 section.Nodes
-                    .Where(node => node.Key is not null && node.IsVisible)
+                    .Where(node => node.Key is not null && node.IsVisible && !node.IsStatus)
                     .GroupBy(node => node.Key!)
                     .Select(group => new SidebarEntryDefinition(group.Key, group.First().Title))
                     .ToList()))
@@ -229,6 +258,7 @@ public partial class NavigationShellViewModel : ObservableObject
             if (desired.Count > 0)
                 desired.Add(section.Separator);
             desired.Add(section.Header);
+            desired.AddRange(section.Nodes.Where(node => node.IsStatus));
             desired.AddRange(nodes);
         }
 
@@ -288,13 +318,37 @@ public partial class NavigationShellViewModel : ObservableObject
         return LoadPlaylistsAsync();
     }
 
+    public Task RefreshPodcastsAsync()
+    {
+        return _auth.CurrentUser is null || PodcastLoad.IsLoading ? Task.CompletedTask : LoadPodcastsAsync();
+    }
+
+    private void UpdateStatusNode(NavigationNode node, LoadState load)
+    {
+        var visible = load.IsLoading || load.CanRetry;
+        if (visible)
+        {
+            node.Title = load.IsFailed
+                ? $"{load.Subject}加载失败，点击重试"
+                : load.IsSlow
+                    ? $"网络较慢，仍在加载{load.Subject}…"
+                    : $"正在加载{load.Subject}…";
+            var icon = load.IsFailed ? _statusRetryIcon : _statusLoadingIcon;
+            if (!ReferenceEquals(node.Icon, icon))
+                node.Icon = icon;
+        }
+
+        if (node.IsVisible != visible)
+            node.IsVisible = visible;
+    }
+
     public void UpdateAfterLogout()
     {
         ClearProviderLibraryNodes();
         ClearPodcastNodes();
         _userLibraryState.Clear();
 
-        IsLoading = false;
+        LibraryLoad.Cancel();
         _ = UpdateAccountStatusAsync();
     }
 
@@ -369,64 +423,46 @@ public partial class NavigationShellViewModel : ObservableObject
     [RelayCommand]
     private Task LoadPlaylistsAsync()
     {
-        if (_loadPlaylistsTask is not null && !_loadPlaylistsTask.IsCompleted)
+        if (LibraryLoad.IsLoading && _loadPlaylistsTask is not null && !_loadPlaylistsTask.IsCompleted)
             return _loadPlaylistsTask;
 
-        _loadPlaylistsTask = LoadPlaylistsCoreAsync();
+        if (_auth.CurrentUser is null)
+            return Task.CompletedTask;
+
+        _loadPlaylistsTask = LibraryLoad.RunAsync(
+            cancellationToken =>
+                _userLibraryNavigationProvider.GetCurrentUserLibraryNavigationGroupsAsync(cancellationToken),
+            groups =>
+            {
+                ClearProviderLibraryNodes();
+                _userLibraryState.UpdateFromNavigationGroups(groups);
+                RenderProviderLibraryGroups(groups);
+                RefreshLayout();
+            },
+            static groups => groups.Count == 0,
+            LoadPlaylistsAsync);
         return _loadPlaylistsTask;
     }
 
-    private async Task LoadPlaylistsCoreAsync()
+    private Task LoadPodcastsAsync()
     {
-        if (_auth.CurrentUser is null) return;
-
-        IsLoading = true;
-        try
-        {
-            var groups = await _userLibraryNavigationProvider.GetCurrentUserLibraryNavigationGroupsAsync();
-
-            ClearProviderLibraryNodes();
-            _userLibraryState.UpdateFromNavigationGroups(groups);
-            RenderProviderLibraryGroups(groups);
-            RefreshLayout();
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("获取歌单失败", ex.Message);
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    private async Task LoadPodcastsAsync()
-    {
-        var version = ++_podcastLoadVersion;
         _podcastLikedNode.IsVisible = true;
         _podcastCollectedNode.IsVisible = true;
         RefreshLayout();
 
-        var created = await LoadPodcastChannelsAsync(_podcastLibrary.GetCreatedChannelsAsync());
-        if (version != _podcastLoadVersion) return;
-        FillPodcastGroup(_podcastCreatedNode, created);
-
-        var subscribed = await LoadPodcastChannelsAsync(_podcastLibrary.GetSubscribedChannelsAsync());
-        if (version != _podcastLoadVersion) return;
-        FillPodcastGroup(_podcastSubscribedNode, subscribed);
-    }
-
-    private static async Task<IReadOnlyList<ContainerBase>> LoadPodcastChannelsAsync(
-        Task<IReadOnlyList<ContainerBase>> loader)
-    {
-        try
+        return PodcastLoad.RunAsync(async cancellationToken =>
         {
-            return await loader;
-        }
-        catch
-        {
-            return [];
-        }
+            var created = await _podcastLibrary.GetCreatedChannelsAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            FillPodcastGroup(_podcastCreatedNode, created);
+
+            var subscribed = await LoadRequestProbe.GuardAsync(
+                () => _podcastLibrary.GetSubscribedChannelsAsync(cancellationToken),
+                static channels => channels.Count == 0);
+            cancellationToken.ThrowIfCancellationRequested();
+            FillPodcastGroup(_podcastSubscribedNode, subscribed);
+            return true;
+        });
     }
 
     private void FillPodcastGroup(NavigationNode group, IReadOnlyList<ContainerBase> channels)
@@ -446,7 +482,7 @@ public partial class NavigationShellViewModel : ObservableObject
 
     private void ClearPodcastNodes()
     {
-        _podcastLoadVersion++;
+        PodcastLoad.Cancel();
         _podcastLikedNode.IsVisible = false;
         _podcastCollectedNode.IsVisible = false;
         _podcastCreatedNode.IsVisible = false;

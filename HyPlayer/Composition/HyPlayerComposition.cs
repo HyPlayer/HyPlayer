@@ -4,6 +4,7 @@ using Depository.Abstraction.Interfaces;
 using Depository.Abstraction.Interfaces.NotificationHub;
 using Depository.Extensions;
 using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Application.Threading;
@@ -346,6 +347,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<AppearanceCustomizer>();
         depository.AddSingleton<NavigationShellViewModel>();
         depository.AddSingleton<IShellHostStateService, ShellHostStateService>();
+        depository.AddSingleton<ILoadEnvironment, ShellLoadEnvironment>();
         depository.AddSingleton<PlaybackSurfaceStore>();
         depository.AddSingleton<PlaybackShellStateMachine>();
         depository.AddSingleton<IPlaybackSurfaceCoordinator, PlaybackSurfaceCoordinator>();

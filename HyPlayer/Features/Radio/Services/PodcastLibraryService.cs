@@ -51,7 +51,8 @@ internal sealed class PodcastLibraryService : IPodcastLibraryService
             PodcastListApi.CreatedVoiceLists,
             new PodcastListRequest { Limit = PageSize },
             cancellationToken);
-        if (response.IsError || !TryGetData(response.Value, out var data)) return [];
+        if (response.IsError) throw (Exception?)response.Error ?? new InvalidOperationException("加载失败");
+        if (!TryGetData(response.Value, out var data)) return [];
 
         var channels = new List<ContainerBase>();
         foreach (var item in Items(data))
@@ -99,7 +100,7 @@ internal sealed class PodcastLibraryService : IPodcastLibraryService
             isCollected ? PodcastListApi.CollectedVoices : PodcastListApi.LikedVoices,
             new PodcastListRequest { Limit = count, Offset = offset },
             cancellationToken);
-        if (response.IsError) throw new InvalidOperationException(response.Error?.Message ?? "加载失败");
+        if (response.IsError) throw (Exception?)response.Error ?? new InvalidOperationException("加载失败");
         if (!TryGetData(response.Value, out var data)) return (false, []);
 
         var episodes = Items(data).Select(MapEpisode).OfType<ProvidableItemBase>().ToList();

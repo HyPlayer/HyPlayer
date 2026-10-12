@@ -8,6 +8,7 @@ using Windows.Services.Store;
 using Windows.System;
 using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.Threading;
 using HyPlayer.Domain;
@@ -62,9 +63,7 @@ public static class UpdateManager
         };
         message.Headers.Add("User-Agent", "HyPlayer-Apply-Client");
         using var versionsResponse = await Ioc.Default.GetRequiredService<HttpClient>().SendAsync(message);
-        if (!versionsResponse.IsSuccessStatusCode)
-            Ioc.Default.GetRequiredService<INotificationService>()
-                .ShowMessage("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
+        versionsResponse.EnsureSuccessStatusCode();
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
             JsonSerializer.Deserialize<GitHubReleaseResponse>(resp, JsonDefaults.Options);
@@ -89,9 +88,7 @@ public static class UpdateManager
                 UpdateSource.Canary => 2,
                 _ => 3
             }}/latest"));
-        if (!versionsResponse.IsSuccessStatusCode)
-            Ioc.Default.GetRequiredService<INotificationService>()
-                .ShowMessage("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
+        versionsResponse.EnsureSuccessStatusCode();
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
             JsonSerializer.Deserialize<LatestApplicationUpdate>(resp, JsonDefaults.Options);
@@ -121,7 +118,20 @@ public static class UpdateManager
     {
         return Task.Run((Func<Task?>)(async () =>
         {
-            var remoteResult = await GetRemoteVersion(Ioc.Default.GetRequiredService<UISettings>().UpdateSource);
+            RemoteVersionResult remoteResult;
+            try
+            {
+                remoteResult = await GetRemoteVersion(Ioc.Default.GetRequiredService<UISettings>().UpdateSource);
+            }
+            catch (Exception exception)
+            {
+                if (isStartup)
+                    LoadFailureNotifier.Record("检查更新", exception);
+                else
+                    Ioc.Default.GetRequiredService<INotificationService>().ShowFailure("检查更新失败", exception);
+                return;
+            }
+
             var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
                 Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
             var title = "发现新版本";

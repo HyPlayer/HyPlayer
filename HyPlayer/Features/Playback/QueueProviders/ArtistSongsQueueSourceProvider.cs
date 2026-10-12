@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
@@ -72,7 +73,7 @@ internal sealed class ArtistSongsQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("获取歌手歌曲失败", ex.Message);
+            _notification.ShowFailure("获取歌手歌曲失败", ex);
         }
 
         return ProviderQueueSourceLoadResult.Failed;

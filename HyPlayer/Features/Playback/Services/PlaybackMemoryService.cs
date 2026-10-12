@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
@@ -110,7 +111,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("恢复播放列表失败", ex.Message);
+            _notification.ShowFailure("恢复播放列表失败", ex);
         }
         finally
         {

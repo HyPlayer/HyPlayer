@@ -145,7 +145,8 @@
                     <controls1:ContainerItemsView
                         x:Name="HotSongContainer"
                         Container="{x:Bind ViewModel.HotSongsContainer, Mode=OneWay}"
-                        IsLoading="{x:Bind ViewModel.IsLoadingHotSongs, Mode=OneWay}"
+                        ContainerLoad="{x:Bind ViewModel.HotSongsLoad}"
+                        EmptyText="还没有热门歌曲"
                         LoadingText="正在加载歌曲…">
                         <controls1:ContainerItemsView.ListHeader>
                             <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
@@ -156,7 +157,8 @@
                     <controls1:ContainerItemsView
                         x:Name="AllSongContainer"
                         Container="{x:Bind ViewModel.AllSongsContainer, Mode=OneWay}"
-                        IsLoading="{x:Bind ViewModel.IsLoadingSongs, Mode=OneWay}"
+                        ContainerLoad="{x:Bind ViewModel.ArtistLoad}"
+                        EmptyText="还没有歌曲"
                         LoadingText="正在加载歌曲…">
                         <controls1:ContainerItemsView.ListHeader>
                             <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
@@ -164,7 +166,12 @@
                     </controls1:ContainerItemsView>
                 </PivotItem>
                 <PivotItem Header="专辑">
-                    <controls1:ContainerItemsView x:Name="AlbumContainer" Container="{x:Bind ViewModel.AlbumsContainer, Mode=OneWay}">
+                    <controls1:ContainerItemsView
+                        x:Name="AlbumContainer"
+                        Container="{x:Bind ViewModel.AlbumsContainer, Mode=OneWay}"
+                        ContainerLoad="{x:Bind ViewModel.ArtistLoad}"
+                        EmptyText="还没有专辑"
+                        LoadingText="正在加载专辑…">
                         <controls1:ContainerItemsView.ListHeader>
                             <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:ContainerItemsView.ListHeader>

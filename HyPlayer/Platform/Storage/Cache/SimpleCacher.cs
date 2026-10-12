@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -164,6 +165,29 @@ public static class SimpleCacher
 
 
         return data;
+    }
+
+    public static async Task<T?> GetOrCreateCacheOrThrowAsync<T>(CacheType cacheType, string id,
+        Func<Task<T?>> creator, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
+        where T : class
+    {
+        ExceptionDispatchInfo? failure = null;
+        var result = await GetOrCreateCacheAsync(cacheType, id, async () =>
+        {
+            try
+            {
+                return await creator();
+            }
+            catch (Exception exception)
+            {
+                failure = ExceptionDispatchInfo.Capture(exception);
+                throw;
+            }
+        }, expiration, cancellationToken: cancellationToken);
+        if (result is null)
+            failure?.Throw();
+
+        return result;
     }
 
     private static bool SupportsJsonCache<T>() where T : class

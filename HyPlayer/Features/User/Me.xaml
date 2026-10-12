@@ -15,6 +15,7 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:settings="using:HyPlayer.Domain.Settings"
     xmlns:ui="using:CommunityToolkit.WinUI"
+    xmlns:uiControls="using:HyPlayer.UI.Controls"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Page.Resources>
@@ -224,6 +225,7 @@
                                 Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
                                 IsTextSelectionEnabled="True"
                                 Text="{x:Bind ViewModel.User.Description, Mode=OneWay}" />
+                            <uiControls:LoadStateView HorizontalAlignment="Left" State="{x:Bind ViewModel.ProfileLoad}" />
                         </StackPanel>
                     </controls:DockPanel>
                 </Grid>
@@ -271,6 +273,11 @@
                                 <muxc:StackLayout Orientation="Vertical" />
                             </muxc:ItemsRepeater.Layout>
                         </muxc:ItemsRepeater>
+                        <uiControls:LoadStateView
+                            MinHeight="150"
+                            Margin="0,60,0,20"
+                            VerticalAlignment="Top"
+                            State="{x:Bind ViewModel.MyPlaylistLoad}" />
 
                     </Grid>
                     <Grid
@@ -305,6 +312,11 @@
                             </muxc:ItemsRepeater.Layout>
 
                         </muxc:ItemsRepeater>
+                        <uiControls:LoadStateView
+                            MinHeight="150"
+                            Margin="0,60,0,20"
+                            VerticalAlignment="Top"
+                            State="{x:Bind ViewModel.LikedPlaylistLoad}" />
                     </Grid>
                 </Grid>
             </Grid>

@@ -4,13 +4,11 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
-using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Account.Services;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Shell.Navigation.Services;
 
@@ -25,7 +23,6 @@ namespace HyPlayer.Features.User;
 /// </summary>
 public sealed partial class Me : Page
 {
-    private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
@@ -42,10 +39,13 @@ public sealed partial class Me : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (e.Parameter != null)
-            ViewModel.InitializeUserInfo((string)e.Parameter).SafeFireAndForget();
-        else if (_auth.CurrentUser?.ActualId is { } currentUserId)
-            ViewModel.InitializeUserInfo(currentUserId).SafeFireAndForget();
+        _ = ViewModel.Start(e.Parameter as string);
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        ViewModel.Cancel();
     }
 
     private void UserAvatar_OnRightTapped(object sender, RightTappedRoutedEventArgs e)

@@ -8,6 +8,7 @@
         <controls1:ContainerItemsView
             x:Name="SongContainer"
             Container="{x:Bind EpisodesContainer, Mode=OneWay}"
+            EmptyText="这里还没有单集"
             IsSearchEnabled="True"
             LoadingText="正在加载单集…">
             <controls1:ContainerItemsView.ListHeader>

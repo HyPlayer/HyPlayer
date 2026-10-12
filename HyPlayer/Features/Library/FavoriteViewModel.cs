@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
+using HyPlayer.Application.Loading;
 using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
@@ -16,9 +17,16 @@ namespace HyPlayer.Features.Library;
 
 public partial class FavoriteViewModel(
     IUserLibraryProvidable userLibraryProvider,
-    IProviderKnownTypeIds knownTypeIds) : ObservableObject
+    IProviderKnownTypeIds knownTypeIds,
+    ILoadEnvironment loadEnvironment) : ObservableObject
 {
     private string? _currentTag;
+
+    public LoadState Load { get; } = new("收藏", loadEnvironment)
+    {
+        EmptyText = "暂不支持查看这类收藏",
+        RequiresAccount = true
+    };
 
     [ObservableProperty] public partial ContainerBase? ContentContainer { get; set; }
 
@@ -37,7 +45,7 @@ public partial class FavoriteViewModel(
             _ => (string.Empty, 25, "favorite")
         };
 
-        ContentContainer = string.IsNullOrWhiteSpace(kind)
+        ContainerBase? container = string.IsNullOrWhiteSpace(kind)
             ? null
             : new DelegateProgressiveContainer(
                 (offset, count, cancellationToken) =>
@@ -46,6 +54,11 @@ public partial class FavoriteViewModel(
                 $"favorite:{tag}",
                 kind,
                 pageSize: pageSize);
+        ContentContainer = null;
+        _ = Load.RunAsync(
+            _ => Task.FromResult(container),
+            value => ContentContainer = value,
+            static value => value is null);
     }
 
     private async Task<(bool HasMore, List<ProvidableItemBase> Items)> LoadUserLibraryPageAsync(
@@ -55,7 +68,7 @@ public partial class FavoriteViewModel(
         int count,
         CancellationToken cancellationToken)
     {
-        var page = await SimpleCacher.GetOrCreateCacheAsync(
+        var page = await SimpleCacher.GetOrCreateCacheOrThrowAsync(
             CacheType.Login,
             $"{cachePrefix}_{offset}_{count}",
             async () =>
@@ -64,8 +77,9 @@ public partial class FavoriteViewModel(
                     is not IProgressiveLoadingContainer container)
                     return new UserLibraryPage();
 
-                var (hasMore, items) = await container.GetProgressiveItemsListAsync(
-                    offset, count, cancellationToken);
+                var (hasMore, items) = await LoadRequestProbe.GuardAsync(
+                    () => container.GetProgressiveItemsListAsync(offset, count, cancellationToken),
+                    static loaded => loaded.Item2 is not { Count: > 0 });
                 return new UserLibraryPage
                 {
                     HasMore = hasMore,

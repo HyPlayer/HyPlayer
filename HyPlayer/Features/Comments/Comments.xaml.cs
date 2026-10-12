@@ -10,6 +10,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Platform.Xaml;
@@ -44,6 +45,8 @@ public sealed partial class Comments : Page
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly Dictionary<string, Task> _commentLoadTasks = [];
     private readonly ObservableList<CommentBase> _hotComments = [];
+    private readonly LoadState _hotLoad;
+    private readonly LoadState _normalLoad;
     private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _hotCommentsView;
     private readonly ObservableList<CommentBase> _normalComments = [];
     private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _normalCommentsView;
@@ -67,6 +70,23 @@ public sealed partial class Comments : Page
         _normalCommentsView = _normalComments.ToNotifyCollectionChanged();
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
+        var loadEnvironment = Ioc.Default.GetRequiredService<ILoadEnvironment>();
+        _hotLoad = new LoadState("热评", loadEnvironment) { EmptyText = "还没有热评" };
+        _normalLoad = new LoadState("评论", loadEnvironment) { EmptyText = "还没有评论" };
+        _normalLoad.PropertyChanged += (_, _) => ShowNormalLoad();
+        HotLoadView.State = _hotLoad;
+        ShowNormalLoad();
+    }
+
+    private void ShowNormalLoad()
+    {
+        var isListEmpty = _normalComments.Count == 0;
+        NormalLoadView.State = isListEmpty ? _normalLoad : null;
+        PageIndicator.Text = isListEmpty || !_normalLoad.IsLoading
+            ? string.Empty
+            : _normalLoad.IsSlow
+                ? LoadState.SlowText
+                : _normalLoad.Title;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -93,6 +113,8 @@ public sealed partial class Comments : Page
     {
         base.OnNavigatedFrom(e);
         Bindings.StopTracking();
+        _hotLoad.Cancel();
+        _normalLoad.Cancel();
         if (_commentLoaderTask != null && !_commentLoaderTask.IsCompleted)
             try
             {
@@ -133,14 +155,45 @@ public sealed partial class Comments : Page
             ? ++_hotCommentsLoadVersion
             : ++_normalCommentsLoadVersion;
 
+        var load = targetHotComments ? _hotLoad : _normalLoad;
+        var attempt = targetHotComments
+            ? load.Begin(() =>
+            {
+                LoadHotComments();
+                return _hotCommentLoaderTask;
+            }, out _)
+            : load.Begin(() => _commentLoaderTask = StartLoadComments(_sortType), out _);
         var page = _page;
         var openedPage = page;
         ProviderPageResult<CommentBase> result;
-        if (targetHotComments)
-            result = await LoadProviderCommentsAsync(page, null, type);
-        else
-            (result, openedPage) = await _pageTrail.OpenAsync(page,
-                (number, token) => LoadProviderCommentsAsync(number, token, type));
+        try
+        {
+            if (targetHotComments)
+                result = await LoadProviderCommentsAsync(page, null, type);
+            else
+                (result, openedPage) = await _pageTrail.OpenAsync(page,
+                    (number, token) => LoadProviderCommentsAsync(number, token, type));
+        }
+        catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            if (!load.IsCurrent(attempt))
+                return;
+
+            if (!targetHotComments)
+            {
+                _normalComments.Clear();
+                NextPage.IsEnabled = false;
+                PrevPage.IsEnabled = _page > 1;
+            }
+
+            load.Fail(attempt, exception);
+            return;
+        }
+
         if (targetHotComments
                 ? requestVersion != _hotCommentsLoadVersion
                 : requestVersion != _normalCommentsLoadVersion)
@@ -170,6 +223,9 @@ public sealed partial class Comments : Page
 
         NextPage.IsEnabled = result.HasMore;
         PrevPage.IsEnabled = _page > 1;
+        load.Complete(attempt, result.Items.Count > 0);
+        if (!targetHotComments)
+            ShowNormalLoad();
     }
 
     private Task StartLoadComments(int type)
@@ -202,40 +258,25 @@ public sealed partial class Comments : Page
             _commentLoadTasks.Remove(key);
     }
 
-    private async Task<ProviderPageResult<CommentBase>> LoadProviderCommentsAsync(int page, string pageToken, int type)
+    private Task<ProviderPageResult<CommentBase>> LoadProviderCommentsAsync(int page, string pageToken, int type)
     {
-        try
-        {
-            if (pageToken is not null && _commentProvider is IProvidableItemCommentPageTokenProvidable tokenProvider)
-                return await tokenProvider.GetCommentsPageAsync(
+        return LoadRequestProbe.GuardAsync(
+            () => pageToken is not null && _commentProvider is IProvidableItemCommentPageTokenProvidable tokenProvider
+                ? tokenProvider.GetCommentsPageAsync(
                     _resourceId,
                     _resourceType,
                     pageToken,
                     20,
                     type,
-                    _cancellationToken);
-
-            return await _commentProvider.GetCommentsAsync(
-                _resourceId,
-                _resourceType,
-                (page - 1) * 20,
-                20,
-                type,
-                _cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage("加载评论时出错", ex.Message);
-            return new ProviderPageResult<CommentBase>
-            {
-                Items = [],
-                HasMore = false
-            };
-        }
+                    _cancellationToken)
+                : _commentProvider.GetCommentsAsync(
+                    _resourceId,
+                    _resourceType,
+                    (page - 1) * 20,
+                    20,
+                    type,
+                    _cancellationToken),
+            static result => result?.Items is not { Count: > 0 });
     }
 
     private string CreateProvidableItemId(string typeId, string actualId)

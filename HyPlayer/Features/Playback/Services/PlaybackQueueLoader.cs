@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Features.Playback.QueueProviders;
@@ -153,7 +154,7 @@ public sealed class PlaybackQueueLoader : IPlaybackQueueLoader
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("AppendNCSong时发生错误", ex.Message);
+            _notification.ShowFailure("加载歌曲失败", ex);
         }
     }
 

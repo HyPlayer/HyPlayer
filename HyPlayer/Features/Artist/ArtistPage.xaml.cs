@@ -44,6 +44,7 @@ public sealed partial class ArtistPage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        ViewModel.Cancel();
         HotSongContainer.ReleaseResources();
         AllSongContainer.ReleaseResources();
         AlbumContainer.ReleaseResources();

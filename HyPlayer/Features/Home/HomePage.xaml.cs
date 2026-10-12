@@ -5,6 +5,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Features.Playlist;
@@ -51,6 +52,12 @@ public sealed partial class HomePage : Page
         ViewModel.GetDataAsync().SafeFireAndForget();
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        ViewModel.Cancel();
+    }
+
     private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
     {
         var playList = sender?.As<MenuFlyoutItem>()?.CommandParameter as HomeContainerCardViewModel;
@@ -72,7 +79,7 @@ public sealed partial class HomePage : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("公开歌单失败", ex.Message);
+            _notification.ShowFailure("公开歌单失败", ex);
         }
     }
 
@@ -89,7 +96,7 @@ public sealed partial class HomePage : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("删除歌单失败", ex.Message);
+            _notification.ShowFailure("删除歌单失败", ex);
         }
     }
 

@@ -50,8 +50,18 @@ public sealed partial class AlbumPage : Page
         ViewModel.LoadAlbumDynamic(albumId).SafeFireAndForget();
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        SongContainer.ReleaseResources();
+        Bindings.StopTracking();
+    }
+
     private async void TextBoxAuthor_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
+        if (ViewModel.Artists is not { Count: > 0 })
+            return;
+
         if (ViewModel.Artists.Count > 1)
             await new ArtistSelectDialog(ViewModel.Artists).ShowAsync();
         else

@@ -1,10 +1,13 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
+using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.PlayCore.Abstraction;
@@ -52,6 +55,12 @@ internal sealed class PersonalFM
 
     public static void InitPersonalFM()
     {
+        if (Ioc.Default.GetRequiredService<ILoadEnvironment>().IsLoginPending)
+        {
+            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("正在登录", "登录完成后即可开始私人 FM");
+            return;
+        }
+
         DisposeInstance();
 
         var fm = new PersonalFM();
@@ -62,7 +71,22 @@ internal sealed class PersonalFM
         fm._playbackState.ActiveStrategyId = "pfm";
         fm._playbackSettings.ActiveStrategyId = "pfm";
         fm._playbackState.IsInFm = true;
-        fm.LoadNextTrackAsync().SafeFireAndForget();
+        fm.StartAsync().SafeFireAndForget();
+    }
+
+    private async Task StartAsync()
+    {
+        var notification = Ioc.Default.GetRequiredService<INotificationService>();
+        try
+        {
+            await LoadNextTrackAsync().ConfigureAwait(false);
+            if (IsActiveSession && (await _playCore.GetPlaylistAsync().ConfigureAwait(false)).Count == 0)
+                notification.ShowMessage("无法开始私人 FM", "没有获取到歌曲，请检查网络与登录状态");
+        }
+        catch (Exception exception)
+        {
+            notification.ShowFailure("无法开始私人 FM", exception);
+        }
     }
 
     public static void ExitFm(bool clearPlaylist = true)

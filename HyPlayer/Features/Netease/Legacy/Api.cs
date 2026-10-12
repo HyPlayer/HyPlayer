@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Features.Account.Services;
@@ -47,7 +48,7 @@ internal class Api
         }
         catch (Exception ex)
         {
-            notification.ShowMessage(ex.Message);
+            notification.ShowFailure("操作失败", ex);
             return false;
         }
     }
@@ -83,36 +84,42 @@ internal class Api
         var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         var auth = Ioc.Default.GetRequiredService<IAuthService>();
         var userLibrary = Ioc.Default.GetRequiredService<IUserLibraryStateService>();
-
-        var seedPlaylist = await ResolveLikedMusicPlaylistAsync(auth, userLibrary, playlistId, cancellationToken);
-        if (seedPlaylist is null || string.IsNullOrWhiteSpace(seedPlaylist.ActualId))
+        if (Ioc.Default.GetRequiredService<ILoadEnvironment>().IsLoginPending)
         {
-            notification.ShowMessage("无法进入心动模式", "未找到我喜欢的音乐歌单");
+            notification.ShowMessage("正在登录", "登录完成后即可进入心动模式");
             return;
         }
 
-        var seedSongIds = auth.LikedSongs
-            .Select(NormalizeProviderItemId)
-            .Where(id => !string.IsNullOrWhiteSpace(id))
-            .Select(id => id!)
-            .ToList();
-        if (seedSongIds.Count == 0)
-            seedSongIds = await GetPlaylistSongIdsAsync(seedPlaylist, cancellationToken);
-
-        if (seedSongIds.Count == 0)
-        {
-            notification.ShowMessage("无法进入心动模式", "心动模式歌单没有歌曲");
-            return;
-        }
-
-        seedSongId = NormalizeProviderItemId(seedSongId);
-        var currentSongId = NormalizeProviderItemId(state.NowPlayingProviderItem?.ActualId);
-        var randomSongId = seedSongIds[RandomNumberGenerator.GetInt32(seedSongIds.Count)];
-        var seedSong = !string.IsNullOrWhiteSpace(seedSongId) ? seedSongId
-            : !string.IsNullOrWhiteSpace(currentSongId) && seedSongIds.Contains(currentSongId) ? currentSongId
-            : randomSongId;
         try
         {
+            var seedPlaylist =
+                await ResolveLikedMusicPlaylistAsync(auth, userLibrary, playlistId, cancellationToken);
+            if (seedPlaylist is null || string.IsNullOrWhiteSpace(seedPlaylist.ActualId))
+            {
+                notification.ShowMessage("无法进入心动模式", "未找到我喜欢的音乐歌单");
+                return;
+            }
+
+            var seedSongIds = auth.LikedSongs
+                .Select(NormalizeProviderItemId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => id!)
+                .ToList();
+            if (seedSongIds.Count == 0)
+                seedSongIds = await GetPlaylistSongIdsAsync(seedPlaylist, cancellationToken);
+
+            if (seedSongIds.Count == 0)
+            {
+                notification.ShowMessage("无法进入心动模式", "心动模式歌单没有歌曲");
+                return;
+            }
+
+            seedSongId = NormalizeProviderItemId(seedSongId);
+            var currentSongId = NormalizeProviderItemId(state.NowPlayingProviderItem?.ActualId);
+            var randomSongId = seedSongIds[RandomNumberGenerator.GetInt32(seedSongIds.Count)];
+            var seedSong = !string.IsNullOrWhiteSpace(seedSongId) ? seedSongId
+                : !string.IsNullOrWhiteSpace(currentSongId) && seedSongIds.Contains(currentSongId) ? currentSongId
+                : randomSongId;
             var songs = await GetIntelligenceSongsAsync(itemProvider, specialTypeIds, seedPlaylist.ActualId, seedSong,
                 cancellationToken);
             if (songs.Count == 0)
@@ -134,7 +141,7 @@ internal class Api
         }
         catch (Exception ex)
         {
-            notification.ShowMessage("加载心动模式列表出错", ex.Message);
+            notification.ShowFailure("无法进入心动模式", ex, cancellationToken);
         }
     }
 

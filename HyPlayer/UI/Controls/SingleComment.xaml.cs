@@ -9,6 +9,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Settings;
@@ -48,14 +49,18 @@ public sealed partial class SingleComment : UserControl
     private readonly IncrementalLoadingCollection<SwitchingIncrementalSource<CommentBase>, CommentBase> _floorComments;
     private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _floorCommentsView;
     private int _commentLoadVersion;
+    private int _floorAttempt;
+    private LoadState? _floorLoad;
     private bool _isLoaded;
 
     public SingleComment()
     {
         _floorComments = new IncrementalLoadingCollection<SwitchingIncrementalSource<CommentBase>, CommentBase>(
             _floorCommentSource,
-            itemsPerPage: 20,
-            onError: FloorComments_LoadFailed);
+            20,
+            FloorComments_LoadingStarted,
+            FloorComments_LoadCompleted,
+            FloorComments_LoadFailed);
         _floorCommentsView = _floorComments.ToNotifyCollectionChanged();
         InitializeComponent();
     }
@@ -90,15 +95,40 @@ public sealed partial class SingleComment : UserControl
             itemId,
             typeId));
         LoadMore.Visibility = Visibility.Collapsed;
+        if (_floorLoad is null)
+        {
+            _floorLoad = new LoadState("回复", Ioc.Default.GetRequiredService<ILoadEnvironment>())
+            {
+                EmptyText = "还没有回复"
+            };
+            FloorLoadView.State = _floorLoad;
+        }
+
         _floorComments.Clear();
         await _floorComments.RefreshAsync();
     }
 
+    private void FloorComments_LoadingStarted()
+    {
+        if (_floorComments.Count == 0 && _floorLoad is { } load)
+            _floorAttempt = load.Begin(ResetAndLoadFloorCommentsAsync, out _);
+    }
+
+    private void FloorComments_LoadCompleted()
+    {
+        _floorLoad?.Complete(_floorAttempt, _floorComments.Count > 0);
+    }
+
     private void FloorComments_LoadFailed(Exception exception)
     {
+        if (_floorComments.Count == 0 && _floorLoad is { IsLoading: true } load)
+        {
+            load.Fail(_floorAttempt, exception);
+            return;
+        }
+
         LoadMore.Visibility = Visibility.Visible;
-        Ioc.Default.GetRequiredService<INotificationService>()
-            .ShowMessage("加载回复失败", exception.Message);
+        Ioc.Default.GetRequiredService<INotificationService>().ShowFailure("加载回复失败", exception);
     }
 
     private async void Like_Click(object sender, RoutedEventArgs e)
@@ -120,7 +150,7 @@ public sealed partial class SingleComment : UserControl
         }
         catch (Exception ex)
         {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("点赞失败", ex.Message);
+            Ioc.Default.GetRequiredService<INotificationService>().ShowFailure("点赞失败", ex);
             return;
         }
 
@@ -188,6 +218,7 @@ public sealed partial class SingleComment : UserControl
     {
         _isLoaded = false;
         _commentLoadVersion++;
+        _floorLoad?.Cancel();
         _floorCommentSource.Reset(null);
         _floorComments.Clear();
     }
@@ -201,6 +232,7 @@ public sealed partial class SingleComment : UserControl
     private void FloorCommentsExpander_Collapsed(Expander sender,
         ExpanderCollapsedEventArgs args)
     {
+        _floorLoad?.Cancel();
         _floorCommentSource.Reset(null);
         _floorComments.Clear();
     }
@@ -227,6 +259,7 @@ public sealed partial class SingleComment : UserControl
     private void ApplyMainComment(CommentBase? comment)
     {
         var version = ++_commentLoadVersion;
+        _floorLoad?.Cancel();
         _floorCommentSource.Reset(null);
         _floorComments.Clear();
         FloorCommentsExpander.IsExpanded = false;

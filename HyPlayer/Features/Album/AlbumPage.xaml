@@ -17,6 +17,8 @@
             Grid.Row="1"
             Margin="20,30,0,0"
             Container="{x:Bind ViewModel.Album, Mode=OneWay}"
+            ContainerLoad="{x:Bind ViewModel.PageLoad}"
+            EmptyText="专辑里还没有歌曲"
             LoadingText="正在加载歌曲…">
             <controls1:ContainerItemsView.ListHeader>
                 <controls:DockPanel

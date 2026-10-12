@@ -2,10 +2,12 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Playback.QueueProviders;
@@ -26,6 +28,12 @@ public sealed partial class PodcastEpisodesPage : Page
     private readonly ApiSettings _apiSettings = Ioc.Default.GetRequiredService<ApiSettings>();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
+
+    private readonly LoadState _load = new("单集", Ioc.Default.GetRequiredService<ILoadEnvironment>())
+    {
+        RequiresAccount = true
+    };
+
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
 
@@ -55,8 +63,13 @@ public sealed partial class PodcastEpisodesPage : Page
         TitleText.Text = container.Name;
         SubtitleText.Text = "正在加载…";
         SongContainer.State.PropertyChanged += ListState_PropertyChanged;
+        _load.PropertyChanged += ListState_PropertyChanged;
         SongContainer.GreedyLoad = _apiSettings.GreedilyLoadPlayContainerItems;
-        EpisodesContainer = container;
+        SongContainer.ContainerLoad = _load;
+        _ = _load.RunAsync(
+            _ => Task.FromResult(container),
+            value => EpisodesContainer = value,
+            static value => value is null);
     }
 
     private void ListState_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -64,7 +77,9 @@ public sealed partial class PodcastEpisodesPage : Page
         var state = SongContainer.State;
         var count = state.Rows.Count;
         PlayAllButton.IsEnabled = count > 0 && !_isPlayingAll;
-        if (state.CanRetry)
+        if (_load.IsLoading || _load.IsFailed)
+            SubtitleText.Text = _load.Title;
+        else if (state.CanRetry)
             SubtitleText.Text = "加载失败";
         else if (state.IsLoading && count == 0)
             SubtitleText.Text = "正在加载…";
@@ -80,6 +95,7 @@ public sealed partial class PodcastEpisodesPage : Page
         _cancellationTokenSource.Cancel();
         _cancellationTokenSource.Dispose();
         SongContainer.State.PropertyChanged -= ListState_PropertyChanged;
+        _load.PropertyChanged -= ListState_PropertyChanged;
         SongContainer.ReleaseResources();
         Bindings.StopTracking();
     }
@@ -111,7 +127,7 @@ public sealed partial class PodcastEpisodesPage : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("加载播客单集失败", ex.Message);
+            _notification.ShowFailure("加载播客单集失败", ex);
         }
         finally
         {
