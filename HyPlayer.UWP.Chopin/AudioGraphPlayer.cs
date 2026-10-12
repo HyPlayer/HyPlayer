@@ -859,9 +859,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 // Disposing the node below still provides the final detach boundary.
             }
 
-            // Keep the dictionaries and primary-source ownership intact if disposal fails,
-            // allowing the ticket owner to retry instead of losing the graph node.
-            node.Dispose();
+            DisposeInBackground(node);
 
             if (PrimaryPlaybackSource == source)
                 PrimaryPlaybackSource = null;
@@ -887,7 +885,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 source.Value.MediaSourceCompleted -= OnMediaSourceCompleted;
                 source.Value.RemoveOutgoingConnection(_outputNode);
                 source.Value.RemoveOutgoingConnection(_frameOutputNode);
-                source.Value.Dispose();
+                DisposeInBackground(source.Value);
             }
             _audioInputNodes.Clear();
             _audioInputNodesReverseDictionary.Clear();
@@ -895,6 +893,20 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             _primaryPlaybackSource = null;
             _defaultPlayer.Stop();
             UpdateGlobalPlaybackStatus(PlaybackStatus.Closed);
+        }
+
+        private static void DisposeInBackground(IDisposable node)
+        {
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    node.Dispose();
+                }
+                catch
+                {
+                }
+            });
         }
 
         public List<AudioGraphPlaybackSource> GetConnectedPlaybackSource()

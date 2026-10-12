@@ -819,7 +819,14 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         try
         {
             await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
-            await _playCore.SeekAsync((long)target.TotalMilliseconds);
+            try
+            {
+                await _playCore.SeekAsync((long)target.TotalMilliseconds);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                return;
+            }
 
             SeekRequested?.Invoke(this, new SeekRequestedEventArgs(target));
 
@@ -1059,6 +1066,21 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         try
         {
             await _playCore.PlayAsync(ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _currentSource = null;
+            _playbackGeneration++;
+            _state.IsPlaying = false;
+            await _playCoreNotificationHub.PublishNotificationAsync(
+                new PlaybackRequestFailedNotification
+                {
+                    Song = song,
+                    Reason = ex.Message,
+                    Exception = ex
+                },
+                CancellationToken.None).ConfigureAwait(false);
+            return;
         }
         finally
         {

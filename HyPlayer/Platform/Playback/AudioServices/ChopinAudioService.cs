@@ -295,7 +295,19 @@ public sealed class ChopinAudioService :
         }
         catch
         {
-            source?.Dispose();
+            if (source is not null)
+            {
+                try
+                {
+                    _player.DisconnectPlaybackSource(source);
+                }
+                catch
+                {
+                }
+
+                source.Dispose();
+            }
+
             throw;
         }
     }

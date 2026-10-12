@@ -32,6 +32,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly ITileService _tileService;
     private int _coverRequestVersion;
+    private int _trackChangeVersion;
 
     public PlaybackNotificationService(
         PlaybackStateService state,
@@ -57,11 +58,13 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     public async Task OnTrackChangedAsync(SingleSongBase providerItem)
     {
         if (providerItem == null) return;
+        var version = Interlocked.Increment(ref _trackChangeVersion);
         UpdateSmtcDisplayInfo(providerItem);
 
         if (!_uiSettings.NoImage)
         {
             await RefreshCoverAsync(providerItem);
+            if (version != Volatile.Read(ref _trackChangeVersion)) return;
             UpdateSmtcThumbnail();
         }
         else
