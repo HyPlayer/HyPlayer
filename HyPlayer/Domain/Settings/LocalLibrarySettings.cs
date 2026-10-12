@@ -23,7 +23,26 @@ public partial class LocalLibrarySettings(DownloadSettings downloadSettings) : S
             FolderAccess.Forget(value);
             if (!SetSettings(nameof(SearchDirectory), value))
                 OnPropertyChanged();
+            OnPropertyChanged(nameof(SearchDirectoryIsCustom));
         }
+    }
+
+    public bool SearchDirectoryIsCustom =>
+        CustomSearchDirectory is { } custom && FolderAccess.IsUsable(custom) &&
+        !FolderAccess.IsSamePath(custom, downloadSettings.DownloadDirectory);
+
+    public void ResetSearchDirectory()
+    {
+        FolderAccess.Forget(CustomSearchDirectory);
+        if (!SetSettings<string?>(nameof(SearchDirectory), null, nameof(SearchDirectory)))
+            OnPropertyChanged(nameof(SearchDirectory));
+        OnPropertyChanged(nameof(SearchDirectoryIsCustom));
+    }
+
+    public void NotifyDownloadDirectoryChanged()
+    {
+        OnPropertyChanged(nameof(SearchDirectory));
+        OnPropertyChanged(nameof(SearchDirectoryIsCustom));
     }
 
     public List<string> ScanLocalFolders

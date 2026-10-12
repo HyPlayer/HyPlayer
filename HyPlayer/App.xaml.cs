@@ -116,6 +116,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
     private static async Task InitializeThings()
     {
+        _ = Task.Run(() => HyPlayer.Features.Settings.Settings.SystemFonts.Value);
         try
         {
             await SimpleCacher.InitializeAsync();

@@ -97,7 +97,7 @@ public partial class PlaybackSettings : SettingsBase
     public double CrossFadeTime
     {
         get => GetSettings(nameof(CrossFadeTime), 3d);
-        set => SetSettings(nameof(CrossFadeTime), Math.Clamp(value, 3d, 10d));
+        set => SetSettings(nameof(CrossFadeTime), Math.Clamp(value, 2d, 10d));
     }
 
     /// <summary>
@@ -147,8 +147,22 @@ public partial class PlaybackSettings : SettingsBase
             FolderAccess.Forget(value);
             if (!SetSettings(nameof(CacheDirectory), value))
                 OnPropertyChanged();
+            OnPropertyChanged(nameof(CacheDirectoryIsCustom));
             SimpleCacher.Reset();
         }
+    }
+
+    public bool CacheDirectoryIsCustom =>
+        CustomCacheDirectory is { } custom && FolderAccess.IsUsable(custom) &&
+        !FolderAccess.IsSamePath(custom, ApplicationData.Current.LocalCacheFolder.Path);
+
+    public void ResetCacheDirectory()
+    {
+        FolderAccess.Forget(CustomCacheDirectory);
+        if (!SetSettings<string?>(nameof(CacheDirectory), null, nameof(CacheDirectory)))
+            OnPropertyChanged(nameof(CacheDirectory));
+        OnPropertyChanged(nameof(CacheDirectoryIsCustom));
+        SimpleCacher.Reset();
     }
 
     public string? CustomCacheDirectory =>

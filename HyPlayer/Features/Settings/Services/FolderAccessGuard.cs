@@ -46,6 +46,7 @@ public static class FolderAccessGuard
         if (Interlocked.Exchange(ref _checking, 1) == 1) return;
         try
         {
+            await Ioc.Default.GetRequiredService<DownloadSettings>().EnsureDefaultDownloadDirectoryAsync();
             await PromptLostFoldersAsync();
         }
         finally

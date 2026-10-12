@@ -483,7 +483,7 @@
                                 <controls3:SettingsExpander
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Stretch"
-                                    Header="渐入渐出"
+                                    Header="切歌过渡"
                                     IsExpanded="True">
                                     <controls3:SettingsExpander.HeaderIcon>
                                         <FontIcon Glyph="&#xE799;" />
@@ -494,7 +494,7 @@
                                         </TransitionCollection>
                                     </controls3:SettingsExpander.Transitions>
                                     <controls3:SettingsExpander.Items>
-                                        <controls3:SettingsCard Header="曲目过渡">
+                                        <controls3:SettingsCard Header="过渡方式">
                                             <ComboBox
                                                 x:Name="TransitionMode"
                                                 MinWidth="180"
@@ -504,8 +504,8 @@
                                                 SelectionChanged="TransitionMode_SelectionChanged">
                                                 <ComboBoxItem Content="直接切换" Tag="dir" />
                                                 <ComboBoxItem Content="淡入淡出" Tag="fde" />
-                                                <ComboBoxItem Content="提前准备" Tag="gap" />
                                                 <ComboBoxItem Content="交叉淡化" Tag="xfd" />
+                                                <ComboBoxItem Content="无缝衔接" Tag="gap" />
                                                 <ComboBoxItem Content="自动混音" Tag="mix" />
                                             </ComboBox>
                                         </controls3:SettingsCard>
@@ -516,7 +516,7 @@
                                                 HorizontalAlignment="Right"
                                                 IsEnabled="{x:Bind Playback.TransitionUsesDuration, Mode=OneWay}"
                                                 Maximum="10"
-                                                Minimum="3"
+                                                Minimum="2"
                                                 StepFrequency="1"
                                                 TickFrequency="1"
                                                 ToolTipService.ToolTip="{x:Bind CrossFadeTime.Value, Mode=OneWay}"
@@ -543,6 +543,98 @@
                                 <controls3:SettingsExpander
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Stretch"
+                                    Header="启动与恢复"
+                                    IsExpanded="True">
+                                    <controls3:SettingsExpander.HeaderIcon>
+                                        <FontIcon Glyph="&#xE768;" />
+                                    </controls3:SettingsExpander.HeaderIcon>
+                                    <controls3:SettingsExpander.Transitions>
+                                        <TransitionCollection>
+                                            <RepositionThemeTransition />
+                                        </TransitionCollection>
+                                    </controls3:SettingsExpander.Transitions>
+                                    <controls3:SettingsExpander.Items>
+                                        <controls3:SettingsCard Description="配合开机自启动使用，可以实现开机自动播放" Header="启动后自动播放">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Playback.AutoPlayOnLaunch, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="重新打开应用时从上次的位置继续播放" Header="记住播放进度">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Playback.RememberPlaybackPosition, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                    </controls3:SettingsExpander.Items>
+                                </controls3:SettingsExpander>
+                                <controls3:SettingsExpander
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    Header="弱网与节能">
+                                    <controls3:SettingsExpander.HeaderIcon>
+                                        <FontIcon Glyph="&#xEC48;" />
+                                    </controls3:SettingsExpander.HeaderIcon>
+                                    <controls3:SettingsExpander.Transitions>
+                                        <TransitionCollection>
+                                            <RepositionThemeTransition />
+                                        </TransitionCollection>
+                                    </controls3:SettingsExpander.Transitions>
+                                    <controls3:SettingsExpander.Items>
+                                        <controls3:SettingsCard Description="检测到网络较慢时，提示降低音质、不加载封面并放宽超时与重试" Header="弱网时弹出提示">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Playback.PromptWeakNetwork, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="开启节能或使用电池供电时，提示暂停模型分析并关闭部分耗电效果" Header="节能时弹出提示">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Playback.PromptPowerSaving, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                    </controls3:SettingsExpander.Items>
+                                </controls3:SettingsExpander>
+                                <controls3:SettingsExpander
+                                    xmlns:shellInput="using:HyPlayer.Shell.Input"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    Header="快捷键"
+                                    IsExpanded="False"
+                                    ItemsSource="{x:Bind Shortcuts}">
+                                    <controls3:SettingsExpander.HeaderIcon>
+                                        <FontIcon Glyph="&#xE92E;" />
+                                    </controls3:SettingsExpander.HeaderIcon>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Click="ShortcutResetAll_Click" Content="全部恢复默认" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            IsOn="{x:Bind UI.KeyboardShortcutsEnabled, Mode=TwoWay}"
+                                            OffContent="关闭"
+                                            OnContent="开启" />
+                                    </StackPanel>
+                                    <controls3:SettingsExpander.ItemTemplate>
+                                        <DataTemplate x:DataType="shellInput:KeyboardShortcutEntry">
+                                            <controls3:SettingsCard Header="{x:Bind Name}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <Button
+                                                        MinWidth="160"
+                                                        AutomationProperties.Name="{x:Bind Name}"
+                                                        Click="ShortcutCapture_Click"
+                                                        Content="{x:Bind DisplayText, Mode=OneWay}"
+                                                        Tag="{x:Bind}" />
+                                                    <Button
+                                                        Click="ShortcutClear_Click"
+                                                        Content="清除"
+                                                        Tag="{x:Bind}" />
+                                                </StackPanel>
+                                            </controls3:SettingsCard>
+                                        </DataTemplate>
+                                    </controls3:SettingsExpander.ItemTemplate>
+                                </controls3:SettingsExpander>
+                                <controls3:SettingsExpander
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
                                     Header="随机设置"
                                     HeaderIcon="RepeatAll"
                                     IsExpanded="True">
@@ -557,32 +649,6 @@
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind UI.DisplayShuffledList, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                    </controls3:SettingsExpander.Items>
-                                </controls3:SettingsExpander>
-                                <controls3:SettingsExpander
-                                    HorizontalAlignment="Stretch"
-                                    HorizontalContentAlignment="Stretch"
-                                    Header="启动设置"
-                                    HeaderIcon="Play"
-                                    IsExpanded="True">
-                                    <controls3:SettingsExpander.Transitions>
-                                        <TransitionCollection>
-                                            <RepositionThemeTransition />
-                                        </TransitionCollection>
-                                    </controls3:SettingsExpander.Transitions>
-                                    <controls3:SettingsExpander.Items>
-                                        <controls3:SettingsCard Description="打开应用并恢复上次的播放列表后自动开始播放" Header="启动后自动播放">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind Playback.AutoPlayOnLaunch, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="重新打开应用时从上次的位置继续播放" Header="记住播放进度">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind Playback.RememberPlaybackPosition, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                     </controls3:SettingsExpander.Items>
                                 </controls3:SettingsExpander>
@@ -647,71 +713,6 @@
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind Api.JumpVipSongDownloading, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                    </controls3:SettingsExpander.Items>
-                                </controls3:SettingsExpander>
-                                <controls3:SettingsExpander
-                                    xmlns:shellInput="using:HyPlayer.Shell.Input"
-                                    HorizontalAlignment="Stretch"
-                                    HorizontalContentAlignment="Stretch"
-                                    Header="快捷键"
-                                    IsExpanded="False"
-                                    ItemsSource="{x:Bind Shortcuts}">
-                                    <controls3:SettingsExpander.HeaderIcon>
-                                        <FontIcon Glyph="&#xE92E;" />
-                                    </controls3:SettingsExpander.HeaderIcon>
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Button Click="ShortcutResetAll_Click" Content="全部恢复默认" />
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            IsOn="{x:Bind UI.KeyboardShortcutsEnabled, Mode=TwoWay}"
-                                            OffContent="关闭"
-                                            OnContent="开启" />
-                                    </StackPanel>
-                                    <controls3:SettingsExpander.ItemTemplate>
-                                        <DataTemplate x:DataType="shellInput:KeyboardShortcutEntry">
-                                            <controls3:SettingsCard Header="{x:Bind Name}">
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <Button
-                                                        MinWidth="160"
-                                                        AutomationProperties.Name="{x:Bind Name}"
-                                                        Click="ShortcutCapture_Click"
-                                                        Content="{x:Bind DisplayText, Mode=OneWay}"
-                                                        Tag="{x:Bind}" />
-                                                    <Button
-                                                        Click="ShortcutClear_Click"
-                                                        Content="清除"
-                                                        Tag="{x:Bind}" />
-                                                </StackPanel>
-                                            </controls3:SettingsCard>
-                                        </DataTemplate>
-                                    </controls3:SettingsExpander.ItemTemplate>
-                                </controls3:SettingsExpander>
-                                <controls3:SettingsExpander
-                                    HorizontalAlignment="Stretch"
-                                    HorizontalContentAlignment="Stretch"
-                                    Header="弱网与节能"
-                                    IsExpanded="True">
-                                    <controls3:SettingsExpander.HeaderIcon>
-                                        <FontIcon Glyph="&#xEC48;" />
-                                    </controls3:SettingsExpander.HeaderIcon>
-                                    <controls3:SettingsExpander.Transitions>
-                                        <TransitionCollection>
-                                            <RepositionThemeTransition />
-                                        </TransitionCollection>
-                                    </controls3:SettingsExpander.Transitions>
-                                    <controls3:SettingsExpander.Items>
-                                        <controls3:SettingsCard Description="检测到网络较慢时，提示暂时不加载封面并关闭贪婪加载等联网功能，网络恢复后自动还原" Header="弱网时弹出提示">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind Playback.PromptWeakNetwork, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="开启节能或使用电池供电时，提示暂时关闭频谱、呼吸动画等耗电效果，恢复供电后自动还原" Header="节能时弹出提示">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind Playback.PromptPowerSaving, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                     </controls3:SettingsExpander.Items>
                                 </controls3:SettingsExpander>
@@ -801,6 +802,30 @@
                                                 <ComboBoxItem Content="亮色" />
                                                 <ComboBoxItem Content="暗色" />
                                             </ComboBox>
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="圆形播放按钮">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.PlayButtonAccentColor, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="播放栏按钮透明">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.PlaybarButtonsTransparent, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="播放条背景防糊优化">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.PlaybarBackgroundElay, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="关闭可降低显卡占用, 需重启应用" Header="播放栏渐变模糊">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.PlaybarProgressiveBlur, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                     </controls3:SettingsExpander.Items>
                                 </controls3:SettingsExpander>
@@ -975,53 +1000,6 @@
                                         </TransitionCollection>
                                     </controls3:SettingsExpander.Transitions>
                                     <controls3:SettingsExpander.Items>
-                                        <controls3:SettingsCard Description="部分控件需重启应用后生效" Header="界面字体">
-                                            <ComboBox
-                                                x:Name="UiFontBox"
-                                                MinWidth="200"
-                                                HorizontalAlignment="Right"
-                                                DisplayMemberPath="Name"
-                                                SelectedValue="{x:Bind UI.CustomUiFontFamily, Mode=TwoWay}"
-                                                SelectedValuePath="Value" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="自定义主页面背景图">
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <Button Click="PickBackgroundImage_Click" Content="选择图片" />
-                                                <Button
-                                                    Click="RemoveBackgroundImage_Click"
-                                                    Content="移除"
-                                                    Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}" />
-                                            </StackPanel>
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="背景图不透明度 (%)" Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}">
-                                            <Slider
-                                                Width="256"
-                                                HorizontalAlignment="Right"
-                                                Maximum="100"
-                                                Minimum="5"
-                                                StepFrequency="1"
-                                                Value="{x:Bind UI.BackgroundImageOpacity, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="背景图模糊" Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}">
-                                            <Slider
-                                                Width="256"
-                                                HorizontalAlignment="Right"
-                                                Maximum="60"
-                                                Minimum="0"
-                                                StepFrequency="1"
-                                                Value="{x:Bind UI.BackgroundImageBlur, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="背景图填充方式" Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}">
-                                            <ComboBox
-                                                MinWidth="120"
-                                                HorizontalAlignment="Right"
-                                                SelectedIndex="{x:Bind UI.BackgroundImageStretch, Mode=TwoWay}">
-                                                <ComboBoxItem Content="填充" />
-                                                <ComboBoxItem Content="适应" />
-                                                <ComboBoxItem Content="拉伸" />
-                                                <ComboBoxItem Content="原始大小" />
-                                            </ComboBox>
-                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Description="关闭此选项则为 Mica" Header="使用亚克力窗口背景">
                                             <ToggleSwitch
                                                 MinWidth="10"
@@ -1070,6 +1048,53 @@
                                                 RadiusX="10"
                                                 RadiusY="10" />
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="部分控件需重启应用后生效" Header="界面字体">
+                                            <ComboBox
+                                                x:Name="UiFontBox"
+                                                MinWidth="200"
+                                                HorizontalAlignment="Right"
+                                                DisplayMemberPath="Name"
+                                                SelectedValue="{x:Bind UI.CustomUiFontFamily, Mode=TwoWay}"
+                                                SelectedValuePath="Value" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="自定义主页面背景图">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <Button Click="PickBackgroundImage_Click" Content="选择图片" />
+                                                <Button
+                                                    Click="RemoveBackgroundImage_Click"
+                                                    Content="移除"
+                                                    Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}" />
+                                            </StackPanel>
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="背景图不透明度 (%)" Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}">
+                                            <Slider
+                                                Width="256"
+                                                HorizontalAlignment="Right"
+                                                Maximum="100"
+                                                Minimum="5"
+                                                StepFrequency="1"
+                                                Value="{x:Bind UI.BackgroundImageOpacity, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="背景图模糊" Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}">
+                                            <Slider
+                                                Width="256"
+                                                HorizontalAlignment="Right"
+                                                Maximum="60"
+                                                Minimum="0"
+                                                StepFrequency="1"
+                                                Value="{x:Bind UI.BackgroundImageBlur, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="背景图填充方式" Visibility="{x:Bind UI.HasCustomBackground, Mode=OneWay}">
+                                            <ComboBox
+                                                MinWidth="120"
+                                                HorizontalAlignment="Right"
+                                                SelectedIndex="{x:Bind UI.BackgroundImageStretch, Mode=TwoWay}">
+                                                <ComboBoxItem Content="填充" />
+                                                <ComboBoxItem Content="适应" />
+                                                <ComboBoxItem Content="拉伸" />
+                                                <ComboBoxItem Content="原始大小" />
+                                            </ComboBox>
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Description="需重启应用" Header="无图模式">
                                             <ToggleSwitch
                                                 MinWidth="10"
@@ -1081,18 +1106,6 @@
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind UI.PlayBarMargin, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="未在播放时收起主界面底部的 PlayBar" Header="在主界面隐藏 PlayBar">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind UI.HidePlaybarOnHome, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="关闭可降低显卡占用, 需重启应用" Header="播放栏渐变模糊">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind UI.PlaybarProgressiveBlur, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="歌词界面专辑封面不裁剪为正方形">
                                             <ToggleSwitch
@@ -1106,6 +1119,12 @@
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind UI.NotClearMode, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="在主界面隐藏 PlayBar">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.HidePlaybarOnHome, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="自动隐藏PlayBar">
                                             <ToggleSwitch
@@ -1270,6 +1289,30 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind UI.ExpandedUseAcrylic, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="否则为窗口亚克力" Header="播放条使用封面模糊背景">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.PlaybarBackgroundAcrylic, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="展开/收缩「歌词页面」动画">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.ExpandAnimation, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="播放条背景呼吸动画">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.PlaybarBackgroundBreath, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="与阴影冲突" Header="歌词页面专辑封面呼吸动画">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind UI.ExpandAlbumBreath, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="表头启用封面主题色">
                                             <ToggleSwitch
                                                 MinWidth="10"
@@ -1281,48 +1324,6 @@
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind UI.ItemOfListBackgroundAcrylicBlur, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="否则为窗口亚克力" Header="播放条使用封面模糊背景">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind UI.PlaybarBackgroundAcrylic, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="播放条背景呼吸动画">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind UI.PlaybarBackgroundBreath, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="需重启应用" Header="播放条背景防糊优化">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind UI.PlaybarBackgroundElay, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="需重启应用" Header="圆形播放按钮">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind UI.PlayButtonAccentColor, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="需重启应用" Header="播放栏按钮透明">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind UI.PlaybarButtonsTransparent, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="展开/收缩「歌词页面」动画">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind UI.ExpandAnimation, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="与阴影冲突" Header="歌词页面专辑封面呼吸动画">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind UI.ExpandAlbumBreath, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="启用触摸手势控制 (歌词页面-专辑封面)">
                                             <ToggleSwitch
@@ -1377,6 +1378,10 @@
                                                     IsReadOnly="True"
                                                     Text="{x:Bind Download.DownloadDirectory, Mode=OneWay}" />
                                                 <Button
+                                                    Click="ButtonDownloadReset_OnClick"
+                                                    Content="恢复默认"
+                                                    Visibility="{x:Bind Download.DownloadDirectoryIsCustom, Mode=OneWay}" />
+                                                <Button
                                                     x:Name="ButtonDownloadSelect"
                                                     Click="ButtonDownloadSelect_OnClick"
                                                     Content="选择" />
@@ -1393,6 +1398,10 @@
                                                     IsReadOnly="True"
                                                     Text="{x:Bind LocalLibrary.SearchDirectory, Mode=OneWay}" />
                                                 <Button
+                                                    Click="ButtonSearchingReset_OnClick"
+                                                    Content="恢复默认"
+                                                    Visibility="{x:Bind LocalLibrary.SearchDirectoryIsCustom, Mode=OneWay}" />
+                                                <Button
                                                     x:Name="ButtonSearchingSelect"
                                                     Click="ButtonSearchingSelect_OnClick"
                                                     Content="选择" />
@@ -1407,6 +1416,10 @@
                                                     x:Name="TextBoxCacheDir"
                                                     Width="256"
                                                     Text="{x:Bind Playback.CacheDirectory, Mode=OneWay}" />
+                                                <Button
+                                                    Click="ButtonCacheReset_OnClick"
+                                                    Content="恢复默认"
+                                                    Visibility="{x:Bind Playback.CacheDirectoryIsCustom, Mode=OneWay}" />
                                                 <Button
                                                     x:Name="ButtonCacheSelect"
                                                     Click="ButtonCacheSelect_OnClick"
@@ -1440,7 +1453,7 @@
                                                     <ComboBoxItem Content="10 GB" />
                                                     <ComboBoxItem Content="15 GB" />
                                                     <ComboBoxItem Content="20 GB" />
-                                                    <ComboBoxItem Content="自定义" />
+                                                    <ComboBoxItem Content="自定义大小" />
                                                 </ComboBox>
                                             </StackPanel>
                                         </controls3:SettingsCard>
@@ -1467,7 +1480,7 @@
                                         </TransitionCollection>
                                     </controls3:SettingsExpander.Transitions>
                                     <controls3:SettingsExpander.Items>
-                                        <controls3:SettingsCard Description="窗口失去焦点或进入后台超过设定时间后，整理并释放内存" Header="后台释放内存">
+                                        <controls3:SettingsCard Description="窗口失去焦点或最小化超过设定时间后，释放空闲资源并整理内存" Header="后台释放资源">
                                             <ComboBox
                                                 MinWidth="120"
                                                 HorizontalAlignment="Right"
@@ -1480,7 +1493,7 @@
                                                 <ComboBoxItem Content="从不" />
                                             </ComboBox>
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="默认根据应用与系统的内存占用判断是否清理" Header="内存上限">
+                                        <controls3:SettingsCard Description="默认根据应用与系统的内存占用、播放与分析状态判断是否清理" Header="内存上限">
                                             <ComboBox
                                                 MinWidth="120"
                                                 HorizontalAlignment="Right"
@@ -1574,6 +1587,12 @@
                                         </TransitionCollection>
                                     </controls3:SettingsExpander.Transitions>
                                     <controls3:SettingsExpander.Items>
+                                        <controls3:SettingsCard Description="播放网易云歌曲时，如果已经下载过就直接播放本地文件" Header="优先播放已下载的歌曲">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Download.PreferDownloadedFile, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="下载歌词">
                                             <ToggleSwitch
                                                 MinWidth="10"
@@ -1597,12 +1616,6 @@
                                                 MinWidth="10"
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind Download.Write163Info, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="播放网易云歌曲时，如果已经下载过就直接播放本地文件" Header="优先播放已下载的歌曲">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind Download.PreferDownloadedFile, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="最大同时下载任务数">
                                             <controls:NumberBox
@@ -1704,6 +1717,9 @@
                                         Margin="0,0,-100,0"
                                         IsChecked="{x:Bind Api.UseHttp, Mode=TwoWay}" />
                                 </controls3:SettingsCard>
+                                <controls3:SettingsCard Header="获取歌曲时降级HTTPS为HTTP">
+                                    <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind Api.UseHttpWhenGettingSongs, Mode=TwoWay}" />
+                                </controls3:SettingsCard>
                                 <controls3:SettingsCard Description="自动加载更多内容, 3 秒一次请求, 可能会导致风控" Header="使用贪婪加载">
                                     <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind Api.GreedilyLoadPlayContainerItems, Mode=TwoWay}" />
                                 </controls3:SettingsCard>
@@ -1715,6 +1731,9 @@
                                         x:Name="LazySongUrlGetCheck"
                                         Margin="0,0,-100,0"
                                         IsChecked="{x:Bind Api.SongUrlLazyGet, Mode=TwoWay}" />
+                                </controls3:SettingsCard>
+                                <controls3:SettingsCard Description="不要开启!" Header="Xbox上隐藏指针">
+                                    <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind UI.XboxHidePointer, Mode=TwoWay}" />
                                 </controls3:SettingsCard>
                                 <controls3:SettingsCard Header="开启高级音乐历史存储 (超过 100 首)">
                                     <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind LocalLibrary.AdvancedMusicHistoryStorage, Mode=TwoWay}" />
@@ -1748,9 +1767,6 @@
                                 </controls3:SettingsCard>
                                 <controls3:SettingsCard Header="尝试绕过 CheckToken 接口 (可能被检测)">
                                     <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind Api.EnableCheckTokenApi, Mode=TwoWay}" />
-                                </controls3:SettingsCard>
-                                <controls3:SettingsCard Description="不要开启! 需重启应用" Header="Xbox上隐藏指针">
-                                    <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind UI.XboxHidePointer, Mode=TwoWay}" />
                                 </controls3:SettingsCard>
                                 <controls3:SettingsCard Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像关闭&#13;开发者不受理受此功能影响的问题" Header="启用旧版主题（需重启应用）">
                                     <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind UI.IsOldThemeEnabled, Mode=TwoWay}" />

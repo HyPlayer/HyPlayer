@@ -1383,7 +1383,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             CanPreload = _playCore.ActivePlayModeId is not ("sgl" or "ltg")
                          && duration >= TimeSpan.FromSeconds(30),
             PlaybackRate = _player.GetPlaybackSourceSpeed(source),
-            CrossFadeDuration = TimeSpan.FromSeconds(Math.Clamp(_playbackSettings.CrossFadeTime, 3d, 10d)),
+            CrossFadeDuration = TimeSpan.FromSeconds(Math.Clamp(_playbackSettings.CrossFadeTime, 2d, 10d)),
             Song = _state.NowPlayingProviderItem
         };
     }

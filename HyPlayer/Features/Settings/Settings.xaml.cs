@@ -205,10 +205,15 @@ public sealed partial class Settings : Page
 #if DEBUG
         VersionCode.Text += " Debug";
 #endif
-        FontBox.ItemsSource = GetAllFonts();
-        UiFontBox.ItemsSource = (List<FontInfo>)
-            [new FontInfo { Name = "默认", Value = string.Empty }, .. (List<FontInfo>)FontBox.ItemsSource];
+        FontBox.ItemsSource = SystemFonts.Value;
+        UiFontBox.ItemsSource = UiFonts.Value;
     }
+
+    public static readonly Lazy<List<FontInfo>> SystemFonts =
+        new(GetAllFonts, System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+
+    private static readonly Lazy<List<FontInfo>> UiFonts =
+        new(() => [new FontInfo { Name = "默认", Value = string.Empty }, .. SystemFonts.Value]);
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
@@ -368,7 +373,28 @@ public sealed partial class Settings : Page
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("downloadFolder", folder);
             Download.DownloadDirectory = folder.Path;
+            LocalLibrary.NotifyDownloadDirectoryChanged();
         }
+    }
+
+    private async void ButtonDownloadReset_OnClick(object sender, RoutedEventArgs e)
+    {
+        StorageFolder target;
+        try
+        {
+            target = await StorageFolder.GetFolderFromPathAsync(await Download.GetDefaultDownloadDirectoryAsync());
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("无法恢复默认下载路径", ex.Message);
+            return;
+        }
+
+        if (!await StorageMigrationPrompt.OfferAsync("下载的歌曲", await Download.GetDownloadDirectoryAsync(), target,
+                StorageContentKind.Music))
+            return;
+        Download.ResetDownloadDirectory();
+        LocalLibrary.NotifyDownloadDirectoryChanged();
     }
 
     private async void ButtonSearchingSelect_OnClick(object sender, RoutedEventArgs e)
@@ -379,11 +405,32 @@ public sealed partial class Settings : Page
         };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
-        if (folder != null)
+        if (folder != null && await FolderAccessGuard.EnsureWritableAsync(folder, "本地音乐索引")
+            && await StorageMigrationPrompt.OfferAsync("本地音乐", LocalLibrary.SearchDirectory, folder,
+                StorageContentKind.Music))
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("searchingFolder", folder);
             LocalLibrary.SearchDirectory = folder.Path;
         }
+    }
+
+    private async void ButtonSearchingReset_OnClick(object sender, RoutedEventArgs e)
+    {
+        StorageFolder target;
+        try
+        {
+            target = await StorageFolder.GetFolderFromPathAsync(await Download.GetDownloadDirectoryAsync());
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("无法恢复默认搜索路径", ex.Message);
+            return;
+        }
+
+        if (!await StorageMigrationPrompt.OfferAsync("本地音乐", LocalLibrary.SearchDirectory, target,
+                StorageContentKind.Music))
+            return;
+        LocalLibrary.ResetSearchDirectory();
     }
 
 
@@ -448,6 +495,15 @@ public sealed partial class Settings : Page
             Playback.CacheDirectory = folder.Path;
             _ = RefreshCacheUsageAsync();
         }
+    }
+
+    private async void ButtonCacheReset_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (!await StorageMigrationPrompt.OfferAsync("缓存", Playback.CacheDirectory,
+                ApplicationData.Current.LocalCacheFolder, StorageContentKind.Cache))
+            return;
+        Playback.ResetCacheDirectory();
+        _ = RefreshCacheUsageAsync();
     }
 
     private void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
