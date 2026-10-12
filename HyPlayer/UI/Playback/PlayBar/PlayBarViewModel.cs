@@ -10,6 +10,7 @@ using Windows.UI.Xaml.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.WinUI.Helpers;
+using HyPlayer.Application.Notifications;
 using HyPlayer.Application.Threading;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Settings;
@@ -27,10 +28,12 @@ namespace HyPlayer.UI.Playback.PlayBar;
 public partial class PlayBarViewModel : ObservableObject
 {
     private int _playlistRefreshVersion;
+    private int _trackLoadingVersion;
     private long _lastNotifiedSecond = -1;
     private readonly IAuthService _authService;
     private readonly IPlaybackControlService _control;
     private readonly ILyricService _lyricService;
+    private readonly INotificationService _notification;
     private readonly PlayCoreBase _playCore;
     private readonly PlaybackSettings _playbackSettings;
     private readonly UISettings _uiSettings;
@@ -48,8 +51,10 @@ public partial class PlayBarViewModel : ObservableObject
         UISettings uiSettings,
         IUIThreadDispatcher uiThreadDispatcher,
         IBackgroundTaskRunner taskRunner,
-        IAuthService authService)
+        IAuthService authService,
+        INotificationService notification)
     {
+        _notification = notification;
         _playCore = playCore;
         _control = control;
         _state = state;
@@ -93,6 +98,10 @@ public partial class PlayBarViewModel : ObservableObject
     [ObservableProperty] public partial string QualityTag { get; set; } = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ArtistDisplayText))]
+    public partial bool IsLoadingTrack { get; set; }
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PlaybackAccentBrush))]
     [NotifyPropertyChangedFor(nameof(PlaybackAccentTheme))]
     public partial PlaybackThemeSnapshot DisplayedTheme { get; set; } = PlaybackThemeSnapshot.Default;
@@ -121,6 +130,7 @@ public partial class PlayBarViewModel : ObservableObject
 
     public string SongName => NowPlayingSnapshot?.Name ?? string.Empty;
     public string ArtistName => NowPlayingSnapshot?.ArtistText ?? string.Empty;
+    public string ArtistDisplayText => IsLoadingTrack ? "正在加载…" : ArtistName;
     public string AlbumName => NowPlayingSnapshot?.AlbumName ?? string.Empty;
     public string QualityTagText => GetQualityTagText(NowPlayingSnapshot, QualityTag, _playbackSettings.AudioRate);
 
@@ -254,6 +264,9 @@ public partial class PlayBarViewModel : ObservableObject
                 case nameof(PlaybackStateService.QualityTag):
                     QualityTag = _state.QualityTag;
                     break;
+                case nameof(PlaybackStateService.IsLoadingTrack):
+                    IsLoadingTrack = _state.IsLoadingTrack;
+                    break;
                 case nameof(PlaybackStateService.LyricInfo):
                     LyricInfo = _state.LyricInfo;
                     break;
@@ -297,6 +310,20 @@ public partial class PlayBarViewModel : ObservableObject
         OnPropertyChanged(nameof(PlayStateGlyph));
     }
 
+    partial void OnIsLoadingTrackChanged(bool value)
+    {
+        var version = ++_trackLoadingVersion;
+        if (value)
+            _taskRunner.Forget(NotifySlowTrackLoadingAsync(version, SongName), "notify slow track loading");
+    }
+
+    private async Task NotifySlowTrackLoadingAsync(int version, string title)
+    {
+        await Task.Delay(5000);
+        if (version != _trackLoadingVersion || !IsLoadingTrack) return;
+        _notification.ShowMessage("正在加载", $"{(string.IsNullOrEmpty(title) ? "歌曲" : title)} 加载较慢，请稍候");
+    }
+
     partial void OnPositionChanged(TimeSpan value)
     {
         var second = (long)value.TotalSeconds;
@@ -329,6 +356,7 @@ public partial class PlayBarViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(SongName));
         OnPropertyChanged(nameof(ArtistName));
+        OnPropertyChanged(nameof(ArtistDisplayText));
         OnPropertyChanged(nameof(AlbumName));
         OnPropertyChanged(nameof(QualityTagText));
         OnPropertyChanged(nameof(TotalTimeText));
@@ -472,5 +500,6 @@ public partial class PlayBarViewModel : ObservableObject
         LyricInfo = _state.LyricInfo;
         IsInFm = _state.IsInFm;
         QualityTag = _state.QualityTag;
+        IsLoadingTrack = _state.IsLoadingTrack;
     }
 }

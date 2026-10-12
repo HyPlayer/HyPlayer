@@ -89,7 +89,20 @@ public sealed partial class RadioPage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (e.Parameter is string rid)
+        SongContainer.IsLoading = true;
+        try
+        {
+            await LoadRadioChannelAsync(e.Parameter);
+        }
+        finally
+        {
+            SongContainer.IsLoading = false;
+        }
+    }
+
+    private async Task LoadRadioChannelAsync(object parameter)
+    {
+        if (parameter is string rid)
         {
             _radioChannel = await GetRadioChannelAsync(rid);
             if (_radioChannel is null)
@@ -99,7 +112,7 @@ public sealed partial class RadioPage : Page
             }
         }
 
-        if (e.Parameter is ContainerBase radio) _radioChannel = radio;
+        if (parameter is ContainerBase radio) _radioChannel = radio;
 
         _progressiveRadioChannel = _radioChannel as IProgressiveLoadingContainer;
         if (_progressiveRadioChannel is null)

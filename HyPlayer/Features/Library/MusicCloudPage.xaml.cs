@@ -121,12 +121,21 @@ public sealed partial class MusicCloudPage : Page
 
     private async Task<bool> LoadCloudContainerAsync()
     {
-        if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
-                _cancellationTokenSource?.Token ?? CancellationToken.None) is not ContainerBase container)
-            return false;
+        SongContainer.IsLoading = true;
+        try
+        {
+            if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(
+                    _userLibraryTypeIds.CloudLibraryTypeId,
+                    _cancellationTokenSource?.Token ?? CancellationToken.None) is not ContainerBase container)
+                return false;
 
-        CloudContainer = container;
-        return true;
+            CloudContainer = container;
+            return true;
+        }
+        finally
+        {
+            SongContainer.IsLoading = false;
+        }
     }
 
     private async Task DeleteCloudItemAsync(ProvidableItemRowViewModel row)

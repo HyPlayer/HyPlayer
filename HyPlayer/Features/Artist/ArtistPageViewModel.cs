@@ -55,6 +55,8 @@ public partial class ArtistPageViewModel : ObservableObject
     [ObservableProperty] public partial int CurrentPivotIndex { get; set; }
     [ObservableProperty] public partial BitmapImage? Image { get; set; }
     [ObservableProperty] public partial bool IsPlayingAll { get; set; }
+    [ObservableProperty] public partial bool IsLoadingHotSongs { get; set; }
+    [ObservableProperty] public partial bool IsLoadingSongs { get; set; }
 
     [RelayCommand]
     private async Task PlayAllSongsAsync()
@@ -87,6 +89,26 @@ public partial class ArtistPageViewModel : ObservableObject
         if (_loadedArtistId == artistId && Artist is not null)
             return;
 
+        IsLoadingHotSongs = true;
+        IsLoadingSongs = true;
+        try
+        {
+            if (!await LoadArtistDetailAsync(artistId))
+                IsLoadingHotSongs = false;
+        }
+        catch
+        {
+            IsLoadingHotSongs = false;
+            throw;
+        }
+        finally
+        {
+            IsLoadingSongs = false;
+        }
+    }
+
+    private async Task<bool> LoadArtistDetailAsync(string artistId)
+    {
         _providerArtist = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
         {
             try
@@ -101,7 +123,7 @@ public partial class ArtistPageViewModel : ObservableObject
         });
 
         if (_providerArtist is null)
-            return;
+            return false;
 
         Artist = _providerArtist;
         var image = (_providerArtist as NeteaseArtist)?.CoverUrl;
@@ -116,6 +138,7 @@ public partial class ArtistPageViewModel : ObservableObject
             "alb", "专辑", "artist-albums", _knownTypeIds.AlbumTypeId,
             CacheType.ArtistAlbumsList);
         LoadHotSongs().SafeFireAndForget();
+        return true;
     }
 
     private ContainerBase CreateArtistContainer(
@@ -167,6 +190,18 @@ public partial class ArtistPageViewModel : ObservableObject
     }
 
     private async Task LoadHotSongs()
+    {
+        try
+        {
+            await LoadHotSongsCore();
+        }
+        finally
+        {
+            IsLoadingHotSongs = false;
+        }
+    }
+
+    private async Task LoadHotSongsCore()
     {
         if (Artist is null)
             return;

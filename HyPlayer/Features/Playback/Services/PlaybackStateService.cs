@@ -73,6 +73,9 @@ public partial class PlaybackStateService : ObservableObject
     [ObservableProperty]
     public partial bool IsTransitioning { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsLoadingTrack { get; set; }
+
     /// <summary>PlayCore 队列变化版本号，供 UI 刷新队列投影。</summary>
     [ObservableProperty]
     public partial int QueueRevision { get; set; }

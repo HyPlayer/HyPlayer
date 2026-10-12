@@ -46,8 +46,10 @@
             Container="{x:Bind ViewModel.PlayList, Mode=OneWay}"
             ExtraItemActions="{x:Bind ItemActions}"
             GreedyLoad="{x:Bind ViewModel.GreedyLoad, Mode=OneWay}"
+            IsLoading="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
             IsMySongList="{x:Bind ViewModel.IsMySongList, Mode=OneWay}"
-            IsSearchEnabled="True">
+            IsSearchEnabled="True"
+            LoadingText="正在加载歌曲…">
             <controls1:ContainerItemsView.ListHeader>
                 <Grid Margin="0,0,0,-75">
                     <Border

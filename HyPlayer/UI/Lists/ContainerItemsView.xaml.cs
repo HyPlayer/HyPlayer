@@ -84,6 +84,14 @@ public sealed partial class ContainerItemsView : UserControl
     public static readonly DependencyProperty ExtraSelectionActionsProperty = DependencyProperty.Register(
         nameof(ExtraSelectionActions), typeof(IList), typeof(ContainerItemsView), new PropertyMetadata(null));
 
+    public static readonly DependencyProperty IsLoadingProperty = DependencyProperty.Register(
+        nameof(IsLoading), typeof(bool), typeof(ContainerItemsView),
+        new PropertyMetadata(false, (d, _) => ((ContainerItemsView)d).UpdateLoadingState()));
+
+    public static readonly DependencyProperty LoadingTextProperty = DependencyProperty.Register(
+        nameof(LoadingText), typeof(string), typeof(ContainerItemsView),
+        new PropertyMetadata("正在加载…", (d, _) => ((ContainerItemsView)d).UpdateLoadingState()));
+
     private readonly IPlaybackControlService _control = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly ProvidableItemDisplayResolver _displayResolver = ProvidableItemDisplayResolver.CreateDefault();
     private readonly SwitchingIncrementalSource<ProvidableItemRowViewModel> _rowsSource = new();
@@ -99,6 +107,8 @@ public sealed partial class ContainerItemsView : UserControl
     private readonly WeakEventListener<ContainerItemsView, object?, PropertyChangedEventArgs> _stateChangedListener;
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private bool _isStateSubscribed;
+    private bool _isPlayingClickedRow;
+    private ProvidableItemRowViewModel? _queuedClick;
     private CancellationTokenSource? _eagerLoadCts;
 
     public ContainerItemsView()
@@ -110,6 +120,7 @@ public sealed partial class ContainerItemsView : UserControl
             RowsLoadCompleted,
             RowsLoadFailed);
         State = new ContainerItemsViewState(_rows);
+        State.PropertyChanged += State_PropertyChanged;
         InitializeComponent();
         _stateChangedListener = new WeakEventListener<ContainerItemsView, object?, PropertyChangedEventArgs>(this)
         {
@@ -176,16 +187,16 @@ public sealed partial class ContainerItemsView : UserControl
         set => SetValue(GreedyLoadProperty, value);
     }
 
-    private bool IsLoading
+    public bool IsLoading
     {
-        get => State.IsLoading;
-        set => State.IsLoading = value;
+        get => (bool)GetValue(IsLoadingProperty);
+        set => SetValue(IsLoadingProperty, value);
     }
 
-    private bool HasMore
+    public string LoadingText
     {
-        get => State.HasMore;
-        set => State.HasMore = value;
+        get => (string)GetValue(LoadingTextProperty);
+        set => SetValue(LoadingTextProperty, value);
     }
 
     public SongListQueueScope QueueScope
@@ -268,10 +279,65 @@ public sealed partial class ContainerItemsView : UserControl
         view.RestartEagerLoading();
     }
 
+    private void State_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ContainerItemsViewState.IsInitialLoading))
+            UpdateLoadingState();
+    }
+
+    private void UpdateLoadingState()
+    {
+        if (LoadingPanel is null) return;
+        var loading = IsLoading || State.IsInitialLoading;
+        LoadingTextBlock.Text = LoadingText;
+        LoadingRing.IsActive = loading;
+        LoadingPanel.Visibility = loading ? Visibility.Visible : Visibility.Collapsed;
+        if (loading) PositionLoadingPanel();
+    }
+
+    private void PositionLoadingPanel()
+    {
+        if (LoadingPanel.Visibility != Visibility.Visible || ActualHeight <= 0) return;
+        double headerBottom = 0;
+        try
+        {
+            if (HeaderPanel is { ActualHeight: > 0 })
+                headerBottom = HeaderPanel.TransformToVisual(this)
+                    .TransformPoint(new Point(0, HeaderPanel.ActualHeight)).Y;
+        }
+        catch
+        {
+        }
+
+        var top = Math.Clamp(headerBottom, 0, ActualHeight);
+        var bottomReserve = Math.Min(130, ActualHeight * 0.15);
+        var available = Math.Max(0, ActualHeight - top - bottomReserve);
+        var panelHeight = LoadingPanel.ActualHeight > 0 ? LoadingPanel.ActualHeight : 80;
+        LoadingPanelOffset.Y = available > panelHeight
+            ? top + (available - panelHeight) / 2 - (ActualHeight - panelHeight) / 2
+            : 0;
+    }
+
+    private void OnLoadingLayoutChanged(object sender, SizeChangedEventArgs e)
+    {
+        PositionLoadingPanel();
+    }
+
     private void ContainerItemsView_Loaded(object sender, RoutedEventArgs e)
     {
         AttachStateChanged();
         State.MultiSelect = false;
+        if (HeaderPanel is not null)
+        {
+            HeaderPanel.SizeChanged -= OnLoadingLayoutChanged;
+            HeaderPanel.SizeChanged += OnLoadingLayoutChanged;
+        }
+
+        SizeChanged -= OnLoadingLayoutChanged;
+        SizeChanged += OnLoadingLayoutChanged;
+        LoadingPanel.SizeChanged -= OnLoadingLayoutChanged;
+        LoadingPanel.SizeChanged += OnLoadingLayoutChanged;
+        UpdateLoadingState();
         if (Rows.Count == 0 && _rows.HasMoreItems && !_rows.IsLoading)
             LoadFirstPageAsync().SafeFireAndForget();
         RestartEagerLoading();
@@ -366,8 +432,8 @@ public sealed partial class ContainerItemsView : UserControl
 
     private void SyncLoadState()
     {
-        IsLoading = _rows.IsLoading;
-        HasMore = _rows.HasMoreItems;
+        State.IsLoading = _rows.IsLoading;
+        State.HasMore = _rows.HasMoreItems;
     }
 
     private void RefreshVisibleRows()
@@ -443,7 +509,7 @@ public sealed partial class ContainerItemsView : UserControl
         if (!TryGetRow(e.ClickedItem, out var row)) return;
         if (ItemList.SelectionMode == ListViewSelectionMode.Multiple) return;
 
-        if (row.AsPlayableSong is { } clickedSong)
+        if (row.AsPlayableSong is not null)
         {
             if (!row.IsAvailable)
             {
@@ -451,15 +517,47 @@ public sealed partial class ContainerItemsView : UserControl
                 return;
             }
 
-            await _queueBuilder.BuildAndPlayAsync(
-                clickedSong,
-                GetEffectiveQueueScope(),
-                VisibleRows.Select(visibleRow => visibleRow.AsPlayableSong).OfType<SingleSongBase>().ToList());
+            ItemList.SelectedItem = row;
+            if (_isPlayingClickedRow)
+            {
+                _queuedClick = row;
+                return;
+            }
+
+            await PlayClickedRowAsync(row);
             return;
         }
 
         if (TryBuildRoute(row) is { } route)
             await _navigator.NavigateAsync(route);
+    }
+
+    private async Task PlayClickedRowAsync(ProvidableItemRowViewModel row)
+    {
+        while (row.AsPlayableSong is { } clickedSong)
+        {
+            _isPlayingClickedRow = true;
+            try
+            {
+                await _queueBuilder.BuildAndPlayAsync(
+                    clickedSong,
+                    GetEffectiveQueueScope(),
+                    VisibleRows.Select(visibleRow => visibleRow.AsPlayableSong).OfType<SingleSongBase>().ToList());
+            }
+            catch (Exception ex)
+            {
+                _notification.ShowMessage("播放失败", $"{row.Title}: {ex.Message}");
+            }
+            finally
+            {
+                _isPlayingClickedRow = false;
+            }
+
+            if (_queuedClick is not { } queued) return;
+            _queuedClick = null;
+            if (ReferenceEquals(queued, row)) return;
+            row = queued;
+        }
     }
 
     private void More_Click(object sender, RoutedEventArgs e)
@@ -799,6 +897,8 @@ public sealed partial class ContainerItemsView : UserControl
         _rows.OnEndLoading = null;
         _rows.OnError = null;
 
+        State.PropertyChanged -= State_PropertyChanged;
+        _queuedClick = null;
         State.ActiveItemsSource = null;
         ItemList.ItemsSource = null;
         HeaderContentControl.Content = null;

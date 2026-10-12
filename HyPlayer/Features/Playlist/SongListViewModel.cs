@@ -110,6 +110,19 @@ public partial class SongListViewModel : ObservableObject, IDisposable
 
     public async Task LoadPageData(string playlistId, bool loadPlaylist = false)
     {
+        IsLoading = true;
+        try
+        {
+            await LoadPageDataCore(playlistId, loadPlaylist);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadPageDataCore(string playlistId, bool loadPlaylist)
+    {
         var playlistChanged = !string.Equals(_loadedPlaylistId, playlistId, StringComparison.Ordinal)
                               || _loadedDailyRecommend != IsDailyRecommend;
         if (playlistChanged)
@@ -182,15 +195,23 @@ public partial class SongListViewModel : ObservableObject, IDisposable
 
     public async Task LoadAlbumImage(CancellationToken cancellationToken)
     {
-        if (CoverUri is null) return;
-        using var result = await _httpClient.GetAsync(CoverUri, cancellationToken);
-        if (result.IsSuccessStatusCode)
+        if (CoverUri is not { IsAbsoluteUri: true } coverUri ||
+            (coverUri.Scheme != Uri.UriSchemeHttp && coverUri.Scheme != Uri.UriSchemeHttps)) return;
+        try
         {
-            using var stream = await result.Content.ReadAsStreamAsync(cancellationToken);
-            using var inputStream = stream.AsRandomAccessStream();
-            var imageMainColor = await ColorHelper.ExtractThemeColorFromStream(inputStream, _uiSettings.ColorGeneratorType);
-            cancellationToken.ThrowIfCancellationRequested();
-            AlbumColor = imageMainColor;
+            using var result = await _httpClient.GetAsync(coverUri, cancellationToken);
+            if (result.IsSuccessStatusCode)
+            {
+                using var stream = await result.Content.ReadAsStreamAsync(cancellationToken);
+                using var inputStream = stream.AsRandomAccessStream();
+                var imageMainColor =
+                    await ColorHelper.ExtractThemeColorFromStream(inputStream, _uiSettings.ColorGeneratorType);
+                cancellationToken.ThrowIfCancellationRequested();
+                AlbumColor = imageMainColor;
+            }
+        }
+        catch
+        {
         }
     }
 

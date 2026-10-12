@@ -127,6 +127,12 @@
                         HorizontalAlignment="Center"
                         IsActive="{x:Bind State.IsLoadingMore, Mode=OneWay}"
                         Visibility="{x:Bind State.IsLoadingMore, Mode=OneWay}" />
+                    <TextBlock
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Center"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="{x:Bind State.LoadingMoreText, Mode=OneWay}"
+                        Visibility="{x:Bind State.IsLoadingMore, Mode=OneWay}" />
                     <Button
                         x:Name="LoadMoreButton"
                         HorizontalAlignment="Center"
@@ -272,11 +278,31 @@
                                 RadiusX="10"
                                 RadiusY="10" />
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <Grid
+                                    MinWidth="36"
+                                    Margin="6,0,2,0"
+                                    VerticalAlignment="Center">
+                                    <TextBlock
+                                        x:Name="OrderId"
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{x:Bind DisplayOrder}"
+                                        TextAlignment="Center"
+                                        Visibility="{x:Bind IsCurrent, Mode=OneWay, Converter={StaticResource ReversedBooleanToVisibilityConverter}}" />
+                                    <FontIcon
+                                        HorizontalAlignment="Center"
+                                        FontSize="16"
+                                        FontWeight="Bold"
+                                        Foreground="{ThemeResource SystemAccentColor}"
+                                        Glyph="&#xF5B0;"
+                                        Visibility="{x:Bind CurrentVisible, Mode=OneWay}" />
+                                </Grid>
                                 <frieren:ImageEx
                                     x:Name="ImageRect"
                                     Width="50"
                                     Height="50"
-                                    Margin="6,0,0,0"
+                                    Margin="4,0,12,0"
                                     CornerRadius="9"
                                     IsCacheEnabled="False"
                                     IsEnabled="{x:Bind IsAvailable}"
@@ -285,26 +311,6 @@
                                         <BitmapImage UriSource="{x:Bind Cover}" />
                                     </frieren:ImageEx.Source>
                                 </frieren:ImageEx>
-                                <TextBlock
-                                    x:Name="OrderId"
-                                    Width="48"
-                                    Margin="-46,6,6,0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Top"
-                                    FontSize="16"
-                                    FontWeight="Bold"
-                                    Text="{x:Bind DisplayOrder}"
-                                    Visibility="{x:Bind IsCurrent, Mode=OneWay, Converter={StaticResource ReversedBooleanToVisibilityConverter}}" />
-                                <FontIcon
-                                    Width="24"
-                                    Margin="-46,6,30,0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Top"
-                                    FontSize="16"
-                                    FontWeight="Bold"
-                                    Foreground="{ThemeResource SystemAccentColor}"
-                                    Glyph="&#xF5B0;"
-                                    Visibility="{x:Bind CurrentVisible, Mode=OneWay}" />
                                 <Grid HorizontalAlignment="Stretch">
                                     <StackPanel
                                         Margin="0,0,0,4"
@@ -377,12 +383,25 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <ProgressRing
-            Width="100"
-            Height="100"
+        <StackPanel
+            x:Name="LoadingPanel"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            IsActive="{x:Bind State.IsInitialLoading, Mode=OneWay}"
-            Visibility="{x:Bind State.IsInitialLoading, Mode=OneWay}" />
+            IsHitTestVisible="False"
+            Spacing="14"
+            Visibility="Collapsed">
+            <StackPanel.RenderTransform>
+                <TranslateTransform x:Name="LoadingPanelOffset" />
+            </StackPanel.RenderTransform>
+            <ProgressRing
+                x:Name="LoadingRing"
+                Width="44"
+                Height="44"
+                IsActive="False" />
+            <TextBlock
+                x:Name="LoadingTextBlock"
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
     </Grid>
 </UserControl>

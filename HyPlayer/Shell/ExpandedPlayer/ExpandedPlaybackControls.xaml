@@ -51,7 +51,7 @@
                 Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
                 Opacity="0.6"
                 Text="-0:00" />
-            <Grid HorizontalAlignment="Center" Opacity="0.6">
+            <Grid x:Name="QualityHost" HorizontalAlignment="Center">
                 <TextBlock
                     x:Name="QualityText"
                     CharacterSpacing="60"
@@ -59,6 +59,22 @@
                     FontWeight="SemiBold"
                     Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
                     Text="" />
+                <Grid
+                    x:Name="QualityRevealHost"
+                    IsHitTestVisible="False"
+                    Visibility="Collapsed">
+                    <Grid x:Name="QualityMaskSource">
+                        <TextBlock
+                            x:Name="QualityRevealText"
+                            CharacterSpacing="60"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="过渡" />
+                    </Grid>
+                    <Border x:Name="QualityBloomHost" />
+                    <Border x:Name="QualityFillHost" />
+                </Grid>
             </Grid>
         </Grid>
         <Grid Grid.Row="2" Margin="0,6,0,6">

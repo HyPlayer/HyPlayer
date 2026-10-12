@@ -90,6 +90,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private const long PrepareRetryDelayMilliseconds = 8000;
     private long _prepareRetryAfter;
     private bool _loadTimedOut;
+    private int _trackLoadingDepth;
     private SystemMediaTransportControls? _smtc;
     private bool _smtcSubscribed;
 
@@ -789,7 +790,9 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 _audioService.FadeInNextPlay(_resumeFadeIn);
             var song = _playCore.CurrentSong;
             var timeout = song is null ? Timeout.InfiniteTimeSpan : GetLoadTimeout(song, false);
+            var opensSource = song is not null && _playCore.CurrentPlayingTicket is null;
             bool loaded;
+            if (opensSource) BeginTrackLoading();
             try
             {
                 loaded = await TryLoadWithinAsync(
@@ -801,6 +804,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             finally
             {
                 _audioService.FadeInNextPlay(TimeSpan.Zero);
+                if (opensSource) EndTrackLoading();
             }
 
             if (!loaded && song is not null)
@@ -1192,6 +1196,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         var timeout = GetLoadTimeout(song, false);
         bool loaded;
         _loadTimedOut = false;
+        BeginTrackLoading();
         try
         {
             loaded = await TryLoadWithinAsync(token => _playCore.PlayAsync(token), timeout, ct)
@@ -1215,6 +1220,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         finally
         {
             _audioService.FadeInNextPlay(TimeSpan.Zero);
+            EndTrackLoading();
         }
 
         if (!loaded)
@@ -1228,6 +1234,18 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
         _state.IsPlaying = _playCore.CurrentPlayingTicket is not null;
         CaptureCurrentPlaybackIdentity();
+    }
+
+    private void BeginTrackLoading()
+    {
+        if (Interlocked.Increment(ref _trackLoadingDepth) == 1)
+            _state.IsLoadingTrack = true;
+    }
+
+    private void EndTrackLoading()
+    {
+        if (Interlocked.Decrement(ref _trackLoadingDepth) == 0)
+            _state.IsLoadingTrack = false;
     }
 
     private static TimeSpan GetLoadTimeout(SingleSongBase song, bool preload)

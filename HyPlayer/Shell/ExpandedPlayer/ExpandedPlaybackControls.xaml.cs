@@ -9,6 +9,8 @@ using Windows.UI.Xaml.Input;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Playback.Services;
+using HyPlayer.Platform.Xaml;
+using HyPlayer.UI.Controls.Primitives;
 using HyPlayer.UI.Playback.PlayBar;
 
 namespace HyPlayer.Shell.ExpandedPlayer;
@@ -16,11 +18,15 @@ namespace HyPlayer.Shell.ExpandedPlayer;
 public sealed partial class ExpandedPlaybackControls : UserControl
 {
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
+    private readonly PlaybackStateService _playbackState = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private bool _isAttached;
     private long _lastElapsedSecond = -1;
     private long _lastRemainingSecond = -1;
+    private bool? _qualityHostBright;
     private int _qualityVersion;
+    private bool _showingTransition;
+    private TextGlowEffect? _textGlow;
 
     public ExpandedPlaybackControls()
     {
@@ -67,6 +73,7 @@ public sealed partial class ExpandedPlaybackControls : UserControl
         if (_isAttached || ViewModel is not { } viewModel) return;
         _isAttached = true;
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
+        _playbackState.PropertyChanged += PlaybackState_PropertyChanged;
         RefreshAll();
     }
 
@@ -75,6 +82,16 @@ public sealed partial class ExpandedPlaybackControls : UserControl
         if (!_isAttached || ViewModel is not { } viewModel) return;
         _isAttached = false;
         viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        _playbackState.PropertyChanged -= PlaybackState_PropertyChanged;
+    }
+
+    private void PlaybackState_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(PlaybackStateService.IsTransitioning)) return;
+        _ = this.RunOnUIThreadAsync(() =>
+        {
+            if (_isAttached) RefreshQuality(true);
+        });
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -142,14 +159,27 @@ public sealed partial class ExpandedPlaybackControls : UserControl
 
     private void RefreshQuality(bool animate)
     {
-        var text = ViewModel is not { NowPlayingSnapshot: { } snapshot } viewModel
-            ? string.Empty
-            : PlayBarViewModel.GetQualityTagText(snapshot, viewModel.QualityTag, viewModel.PlaybackSettings.AudioRate);
-        if (QualityText.Text == text) return;
+        var transitioning = _playbackState.IsTransitioning;
+        var text = transitioning
+            ? "过渡"
+            : ViewModel is not { NowPlayingSnapshot: { } snapshot } viewModel
+                ? string.Empty
+                : PlayBarViewModel.GetQualityTagText(snapshot, viewModel.QualityTag,
+                    viewModel.PlaybackSettings.AudioRate);
+        if (QualityText.Text == text && _showingTransition == transitioning && _qualityHostBright is not null)
+            return;
+        _showingTransition = transitioning;
+        _textGlow ??= new TextGlowEffect(QualityRevealHost, QualityMaskSource, QualityRevealText, QualityBloomHost,
+            QualityFillHost);
+        ProgressBar.IsGlowing = transitioning;
+        AnimateQualityHost(transitioning);
+        if (!transitioning) _textGlow.SetActive(false);
         var version = ++_qualityVersion;
         if (!animate || string.IsNullOrEmpty(QualityText.Text))
         {
             QualityText.Text = text;
+            QualityText.Opacity = transitioning ? 0 : 1;
+            if (transitioning) _textGlow.SetActive(true);
             return;
         }
 
@@ -165,11 +195,31 @@ public sealed partial class ExpandedPlaybackControls : UserControl
         {
             if (version != _qualityVersion) return;
             QualityText.Text = text;
+            QualityText.Opacity = transitioning ? 0 : 1;
+            if (transitioning) _textGlow.SetActive(true);
             var fadeIn = compositor.CreateScalarKeyFrameAnimation();
             fadeIn.InsertKeyFrame(1f, 1f);
             fadeIn.Duration = TimeSpan.FromMilliseconds(240);
             visual.StartAnimation("Opacity", fadeIn);
         };
+    }
+
+    private void AnimateQualityHost(bool bright)
+    {
+        if (_qualityHostBright == bright) return;
+        var visual = ElementCompositionPreview.GetElementVisual(QualityHost);
+        if (_qualityHostBright is null)
+        {
+            visual.Opacity = bright ? 1f : 0.6f;
+            _qualityHostBright = bright;
+            return;
+        }
+
+        _qualityHostBright = bright;
+        var fade = visual.Compositor.CreateScalarKeyFrameAnimation();
+        fade.InsertKeyFrame(1f, bright ? 1f : 0.6f);
+        fade.Duration = TimeSpan.FromMilliseconds(500);
+        visual.StartAnimation("Opacity", fade);
     }
 
     private void RefreshPlayState()

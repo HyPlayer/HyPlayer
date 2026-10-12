@@ -8,7 +8,8 @@
         <controls1:ContainerItemsView
             x:Name="SongContainer"
             Container="{x:Bind EpisodesContainer, Mode=OneWay}"
-            IsSearchEnabled="True">
+            IsSearchEnabled="True"
+            LoadingText="正在加载单集…">
             <controls1:ContainerItemsView.ListHeader>
                 <StackPanel Margin="24,24,24,12" Spacing="10">
                     <TextBlock
@@ -16,10 +17,15 @@
                         FontSize="36"
                         FontWeight="Medium"
                         TextWrapping="Wrap" />
+                    <TextBlock
+                        x:Name="SubtitleText"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Button
                             x:Name="PlayAllButton"
                             Click="PlayAll_Click"
+                            IsEnabled="False"
                             Style="{StaticResource AccentButtonStyle}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon FontSize="14" Glyph="&#xE768;" />

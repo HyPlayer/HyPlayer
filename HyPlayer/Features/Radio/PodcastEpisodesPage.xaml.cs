@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using Windows.UI.Xaml;
@@ -31,6 +32,8 @@ public sealed partial class PodcastEpisodesPage : Page
     private readonly IPodcastLibraryService _podcastLibrary =
         Ioc.Default.GetRequiredService<IPodcastLibraryService>();
 
+    private bool _isPlayingAll;
+
     public PodcastEpisodesPage()
     {
         InitializeComponent();
@@ -50,8 +53,25 @@ public sealed partial class PodcastEpisodesPage : Page
                 ? PodcastEpisodeKinds.Collected
                 : PodcastEpisodeKinds.Liked);
         TitleText.Text = container.Name;
+        SubtitleText.Text = "正在加载…";
+        SongContainer.State.PropertyChanged += ListState_PropertyChanged;
         SongContainer.GreedyLoad = _apiSettings.GreedilyLoadPlayContainerItems;
         EpisodesContainer = container;
+    }
+
+    private void ListState_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        var state = SongContainer.State;
+        var count = state.Rows.Count;
+        PlayAllButton.IsEnabled = count > 0 && !_isPlayingAll;
+        if (state.CanRetry)
+            SubtitleText.Text = "加载失败";
+        else if (state.IsLoading && count == 0)
+            SubtitleText.Text = "正在加载…";
+        else if (count == 0)
+            SubtitleText.Text = "这里还没有单集";
+        else
+            SubtitleText.Text = state.HasMore ? $"已加载 {count} 个单集" : $"共 {count} 个单集";
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -59,6 +79,7 @@ public sealed partial class PodcastEpisodesPage : Page
         base.OnNavigatedFrom(e);
         _cancellationTokenSource.Cancel();
         _cancellationTokenSource.Dispose();
+        SongContainer.State.PropertyChanged -= ListState_PropertyChanged;
         SongContainer.ReleaseResources();
         Bindings.StopTracking();
     }
@@ -67,6 +88,7 @@ public sealed partial class PodcastEpisodesPage : Page
     {
         if (EpisodesContainer is not { } container) return;
 
+        _isPlayingAll = true;
         PlayAllButton.IsEnabled = false;
         try
         {
@@ -93,7 +115,8 @@ public sealed partial class PodcastEpisodesPage : Page
         }
         finally
         {
-            PlayAllButton.IsEnabled = true;
+            _isPlayingAll = false;
+            PlayAllButton.IsEnabled = SongContainer.State.Rows.Count > 0;
         }
     }
 }

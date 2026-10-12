@@ -142,14 +142,22 @@
                 IsTabStop="False"
                 SelectedIndex="{x:Bind ViewModel.CurrentPivotIndex, Mode=TwoWay}">
                 <PivotItem Header="热门50首">
-                    <controls1:ContainerItemsView x:Name="HotSongContainer" Container="{x:Bind ViewModel.HotSongsContainer, Mode=OneWay}">
+                    <controls1:ContainerItemsView
+                        x:Name="HotSongContainer"
+                        Container="{x:Bind ViewModel.HotSongsContainer, Mode=OneWay}"
+                        IsLoading="{x:Bind ViewModel.IsLoadingHotSongs, Mode=OneWay}"
+                        LoadingText="正在加载歌曲…">
                         <controls1:ContainerItemsView.ListHeader>
                             <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:ContainerItemsView.ListHeader>
                     </controls1:ContainerItemsView>
                 </PivotItem>
                 <PivotItem Header="全部歌曲">
-                    <controls1:ContainerItemsView x:Name="AllSongContainer" Container="{x:Bind ViewModel.AllSongsContainer, Mode=OneWay}">
+                    <controls1:ContainerItemsView
+                        x:Name="AllSongContainer"
+                        Container="{x:Bind ViewModel.AllSongsContainer, Mode=OneWay}"
+                        IsLoading="{x:Bind ViewModel.IsLoadingSongs, Mode=OneWay}"
+                        LoadingText="正在加载歌曲…">
                         <controls1:ContainerItemsView.ListHeader>
                             <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:ContainerItemsView.ListHeader>

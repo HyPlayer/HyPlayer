@@ -853,7 +853,7 @@
                             Padding="0"
                             VerticalAlignment="Top"
                             Click="TbSingerName_OnTapped"
-                            Content="{x:Bind ViewModel.ArtistName, Mode=OneWay}"
+                            Content="{x:Bind ViewModel.ArtistDisplayText, Mode=OneWay}"
                             FontSize="12"
                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             Style="{StaticResource TextBlockButtonStyle}">
@@ -997,11 +997,21 @@
                         CornerRadius="30"
                         KeyUp="BtnPlayStateChange_KeyUp"
                         Opacity="0.9">
-                        <FontIcon
-                            x:Name="PlayStateIcon"
-                            FontSize="24"
-                            Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
-                            Glyph="{x:Bind ViewModel.PlayStateGlyph, Mode=OneWay}" />
+                        <Grid>
+                            <FontIcon
+                                x:Name="PlayStateIcon"
+                                FontSize="24"
+                                Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
+                                Glyph="{x:Bind ViewModel.PlayStateGlyph, Mode=OneWay}" />
+                            <ProgressRing
+                                Width="44"
+                                Height="44"
+                                Margin="-10"
+                                Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
+                                IsActive="{x:Bind ViewModel.IsLoadingTrack, Mode=OneWay}"
+                                IsHitTestVisible="False"
+                                Visibility="{x:Bind ViewModel.IsLoadingTrack, Mode=OneWay}" />
+                        </Grid>
                         <!--  EDB4  -->
                     </Button>
                     <Button

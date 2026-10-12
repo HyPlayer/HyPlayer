@@ -36,6 +36,7 @@ public sealed partial class HistoryPage : Page
 
     private CancellationTokenSource? _cancellationTokenSource = new();
     private string _currentSelectionName;
+    private int _loadVersion;
     private List<ProvidableItemBase> _songHistoryCache;
 
     public HistoryPage()
@@ -68,17 +69,26 @@ public sealed partial class HistoryPage : Page
             return;
 
         _currentSelectionName = selectedName;
-        switch (selectedName)
+        var version = ++_loadVersion;
+        ItemsList.IsLoading = true;
+        try
         {
-            case "SongHis":
-                await LoadSongHistory(selectedName);
-                break;
-            case "SongRankWeek":
-                await LoadRankWeek(selectedName);
-                break;
-            case "SongRankAll":
-                await LoadRankAll(selectedName);
-                break;
+            switch (selectedName)
+            {
+                case "SongHis":
+                    await LoadSongHistory(selectedName);
+                    break;
+                case "SongRankWeek":
+                    await LoadRankWeek(selectedName);
+                    break;
+                case "SongRankAll":
+                    await LoadRankAll(selectedName);
+                    break;
+            }
+        }
+        finally
+        {
+            if (version == _loadVersion) ItemsList.IsLoading = false;
         }
     }
 

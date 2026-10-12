@@ -52,6 +52,7 @@ public sealed partial class ContainerItemsViewState : ObservableObject, IDisposa
 
     public bool IsInitialLoading => IsLoading && Rows.Count == 0;
     public bool IsLoadingMore => IsLoading && Rows.Count > 0;
+    public string LoadingMoreText => $"已加载 {Rows.Count} 项，正在继续加载…";
     public bool CanLoadMore => CanRetry && !IsLoading;
 
     public void ApplyFilter(string filterText)
@@ -88,5 +89,6 @@ public sealed partial class ContainerItemsViewState : ObservableObject, IDisposa
     {
         OnPropertyChanged(nameof(IsInitialLoading));
         OnPropertyChanged(nameof(IsLoadingMore));
+        OnPropertyChanged(nameof(LoadingMoreText));
     }
 }

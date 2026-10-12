@@ -42,7 +42,8 @@
             Container="{x:Bind CloudContainer, Mode=OneWay}"
             ExtraItemActions="{x:Bind ItemActions, Mode=OneWay}"
             GreedyLoad="{x:Bind GreedyLoad, Mode=OneWay}"
-            IsSearchEnabled="True" />
+            IsSearchEnabled="True"
+            LoadingText="正在加载歌曲…" />
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>

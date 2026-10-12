@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Numerics;
 using Windows.Devices.Input;
 using Windows.Foundation;
 using Windows.UI;
+using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -24,6 +27,12 @@ public sealed partial class FluidBar : Grid
 
     private readonly Rectangle _fill = new()
         { RadiusX = 4, RadiusY = 4, HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
+
+    private readonly Grid _glowHost = new() { IsHitTestVisible = false };
+    private ContainerVisual? _glowRoot;
+    private (SpriteVisual Visual, DropShadow Shadow)? _glowCore;
+    private (SpriteVisual Visual, DropShadow Shadow)? _glowBloom;
+    private bool _glowing;
 
     private readonly ScaleTransform _scale = new() { ScaleY = IdleScale };
 
@@ -47,6 +56,7 @@ public sealed partial class FluidBar : Grid
         _bar.RenderTransform = _scale;
         _bar.Children.Add(_track);
         _bar.Children.Add(_fill);
+        Children.Add(_glowHost);
         Children.Add(_bar);
 
         Storyboard.SetTarget(_scaleAnimation, _scale);
@@ -85,11 +95,31 @@ public sealed partial class FluidBar : Grid
         }
     }
 
+    public bool IsGlowing
+    {
+        get => _glowing;
+        set
+        {
+            if (_glowing == value) return;
+            _glowing = value;
+            RefreshScale();
+            EnsureGlow();
+            UpdateGlowLayout();
+            var compositor = _glowRoot!.Compositor;
+            var fade = compositor.CreateScalarKeyFrameAnimation();
+            fade.InsertKeyFrame(1f, value ? 1f : 0f,
+                compositor.CreateCubicBezierEasingFunction(new Vector2(0.25f, 0.1f), new Vector2(0.25f, 1f)));
+            fade.Duration = TimeSpan.FromMilliseconds(value ? 700 : 800);
+            _glowRoot.StartAnimation("Opacity", fade);
+        }
+    }
+
     private static void OnBarBrushChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var bar = (FluidBar)d;
         bar._track.Fill = e.NewValue as Brush;
         bar._fill.Fill = e.NewValue as Brush;
+        bar.UpdateGlowColor();
     }
 
     private void UpdateFill()
@@ -97,6 +127,57 @@ public sealed partial class FluidBar : Grid
         var width = _bar.ActualWidth;
         if (width <= 0) return;
         _fill.Width = width * (IsDragging ? _dragValue : _value);
+        UpdateGlowLayout();
+    }
+
+    private void EnsureGlow()
+    {
+        if (_glowRoot is not null) return;
+        var compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
+        _glowRoot = compositor.CreateContainerVisual();
+        _glowRoot.Opacity = 0;
+        _glowCore = CreateGlowLayer(compositor, 5, 0.9f);
+        _glowBloom = CreateGlowLayer(compositor, 11, 0.45f);
+        _glowRoot.Children.InsertAtTop(_glowBloom.Value.Visual);
+        _glowRoot.Children.InsertAtTop(_glowCore.Value.Visual);
+        UpdateGlowColor();
+        ElementCompositionPreview.SetElementChildVisual(_glowHost, _glowRoot);
+    }
+
+    private static (SpriteVisual Visual, DropShadow Shadow) CreateGlowLayer(
+        Compositor compositor,
+        float blur,
+        float opacity)
+    {
+        var shadow = compositor.CreateDropShadow();
+        shadow.BlurRadius = blur;
+        shadow.Opacity = opacity;
+        shadow.Offset = Vector3.Zero;
+        shadow.Color = Colors.White;
+        var visual = compositor.CreateSpriteVisual();
+        visual.Shadow = shadow;
+        return (visual, shadow);
+    }
+
+    private void UpdateGlowColor()
+    {
+        if (_glowCore is null || _glowBloom is null) return;
+        var color = BarBrush is SolidColorBrush brush ? brush.Color : Colors.White;
+        color.A = 255;
+        _glowCore.Value.Shadow.Color = color;
+        _glowBloom.Value.Shadow.Color = color;
+    }
+
+    private void UpdateGlowLayout()
+    {
+        if (_glowCore is null || _glowBloom is null) return;
+        var height = (float)_bar.Height;
+        var size = new Vector2((float)Math.Max(_fill.Width, 0), height);
+        var offset = new Vector3(0, (float)(ActualHeight - height) / 2, 0);
+        _glowCore.Value.Visual.Size = size;
+        _glowCore.Value.Visual.Offset = offset;
+        _glowBloom.Value.Visual.Size = size;
+        _glowBloom.Value.Visual.Offset = offset;
     }
 
     private void AnimateScale(double to)
@@ -107,7 +188,7 @@ public sealed partial class FluidBar : Grid
 
     private void RefreshScale()
     {
-        AnimateScale(_isHovering || IsDragging ? 1 : IdleScale);
+        AnimateScale(_isHovering || IsDragging || _glowing ? 1 : IdleScale);
     }
 
     private double GetPointerValue(PointerRoutedEventArgs e)
