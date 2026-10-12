@@ -110,6 +110,11 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
                && await GetCacheFileAsync(song, resource, ct) is not null;
     }
 
+    public Task<StorageFile?> FindCachedFileAsync(SingleSongBase song, MusicResourceBase resource, CancellationToken ct)
+    {
+        return GetCacheFileAsync(song, resource, ct);
+    }
+
     public async Task<StorageFile?> FindOfflineFileAsync(SingleSongBase song)
     {
         try

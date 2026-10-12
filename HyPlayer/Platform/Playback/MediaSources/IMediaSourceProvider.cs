@@ -2,6 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.Storage;
+using Windows.Storage.Streams;
 using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
@@ -26,6 +27,8 @@ public interface IMediaTransferProvider
     void CancelTransfersExcept(SingleSongBase keep);
 
     Task<bool> IsCachedAsync(SingleSongBase song, MusicResourceBase resource, CancellationToken ct);
+
+    Task<StorageFile?> FindCachedFileAsync(SingleSongBase song, MusicResourceBase resource, CancellationToken ct);
 }
 
 public interface IMediaOfflineProvider
@@ -61,6 +64,8 @@ public interface IMediaSourceService
     void CancelTransfersExcept(SingleSongBase keep);
 
     Task<bool> CanSeekBeforePlaybackAsync(SingleSongBase song, CancellationToken ct);
+
+    Task<IRandomAccessStream?> OpenLocalAudioAsync(SingleSongBase song, CancellationToken ct);
 
     Task<MusicResourceBase?> ResolveAsync(SingleSongBase song, CancellationToken ct);
 

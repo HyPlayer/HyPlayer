@@ -178,6 +178,95 @@ public sealed partial class LyricService(
         return lyricInfo;
     }
 
+    public async Task<IReadOnlyList<(double Start, double End)>> GetVocalRegionsAsync(SingleSongBase providerItem,
+        CancellationToken ct = default)
+    {
+        List<SongLyric>? lines = null;
+        if (ReferenceEquals(state.NowPlayingProviderItem, providerItem) && state.LyricInfo?.Lyrics is { Count: > 0 } current)
+            lines = current;
+        if (lines is null && !string.IsNullOrWhiteSpace(providerItem.ActualId))
+        {
+            var cached = await SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.HyLyricInfo, providerItem.ActualId,
+                () => Task.FromResult<HyLyricInfo>(null),
+                cancellationToken: ct);
+            if (cached?.Lyrics is { Count: > 0 }) lines = cached.Lyrics;
+        }
+
+        if (lines is null)
+        {
+            var pure = providerItem switch
+            {
+                LocalSong localSong => await LoadLocalLyricAsync(localSong),
+                _ => await LoadProviderLyricAsync(providerItem, ct)
+            };
+            lines = pure is KaraokLyricInfo { KaraokLyric.Length: > 0 }
+                ? Utils.ConvertKaraok(pure, setting.MigrateLyrics)
+                : Utils.ConvertPureLyric(pure.PureLyrics);
+        }
+
+        var first = 0;
+        var last = lines.Count - 1;
+        while (first <= last && IsCreditLine(lines[first].LyricLine?.CurrentLyric)) first++;
+        while (last >= first && IsCreditLine(lines[last].LyricLine?.CurrentLyric)) last--;
+
+        var regions = new List<(double Start, double End)>();
+        for (var i = first; i <= last; i++)
+        {
+            var line = lines[i].LyricLine;
+            if (line is null || string.IsNullOrWhiteSpace(line.CurrentLyric)) continue;
+            var start = line.StartTime.TotalSeconds;
+            double end;
+            if (line is KaraokeLyricsLine { WordInfos: { Count: > 0 } words })
+            {
+                end = (words[^1].StartTime + words[^1].Duration).TotalSeconds;
+            }
+            else
+            {
+                var length = i < last ? 8 : EstimateLineSeconds(line.CurrentLyric);
+                var next = i + 1 < lines.Count ? lines[i + 1].LyricLine.StartTime.TotalSeconds : start + length;
+                end = Math.Min(next, start + length);
+            }
+
+            if (end > start) regions.Add((start, end));
+        }
+
+        if (regions.Count < 3) regions.Clear();
+        return regions;
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex _creditLine = new(@"^\s*[^:：]{1,24}\s*[:：]\s*\S");
+
+    private static bool IsCreditLine(string? text)
+    {
+        return string.IsNullOrWhiteSpace(text) || _creditLine.IsMatch(text) || text.Contains("纯音乐");
+    }
+
+    private static double EstimateLineSeconds(string text)
+    {
+        var units = 0;
+        var inWord = false;
+        foreach (var c in text)
+        {
+            if (c >= 0x2E80)
+            {
+                units++;
+                inWord = false;
+            }
+            else if (char.IsLetterOrDigit(c))
+            {
+                if (!inWord) units++;
+                inWord = true;
+            }
+            else
+            {
+                inWord = false;
+            }
+        }
+
+        return Math.Clamp(1.5 + 0.4 * units, 3, 8);
+    }
+
     #region Private helpers
 
     private async Task<PureLyricInfo> LoadProviderLyricAsync(SingleSongBase providerItem, CancellationToken ct)

@@ -15,6 +15,9 @@ using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.Analysis;
+using HyPlayer.Features.Playback.Analysis.Models;
+using HyPlayer.Features.Playback.Models;
 using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Playback.Transitions;
@@ -273,6 +276,12 @@ internal static class HyPlayerComposition
         depository.AddSingleton<ITrackTransition, GaplessTransition>();
         depository.AddSingleton<ITrackTransition, CrossFadeTransition>();
         depository.AddSingleton<ITrackTransition, FadeTransition>();
+        depository.AddSingleton<AutoMixSettings>(new AutoMixSettings());
+        depository.AddSingleton<ModelManager>();
+        depository.AddSingleton<IBeatAnalyzer, BeatThisAnalyzer>();
+        depository.AddSingleton<IKeyAnalyzer, SKeyAnalyzer>();
+        depository.AddSingleton<IVocalAnalyzer, MdxVocalAnalyzer>();
+        depository.AddSingleton<IAudioAnalysisService, AudioAnalysisService>();
         depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
         depository.Add(
             typeof(INotificationSubscriber<PlaybackRequestFailedNotification>),

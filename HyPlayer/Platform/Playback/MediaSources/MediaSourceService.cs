@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Downloads;
@@ -88,6 +90,44 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
 
         return resolved is null
                || await transfers.IsCachedAsync(song, CreateResource(song, resolved), ct).ConfigureAwait(false);
+    }
+
+    public async Task<IRandomAccessStream?> OpenLocalAudioAsync(SingleSongBase song, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        if (song.ProviderId == LocalProvider.LocalProvider.ProviderIdValue)
+            return await OpenLocalSongAsync(song).ConfigureAwait(false);
+
+        if (!IsNeteaseSong(song))
+            return null;
+
+        if (await DownloadedTrackIndex.TryGetAsync(song.ActualId).ConfigureAwait(false) is { } downloaded)
+            return await downloaded.OpenReadAsync();
+
+        if (!_providers.TryGetValue(SelectProviderId(), out var provider)
+            || provider is not IMediaTransferProvider transfers
+            || transfers.IsTransferring(song))
+            return null;
+
+        var resolved = await _urlResolver.ResolveAsync(song.ActualId, ct).ConfigureAwait(false);
+        if (resolved is null)
+            return null;
+
+        var cached = await transfers
+            .FindCachedFileAsync(song, CreateResource(song, resolved), ct)
+            .ConfigureAwait(false);
+        return cached is null ? null : await cached.OpenReadAsync();
+    }
+
+    private static async Task<IRandomAccessStream?> OpenLocalSongAsync(SingleSongBase song)
+    {
+        if (song.TypeId == LocalProvider.LocalProvider.LocalNcmSongTypeId
+            || string.IsNullOrWhiteSpace(song.ActualId)
+            || !System.IO.Path.IsPathFullyQualified(song.ActualId))
+            return null;
+
+        var file = await StorageFile.GetFileFromPathAsync(song.ActualId);
+        return await file.OpenReadAsync();
     }
 
     public ResourceQualityTag? GetPlaybackQualityTag(SingleSongBase song)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -36,4 +37,7 @@ public interface ILyricService
     ///     根据播放位置更新当前歌词行
     /// </summary>
     void Tick(TimeSpan position);
+
+    Task<IReadOnlyList<(double Start, double End)>> GetVocalRegionsAsync(SingleSongBase providerItem,
+        CancellationToken ct = default);
 }
