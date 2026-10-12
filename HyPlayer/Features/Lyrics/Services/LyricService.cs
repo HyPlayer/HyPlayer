@@ -53,7 +53,7 @@ public sealed partial class LyricService(
     public async Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default)
     {
         var cacheId = providerItem.ActualId;
-        var canUseHyLyricInfoCache = !string.IsNullOrWhiteSpace(cacheId);
+        var canUseHyLyricInfoCache = providerItem is not NeteaseRadioProgram && !string.IsNullOrWhiteSpace(cacheId);
         var forceRefreshHyLyricInfoCache = false;
         if (canUseHyLyricInfoCache)
         {
@@ -93,6 +93,7 @@ public sealed partial class LyricService(
         var pureLyricInfo = providerItem switch
         {
             LocalSong localSong => await LoadLocalLyricAsync(localSong),
+            NeteaseRadioProgram => new PureLyricInfo(),
             _ => await LoadProviderLyricAsync(providerItem, ct)
         };
         var lyricInfo = await ConvertPureLyricInfoAsync(pureLyricInfo, GetArtistText(providerItem));
@@ -184,7 +185,8 @@ public sealed partial class LyricService(
         List<SongLyric>? lines = null;
         if (ReferenceEquals(state.NowPlayingProviderItem, providerItem) && state.LyricInfo?.Lyrics is { Count: > 0 } current)
             lines = current;
-        if (lines is null && !string.IsNullOrWhiteSpace(providerItem.ActualId))
+        if (lines is null && providerItem is not NeteaseRadioProgram &&
+            !string.IsNullOrWhiteSpace(providerItem.ActualId))
         {
             var cached = await SimpleCacher.GetOrCreateCacheAsync(
                 CacheType.HyLyricInfo, providerItem.ActualId,
@@ -198,6 +200,7 @@ public sealed partial class LyricService(
             var pure = providerItem switch
             {
                 LocalSong localSong => await LoadLocalLyricAsync(localSong),
+                NeteaseRadioProgram => new PureLyricInfo(),
                 _ => await LoadProviderLyricAsync(providerItem, ct)
             };
             lines = pure is KaraokLyricInfo { KaraokLyric.Length: > 0 }
@@ -235,11 +238,12 @@ public sealed partial class LyricService(
         return regions;
     }
 
-    private static readonly System.Text.RegularExpressions.Regex _creditLine = new(@"^\s*[^:：]{1,24}\s*[:：]\s*\S");
+    [GeneratedRegex(@"^\s*[^:：]{1,24}\s*[:：]\s*\S")]
+    private static partial Regex CreditLineRegex();
 
     private static bool IsCreditLine(string? text)
     {
-        return string.IsNullOrWhiteSpace(text) || _creditLine.IsMatch(text) || text.Contains("纯音乐");
+        return string.IsNullOrWhiteSpace(text) || CreditLineRegex().IsMatch(text) || text.Contains("纯音乐");
     }
 
     private static double EstimateLineSeconds(string text)
@@ -301,12 +305,14 @@ public sealed partial class LyricService(
     {
         var lyricInfo = new HyLyricInfo();
         var sourceLyricInfo = pureLyricInfo;
-        if (!setting.KaraokeLyric && pureLyricInfo is KaraokLyricInfo &&
+        if (!setting.KaraokeLyric && pureLyricInfo is KaraokLyricInfo wordLyricInfo &&
             !string.IsNullOrWhiteSpace(pureLyricInfo.PureLyrics))
             pureLyricInfo = new PureLyricInfo
             {
                 PureLyrics = pureLyricInfo.PureLyrics,
-                TrLyrics = pureLyricInfo.TrLyrics,
+                TrLyrics = string.IsNullOrWhiteSpace(pureLyricInfo.TrLyrics)
+                    ? wordLyricInfo.YrTrLyrics
+                    : pureLyricInfo.TrLyrics,
                 NeteaseRomaji = pureLyricInfo.NeteaseRomaji,
                 SongMetadata = pureLyricInfo.SongMetadata,
                 LyricMetadata = pureLyricInfo.LyricMetadata
@@ -625,7 +631,7 @@ public sealed partial class LyricService(
     {
         try
         {
-            if (!setting.EnableAmllTtmlDb || item is LocalSong || string.IsNullOrWhiteSpace(item.ActualId)) return;
+            if (!setting.EnableAmllTtmlDb || item is not NeteaseSong || string.IsNullOrWhiteSpace(item.ActualId)) return;
             lock (_amllMissingIds)
             {
                 if (_amllMissingIds.Contains(item.ActualId)) return;

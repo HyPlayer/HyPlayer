@@ -16,6 +16,8 @@ namespace HyPlayer.UI.Playback.LyricControl;
 public sealed partial class LyricControl : UserControl
 {
     private readonly LyricClock _lyricClock = new();
+    private readonly ILyricService _lyricService = Ioc.Default.GetRequiredService<ILyricService>();
+    private readonly AudioGraphPlayer _audioPlayer = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
 
     public LyricRenderOption? LyricRenderOption { get; set; }
 
@@ -32,10 +34,8 @@ public sealed partial class LyricControl : UserControl
     private void CanvasControl_Draw(ICanvasAnimatedControl sender,
         CanvasAnimatedDrawEventArgs args)
     {
-        var lyric = Ioc.Default.GetRequiredService<ILyricService>();
-        var player = Ioc.Default.GetRequiredService<AudioGraphPlayer>();
-        var node = player.PrimaryAudioInputNode;
-        if (lyric.CurrentLyricIndex < 0 || lyric.CurrentLyricIndex >= lyric.CurrentLyricInfo.Lyrics.Count ||
+        var node = _audioPlayer.PrimaryAudioInputNode;
+        if (_lyricService.CurrentLyricIndex < 0 || _lyricService.CurrentLyricIndex >= _lyricService.CurrentLyricInfo.Lyrics.Count ||
             node == null)
             return;
         LyricRenderOption ??= new LyricRenderOption
@@ -53,9 +53,9 @@ public sealed partial class LyricControl : UserControl
             ShadowColor = _shadowColor
         };
         LyricRenderComposer.RenderOnDrawingSession(args.DrawingSession,
-            lyric.CurrentLyricInfo.Lyrics[lyric.CurrentLyricIndex],
+            _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex],
             TimeSpan.FromMilliseconds(_lyricClock.Next(node.Position.TotalMilliseconds,
-                player.GlobalPlaybackStatus == PlaybackStatus.Playing, node.PlaybackSpeedFactor)),
+                _audioPlayer.GlobalPlaybackStatus == PlaybackStatus.Playing, node.PlaybackSpeedFactor)),
             LyricRenderOption.GetValueOrDefault(),
             sender.Size, QuickRenderMode);
     }
