@@ -9,6 +9,7 @@ using Windows.Storage.Streams;
 using HyPlayer.NeteaseProvider.LocalMusic;
 using HyPlayer.Platform.Network;
 using HyPlayer.Platform.Playback.AudioServices;
+using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -89,11 +90,16 @@ public sealed class LocalProvider : ProviderBase, IMusicResourceProvidable
                 var playableStream = new InMemoryRandomAccessStream();
                 await NCMFile.CopyDecryptedContentToAsync(stream, playableStream.AsStreamForWrite(), ctk);
                 playableStream.Seek(0);
-                mediaSource = MediaSource.CreateFromStream(playableStream, MIMEHelper.GetNCMFileMimeType(info.Format));
+                var mimeType = MIMEHelper.GetNCMFileMimeType(info.Format);
+                mediaSource = await RechunkedAudioSource.FromStreamAsync(
+                    playableStream,
+                    () => MediaSource.CreateFromStream(playableStream, mimeType));
             }
             else
             {
-                mediaSource = MediaSource.CreateFromStorageFile(file);
+                mediaSource = string.Equals(file.FileType, ".flac", StringComparison.OrdinalIgnoreCase)
+                    ? await RechunkedAudioSource.FromFileAsync(file)
+                    : MediaSource.CreateFromStorageFile(file);
             }
 
             return new AudioGraphPlaybackSource(mediaSource);

@@ -15,6 +15,7 @@ using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Transitions;
 using HyPlayer.Features.Settings.Services;
+using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Playback.AudioServices;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.PlayCore.Abstraction;
@@ -966,6 +967,9 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             ? ticket.PlaybackSource
             : _player.PrimaryPlaybackSource;
         _playbackGeneration++;
+        _state.QualityTag = _playCore.CurrentPlayingTicket?.MusicResource is NeteaseMusicResource { Level: { } level }
+            ? level
+            : string.Empty;
     }
 
     private TrackTransitionContext CreateTransitionContext(

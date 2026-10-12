@@ -24,6 +24,7 @@ using HyPlayer.Features.Widgets.Services;
 using HyPlayer.Platform.Network;
 using HyPlayer.Platform.Playback.AudioServices;
 using HyPlayer.Platform.Playback.LocalProvider;
+using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
@@ -83,7 +84,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<LocalLibrarySettings>(localLibrarySettings);
         depository.AddSingleton<Setting>(legacySettings);
 
-        var neteaseProvider = new NeteaseProvider.NeteaseProvider();
+        var neteaseProvider = new NeteasePlaybackProvider();
         neteaseProvider.ConfigureHttpClient(apiSettings.EnableProxy);
         var client = new HttpClient(
             new NetworkWatchHandler(
@@ -139,6 +140,10 @@ internal static class HyPlayerComposition
         depository.AddSingleton<LocalProvider>(localProvider);
         depository.AddSingleton<ProviderBase>(localProvider);
         depository.AddSingleton<IMusicResourceProvidable>(localProvider);
+
+        depository.AddSingleton<NeteaseSongUrlResolver>();
+        depository.AddSingleton<IMediaSourceProvider, NeteaseStreamingProvider>();
+        depository.AddSingleton<IMediaSourceService, MediaSourceService>();
 
         depository.AddSingleton<LastFMClient>(
             new LastFMClient(
