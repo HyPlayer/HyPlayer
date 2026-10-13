@@ -25,6 +25,7 @@ namespace HyPlayer.Features.Playback.Services;
 public sealed class PlaybackNotificationService : IPlaybackNotificationService
 {
     private const int CoverPixels = 1024;
+    private readonly object _coverPublishGate = new();
     private readonly HttpClient _http;
     private readonly ILastFmService _lastFm;
     private readonly IPlayer _player;
@@ -72,9 +73,12 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
         }
         else
         {
-            Interlocked.Increment(ref _coverRequestVersion);
-            _state.CoverStream = null;
-            _state.CoverStreamReference = null;
+            lock (_coverPublishGate)
+            {
+                Interlocked.Increment(ref _coverRequestVersion);
+                _state.CoverStream = null;
+                _state.CoverStreamReference = null;
+            }
         }
 
         await _tileService.UpdateTile(providerItem, _uiSettings.NoImage ? null : _state.CoverStream);
@@ -106,17 +110,14 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
             var buffer = bytes.AsBuffer();
             await newStream.WriteAsync(buffer);
             newStream.Seek(0);
-            if (requestVersion != Volatile.Read(ref _coverRequestVersion))
-            {
-                newStream.Dispose();
-                newStream = null;
-                return;
-            }
             var newRef = RandomAccessStreamReference.CreateFromStream(newStream);
-
-            _state.CoverStreamReference = newRef;
-            _state.CoverStream = newStream;
-            newStream = null;
+            lock (_coverPublishGate)
+            {
+                if (requestVersion != Volatile.Read(ref _coverRequestVersion)) return;
+                _state.CoverStreamReference = newRef;
+                _state.CoverStream = newStream;
+                newStream = null;
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

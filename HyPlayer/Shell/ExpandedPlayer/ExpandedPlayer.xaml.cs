@@ -84,6 +84,7 @@ public sealed partial class ExpandedPlayer : Page
     private const float MaxBackgroundDim = 0.38f;
     private const double LeftPanelShiftMilliseconds = 500;
     private const double LyricCanvasIdlePauseMs = 1000;
+    private const int CoverRefreshPendingSeconds = 5;
 
     public static readonly DependencyProperty NowPlaybackSpeedProperty = DependencyProperty.Register(
         "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
@@ -159,7 +160,7 @@ public sealed partial class ExpandedPlayer : Page
     private bool _isManualChangeMode;
     private bool _isRealClick;
     private string? _lastSongTitle;
-    private readonly CoverColorRefreshGate _coverColorGate = new();
+    private readonly CoverColorRefreshGate _coverColorGate = new(Stopwatch.Frequency * CoverRefreshPendingSeconds);
     private int _coverSwapVersion;
     private bool _hasDisplayedCover;
     private double _coverLuminance;
@@ -369,6 +370,10 @@ public sealed partial class ExpandedPlayer : Page
                 _canvasState.TrackChangeTimestamp = Stopwatch.GetTimestamp();
                 WakeLyricCanvas();
                 OnSongChange();
+                ReconcileAlbumCover();
+                break;
+            case nameof(PlaybackStateService.IsTransitioning):
+                if (!_state.IsTransitioning) ReconcileAlbumCover();
                 break;
             case nameof(PlaybackStateService.CoverStream):
                 WakeLyricCanvas();
@@ -1615,65 +1620,78 @@ public sealed partial class ExpandedPlayer : Page
             return;
         }
 
-        var ticket = _coverColorGate.Begin(cover);
-        CoverColors? colors;
-        using (var sampling = source.CloneStream())
+        var ticket = _coverColorGate.Begin(cover, Stopwatch.GetTimestamp());
+        var applied = false;
+        try
         {
-            colors = await ExtractCoverColorsAsync(sampling);
-        }
+            CoverColors? colors;
+            using (var sampling = source.CloneStream())
+            {
+                colors = await ExtractCoverColorsAsync(sampling);
+            }
 
-        if (!IsCurrentCover(ticket))
+            if (!IsCurrentCover(ticket)) return;
+            WakeLyricCanvas();
+            await this.RunOnUIThreadAsync(async () => applied = await ApplyAlbumCoverAsync(ticket, source, colors));
+        }
+        catch
+        {
+        }
+        finally
         {
             source.Dispose();
-            return;
+            _coverColorGate.Complete(ticket, applied);
+            if (!ReferenceEquals(ticket.Cover, _state.CoverStream)) ReconcileAlbumCover();
         }
-
-        WakeLyricCanvas();
-        _ = this.RunOnUIThreadAsync(() => ApplyAlbumCoverAsync(ticket, source, colors));
     }
 
-    private async Task ApplyAlbumCoverAsync(CoverColorTicket ticket, IRandomAccessStream source, CoverColors? colors)
+    private void ReconcileAlbumCover()
     {
-        using (source)
+        if (_coverColorGate.NeedsRefresh(_state.CoverStream, Stopwatch.GetTimestamp())) RefreshAlbumCover();
+    }
+
+    private async Task<bool> ApplyAlbumCoverAsync(CoverColorTicket ticket, IRandomAccessStream source,
+        CoverColors? colors)
+    {
+        if (_isCleanedUp || _canvasResourcesReleased || _uiSettings.NoImage || !IsCurrentCover(ticket)) return false;
+        try
         {
-            if (_isCleanedUp || _canvasResourcesReleased || _uiSettings.NoImage || !IsCurrentCover(ticket)) return;
-            try
+            using var image = source.CloneStream();
+            var bitmap = new BitmapImage();
+            await bitmap.SetSourceAsync(image);
+            if (_isCleanedUp || _canvasResourcesReleased || !IsCurrentCover(ticket)) return false;
+            await SwapCoverAsync(bitmap, ticket);
+            if (_isCleanedUp || _canvasResourcesReleased || !IsCurrentCover(ticket)) return false;
+            if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.CoverBlur &&
+                Background is not ImageBrush)
             {
-                using var image = source.CloneStream();
-                var bitmap = new BitmapImage();
-                await bitmap.SetSourceAsync(image);
-                if (_isCleanedUp || _canvasResourcesReleased || !IsCurrentCover(ticket)) return;
-                await SwapCoverAsync(bitmap, ticket);
-                if (_isCleanedUp || _canvasResourcesReleased || !IsCurrentCover(ticket)) return;
-                if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.CoverBlur &&
-                    Background is not ImageBrush)
-                {
-                    var brush = new ImageBrush
-                        { Stretch = Stretch.UniformToFill };
-                    Background = brush;
-                }
-
-                if (Background is ImageBrush imageBrush) imageBrush.ImageSource = bitmap;
-            }
-            catch
-            {
+                var brush = new ImageBrush
+                    { Stretch = Stretch.UniformToFill };
+                Background = brush;
             }
 
-            if (_isCleanedUp || _canvasResourcesReleased ||
-                !_coverColorGate.TryApply(ticket, _state.CoverStream)) return;
-            if (colors is not null) ApplyCoverColors(colors);
-            WakeLyricCanvas();
-            if (_uiSettings.ExpandedPlayerBackgroundType != BackgroundType.LikeApple) return;
-            try
-            {
-                using var artwork = source.CloneStream();
-                await _likeAppleBackgroundLayer.SetArtworkAsync(artwork);
-                WakeLyricCanvas();
-            }
-            catch
-            {
-            }
+            if (Background is ImageBrush imageBrush) imageBrush.ImageSource = bitmap;
         }
+        catch
+        {
+        }
+
+        if (_isCleanedUp || _canvasResourcesReleased ||
+            !_coverColorGate.TryApply(ticket, _state.CoverStream)) return false;
+        if (colors is not null) ApplyCoverColors(colors);
+        WakeLyricCanvas();
+        if (_uiSettings.ExpandedPlayerBackgroundType != BackgroundType.LikeApple) return colors is not null;
+        try
+        {
+            using var artwork = source.CloneStream();
+            await _likeAppleBackgroundLayer.SetArtworkAsync(artwork);
+            WakeLyricCanvas();
+        }
+        catch
+        {
+        }
+
+        return colors is not null;
     }
 
 
