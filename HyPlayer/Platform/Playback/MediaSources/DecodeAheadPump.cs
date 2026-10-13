@@ -30,6 +30,7 @@ internal sealed class DecodeAheadPump : IDisposable
 {
     private const int JoinMilliseconds = 250;
     private const int InterruptedJoinMilliseconds = 2000;
+    private const int LentLimit = 256;
 
     private readonly object _gate = new();
     private readonly IChunkDecoder _decoder;
@@ -38,6 +39,7 @@ internal sealed class DecodeAheadPump : IDisposable
     private readonly int _idleExitMilliseconds;
     private readonly Queue<DecodedChunk> _ready = new();
     private readonly Stack<DecodedChunk> _free = new();
+    private readonly HashSet<DecodedChunk> _lent = new();
     private readonly Queue<Action<DecodedChunk?>> _waiters = new();
     private Thread? _thread;
     private Action? _seekCompleted;
@@ -109,10 +111,21 @@ internal sealed class DecodeAheadPump : IDisposable
         continuation(chunk);
     }
 
+    public void Lend(DecodedChunk chunk)
+    {
+        lock (_gate)
+        {
+            if (_disposed) return;
+            if (_lent.Count >= LentLimit) _lent.Clear();
+            _lent.Add(chunk);
+        }
+    }
+
     public void Return(DecodedChunk chunk)
     {
         lock (_gate)
         {
+            _lent.Remove(chunk);
             if (!_disposed) _free.Push(chunk);
         }
 
@@ -161,6 +174,7 @@ internal sealed class DecodeAheadPump : IDisposable
             _waiters.Clear();
             _ready.Clear();
             _free.Clear();
+            _lent.Clear();
             Monitor.PulseAll(_gate);
         }
         seekCompleted?.Invoke();

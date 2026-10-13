@@ -357,7 +357,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             lock (_callbackLock)
             {
                 var graph = _defaultPlayer;
-                RealtimeGcGuard.Set(graph != null && (TransientCallbacksNeeded() || MixWorkActive()));
+                RealtimeGcGuard.Set(graph != null && TransientCallbacksNeeded());
                 var target = graph != null && TransientCallbacksNeeded() ? graph : null;
                 if (!ReferenceEquals(target, _callbackGraph))
                 {

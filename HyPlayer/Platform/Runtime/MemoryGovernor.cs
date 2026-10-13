@@ -8,6 +8,7 @@ using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Playback.Analysis;
 using HyPlayer.Features.Playback.Models;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
@@ -121,6 +122,7 @@ public sealed class MemoryGovernor : IMemoryGovernor
     private volatile bool _appInBackground;
     private volatile bool _fullReclaimPending;
     private int _pollsWithoutPlayback;
+    private long _analysisCollected;
     private readonly NavigationReclaimGate _navigationReclaim = new();
 
     public MemoryGovernor(
@@ -261,6 +263,7 @@ public sealed class MemoryGovernor : IMemoryGovernor
             _pollsWithoutPlayback = _playbackState.IsPlaying ? 0 : Math.Min(_pollsWithoutPlayback + 1, ReclaimPolicy.SettledPolls);
             var limitMb = _settings.MemoryLimitMB;
             var busy = IsBusy();
+            CollectAfterAnalysis(busy);
             if (_fullReclaimPending)
             {
                 var overLimit = limitMb != 0 && WorkingSetBytes > Threshold(limitMb);
@@ -283,6 +286,14 @@ public sealed class MemoryGovernor : IMemoryGovernor
         catch
         {
         }
+    }
+
+    private void CollectAfterAnalysis(bool busy)
+    {
+        var completed = AnalysisWorker.CompletedCount;
+        if (completed == _analysisCollected || busy || AnalysisWorker.IsBusy) return;
+        _analysisCollected = completed;
+        GC.Collect(2, GCCollectionMode.Forced, blocking: false);
     }
 
     private ulong Threshold(int limitMb) => limitMb > 0 ? (ulong)limitMb * MB : AutoThreshold();

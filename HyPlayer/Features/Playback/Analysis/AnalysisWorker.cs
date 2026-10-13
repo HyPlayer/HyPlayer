@@ -13,6 +13,19 @@ internal static class AnalysisWorker
     private static readonly object Gate = new();
     private static readonly Queue<Action> Pending = new();
     private static Thread? _thread;
+    private static long _completed;
+    private static int _running;
+
+    public static long CompletedCount => Interlocked.Read(ref _completed);
+
+    public static bool IsBusy
+    {
+        get
+        {
+            if (Volatile.Read(ref _running) != 0) return true;
+            lock (Gate) return Pending.Count > 0;
+        }
+    }
 
     public static Task<T> Run<T>(Func<T> work, CancellationToken ct = default)
     {
@@ -69,8 +82,11 @@ internal static class AnalysisWorker
                     return;
                 }
                 work = Pending.Dequeue();
+                Volatile.Write(ref _running, 1);
             }
             work();
+            Interlocked.Increment(ref _completed);
+            Volatile.Write(ref _running, 0);
         }
     }
 }

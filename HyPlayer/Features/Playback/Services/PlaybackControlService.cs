@@ -235,19 +235,33 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                  && _state.NowPlayingProviderItem is not null
                  && !userInitiated)
         {
-            await _playCore.SeekAsync(0, ct).ConfigureAwait(false);
-            SeekRequested?.Invoke(this, new SeekRequestedEventArgs(TimeSpan.Zero));
-            await _playCore.PlayAsync(ct).ConfigureAwait(false);
-            CaptureCurrentPlaybackIdentity();
+            await RestartCurrentSongAsync(ct).ConfigureAwait(false);
             return;
         }
         else
         {
+            var previous = _playCore.CurrentSong;
             await _playCore.MoveNextAsync().ConfigureAwait(false);
+            if (queue.Count == 1
+                && _state.NowPlayingProviderItem is not null
+                && _playCore.CurrentPlayingTicket is not null
+                && SameSong(previous, _playCore.CurrentSong))
+            {
+                await RestartCurrentSongAsync(ct).ConfigureAwait(false);
+                return;
+            }
         }
 
         if (_playCore.CurrentSong is { } song)
             await LoadAndPlayCoreAsync(song, true, false, ct, userInitiated).ConfigureAwait(false);
+    }
+
+    private async Task RestartCurrentSongAsync(CancellationToken ct)
+    {
+        await _playCore.SeekAsync(0, ct).ConfigureAwait(false);
+        SeekRequested?.Invoke(this, new SeekRequestedEventArgs(TimeSpan.Zero));
+        await _playCore.PlayAsync(ct).ConfigureAwait(false);
+        CaptureCurrentPlaybackIdentity();
     }
 
     private async Task<TransitionPreparedTrack?> PrepareNextCoreAsync(
@@ -303,7 +317,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
 
         if (nextIndex == currentIndex || SameSong(nextSong, context.Song))
+        {
+            DeferPrepareRetry();
             return null;
+        }
 
         _lyricService.PreloadLyrics(nextSong);
         _playbackNotification.PreloadCover(nextSong);
