@@ -45,7 +45,8 @@ public sealed partial class LyricTextLayoutSnapshot
 
     private DirectLyricVisualLine[] PrepareLines(IReadOnlyList<LyricGlyphCluster> clusters, long start, long end)
     {
-        var result = new List<DirectLyricVisualLine>();
+        var visualLines = new List<(int First, int Last, float Left, float Right, SortedDictionary<int, (float Left, float Right, bool Rtl)> Bounds)>();
+        var tokenWidths = new Dictionary<int, float>();
         for (var first = 0; first < clusters.Count;)
         {
             var last = first + 1;
@@ -64,6 +65,17 @@ public sealed partial class LyricTextLayoutSnapshot
                     bounds[token] = (Math.Min(previous.Left, cluster.VisualLeft), Math.Max(previous.Right, cluster.VisualRight), previous.Rtl);
                 else bounds[token] = (cluster.VisualLeft, cluster.VisualRight, (cluster.BaseState.BidiLevel & 1) != 0);
             }
+            foreach (var pair in bounds)
+                tokenWidths[pair.Key] = tokenWidths.GetValueOrDefault(pair.Key) + Math.Max(pair.Value.Right - pair.Value.Left, 0.001f);
+            visualLines.Add((first, last, left, right, bounds));
+            first = last;
+        }
+
+        var result = new DirectLyricVisualLine[visualLines.Count];
+        var tokenOffsets = new Dictionary<int, float>();
+        for (var lineIndex = 0; lineIndex < visualLines.Count; lineIndex++)
+        {
+            var (first, last, left, right, bounds) = visualLines[lineIndex];
             var rtl = (clusters[first].BaseState.BidiLevel & 1) != 0;
             if (bounds.Count > 1)
             {
@@ -85,16 +97,22 @@ public sealed partial class LyricTextLayoutSnapshot
             {
                 var token = Tokens[pair.Key];
                 var b = pair.Value;
+                var total = tokenWidths[pair.Key];
+                var before = tokenOffsets.GetValueOrDefault(pair.Key);
+                var after = before + Math.Max(b.Right - b.Left, 0.001f);
+                tokenOffsets[pair.Key] = after;
+                var duration = Math.Max(token.EndTime - token.StartTime, 0);
+                var spanStart = token.StartTime + (long)Math.Round(duration * Math.Clamp(before / total, 0, 1));
+                var spanEnd = token.StartTime + (long)Math.Round(duration * Math.Clamp(after / total, 0, 1));
                 tokenToSpan.Add(pair.Key, spans.Count);
-                spans.Add(new(token.StartTime, token.EndTime, b.Rtl ? b.Right : b.Left, b.Rtl ? b.Left : b.Right));
+                spans.Add(new(spanStart, spanEnd, b.Rtl ? b.Right : b.Left, b.Rtl ? b.Left : b.Right));
             }
             if (spans.Count == 0) spans.Add(new(start, end, rtl ? right : left, rtl ? left : right));
             var indexes = new int[last - first];
             for (var index = first; index < last; index++)
                 indexes[index - first] = tokenToSpan.GetValueOrDefault(clusters[index].TokenStartIndex, 0);
-            result.Add(new(first, last, FocusedLineRevealTimeline.Create(spans, left, right, rtl), indexes));
-            first = last;
+            result[lineIndex] = new(first, last, FocusedLineRevealTimeline.Create(spans, left, right, rtl), indexes);
         }
-        return result.ToArray();
+        return result;
     }
 }

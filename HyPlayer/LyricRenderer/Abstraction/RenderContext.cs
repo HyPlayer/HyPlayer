@@ -183,5 +183,7 @@ public class RenderContext
 
     internal bool PerLineMotion { get; set; }
 
+    internal float PreviewFocus { get; set; }
+
     internal int BlurCacheBudget { get; set; }
 }

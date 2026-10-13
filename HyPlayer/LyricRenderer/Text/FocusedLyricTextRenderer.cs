@@ -42,11 +42,11 @@ public sealed class FocusedLyricTextRenderer : IDisposable
         LastFrameGlyphRunCount = 0;
         if (layout.HasStaticContent) session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
         var settings = context.Settings.Focused;
-        DrawLayer(session, layout, layout.LyricGlyphClusters, layout.LyricVisualLines, context.CurrentLyricTime,
+        DrawLayer(session, layout, layout.LyricGlyphClusters, layout.LyricVisualLines, context.PreciseLyricTime,
             settings, false, context.Effects.TransliterationScanning);
         if (context.EnableTransliteration)
             DrawLayer(session, layout, layout.TransliterationGlyphClusters, layout.TransliterationVisualLines,
-                context.CurrentLyricTime, settings, true, context.Effects.TransliterationScanning);
+                context.PreciseLyricTime, settings, true, context.Effects.TransliterationScanning);
         if (context.EnableTranslation && layout.DefaultTranslationPersistCache is not null)
             session.DrawImage(layout.DefaultTranslationPersistCache, 0, layout.TranslationRenderActualTop, layout.SizePixelRect, 1);
     }
@@ -75,7 +75,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     }
 
     private void DrawLayer(CanvasDrawingSession session, LyricTextLayoutSnapshot layout,
-        IReadOnlyList<LyricGlyphCluster> clusters, DirectLyricVisualLine[] lines, long time,
+        IReadOnlyList<LyricGlyphCluster> clusters, DirectLyricVisualLine[] lines, double time,
         FocusedTextSettings settings, bool transliteration, bool scanTransliteration)
     {
         var useWords = layout.HasRealWords || settings.UntimedHighlight == UntimedHighlightMode.InferWords;
@@ -168,7 +168,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
         LastFrameGlyphRunCount = 0;
         if (layout.HasStaticContent) session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
         var settings = context.Settings.Focused;
-        var time = context.CurrentLyricTime;
+        var time = context.PreciseLyricTime;
         focus = focus > 0.001f ? Math.Min(focus, 1) : 0;
         if (focus > 0 && context.EnableTransliteration && layout.TransliterationGlyphClusters.Count > 0)
             DrawTailLayer(session, layout, layout.TransliterationGlyphClusters, time, settings, true,
@@ -182,7 +182,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     }
 
     private void DrawTailLayer(CanvasDrawingSession session, LyricTextLayoutSnapshot layout,
-        IReadOnlyList<LyricGlyphCluster> clusters, long time, FocusedTextSettings settings, bool transliteration,
+        IReadOnlyList<LyricGlyphCluster> clusters, double time, FocusedTextSettings settings, bool transliteration,
         bool scanTransliteration, float focus)
     {
         var useWords = layout.HasRealWords || settings.UntimedHighlight == UntimedHighlightMode.InferWords;
@@ -287,7 +287,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     }
 
     private static float CalculateLift(LyricGlyphCluster cluster, LyricTextToken? token,
-        LyricTextLayoutSnapshot layout, long time, FocusedTextSettings settings)
+        LyricTextLayoutSnapshot layout, double time, FocusedTextSettings settings)
     {
         if (!settings.LiftEnabled || settings.LiftHeight == 0) return 0;
         if (!layout.HasRealWords && settings.UntimedLift == UntimedLiftMode.DoNotLift) return 0;
@@ -308,6 +308,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     {
         if (progress <= 0) { DrawSolid(session, cluster, origin, layout.IdleColor); return; }
         if (progress >= 1) { DrawSolid(session, cluster, origin, layout.FocusingColor); return; }
+        feather = Math.Min(feather, Math.Max(rtl ? right - boundary : boundary - left, 0));
         var rampEnd = rtl ? Math.Max(left, boundary - feather) : Math.Min(right, boundary + feather);
         var rampLeft = Math.Min(boundary, rampEnd);
         var rampRight = Math.Max(boundary, rampEnd);
@@ -423,11 +424,11 @@ public sealed class FocusedLyricTextRenderer : IDisposable
         session.DrawGlyphRun(origin, state.FontFace, state.FontSize, state.Glyphs, state.IsSideways,
             state.BidiLevel, brush, state.MeasuringMode);
 
-    private static float GetRevealWordProgress(long time, long start, long end, float offset)
+    private static float GetRevealWordProgress(double time, long start, long end, float offset)
     {
-        var adjustedStart = offset < 0 ? start - offset : start;
-        var adjustedEnd = offset > 0 ? end - offset : end;
-        return adjustedEnd <= adjustedStart ? time >= adjustedEnd ? 1 : 0 : Math.Clamp((time - adjustedStart) / (adjustedEnd - adjustedStart), 0, 1);
+        var adjustedStart = offset < 0 ? start - (double)offset : start;
+        var adjustedEnd = offset > 0 ? end - (double)offset : end;
+        return adjustedEnd <= adjustedStart ? time >= adjustedEnd ? 1 : 0 : (float)Math.Clamp((time - adjustedStart) / (adjustedEnd - adjustedStart), 0, 1);
     }
 
     /// <summary>Releases device brushes; the next draw creates them for the current layout.</summary>
@@ -526,14 +527,14 @@ public sealed class FocusedLyricTextRenderer : IDisposable
             OpacityAt(1));
     }
 
-    private static long AdjustLineRevealTime(long timeMs, long startMs, long endMs, float offset)
+    private static double AdjustLineRevealTime(double timeMs, long startMs, long endMs, float offset)
     {
         if (endMs <= startMs) return timeMs;
-        var adjustedStart = offset < 0 ? startMs - offset : startMs;
-        var adjustedEnd = offset > 0 ? endMs - offset : endMs;
+        var adjustedStart = offset < 0 ? startMs - (double)offset : startMs;
+        var adjustedEnd = offset > 0 ? endMs - (double)offset : endMs;
         if (adjustedEnd <= adjustedStart) return timeMs >= adjustedEnd ? endMs : startMs;
-        var progress = Math.Clamp((timeMs - adjustedStart) / (float)(adjustedEnd - adjustedStart), 0, 1);
-        return startMs + (long)Math.Round((endMs - startMs) * progress);
+        var progress = Math.Clamp((timeMs - adjustedStart) / (adjustedEnd - adjustedStart), 0, 1);
+        return startMs + (endMs - startMs) * progress;
     }
     internal readonly record struct RectangleMaskPlan(float? ConstantOpacity, float FirstStop, float MiddleStop, float SecondStop, float StartOpacity, float FirstOpacity, float MiddleOpacity, float SecondOpacity, float EndOpacity);
 }

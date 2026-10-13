@@ -139,7 +139,7 @@ internal sealed class LyricEmphasisPlan
         return false;
     }
 
-    public bool TrySample(int clusterIndex, long time, float fontSize, out LyricEmphasisSample sample)
+    public bool TrySample(int clusterIndex, double time, float fontSize, out LyricEmphasisSample sample)
     {
         sample = default;
         if (time < _activeFrom || time > _activeUntil || (uint)clusterIndex >= (uint)_clusterGroups.Length)
@@ -151,10 +151,10 @@ internal sealed class LyricEmphasisPlan
 
         var em = Math.Max(1f, fontSize);
         var charIndex = _clusterIndexes[clusterIndex];
-        var charStart = group.Start + group.Duration / 2.5f / group.Count * charIndex;
-        var progress = Math.Clamp((time - charStart) / group.Duration, 0f, 1f);
+        var charElapsed = (float)(time - group.Start) - group.Duration / 2.5f / group.Count * charIndex;
+        var progress = Math.Clamp(charElapsed / group.Duration, 0f, 1f);
         var strength = Ease(progress);
-        var floatProgress = Math.Clamp((time - (charStart - FloatLead)) / (group.Duration * FloatDurationScale), 0f, 1f);
+        var floatProgress = Math.Clamp((charElapsed + FloatLead) / (group.Duration * FloatDurationScale), 0f, 1f);
         var floatY = -MathF.Sin(floatProgress * MathF.PI) * 0.05f * em;
         sample = new LyricEmphasisSample(
             1 + strength * 0.1f * group.Amount,

@@ -102,7 +102,7 @@ namespace HyPlayer.LyricRenderer
                 if (!_pendingMutations.IsEmpty) return true;
                 if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return false;
                 return Volatile.Read(ref _pendingSettings) is not null || _isTypographyChanged ||
-                       _needRecalculateSize || _forceScrollReset || _scrollSettling || _springMoving ||
+                       _needRecalculateSize || _forceScrollReset || _scrollSettling || _springMoving || _previewSettling ||
                        _staleLayoutCount > 0 || _layoutRequestPending || _needRealign ||
                        _layoutRequestSerial != _layoutSeenSerial;
             }
@@ -379,6 +379,9 @@ namespace HyPlayer.LyricRenderer
             Context.IsScrolling = false;
             _scrollSettling = false;
             _springMoving = false;
+            _previewSettling = false;
+            _previewFocus = default;
+            Context.PreviewFocus = 0;
             _springSnap = true;
             _needRecalculate = false;
             _needRecalculateSize = false;
@@ -999,6 +1002,11 @@ namespace HyPlayer.LyricRenderer
                     _scrollPreviewing = false;
                 }
 
+                var previewTarget = _scrollPreviewing ? 1 : 0;
+                Context.PreviewFocus = _previewFocus.Update(previewTarget, Context.RenderTick / TimeSpan.TicksPerMillisecond,
+                    PreviewFadeMilliseconds, false);
+                _previewSettling = Math.Abs(Context.PreviewFocus - previewTarget) > 0.001f;
+
                 var typographyChanged = _isTypographyChanged;
                 UpdateLayoutRequest(typographyChanged);
                 if (typographyChanged)
@@ -1133,6 +1141,9 @@ namespace HyPlayer.LyricRenderer
         private long _lastWheelTime;
         private bool _forceScrollReset;
         private bool _scrollSettling;
+        private bool _previewSettling;
+        private LyricScalarTransition _previewFocus;
+        private const float PreviewFadeMilliseconds = 250;
         private volatile bool _scrollPreviewing;
         private int _scrollPreviewNotified;
 

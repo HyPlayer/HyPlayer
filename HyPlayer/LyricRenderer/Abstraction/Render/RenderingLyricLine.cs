@@ -117,6 +117,19 @@ public abstract class RenderingLyricLine : IDisposable
 
     internal float LastFrameGlow { get; private set; }
 
+    private float OpacityTarget(LyricLineEffectSettings settings, float distance, bool scrolling)
+    {
+        if (settings.Preset == LyricLinePreset.None) return 1;
+        var target = IsActive ? 1 : Math.Clamp(settings.NearOpacity + (settings.FarOpacity - settings.NearOpacity) * distance, settings.FarOpacity, 1);
+        return settings.Preset == LyricLinePreset.Layered && scrolling ? Math.Max(target, 0.4f) : target;
+    }
+
+    private static float ScaleTarget(LyricLineEffectSettings settings, float distance, bool scrolling)
+    {
+        var target = settings.Preset != LyricLinePreset.None ? Math.Max(0.1f, 1 + (settings.DistantScale - 1) * distance) : 1;
+        return scrolling ? Math.Max(target, 0.8f) : target;
+    }
+
     /// <summary>Draws a line directly; only spatial image effects record its content.</summary>
     public bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
@@ -131,17 +144,22 @@ public abstract class RenderingLyricLine : IDisposable
             : perLine ? RestDistance : Math.Abs((currentY - offset.Y) / context.ViewHeight);
         var time = context.CurrentLyricTime;
         var enabled = settings.Preset != LyricLinePreset.None;
-        var opacityTarget = IsActive ? 1 : Math.Clamp(settings.NearOpacity + (settings.FarOpacity - settings.NearOpacity) * distance, settings.FarOpacity, 1);
-        if (settings.Preset == LyricLinePreset.Layered && context.IsScrolling) opacityTarget = Math.Max(opacityTarget, 0.4f);
+        var opacityTarget = OpacityTarget(settings, distance, context.IsScrolling);
         var opacity = perLine
-            ? _opacityMotion.Update(enabled ? opacityTarget : 1, tick, IsActive ? 300 : 400, context.IsSeek)
-            : _opacityTransition.Update(enabled ? opacityTarget : 1, time, IsActive ? 300 : 500, context.IsSeek);
-        var scaleTarget = enabled ? Math.Max(0.1f, 1 + (settings.DistantScale - 1) * distance) : 1;
-        if (context.IsScrolling) scaleTarget = Math.Max(scaleTarget, 0.8f);
+            ? _opacityMotion.Update(opacityTarget, tick, IsActive ? 300 : 400, context.IsSeek)
+            : _opacityTransition.Update(opacityTarget, time, IsActive ? 300 : 500, context.IsSeek);
+        var scaleTarget = ScaleTarget(settings, distance, context.IsScrolling);
         var scale = perLine
             ? _scaleMotion.Update(scaleTarget, tick, 450, context.IsSeek)
             : _scaleTransition.Update(scaleTarget, time, 500, context.IsSeek);
-        var blurTarget = enabled && !context.IsScrolling ? Math.Min(250, settings.MaximumBlur * distance) : 0;
+        var preview = context.PreviewFocus;
+        if (preview > 0 && context.ViewHeight > 0)
+        {
+            var previewDistance = Math.Max(0, Math.Abs(offset.Y + RenderingHeight / 2 - context.ViewHeight / 2) - RenderingHeight / 2) / context.ViewHeight;
+            opacity += (OpacityTarget(settings, previewDistance, context.IsScrolling) - opacity) * preview;
+            scale += (ScaleTarget(settings, previewDistance, context.IsScrolling) - scale) * preview;
+        }
+        var blurTarget = enabled && !context.IsScrolling ? Math.Min(250, settings.MaximumBlur * distance) * (1 - preview) : 0;
         var blur = perLine ? 0 : _blurTransition.Update(blurTarget, time, 500, context.IsSeek);
         var glow = _glowTransition.Update(enabled && IsTextLine && IsActive ? settings.GlowOpacity : 0, time, 500, context.IsSeek);
         var relativeIndex = GroupIndex - (context.CurrentLyricLine?.GroupIndex ?? GroupIndex);
