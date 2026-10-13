@@ -158,9 +158,8 @@ public sealed partial class ExpandedPlayer : Page
     private Storyboard? _lyricPreviewHintStoryboard;
     private bool _isManualChangeMode;
     private bool _isRealClick;
-    private SingleSongBase? _lastCoverSong;
     private string? _lastSongTitle;
-    private int _coverRefreshVersion;
+    private readonly CoverColorRefreshGate _coverColorGate = new();
     private int _coverSwapVersion;
     private bool _hasDisplayedCover;
     private double _coverLuminance;
@@ -373,7 +372,7 @@ public sealed partial class ExpandedPlayer : Page
                 break;
             case nameof(PlaybackStateService.CoverStream):
                 WakeLyricCanvas();
-                RefreshAlbumCover(_state.NowPlayingProviderItem);
+                RefreshAlbumCover();
                 break;
             case nameof(PlaybackStateService.LyricInfo):
             case nameof(PlaybackStateService.IsLyricPending):
@@ -1030,7 +1029,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         WakeLyricCanvas();
         OnSongChange();
-        RefreshAlbumCover(_state.NowPlayingProviderItem);
+        RefreshAlbumCover();
         if (!_lyricHasBeenLoaded) HyPlayList_OnLyricLoaded();
     }
 
@@ -1261,83 +1260,101 @@ public sealed partial class ExpandedPlayer : Page
         }
     }
 
-    private bool IsStaleCoverRefresh(int version)
+    private bool IsCurrentCover(CoverColorTicket ticket)
     {
-        return version != Volatile.Read(ref _coverRefreshVersion);
+        return _coverColorGate.IsCurrent(ticket, _state.CoverStream);
     }
 
-    private async Task<bool> IsBrightAsync(IRandomAccessStream stream, int version)
+    private async Task<CoverColors?> ExtractCoverColorsAsync(IRandomAccessStream stream)
     {
-        _lastCoverSong = _state.NowPlayingProviderItem;
-        var finalResult = false; //在不手动指定背景类型为2至5时需要执行颜色采样
-        var resultGenerated = false; //标志返回颜色已经生成
-        if (_uiSettings.LyricColor != LyricColor.Auto && _uiSettings.LyricColor != LyricColor.FollowCover)
-        {
-            finalResult = _uiSettings.LyricColor == LyricColor.Black;
-            resultGenerated = true;
-        }
-
-        if (_state.NowPlayingProviderItem == null) return false;
+        var backgroundType = _uiSettings.ExpandedPlayerBackgroundType;
+        var lyricColor = _uiSettings.LyricColor;
+        var generatorType = _uiSettings.ColorGeneratorType;
+        var useLab = _lyricSettings.ImpressionistLABSpace;
+        var usesPalette = backgroundType is BackgroundType.Animated or BackgroundType.Isolation or BackgroundType.LikeApple;
         try
         {
-            var generatorType = _uiSettings.ColorGeneratorType;
-            var useLab = _lyricSettings.ImpressionistLABSpace;
-            var usesPalette = _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated ||
-                              _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation ||
-                              _uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple;
-            var (theme, palette) = await Task.Run(async () =>
+            var (mainColor, palette) = await Task.Run(async () =>
             {
                 var themeColor = await ColorHelper.ExtractThemeColorFromStream(stream, generatorType);
                 if (!usesPalette) return (themeColor, (List<Vector3>?)null);
                 stream.Seek(0);
                 return (themeColor, await ColorHelper.ExtractPaletteFromStream(stream, generatorType, useLab));
             });
-            if (IsStaleCoverRefresh(version)) return finalResult;
-            _albumMainColor = theme;
-            if (palette is not null)
+            var theme = mainColor;
+            if (palette is { Count: > 0 })
             {
-                if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated)
-                {
-                    _albumColors =
-                    [
-                        .. palette.Select(quantizedColor => Color.FromArgb(255, (byte)quantizedColor.X,
-                            (byte)quantizedColor.Y, (byte)quantizedColor.Z))
-                    ];
-                }
-                else if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation)
-                {
-                    _albumColorVectors = [.. palette.Select(t => t / 255)];
-                    _canvasState.AlbumColorVectors = _albumColorVectors;
-                }
                 var themeVector = Vector3.Zero;
                 foreach (var item in palette) themeVector += item;
                 themeVector /= palette.Count;
                 theme = Color.FromArgb(255, (byte)themeVector.X, (byte)themeVector.Y, (byte)themeVector.Z);
             }
 
-            if (_uiSettings.ExpandedPlayerBackgroundType is BackgroundType.CoverTheme)
-                PageContainer.Background =
-                    new SolidColorBrush(_albumMainColor!.Value);
-            else if (_uiSettings.ExpandedPlayerBackgroundType is BackgroundType.Isolation or BackgroundType.LikeApple)
-                PageContainer.Background = new SolidColorBrush(theme);
-            _coverLuminance = (0.2126 * theme.R + 0.7152 * theme.G + 0.0722 * theme.B) / 255;
-            if (!resultGenerated)
-            {
-                finalResult = !new Vector3(theme.R, theme.G, theme.B).RGBVectorLStarIsDark();
-                resultGenerated = true;
-            }
+            var isBright = lyricColor is LyricColor.Auto or LyricColor.FollowCover
+                ? !new Vector3(theme.R, theme.G, theme.B).RGBVectorLStarIsDark()
+                : lyricColor == LyricColor.Black;
+            return new CoverColors(mainColor, theme, palette, isBright,
+                (0.2126 * theme.R + 0.7152 * theme.G + 0.0722 * theme.B) / 255);
         }
         catch
         {
-            if (!resultGenerated)
-            {
-                finalResult = false; //如果颜色生成失败（例如解码失败），默认使用黑色字体
-                resultGenerated = true;
-            }
+            return null;
+        }
+    }
+
+    private void ApplyCoverColors(CoverColors colors)
+    {
+        var backgroundType = _uiSettings.ExpandedPlayerBackgroundType;
+        _albumMainColor = colors.MainColor;
+        _coverLuminance = colors.Luminance;
+        if (colors.Palette is { Count: > 0 } palette)
+        {
+            if (backgroundType == BackgroundType.Animated)
+                _albumColors =
+                [
+                    .. palette.Select(quantizedColor => Color.FromArgb(255, (byte)quantizedColor.X,
+                        (byte)quantizedColor.Y, (byte)quantizedColor.Z))
+                ];
+            else if (backgroundType == BackgroundType.Isolation)
+                _albumColorVectors = [.. palette.Select(t => t / 255)];
         }
 
-        return finalResult;
+        if (backgroundType is BackgroundType.CoverTheme)
+            PageContainer.Background = new SolidColorBrush(colors.MainColor);
+        else if (backgroundType is BackgroundType.Isolation or BackgroundType.LikeApple)
+            PageContainer.Background = new SolidColorBrush(colors.Theme);
+        if (backgroundType == BackgroundType.Animated)
+            BlackCover.Fill = new SolidColorBrush(colors.IsBright
+                ? Color.FromArgb(80, 255, 255, 255)
+                : Color.FromArgb(80, 0, 0, 0));
+        var dimBackground = colors.IsBright && UsesBrightDimmer();
+        AnimateBrightDimmer(dimBackground);
+        ApplyPlaybackTheme(ExpandedPlayerThemeFactory.Create(_uiSettings, _lyricSettings, _albumMainColor,
+            colors.IsBright && !dimBackground));
+        if (backgroundType == BackgroundType.LikeApple)
+            _likeAppleBackgroundLayer.SetLightTheme(colors.IsBright);
+        RefreshUIColor();
+        if (backgroundType == BackgroundType.Animated && _albumColors.Count > 0)
+        {
+            Windows.UI.Xaml.Shapes.Rectangle[] cells =
+                [BgRect00, BgRect01, BgRect02, BgRect10, BgRect11, BgRect12, BgRect20, BgRect21, BgRect22];
+            for (var i = 0; i < cells.Length; i++)
+                cells[i].Fill = new SolidColorBrush(_albumColors[i % _albumColors.Count]);
+        }
+
+        if (backgroundType == BackgroundType.Isolation)
+        {
+            _canvasState.AlbumColorVectors = _albumColorVectors;
+            _isolationBackgroundLayer.ApplyShaderProperties();
+        }
     }
+
+    private sealed record CoverColors(
+        Color MainColor,
+        Color Theme,
+        List<Vector3>? Palette,
+        bool IsBright,
+        double Luminance);
 
     private static string FormatPlaybackSpeed(double speed)
     {
@@ -1433,7 +1450,7 @@ public sealed partial class ExpandedPlayer : Page
             ViewModel.SyncFromState();
             if (_state.NowPlayingProviderItem != null)
                 OnSongChange();
-            RefreshAlbumCover(_state.NowPlayingProviderItem);
+            RefreshAlbumCover();
             ChangeWindowMode();
             _needsRedesign = true;
         }
@@ -1581,85 +1598,80 @@ public sealed partial class ExpandedPlayer : Page
         ImageResetPositionAni.Begin();
     }
 
-    public async void RefreshAlbumCover(SingleSongBase? playItem)
+    public async void RefreshAlbumCover()
     {
-        if (_isCleanedUp || _canvasResourcesReleased || _state.CoverStream == null || _lifecycle.IsInBackground) return;
-        if (playItem is not null && !ReferenceEquals(playItem, _state.NowPlayingProviderItem)) return;
-        var version = Interlocked.Increment(ref _coverRefreshVersion);
-        using var stream = _state.CoverStream.CloneStream();
-        var isBright = await IsBrightAsync(stream, version);
-        if (IsStaleCoverRefresh(version)) return;
-        WakeLyricCanvas();
-        _ = this.RunOnUIThreadAsync(async () =>
+        if (_isCleanedUp || _canvasResourcesReleased || _lifecycle.IsInBackground) return;
+        var cover = _state.CoverStream;
+        if (cover is null) return;
+        IRandomAccessStream source;
+        try
         {
-            if (_isCleanedUp || _canvasResourcesReleased) return;
-            if (!_uiSettings.NoImage)
-                try
+            source = cover.CloneStream();
+        }
+        catch
+        {
+            return;
+        }
+
+        var ticket = _coverColorGate.Begin(cover);
+        CoverColors? colors;
+        using (var sampling = source.CloneStream())
+        {
+            colors = await ExtractCoverColorsAsync(sampling);
+        }
+
+        if (!IsCurrentCover(ticket))
+        {
+            source.Dispose();
+            return;
+        }
+
+        WakeLyricCanvas();
+        _ = this.RunOnUIThreadAsync(() => ApplyAlbumCoverAsync(ticket, source, colors));
+    }
+
+    private async Task ApplyAlbumCoverAsync(CoverColorTicket ticket, IRandomAccessStream source, CoverColors? colors)
+    {
+        using (source)
+        {
+            if (_isCleanedUp || _canvasResourcesReleased || _uiSettings.NoImage || !IsCurrentCover(ticket)) return;
+            try
+            {
+                using var image = source.CloneStream();
+                var bitmap = new BitmapImage();
+                await bitmap.SetSourceAsync(image);
+                if (_isCleanedUp || _canvasResourcesReleased || !IsCurrentCover(ticket)) return;
+                await SwapCoverAsync(bitmap, ticket);
+                if (_isCleanedUp || _canvasResourcesReleased || !IsCurrentCover(ticket)) return;
+                if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.CoverBlur &&
+                    Background is not ImageBrush)
                 {
-                    if (!ReferenceEquals(playItem, _state.NowPlayingProviderItem) ||
-                        !ReferenceEquals(playItem, _lastCoverSong) || IsStaleCoverRefresh(version)) return;
-                    using var cover = _state.CoverStream.CloneStream();
-                    var bitmap = new BitmapImage();
-                    await bitmap.SetSourceAsync(cover);
-                    if (_isCleanedUp || _canvasResourcesReleased || IsStaleCoverRefresh(version)) return;
-                    await SwapCoverAsync(bitmap, version);
-                    if (_isCleanedUp || _canvasResourcesReleased || IsStaleCoverRefresh(version)) return;
-                    if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.CoverBlur &&
-                        Background is not ImageBrush)
-                    {
-                        var brush = new ImageBrush
-                            { Stretch = Stretch.UniformToFill };
-                        Background = brush;
-                    }
-
-                    if (Background is ImageBrush imageBrush) imageBrush.ImageSource = bitmap;
-
-                    if (!ReferenceEquals(playItem, _state.NowPlayingProviderItem) ||
-                        !ReferenceEquals(playItem, _lastCoverSong)) return;
-                    if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated && isBright)
-                        BlackCover.Fill = new SolidColorBrush(Color.FromArgb(80, 255, 255, 255));
-                    else if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated && !isBright)
-                        BlackCover.Fill = new SolidColorBrush(Color.FromArgb(80, 0, 0, 0));
-                    var dimBackground = isBright && UsesBrightDimmer();
-                    AnimateBrightDimmer(dimBackground);
-                    ApplyPlaybackTheme(ExpandedPlayerThemeFactory.Create(_uiSettings, _lyricSettings, _albumMainColor,
-                        isBright && !dimBackground));
-                    if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
-                        _likeAppleBackgroundLayer.SetLightTheme(isBright);
-
-                    //LoadLyricsBox();
-                    RefreshUIColor();
-                    if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Animated)
-                    {
-                        BgRect00.Fill = new SolidColorBrush(_albumColors[0]);
-                        BgRect01.Fill = new SolidColorBrush(_albumColors[1]);
-                        BgRect02.Fill = new SolidColorBrush(_albumColors[2]);
-                        BgRect10.Fill = new SolidColorBrush(_albumColors[3]);
-                        BgRect11.Fill = new SolidColorBrush(_albumColors[4]);
-                        BgRect12.Fill = new SolidColorBrush(_albumColors[5]);
-                        BgRect20.Fill = new SolidColorBrush(_albumColors[6]);
-                        BgRect21.Fill = new SolidColorBrush(_albumColors[7]);
-                        BgRect22.Fill = new SolidColorBrush(_albumColors[8]);
-                    }
-
-                    if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.Isolation)
-                    {
-                        _canvasState.AlbumColorVectors = _albumColorVectors;
-                        _isolationBackgroundLayer.ApplyShaderProperties();
-                    }
-
-                    if (_uiSettings.ExpandedPlayerBackgroundType == BackgroundType.LikeApple)
-                    {
-                        using var likeAppleCover = _state.CoverStream.CloneStream();
-                        await _likeAppleBackgroundLayer.SetArtworkAsync(likeAppleCover);
-                    }
-
-                    WakeLyricCanvas();
+                    var brush = new ImageBrush
+                        { Stretch = Stretch.UniformToFill };
+                    Background = brush;
                 }
-                catch
-                {
-                }
-        });
+
+                if (Background is ImageBrush imageBrush) imageBrush.ImageSource = bitmap;
+            }
+            catch
+            {
+            }
+
+            if (_isCleanedUp || _canvasResourcesReleased ||
+                !_coverColorGate.TryApply(ticket, _state.CoverStream)) return;
+            if (colors is not null) ApplyCoverColors(colors);
+            WakeLyricCanvas();
+            if (_uiSettings.ExpandedPlayerBackgroundType != BackgroundType.LikeApple) return;
+            try
+            {
+                using var artwork = source.CloneStream();
+                await _likeAppleBackgroundLayer.SetArtworkAsync(artwork);
+                WakeLyricCanvas();
+            }
+            catch
+            {
+            }
+        }
     }
 
 
@@ -1743,7 +1755,7 @@ public sealed partial class ExpandedPlayer : Page
         }
     }
 
-    private async Task SwapCoverAsync(BitmapImage bitmap, int version)
+    private async Task SwapCoverAsync(BitmapImage bitmap, CoverColorTicket ticket)
     {
         var swap = ++_coverSwapVersion;
         var visual = ElementCompositionPreview.GetElementVisual(ImageAlbum);
@@ -1756,7 +1768,7 @@ public sealed partial class ExpandedPlayer : Page
             fadeOut.Duration = TimeSpan.FromMilliseconds(160);
             visual.StartAnimation("Opacity", fadeOut);
             await Task.Delay(160);
-            if (swap != _coverSwapVersion || IsStaleCoverRefresh(version) || _isCleanedUp) return;
+            if (swap != _coverSwapVersion || !IsCurrentCover(ticket) || _isCleanedUp) return;
         }
 
         ViewModel.Cover = bitmap;

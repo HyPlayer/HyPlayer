@@ -29,6 +29,7 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
     private readonly ExpandedCanvasState _state;
     private readonly Vector3[] _colorsFrom = new Vector3[4];
     private readonly Vector3[] _colorsTo = new Vector3[4];
+    private readonly object _colorGate = new();
     private readonly float _random1 = Random.Shared.NextSingle();
     private readonly float _random2 = Random.Shared.NextSingle();
     private readonly float _random3 = Random.Shared.NextSingle();
@@ -82,11 +83,12 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
         }
 
         if (_colorsInitialized && Volatile.Read(ref _colorBlendStart) != 0)
-        {
-            var blend = ColorBlendProgress();
-            ApplyColorBlend(blend);
-            if (blend >= 1) Volatile.Write(ref _colorBlendStart, 0);
-        }
+            lock (_colorGate)
+            {
+                var blend = ColorBlendProgress();
+                ApplyColorBlend(blend);
+                if (blend >= 1) Volatile.Write(ref _colorBlendStart, 0);
+            }
 
         if (_state.IsPlaying) _shaderSeconds += args.Timing.ElapsedTime.TotalSeconds;
 
@@ -164,6 +166,12 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
     {
         var colors = _state.AlbumColorVectors;
         if (colors.Count < 4) return;
+        lock (_colorGate)
+            AdoptColors(colors);
+    }
+
+    private void AdoptColors(IReadOnlyList<Vector3> colors)
+    {
         if (!_colorsInitialized)
         {
             for (var i = 0; i < 4; i++) _colorsFrom[i] = _colorsTo[i] = colors[i];

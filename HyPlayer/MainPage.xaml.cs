@@ -70,7 +70,10 @@ public sealed partial class MainPage : Page
     private DispatcherTimer? _idleHideTimer;
     private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _playbackStateChangedListener;
     private WeakEventListener<MainPage, object?, PropertyChangedEventArgs>? _uiSettingsChangedListener;
+    private const int SurfaceFadeMilliseconds = 350;
     private ConnectedAnimationBatch? _collapseAnimations;
+    private Storyboard? _expandedPlayerFadeStoryboard;
+    private bool _expandedPlayerReclaimHeld;
     private int _surfaceTransitionVersion;
 
     public HyPlayer.Domain.Settings.UISettings UISettings { get; } =
@@ -192,8 +195,12 @@ public sealed partial class MainPage : Page
             case nameof(PlaybackSurfaceStore.SurfaceMode):
                 ApplySurfaceMode(_surfaceStore.SurfaceMode);
                 UpdateHomePlaybar();
-                _memoryGovernor.OnExpandedPlayerVisibilityChanged(
-                    _surfaceStore.SurfaceMode == PlaybackSurfaceMode.Expanded);
+                if (_surfaceStore.IsExpanded)
+                {
+                    _expandedPlayerReclaimHeld = true;
+                    _memoryGovernor.OnExpandedPlayerVisibilityChanged(true);
+                }
+
                 break;
             case nameof(PlaybackSurfaceStore.ExpandedFrameOffsetY):
                 ExpandedPlayerPositionOffset.Y = _surfaceStore.ExpandedFrameOffsetY;
@@ -205,6 +212,7 @@ public sealed partial class MainPage : Page
                 EnsureExpandedPlayerFrame();
                 break;
             case nameof(PlaybackSurfaceStore.IsPlayBarSuppressed):
+                if (!_surfaceStore.IsExpanded && ExpandedPlayer.Content != null) break;
                 ApplyPlaybarVisibility(false);
                 if (!_surfaceStore.IsPlayBarSuppressed) RestorePlaybar();
                 break;
@@ -222,6 +230,11 @@ public sealed partial class MainPage : Page
     private void PresentExpandedSurface()
     {
         CancelCollapseTransition();
+        if (ExpandedPlayer.Content != null)
+            _ = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+            {
+                if (_surfaceStore.IsExpanded) ApplyPlaybarVisibility(false);
+            });
         ImageResetPositionAni.Stop();
         ExpandedPlayerPositionOffset.X = 0;
         ExpandedPlayerPositionOffset.Y = 0;
@@ -251,7 +264,6 @@ public sealed partial class MainPage : Page
     private async void RestoreCompactSurface()
     {
         CancelCollapseTransition();
-        RestorePlaybar();
         var version = _surfaceTransitionVersion;
         var source = ExpandedPlayer.Content as ExpandedPlayer;
         var animations = UISettings.ExpandAnimation && source != null
@@ -259,11 +271,8 @@ public sealed partial class MainPage : Page
             : null;
         _collapseAnimations = animations;
 
-        GridPlayBarMarginBlur.Visibility = Visibility.Visible;
         _shellHost.AppTitleBar?.ReleasePointerCaptures();
         ExpandedPlayer.IsHitTestVisible = false;
-        GridPlayBar.BorderThickness = new Thickness(1);
-        GridPlayBar.Background = GetCompactPlayBarBackground();
         MainFrame.Visibility = Visibility.Visible;
 
         if (_shellHost.AppTitleBar is { } titleBar)
@@ -272,19 +281,39 @@ public sealed partial class MainPage : Page
             Window.Current.SetTitleBar(dragRegion);
         }
 
+        if (animations == null)
+        {
+            ShowCompactPlaybar(false);
+            HideExpandedPlayer();
+            if (source != null) await WaitForRenderedFrameAsync();
+            ReleaseExpandedPlayer(version, source);
+            return;
+        }
+
+        _playbarHideStoryboard?.Stop();
+        _playbarHideStoryboard = null;
+        _playbarHidden = true;
+        PlayBarHost.IsHitTestVisible = false;
+        PlayBarHost.Visibility = Visibility.Visible;
+        PlayBarHost.Opacity = 0;
+        GridPlayBarMarginBlur.Opacity = 0;
+
+        var revealed = false;
         try
         {
-            if (animations != null)
-            {
-                // Let all SurfaceMode subscribers reveal the PlayBar targets before layout.
-                // Keep the source attached and visible while DWM consumes the queued snapshots:
-                // clearing Content here can fail-fast in CVisual::GetWorldTransform.
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () => { });
-                if (version != _surfaceTransitionVersion) return;
-                PlaybackBar.UpdateLayout();
-                if (GridPlayBar.Visibility == Visibility.Visible && PlaybackBar.CanShowCollapseAnimations)
-                    await animations.StartAsync();
-            }
+            // Let all SurfaceMode subscribers reveal the PlayBar targets before layout.
+            // Keep the source attached and visible while DWM consumes the queued snapshots:
+            // clearing Content here can fail-fast in CVisual::GetWorldTransform.
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () => { });
+            if (version != _surfaceTransitionVersion) return;
+            PlaybackBar.UpdateLayout();
+            var flight = GridPlayBar.Visibility == Visibility.Visible && PlaybackBar.CanShowCollapseAnimations
+                ? animations.StartAsync()
+                : Task.CompletedTask;
+            var fade = FadeOutExpandedPlayerAsync();
+            RevealCompactPlaybar(true);
+            revealed = true;
+            await Task.WhenAll(flight, fade);
         }
         catch (Exception ex)
         {
@@ -292,18 +321,86 @@ public sealed partial class MainPage : Page
         }
         finally
         {
-            animations?.Cancel();
-            if (version == _surfaceTransitionVersion && !_surfaceStore.IsExpanded &&
-                ReferenceEquals(ExpandedPlayer.Content, source))
-            {
-                _collapseAnimations = null;
-                ExpandedPlayer.Content = null;
-                ExpandedPlayer.Visibility = Visibility.Collapsed;
-                ImageResetPositionAni.Stop();
-                ExpandedPlayerPositionOffset.X = 0;
-                ExpandedPlayerPositionOffset.Y = 0;
-            }
+            animations.Cancel();
         }
+
+        if (version != _surfaceTransitionVersion || _surfaceStore.IsExpanded ||
+            !ReferenceEquals(ExpandedPlayer.Content, source)) return;
+        _collapseAnimations = null;
+        if (!revealed) RevealCompactPlaybar(false);
+        HideExpandedPlayer();
+        await WaitForRenderedFrameAsync();
+        ReleaseExpandedPlayer(version, source);
+    }
+
+    private void ShowCompactPlaybar(bool fade)
+    {
+        GridPlayBarMarginBlur.Visibility = Visibility.Visible;
+        GridPlayBar.BorderThickness = new Thickness(1);
+        GridPlayBar.Background = GetCompactPlayBarBackground();
+        ApplyPlaybarVisibility(fade);
+        RestorePlaybar();
+    }
+
+    private void RevealCompactPlaybar(bool fade)
+    {
+        _playbarHidden = !(_surfaceStore.IsPlayBarSuppressed || _playbarHiddenWhenIdle);
+        ShowCompactPlaybar(fade);
+    }
+
+    private Task FadeOutExpandedPlayerAsync()
+    {
+        var completion = new TaskCompletionSource();
+        var storyboard = new Storyboard();
+        AddPlaybarAnimation(storyboard, ExpandedPlayer, "Opacity", 0, SurfaceFadeMilliseconds, EasingMode.EaseOut);
+        storyboard.Completed += (_, _) => completion.TrySetResult();
+        _expandedPlayerFadeStoryboard = storyboard;
+        storyboard.Begin();
+        return Task.WhenAny(completion.Task, Task.Delay(TimeSpan.FromSeconds(1)));
+    }
+
+    private void HideExpandedPlayer()
+    {
+        ExpandedPlayer.Visibility = Visibility.Collapsed;
+        StopExpandedPlayerFade();
+        ImageResetPositionAni.Stop();
+        ExpandedPlayerPositionOffset.X = 0;
+        ExpandedPlayerPositionOffset.Y = 0;
+    }
+
+    private void StopExpandedPlayerFade()
+    {
+        _expandedPlayerFadeStoryboard?.Stop();
+        _expandedPlayerFadeStoryboard = null;
+        ExpandedPlayer.Opacity = 1;
+    }
+
+    private void ReleaseExpandedPlayer(int version, ExpandedPlayer? source)
+    {
+        if (version != _surfaceTransitionVersion || _surfaceStore.IsExpanded ||
+            !ReferenceEquals(ExpandedPlayer.Content, source)) return;
+        ExpandedPlayer.Content = null;
+        ReleaseExpandedPlayerReclaimHold();
+    }
+
+    private void ReleaseExpandedPlayerReclaimHold()
+    {
+        if (!_expandedPlayerReclaimHeld) return;
+        _expandedPlayerReclaimHeld = false;
+        _memoryGovernor.OnExpandedPlayerVisibilityChanged(false);
+    }
+
+    private static Task WaitForRenderedFrameAsync()
+    {
+        var rendered = new TaskCompletionSource();
+        EventHandler<RenderedEventArgs>? handler = null;
+        handler = (_, _) =>
+        {
+            Windows.UI.Xaml.Media.CompositionTarget.Rendered -= handler;
+            rendered.TrySetResult();
+        };
+        Windows.UI.Xaml.Media.CompositionTarget.Rendered += handler;
+        return Task.WhenAny(rendered.Task, Task.Delay(TimeSpan.FromMilliseconds(250)));
     }
 
     private Brush? GetCompactPlayBarBackground()
@@ -322,6 +419,7 @@ public sealed partial class MainPage : Page
         var animations = _collapseAnimations;
         _collapseAnimations = null;
         animations?.Cancel();
+        StopExpandedPlayerFade();
     }
 
     private void EnsureExpandedPlayerFrame()
@@ -339,6 +437,7 @@ public sealed partial class MainPage : Page
         {
             ExpandedPlayer.Content = null;
             ExpandedPlayer.Visibility = Visibility.Collapsed;
+            ReleaseExpandedPlayerReclaimHold();
         }
         base.OnNavigatedFrom(e);
         _surfaceStoreChangedListener?.Detach();
