@@ -360,8 +360,8 @@ public sealed partial class WidgetPage : Page
         var node = _player.PrimaryAudioInputNode;
         if (node == null) return;
         var seek = _positionChangedBySeeking;
-        var position = _lyricClock.Next(node, node.Position.TotalMilliseconds,
-            _player.GlobalPlaybackStatus == PlaybackStatus.Playing, node.PlaybackSpeedFactor, seek);
+        var position = _lyricClock.Next(node, _player.GetPosition(node).TotalMilliseconds,
+            _player.GlobalPlaybackStatus == PlaybackStatus.Playing, _player.GetSpeed(node), seek);
         if (position < _lyricBox.Context.CurrentLyricTime)
         {
             _lyricBox.Context.CurrentLyricTime = position;

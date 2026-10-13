@@ -10,7 +10,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
     {
         private const int WakeMilliseconds = 5;
         private readonly CallbackGate _gate = new();
-        private readonly TimeStretcher _stretcher;
+        private readonly PitchPreservingSpeed _speed;
         private readonly object _stretchLock = new();
         private readonly PitchPump _pump;
         private readonly PreciseWait _wait = new();
@@ -20,11 +20,11 @@ namespace HyPlayer.UWP.Chopin.Dsp
         private bool _disposed;
         private int _unit;
 
-        internal PitchCorrector(AudioFrameOutputNode capture, AudioFrameInputNode render, int sampleRate, int quantumFrames)
+        internal PitchCorrector(AudioFrameOutputNode capture, AudioFrameInputNode render, int sampleRate, int quantumFrames, double speed)
         {
             Capture = capture;
             Render = render;
-            _stretcher = new TimeStretcher(2, sampleRate);
+            _speed = new PitchPreservingSpeed(sampleRate, quantumFrames, speed);
             _pump = new PitchPump(quantumFrames, sampleRate, Stretch, Write);
             _thread = new Thread(Run)
             {
@@ -41,7 +41,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
         {
             lock (_stretchLock)
             {
-                if (!_disposed) _stretcher.SetTranspose(1 / Math.Max(0.1, speed));
+                if (!_disposed) _speed.SetSpeed(speed);
             }
         }
 
@@ -102,7 +102,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
             lock (_stretchLock)
             {
                 if (_disposed) output.Clear();
-                else _stretcher.Process(input, output);
+                else _speed.Process(input, output);
             }
         }
 
@@ -127,7 +127,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
             {
                 if (_disposed) return;
                 _disposed = true;
-                _stretcher.Dispose();
+                _speed.Dispose();
             }
 
             if (!_started) _wait.Dispose();

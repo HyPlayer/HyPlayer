@@ -15,6 +15,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
         private static delegate* unmanaged[Cdecl]<nint, float*, int, void> _outputSeek;
         private static delegate* unmanaged[Cdecl]<nint, float*, int, float*, int, void> _process;
         private static delegate* unmanaged[Cdecl]<nint, float, void> _setTranspose;
+        private static delegate* unmanaged[Cdecl]<int, int, int, nint> _createSized;
 
         private nint _handle;
         private readonly int _channels;
@@ -65,6 +66,8 @@ namespace HyPlayer.UWP.Chopin.Dsp
                 _process = (delegate* unmanaged[Cdecl]<nint, float*, int, float*, int, void>)NativeLibrary.GetExport(library, "hyp_stretch_process");
                 if (NativeLibrary.TryGetExport(library, "hyp_stretch_set_transpose", out var transpose))
                     _setTranspose = (delegate* unmanaged[Cdecl]<nint, float, void>)transpose;
+                if (NativeLibrary.TryGetExport(library, "hyp_stretch_create_sized", out var sized))
+                    _createSized = (delegate* unmanaged[Cdecl]<int, int, int, nint>)sized;
                 _create = (delegate* unmanaged[Cdecl]<int, float, int, nint>)create;
                 return;
             }
@@ -76,6 +79,18 @@ namespace HyPlayer.UWP.Chopin.Dsp
             if (_create == null) throw new InvalidOperationException("Time stretch library is not available");
             _channels = channels;
             _handle = _create(channels, sampleRate, 0);
+        }
+
+        public TimeStretcher(int channels, int sampleRate, double blockSeconds, double intervalSeconds)
+        {
+            EnsureLoaded();
+            if (_create == null) throw new InvalidOperationException("Time stretch library is not available");
+            _channels = channels;
+            var block = (int)(sampleRate * blockSeconds);
+            var interval = (int)(sampleRate * intervalSeconds);
+            _handle = _createSized != null && block > 0 && interval > 0
+                ? _createSized(channels, block, interval)
+                : _create(channels, sampleRate, 0);
         }
 
         public int OutputSeekLength(double rate) => _outputSeekLength(_handle, (float)rate);

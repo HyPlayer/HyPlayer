@@ -60,6 +60,14 @@ HYP_EXPORT void* hyp_stretch_create(int32_t channels, float sampleRate, int32_t 
     return instance;
 }
 
+HYP_EXPORT void* hyp_stretch_create_sized(int32_t channels, int32_t blockFrames, int32_t intervalFrames)
+{
+    auto* instance = new Instance();
+    instance->channels = channels;
+    instance->stretch.configure(channels, blockFrames, intervalFrames);
+    return instance;
+}
+
 HYP_EXPORT void hyp_stretch_destroy(void* handle)
 {
     delete static_cast<Instance*>(handle);

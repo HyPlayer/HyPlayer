@@ -478,8 +478,8 @@ public sealed partial class ExpandedPlayer : Page
 
         var seek = _positionChangedBySeeking;
         var precisePosition = Math.Max(0, _lyricClock.NextPrecise(primaryAudioInputNode,
-            primaryAudioInputNode.Position.TotalMilliseconds, _player.GlobalPlaybackStatus == PlaybackStatus.Playing,
-            primaryAudioInputNode.PlaybackSpeedFactor, seek));
+            _player.GetPosition(primaryAudioInputNode).TotalMilliseconds, _player.GlobalPlaybackStatus == PlaybackStatus.Playing,
+            _player.GetSpeed(primaryAudioInputNode), seek));
         var positionMilliseconds = (long)precisePosition;
         if (positionMilliseconds < view.Context.CurrentLyricTime)
         {
@@ -1558,7 +1558,7 @@ public sealed partial class ExpandedPlayer : Page
                 manipulationDeltaRotateValue = e.Delta.Rotation;
                 if (manipulationDeltaRotateValue == 0) manipulationDeltaRotateValue = e.Delta.Translation.Y;
                 ImageRotateTransform.Angle += manipulationDeltaRotateValue;
-                _ = _control.SeekAsync(_player.PrimaryAudioInputNode.Position.Add(
+                _ = _control.SeekAsync(_player.GetPosition(_player.PrimaryAudioInputNode).Add(
                     TimeSpan.FromMilliseconds((int)manipulationDeltaRotateValue) * 100));
                 break;
             case GestureMode.DJ:

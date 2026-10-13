@@ -27,6 +27,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private readonly ConcurrentDictionary<AudioGraphPlaybackSource, PlaybackSourceGainState> _playbackSourceGainStates = new();
         private readonly ConcurrentDictionary<AudioGraphPlaybackSource, AudioSubmixNode> _voiceBuses = new();
         private readonly ConcurrentDictionary<AudioGraphPlaybackSource, PitchCorrector> _pitchCorrectors = new();
+        private readonly ConcurrentDictionary<AudioGraphPlaybackSource, DecodedVoice> _decodedVoices = new();
+        private readonly ConcurrentDictionary<AudioGraphPlaybackSource, Relocation> _relocations = new();
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
         private AudioFrameOutputNode _frameOutputNode;
@@ -65,6 +67,16 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             public double Elapsed;
             public FadeCurve Curve;
             public TaskCompletionSource<bool> Completion;
+        }
+
+        private sealed class Relocation
+        {
+            public double Speed;
+            public bool PreservePitch;
+            public TimeSpan Position;
+            public bool Playing;
+            public bool Detached;
+            public DecodedVoice Voice;
         }
 
         public AudioGraphPlayer()
@@ -112,6 +124,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             {
                 if (PrimaryPlaybackSource == null) return null;
                 var source = PrimaryPlaybackSource as AudioGraphPlaybackSource;
+                if (Detached(source)) return null;
                 return _audioInputNodes.TryGetValue(source, out var node) ? node : null;
             }
         }
@@ -408,7 +421,22 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             var properties = Windows.Media.MediaProperties.AudioEncodingProperties.CreatePcm(_defaultPlayer.EncodingProperties.SampleRate, 2, 32);
             properties.Subtype = Windows.Media.MediaProperties.MediaEncodingSubtypes.Float;
             var output = _defaultPlayer.CreateFrameOutputNode(properties);
-            node.AddOutgoingConnection(output);
+            if (_decodedVoices.TryGetValue((AudioGraphPlaybackSource)playbackSource, out var voice))
+            {
+                voice.Suspend();
+                try
+                {
+                    voice.Render.AddOutgoingConnection(output);
+                }
+                finally
+                {
+                    voice.Resume();
+                }
+            }
+            else
+            {
+                node.AddOutgoingConnection(output);
+            }
             var tap = new PlaybackTap(output, (int)properties.SampleRate, seconds);
             lock (_taps)
             {
@@ -434,8 +462,22 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             try
             {
                 var source = playbackSource as AudioGraphPlaybackSource ?? owner;
-                if (source != null && _audioInputNodes.TryGetValue(source, out var node))
+                if (source != null && _decodedVoices.TryGetValue(source, out var voice))
+                {
+                    voice.Suspend();
+                    try
+                    {
+                        voice.Render.RemoveOutgoingConnection(tap.Node);
+                    }
+                    finally
+                    {
+                        voice.Resume();
+                    }
+                }
+                else if (source != null && _audioInputNodes.TryGetValue(source, out var node))
+                {
                     node.RemoveOutgoingConnection(tap.Node);
+                }
             }
             catch
             {
@@ -552,6 +594,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 var newNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
                 var newBuses = new ConcurrentDictionary<AudioGraphPlaybackSource, AudioSubmixNode>();
                 var committed = false;
+                var pendingRelocations = new List<(AudioGraphPlaybackSource Source, Relocation Request)>();
 
                 try
                 {
@@ -576,20 +619,50 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
                     // 转移所有播放源
                     var newNodesReverse = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
+                    var keptVoices = new List<(DecodedVoice Voice, AudioSubmixNode Bus)>();
+                    var sameRate = newPlayer.EncodingProperties.SampleRate == oldPlayer.EncodingProperties.SampleRate;
 
                     foreach (var (source, oldNode) in oldNodes)
                     {
+                        if (_decodedVoices.TryGetValue(source, out var decoded))
+                        {
+                            if (sameRate)
+                            {
+                                var keptBus = newPlayer.CreateSubmixNode();
+                                newBuses[source] = keptBus;
+                                keptBus.OutgoingGain = _playbackSourceGainStates.TryGetValue(source, out var keptGain) ? keptGain.GetOutgoingGain() : 1;
+                                keptBus.AddOutgoingConnection(newOutputNode);
+                                keptBus.AddOutgoingConnection(newFrameOutputNode);
+                                newNodes[source] = oldNode;
+                                newNodesReverse[oldNode] = source;
+                                keptVoices.Add((decoded, keptBus));
+                                continue;
+                            }
+
+                            var request = new Relocation { Speed = decoded.Speed, PreservePitch = decoded.PreservePitch };
+                            if (_relocations.TryAdd(source, request)) pendingRelocations.Add((source, request));
+                        }
+
                         // 捕获旧节点状态
-                        var position = oldNode.Position;
+                        var position = PositionOf(source, oldNode);
                         var gain = _playbackSourceGainStates.TryGetValue(source, out var gainState)
                             ? gainState.GetOutgoingGain()
                             : oldNode.OutgoingGain;
-                        var factor = oldNode.PlaybackSpeedFactor;
+                        var factor = SpeedOf(source, oldNode);
                         var effects = oldNode.EffectDefinitions.ToList();
 
                         // 清理旧节点
-                        oldNode.MediaSourceCompleted -= OnMediaSourceCompleted;
-                        oldNode.Dispose();
+                        UnsubscribeCompletion(oldNode);
+                        if (_decodedVoices.TryRemove(source, out var replaced))
+                        {
+                            replaced.Completed -= OnVoiceCompleted;
+                            replaced.Dispose();
+                            DisposeInBackground(replaced.Render);
+                        }
+                        else
+                        {
+                            oldNode.Dispose();
+                        }
                         source.PlaybackSource?.Reset();
 
                         // 准备播放源
@@ -643,10 +716,24 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     _pitchCorrectors.Clear();
                     _voiceBuses.Clear();
                     foreach (var kvp in newBuses) _voiceBuses.TryAdd(kvp.Key, kvp.Value);
+                    foreach (var (voice, voiceBus) in keptVoices)
+                    {
+                        try
+                        {
+                            var render = newPlayer.CreateFrameInputNode(DecodedVoice.Format(newPlayer.EncodingProperties.SampleRate));
+                            render.Stop();
+                            render.AddOutgoingConnection(voiceBus);
+                            DisposeInBackground(voice.Rebind(render, voiceBus, newOutputNode));
+                            render.Start();
+                        }
+                        catch
+                        {
+                        }
+                    }
                     foreach (var pitchSource in pitchSources)
                     {
                         if (_audioInputNodes.TryGetValue(pitchSource, out var pitchNode) && Math.Abs(pitchNode.PlaybackSpeedFactor - 1) > 0.001)
-                            AttachPitchCorrector(pitchSource, pitchNode)?.SetSpeed(pitchNode.PlaybackSpeedFactor);
+                            AttachPitchCorrector(pitchSource, pitchNode, pitchNode.PlaybackSpeedFactor);
                     }
                     lock (_taps)
                     {
@@ -660,6 +747,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     _currentDeviceId = audioGraphSetting.ResolvedDeviceId;
                     if (GlobalPlaybackStatus == PlaybackStatus.Playing) newPlayer.Start();
                     committed = true;
+                    foreach (var (source, request) in pendingRelocations) _ = RelocateAsync(source, request);
+
                     OnGraphRebuilt?.Invoke();
                 }
                 finally
@@ -670,6 +759,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     }
                     else
                     {
+                        foreach (var (source, _) in pendingRelocations) _relocations.TryRemove(source, out _);
                         foreach (var (source, node) in newNodes)
                         {
                             try { node.MediaSourceCompleted -= OnMediaSourceCompleted; } catch { }
@@ -717,20 +807,34 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             RealtimeGcGuard.Set(false);
             foreach (var corrector in _pitchCorrectors.Values) corrector.Dispose();
             _pitchCorrectors.Clear();
+            foreach (var source in _decodedVoices.Keys.ToList()) DetachDecodedVoice(source);
             if (player is not null)
                 player.UnrecoverableErrorOccurred -= GraphOnUnrecoverableErrorOccurred;
 
             // 清理所有播放源
             foreach (var (source, item) in _audioInputNodes)
             {
-                item.MediaSourceCompleted -= OnMediaSourceCompleted;
+                UnsubscribeCompletion(item);
                 if (_voiceBuses.TryRemove(source, out var bus))
                 {
-                    item.RemoveOutgoingConnection(bus);
+                    try
+                    {
+                        item.RemoveOutgoingConnection(bus);
+                    }
+                    catch
+                    {
+                    }
+
                     bus.Dispose();
                 }
 
-                item.Dispose();
+                try
+                {
+                    item.Dispose();
+                }
+                catch
+                {
+                }
             }
 
             _audioInputNodes.Clear();
@@ -833,7 +937,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             ThrowExceptionIfDisposed();
             var node = GetAudioInputNodeOrThrow(playbackSource);
 
-            node.Start();
+            Route((AudioGraphPlaybackSource)playbackSource, node, n => n.Start(), v => v.Play(), r => r.Playing = true);
             if (playbackSource is AudioGraphPlaybackSource source)
             {
                 source.PlaybackStatus = PlaybackStatus.Playing;
@@ -846,7 +950,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             ThrowExceptionIfDisposed();
             var node = GetAudioInputNodeOrThrow(playbackSource);
 
-            node.Stop();
+            Route((AudioGraphPlaybackSource)playbackSource, node, n => n.Stop(), v => v.Pause(), r => r.Playing = false);
             if (playbackSource is AudioGraphPlaybackSource source)
             {
                 source.PlaybackStatus = PlaybackStatus.Paused;
@@ -866,13 +970,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 target = TimeSpan.FromMilliseconds(value);
             }
 
-            node.Seek(target);
+            Route(source, node, n => n.Seek(target), v => v.Seek(target), r => r.Position = target);
             if (GlobalPlaybackStatus is PlaybackStatus.Playing || !ReferenceEquals(playbackSource, PrimaryPlaybackSource))
                 return;
 
             _lastPosition = target;
             OnIdlePositionChanged?.Invoke(target);
-            PublishTimeline(target, node.Duration);
+            PublishTimeline(target, SafeDuration(node));
         }
 
         private void PublishTimeline(TimeSpan position, TimeSpan duration)
@@ -1058,7 +1162,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         {
             ThrowExceptionIfDisposed();
             var node = GetAudioInputNodeOrThrow(playbackSource);
-            node.PlaybackSpeedFactor = speed;
+            Route((AudioGraphPlaybackSource)playbackSource, node, n => n.PlaybackSpeedFactor = speed,
+                v => v.SetSpeed(speed, v.PreservePitch), r => r.Speed = speed);
         }
 
         public void SetUserPlaybackSpeed(double speed, IPlaybackSource playbackSource, bool preservePitch)
@@ -1066,12 +1171,38 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             ThrowExceptionIfDisposed();
             var node = GetAudioInputNodeOrThrow(playbackSource);
             var source = (AudioGraphPlaybackSource)playbackSource;
+            if (_relocations.TryGetValue(source, out var relocation))
+            {
+                lock (relocation)
+                {
+                    relocation.Speed = speed;
+                    relocation.PreservePitch = preservePitch;
+                    relocation.Voice?.SetSpeed(speed, preservePitch);
+                }
+
+                return;
+            }
+
+            if (_decodedVoices.TryGetValue(source, out var voice))
+            {
+                voice.SetSpeed(speed, preservePitch);
+                return;
+            }
+
+            if (preservePitch && Math.Abs(speed - 1) > 0.001 && TimeStretcher.IsAvailable && _defaultPlayer != null)
+            {
+                var request = new Relocation { Speed = speed, PreservePitch = true };
+                if (_relocations.TryAdd(source, request)) _ = RelocateAsync(source, request);
+                return;
+            }
+
             node.PlaybackSpeedFactor = speed;
             if (preservePitch && Math.Abs(speed - 1) > 0.001 && TimeStretcher.CanTranspose)
             {
-                if (!_pitchCorrectors.TryGetValue(source, out var corrector))
-                    corrector = AttachPitchCorrector(source, node);
-                corrector?.SetSpeed(speed);
+                if (_pitchCorrectors.TryGetValue(source, out var corrector))
+                    corrector.SetSpeed(speed);
+                else
+                    AttachPitchCorrector(source, node, speed);
             }
             else
             {
@@ -1079,7 +1210,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
         }
 
-        private PitchCorrector AttachPitchCorrector(AudioGraphPlaybackSource source, MediaSourceAudioInputNode node)
+        private PitchCorrector AttachPitchCorrector(AudioGraphPlaybackSource source, MediaSourceAudioInputNode node, double speed)
         {
             if (_defaultPlayer == null || !_voiceBuses.TryGetValue(source, out var bus)) return null;
             PitchCorrector corrector = null;
@@ -1090,7 +1221,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 var capture = _defaultPlayer.CreateFrameOutputNode(properties);
                 var render = _defaultPlayer.CreateFrameInputNode(properties);
                 render.Stop();
-                corrector = new PitchCorrector(capture, render, (int)properties.SampleRate, _defaultPlayer.SamplesPerQuantum);
+                corrector = new PitchCorrector(capture, render, (int)properties.SampleRate, _defaultPlayer.SamplesPerQuantum, speed);
                 render.AddOutgoingConnection(bus);
                 node.AddOutgoingConnection(capture);
                 node.RemoveOutgoingConnection(bus);
@@ -1146,7 +1277,119 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         {
             ThrowExceptionIfDisposed();
             var node = GetAudioInputNodeOrThrow(playbackSource);
-            return node.PlaybackSpeedFactor;
+            return SpeedOf((AudioGraphPlaybackSource)playbackSource, node);
+        }
+
+        public TimeSpan GetPlaybackSourcePosition(IPlaybackSource playbackSource)
+        {
+            ThrowExceptionIfDisposed();
+            var node = GetAudioInputNodeOrThrow(playbackSource);
+            return PositionOf((AudioGraphPlaybackSource)playbackSource, node);
+        }
+
+        public TimeSpan GetPosition(MediaSourceAudioInputNode node)
+        {
+            if (node == null) return TimeSpan.Zero;
+            if (_audioInputNodesReverseDictionary.TryGetValue(node, out var source)) return PositionOf(source, node);
+            try
+            {
+                return node.Position;
+            }
+            catch
+            {
+                return TimeSpan.Zero;
+            }
+        }
+
+        public double GetSpeed(MediaSourceAudioInputNode node)
+        {
+            if (node == null) return 1;
+            if (_audioInputNodesReverseDictionary.TryGetValue(node, out var source)) return SpeedOf(source, node);
+            try
+            {
+                return node.PlaybackSpeedFactor;
+            }
+            catch
+            {
+                return 1;
+            }
+        }
+
+        private TimeSpan PositionOf(AudioGraphPlaybackSource source, MediaSourceAudioInputNode node)
+        {
+            if (_relocations.TryGetValue(source, out var relocation))
+            {
+                lock (relocation)
+                {
+                    if (relocation.Voice != null) return relocation.Voice.Position;
+                    if (relocation.Detached) return relocation.Position;
+                }
+            }
+
+            if (_decodedVoices.TryGetValue(source, out var voice)) return voice.Position;
+            try
+            {
+                return node.Position;
+            }
+            catch
+            {
+                return TimeSpan.Zero;
+            }
+        }
+
+        private double SpeedOf(AudioGraphPlaybackSource source, MediaSourceAudioInputNode node)
+        {
+            if (_relocations.TryGetValue(source, out var relocation))
+            {
+                lock (relocation) return relocation.Voice?.Speed ?? relocation.Speed;
+            }
+
+            if (_decodedVoices.TryGetValue(source, out var voice)) return voice.Speed;
+            try
+            {
+                return node.PlaybackSpeedFactor;
+            }
+            catch
+            {
+                return 1;
+            }
+        }
+
+        private bool Detached(AudioGraphPlaybackSource source)
+        {
+            if (source == null || !_relocations.TryGetValue(source, out var relocation)) return false;
+            lock (relocation) return relocation.Detached && relocation.Voice == null;
+        }
+
+        private void Route(AudioGraphPlaybackSource source, MediaSourceAudioInputNode node, Action<MediaSourceAudioInputNode> onNode,
+            Action<DecodedVoice> onVoice, Action<Relocation> onPending)
+        {
+            if (source != null && _relocations.TryGetValue(source, out var relocation))
+            {
+                lock (relocation)
+                {
+                    if (relocation.Voice != null) onVoice(relocation.Voice);
+                    else if (relocation.Detached) onPending(relocation);
+                    else onNode(node);
+                }
+
+                return;
+            }
+
+            if (source != null && _decodedVoices.TryGetValue(source, out var voice)) onVoice(voice);
+            else onNode(node);
+        }
+
+        private static TimeSpan SafeDuration(MediaSourceAudioInputNode node)
+        {
+            try
+            {
+                return node.Duration;
+            }
+            catch
+            {
+                return TimeSpan.Zero;
+            }
         }
         #endregion
 
@@ -1172,19 +1415,46 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 await playbackSource.CreatePlaybackSource();
             cancellationToken.ThrowIfCancellationRequested();
 
-            // 创建音频输入节点
-            var nodeResult = await _defaultPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
-            if (cancellationToken.IsCancellationRequested)
+            DecodedVoice voice = null;
+            if (options.PreservePitch && Math.Abs(options.Speed - 1) > 0.001 && TimeStretcher.IsAvailable)
             {
-                if (nodeResult.Node is { } abandoned) DisposeInBackground(abandoned);
-                throw new OperationCanceledException(cancellationToken);
+                try
+                {
+                    voice = await DecodedVoice.CreateAsync(_defaultPlayer, source.PlaybackSource, options.Speed, true);
+                }
+                catch
+                {
+                    voice = null;
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    if (voice != null) DisposeDecodedVoice(voice, null);
+                    throw new OperationCanceledException(cancellationToken);
+                }
             }
 
-            if (nodeResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
-                throw nodeResult.ExtendedError;
+            MediaSourceAudioInputNode node;
+            if (voice != null)
+            {
+                node = voice.Node;
+            }
+            else
+            {
+                // 创建音频输入节点
+                var nodeResult = await _defaultPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    if (nodeResult.Node is { } abandoned) DisposeInBackground(abandoned);
+                    throw new OperationCanceledException(cancellationToken);
+                }
 
-            var node = nodeResult.Node;
-            if (Math.Abs(options.Speed - 1) > 0.001) node.PlaybackSpeedFactor = options.Speed;
+                if (nodeResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
+                    throw nodeResult.ExtendedError;
+
+                node = nodeResult.Node;
+                if (Math.Abs(options.Speed - 1) > 0.001) node.PlaybackSpeedFactor = options.Speed;
+            }
 
             // 配置节点
             var gainState = new PlaybackSourceGainState(options.Volume, options.AudioGain);
@@ -1192,16 +1462,27 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             bus.OutgoingGain = gainState.GetOutgoingGain();
             bus.AddOutgoingConnection(_outputNode);
             ConnectFrameOutput(bus);
-            node.AddOutgoingConnection(bus);
-            node.MediaSourceCompleted += OnMediaSourceCompleted;
+            if (voice != null)
+            {
+                voice.Render.AddOutgoingConnection(bus);
+                voice.Completed += OnVoiceCompleted;
+            }
+            else
+            {
+                node.AddOutgoingConnection(bus);
+                node.MediaSourceCompleted += OnMediaSourceCompleted;
+            }
 
             // 注册节点
             _voiceBuses.TryAdd(source, bus);
+            if (voice != null) _decodedVoices.TryAdd(source, voice);
             _audioInputNodes.TryAdd(source, node);
             _audioInputNodesReverseDictionary.TryAdd(node, source);
             _playbackSourceGainStates.TryAdd(source, gainState);
-            if (options.PreservePitch && Math.Abs(options.Speed - 1) > 0.001 && TimeStretcher.CanTranspose)
-                AttachPitchCorrector(source, node)?.SetSpeed(options.Speed);
+            if (voice != null)
+                voice.Start(TimeSpan.Zero, bus, _outputNode);
+            else if (options.PreservePitch && Math.Abs(options.Speed - 1) > 0.001 && TimeStretcher.CanTranspose)
+                AttachPitchCorrector(source, node, options.Speed);
 
             // 设置为主播放源
             if (_audioInputNodes.Count == 1 || options.SetAsPrimarySource)
@@ -1210,11 +1491,12 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             // 根据选项设置播放状态
             if (!options.AutoPlay)
             {
-                node.Stop();
+                if (voice == null) node.Stop();
                 source.PlaybackStatus = PlaybackStatus.Paused;
             }
             else
             {
+                voice?.Play();
                 if (GlobalPlaybackStatus is not PlaybackStatus.Playing)
                 {
                     PlayAll();
@@ -1236,7 +1518,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             // before ownership can be retried by the caller.
             try
             {
-                node.Stop();
+                Route(source, node, n => n.Stop(), v => v.Pause(), r => r.Playing = false);
                 source.PlaybackStatus = PlaybackStatus.Paused;
             }
             catch
@@ -1245,9 +1527,10 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 // indication that cleanup completed.
             }
 
-            node.MediaSourceCompleted -= OnMediaSourceCompleted;
+            UnsubscribeCompletion(node);
             DetachPitchCorrector(source, node);
             DetachTaps(source);
+            DetachDecodedVoice(source);
             ReleaseVoice(source, node);
 
             if (PrimaryPlaybackSource == source)
@@ -1271,9 +1554,10 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             CancelAllRamps();
             foreach (var source in _audioInputNodes)
             {
-                source.Value.MediaSourceCompleted -= OnMediaSourceCompleted;
+                UnsubscribeCompletion(source.Value);
                 DetachPitchCorrector(source.Key, source.Value);
                 DetachTaps(source.Key);
+                DetachDecodedVoice(source.Key);
                 ReleaseVoice(source.Key, source.Value);
             }
             _audioInputNodes.Clear();
@@ -1282,6 +1566,164 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             _primaryPlaybackSource = null;
             _defaultPlayer.Stop();
             UpdateGlobalPlaybackStatus(PlaybackStatus.Closed);
+        }
+
+        private void UnsubscribeCompletion(MediaSourceAudioInputNode node)
+        {
+            try
+            {
+                node.MediaSourceCompleted -= OnMediaSourceCompleted;
+            }
+            catch
+            {
+            }
+        }
+
+        private void DetachDecodedVoice(AudioGraphPlaybackSource source)
+        {
+            if (!_decodedVoices.TryRemove(source, out var voice)) return;
+            _voiceBuses.TryGetValue(source, out var bus);
+            DisposeDecodedVoice(voice, bus);
+        }
+
+        private void DisposeDecodedVoice(DecodedVoice voice, AudioSubmixNode bus)
+        {
+            voice.Completed -= OnVoiceCompleted;
+            voice.Dispose();
+            var render = voice.Render;
+            try
+            {
+                render.Stop();
+                if (bus != null) render.RemoveOutgoingConnection(bus);
+            }
+            catch
+            {
+            }
+
+            DisposeInBackground(render);
+        }
+
+        private async Task RelocateAsync(AudioGraphPlaybackSource source, Relocation request)
+        {
+            DecodedVoice voice = null;
+            var restore = false;
+            await _lifecycleGate.WaitAsync();
+            try
+            {
+                if (_disposedValue || _defaultPlayer == null || source.PlaybackSource == null
+                    || !_audioInputNodes.TryGetValue(source, out var node) || !_voiceBuses.TryGetValue(source, out var bus))
+                    return;
+
+                DetachTaps(source);
+                DetachPitchCorrector(source, node);
+                lock (request)
+                {
+                    request.Position = SafePosition(node);
+                    request.Playing = source.PlaybackStatus != PlaybackStatus.Paused;
+                    request.Detached = true;
+                }
+
+                UnsubscribeCompletion(node);
+                try
+                {
+                    node.Stop();
+                    node.RemoveOutgoingConnection(bus);
+                }
+                catch
+                {
+                }
+
+                restore = true;
+                DisposeInBackground(node);
+                source.PlaybackSource.Reset();
+                await source.PlaybackSource.OpenAsync();
+                voice = await DecodedVoice.CreateAsync(_defaultPlayer, source.PlaybackSource, request.Speed, request.PreservePitch);
+                if (voice == null || _disposedValue || !_audioInputNodes.ContainsKey(source) || !_voiceBuses.TryGetValue(source, out bus))
+                    return;
+
+                voice.Render.AddOutgoingConnection(bus);
+                voice.Completed += OnVoiceCompleted;
+                _decodedVoices[source] = voice;
+                _audioInputNodesReverseDictionary[voice.Node] = source;
+                _audioInputNodes[source] = voice.Node;
+                _audioInputNodesReverseDictionary.TryRemove(node, out _);
+                lock (request)
+                {
+                    voice.SetSpeed(request.Speed, request.PreservePitch);
+                    voice.Start(request.Position, bus, _outputNode);
+                    if (request.Playing) voice.Play();
+                    request.Voice = voice;
+                }
+
+                voice = null;
+                restore = false;
+            }
+            catch
+            {
+            }
+            finally
+            {
+                if (voice != null)
+                {
+                    _decodedVoices.TryRemove(source, out _);
+                    _voiceBuses.TryGetValue(source, out var bus);
+                    DisposeDecodedVoice(voice, bus);
+                }
+
+                if (restore) await RestoreNodeAsync(source, request);
+                _relocations.TryRemove(source, out _);
+                _lifecycleGate.Release();
+            }
+        }
+
+        private async Task RestoreNodeAsync(AudioGraphPlaybackSource source, Relocation request)
+        {
+            try
+            {
+                if (_disposedValue || _defaultPlayer == null || source.PlaybackSource == null
+                    || !_voiceBuses.TryGetValue(source, out var bus) || !_audioInputNodes.TryGetValue(source, out var stale))
+                    return;
+
+                source.PlaybackSource.Reset();
+                await source.PlaybackSource.OpenAsync();
+                var created = await _defaultPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
+                if (created.Status != MediaSourceAudioInputNodeCreationStatus.Success || !_audioInputNodes.ContainsKey(source)) return;
+                var node = created.Node;
+                node.AddOutgoingConnection(bus);
+                node.MediaSourceCompleted += OnMediaSourceCompleted;
+                _audioInputNodesReverseDictionary[node] = source;
+                _audioInputNodes[source] = node;
+                _audioInputNodesReverseDictionary.TryRemove(stale, out _);
+                double speed;
+                bool preservePitch;
+                lock (request)
+                {
+                    speed = request.Speed;
+                    preservePitch = request.PreservePitch;
+                    node.PlaybackSpeedFactor = speed;
+                    node.Seek(request.Position);
+                    if (!request.Playing) node.Stop();
+                    request.Detached = false;
+                }
+
+                if (preservePitch && Math.Abs(speed - 1) > 0.001 && TimeStretcher.CanTranspose)
+                    AttachPitchCorrector(source, node, speed);
+            }
+            catch
+            {
+            }
+        }
+
+        private static TimeSpan SafePosition(MediaSourceAudioInputNode node)
+        {
+            try
+            {
+                return node.Position;
+            }
+            catch
+            {
+                return TimeSpan.Zero;
+            }
         }
 
         private void ReleaseVoice(AudioGraphPlaybackSource source, MediaSourceAudioInputNode node)
@@ -1375,7 +1817,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public void AddEffectToPlaybackSource(IAudioEffectDefinition definition, AudioGraphPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
-            var node = GetAudioInputNodeOrThrow(playbackSource);
+            IAudioNode node = GetAudioInputNodeOrThrow(playbackSource);
+            if (_decodedVoices.TryGetValue(playbackSource, out var voice)) node = voice.Render;
             if (!node.EffectDefinitions.Contains(definition)) node.EffectDefinitions.Add(definition);
             node.EnableEffectsByDefinition(definition);
         }
@@ -1383,7 +1826,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public void RemoveEffectFromPlaybackSource(IAudioEffectDefinition definition, AudioGraphPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
-            var node = GetAudioInputNodeOrThrow(playbackSource);
+            IAudioNode node = GetAudioInputNodeOrThrow(playbackSource);
+            if (_decodedVoices.TryGetValue(playbackSource, out var voice)) node = voice.Render;
             node.DisableEffectsByDefinition(definition);
             node.EffectDefinitions.Remove(definition);
         }
@@ -1397,14 +1841,24 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             var source = PrimaryPlaybackSource as AudioGraphPlaybackSource;
             if (!_audioInputNodes.TryGetValue(source, out var track)) return;
 
-            var position = track?.Position;
+            var position = track == null ? (TimeSpan?)null : PositionOf(source, track);
             if (position == null || position == _lastPosition) return;
 
             _lastPosition = position.Value;
             OnPositionChanged?.Invoke(position.Value);
 
             // 更新系统媒体传输控制
-            PublishTimeline(position.Value, track.Duration);
+            PublishTimeline(position.Value, SafeDuration(track));
+        }
+
+        private void OnVoiceCompleted(DecodedVoice voice)
+        {
+            foreach (var (source, candidate) in _decodedVoices)
+            {
+                if (!ReferenceEquals(candidate, voice)) continue;
+                OnTrackReachesEnd?.Invoke(source);
+                return;
+            }
         }
 
         private void OnMediaSourceCompleted(MediaSourceAudioInputNode sender, object args)

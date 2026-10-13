@@ -764,7 +764,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     {
         try
         {
-            return Graph.GetAudioInputNode(session.Outgoing).Position.TotalSeconds;
+            return Graph.GetPlaybackSourcePosition(session.Outgoing).TotalSeconds;
         }
         catch
         {
