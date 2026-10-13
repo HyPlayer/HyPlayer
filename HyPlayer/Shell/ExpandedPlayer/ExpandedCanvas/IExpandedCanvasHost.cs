@@ -25,7 +25,7 @@ public interface IExpandedCanvasHost
     void Update(ICanvasAnimatedControl sender, CanvasAnimatedUpdateEventArgs args);
 
     /// <summary>Draw all layers onto the shared canvas in layer order.</summary>
-    void Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args);
+    void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing);
 
     /// <summary>Route pointer input from the shared canvas to interested layers.</summary>
     bool TryHandlePointer(PointerRoutedEventArgs args);

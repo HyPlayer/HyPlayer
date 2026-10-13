@@ -39,6 +39,7 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
     private int _threadId;
     private double _typicalInterval;
     private LyricFrameActivity _previousActivity;
+    private bool _idle;
     private string _text = string.Empty;
     private CanvasTextLayout? _textLayout;
     private long _processAllocatedBytes;
@@ -52,7 +53,7 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
 
     public string LayerName => "Debug overlay";
     public int Order => int.MaxValue;
-    public bool NeedsFrames => _state.ShowDebugOverlay;
+    public bool NeedsFrames => false;
 
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
     {
@@ -78,10 +79,16 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
         var allocated = GC.GetAllocatedBytesForCurrentThread();
         var threadId = Environment.CurrentManagedThreadId;
         var activity = _state.LyricBox?.LastFrameActivity ?? LyricFrameActivity.None;
-        if (_lastDrawTimestamp != 0 && threadId == _threadId)
+        var idle = _state.IsCanvasIdle;
+        if (_lastDrawTimestamp == 0 || threadId != _threadId)
+        {
+            _window.Reset(now);
+        }
+        else if (!idle && !_idle)
         {
             var interval = Stopwatch.GetElapsedTime(_lastDrawTimestamp, now).TotalMilliseconds;
-            var target = sender.IsFixedTimeStep ? sender.TargetElapsedTime.TotalMilliseconds : _typicalInterval;
+            var expected = _state.FramePacer.FrameIntervalMilliseconds;
+            var target = expected > 0 ? expected : _typicalInterval;
             var markers = FrameMarkerText.From(activity | _previousActivity, _state.IsTransitioning,
                 Stopwatch.GetElapsedTime(_state.TrackChangeTimestamp, now).TotalMilliseconds < TrackChangeMilliseconds);
             _window.Add(now, interval, _state.LastFrameDrawMilliseconds, target > 0 && interval > target * 2,
@@ -97,22 +104,19 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
                     : _typicalInterval + (Math.Min(interval, _typicalInterval * 2) - _typicalInterval) * 0.05;
             }
         }
-        else
-        {
-            _window.Reset(now);
-        }
 
+        _idle = idle;
         _lastDrawTimestamp = now;
         _threadId = threadId;
         _previousActivity = activity;
-        if (_text.Length == 0 || Stopwatch.GetElapsedTime(_textTimestamp, now).TotalMilliseconds >= TextRefreshMilliseconds)
+        if (idle || _text.Length == 0 || Stopwatch.GetElapsedTime(_textTimestamp, now).TotalMilliseconds >= TextRefreshMilliseconds)
         {
             _textTimestamp = now;
             _text = Describe(sender, timing);
             ReleaseTextLayout();
         }
 
-        var overlayX = Math.Max(8, (float)sender.Size.Width - OverlayWidth - 8);
+        var overlayX = Math.Max(8, (float)_state.Viewport(sender.Size).Width - OverlayWidth - 8);
         session.FillRectangle(overlayX, 8, OverlayWidth, OverlayHeight, _overlayColor);
         session.DrawRectangle(overlayX, 8, OverlayWidth, OverlayHeight, Colors.White, 1);
         _textLayout ??= new CanvasTextLayout(session, _text, _textFormat, OverlayWidth - 12, OverlayHeight - 8);
@@ -122,8 +126,15 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
 
     private string Describe(ICanvasAnimatedControl sender, CanvasTimingInformation timing)
     {
-        var timingMode = sender.IsFixedTimeStep ? "Fixed" : "Variable";
-        var runningState = timing.IsRunningSlowly ? "SLOW" : "OK";
+        var pacer = _state.FramePacer;
+        var timingMode = pacer.Mode switch
+        {
+            CanvasPacingMode.Capped => $"Capped 1/{pacer.Interval}",
+            CanvasPacingMode.Variable => "Variable",
+            _ => "Calibrating"
+        };
+        var refreshRate = pacer.RefreshPeriodMilliseconds > 0 ? 1000 / pacer.RefreshPeriodMilliseconds : 0;
+        var runningState = _state.IsCanvasIdle ? "暂停" : timing.IsRunningSlowly ? "SLOW" : "OK";
         var window = _window.Summarize();
         var now = Stopwatch.GetTimestamp();
         var processAllocated = GC.GetTotalAllocatedBytes(false);
@@ -153,10 +164,11 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
             $"FPS (Draw)       {_framesPerSecond,8:F1}\n" +
             $"帧绘制           {_state.LastFrameDrawMilliseconds,8:F2} ms\n" +
             $"更新间隔         {timing.ElapsedTime.TotalMilliseconds,8:F2} ms\n" +
-            $"目标间隔         {sender.TargetElapsedTime.TotalMilliseconds,8:F2} ms\n" +
+            $"目标间隔         {pacer.FrameIntervalMilliseconds,8:F2} ms\n" +
             $"运行总时长       {timing.TotalTime.TotalSeconds,8:F1} s\n" +
             $"更新计数         {timing.UpdateCount,8}\n" +
-            $"计时状态         {timingMode,8} / {runningState}\n" +
+            $"计时状态         {timingMode} / {runningState}\n" +
+            $"显示刷新率       {refreshRate,8:F1} Hz\n" +
             $"画布 (DIP)       {sender.Size.Width:F0} x {sender.Size.Height:F0}\n" +
             $"DPI 缩放         {_state.RasterizationScale,8:F2}x\n" +
             $"-- 最近 {WindowSeconds} 秒 --\n" +

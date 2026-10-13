@@ -2334,6 +2334,35 @@
                                             </StackPanel>
                                         </Grid>
                                     </Border>
+                                    <Border
+                                        Height="64"
+                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="{StaticResource ControlCornerRadius}"
+                                        Tapped="UIElement_OnTapped">
+                                        <Grid Margin="8">
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <PersonPicture Height="44" ProfilePicture="https://avatars.githubusercontent.com/u/106746080?s=100" />
+                                                <StackPanel>
+                                                    <TextBlock
+                                                        Margin="1,0,0,0"
+                                                        Style="{StaticResource SubtitleTextBlockStyle}"
+                                                        Text="Gaimoy" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <TextBlock Text="Developer" />
+                                                        <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="🐖🐖🐖" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <StackPanel
+                                                HorizontalAlignment="Right"
+                                                Orientation="Horizontal"
+                                                Tapped="UIElement_OnTapped">
+                                                <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/Gaimoydev" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
                                 </StackPanel>
                                 <VisualStateManager.VisualStateGroups>
                                     <VisualStateGroup>

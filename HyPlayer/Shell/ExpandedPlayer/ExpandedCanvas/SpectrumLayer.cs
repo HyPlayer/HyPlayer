@@ -56,7 +56,7 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
             return;
         }
 
-        var size = sender.Size;
+        var size = _state.Viewport(sender.Size);
         var width = (float)size.Width;
         var height = (float)size.Height / 2f;
         var remainHeight = (float)size.Height - height;

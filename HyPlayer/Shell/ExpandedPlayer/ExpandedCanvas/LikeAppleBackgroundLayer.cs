@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,8 +37,8 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
     private int _renderHeight;
     private int _pendingWidth;
     private int _pendingHeight;
-    private long _pendingSizeTick;
-    private long _renderSizeTick;
+    private long _pendingSizeTimestamp;
+    private long _renderSizeTimestamp;
 
     private const long SurfaceQuietTicks = 150 * TimeSpan.TicksPerMillisecond;
     private const long SurfaceRepeatTicks = 300 * TimeSpan.TicksPerMillisecond;
@@ -159,7 +160,7 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
             _isVisible = true;
         }
 
-        Size size = sender.Size;
+        Size size = _state.Viewport(sender.Size);
         if (size.Width <= 0 || size.Height <= 0)
         {
             _frame = null;
@@ -168,21 +169,22 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
 
         int pixelWidth = sender.ConvertDipsToPixels((float)size.Width, CanvasDpiRounding.Round);
         int pixelHeight = sender.ConvertDipsToPixels((float)size.Height, CanvasDpiRounding.Round);
-        long tick = args.Timing.TotalTime.Ticks;
+        long now = Stopwatch.GetTimestamp();
         if (pixelWidth != _pendingWidth || pixelHeight != _pendingHeight)
         {
             _pendingWidth = pixelWidth;
             _pendingHeight = pixelHeight;
-            _pendingSizeTick = tick;
+            _pendingSizeTimestamp = now;
         }
 
         if ((pixelWidth != _renderWidth || pixelHeight != _renderHeight) &&
-            (_renderWidth <= 0 || _renderHeight <= 0 || tick < _renderSizeTick ||
-             tick - _pendingSizeTick >= SurfaceQuietTicks || tick - _renderSizeTick >= SurfaceRepeatTicks))
+            (_renderWidth <= 0 || _renderHeight <= 0 ||
+             Stopwatch.GetElapsedTime(_pendingSizeTimestamp, now).Ticks >= SurfaceQuietTicks ||
+             Stopwatch.GetElapsedTime(_renderSizeTimestamp, now).Ticks >= SurfaceRepeatTicks))
         {
             _renderWidth = pixelWidth;
             _renderHeight = pixelHeight;
-            _renderSizeTick = tick;
+            _renderSizeTimestamp = now;
         }
 
         _frame = renderer.Render(_renderWidth, _renderHeight, _state.IsPlaying);
@@ -190,9 +192,25 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
 
     public void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing)
     {
-        if (_state.BackgroundType != BackgroundType.LikeApple || _frame is null) return;
-        Size size = sender.Size;
-        session.DrawImage(_frame, new Rect(0, 0, size.Width, size.Height));
+        CanvasRenderTarget? frame = _frame;
+        if (_state.BackgroundType != BackgroundType.LikeApple || frame is null) return;
+        Size canvas = sender.Size;
+        Size viewport = _state.Viewport(canvas);
+        session.DrawImage(frame, new Rect(0, 0, viewport.Width, viewport.Height));
+        double right = canvas.Width - viewport.Width;
+        double bottom = canvas.Height - viewport.Height;
+        if (right <= 0 && bottom <= 0) return;
+        Size source = frame.Size;
+        double pixel = 96 / frame.Dpi;
+        if (right > 0)
+            session.DrawImage(frame, new Rect(viewport.Width, 0, right, viewport.Height),
+                new Rect(source.Width - pixel, 0, pixel, source.Height));
+        if (bottom > 0)
+            session.DrawImage(frame, new Rect(0, viewport.Height, viewport.Width, bottom),
+                new Rect(0, source.Height - pixel, source.Width, pixel));
+        if (right > 0 && bottom > 0)
+            session.DrawImage(frame, new Rect(viewport.Width, viewport.Height, right, bottom),
+                new Rect(source.Width - pixel, source.Height - pixel, pixel, pixel));
     }
 
     public async Task SetArtworkAsync(IRandomAccessStream stream)

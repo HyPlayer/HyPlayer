@@ -84,6 +84,8 @@ public sealed partial class ExpandedPlayer : Page
     private const float MaxBackgroundDim = 0.38f;
     private const double LeftPanelShiftMilliseconds = 500;
     private const double LyricCanvasIdlePauseMs = 1000;
+    private const double IdleOverlayRefreshMs = 250;
+    private const float LikeAppleCanvasOverscan = 128;
     private const int CoverRefreshPendingSeconds = 5;
 
     public static readonly DependencyProperty NowPlaybackSpeedProperty = DependencyProperty.Register(
@@ -155,6 +157,9 @@ public sealed partial class ExpandedPlayer : Page
     private long _lyricFadeStart;
     private long _lyricActivityTimestamp = Stopwatch.GetTimestamp();
     private int _lyricCanvasPausePending;
+    private DispatcherTimer? _idleOverlayTimer;
+    private bool _appliedFixedTimeStep;
+    private long _appliedTargetElapsedTicks;
     private Storyboard? _leftPanelShiftStoryboard;
     private Storyboard? _lyricPreviewHintStoryboard;
     private bool _isManualChangeMode;
@@ -344,7 +349,16 @@ public sealed partial class ExpandedPlayer : Page
         _canvasState.ShowDebugOverlay = _uiSettings.ExpandedPlayerDebugMode;
         _player.EnableFFTProcessing = _playbackSettings.EnableFFT || showSpectrum ||
             _canvasState.BackgroundType == BackgroundType.LikeApple;
+        if (Dispatcher.HasThreadAccess) ApplyCanvasOverscan();
+        else RunOnUIThread(ApplyCanvasOverscan);
         WakeLyricCanvas();
+    }
+
+    private void ApplyCanvasOverscan()
+    {
+        if (_isCleanedUp || LuminousBackground is null) return;
+        var overscan = _canvasState.BackgroundType == BackgroundType.LikeApple ? LikeAppleCanvasOverscan : 0;
+        LuminousBackground.Margin = new Thickness(0, 0, -overscan, -overscan);
     }
 
     private void SyncCanvasState()
@@ -390,6 +404,8 @@ public sealed partial class ExpandedPlayer : Page
     private void OnLyricSettingsPropertyChanged(string? propertyName)
     {
         if (propertyName == nameof(LyricSettings.LyricLineSpacing)) ApplyLyricLineSpacing();
+        if (propertyName is nameof(LyricSettings.IsolationFullThrottle) or nameof(LyricSettings.IsolationFPS))
+            ConfigureFramePacing();
     }
 
     private void ApplyLyricLineSpacing()
@@ -529,16 +545,26 @@ public sealed partial class ExpandedPlayer : Page
     {
         Volatile.Write(ref _lyricActivityTimestamp, Stopwatch.GetTimestamp());
         if (Dispatcher.HasThreadAccess)
-        {
-            if (LuminousBackground is { Paused: true }) LuminousBackground.Paused = false;
-        }
+            ResumeLyricCanvas();
         else
-        {
-            _ = Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-            {
-                if (LuminousBackground is { Paused: true }) LuminousBackground.Paused = false;
-            });
-        }
+            _ = Dispatcher.RunAsync(CoreDispatcherPriority.High, ResumeLyricCanvas);
+    }
+
+    private void ResumeLyricCanvas()
+    {
+        if (LuminousBackground is not { Paused: true }) return;
+        _canvasState.FramePacer.Suspend();
+        LuminousBackground.Paused = false;
+        _canvasState.IsCanvasIdle = false;
+        _idleOverlayTimer?.Stop();
+    }
+
+    private void RefreshIdleOverlay()
+    {
+        if (!_isCleanedUp && _canvasState.ShowDebugOverlay && LuminousBackground is { Paused: true })
+            LuminousBackground.Invalidate();
+        else
+            _idleOverlayTimer?.Stop();
     }
 
     private bool IsLyricCanvasIdle()
@@ -557,7 +583,16 @@ public sealed partial class ExpandedPlayer : Page
         {
             _lyricCanvasPausePending = 0;
             if (_isCleanedUp || LuminousBackground is null || !IsLyricCanvasIdle()) return;
+            _canvasState.IsCanvasIdle = true;
             LuminousBackground.Paused = true;
+            if (!_canvasState.ShowDebugOverlay) return;
+            if (_idleOverlayTimer is null)
+            {
+                _idleOverlayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(IdleOverlayRefreshMs) };
+                _idleOverlayTimer.Tick += (_, _) => RefreshIdleOverlay();
+            }
+
+            _idleOverlayTimer.Start();
         });
     }
 
@@ -1804,6 +1839,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (_canvasResourcesReleased) return;
         _canvasResourcesReleased = true;
+        _idleOverlayTimer?.Stop();
         // The control's own Unloaded follows GameLoopStopped. An ancestor's
         // Unloaded (or the page's cleanup) can precede the last Draw callback.
         var canvas = (CanvasAnimatedControl)sender;
@@ -1871,6 +1907,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void LuminousBackground_SizeChanged(object sender, SizeChangedEventArgs e)
     {
+        if (LuminousBackground is not null) _canvasState.Overscan = (float)Math.Max(0, -LuminousBackground.Margin.Right);
         WakeLyricCanvas();
     }
 
@@ -1882,11 +1919,7 @@ public sealed partial class ExpandedPlayer : Page
         SyncCanvasSettings();
         LuminousBackground.DpiScale = _lyricSettings.IsolationScale;
         RunOnUIThread(SyncCanvasRasterizationScale);
-        if (!_lyricSettings.IsolationFullThrottle)
-        {
-            LuminousBackground.IsFixedTimeStep = true;
-            LuminousBackground.TargetElapsedTime = TimeSpan.FromMilliseconds(16.6 * (60d / _lyricSettings.IsolationFPS));
-        }
+        ConfigureFramePacing();
 
         // Delegate to composable layers
         _expandedCanvasHost.CreateResources(sender, args);
@@ -1896,7 +1929,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (_isCleanedUp) return;
         SyncCanvasState();
-        _expandedCanvasHost.Update(sender, args);
+        if (_canvasState.FramePacer.MarkUpdate(Stopwatch.GetTimestamp())) _expandedCanvasHost.Update(sender, args);
         TryPauseIdleLyricCanvas();
     }
 
@@ -1904,17 +1937,45 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (_isCleanedUp) return;
         SyncCanvasState();
-        if (!_canvasState.ShowDebugOverlay)
+        var pacer = _canvasState.FramePacer;
+        var drawStartedAt = Stopwatch.GetTimestamp();
+        var frame = pacer.BeginFrame(drawStartedAt);
+        var session = args.DrawingSession;
+        _expandedCanvasHost.Draw(sender, session, new CanvasTimingInformation
         {
-            _canvasState.LastFrameDrawMilliseconds = 0;
-            _expandedCanvasHost.Draw(sender, args);
-            return;
+            UpdateCount = frame.FrameCount,
+            TotalTime = TimeSpan.FromTicks(frame.TotalTicks),
+            ElapsedTime = TimeSpan.FromTicks(frame.ElapsedTicks),
+            IsRunningSlowly = args.Timing.IsRunningSlowly
+        });
+        session.Dispose();
+        var drawnAt = Stopwatch.GetTimestamp();
+        _canvasState.LastFrameDrawMilliseconds = _canvasState.ShowDebugOverlay
+            ? Stopwatch.GetElapsedTime(drawStartedAt, drawnAt).TotalMilliseconds
+            : 0;
+        ApplyFrameSchedule(sender, pacer.EndFrame(drawnAt));
+    }
+
+    private void ApplyFrameSchedule(ICanvasAnimatedControl sender, CanvasLoopSchedule schedule)
+    {
+        if (schedule.IsFixedTimeStep && schedule.TargetElapsedTicks != _appliedTargetElapsedTicks)
+        {
+            sender.TargetElapsedTime = TimeSpan.FromTicks(schedule.TargetElapsedTicks);
+            _appliedTargetElapsedTicks = schedule.TargetElapsedTicks;
         }
 
-        var drawStartedAt = Stopwatch.GetTimestamp();
-        _expandedCanvasHost.Draw(sender, args);
-        args.DrawingSession.Dispose();
-        _canvasState.LastFrameDrawMilliseconds = Stopwatch.GetElapsedTime(drawStartedAt).TotalMilliseconds;
+        if (schedule.IsFixedTimeStep != _appliedFixedTimeStep)
+        {
+            sender.IsFixedTimeStep = schedule.IsFixedTimeStep;
+            _appliedFixedTimeStep = schedule.IsFixedTimeStep;
+        }
+
+        if (schedule.ResetElapsedTime) sender.ResetElapsedTime();
+    }
+
+    private void ConfigureFramePacing()
+    {
+        _canvasState.FramePacer.Configure(!_lyricSettings.IsolationFullThrottle, _lyricSettings.IsolationFPS);
     }
 
 
@@ -1970,6 +2031,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (_isCleanedUp) return;
         _isCleanedUp = true;
+        _idleOverlayTimer?.Stop();
 
         _secondTickListener.Detach();
         _enteredForegroundListener.Detach();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Windows.UI.Xaml.Input;
+using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 
@@ -49,10 +50,8 @@ public class ExpandedCanvasHost : IExpandedCanvasHost
     }
 
     /// <inheritdoc />
-    public void Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
+    public void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing)
     {
-        var session = args.DrawingSession;
-        var timing = args.Timing;
         foreach (var layer in _layers)
             layer.Draw(sender, session, timing);
     }

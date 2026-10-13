@@ -89,11 +89,6 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
                 ApplyColorBlend(blend);
                 if (blend >= 1) Volatile.Write(ref _colorBlendStart, 0);
             }
-
-        if (_state.IsPlaying) _shaderSeconds += args.Timing.ElapsedTime.TotalSeconds;
-
-        _canvasSize = PixelSize(sender);
-        ApplyConstants();
     }
 
     private static Vector2 PixelSize(ICanvasAnimatedControl sender)
@@ -124,12 +119,9 @@ public sealed class IsolationBackgroundLayer : IExpandedCanvasLayer
     public void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing)
     {
         if (_state.BackgroundType != BackgroundType.Isolation) return;
-        var pixelSize = PixelSize(sender);
-        if (pixelSize != _canvasSize)
-        {
-            _canvasSize = pixelSize;
-            ApplyConstants();
-        }
+        if (_state.IsPlaying) _shaderSeconds += timing.ElapsedTime.TotalSeconds;
+        _canvasSize = PixelSize(sender);
+        ApplyConstants();
 
         var progress = _dimProgress;
         if (progress <= 0.001f)
