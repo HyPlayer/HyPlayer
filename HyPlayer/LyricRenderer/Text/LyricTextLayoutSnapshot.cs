@@ -26,6 +26,8 @@ public sealed partial class LyricTextLayoutSnapshot : IDisposable
     public required ICanvasImage DefaultTextPersistCache { get; init; }
     public ICanvasImage? DefaultTransliterationPersistCache { get; init; }
     public ICanvasImage? DefaultTranslationPersistCache { get; init; }
+    public bool HasStaticContent { get; init; } = true;
+    public float? LayoutDrawOffsetX { get; init; }
     public required Rect SizePixelRect { get; init; }
     public required float TextRenderActualTop { get; init; }
     public required float TranslationRenderActualTop { get; init; }

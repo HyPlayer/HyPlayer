@@ -159,14 +159,15 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
             _isVisible = true;
         }
 
-        if (sender.Size.Width <= 0 || sender.Size.Height <= 0)
+        Size size = sender.Size;
+        if (size.Width <= 0 || size.Height <= 0)
         {
             _frame = null;
             return;
         }
 
-        int pixelWidth = sender.ConvertDipsToPixels((float)sender.Size.Width, CanvasDpiRounding.Round);
-        int pixelHeight = sender.ConvertDipsToPixels((float)sender.Size.Height, CanvasDpiRounding.Round);
+        int pixelWidth = sender.ConvertDipsToPixels((float)size.Width, CanvasDpiRounding.Round);
+        int pixelHeight = sender.ConvertDipsToPixels((float)size.Height, CanvasDpiRounding.Round);
         long tick = args.Timing.TotalTime.Ticks;
         if (pixelWidth != _pendingWidth || pixelHeight != _pendingHeight)
         {
@@ -189,8 +190,9 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
 
     public void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing)
     {
-        if (_state.BackgroundType == BackgroundType.LikeApple && _frame is not null)
-            session.DrawImage(_frame, new Rect(0, 0, sender.Size.Width, sender.Size.Height));
+        if (_state.BackgroundType != BackgroundType.LikeApple || _frame is null) return;
+        Size size = sender.Size;
+        session.DrawImage(_frame, new Rect(0, 0, size.Width, size.Height));
     }
 
     public async Task SetArtworkAsync(IRandomAccessStream stream)

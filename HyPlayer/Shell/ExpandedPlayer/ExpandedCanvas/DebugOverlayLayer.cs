@@ -4,6 +4,7 @@ using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Xaml.Input;
 using HyPlayer.LyricRenderer;
+using HyPlayer.UI.Effects;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI;
@@ -39,6 +40,7 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
     private double _typicalInterval;
     private LyricFrameActivity _previousActivity;
     private string _text = string.Empty;
+    private CanvasTextLayout? _textLayout;
     private long _processAllocatedBytes;
     private long _processAllocatedTimestamp;
     private double _processAllocationRate;
@@ -54,6 +56,7 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
 
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
     {
+        ReleaseTextLayout();
     }
 
     public void Update(ICanvasAnimatedControl sender, CanvasAnimatedUpdateEventArgs args)
@@ -67,6 +70,7 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
             _lastDrawTimestamp = 0;
             _framesPerSecond = 0;
             _typicalInterval = 0;
+            ReleaseTextLayout();
             return;
         }
 
@@ -105,13 +109,14 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
         {
             _textTimestamp = now;
             _text = Describe(sender, timing);
+            ReleaseTextLayout();
         }
 
         var overlayX = Math.Max(8, (float)sender.Size.Width - OverlayWidth - 8);
         session.FillRectangle(overlayX, 8, OverlayWidth, OverlayHeight, _overlayColor);
         session.DrawRectangle(overlayX, 8, OverlayWidth, OverlayHeight, Colors.White, 1);
-        session.DrawText(_text, new Rect(overlayX + 6, 12, OverlayWidth - 12, OverlayHeight - 8), Colors.White,
-            _textFormat);
+        _textLayout ??= new CanvasTextLayout(session, _text, _textFormat, OverlayWidth - 12, OverlayHeight - 8);
+        session.DrawTextLayout(_textLayout, overlayX + 6, 12, Colors.White);
         _allocatedBytes = GC.GetAllocatedBytesForCurrentThread();
     }
 
@@ -174,8 +179,15 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
         return false;
     }
 
+    private void ReleaseTextLayout()
+    {
+        NativeClosable.Close(_textLayout);
+        _textLayout = null;
+    }
+
     public void Dispose()
     {
+        ReleaseTextLayout();
         _textFormat.Dispose();
     }
 }

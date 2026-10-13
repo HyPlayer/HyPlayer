@@ -261,6 +261,8 @@ public sealed class Win2DLyricTextLayouter : ILyricTextLayouter
             DefaultTextPersistCache = defaultTextPersistCache,
             DefaultTransliterationPersistCache = defaultTransliterationPersistCache,
             DefaultTranslationPersistCache = defaultTranslationPersistCache,
+            HasStaticContent = transliterationLayout is not null && !useDynamicTransliteration,
+            LayoutDrawOffsetX = request.Context.Effects.CacheRenderTarget ? null : drawOffsetX,
             SizePixelRect = sizePixelRect,
             TextRenderActualTop = textRenderActualTop,
             TranslationRenderActualTop = translationRenderActualTop,

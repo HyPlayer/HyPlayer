@@ -1,8 +1,10 @@
 #nullable enable
 using HyPlayer.LyricRenderer.Abstraction;
+using HyPlayer.UI.Effects;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Effects;
+using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -21,13 +23,24 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     private Color _solidColor;
     private float _rampStart = float.NaN;
     private float _rampEnd = float.NaN;
-    private Dictionary<int, ShadowEffect>? _emphasisGlows;
+    private Dictionary<int, EmphasisGlow>? _emphasisGlows;
+    private Dictionary<long, CanvasGlyph[]>? _mergedGlyphs;
+    private LyricGlyphCluster? _runFirst;
+    private LyricGlyphCluster? _runLast;
+    private int _runLength;
+    private Color _runColor;
+    private Vector2 _runOffset;
+
+    internal int LastFrameGlyphRunCount { get; private set; }
+
+    private readonly record struct EmphasisGlow(ShadowEffect Effect, CanvasCommandList Glyphs);
 
     /// <summary>Draws all three text layers. Translation remains independent of the scan.</summary>
     public void Render(CanvasDrawingSession session, LyricTextLayoutSnapshot layout, RenderContext context)
     {
         EnsureBrushes(session, layout);
-        session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
+        LastFrameGlyphRunCount = 0;
+        if (layout.HasStaticContent) session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
         var settings = context.Settings.Focused;
         DrawLayer(session, layout, layout.LyricGlyphClusters, layout.LyricVisualLines, context.CurrentLyricTime,
             settings, false, context.Effects.TransliterationScanning);
@@ -79,6 +92,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
             {
                 if (transformed)
                 {
+                    FlushSolid(session);
                     session.Transform = baseTransform;
                     transformed = false;
                 }
@@ -89,6 +103,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
                 var origin = cluster.BaseState.Origin - new Vector2(0, lift);
                 if (emphasis is not null && emphasis.TrySample(index, time, cluster.BaseState.FontSize, out var emphasized))
                 {
+                    FlushSolid(session);
                     session.Transform = CreateEmphasisTransform(cluster, emphasized) * baseTransform;
                     transformed = true;
                     DrawEmphasisGlow(session, index, cluster, layout.FocusingColor, emphasized, lift);
@@ -104,6 +119,14 @@ public sealed class FocusedLyricTextRenderer : IDisposable
                     var progress = GetRevealWordProgress(time, token.StartTime, token.EndTime, settings.RevealTimeOffsetMs);
                     progress = FocusedTextProgress.GetRevealProgress(settings.RevealMode, progress,
                         cluster.TokenClusterIndex, cluster.TokenClusterCount);
+                    if (progress <= 0 || progress >= 1)
+                    {
+                        DrawSolid(session, cluster, origin, progress <= 0 ? layout.IdleColor : layout.FocusingColor);
+                        continue;
+                    }
+
+                    FlushSolid(session);
+                    LastFrameGlyphRunCount += 2;
                     SetSolidColor(layout.IdleColor);
                     _solid!.Opacity = 1 - progress;
                     DrawGlyphRun(session, cluster.BaseState, origin, _solid);
@@ -132,6 +155,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
                     rtl, left, right, settings.FeatherDip);
             }
         }
+        FlushSolid(session);
         if (transformed) session.Transform = baseTransform;
     }
 
@@ -141,7 +165,8 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     internal void RenderTail(CanvasDrawingSession session, LyricTextLayoutSnapshot layout, RenderContext context, float focus)
     {
         EnsureBrushes(session, layout);
-        session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
+        LastFrameGlyphRunCount = 0;
+        if (layout.HasStaticContent) session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
         var settings = context.Settings.Focused;
         var time = context.CurrentLyricTime;
         focus = focus > 0.001f ? Math.Min(focus, 1) : 0;
@@ -193,11 +218,14 @@ public sealed class FocusedLyricTextRenderer : IDisposable
                 DrawSolid(session, cluster, origin, color);
                 continue;
             }
+            FlushSolid(session);
             session.Transform = CreateEmphasisTransform(cluster, emphasized) * baseTransform;
             DrawEmphasisGlow(session, index, cluster, layout.FocusingColor, emphasized, lift);
             DrawSolid(session, cluster, origin, color);
+            FlushSolid(session);
             session.Transform = baseTransform;
         }
+        FlushSolid(session);
     }
 
     internal static Color Blend(Color from, Color to, float amount)
@@ -231,16 +259,27 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     {
         if (sample.GlowOpacity <= 0.01f || sample.GlowRadius <= 0.1f) return;
         _emphasisGlows ??= [];
-        if (!_emphasisGlows.TryGetValue(index, out var glow))
+        ShadowEffect glow;
+        if (_emphasisGlows.TryGetValue(index, out var cached))
+        {
+            glow = cached.Effect;
+        }
+        else
         {
             var glyphs = new CanvasCommandList(session);
-            using (var glyphSession = glyphs.CreateDrawingSession())
+            var glyphSession = glyphs.CreateDrawingSession();
+            try
             {
                 SetSolidColor(color);
                 DrawGlyphRun(glyphSession, cluster.BaseState, cluster.BaseState.Origin, _solid!);
             }
+            finally
+            {
+                NativeClosable.Close(glyphSession);
+            }
+
             glow = new ShadowEffect { Source = glyphs };
-            _emphasisGlows.Add(index, glow);
+            _emphasisGlows.Add(index, new EmphasisGlow(glow, glyphs));
         }
         glow.BlurAmount = sample.GlowRadius / 2;
         glow.ShadowColor = Color.FromArgb((byte)(Math.Clamp(sample.GlowOpacity, 0, 1) * 255), color.R, color.G, color.B);
@@ -289,14 +328,71 @@ public sealed class FocusedLyricTextRenderer : IDisposable
             _rampStart = boundary;
             _rampEnd = rampEnd;
         }
+        FlushSolid(session);
+        LastFrameGlyphRunCount += 2;
         DrawGlyphRun(session, cluster.BaseState, origin, _pending!);
         DrawGlyphRun(session, cluster.BaseState, origin, _highlight!);
     }
 
     private void DrawSolid(CanvasDrawingSession session, LyricGlyphCluster cluster, Vector2 origin, Color color)
     {
-        SetSolidColor(color);
-        DrawGlyphRun(session, cluster.BaseState, origin, _solid!);
+        var offset = origin - cluster.BaseState.Origin;
+        if (_runLast is { } last && cluster.ContinuesRun && cluster.Layer == last.Layer &&
+            cluster.LayerClusterIndex == last.LayerClusterIndex + 1 && color == _runColor && offset == _runOffset)
+        {
+            _runLast = cluster;
+            _runLength++;
+            return;
+        }
+
+        FlushSolid(session);
+        _runFirst = _runLast = cluster;
+        _runLength = 1;
+        _runColor = color;
+        _runOffset = offset;
+    }
+
+    private void FlushSolid(CanvasDrawingSession session)
+    {
+        if (_runFirst is not { } first) return;
+        var length = _runLength;
+        _runFirst = _runLast = null;
+        _runLength = 0;
+        SetSolidColor(_runColor);
+        LastFrameGlyphRunCount++;
+        var state = first.BaseState;
+        if (length == 1)
+        {
+            DrawGlyphRun(session, state, state.Origin + _runOffset, _solid!);
+            return;
+        }
+
+        session.DrawGlyphRun(state.Origin + _runOffset, state.FontFace, state.FontSize, MergedGlyphs(first, length),
+            state.IsSideways, state.BidiLevel, _solid!, state.MeasuringMode);
+    }
+
+    private CanvasGlyph[] MergedGlyphs(LyricGlyphCluster first, int length)
+    {
+        var key = ((long)first.Layer << 48) | ((long)first.LayerClusterIndex << 24) | (uint)length;
+        _mergedGlyphs ??= [];
+        if (_mergedGlyphs.TryGetValue(key, out var merged)) return merged;
+        var clusters = first.Layer == LyricTextLayer.Transliteration
+            ? _brushLayout!.TransliterationGlyphClusters
+            : _brushLayout!.LyricGlyphClusters;
+        var count = 0;
+        for (var index = 0; index < length; index++)
+            count += clusters[first.LayerClusterIndex + index].BaseState.Glyphs.Length;
+        merged = new CanvasGlyph[count];
+        var position = 0;
+        for (var index = 0; index < length; index++)
+        {
+            var glyphs = clusters[first.LayerClusterIndex + index].BaseState.Glyphs;
+            Array.Copy(glyphs, 0, merged, position, glyphs.Length);
+            position += glyphs.Length;
+        }
+
+        _mergedGlyphs.Add(key, merged);
+        return merged;
     }
 
     private void SetSolidColor(Color color)
@@ -310,8 +406,17 @@ public sealed class FocusedLyricTextRenderer : IDisposable
         Color color, float boundary, bool rtl, float height)
     {
         var clip = new Rect(rtl ? boundary : -10000, -height, rtl ? 10000 : Math.Max(0, boundary + 10000), height * 3);
-        using var layer = session.CreateLayer(1, clip);
-        DrawSolid(session, cluster, origin, color);
+        FlushSolid(session);
+        var layer = session.CreateLayer(1, clip);
+        try
+        {
+            DrawSolid(session, cluster, origin, color);
+            FlushSolid(session);
+        }
+        finally
+        {
+            NativeClosable.Close(layer);
+        }
     }
 
     internal static void DrawGlyphRun(CanvasDrawingSession session, LyricGlyphDrawState state, Vector2 origin, ICanvasBrush brush) =>
@@ -328,20 +433,22 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     /// <summary>Releases device brushes; the next draw creates them for the current layout.</summary>
     public void Dispose()
     {
-        _solid?.Dispose(); _solid = null;
-        _highlight?.Dispose(); _highlight = null;
-        _pending?.Dispose(); _pending = null;
+        NativeClosable.Close(_solid); _solid = null;
+        NativeClosable.Close(_highlight); _highlight = null;
+        NativeClosable.Close(_pending); _pending = null;
         if (_emphasisGlows is not null)
         {
             foreach (var glow in _emphasisGlows.Values)
             {
-                var glyphs = glow.Source as IDisposable;
-                glow.Dispose();
-                glyphs?.Dispose();
+                NativeClosable.Close(glow.Effect);
+                NativeClosable.Close(glow.Glyphs);
             }
             _emphasisGlows = null;
         }
         _brushLayout = null;
+        _mergedGlyphs = null;
+        _runFirst = _runLast = null;
+        _runLength = 0;
         _rampStart = _rampEnd = float.NaN;
     }
     internal static FocusedRevealClip? GetLineVectorContributionClip(

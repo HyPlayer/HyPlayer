@@ -1,6 +1,7 @@
 #nullable enable
 using ALRC.Abstraction;
 using HyPlayer.LyricRenderer.Animator;
+using HyPlayer.UI.Effects;
 using Microsoft.Graphics.Canvas.Effects;
 using Windows.Foundation;
 using Microsoft.Graphics.Canvas;
@@ -161,7 +162,7 @@ public abstract class RenderingLyricLine : IDisposable
 
             var needsImage = blur > 0.001f || glow > 0.001f && settings.GlowRadius > 0 || Math.Abs(angle) > 0.001f;
             bool result;
-            if (cachedBlur)
+            if (cachedBlur || !hasStatic && !HasContent(context))
             {
                 result = true;
             }
@@ -169,12 +170,25 @@ public abstract class RenderingLyricLine : IDisposable
             {
                 ICanvasImage content;
                 if (hasStatic) { content = cached; result = true; }
+                else if (TryGetRecordedImage(session, context, out var prerecorded))
+                {
+                    content = prerecorded;
+                    result = true;
+                }
                 else
                 {
                     recorded = new CanvasCommandList(session);
                     LastFrameCommandListCount = 1;
-                    using var lineSession = recorded.CreateDrawingSession();
-                    result = RenderCore(lineSession, context);
+                    var lineSession = recorded.CreateDrawingSession();
+                    try
+                    {
+                        result = RenderCore(lineSession, context);
+                    }
+                    finally
+                    {
+                        NativeClosable.Close(lineSession);
+                    }
+
                     content = recorded;
                 }
                 if (glow > 0.001f && settings.GlowRadius > 0)
@@ -219,8 +233,15 @@ public abstract class RenderingLyricLine : IDisposable
             else
             {
                 // A layer supplies uniform line opacity without recording a command list.
-                using var layer = opacity < 0.9999f ? session.CreateLayer(opacity) : null;
-                result = RenderCore(session, context);
+                var layer = opacity < 0.9999f ? session.CreateLayer(opacity) : null;
+                try
+                {
+                    result = RenderCore(session, context);
+                }
+                finally
+                {
+                    NativeClosable.Close(layer);
+                }
             }
             if (settings.HoverBackground && ReactionState == ReactionState.Enter && !Hidden)
                 session.FillRoundedRectangle(0, ContentTop, RenderingWidth + 2, RenderingHeight + 8 - ContentTop, 6, 6, Color.FromArgb(10, 255, 255, 255));
@@ -242,7 +263,7 @@ public abstract class RenderingLyricLine : IDisposable
             if (_glow is not null) _glow.Source = null;
             if (_blur is not null) _blur.Source = null;
             if (_perspective is not null) _perspective.Source = null;
-            recorded?.Dispose();
+            NativeClosable.Close(recorded);
         }
     }
 
@@ -254,7 +275,7 @@ public abstract class RenderingLyricLine : IDisposable
         if (context.IsSeek) ReleaseBlurLevels();
         if (_blurFading && (tick - _blurFadeStartTick >= BlurFadeTicks || tick < _blurFadeStartTick))
         {
-            _blurCache?.Dispose();
+            NativeClosable.Close(_blurCache);
             _blurCache = _blurCacheNext;
             _blurCacheAmount = _blurCacheNextAmount;
             _blurCacheNext = null;
@@ -326,16 +347,23 @@ public abstract class RenderingLyricLine : IDisposable
         var target = new CanvasRenderTarget(session, width, height, dpi);
         try
         {
-            using var targetSession = target.CreateDrawingSession();
-            targetSession.Clear(Colors.Transparent);
-            _blur ??= new GaussianBlurEffect { BorderMode = EffectBorderMode.Soft };
-            _blur.Source = content;
-            _blur.BlurAmount = amount;
-            targetSession.DrawImage(_blur, 0, 0, new Rect(-outset, -outset, width, height));
+            var targetSession = target.CreateDrawingSession();
+            try
+            {
+                targetSession.Clear(Colors.Transparent);
+                _blur ??= new GaussianBlurEffect { BorderMode = EffectBorderMode.Soft };
+                _blur.Source = content;
+                _blur.BlurAmount = amount;
+                targetSession.DrawImage(_blur, 0, 0, new Rect(-outset, -outset, width, height));
+            }
+            finally
+            {
+                NativeClosable.Close(targetSession);
+            }
         }
         catch
         {
-            target.Dispose();
+            NativeClosable.Close(target);
             throw;
         }
         finally
@@ -373,17 +401,17 @@ public abstract class RenderingLyricLine : IDisposable
 
     private void ReleaseBlurLevels()
     {
-        _blurCache?.Dispose();
+        NativeClosable.Close(_blurCache);
         _blurCache = null;
-        _blurCacheNext?.Dispose();
+        NativeClosable.Close(_blurCacheNext);
         _blurCacheNext = null;
         _blurLevelValid = false;
         _blurFading = false;
-        _blurCrossFade?.Dispose();
+        NativeClosable.Close(_blurCrossFade);
         _blurCrossFade = null;
-        _blurFadeFrom?.Dispose();
+        NativeClosable.Close(_blurFadeFrom);
         _blurFadeFrom = null;
-        _blurFadeTo?.Dispose();
+        NativeClosable.Close(_blurFadeTo);
         _blurFadeTo = null;
     }
 
@@ -393,9 +421,9 @@ public abstract class RenderingLyricLine : IDisposable
         _opacityMotion = default;
         _scaleMotion = default;
         _blurMotion = default;
-        _blur?.Dispose(); _blur = null;
-        _glow?.Dispose(); _glow = null;
-        _perspective?.Dispose(); _perspective = null;
+        NativeClosable.Close(_blur); _blur = null;
+        NativeClosable.Close(_glow); _glow = null;
+        NativeClosable.Close(_perspective); _perspective = null;
         _opacityTransition = default;
         _scaleTransition = default;
         _blurTransition = default;
@@ -409,7 +437,18 @@ public abstract class RenderingLyricLine : IDisposable
     }
     protected abstract bool RenderCore(CanvasDrawingSession session, RenderContext context);
 
+    protected virtual bool HasContent(RenderContext context) => true;
+
     protected virtual bool TryGetStaticSourceImage(
+        CanvasDrawingSession session,
+        RenderContext context,
+        out ICanvasImage image)
+    {
+        image = null!;
+        return false;
+    }
+
+    protected virtual bool TryGetRecordedImage(
         CanvasDrawingSession session,
         RenderContext context,
         out ICanvasImage image)

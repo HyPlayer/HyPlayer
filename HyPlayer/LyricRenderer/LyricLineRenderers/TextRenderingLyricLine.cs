@@ -5,7 +5,9 @@ using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using HyPlayer.LyricRenderer.Text;
+using HyPlayer.UI.Effects;
 using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -57,6 +59,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
 
     public string? Text { get; set; }
     public override bool IsTextLine => true;
+    internal int LastFrameGlyphRunCount => _focusedTextRenderer.LastFrameGlyphRunCount;
     public List<LyricTextToken> Tokens { get; set; } = [];
     public string? Transliteration { get; set; }
     public string? Translation { get; set; }
@@ -77,7 +80,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
 
     private static void DrawIdle(CanvasDrawingSession session, LyricTextLayoutSnapshot layout)
     {
-        session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
+        if (layout.HasStaticContent) session.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
         if (layout.DefaultTransliterationPersistCache is not null)
             session.DrawImage(layout.DefaultTransliterationPersistCache, 0, 0, layout.SizePixelRect, 1);
         session.DrawImage(layout.DefaultTextPersistCache, 0, layout.TextRenderActualTop, layout.SizePixelRect, 1);
@@ -119,7 +122,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         ReleaseDrawingResources();
         _focusTransition = default;
         _focusedTextRenderer.Dispose();
-        _idleLineCache?.Dispose();
+        NativeClosable.Close(_idleLineCache);
         _idleLineCache = null;
     }
 
@@ -163,7 +166,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         ReleaseDrawingResources();
         _focusTransition = default;
         _focusedTextRenderer.Dispose();
-        _idleLineCache?.Dispose();
+        NativeClosable.Close(_idleLineCache);
         _idleLineCache = null;
         _cachedAlignment = TypographySelector(t => t?.Alignment, context)!.Value;
         _cachedLyricFontSize = TypographySelector(t => t?.LyricFontSize, context)!.Value;
@@ -207,28 +210,52 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         LyricTextLayoutSnapshot layout)
     {
         var cache = new CanvasCommandList(session);
-        using var idleSession = cache.CreateDrawingSession();
-        idleSession.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
-        if (layout.DefaultTransliterationPersistCache is not null)
-            idleSession.DrawImage(layout.DefaultTransliterationPersistCache, 0, 0, layout.SizePixelRect, 1);
-        idleSession.DrawImage(layout.DefaultTextPersistCache, 0, layout.TextRenderActualTop, layout.SizePixelRect, 1);
-        if (layout.DefaultTranslationPersistCache is not null)
+        var idleSession = cache.CreateDrawingSession();
+        try
         {
-            idleSession.DrawImage(
-                layout.DefaultTranslationPersistCache,
-                0,
-                layout.TranslationRenderActualTop,
-                layout.SizePixelRect,
-                1);
+            if (layout.HasStaticContent)
+                idleSession.DrawImage(layout.StaticPersistCache, 0, 0, layout.SizePixelRect, 1);
+            DrawIdleLayer(idleSession, layout, layout.DefaultTransliterationPersistCache,
+                layout.TransliterationLayout, 0, layout.DrawingOffsetY);
+            DrawIdleLayer(idleSession, layout, layout.DefaultTextPersistCache, layout.TextLayout,
+                layout.TextRenderActualTop, 0);
+            DrawIdleLayer(idleSession, layout, layout.DefaultTranslationPersistCache, layout.TranslationLayout,
+                layout.TranslationRenderActualTop, 0);
+        }
+        finally
+        {
+            NativeClosable.Close(idleSession);
         }
 
         return cache;
     }
 
+    private static void DrawIdleLayer(CanvasDrawingSession session, LyricTextLayoutSnapshot layout,
+        ICanvasImage? image, CanvasTextLayout? text, float top, float textTop)
+    {
+        if (image is null) return;
+        if (text is null || layout.LayoutDrawOffsetX is not { } offsetX || MathF.Floor(top) != top)
+        {
+            session.DrawImage(image, 0, top, layout.SizePixelRect, 1);
+            return;
+        }
+
+        var size = layout.SizePixelRect;
+        var clip = session.CreateLayer(1, new Rect(size.X, size.Y + top, size.Width, size.Height));
+        try
+        {
+            session.DrawTextLayout(text, offsetX, top + textTop, layout.IdleColor);
+        }
+        finally
+        {
+            NativeClosable.Close(clip);
+        }
+    }
+
     public override void Dispose()
     {
         _focusedTextRenderer.Dispose();
-        _idleLineCache?.Dispose();
+        NativeClosable.Close(_idleLineCache);
         _idleLineCache = null;
         _layout?.Dispose();
         _layout = null;

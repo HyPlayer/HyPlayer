@@ -22,6 +22,25 @@ public sealed partial class LyricTextLayoutSnapshot
         LyricVisualLines = PrepareLines(LyricGlyphClusters, start, end);
         TransliterationVisualLines = PrepareLines(TransliterationGlyphClusters, start, end);
         Emphasis = HasRealWords ? LyricEmphasisPlan.Create(Tokens, LyricGlyphClusters) : null;
+        LinkRuns(LyricGlyphClusters);
+        LinkRuns(TransliterationGlyphClusters);
+    }
+
+    private static void LinkRuns(IReadOnlyList<LyricGlyphCluster> clusters)
+    {
+        for (var index = 1; index < clusters.Count; index++)
+        {
+            var previous = clusters[index - 1];
+            var current = clusters[index];
+            var from = previous.BaseState;
+            var to = current.BaseState;
+            current.ContinuesRun = current.VisualLineIndex == previous.VisualLineIndex &&
+                                   ReferenceEquals(from.FontFace, to.FontFace) && from.FontSize == to.FontSize &&
+                                   !from.IsSideways && !to.IsSideways && from.BidiLevel == to.BidiLevel &&
+                                   (to.BidiLevel & 1) == 0 && from.MeasuringMode == to.MeasuringMode &&
+                                   from.Origin.Y == to.Origin.Y &&
+                                   Math.Abs(from.Origin.X + previous.AdvanceWidth - to.Origin.X) < 0.01f;
+        }
     }
 
     private DirectLyricVisualLine[] PrepareLines(IReadOnlyList<LyricGlyphCluster> clusters, long start, long end)

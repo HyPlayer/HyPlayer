@@ -56,9 +56,10 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
             return;
         }
 
-        var width = (float)sender.Size.Width;
-        var height = (float)sender.Size.Height / 2f;
-        var remainHeight = (float)sender.Size.Height - height;
+        var size = sender.Size;
+        var width = (float)size.Width;
+        var height = (float)size.Height / 2f;
+        var remainHeight = (float)size.Height - height;
         var barWidth = width / FFTProcessor.DisplayBandCount;
         var scaleFactor = height / 80.0f;
 

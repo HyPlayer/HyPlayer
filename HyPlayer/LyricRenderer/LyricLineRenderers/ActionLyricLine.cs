@@ -4,6 +4,7 @@ using Windows.UI.Text;
 using Windows.UI.Xaml;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
+using HyPlayer.UI.Effects;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 
@@ -19,6 +20,7 @@ public partial class ActionLyricLine : RenderingLyricLine
     private float _topPadding;
 
     private ICanvasImage _staticPersistCache;
+    private CanvasCommandList _lineCache;
     private CanvasTextFormat _textFormat;
     private CanvasTextLayout _textLayout;
 
@@ -32,6 +34,45 @@ public partial class ActionLyricLine : RenderingLyricLine
         if (_textLayout is null) return true;
         session.DrawImage(_staticPersistCache, 0, _topPadding);
         return true;
+    }
+
+    protected override bool TryGetRecordedImage(
+        CanvasDrawingSession session,
+        RenderContext context,
+        out ICanvasImage image)
+    {
+        if (_textLayout is null || _staticPersistCache is null)
+        {
+            image = null!;
+            return false;
+        }
+
+        if (_lineCache is null)
+        {
+            var cache = new CanvasCommandList(session);
+            var cacheSession = cache.CreateDrawingSession();
+            try
+            {
+                cacheSession.DrawImage(_staticPersistCache, 0, _topPadding);
+            }
+            finally
+            {
+                NativeClosable.Close(cacheSession);
+            }
+
+            _lineCache = cache;
+        }
+
+        image = _lineCache;
+        return true;
+    }
+
+    protected override void OnRenderingChanged(bool rendering)
+    {
+        if (rendering) return;
+        ReleaseDrawingResources();
+        NativeClosable.Close(_lineCache);
+        _lineCache = null;
     }
 
     protected override void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
@@ -51,6 +92,8 @@ public partial class ActionLyricLine : RenderingLyricLine
         _canvasWidth = context.ItemWidth;
         _canvasHeight = context.ViewHeight;
         ReleaseDrawingResources();
+        NativeClosable.Close(_lineCache);
+        _lineCache = null;
         _textFormat?.Dispose();
         _textLayout?.Dispose();
         _staticPersistCache?.Dispose();
@@ -108,6 +151,8 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     public override void Dispose()
     {
+        NativeClosable.Close(_lineCache);
+        _lineCache = null;
         _textFormat?.Dispose();
         _textLayout?.Dispose();
         _staticPersistCache?.Dispose();

@@ -1881,6 +1881,7 @@ public sealed partial class ExpandedPlayer : Page
 
         var drawStartedAt = Stopwatch.GetTimestamp();
         _expandedCanvasHost.Draw(sender, args);
+        args.DrawingSession.Dispose();
         _canvasState.LastFrameDrawMilliseconds = Stopwatch.GetElapsedTime(drawStartedAt).TotalMilliseconds;
     }
 

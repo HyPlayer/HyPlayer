@@ -51,9 +51,10 @@ public class ExpandedCanvasHost : IExpandedCanvasHost
     /// <inheritdoc />
     public void Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
     {
-        using var session = args.DrawingSession;
+        var session = args.DrawingSession;
+        var timing = args.Timing;
         foreach (var layer in _layers)
-            layer.Draw(sender, session, args.Timing);
+            layer.Draw(sender, session, timing);
     }
 
     public bool NeedsFrames
