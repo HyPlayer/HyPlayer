@@ -2,6 +2,7 @@
     x:Class="HyPlayer.UI.Controls.LoadStateView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     IsTabStop="False"
@@ -19,7 +20,7 @@
         <StackPanel.OpacityTransition>
             <ScalarTransition Duration="0:0:0.25" />
         </StackPanel.OpacityTransition>
-        <ProgressRing
+        <muxc:ProgressRing
             x:Name="Ring"
             Width="32"
             Height="32"

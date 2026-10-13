@@ -121,7 +121,7 @@
                         x:Name="IncrementalLoadSentinel"
                         Height="1"
                         EffectiveViewportChanged="IncrementalLoadSentinel_EffectiveViewportChanged" />
-                    <ProgressRing
+                    <muxc:ProgressRing
                         x:Name="FooterProgressRing"
                         Width="32"
                         Height="32"

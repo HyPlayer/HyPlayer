@@ -2,6 +2,7 @@
     x:Class="HyPlayer.Features.Artist.ArtistPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:controls1="using:HyPlayer.UI.Lists"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -96,7 +97,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon FontSize="14" Glyph="&#xE768;" />
                                     <TextBlock Text="播放全部" />
-                                    <ProgressRing
+                                    <muxc:ProgressRing
                                         Width="14"
                                         Height="14"
                                         IsActive="{x:Bind ViewModel.IsPlayingAll, Mode=OneWay}"
