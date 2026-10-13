@@ -341,7 +341,7 @@
                                                 Value="{x:Bind Lyric.LyricRenderWidthRatio, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
 
-                                        <controls3:SettingsCard Description="在默认行距上增减的像素数，0 为默认。负数收紧（最多收紧到相邻行不重叠），正数拉开，修改后立即作用于已打开的歌词页" Header="歌词行间距">
+                                        <controls3:SettingsCard Description="" Header="歌词行间距">
                                             <controls:NumberBox
                                                 MinWidth="100"
                                                 HorizontalAlignment="Right"
@@ -540,7 +540,7 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind Playback.PlaybackFade, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="歌曲无法获取音源或打开失败时的处理方式，加载超时始终停下并提示" Header="播放失败时">
+                                        <controls3:SettingsCard Description="" Header="播放失败时">
                                             <ComboBox
                                                 MinWidth="180"
                                                 HorizontalAlignment="Right"
@@ -2343,7 +2343,7 @@
                                         Tapped="UIElement_OnTapped">
                                         <Grid Margin="8">
                                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                                <PersonPicture Height="44" ProfilePicture="https://avatars.githubusercontent.com/u/106746080?s=100" />
+                                                <PersonPicture Height="44" ProfilePicture="https://q.qlogo.cn/g?b=qq&amp;nk=10510544&amp;s=100" />
                                                 <StackPanel>
                                                     <TextBlock
                                                         Margin="1,0,0,0"
