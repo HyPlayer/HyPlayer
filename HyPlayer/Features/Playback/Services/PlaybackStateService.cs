@@ -99,8 +99,24 @@ public partial class PlaybackStateService : ObservableObject
     /// </summary>
     public void SetNowPlaying(SingleSongBase? providerItem)
     {
+        if (!IsSameSong(NowPlayingProviderItem, providerItem))
+        {
+            Position = TimeSpan.Zero;
+            Duration = TimeSpan.FromMilliseconds(Math.Max(0, providerItem?.Duration ?? 0));
+        }
+
         NowPlayingProviderItem = providerItem;
         NowPlayingSnapshot = PlaybackCurrentItemSnapshot.FromProvider(providerItem);
+    }
+
+    private static bool IsSameSong(SingleSongBase? left, SingleSongBase? right)
+    {
+        return ReferenceEquals(left, right)
+               || (left is not null
+                   && right is not null
+                   && left.ProviderId == right.ProviderId
+                   && left.TypeId == right.TypeId
+                   && left.ActualId == right.ActualId);
     }
 
     /// <summary>Clears mirrored now-playing state and resets the playlist index.</summary>

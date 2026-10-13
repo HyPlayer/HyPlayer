@@ -95,6 +95,8 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] public partial string QualityTag { get; set; } = string.Empty;
 
+    [ObservableProperty] public partial bool IsLoadingTrack { get; set; }
+
     [ObservableProperty] public partial string SongName { get; set; }
 
     [ObservableProperty] public partial string Album { get; set; }
@@ -202,6 +204,7 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
                     Position = State.Position;
                     break;
                 case nameof(PlaybackStateService.Duration):
+                    Position = State.Position;
                     Duration = State.Duration;
                     break;
                 case nameof(PlaybackStateService.Volume):
@@ -215,6 +218,9 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
                     break;
                 case nameof(PlaybackStateService.QualityTag):
                     QualityTag = State.QualityTag;
+                    break;
+                case nameof(PlaybackStateService.IsLoadingTrack):
+                    IsLoadingTrack = State.IsLoadingTrack;
                     break;
                 case nameof(PlaybackStateService.LyricIndex):
                     LyricIndex = State.LyricIndex;
@@ -241,6 +247,7 @@ public partial class ExpandedPlayerViewModel : ObservableObject, IDisposable
         LyricIndex = State.LyricIndex;
         IsInFm = State.IsInFm;
         QualityTag = State.QualityTag;
+        IsLoadingTrack = State.IsLoadingTrack;
         if (NowPlayingSnapshot != null)
         {
             SongName = NowPlayingSnapshot.Name;

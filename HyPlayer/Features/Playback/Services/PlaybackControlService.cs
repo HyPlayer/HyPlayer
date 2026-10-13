@@ -83,6 +83,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private readonly IUIThreadDispatcher _uiThreadDispatcher;
     private ITrackTransition _activeTransition;
     private IPlaybackSource? _currentSource;
+    private SingleSongBase? _loadedSong;
     private bool _disposed;
     private bool _initialized;
     private long _lastScrobbledGeneration = -1;
@@ -843,6 +844,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     {
         await InitializeAsync().ConfigureAwait(false);
         await _transitionGate.WaitAsync().ConfigureAwait(false);
+        var opensSource = false;
         try
         {
             var resuming = IsCurrentTicketSource(_currentSource);
@@ -852,7 +854,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 _audioService.FadeInNextPlay(_resumeFadeIn);
             var song = _playCore.CurrentSong;
             var timeout = song is null ? Timeout.InfiniteTimeSpan : GetLoadTimeout(song, false);
-            var opensSource = song is not null && _playCore.CurrentPlayingTicket is null;
+            opensSource = song is not null && _playCore.CurrentPlayingTicket is null;
             bool loaded;
             if (opensSource) BeginTrackLoading();
             try
@@ -871,7 +873,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             finally
             {
                 _audioService.FadeInNextPlay(TimeSpan.Zero);
-                if (opensSource) EndTrackLoading();
             }
 
             if (resuming && !IsCurrentTicketSource(_currentSource))
@@ -902,6 +903,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
         finally
         {
+            if (opensSource) EndTrackLoading();
             _transitionGate.Release();
         }
     }
@@ -1059,7 +1061,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     /// </summary>
     private void OnPositionChanged(TimeSpan position)
     {
-        if (_state.IsLoadingTrack)
+        if (_state.IsLoadingTrack || !SameSong(_loadedSong, _state.NowPlayingProviderItem))
             return;
 
         _state.Position = position;
@@ -1132,6 +1134,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     {
         if (source is AudioGraphPlaybackSource agSource)
         {
+            _loadedSong = _state.NowPlayingProviderItem;
             if (_state.NowPlayingProviderItem is null) return;
 
             _state.Duration = agSource.PlaybackSource.Duration ?? TimeSpan.Zero;
@@ -1268,6 +1271,31 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         CancellationToken ct,
         bool fade = false)
     {
+        if (autoPlay)
+        {
+            BeginTrackLoading();
+            if (!SameSong(_loadedSong, song))
+                _state.QualityTag = string.Empty;
+        }
+
+        try
+        {
+            await LoadTrackAsync(song, autoPlay, removeCurrentSongs, ct, fade).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (autoPlay)
+                EndTrackLoading();
+        }
+    }
+
+    private async Task LoadTrackAsync(
+        SingleSongBase song,
+        bool autoPlay,
+        bool removeCurrentSongs,
+        CancellationToken ct,
+        bool fade)
+    {
         fade = fade && _playbackSettings.PlaybackFade;
         if (fade)
             await FadeOutCurrentAsync().ConfigureAwait(false);
@@ -1286,7 +1314,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         var timeout = GetLoadTimeout(song, false);
         bool loaded;
         _loadTimedOut = false;
-        BeginTrackLoading();
         _state.Position = TimeSpan.Zero;
         try
         {
@@ -1301,7 +1328,6 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         finally
         {
             _audioService.FadeInNextPlay(TimeSpan.Zero);
-            EndTrackLoading();
         }
 
         if (!loaded)
@@ -1525,6 +1551,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         _currentSource = _playCore.CurrentPlayingTicket is ChopinAudioTicket ticket
             ? ticket.PlaybackSource
             : _player.PrimaryPlaybackSource;
+        _loadedSong = _state.NowPlayingProviderItem;
         _playbackGeneration++;
         PublishQualityTag();
     }

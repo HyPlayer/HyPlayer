@@ -5,6 +5,8 @@ using System.Numerics;
 using Windows.UI;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Automation;
+using Windows.UI.Xaml.Automation.Peers;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Media;
@@ -72,6 +74,10 @@ public sealed class PlayBarTransitionEffect
         }
         Fade(Visual(_qualityText), active ? 0 : 1, 250);
         Fade(Visual(_transitionText), active ? 1 : 0, 250);
+        AutomationProperties.SetAccessibilityView(_qualityText,
+            active ? AccessibilityView.Raw : AccessibilityView.Content);
+        AutomationProperties.SetAccessibilityView(_transitionText,
+            active ? AccessibilityView.Content : AccessibilityView.Raw);
 
         if (_textGlow is null || _textShadow is null) return;
         _textShadow.Color = color;

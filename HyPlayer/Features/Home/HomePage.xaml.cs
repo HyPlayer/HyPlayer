@@ -100,6 +100,12 @@ public sealed partial class HomePage : Page
         }
     }
 
+    private void CardList_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is HomeContainerCardViewModel playlist)
+            _navigation.Navigate(typeof(SongListDetail), playlist.Container);
+    }
+
     private void Card_Tapped(object sender, TappedRoutedEventArgs e)
     {
         var button = sender?.As<ListViewItem>();

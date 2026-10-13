@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,9 @@ namespace HyPlayer.UI.Lists;
 
 public sealed class ProvidableItemDisplayResolver
 {
+    private const int MatchedLyricLineLimit = 2;
+    private const int MatchedLyricLineLength = 60;
+
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly UISettings _setting;
 
@@ -46,7 +50,7 @@ public sealed class ProvidableItemDisplayResolver
             LineOne = string.Join(" / ", creators.Select(t => t.Name) ?? []),
             LineTwo = album,
             LineThree = item is NeteaseLyricSearchItem { MatchedLyrics.Count: > 0 } lyricMatch
-                ? string.Join("   ", lyricMatch.MatchedLyrics)
+                ? SummarizeMatchedLyrics(lyricMatch.MatchedLyrics)
                 : string.Join(" / ", aliases),
             CoverUrl = coverUrl,
             RichMediaId = richMedia?.RichMediaId,
@@ -69,6 +73,17 @@ public sealed class ProvidableItemDisplayResolver
         return new ProvidableItemDisplayResolver(
             Ioc.Default.GetRequiredService<IProviderKnownTypeIds>(),
             Ioc.Default.GetRequiredService<UISettings>());
+    }
+
+    internal static string SummarizeMatchedLyrics(IReadOnlyList<string> matchedLines)
+    {
+        return string.Join("   ", matchedLines
+            .Select(line => line?.Trim() ?? string.Empty)
+            .Where(line => line.Length > 0)
+            .Take(MatchedLyricLineLimit)
+            .Select(line => line.Length > MatchedLyricLineLength
+                ? line[..MatchedLyricLineLength].TrimEnd() + "…"
+                : line));
     }
 
     private static async Task<string?> TryGetCoverUrlAsync(object? item, CancellationToken cancellationToken)

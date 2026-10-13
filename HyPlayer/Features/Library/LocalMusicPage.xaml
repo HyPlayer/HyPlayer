@@ -16,7 +16,7 @@
             Margin="24,24,24,0"
             FontSize="40"
             FontWeight="Bold"
-            Text="本地歌曲" />
+            Text="离线音乐" />
         <Pivot Margin="15,80,30,0">
 
             <PivotItem Header="下载管理">

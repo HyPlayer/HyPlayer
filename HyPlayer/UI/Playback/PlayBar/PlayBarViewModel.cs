@@ -80,7 +80,9 @@ public partial class PlayBarViewModel : ObservableObject
 
     [ObservableProperty] public partial PlaybackCurrentItemSnapshot? NowPlayingSnapshot { get; set; }
 
-    [ObservableProperty] public partial bool IsPlaying { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PlayStateGlyph))]
+    public partial bool IsPlaying { get; set; }
 
     [ObservableProperty] public partial TimeSpan Position { get; set; }
 
@@ -100,6 +102,9 @@ public partial class PlayBarViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ArtistDisplayText))]
+    [NotifyPropertyChangedFor(nameof(PlayStateGlyph))]
+    [NotifyPropertyChangedFor(nameof(QualityTagText))]
+    [NotifyPropertyChangedFor(nameof(QualityTagOpacity))]
     public partial bool IsLoadingTrack { get; set; }
 
     [ObservableProperty]
@@ -133,7 +138,8 @@ public partial class PlayBarViewModel : ObservableObject
     public string ArtistName => NowPlayingSnapshot?.ArtistText ?? string.Empty;
     public string ArtistDisplayText => IsLoadingTrack ? "正在加载…" : ArtistName;
     public string AlbumName => NowPlayingSnapshot?.AlbumName ?? string.Empty;
-    public string QualityTagText => GetQualityTagText(NowPlayingSnapshot, QualityTag, _playbackSettings.AudioRate);
+    public string QualityTagText =>
+        GetQualityTagText(NowPlayingSnapshot, QualityTag, _playbackSettings.AudioRate, IsLoadingTrack);
     public double QualityTagOpacity => _state.IsTransitioning || QualityTagText.Length > 0 ? 1 : 0;
 
     public string TotalTimeText => FormatTime(Duration != TimeSpan.Zero
@@ -146,7 +152,7 @@ public partial class PlayBarViewModel : ObservableObject
     public double DurationMilliseconds =>
         Duration != TimeSpan.Zero ? Duration.TotalMilliseconds : NowPlayingSnapshot?.Duration ?? 0;
 
-    public string PlayStateGlyph => IsPlaying ? "\uF8AE" : "\uF5B0";
+    public string PlayStateGlyph => ShowsPauseAction(IsPlaying, IsLoadingTrack) ? "\uF8AE" : "\uF5B0";
     public bool CanShareCurrentSong => NowPlayingSnapshot is { IsLocal: false };
 
     // ── Relay Commands ──
@@ -280,6 +286,7 @@ public partial class PlayBarViewModel : ObservableObject
                     Duration = _state.Duration;
                     break;
                 case nameof(PlaybackStateService.Duration):
+                    Position = _state.Position;
                     Duration = _state.Duration;
                     break;
                 case nameof(PlaybackStateService.LyricIndex):
@@ -313,22 +320,18 @@ public partial class PlayBarViewModel : ObservableObject
         UpdateCurrentPlaylistItem();
     }
 
-    partial void OnIsPlayingChanged(bool value)
-    {
-        OnPropertyChanged(nameof(PlayStateGlyph));
-    }
-
     partial void OnIsLoadingTrackChanged(bool value)
     {
         var version = ++_trackLoadingVersion;
         if (value)
-            _taskRunner.Forget(NotifySlowTrackLoadingAsync(version, SongName), "notify slow track loading");
+            _taskRunner.Forget(NotifySlowTrackLoadingAsync(version), "notify slow track loading");
     }
 
-    private async Task NotifySlowTrackLoadingAsync(int version, string title)
+    private async Task NotifySlowTrackLoadingAsync(int version)
     {
         await Task.Delay(5000);
         if (version != _trackLoadingVersion || !IsLoadingTrack) return;
+        var title = SongName;
         _notification.ShowMessage("正在加载", $"{(string.IsNullOrEmpty(title) ? "歌曲" : title)} 加载较慢，请稍候");
     }
 
@@ -387,14 +390,19 @@ public partial class PlayBarViewModel : ObservableObject
         return time.ToString(@"hh\:mm\:ss");
     }
 
+    internal static bool ShowsPauseAction(bool isPlaying, bool isLoadingTrack)
+    {
+        return isPlaying || isLoadingTrack;
+    }
+
     internal static string GetQualityTagText(PlaybackCurrentItemSnapshot? snapshot, string qualityTag,
-        string fallbackLevel)
+        string fallbackLevel, bool isLoadingTrack = false)
     {
         if (!string.IsNullOrWhiteSpace(qualityTag)) return FormatAudioLevel(qualityTag);
         if (snapshot is null) return "无歌曲";
         if (snapshot.IsLocal) return "本地歌曲";
         if (snapshot.ProviderItem is NeteaseRadioProgram) return string.Empty;
-        return FormatAudioLevel(fallbackLevel);
+        return isLoadingTrack ? string.Empty : FormatAudioLevel(fallbackLevel);
     }
 
     private static string FormatAudioLevel(string level)

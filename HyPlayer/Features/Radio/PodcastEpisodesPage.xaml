@@ -25,9 +25,11 @@
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Button
                             x:Name="PlayAllButton"
+                            AutomationProperties.Name="播放全部"
                             Click="PlayAll_Click"
                             IsEnabled="False"
-                            Style="{StaticResource AccentButtonStyle}">
+                            Style="{StaticResource AccentButtonStyle}"
+                            ToolTipService.ToolTip="播放全部单集">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon FontSize="14" Glyph="&#xE768;" />
                                 <TextBlock Text="播放全部" />

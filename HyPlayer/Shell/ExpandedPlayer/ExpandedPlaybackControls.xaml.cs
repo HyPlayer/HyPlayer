@@ -125,6 +125,10 @@ public sealed partial class ExpandedPlaybackControls : UserControl
             case nameof(ExpandedPlayerViewModel.IsPlaying):
                 RefreshPlayState();
                 break;
+            case nameof(ExpandedPlayerViewModel.IsLoadingTrack):
+                RefreshPlayState();
+                RefreshQuality(true);
+                break;
             case nameof(ExpandedPlayerViewModel.IsInFm):
                 RefreshFmState();
                 RefreshPlayMode();
@@ -183,7 +187,7 @@ public sealed partial class ExpandedPlaybackControls : UserControl
             : ViewModel is not { NowPlayingSnapshot: { } snapshot } viewModel
                 ? string.Empty
                 : PlayBarViewModel.GetQualityTagText(snapshot, viewModel.QualityTag,
-                    viewModel.PlaybackSettings.AudioRate);
+                    viewModel.PlaybackSettings.AudioRate, viewModel.IsLoadingTrack);
         if (QualityText.Text == text && _showingTransition == transitioning && _qualityHostBright is not null)
             return;
         _showingTransition = transitioning;
@@ -243,7 +247,7 @@ public sealed partial class ExpandedPlaybackControls : UserControl
     private void RefreshPlayState(bool animate = true)
     {
         if (ViewModel is not { } viewModel) return;
-        var playing = viewModel.IsPlaying;
+        var playing = PlayBarViewModel.ShowsPauseAction(viewModel.IsPlaying, viewModel.IsLoadingTrack);
         var glyph = playing ? "\uF8AE" : "\uF5B0";
         var changed = IconPlayPause.Glyph != glyph;
         IconPlayPause.Glyph = glyph;

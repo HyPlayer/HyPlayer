@@ -921,6 +921,7 @@
                             <TextBlock
                                 x:Name="TbTransitionTag"
                                 HorizontalAlignment="Center"
+                                AutomationProperties.AccessibilityView="Raw"
                                 FontSize="11"
                                 FontWeight="Bold"
                                 IsHitTestVisible="False"

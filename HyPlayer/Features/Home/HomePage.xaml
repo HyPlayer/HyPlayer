@@ -107,6 +107,7 @@
                 x:Name="Card"
                 Width="256"
                 Height="128"
+                AutomationProperties.AccessibilityView="Raw"
                 AutomationProperties.Name="{x:Bind Name}"
                 Margin="2,10"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -372,6 +373,8 @@
                                     </StackPanel>
                                     <ListView
                                         Grid.Row="1"
+                                        IsItemClickEnabled="True"
+                                        ItemClick="CardList_ItemClick"
                                         ItemTemplate="{StaticResource ToplistCardTemplate}"
                                         ItemsSource="{x:Bind ViewModel.OfficialPlaylists, Mode=OneWay}"
                                         ScrollViewer.HorizontalScrollBarVisibility="Visible"
@@ -404,6 +407,8 @@
                                     </StackPanel>
                                     <ListView
                                         Grid.Row="1"
+                                        IsItemClickEnabled="True"
+                                        ItemClick="CardList_ItemClick"
                                         ItemTemplate="{StaticResource ToplistCardTemplate}"
                                         ItemsSource="{x:Bind ViewModel.RecommendedPlaylist, Mode=OneWay}"
                                         ScrollViewer.HorizontalScrollBarVisibility="Visible"
@@ -447,10 +452,12 @@
                                         VerticalAlignment="Center"
                                         HorizontalContentAlignment="Center"
                                         VerticalContentAlignment="Center"
+                                        AutomationProperties.Name="全部播放"
                                         Command="{x:Bind ViewModel.PlayAllRecommendedSongsClickedCommand}"
                                         CommandParameter="{x:Bind ViewModel.RecommendedSongItems}"
                                         CornerRadius="14"
-                                        Style="{ThemeResource AccentButtonStyle}">
+                                        Style="{ThemeResource AccentButtonStyle}"
+                                        ToolTipService.ToolTip="播放全部推荐单曲">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <FontIcon
                                                 FontFamily="Segoe Fluent Icons"
@@ -503,6 +510,8 @@
                             </StackPanel>
                             <ListView
                                 Grid.Row="1"
+                                IsItemClickEnabled="True"
+                                ItemClick="CardList_ItemClick"
                                 ItemTemplate="{StaticResource ToplistCardTemplate}"
                                 ItemsSource="{x:Bind ViewModel.ToplistPlaylist, Mode=OneWay}"
                                 ScrollViewer.HorizontalScrollBarVisibility="Visible"

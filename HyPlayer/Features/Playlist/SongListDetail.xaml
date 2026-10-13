@@ -134,16 +134,17 @@
                                         <TextBlock x:Name="LikeBtnText" Text="{x:Bind ViewModel.Subscribed, Mode=OneWay, Converter={StaticResource BoolToLikeStringConverter}}" />
                                     </StackPanel>
                                 </Button>
-                                <Button Margin="0,6,0,0" Click="PlayAll_Click">
+                                <Button
+                                    Margin="0,6,0,0"
+                                    AutomationProperties.Name="播放全部"
+                                    Click="PlayAll_Click"
+                                    ToolTipService.ToolTip="播放全部">
                                     <StackPanel Orientation="Horizontal">
                                         <FontIcon
                                             x:Name="IconPlay"
                                             FontSize="12"
                                             Glyph="&#xF5B0;" />
-                                        <TextBlock
-                                            Margin="8,0,0,0"
-                                            Text="播放"
-                                            ToolTipService.ToolTip="播放全部" />
+                                        <TextBlock Margin="8,0,0,0" Text="播放" />
                                     </StackPanel>
                                 </Button>
                                 <Button

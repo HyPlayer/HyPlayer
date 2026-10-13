@@ -76,7 +76,11 @@
                                 Text="{x:Bind ViewModel.PublishTime, Mode=OneWay, Converter={StaticResource DateConverter}}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="15">
-                            <Button Click="PlayAll_Click" Style="{ThemeResource AccentButtonStyle}">
+                            <Button
+                                AutomationProperties.Name="播放全部"
+                                Click="PlayAll_Click"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                ToolTipService.ToolTip="播放全部">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
                                         x:Name="IconPlay"
