@@ -652,6 +652,29 @@ namespace HyPlayer.LyricRenderer
 
                 Context.RenderOffsets[currentLine.RuntimeIndex].Y = renderedBeforeStartPosition;
             }
+
+            TrackOffsetVelocities();
+        }
+
+        private const double OffsetVelocityWindowMilliseconds = 100;
+        private float[] _velocityOffsets = [];
+        private double _velocityTime = double.NaN;
+
+        private void TrackOffsetVelocities()
+        {
+            var offsets = Context.RenderOffsets;
+            if (_velocityOffsets.Length < offsets.Count) _velocityOffsets = new float[offsets.Count];
+            var now = Context.PreciseLyricTime;
+            var elapsed = now - _velocityTime;
+            var valid = elapsed > 0 && elapsed <= OffsetVelocityWindowMilliseconds && !Context.IsSeek;
+            for (var i = 0; i < offsets.Count; i++)
+            {
+                var y = offsets[i].Y;
+                offsets[i].VelocityY = valid ? (float)((y - _velocityOffsets[i]) / elapsed) : 0;
+                _velocityOffsets[i] = y;
+            }
+
+            _velocityTime = now;
         }
 
         private RenderingLyricLine FindCurrentGroup() => FindGroupAt(Context.CurrentLyricTime);
@@ -1001,16 +1024,20 @@ namespace HyPlayer.LyricRenderer
                 while (_pendingKeyFrames.Count > 0)
                 {
                     var key = _pendingKeyFrames.Min;
-                    if (key >= Context.CurrentLyricTime && key != 0) break;
+                    if (key > Context.CurrentLyricTime && key != 0) break;
                     _pendingKeyFrames.Remove(key);
                     // 该 KeyFrame 尚未渲染
                     //if (!_needRecalculate)
                     Context.CurrentKeyframe = key;
                     // 视图快照
                     //if (!_needRecalculate)
+                    var sinceVelocity = Context.PreciseLyricTime - _velocityTime;
+                    var moving = sinceVelocity >= 0 && sinceVelocity <= OffsetVelocityWindowMilliseconds && !Context.IsSeek;
+                    Context.SnapshotLyricTime = moving ? _velocityTime : key;
                     for (var i = 0; i < Context.RenderOffsets.Count; i++)
                     {
                         Context.SnapshotRenderOffsets[i].Y = Context.RenderOffsets[i].Y;
+                        Context.SnapshotRenderOffsets[i].VelocityY = moving ? Context.RenderOffsets[i].VelocityY : 0;
                     }
 
 

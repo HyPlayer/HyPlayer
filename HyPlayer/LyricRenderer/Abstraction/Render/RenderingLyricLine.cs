@@ -109,6 +109,14 @@ public abstract class RenderingLyricLine : IDisposable
 
     internal int BlurCacheBuildCount { get; private set; }
 
+    internal float LastFrameOpacity { get; private set; }
+
+    internal float LastFrameScale { get; private set; }
+
+    internal float LastFrameBlur { get; private set; }
+
+    internal float LastFrameGlow { get; private set; }
+
     /// <summary>Draws a line directly; only spatial image effects record its content.</summary>
     public bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
@@ -160,6 +168,10 @@ public abstract class RenderingLyricLine : IDisposable
                 blur = _blurMotion.Update(blurTarget, tick, 400, context.IsSeek);
             }
 
+            LastFrameOpacity = opacity;
+            LastFrameScale = scale;
+            LastFrameBlur = blur;
+            LastFrameGlow = glow;
             var needsImage = blur > 0.001f || glow > 0.001f && settings.GlowRadius > 0 || Math.Abs(angle) > 0.001f;
             bool result;
             if (cachedBlur || !hasStatic && !HasContent(context))

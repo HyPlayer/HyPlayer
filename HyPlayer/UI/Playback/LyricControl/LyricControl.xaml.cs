@@ -54,7 +54,7 @@ public sealed partial class LyricControl : UserControl
         };
         LyricRenderComposer.RenderOnDrawingSession(args.DrawingSession,
             _lyricService.CurrentLyricInfo.Lyrics[_lyricService.CurrentLyricIndex],
-            TimeSpan.FromMilliseconds(_lyricClock.Next(node.Position.TotalMilliseconds,
+            TimeSpan.FromMilliseconds(_lyricClock.Next(node, node.Position.TotalMilliseconds,
                 _audioPlayer.GlobalPlaybackStatus == PlaybackStatus.Playing, node.PlaybackSpeedFactor)),
             LyricRenderOption.GetValueOrDefault(),
             sender.Size, QuickRenderMode);

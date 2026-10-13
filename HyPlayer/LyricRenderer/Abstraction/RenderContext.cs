@@ -93,6 +93,8 @@ public class RenderContext
     /// </summary>
     public List<LineRenderOffset> SnapshotRenderOffsets { get; } = new();
 
+    internal double SnapshotLyricTime { get; set; }
+
     /// <summary>
     ///     歌词滚动的缓动计算器
     /// </summary>

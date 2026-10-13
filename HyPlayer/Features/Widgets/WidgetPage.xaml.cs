@@ -359,8 +359,9 @@ public sealed partial class WidgetPage : Page
         if (_lyricTrackGuard.Holds(_state.NowPlayingProviderItem, Stopwatch.GetTimestamp())) return;
         var node = _player.PrimaryAudioInputNode;
         if (node == null) return;
-        var position = _lyricClock.Next(node.Position.TotalMilliseconds,
-            _player.GlobalPlaybackStatus == PlaybackStatus.Playing, node.PlaybackSpeedFactor);
+        var seek = _positionChangedBySeeking;
+        var position = _lyricClock.Next(node, node.Position.TotalMilliseconds,
+            _player.GlobalPlaybackStatus == PlaybackStatus.Playing, node.PlaybackSpeedFactor, seek);
         if (position < _lyricBox.Context.CurrentLyricTime)
         {
             _lyricBox.Context.CurrentLyricTime = position;
@@ -371,7 +372,7 @@ public sealed partial class WidgetPage : Page
             _lyricBox.Context.CurrentLyricTime = position;
         }
 
-        _lyricBox.Context.IsSeek = _positionChangedBySeeking;
+        _lyricBox.Context.IsSeek = seek;
         _positionChangedBySeeking = false;
     }
 

@@ -455,8 +455,10 @@ public sealed partial class ExpandedPlayer : Page
         if (primaryAudioInputNode == null)
             return;
 
-        var precisePosition = Math.Max(0, _lyricClock.NextPrecise(primaryAudioInputNode.Position.TotalMilliseconds,
-            _player.GlobalPlaybackStatus == PlaybackStatus.Playing, primaryAudioInputNode.PlaybackSpeedFactor));
+        var seek = _positionChangedBySeeking;
+        var precisePosition = Math.Max(0, _lyricClock.NextPrecise(primaryAudioInputNode,
+            primaryAudioInputNode.Position.TotalMilliseconds, _player.GlobalPlaybackStatus == PlaybackStatus.Playing,
+            primaryAudioInputNode.PlaybackSpeedFactor, seek));
         var positionMilliseconds = (long)precisePosition;
         if (positionMilliseconds < view.Context.CurrentLyricTime)
         {
@@ -468,7 +470,7 @@ public sealed partial class ExpandedPlayer : Page
             view.Context.PreciseLyricTime = precisePosition;
         }
 
-        view.Context.IsSeek = _positionChangedBySeeking;
+        view.Context.IsSeek = seek;
         _positionChangedBySeeking = false;
     }
 
