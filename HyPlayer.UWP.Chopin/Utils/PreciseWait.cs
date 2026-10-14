@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.Win32.SafeHandles;
 
 namespace HyPlayer.UWP.Chopin.Utils
 {
@@ -8,29 +9,16 @@ namespace HyPlayer.UWP.Chopin.Utils
     {
         private const uint HighResolution = 0x2;
         private const uint TimerAccess = 0x1F0003;
-        private nint _timer;
-
-        public PreciseWait()
-        {
-            try
-            {
-                _timer = CreateWaitableTimerExW(0, 0, HighResolution, TimerAccess);
-            }
-            catch
-            {
-                _timer = 0;
-            }
-        }
+        private readonly SafeWaitHandle _timer = CreateWaitableTimerExW(0, 0, HighResolution, TimerAccess);
 
         public void Wait(int milliseconds)
         {
-            var timer = _timer;
-            if (timer != 0)
+            if (!_timer.IsInvalid && !_timer.IsClosed)
             {
                 var due = -milliseconds * 10_000L;
-                if (SetWaitableTimerEx(timer, &due, 0, 0, 0, 0, 0) != 0)
+                if (SetWaitableTimerEx(_timer, &due, 0, 0, 0, 0, 0) != 0)
                 {
-                    WaitForSingleObjectEx(timer, (uint)milliseconds + 50, 0);
+                    WaitForSingleObjectEx(_timer, (uint)milliseconds + 50, 0);
                     return;
                 }
             }
@@ -38,22 +26,15 @@ namespace HyPlayer.UWP.Chopin.Utils
             Thread.Sleep(milliseconds);
         }
 
-        public void Dispose()
-        {
-            var timer = Interlocked.Exchange(ref _timer, 0);
-            if (timer != 0) CloseHandle(timer);
-        }
+        public void Dispose() => _timer.Dispose();
 
         [LibraryImport("kernel32.dll")]
-        private static partial nint CreateWaitableTimerExW(nint attributes, nint name, uint flags, uint access);
+        private static partial SafeWaitHandle CreateWaitableTimerExW(nint attributes, nint name, uint flags, uint access);
 
         [LibraryImport("kernel32.dll")]
-        private static partial int SetWaitableTimerEx(nint timer, long* dueTime, int period, nint completion, nint argument, nint context, uint tolerance);
+        private static partial int SetWaitableTimerEx(SafeWaitHandle timer, long* dueTime, int period, nint completion, nint argument, nint context, uint tolerance);
 
         [LibraryImport("kernel32.dll")]
-        private static partial uint WaitForSingleObjectEx(nint handle, uint milliseconds, int alertable);
-
-        [LibraryImport("kernel32.dll")]
-        private static partial int CloseHandle(nint handle);
+        private static partial uint WaitForSingleObjectEx(SafeWaitHandle handle, uint milliseconds, int alertable);
     }
 }

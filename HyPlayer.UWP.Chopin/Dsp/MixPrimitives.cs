@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using HyPlayer.UWP.Chopin.Utils;
 using Windows.Media;
@@ -12,6 +13,8 @@ namespace HyPlayer.UWP.Chopin.Dsp
         private int _active;
         private int _closed;
 
+        public CallbackGate(bool closed = false) => _closed = closed ? 1 : 0;
+
         public bool TryEnter()
         {
             Interlocked.Increment(ref _active);
@@ -22,14 +25,37 @@ namespace HyPlayer.UWP.Chopin.Dsp
 
         public void Exit() => Interlocked.Decrement(ref _active);
 
-        public void Reopen() => Interlocked.Exchange(ref _closed, 0);
+        public void Reopen() => Interlocked.Decrement(ref _closed);
 
         public void CloseAndDrain()
         {
-            Interlocked.Exchange(ref _closed, 1);
+            Interlocked.Increment(ref _closed);
             var deadline = Environment.TickCount64 + 500;
             var spin = new SpinWait();
             while (Volatile.Read(ref _active) > 0 && Environment.TickCount64 < deadline) spin.SpinOnce();
+        }
+    }
+
+    internal static class AudioFrames
+    {
+        public static unsafe AudioFrame FromInterleaved(ReadOnlySpan<float> interleavedStereo)
+        {
+            var bytes = (uint)(interleavedStereo.Length * sizeof(float));
+            var frame = new AudioFrame(bytes);
+            try
+            {
+                using var buffer = frame.LockBuffer(AudioBufferAccessMode.Write);
+                using var reference = buffer.CreateReference();
+                Marshal.ThrowExceptionForHR(reference.GetBuffer(out var data, out var capacity));
+                if (data == null || capacity < bytes) throw new InvalidOperationException("The audio frame buffer is smaller than the samples to write.");
+                interleavedStereo.CopyTo(new Span<float>(data, interleavedStereo.Length));
+                return frame;
+            }
+            catch
+            {
+                frame.Dispose();
+                throw;
+            }
         }
     }
 
@@ -97,7 +123,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
             using var frame = Node.GetFrame();
             using var buffer = frame.LockBuffer(AudioBufferAccessMode.Read);
             using var reference = buffer.CreateReference();
-            reference.GetBuffer(out var bytes, out _);
+            if (reference.GetBuffer(out var bytes, out _) < 0 || bytes == null) return;
             var data = (float*)bytes;
             var samples = (int)(buffer.Length / 4);
             Append(new ReadOnlySpan<float>(data, samples));
@@ -185,16 +211,9 @@ namespace HyPlayer.UWP.Chopin.Dsp
         long IMixSink.QueuedFrames => (long)Node.QueuedSampleCount / _unit;
         long IMixSink.ClockFrames => (long)_graph.CompletedQuantumCount * _quantum;
 
-        unsafe void IMixSink.Write(ReadOnlySpan<float> interleavedStereo)
+        void IMixSink.Write(ReadOnlySpan<float> interleavedStereo)
         {
-            using var frame = new AudioFrame((uint)(interleavedStereo.Length * 4));
-            using (var buffer = frame.LockBuffer(AudioBufferAccessMode.Write))
-            using (var reference = buffer.CreateReference())
-            {
-                reference.GetBuffer(out var bytes, out _);
-                interleavedStereo.CopyTo(new Span<float>((float*)bytes, interleavedStereo.Length));
-            }
-
+            using var frame = AudioFrames.FromInterleaved(interleavedStereo);
             Node.AddFrame(frame);
         }
 

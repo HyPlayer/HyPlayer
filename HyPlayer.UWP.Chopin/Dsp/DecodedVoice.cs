@@ -397,16 +397,9 @@ namespace HyPlayer.UWP.Chopin.Dsp
             }
         }
 
-        private unsafe void Write(ReadOnlySpan<float> interleavedStereo)
+        private void Write(ReadOnlySpan<float> interleavedStereo)
         {
-            using var frame = new AudioFrame((uint)(interleavedStereo.Length * 4));
-            using (var buffer = frame.LockBuffer(AudioBufferAccessMode.Write))
-            using (var reference = buffer.CreateReference())
-            {
-                reference.GetBuffer(out var bytes, out _);
-                interleavedStereo.CopyTo(new Span<float>((float*)bytes, interleavedStereo.Length));
-            }
-
+            using var frame = AudioFrames.FromInterleaved(interleavedStereo);
             Render.AddFrame(frame);
         }
 
@@ -441,21 +434,9 @@ namespace HyPlayer.UWP.Chopin.Dsp
             }
 
             if (!_started) _wait.Dispose();
-            var decoder = _decoder;
-            var node = Node;
-            var tap = _tap;
-            _ = Task.Run(() =>
-            {
-                try
-                {
-                    node.Dispose();
-                    tap.Dispose();
-                    decoder.Dispose();
-                }
-                catch
-                {
-                }
-            });
+            Node.Dispose();
+            _tap.Dispose();
+            _decoder.Dispose();
         }
     }
 }

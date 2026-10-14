@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.Media.Audio;
 using Windows.Media.Devices;
-using Windows.Media.MediaProperties;
 using Windows.Media.Render;
 
 namespace HyPlayer.UWP.Chopin.Abstractions.Models
@@ -15,7 +14,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public double OutputVolume { get; set; } = 1d;
         public bool AutoFallback { get; set; } = false;
         public bool EnableFFTProcessing { get; set; } = false;
-        public uint PreferredSampleRate { get; set; } = 44100;
 
         public string ResolvedDeviceId
         {
@@ -53,7 +51,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     {
                     }
                 }
-                ApplySampleRate(result);
                 _settings = result;
                 return result;
             }
@@ -72,28 +69,9 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 {
                     result = new AudioGraphSettings(AudioRenderCategory.Media);
                 }
-                ApplySampleRate(result);
                 _settings = result;
                 return result;
             }
-        }
-
-        public void DisablePreferredSampleRate()
-        {
-            PreferredSampleRate = 0;
-            if (_settings != null)
-            {
-                var fallback = new AudioGraphSettings(AudioRenderCategory.Media) { PrimaryRenderDevice = _settings.PrimaryRenderDevice };
-                _settings = fallback;
-            }
-        }
-
-        private void ApplySampleRate(AudioGraphSettings settings)
-        {
-            if (PreferredSampleRate == 0) return;
-            var properties = AudioEncodingProperties.CreatePcm(PreferredSampleRate, 2, 32);
-            properties.Subtype = MediaEncodingSubtypes.Float;
-            settings.EncodingProperties = properties;
         }
     }
 }
