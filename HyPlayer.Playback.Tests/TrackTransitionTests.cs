@@ -60,25 +60,40 @@ public sealed class TrackTransitionTests
     }
 
     [Test]
-    public async Task Crossfade_uses_equal_power_endpoints_and_releases_outgoing()
+    public async Task Crossfade_requests_player_ramps_and_promotes_at_midpoint()
     {
         var host = new FakeHost();
         var transition = new CrossFadeTransition();
         var context = CreateContext(
             host,
             TimeSpan.FromMinutes(3),
-            TimeSpan.FromMilliseconds(179_990),
-            TimeSpan.FromMilliseconds(30));
+            TimeSpan.FromSeconds(179));
 
         await transition.OnPositionChangedAsync(context, CancellationToken.None);
-        Ensure(host.PromoteCount == 1, "Crossfade must promote when entering its fade window.");
+        Ensure(host.PromoteCount == 0, "Crossfade must keep the outgoing track current before its midpoint.");
+        Ensure(host.IsTransitioning, "Crossfade must publish its active transition state.");
+        Ensure(host.Ramps.Count == 2, "Crossfade must request both player volume ramps.");
+        Ensure(host.Ramps.Any(ramp => ReferenceEquals(ramp.Source, host.IncomingSource) && ramp.Target == 1d),
+            "The incoming source must ramp to its target volume.");
+        Ensure(host.Ramps.Any(ramp => ReferenceEquals(ramp.Source, host.Source) && ramp.Target == 0d),
+            "The outgoing source must ramp to silence.");
+        Ensure(host.Ramps.All(ramp => ramp.Duration == TimeSpan.FromMilliseconds(800)),
+            "Ramp duration must account for the playback rate.");
         Ensure(host.Outgoing.LastVolume > 0.9, "Equal-power fade starts with the outgoing track audible.");
         Ensure(host.Incoming.LastVolume < 0.1, "Equal-power fade starts with the incoming track near zero.");
 
-        await Task.Delay(50);
+        context = CreateContext(host, TimeSpan.FromMinutes(3), TimeSpan.FromMilliseconds(179_499));
+        await transition.OnPositionChangedAsync(context, CancellationToken.None);
+        Ensure(host.PromoteCount == 0, "Crossfade must not promote just before its midpoint.");
+        context = CreateContext(host, TimeSpan.FromMinutes(3), TimeSpan.FromMilliseconds(179_500));
+        await transition.OnPositionChangedAsync(context, CancellationToken.None);
+        Ensure(host.PromoteCount == 1, "Crossfade must promote at its midpoint.");
+        Ensure(host.Outgoing.DisposeCount == 0, "The outgoing source must remain alive while its ramp is running.");
+        await host.CompleteRampsAsync();
         await transition.OnPositionChangedAsync(context, CancellationToken.None);
         Ensure(host.Incoming.LastVolume > 0.99, "Equal-power fade ends at the incoming target.");
         Ensure(host.Outgoing.DisposeCount == 1, "Crossfade must release the outgoing lease.");
+        Ensure(!host.IsTransitioning, "A settled crossfade must clear its transition state.");
     }
 
     [Test]
@@ -152,8 +167,10 @@ public sealed class TrackTransitionTests
         var host = new FakeHost();
         host.Incoming.FailVolumeOnCall = 2;
         var transition = new CrossFadeTransition();
-        var context = CreateContext(host, TimeSpan.FromMinutes(3), TimeSpan.FromSeconds(155));
+        var context = CreateContext(host, TimeSpan.FromMinutes(3), TimeSpan.FromSeconds(179));
 
+        await transition.OnPositionChangedAsync(context, CancellationToken.None);
+        context = CreateContext(host, TimeSpan.FromMinutes(3), TimeSpan.FromMilliseconds(179_500));
         await transition.OnPositionChangedAsync(context, CancellationToken.None);
         await ExpectFailureAsync(() => transition.OnTrackCompletedAsync(context, CancellationToken.None));
 
@@ -168,8 +185,10 @@ public sealed class TrackTransitionTests
         var host = new FakeHost();
         host.Outgoing.DisposeFailuresRemaining = 1;
         var transition = new CrossFadeTransition();
-        var context = CreateContext(host, TimeSpan.FromMinutes(3), TimeSpan.FromSeconds(155));
+        var context = CreateContext(host, TimeSpan.FromMinutes(3), TimeSpan.FromSeconds(179));
 
+        await transition.OnPositionChangedAsync(context, CancellationToken.None);
+        context = CreateContext(host, TimeSpan.FromMinutes(3), TimeSpan.FromMilliseconds(179_500));
         await transition.OnPositionChangedAsync(context, CancellationToken.None);
         await ExpectFailureAsync(() => transition.OnTrackCompletedAsync(context, CancellationToken.None));
 
@@ -193,6 +212,8 @@ public sealed class TrackTransitionTests
             TimeSpan.FromSeconds(179),
             TimeSpan.FromSeconds(5));
 
+        await transition.OnPositionChangedAsync(context, CancellationToken.None);
+        context = CreateContext(host, TimeSpan.FromMinutes(3), TimeSpan.FromMilliseconds(179_500), TimeSpan.FromSeconds(5));
         await transition.OnPositionChangedAsync(context, CancellationToken.None);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
@@ -314,12 +335,40 @@ public sealed class TrackTransitionTests
     private sealed class FakeHost : ITrackTransitionHost
     {
         public FakeSource Source { get; } = new();
+        public FakeSource IncomingSource { get; } = new();
         public FakeTicket Incoming { get; } = new(new FakeSong("next"));
         public FakeTicket Outgoing { get; } = new(new FakeSong("current"));
         public bool PromoteSucceeds { get; init; } = true;
         public int PrepareCount { get; private set; }
         public int PromoteCount { get; private set; }
         public int AdvanceCount { get; private set; }
+        public bool IsTransitioning { get; private set; }
+        public List<(IPlaybackSource Source, double Target, TimeSpan Duration, TaskCompletionSource<bool> Completion)> Ramps { get; } = [];
+
+        public Task<bool> RampVolumeAsync(IPlaybackSource source, double targetVolume, TimeSpan duration)
+        {
+            var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Ramps.Add((source, targetVolume, duration, completion));
+            return completion.Task;
+        }
+
+        public double GetVolume(IPlaybackSource source) =>
+            ReferenceEquals(source, Source) ? Outgoing.LastVolume : Incoming.LastVolume;
+
+        public Task<SingleSongBase?> PeekNextAsync(TrackTransitionContext context, CancellationToken ct) =>
+            Task.FromResult<SingleSongBase?>(Incoming.Song);
+
+        public void SetTransitioning(bool transitioning) => IsTransitioning = transitioning;
+
+        public async Task CompleteRampsAsync()
+        {
+            foreach (var ramp in Ramps.Where(ramp => !ramp.Completion.Task.IsCompleted))
+            {
+                var ticket = ReferenceEquals(ramp.Source, Source) ? Outgoing : Incoming;
+                await ticket.SetVolumeAsync(ramp.Target);
+                ramp.Completion.SetResult(true);
+            }
+        }
 
         public Task<TransitionPreparedTrack?> PrepareNextAsync(
             TrackTransitionContext context,
@@ -332,6 +381,7 @@ public sealed class TrackTransitionTests
                 Ticket = Incoming,
                 Generation = context.Generation,
                 Source = context.Source,
+                IncomingSource = IncomingSource,
                 CurrentIndex = 0,
                 QueueRevision = 0
             });
@@ -438,11 +488,17 @@ public sealed class TrackTransitionTests
         public PlaybackStatus GlobalPlaybackStatus => PlaybackStatus.Paused;
         public IPlaybackSource PrimaryPlaybackSource => PrimarySource;
         public Task InitializePlayer(IAudioSettings settings) => Task.CompletedTask;
-        public Task ConnectPlaybackSourceAsync(IPlaybackSource playbackSource, PlaybackOptions options) => Task.CompletedTask;
+        public Task ConnectPlaybackSourceAsync(IPlaybackSource playbackSource, PlaybackOptions options, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public void DisconnectPlaybackSource(IPlaybackSource playbackSource) => DisconnectCount++;
         public void RemoveAllPlaybackSource() { }
         public void PlayAll() { }
+        public void PlayAll(TimeSpan fadeIn) => PlayAll();
         public void PauseAll() => PauseAllCount++;
+        public Task PauseAllAsync(TimeSpan fadeOut)
+        {
+            PauseAll();
+            return Task.CompletedTask;
+        }
         public void SeekPlaybackSource(TimeSpan target, IPlaybackSource playbackSource) { }
         public void PausePlaybackSource(IPlaybackSource playbackSource) => PauseCount++;
         public void PlayPlaybackSource(IPlaybackSource playbackSource) { }
@@ -451,6 +507,9 @@ public sealed class TrackTransitionTests
         public void SetPrimaryPlaybackSource(IPlaybackSource playbackSource) { }
         public void SetOutputVolume(double volume) { }
         public void SetPlaybackSourceOutputVolume(double volume, IPlaybackSource playbackSource) { }
+        public double GetPlaybackSourceOutputVolume(IPlaybackSource playbackSource) => 1d;
+        public Task<bool> RampPlaybackSourceVolumeAsync(IPlaybackSource playbackSource, double target, TimeSpan duration, FadeCurve curve = FadeCurve.EqualPower) =>
+            Task.FromResult(false);
         public void SetPlaybackSourceAudioGain(double audioGain, IPlaybackSource playbackSource) { }
         public Task ChangePlayerServiceImplementation(IAudioSettings settings) => Task.CompletedTask;
     }

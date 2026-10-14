@@ -271,6 +271,7 @@ public sealed class SongListQueueBuilderTests
         public Task SetTransitionAsync(string transitionId, CancellationToken ct = default) => Task.CompletedTask;
         public Task SetPlayModeAsync(string playModeId, CancellationToken ct = default) => Task.CompletedTask;
         public void SetAudioGainEnabled(bool enabled) { }
+        public void SetPlaybackSpeed(double speed) { }
 
         public Task ClearQueueAsync(CancellationToken ct = default)
         {
@@ -329,6 +330,7 @@ public sealed class SongListQueueBuilderTests
         public Task MoveNextAndPlayAsync(bool userInitiated) => Task.CompletedTask;
         public Task MovePreviousAndPlayAsync() => Task.CompletedTask;
         public Task InitializeAsync() => Task.CompletedTask;
+        public Task ApplyAudioDeviceAsync() => Task.CompletedTask;
 
         private static bool SameSong(SingleSongBase? left, SingleSongBase? right) =>
             ReferenceEquals(left, right)

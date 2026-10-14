@@ -38,7 +38,7 @@ public sealed class DownloadResponsivenessTests
 
     private static DownloadObject CreateDownload(IUIThreadDispatcher dispatcher) =>
         new(new TestSong(), new SilentNotification(), dispatcher,
-            new DownloadSettings(), new LyricSettings(), null!, null!, [], null!,
+            new DownloadSettings(), new ApiSettings(), new LyricSettings(), null!, null!, [], null!,
             new DiagnosticsStateService());
 
     [Test]
