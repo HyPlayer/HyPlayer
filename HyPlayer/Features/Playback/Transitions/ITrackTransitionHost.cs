@@ -16,4 +16,5 @@ public interface ITrackTransitionHost
     double GetVolume(IPlaybackSource source);
     Task<SingleSongBase?> PeekNextAsync(TrackTransitionContext context, CancellationToken ct);
     void SetTransitioning(bool transitioning);
+    Task<bool> TryRunExclusiveAsync(Func<Task> work);
 }

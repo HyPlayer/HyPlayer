@@ -559,6 +559,21 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         {
             _owner._state.IsTransitioning = transitioning;
         }
+
+        public async Task<bool> TryRunExclusiveAsync(Func<Task> work)
+        {
+            if (!await _owner._transitionGate.WaitAsync(0).ConfigureAwait(false))
+                return false;
+            try
+            {
+                await work().ConfigureAwait(false);
+                return true;
+            }
+            finally
+            {
+                _owner._transitionGate.Release();
+            }
+        }
     }
 
     #region IPlaybackControlService
@@ -1421,6 +1436,18 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         return preload ? _preloadTimeout : _loadTimeout;
     }
 
+    private static async Task ReleaseAbandonedLoadAsync(Task loading, CancellationTokenSource deadline)
+    {
+        try
+        {
+            await loading.ConfigureAwait(false);
+        }
+        finally
+        {
+            deadline.Dispose();
+        }
+    }
+
     private async Task<bool> TryLoadWithinAsync(
         Func<CancellationToken, Task> load,
         TimeSpan timeout,
@@ -1440,14 +1467,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 if (await Task.WhenAny(loading, Task.Delay(_abandonGrace)).ConfigureAwait(false) != loading)
                 {
                     abandoned = true;
-                    _ = loading.ContinueWith(
-                        static (task, state) =>
-                        {
-                            _ = task.Exception;
-                            ((CancellationTokenSource)state!).Dispose();
-                        },
-                        deadline,
-                        TaskScheduler.Default);
+                    _taskRunner.Forget(ReleaseAbandonedLoadAsync(loading, deadline), "finish abandoned track load");
                     if (timedOut)
                         return false;
 

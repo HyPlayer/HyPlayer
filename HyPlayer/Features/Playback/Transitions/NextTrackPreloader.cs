@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
@@ -162,8 +163,12 @@ internal sealed class NextTrackPreloader
             if (await loading.ConfigureAwait(false) is { } prepared)
                 await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
         }
-        catch
+        catch (OperationCanceledException)
         {
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Releasing an abandoned preload failed: {ex}");
         }
         finally
         {

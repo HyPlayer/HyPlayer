@@ -25,6 +25,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
     private static readonly TimeSpan _catchUpTime = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan _restoreTime = TimeSpan.FromMilliseconds(200);
     private static readonly TimeSpan _forcedHandBackTime = TimeSpan.FromMilliseconds(60);
+    private static readonly TimeSpan _abortSettleTime = TimeSpan.FromMilliseconds(300);
     private const double RetryLeadSeconds = 6;
     private const double AnalysisStartSeconds = 12;
     private const double AnalysisUrgentRemainingSeconds = 150;
@@ -655,7 +656,9 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
             };
             session.GraphRebuilt = engine.RequestAbort;
             timer = new Timer(
-                _ => _ = SuperviseAsync(session, null, CancellationToken.None),
+                _ => _taskRunner.Forget(
+                    session.Host.TryRunExclusiveAsync(() => SuperviseAsync(session, null, CancellationToken.None)),
+                    "supervise automix"),
                 null,
                 200,
                 200);
@@ -946,16 +949,30 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         var engine = session.Engine;
         session.Cancelled = true;
         engine.RequestAbort();
-        for (var i = 0; i < 20 && engine.Stage is not (AutoMixStage.Aborted or AutoMixStage.Done); i++)
-            await Task.Delay(15).ConfigureAwait(false);
+        await engine.Settled.WaitAsync(_abortSettleTime).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         await FinishAsync(session).ConfigureAwait(false);
     }
 
     private async Task FinishAsync(MixSession session)
     {
         if (Interlocked.CompareExchange(ref _session, null, session) != session)
+        {
+            await session.Finished.Task.ConfigureAwait(false);
             return;
+        }
 
+        try
+        {
+            await FinishCoreAsync(session).ConfigureAwait(false);
+        }
+        finally
+        {
+            session.Finished.TrySetResult();
+        }
+    }
+
+    private async Task FinishCoreAsync(MixSession session)
+    {
         var graph = Graph;
         var engine = session.Engine;
         AutoMixLog.WriteSummary(engine, session.Renderer.Stats);
@@ -1187,6 +1204,7 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         public required MixRegion RegionA { get; init; }
         public required MixRegion RegionB { get; init; }
         public required MixRenderer Renderer { get; init; }
+        public readonly TaskCompletionSource Finished = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Action? GraphRebuilt;
         public Timer? Timer;
         public PreparedPlaybackPromotion? Promotion;

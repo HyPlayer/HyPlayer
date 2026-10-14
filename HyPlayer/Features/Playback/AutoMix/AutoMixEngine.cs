@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using HyPlayer.UWP.Chopin.Dsp;
@@ -150,7 +151,20 @@ public sealed class AutoMixEngine : IMixPumpSource, IDisposable
     public double MapA { get; set; } = double.NaN;
     public double MapB { get; set; } = double.NaN;
 
-    public volatile AutoMixStage Stage = AutoMixStage.Waiting;
+    private readonly TaskCompletionSource _settled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private volatile AutoMixStage _stage = AutoMixStage.Waiting;
+
+    public AutoMixStage Stage
+    {
+        get => _stage;
+        private set
+        {
+            _stage = value;
+            if (value is AutoMixStage.Done or AutoMixStage.Aborted) _settled.TrySetResult();
+        }
+    }
+
+    public Task Settled => _settled.Task;
     public volatile bool MidpointReached;
     public volatile bool OutgoingFinished;
     public volatile bool BStarted;

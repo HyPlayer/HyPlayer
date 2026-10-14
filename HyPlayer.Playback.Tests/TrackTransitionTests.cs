@@ -360,6 +360,12 @@ public sealed class TrackTransitionTests
 
         public void SetTransitioning(bool transitioning) => IsTransitioning = transitioning;
 
+        public async Task<bool> TryRunExclusiveAsync(Func<Task> work)
+        {
+            await work();
+            return true;
+        }
+
         public async Task CompleteRampsAsync()
         {
             foreach (var ramp in Ramps.Where(ramp => !ramp.Completion.Task.IsCompleted))
