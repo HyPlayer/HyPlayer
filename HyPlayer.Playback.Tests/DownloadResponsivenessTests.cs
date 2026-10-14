@@ -82,6 +82,7 @@ public sealed class DownloadResponsivenessTests
     private sealed class SilentNotification : INotificationService
     {
         public void ShowMessage(string title, string? message = null) { }
+        public void ShowAction(string title, string? message, string actionText, Action action) { }
     }
 
     private sealed class BlockingDispatcher : IUIThreadDispatcher, IDisposable

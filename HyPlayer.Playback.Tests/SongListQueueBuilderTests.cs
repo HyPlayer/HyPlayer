@@ -354,6 +354,7 @@ public sealed class SongListQueueBuilderTests
     {
         public List<(string Title, string? Message)> Messages { get; } = [];
         public void ShowMessage(string title, string? message = null) => Messages.Add((title, message));
+        public void ShowAction(string title, string? message, string actionText, Action action) => Messages.Add((title, message));
     }
 
     private sealed class FakePlayCore : PlayCoreBase

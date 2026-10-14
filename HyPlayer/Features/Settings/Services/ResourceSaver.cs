@@ -201,8 +201,6 @@ public static class ResourceSaver
             lock (LifecycleSync)
             {
                 if (ReferenceEquals(_lifetime, lifetime)) _lifetime = null;
-                _networkPrompted = false;
-                _powerPrompted = false;
             }
             lock (SlowLock) Requests.Clear();
         }
@@ -268,10 +266,22 @@ public static class ResourceSaver
         finally { Volatile.Write(ref _networkQueued, 0); }
     }
 
-    private static async Task PromptNetworkAsync()
+    private static Task PromptNetworkAsync()
     {
-        if (_networkActive || _networkPrompted) return;
+        if (_networkActive || _networkPrompted) return Task.CompletedTask;
         _networkPrompted = true;
+        if (BuildNetworkOptions().Count == 0) return Task.CompletedTask;
+        Ioc.Default.GetRequiredService<INotificationService>().ShowAction(
+            "网络状况较差",
+            "加载可能较为卡顿，可以临时调整部分设置",
+            "调整",
+            () => Runner.Forget(RunOnUiAsync(ShowNetworkDialogAsync), "weak network dialog"));
+        return Task.CompletedTask;
+    }
+
+    private static async Task ShowNetworkDialogAsync()
+    {
+        if (_networkActive) return;
         var result = await ShowDialogAsync(
             "网络状况较差",
             "检测到当前网络较慢，加载可能较为卡顿。可以临时做以下调整，网络恢复后会自动还原：",
@@ -333,7 +343,6 @@ public static class ResourceSaver
                 return;
             }
 
-            _powerPrompted = false;
             if (!_powerActive) return;
             _powerActive = false;
             if (Restore(SaverKind.Power))
@@ -356,13 +365,27 @@ public static class ResourceSaver
         }
     }
 
-    private static async Task PromptPowerAsync()
+    private static Task PromptPowerAsync()
     {
         _powerPrompted = true;
-        if (!Playback.PromptPowerSaving) return;
+        if (!Playback.PromptPowerSaving || BuildPowerOptions().Count == 0) return Task.CompletedTask;
+        Ioc.Default.GetRequiredService<INotificationService>().ShowAction(
+            "节能模式",
+            PowerReason() + "，可以临时关闭部分耗电功能",
+            "调整",
+            () => Runner.Forget(RunOnUiAsync(ShowPowerDialogAsync), "power saver dialog"));
+        return Task.CompletedTask;
+    }
+
+    private static string PowerReason() =>
+        PowerManager.EnergySaverStatus == EnergySaverStatus.On ? "Windows 已开启节能模式" : "设备正在使用电池供电";
+
+    private static async Task ShowPowerDialogAsync()
+    {
+        if (_powerActive || !IsPowerSaving()) return;
         var options = BuildPowerOptions();
         if (options.Count == 0) return;
-        var reason = PowerManager.EnergySaverStatus == EnergySaverStatus.On ? "Windows 已开启节能模式" : "设备正在使用电池供电";
+        var reason = PowerReason();
         var result = await ShowDialogAsync(
             "节能模式",
             $"{reason}。可以临时关闭以下较为耗电的功能，插入电源或关闭节能后会自动还原：",
@@ -440,7 +463,6 @@ public static class ResourceSaver
                     if (good < 3) continue;
                     var restored = await RunOnUiAsync(() =>
                     {
-                        _networkPrompted = false;
                         lock (SlowLock) Requests.Clear();
                         if (!_networkActive) return Task.CompletedTask;
                         _networkActive = false;

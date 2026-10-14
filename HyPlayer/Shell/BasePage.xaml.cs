@@ -172,6 +172,11 @@ public sealed partial class BasePage : Page
         _ = _loginService.TryLoadSavedLoginAsync();
     }
 
+    private void TheTeachingTip_OnActionButtonClick(TeachingTip sender, object args)
+    {
+        _teachingTip.InvokeAction();
+    }
+
     private void TheTeachingTip_OnCloseButtonClick(TeachingTip sender, object args)
     {
         Ioc.Default.GetRequiredService<ITeachingTipService>().Clear();
