@@ -27,7 +27,6 @@ namespace HyPlayer.UI.Effects.LikeApple
         private const float LandscapeTextureScale = 0.8f;
         private readonly Stopwatch _animationClock = new();
         private readonly CanvasDevice _canvasDevice;
-        private readonly CanvasDeviceLock _deviceLock;
         private readonly float _renderScale;
         private readonly float _blurScale;
         private readonly float _bassPulseScale;
@@ -76,7 +75,6 @@ namespace HyPlayer.UI.Effects.LikeApple
             ArgumentNullException.ThrowIfNull(fftProcessor);
             ArgumentNullException.ThrowIfNull(shaderBytecode);
             _canvasDevice = canvasDevice;
-            _deviceLock = new CanvasDeviceLock(canvasDevice);
             _spectrumAnalysis = new LikeAppleSpectrumAnalysis(fftProcessor);
             PresetIndex = LikeAppleMesh.SelectPreset();
             LandscapePresetIndex = LikeAppleMesh.SelectLandscapePreset();
@@ -231,8 +229,7 @@ namespace HyPlayer.UI.Effects.LikeApple
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pixelWidth);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pixelHeight);
 
-            CanvasLock? held = _deviceLock.Enter();
-            try
+            using (_canvasDevice.Lock())
             {
                 ObjectDisposedException.ThrowIf(_disposed, this);
                 if (_currentArtwork is null || !_presentationVisible)
@@ -252,10 +249,6 @@ namespace HyPlayer.UI.Effects.LikeApple
                 }
 
                 return _outputTarget;
-            }
-            finally
-            {
-                _deviceLock.Leave(held);
             }
         }
 

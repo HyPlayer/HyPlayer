@@ -216,7 +216,7 @@ public abstract class RenderingLyricLine : IDisposable
                     }
                     finally
                     {
-                        NativeClosable.Close(lineSession);
+                        lineSession?.Dispose();
                     }
 
                     content = recorded;
@@ -270,7 +270,7 @@ public abstract class RenderingLyricLine : IDisposable
                 }
                 finally
                 {
-                    NativeClosable.Close(layer);
+                    layer?.Dispose();
                 }
             }
             if (settings.HoverBackground && ReactionState == ReactionState.Enter && !Hidden)
@@ -293,7 +293,7 @@ public abstract class RenderingLyricLine : IDisposable
             if (_glow is not null) _glow.Source = null;
             if (_blur is not null) _blur.Source = null;
             if (_perspective is not null) _perspective.Source = null;
-            NativeClosable.Close(recorded);
+            recorded?.Dispose();
         }
     }
 
@@ -305,7 +305,7 @@ public abstract class RenderingLyricLine : IDisposable
         if (context.IsSeek) ReleaseBlurLevels();
         if (_blurFading && (tick - _blurFadeStartTick >= BlurFadeTicks || tick < _blurFadeStartTick))
         {
-            NativeClosable.Close(_blurCache);
+            _blurCache?.Dispose();
             _blurCache = _blurCacheNext;
             _blurCacheAmount = _blurCacheNextAmount;
             _blurCacheNext = null;
@@ -388,12 +388,12 @@ public abstract class RenderingLyricLine : IDisposable
             }
             finally
             {
-                NativeClosable.Close(targetSession);
+                targetSession?.Dispose();
             }
         }
         catch
         {
-            NativeClosable.Close(target);
+            target?.Dispose();
             throw;
         }
         finally
@@ -431,17 +431,17 @@ public abstract class RenderingLyricLine : IDisposable
 
     private void ReleaseBlurLevels()
     {
-        NativeClosable.Close(_blurCache);
+        _blurCache?.Dispose();
         _blurCache = null;
-        NativeClosable.Close(_blurCacheNext);
+        _blurCacheNext?.Dispose();
         _blurCacheNext = null;
         _blurLevelValid = false;
         _blurFading = false;
-        NativeClosable.Close(_blurCrossFade);
+        _blurCrossFade?.Dispose();
         _blurCrossFade = null;
-        NativeClosable.Close(_blurFadeFrom);
+        _blurFadeFrom?.Dispose();
         _blurFadeFrom = null;
-        NativeClosable.Close(_blurFadeTo);
+        _blurFadeTo?.Dispose();
         _blurFadeTo = null;
     }
 
@@ -451,9 +451,9 @@ public abstract class RenderingLyricLine : IDisposable
         _opacityMotion = default;
         _scaleMotion = default;
         _blurMotion = default;
-        NativeClosable.Close(_blur); _blur = null;
-        NativeClosable.Close(_glow); _glow = null;
-        NativeClosable.Close(_perspective); _perspective = null;
+        _blur?.Dispose(); _blur = null;
+        _glow?.Dispose(); _glow = null;
+        _perspective?.Dispose(); _perspective = null;
         _opacityTransition = default;
         _scaleTransition = default;
         _blurTransition = default;

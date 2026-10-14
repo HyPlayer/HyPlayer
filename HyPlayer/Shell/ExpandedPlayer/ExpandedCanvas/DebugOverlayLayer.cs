@@ -193,7 +193,7 @@ public sealed partial class DebugOverlayLayer : IExpandedCanvasLayer, IDisposabl
 
     private void ReleaseTextLayout()
     {
-        NativeClosable.Close(_textLayout);
+        _textLayout?.Dispose();
         _textLayout = null;
     }
 

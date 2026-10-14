@@ -84,7 +84,7 @@ public partial class ProgressBarRenderingLyricLine : RenderingLyricLine
     {
         RenderingHeight = Height + 2 * VerticalPadding;
         RenderingWidth = Width + 2 * TextRenderingLyricLine.TextPadding;
-        NativeClosable.Close(_baseGradientBrush);
+        _baseGradientBrush?.Dispose();
 
         var baseColor = context.PreferTypography.IdleColor!.Value;
         var canvasGradientStop = new CanvasGradientStop[2];
@@ -115,7 +115,7 @@ public partial class ProgressBarRenderingLyricLine : RenderingLyricLine
 
     public override void Dispose()
     {
-        NativeClosable.Close(_baseGradientBrush);
+        _baseGradientBrush?.Dispose();
         _baseGradientBrush = null;
         base.Dispose();
     }

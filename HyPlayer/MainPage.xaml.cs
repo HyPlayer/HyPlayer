@@ -73,6 +73,7 @@ public sealed partial class MainPage : Page
     private const int SurfaceFadeMilliseconds = 350;
     private ConnectedAnimationBatch? _collapseAnimations;
     private Storyboard? _expandedPlayerFadeStoryboard;
+    private TaskCompletionSource? _expandedPlayerFadeCompletion;
     private bool _expandedPlayerReclaimHeld;
     private int _surfaceTransitionVersion;
 
@@ -356,6 +357,7 @@ public sealed partial class MainPage : Page
         AddPlaybarAnimation(storyboard, ExpandedPlayer, "Opacity", 0, SurfaceFadeMilliseconds, EasingMode.EaseOut);
         storyboard.Completed += (_, _) => completion.TrySetResult();
         _expandedPlayerFadeStoryboard = storyboard;
+        _expandedPlayerFadeCompletion = completion;
         storyboard.Begin();
         return Task.WhenAny(completion.Task, Task.Delay(TimeSpan.FromSeconds(1)));
     }
@@ -373,6 +375,8 @@ public sealed partial class MainPage : Page
     {
         _expandedPlayerFadeStoryboard?.Stop();
         _expandedPlayerFadeStoryboard = null;
+        _expandedPlayerFadeCompletion?.TrySetResult();
+        _expandedPlayerFadeCompletion = null;
         ExpandedPlayer.Opacity = 1;
     }
 

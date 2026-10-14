@@ -57,7 +57,7 @@ public partial class ActionLyricLine : RenderingLyricLine
             }
             finally
             {
-                NativeClosable.Close(cacheSession);
+                cacheSession?.Dispose();
             }
 
             _lineCache = cache;
@@ -71,7 +71,7 @@ public partial class ActionLyricLine : RenderingLyricLine
     {
         if (rendering) return;
         ReleaseDrawingResources();
-        NativeClosable.Close(_lineCache);
+        _lineCache?.Dispose();
         _lineCache = null;
     }
 
@@ -92,7 +92,7 @@ public partial class ActionLyricLine : RenderingLyricLine
         _canvasWidth = context.ItemWidth;
         _canvasHeight = context.ViewHeight;
         ReleaseDrawingResources();
-        NativeClosable.Close(_lineCache);
+        _lineCache?.Dispose();
         _lineCache = null;
         _textFormat?.Dispose();
         _textLayout?.Dispose();
@@ -151,7 +151,7 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     public override void Dispose()
     {
-        NativeClosable.Close(_lineCache);
+        _lineCache?.Dispose();
         _lineCache = null;
         _textFormat?.Dispose();
         _textLayout?.Dispose();

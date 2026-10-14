@@ -547,7 +547,7 @@ public sealed partial class ExpandedPlayer : Page
         if (Dispatcher.HasThreadAccess)
             ResumeLyricCanvas();
         else
-            _ = Dispatcher.RunAsync(CoreDispatcherPriority.High, ResumeLyricCanvas);
+            RunOnUIThread(ResumeLyricCanvas);
     }
 
     private void ResumeLyricCanvas()
@@ -732,7 +732,7 @@ public sealed partial class ExpandedPlayer : Page
                 return;
             }
 
-            _ = HideLyricPanelAsync(version);
+            _taskRunner.Forget(HideLyricPanelAsync(version), "hide lyric panel");
             return;
         }
 

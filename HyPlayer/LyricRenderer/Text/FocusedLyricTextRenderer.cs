@@ -275,7 +275,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
             }
             finally
             {
-                NativeClosable.Close(glyphSession);
+                glyphSession?.Dispose();
             }
 
             glow = new ShadowEffect { Source = glyphs };
@@ -416,7 +416,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
         }
         finally
         {
-            NativeClosable.Close(layer);
+            layer?.Dispose();
         }
     }
 
@@ -434,15 +434,15 @@ public sealed class FocusedLyricTextRenderer : IDisposable
     /// <summary>Releases device brushes; the next draw creates them for the current layout.</summary>
     public void Dispose()
     {
-        NativeClosable.Close(_solid); _solid = null;
-        NativeClosable.Close(_highlight); _highlight = null;
-        NativeClosable.Close(_pending); _pending = null;
+        _solid?.Dispose(); _solid = null;
+        _highlight?.Dispose(); _highlight = null;
+        _pending?.Dispose(); _pending = null;
         if (_emphasisGlows is not null)
         {
             foreach (var glow in _emphasisGlows.Values)
             {
-                NativeClosable.Close(glow.Effect);
-                NativeClosable.Close(glow.Glyphs);
+                glow.Effect?.Dispose();
+                glow.Glyphs?.Dispose();
             }
             _emphasisGlows = null;
         }

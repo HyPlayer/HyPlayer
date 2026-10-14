@@ -122,7 +122,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         ReleaseDrawingResources();
         _focusTransition = default;
         _focusedTextRenderer.Dispose();
-        NativeClosable.Close(_idleLineCache);
+        _idleLineCache?.Dispose();
         _idleLineCache = null;
     }
 
@@ -166,7 +166,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         ReleaseDrawingResources();
         _focusTransition = default;
         _focusedTextRenderer.Dispose();
-        NativeClosable.Close(_idleLineCache);
+        _idleLineCache?.Dispose();
         _idleLineCache = null;
         _cachedAlignment = TypographySelector(t => t?.Alignment, context)!.Value;
         _cachedLyricFontSize = TypographySelector(t => t?.LyricFontSize, context)!.Value;
@@ -224,7 +224,7 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         }
         finally
         {
-            NativeClosable.Close(idleSession);
+            idleSession?.Dispose();
         }
 
         return cache;
@@ -248,14 +248,14 @@ public partial class TextRenderingLyricLine : RenderingLyricLine
         }
         finally
         {
-            NativeClosable.Close(clip);
+            clip?.Dispose();
         }
     }
 
     public override void Dispose()
     {
         _focusedTextRenderer.Dispose();
-        NativeClosable.Close(_idleLineCache);
+        _idleLineCache?.Dispose();
         _idleLineCache = null;
         _layout?.Dispose();
         _layout = null;
