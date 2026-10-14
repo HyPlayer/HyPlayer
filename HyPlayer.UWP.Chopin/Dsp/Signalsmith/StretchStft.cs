@@ -62,12 +62,13 @@ internal sealed class StretchStft
     }
     public void WriteInput(ReadOnlySpan<float> input, int start, int frames)
     {
+        var position = _inputPosition;
         for (var i = 0; i < frames; i++)
         {
-            var position = (_inputPosition + i) % _historyLength;
             for (var c = 0; c < Channels; c++) _input[c * _historyLength + position] = input[(start + i) * Channels + c];
+            if (++position == _historyLength) position = 0;
         }
-        _inputPosition = (_inputPosition + frames) % _historyLength;
+        _inputPosition = position;
     }
     public void Seek(ReadOnlySpan<float> input)
     {
@@ -75,24 +76,26 @@ internal sealed class StretchStft
         var length = Block + Hop;
         var start = Math.Max(0, inputFrames - length);
         var padding = length + start - inputFrames;
+        var position = _inputPosition;
         for (var i = 0; i < length; i++)
         {
-            var position = (_inputPosition + i) % _historyLength;
             for (var c = 0; c < Channels; c++)
                 _input[c * _historyLength + position] = i < padding ? 0 : input[(i - padding + start) * Channels + c];
+            if (++position == _historyLength) position = 0;
         }
-        _inputPosition = (_inputPosition + length) % _historyLength;
+        _inputPosition = position;
     }
     public void Analyse(int channel, Span<Complex32> spectrum, int past = 0)
     {
         Array.Clear(_time);
         var position = (_historyLength * 2 + _inputPosition - Block - past) % _historyLength;
+        var ti = (FftSize - _windowOffset) % FftSize;
         for (var i = 0; i < Block; i++)
         {
-            var ti = (i + FftSize - _windowOffset) % FftSize;
             var w = i < _windowOffset ? -_window[i] : _window[i];
             _time[ti] = _input[channel * _historyLength + position] * w;
             if (++position == _historyLength) position = 0;
+            if (++ti == FftSize) ti = 0;
         }
         _fft.Forward(_time, spectrum);
     }
@@ -100,12 +103,15 @@ internal sealed class StretchStft
     {
         if (channel == 0) AddWindowProduct();
         _fft.Inverse(spectrum, _time);
+        var ti = (FftSize - _windowOffset) % FftSize;
+        var position = _outputPosition;
         for (var i = 0; i < Block; i++)
         {
-            var ti = (i + FftSize - _windowOffset) % FftSize;
             var sample = _time[ti];
             var w = i < _windowOffset ? -_window[i] : _window[i];
-            _output[channel * Block + (_outputPosition + i) % Block] += sample * w;
+            _output[channel * Block + position] += sample * w;
+            if (++position == Block) position = 0;
+            if (++ti == FftSize) ti = 0;
         }
     }
     public float ReadOutput(int channel) => _output[channel * Block + _outputPosition] / _products[_outputPosition];
@@ -118,15 +124,21 @@ internal sealed class StretchStft
     public void AddOutput(ReadOnlySpan<float> interleaved)
     {
         var frames = Math.Min(Block, interleaved.Length / Channels);
+        var position = _outputPosition;
         for (var i = 0; i < frames; i++)
         {
-            var position = (_outputPosition + i) % Block;
             for (var c = 0; c < Channels; c++) _output[c * Block + position] += interleaved[i * Channels + c] * _products[position];
+            if (++position == Block) position = 0;
         }
     }
     private void AddWindowProduct()
     {
-        for (var i = 0; i < Block; i++) _products[(_outputPosition + i) % Block] += _window[i] * _window[i] * FftSize;
+        var position = _outputPosition;
+        for (var i = 0; i < Block; i++)
+        {
+            _products[position] += _window[i] * _window[i] * FftSize;
+            if (++position == Block) position = 0;
+        }
     }
     private static float[] CreateWindow(int size, int hop)
     {

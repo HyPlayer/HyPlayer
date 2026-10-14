@@ -21,6 +21,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
         private int _historyHead;
         private int _historyCount;
         private float[] _ring;
+        private int _ringHead;
         private long _ringStart;
         private int _ringCount;
         private long _end = long.MaxValue;
@@ -68,7 +69,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
             var frames = interleavedStereo.Length / 2;
             if (frames <= 0 || Ended) return;
             Reserve(frames);
-            interleavedStereo.Slice(0, frames * 2).CopyTo(_ring.AsSpan(_ringCount * 2));
+            interleavedStereo.Slice(0, frames * 2).CopyTo(_ring.AsSpan((_ringHead + _ringCount) * 2));
             _ringCount += frames;
         }
 
@@ -84,6 +85,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
             _path?.Dispose();
             _path = null;
             _ringStart = 0;
+            _ringHead = 0;
             _ringCount = 0;
             _end = long.MaxValue;
             _historyCount = 0;
@@ -215,20 +217,29 @@ namespace HyPlayer.UWP.Chopin.Dsp
             if (!Ended) return false;
             var missing = (int)(required - BufferedEnd);
             Reserve(missing);
-            _ring.AsSpan(_ringCount * 2, missing * 2).Clear();
+            _ring.AsSpan((_ringHead + _ringCount) * 2, missing * 2).Clear();
             _ringCount += missing;
             return true;
         }
 
         private ReadOnlySpan<float> Input(long from, int frames) =>
-            _ring.AsSpan((int)(from - _ringStart) * 2, frames * 2);
+            _ring.AsSpan((_ringHead + (int)(from - _ringStart)) * 2, frames * 2);
 
         private void Reserve(int frames)
         {
-            if ((_ringCount + frames) * 2 <= _ring.Length) return;
+            if ((_ringHead + _ringCount + frames) * 2 <= _ring.Length) return;
+            // Keep contiguous spans for DSP. Compact only when the tail is exhausted,
+            // not on every rendered block; this needs no wraparound scratch storage.
+            if ((_ringCount + frames) * 2 <= _ring.Length)
+            {
+                _ring.AsSpan(_ringHead * 2, _ringCount * 2).CopyTo(_ring);
+                _ringHead = 0;
+                return;
+            }
             var grown = new float[Math.Max(_ring.Length * 2, (_ringCount + frames) * 2)];
-            _ring.AsSpan(0, _ringCount * 2).CopyTo(grown);
+            _ring.AsSpan(_ringHead * 2, _ringCount * 2).CopyTo(grown);
             _ring = grown;
+            _ringHead = 0;
         }
 
         private void Trim()
@@ -237,7 +248,7 @@ namespace HyPlayer.UWP.Chopin.Dsp
             var keep = (long)Math.Floor(Math.Min(_path.Audible, _path.Consumed)) - _block;
             var drop = (int)Math.Min(keep - _ringStart, _ringCount);
             if (drop <= 0) return;
-            _ring.AsSpan(drop * 2, (_ringCount - drop) * 2).CopyTo(_ring);
+            _ringHead += drop;
             _ringCount -= drop;
             _ringStart += drop;
         }

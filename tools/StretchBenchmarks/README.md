@@ -13,6 +13,7 @@ dotnet publish tools/StretchBenchmarks/StretchBenchmarks.csproj -c Release -r wi
 <artifact-directory>/StretchBenchmarks.exe --native <reference-hyp_stretch.dll>
 <artifact-directory>/StretchBenchmarks.exe --compare --native <reference-hyp_stretch.dll>
 <artifact-directory>/StretchBenchmarks.exe --memory
+<artifact-directory>/StretchBenchmarks.exe --stream
 ```
 
 The reference DLL must come from the original 43dfc936 version. Keep it outside the
@@ -44,3 +45,11 @@ uses full-collection live-byte measurements with both wrappers alive, then check
 disposed-wrapper retention and 32 create/dispose cycles. Report the bounded shared
 table cache separately from per-instance working memory. This is managed allocation/
 live-object evidence, not an RSS or native-heap measurement or application cold-start test.
+
+Stream mode measures the full SpeedProcessor path (PCM append/retention, stretching or
+resampling, gain and limiter) at 48/192 kHz with 250 ms of queued input. It covers unity,
+1.25x/0.75x pitch preservation and 2x resampling, using 128 warmup blocks followed by
+three rounds of 300 blocks. The CSV records mean/p99/max, zero-allocation checks and an
+output checksum. Run both binaries in reverse order again to expose host drift. Playback
+tests separately compare every sample between fully buffered and incremental input across
+compaction, growth, path changes, end padding and reset. Buffer capacity is unchanged.

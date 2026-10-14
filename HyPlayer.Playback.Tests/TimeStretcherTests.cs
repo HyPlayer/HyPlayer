@@ -6,6 +6,37 @@ namespace HyPlayer.Playback.Tests;
 public sealed class TimeStretcherTests
 {
     [Test]
+    [Arguments(257, 65)]
+    [Arguments(511, 137)]
+    [Arguments(4096, 1024)]
+    public void CustomWindows_ShouldReconstructAcrossRepeatedRingWraps(int block, int hop)
+    {
+        const int rate = 48000, frames = 24000;
+        var source = Tone(rate, frames + block, 440);
+        float[] RenderChunks(int quantum)
+        {
+            using var stretch = new TimeStretcher(2, rate, (block + 0.25) / rate, (hop + 0.25) / rate);
+            var seek = stretch.OutputSeekLength(1);
+            stretch.OutputSeek(source.AsSpan(0, seek * 2));
+            var result = new float[frames * 2];
+            for (var offset = 0; offset < frames; offset += quantum)
+            {
+                var count = Math.Min(quantum, frames - offset);
+                stretch.Process(source.AsSpan((seek + offset) * 2, count * 2), result.AsSpan(offset * 2, count * 2));
+            }
+            return result;
+        }
+        var small = RenderChunks(37);
+        var large = RenderChunks(997);
+        for (var i = 0; i < small.Length; i++)
+        {
+            Ensure(float.IsFinite(small[i]) && Math.Abs(small[i] - large[i]) < 0.0001f, "Ring wrap/chunk boundary changed output.");
+            if (i >= block * 4)
+                Ensure(Math.Abs(small[i] - source[i]) < 0.0001f, "Custom window failed unity reconstruction.");
+        }
+    }
+
+    [Test]
     [Arguments(44100)]
     [Arguments(48000)]
     [Arguments(96000)]
@@ -135,11 +166,14 @@ public sealed class TimeStretcherTests
     }
 
     [Test]
+    [NotInParallel]
     public void LatencyQuery_ShouldNotCreateAndDiscardAFullProcessor()
     {
         const int rate = 192000;
-        // Warm only the immutable tables; the old latency probe still allocated a full worker here.
+        // Warm both tables and the query entry point, then measure a fresh processor's
+        // first query. Serial execution prevents other tests evicting the warmed plan.
         using (var warm = new TimeStretcher(2, rate, 0.07, 0.0175)) { }
+        using (var warmQuery = new SpeedProcessor(rate, 1920, 1.25)) warmQuery.RequiredInput(1920);
         using var processor = new SpeedProcessor(rate, 1920, 1.25);
         var before = GC.GetAllocatedBytesForCurrentThread();
         var required = processor.RequiredInput(1920);
@@ -149,8 +183,50 @@ public sealed class TimeStretcherTests
     }
 
     [Test]
+    public void StreamingBuffer_ShouldMatchPrebufferedAcrossCompactionGrowthAndEnd()
+    {
+        const int rate = 48000, block = 480;
+        var input = Tone(rate, rate * 8, 440);
+        using var expected = new SpeedProcessor(rate, block);
+        using var streamed = new SpeedProcessor(rate, block);
+        expected.Append(input);
+        expected.MarkEnd(input.Length / 2);
+        var a = new float[block * 2];
+        var b = new float[block * 2];
+        for (var pass = 0; pass < 2; pass++)
+        {
+            if (pass != 0)
+            {
+                expected.Reset(); streamed.Reset();
+                expected.Append(input); expected.MarkEnd(input.Length / 2);
+            }
+            var appended = 0;
+            for (var batch = 0; batch < 850; batch++)
+            {
+                // Exercise all paths and a growth after the head has advanced.
+                var speed = batch < 160 ? 1 : batch < 300 ? 1.25 : batch < 430 ? 0.75 : batch < 560 ? 2 : 1;
+                var preserve = batch < 430 || batch >= 560;
+                expected.SetSpeed(speed, preserve); streamed.SetSpeed(speed, preserve);
+                var lead = batch == 360 ? rate * 2 : rate / 4;
+                var wanted = (int)Math.Min(input.Length / 2, streamed.RequiredInput(block) + lead);
+                if (wanted > appended)
+                {
+                    streamed.Append(input.AsSpan(appended * 2, (wanted - appended) * 2));
+                    appended = wanted;
+                }
+                if (appended == input.Length / 2) streamed.MarkEnd(appended);
+                Ensure(expected.Render(a) && streamed.Render(b), "Buffered render failed.");
+                for (var i = 0; i < a.Length; i++)
+                    Ensure(a[i] == b[i], "Streaming/compaction changed PCM.");
+                Ensure(expected.SourceAt(expected.OutputFrames) == streamed.SourceAt(streamed.OutputFrames), "Source timing changed.");
+                Ensure(expected.Drained(expected.OutputFrames) == streamed.Drained(streamed.OutputFrames), "Drain timing changed.");
+            }
+        }
+    }
+
+    [Test]
     [NotInParallel]
-    [Arguments(false, 2_000_000L)]
+    [Arguments(false, 1_800_000L)]
     [Arguments(true, 1_200_000L)]
     public void WarmHighRateInstances_ShouldStayWithinWorkingMemoryBudget(bool compact, long budget)
     {

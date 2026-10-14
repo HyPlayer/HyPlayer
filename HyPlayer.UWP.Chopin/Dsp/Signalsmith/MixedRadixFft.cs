@@ -11,7 +11,7 @@ internal sealed class MixedRadixFft
 {
     private readonly int _inner, _outer;
     private readonly int[] _permutation;
-    private readonly Complex32[] _roots, _scratch;
+    private readonly Complex32[] _roots;
     private readonly float[][] _stageRoots;
 
     internal sealed class Plan
@@ -54,7 +54,6 @@ internal sealed class MixedRadixFft
     {
         _inner = plan.Inner; _outer = plan.Outer;
         _permutation = plan.Permutation; _roots = plan.Roots; _stageRoots = plan.StageRoots;
-        _scratch = _outer == 1 ? Array.Empty<Complex32>() : new Complex32[plan.Size];
     }
 
     // DynamicSTFT uses RealFFT.fastSizeAbove((block + 1)/2)*2.
@@ -69,13 +68,17 @@ internal sealed class MixedRadixFft
         return checked(multiple * pow2 * 4);
     }
 
-    public void Forward(Complex32[] input, Complex32[] output)
+    public void Forward(Complex32[] input, Complex32[] output, bool conjugateInput = false)
     {
         // Gather each strided power-of-two transform directly in bit-reversed order.
         for (var r = 0; r < _outer; r++)
         {
             var start = r * _inner;
-            for (var i = 0; i < _inner; i++) output[start + _permutation[i]] = input[r + i * _outer];
+            for (var i = 0; i < _inner; i++)
+            {
+                var value = input[r + i * _outer];
+                output[start + _permutation[i]] = conjugateInput ? value.Conjugate : value;
+            }
             if (_inner == 2)
             {
                 var a = output[start]; var b = output[start + 1];
@@ -102,7 +105,8 @@ internal sealed class MixedRadixFft
             }
         }
         if (_outer == 1) return;
-        // Factor the small DFT instead of repeating complex twiddles and modulo per output bin.
+        // Each k owns disjoint slots k + r * _inner. Read its inputs before writing
+        // back in place: no transform-sized scratch buffer or final copy is needed.
         for (var k = 0; k < _inner; k++)
         {
             var a = output[k];
@@ -114,9 +118,9 @@ internal sealed class MixedRadixFft
                 var difference = b - c;
                 var centre = a - sum * 0.5f;
                 var rotation = new Complex32(difference.Imaginary * 0.8660254f, -difference.Real * 0.8660254f);
-                _scratch[k] = a + sum;
-                _scratch[_inner + k] = centre + rotation;
-                _scratch[2 * _inner + k] = centre - rotation;
+                output[k] = a + sum;
+                output[_inner + k] = centre + rotation;
+                output[2 * _inner + k] = centre - rotation;
             }
             else
             {
@@ -130,12 +134,11 @@ internal sealed class MixedRadixFft
                 var twist2 = diff1 * 0.587785252f - diff2 * 0.951056516f;
                 var rotation1 = new Complex32(twist1.Imaginary, -twist1.Real);
                 var rotation2 = new Complex32(twist2.Imaginary, -twist2.Real);
-                _scratch[k] = a + sum1 + sum2;
-                _scratch[_inner + k] = centre1 + rotation1; _scratch[4 * _inner + k] = centre1 - rotation1;
-                _scratch[2 * _inner + k] = centre2 + rotation2; _scratch[3 * _inner + k] = centre2 - rotation2;
+                output[k] = a + sum1 + sum2;
+                output[_inner + k] = centre1 + rotation1; output[4 * _inner + k] = centre1 - rotation1;
+                output[2 * _inner + k] = centre2 + rotation2; output[3 * _inner + k] = centre2 - rotation2;
             }
         }
-        _scratch.CopyTo(output, 0);
     }
 
     private static void Butterfly(Span<float> values, float[] roots, int start, int halfFloats)
@@ -173,11 +176,10 @@ internal sealed class MixedRadixFft
 
     public void Inverse(Complex32[] input, Complex32[] output)
     {
-        for (var i = 0; i < input.Length; i++) input[i] = input[i].Conjugate;
-        Forward(input, output);
+        // Conjugate while gathering: preserve the caller's input without two extra walks.
+        Forward(input, output, true);
         for (var i = 0; i < input.Length; i++)
         {
-            input[i] = input[i].Conjugate;
             output[i] = output[i].Conjugate;
         }
     }

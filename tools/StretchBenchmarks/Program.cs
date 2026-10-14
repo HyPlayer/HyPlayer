@@ -12,6 +12,7 @@ internal static class Program
         var nativePath = nativeIndex >= 0 ? args[nativeIndex + 1] : null;
         Console.WriteLine($"runtime={RuntimeInformation.FrameworkDescription} arch={RuntimeInformation.ProcessArchitecture} os={RuntimeInformation.OSDescription} dynamicCode={RuntimeFeature.IsDynamicCodeSupported}");
         if (args.Contains("--memory")) { MeasureMemory(); return 0; }
+        if (args.Contains("--stream")) { StreamBenchmark.Run(); return 0; }
         if (args.Contains("--profile"))
         {
             using var worker = new Worker(192000, false, 2, 1.25, null);
