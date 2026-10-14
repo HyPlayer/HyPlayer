@@ -75,7 +75,7 @@ public static class MixScoring
     public const double GainLimit = 1;
     public const double BoostLimitedPenalty = 0.5;
 
-    public static readonly IReadOnlyList<MixTemplate> Templates =
+    public static readonly IReadOnlyList<MixTemplate> Templates = (MixTemplate[])
     [
         new("gapless", MixShape.Gapless, MixTechnique.Gapless, 0, [], false),
         new("beat mix", MixShape.BeatBlend, MixTechnique.BeatMix, 0, [32, 16, 8, 4, 3, 2, 1], true),

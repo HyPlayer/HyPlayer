@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Search;
 using HyPlayer.Application;
+using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.LocalMusic;
 using HyPlayer.Platform.Storage.Audio;
@@ -22,11 +23,12 @@ public static class DownloadedTrackIndex
     private static readonly ConcurrentDictionary<string, string> _entries = new();
     private static readonly SemaphoreSlim _gate = new(1, 1);
     private static Task? _loading;
-    private static int _scanScheduled;
+    private static readonly object LoadingSync = new();
+    private static readonly ScheduledBackgroundWork ScanWork = new();
 
     private static Task EnsureLoadedAsync()
     {
-        return _loading ??= LoadAsync();
+        lock (LoadingSync) return _loading ??= LoadAsync();
     }
 
     private static async Task LoadAsync()
@@ -93,31 +95,18 @@ public static class DownloadedTrackIndex
         {
         }
 
-        if (_entries.TryRemove(songId, out _)) _ = SaveAsync();
+        if (_entries.TryRemove(songId, out _)) await SaveAsync().ConfigureAwait(false);
         return null;
     }
 
-    public static void ScheduleScan(TimeSpan delay)
-    {
-        if (Interlocked.Exchange(ref _scanScheduled, 1) == 1) return;
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(delay).ConfigureAwait(false);
-                await ScanAsync().ConfigureAwait(false);
-            }
-            catch
-            {
-            }
-            finally
-            {
-                Volatile.Write(ref _scanScheduled, 0);
-            }
-        });
-    }
+    public static void ScheduleScan(TimeSpan delay) =>
+        ScanWork.Schedule(delay, ScanAsync, "scan downloaded tracks");
 
-    private static async Task ScanAsync()
+    public static Task StopAsync() => ScanWork.StopAsync();
+
+    public static void Resume() => ScanWork.Resume();
+
+    private static async Task ScanAsync(CancellationToken token)
     {
         await EnsureLoadedAsync().ConfigureAwait(false);
         var downloadDirectory = await AppDepository.Resolve<DownloadSettings>()
@@ -129,28 +118,34 @@ public static class DownloadedTrackIndex
         foreach (var path in new[] { downloadDirectory, searchDirectory }.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (string.IsNullOrEmpty(path)) continue;
-            IReadOnlyList<StorageFile> files;
             try
             {
-                var folder = await StorageFolder.GetFolderFromPathAsync(path);
+                var folder = await StorageFolder.GetFolderFromPathAsync(path).AsTask(token).ConfigureAwait(false);
                 var options = new QueryOptions(CommonFileQuery.DefaultQuery, _audioExtensions)
                 {
                     FolderDepth = FolderDepth.Deep
                 };
-                files = await folder.CreateFileQueryWithOptions(options).GetFilesAsync();
+                var query = folder.CreateFileQueryWithOptions(options);
+                for (uint start = 0; ; start += 128)
+                {
+                    var files = await query.GetFilesAsync(start, 128).AsTask(token).ConfigureAwait(false);
+                    foreach (var file in files)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        if (!known.Add(file.Path)) continue;
+                        // TagLib parses synchronously: retain one sequential CPU/thread boundary.
+                        var id = await Task.Run(() => ReadTrackIdAsync(file), token).ConfigureAwait(false);
+                        if (id is null) continue;
+                        _entries[id] = file.Path;
+                        changed = true;
+                    }
+                    if (files.Count < 128) break;
+                }
             }
-            catch
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+            catch (Exception exception)
             {
-                continue;
-            }
-
-            foreach (var file in files)
-            {
-                if (!known.Add(file.Path)) continue;
-                var id = await ReadTrackIdAsync(file).ConfigureAwait(false);
-                if (id is null) continue;
-                _entries[id] = file.Path;
-                changed = true;
+                System.Diagnostics.Debug.WriteLine($"Downloaded track scan skipped '{path}': {exception}");
             }
         }
 

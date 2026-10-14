@@ -934,7 +934,7 @@ DoubleAnimation verticalAnimation;
         request.Data = dataPackage;
     }
 
-    public async void RefreshPlayBarCover(SingleSongBase? providerItem)
+    public void RefreshPlayBarCover(SingleSongBase? providerItem)
     {
         if (ViewModel.CoverStream == null) return;
         _taskRunner.Forget(this.RunOnUIThreadAsync(async () =>

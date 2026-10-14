@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Windows.Storage;
 using HyPlayer.Platform.Storage;
+using HyPlayer.Features.Settings.Services;
 
 namespace HyPlayer.Domain.Settings;
 
@@ -41,10 +42,12 @@ public partial class DownloadSettings : SettingsBase
             : _defaultDownloadDirectory ?? ApplicationData.Current.LocalCacheFolder.Path;
         set
         {
+            FolderAccess.Forget(CustomDownloadDirectory);
             FolderAccess.Forget(value);
             if (!SetSettings(nameof(DownloadDirectory), value))
                 OnPropertyChanged();
             OnPropertyChanged(nameof(DownloadDirectoryIsCustom));
+            FolderAccessGuard.RefreshPath(value);
         }
     }
 
@@ -57,6 +60,12 @@ public partial class DownloadSettings : SettingsBase
         FolderAccess.Forget(CustomDownloadDirectory);
         if (!SetSettings<string?>(nameof(DownloadDirectory), null, nameof(DownloadDirectory)))
             OnPropertyChanged(nameof(DownloadDirectory));
+        OnPropertyChanged(nameof(DownloadDirectoryIsCustom));
+    }
+
+    internal void NotifyDirectoryAccessChanged()
+    {
+        OnPropertyChanged(nameof(DownloadDirectory));
         OnPropertyChanged(nameof(DownloadDirectoryIsCustom));
     }
 
@@ -91,7 +100,8 @@ public partial class DownloadSettings : SettingsBase
 
     public async Task<string> GetDownloadDirectoryAsync()
     {
-        if (CustomDownloadDirectory is { } custom && await FolderAccess.ProbeAsync(custom))
+        if (CustomDownloadDirectory is { } custom && await FolderAccess.ProbeAsync(custom) &&
+            FolderAccess.IsSamePath(custom, CustomDownloadDirectory))
             return custom;
 
         return await GetDefaultDownloadDirectoryAsync();

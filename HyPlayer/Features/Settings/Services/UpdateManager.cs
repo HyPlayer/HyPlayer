@@ -35,7 +35,7 @@ public static class UpdateManager
     {
         var storeContext = StoreContext.GetDefault();
         var packageUpdates = await storeContext.GetAppAndOptionalStorePackageUpdatesAsync();
-        var update = packageUpdates[0];
+        var update = packageUpdates.Count > 0 ? packageUpdates[0] : null;
         return new RemoteVersionResult
         {
             UpdateSource = UpdateSource.MicrosoftStore,
@@ -66,7 +66,7 @@ public static class UpdateManager
         versionsResponse.EnsureSuccessStatusCode();
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
-            JsonSerializer.Deserialize<GitHubReleaseResponse>(resp, JsonDefaults.Options);
+            JsonDefaults.Deserialize<GitHubReleaseResponse>(resp);
         var version = Version.TryParse(versionResp?.Tag, out var versionResult);
         return new RemoteVersionResult
         {
@@ -91,7 +91,7 @@ public static class UpdateManager
         versionsResponse.EnsureSuccessStatusCode();
         var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
-            JsonSerializer.Deserialize<LatestApplicationUpdate>(resp, JsonDefaults.Options);
+            JsonDefaults.Deserialize<LatestApplicationUpdate>(resp);
         return new RemoteVersionResult
         {
             UpdateSource = source,
@@ -114,10 +114,8 @@ public static class UpdateManager
         };
     }
 
-    public static Task PopupVersionCheck(bool isStartup = false)
+    public static async Task PopupVersionCheck(bool isStartup = false)
     {
-        return Task.Run((Func<Task?>)(async () =>
-        {
             RemoteVersionResult remoteResult;
             try
             {
@@ -149,7 +147,7 @@ public static class UpdateManager
             if (isStartup)
                 Ioc.Default.GetRequiredService<INotificationService>().ShowMessage(title, message);
             else
-                _ = Ioc.Default.GetRequiredService<IUIThreadDispatcher>().TryRunAsync(async () =>
+                await Ioc.Default.GetRequiredService<IUIThreadDispatcher>().TryRunAsync(async () =>
                 {
                     ContentDialog contentDialog = new()
                     {
@@ -157,13 +155,11 @@ public static class UpdateManager
                         Content = message,
                         PrimaryButtonText = "更新"
                     };
-                    contentDialog.PrimaryButtonClick += async (_, _) =>
-                        await Launcher.LaunchUriAsync(
-                            new Uri(remoteResult.DownloadLink));
                     contentDialog.CloseButtonText = "取消";
-                    await contentDialog.ShowAsync();
+                    if (await contentDialog.ShowAsync() == ContentDialogResult.Primary
+                        && Uri.TryCreate(remoteResult.DownloadLink, UriKind.Absolute, out var downloadUri))
+                        await Launcher.LaunchUriAsync(downloadUri);
                 });
-        }));
     }
 
     public static async Task GetUserCanaryChannelAvailability(string userEmail)
@@ -171,7 +167,7 @@ public static class UpdateManager
         var httpClient = Ioc.Default.GetRequiredService<HttpClient>();
         var notification = Ioc.Default.GetRequiredService<INotificationService>();
         var settings = Ioc.Default.GetRequiredService<UISettings>();
-        var userResp = await httpClient.GetAsync(new Uri($"https://hyplayer.kengwang.com.cn/user/email/{userEmail}"));
+        using var userResp = await httpClient.GetAsync(new Uri($"https://hyplayer.kengwang.com.cn/user/email/{userEmail}"));
         if (userResp.IsSuccessStatusCode)
         {
             notification.ShowMessage("Canary版本已解锁", "感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新");

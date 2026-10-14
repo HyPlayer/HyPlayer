@@ -47,28 +47,27 @@ public sealed class HistoryService : IHistoryService
         var list = new List<string>();
         var values = ApplicationData.Current.LocalSettings.Values;
         if (values["songHistory"] == null)
-            values["songHistory"] = JsonSerializer.Serialize(list, JsonDefaults.Options);
+            values["songHistory"] = JsonDefaults.Serialize(list);
         if (values["songHistory"].ToString().StartsWith("[{"))
-            values["songHistory"] = JsonSerializer.Serialize(list, JsonDefaults.Options);
+            values["songHistory"] = JsonDefaults.Serialize(list);
         if (values["searchHistory"] == null)
-            values["searchHistory"] = JsonSerializer.Serialize(list, JsonDefaults.Options);
+            values["searchHistory"] = JsonDefaults.Serialize(list);
         if (values["songlistHistory"] == null)
-            values["songlistHistory"] = JsonSerializer.Serialize(list, JsonDefaults.Options);
+            values["songlistHistory"] = JsonDefaults.Serialize(list);
         if (values[CurPlayingListHistoryKey] == null)
             values[CurPlayingListHistoryKey] =
-                JsonSerializer.Serialize(new CurPlayingListHistoryState(list, -1), JsonDefaults.Options);
+                JsonDefaults.Serialize(new CurPlayingListHistoryState(list, -1));
         if (values[CurPlayingListHistoryKey].ToString().StartsWith("[{"))
             values[CurPlayingListHistoryKey] =
-                JsonSerializer.Serialize(new CurPlayingListHistoryState(list, -1), JsonDefaults.Options);
+                JsonDefaults.Serialize(new CurPlayingListHistoryState(list, -1));
         if (values["songlistHistory"].ToString().StartsWith("[{"))
-            values["songlistHistory"] = JsonSerializer.Serialize(list, JsonDefaults.Options);
+            values["songlistHistory"] = JsonDefaults.Serialize(list);
     }
 
     public void AddNCSongHistory(string songId)
     {
-        var list = JsonSerializer.Deserialize<List<string>>(
-            ApplicationData.Current.LocalSettings.Values["songHistory"]?.ToString() ?? "[]",
-            JsonDefaults.Options) ?? [];
+        var list = JsonDefaults.Deserialize<List<string>>(
+            ApplicationData.Current.LocalSettings.Values["songHistory"]?.ToString() ?? "[]") ?? [];
 
         var actualId = NormalizeStoredSongId(songId, _knownTypeIds.SingleSongTypeId);
         list.RemoveAll(item => string.Equals(
@@ -77,7 +76,7 @@ public sealed class HistoryService : IHistoryService
         if (list.Count >= SongHistoryLimit)
             list.RemoveRange(SongHistoryLimit, list.Count - SongHistoryLimit);
         ApplicationData.Current.LocalSettings.Values["songHistory"] =
-            JsonSerializer.Serialize(list, JsonDefaults.Options);
+            JsonDefaults.Serialize(list);
     }
 
     public async Task RememberSongAsync(string songId, SingleSongBase song)
@@ -100,7 +99,7 @@ public sealed class HistoryService : IHistoryService
             var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(
                 SongHistoryInfoFileName,
                 CreationCollisionOption.OpenIfExists);
-            await FileIO.WriteTextAsync(file, JsonSerializer.Serialize(entries, JsonDefaults.Options));
+            await FileIO.WriteTextAsync(file, JsonDefaults.Serialize(entries));
         }
         catch
         {
@@ -199,7 +198,7 @@ public sealed class HistoryService : IHistoryService
             var text = await FileIO.ReadTextAsync(file);
             return string.IsNullOrWhiteSpace(text)
                 ? []
-                : JsonSerializer.Deserialize<List<SongHistoryEntry>>(text, JsonDefaults.Options) ?? [];
+                : JsonDefaults.Deserialize<List<SongHistoryEntry>>(text) ?? [];
         }
         catch
         {
@@ -209,27 +208,25 @@ public sealed class HistoryService : IHistoryService
 
     public void AddSearchHistory(string text)
     {
-        var list = JsonSerializer.Deserialize<List<string>>(
-            ApplicationData.Current.LocalSettings.Values["searchHistory"]?.ToString() ?? "[]",
-            JsonDefaults.Options) ?? [];
+        var list = JsonDefaults.Deserialize<List<string>>(
+            ApplicationData.Current.LocalSettings.Values["searchHistory"]?.ToString() ?? "[]") ?? [];
         list.RemoveAll(item => item == text);
         list.Insert(0, text);
         ApplicationData.Current.LocalSettings.Values["searchHistory"] =
-            JsonSerializer.Serialize(list, JsonDefaults.Options);
+            JsonDefaults.Serialize(list);
     }
 
     public void AddSonglistHistory(string playlistId)
     {
-        var list = JsonSerializer.Deserialize<List<string>>(
-            ApplicationData.Current.LocalSettings.Values["songlistHistory"]?.ToString() ?? "[]",
-            JsonDefaults.Options) ?? [];
+        var list = JsonDefaults.Deserialize<List<string>>(
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"]?.ToString() ?? "[]") ?? [];
 
         list.Remove(playlistId);
         list.Insert(0, playlistId);
         if (list.Count >= 100)
             list.RemoveRange(100, list.Count - 100);
         ApplicationData.Current.LocalSettings.Values["songlistHistory"] =
-            JsonSerializer.Serialize(list, JsonDefaults.Options);
+            JsonDefaults.Serialize(list);
     }
 
     public async Task SetCurrentPlayingListHistoryAsync(List<string> songIds, int currentIndex)
@@ -244,25 +241,25 @@ public sealed class HistoryService : IHistoryService
                 var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(
                     SongPlayHistoryFileName,
                     CreationCollisionOption.OpenIfExists);
-                await FileIO.WriteTextAsync(file, JsonSerializer.Serialize(state, JsonDefaults.Options));
+                await FileIO.WriteTextAsync(file, JsonDefaults.Serialize(state));
             }
             catch
             {
             }
         else
             ApplicationData.Current.LocalSettings.Values[CurPlayingListHistoryKey] =
-                JsonSerializer.Serialize(state, JsonDefaults.Options);
+                JsonDefaults.Serialize(state);
     }
 
     public async Task ClearHistoryAsync()
     {
         var list = new List<string>();
         var values = ApplicationData.Current.LocalSettings.Values;
-        values["songlistHistory"] = JsonSerializer.Serialize(list, JsonDefaults.Options);
-        values["songHistory"] = JsonSerializer.Serialize(list, JsonDefaults.Options);
-        values["searchHistory"] = JsonSerializer.Serialize(list, JsonDefaults.Options);
+        values["songlistHistory"] = JsonDefaults.Serialize(list);
+        values["songHistory"] = JsonDefaults.Serialize(list);
+        values["searchHistory"] = JsonDefaults.Serialize(list);
         values[CurPlayingListHistoryKey] =
-            JsonSerializer.Serialize(new CurPlayingListHistoryState(list, -1), JsonDefaults.Options);
+            JsonDefaults.Serialize(new CurPlayingListHistoryState(list, -1));
         await (await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(
             SongPlayHistoryFileName,
             CreationCollisionOption.OpenIfExists)).DeleteAsync();
@@ -280,9 +277,8 @@ public sealed class HistoryService : IHistoryService
     {
         try
         {
-            var songIds = JsonSerializer.Deserialize<List<string>>(
-                ApplicationData.Current.LocalSettings.Values["songHistory"]?.ToString() ?? "[]",
-                JsonDefaults.Options) ?? [];
+            var songIds = JsonDefaults.Deserialize<List<string>>(
+                ApplicationData.Current.LocalSettings.Values["songHistory"]?.ToString() ?? "[]") ?? [];
             return RestoreUnnamedSongs(
                 songIds,
                 await LoadProviderSongsAsync(songIds),
@@ -299,9 +295,8 @@ public sealed class HistoryService : IHistoryService
 
     public List<string> GetSearchHistory()
     {
-        return JsonSerializer.Deserialize<List<string>>(
-            ApplicationData.Current.LocalSettings.Values["searchHistory"]?.ToString() ?? "[]",
-            JsonDefaults.Options) ?? [];
+        return JsonDefaults.Deserialize<List<string>>(
+            ApplicationData.Current.LocalSettings.Values["searchHistory"]?.ToString() ?? "[]") ?? [];
     }
 
     public async Task<List<SingleSongBase>> GetCurrentPlayingListHistoryAsync()
@@ -381,11 +376,11 @@ public sealed class HistoryService : IHistoryService
         {
             if (text.TrimStart().StartsWith("["))
             {
-                var oldList = JsonSerializer.Deserialize<List<string>>(text, JsonDefaults.Options) ?? [];
+                var oldList = JsonDefaults.Deserialize<List<string>>(text) ?? [];
                 return new CurPlayingListHistoryState(oldList, 0);
             }
 
-            var state = JsonSerializer.Deserialize<CurPlayingListHistoryState>(text, JsonDefaults.Options);
+            var state = JsonDefaults.Deserialize<CurPlayingListHistoryState>(text);
             return state ?? new CurPlayingListHistoryState([], -1);
         }
         catch

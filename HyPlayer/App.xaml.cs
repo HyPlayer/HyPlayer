@@ -53,6 +53,7 @@ namespace HyPlayer;
 public sealed partial class App : Windows.UI.Xaml.Application
 {
     private bool _playbackMemoryRestoreRequested;
+    private Task _maintenancePause = Task.CompletedTask;
 
     /// <summary>
     ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
@@ -63,6 +64,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
     public App()
     {
         Suspending += OnSuspending;
+        Resuming += OnResuming;
         UnhandledException += App_UnhandledException;
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
@@ -119,7 +121,8 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
     private static async Task InitializeThings()
     {
-        _ = Task.Run(() => HyPlayer.Features.Settings.Settings.SystemFonts.Value);
+        AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
+            Task.Run(() => HyPlayer.Features.Settings.Settings.SystemFonts.Value), "enumerate system fonts");
         try
         {
             await SimpleCacher.InitializeAsync();
@@ -356,8 +359,41 @@ public sealed partial class App : Windows.UI.Xaml.Application
     private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
-        await AppDepository.Resolve<IPlaybackMemoryService>().SaveNowAsync();
+        try
+        {
+        _maintenancePause = Task.WhenAll(
+            AppDepository.Resolve<IPlaybackMemoryService>().SaveNowAsync(),
+            AppDepository.Resolve<IMemoryGovernor>().PauseAsync(),
+            DownloadedTrackIndex.StopAsync(), StorageMaintenance.StopAsync(),
+            HyPlayer.Features.Playback.AutoMix.AutoMixLog.StopAsync(), ResourceSaver.StopAsync());
+        await _maintenancePause;
         AppDepository.Resolve<IGameBarWidgetService>().Widget?.Close();
-        deferral.Complete();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Application suspension cleanup failed: {ex}");
+        }
+        finally { deferral.Complete(); }
+    }
+
+    private async void OnResuming(object sender, object args)
+    {
+        try { await ResumeMaintenanceAsync(); }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Application maintenance resume failed: {ex}"); }
+    }
+
+    private async Task ResumeMaintenanceAsync()
+    {
+        // An interrupted suspension can still have native I/O unwinding. Do not
+        // replace its lifetime until all owners have finished their StopAsync.
+        try { await _maintenancePause; }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Previous maintenance stop failed: {ex}"); }
+        AppDepository.Resolve<IMemoryGovernor>().Resume();
+        DownloadedTrackIndex.Resume();
+        StorageMaintenance.Resume();
+        DownloadedTrackIndex.ScheduleScan(TimeSpan.FromSeconds(40));
+        StorageMaintenance.ScheduleTrim(TimeSpan.FromSeconds(30));
+        HyPlayer.Features.Playback.AutoMix.AutoMixLog.Resume();
+        ResourceSaver.Resume();
     }
 }

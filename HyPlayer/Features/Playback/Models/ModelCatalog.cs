@@ -62,7 +62,7 @@ public static class ModelCatalog
     public const string SKeyId = "s-key";
     public const string VocalId = "mdx-voc-ft";
 
-    public static IReadOnlyList<ModelDescriptor> All { get; } =
+    public static IReadOnlyList<ModelDescriptor> All { get; } = (ModelDescriptor[])
     [
         new ModelDescriptor
         {
@@ -77,7 +77,7 @@ public static class ModelCatalog
             OutputNames = ["beat", "downbeat"],
             FixedDimensions = new Dictionary<string, long> { ["windows"] = 1, ["frames"] = 1500 },
             DisableGpuGraphOptimization = true,
-            Files =
+            Files = (ModelFile[])
             [
                 new ModelFile
                 {
@@ -109,7 +109,7 @@ public static class ModelCatalog
             InputName = "audio",
             InputShape = [1, -1],
             OutputNames = ["scores"],
-            Files =
+            Files = (ModelFile[])
             [
                 new ModelFile
                 {
@@ -134,7 +134,7 @@ public static class ModelCatalog
             InputShape = [-1, 4, 3072, 256],
             OutputNames = ["output"],
             FixedDimensions = new Dictionary<string, long> { ["batch_size"] = 1 },
-            Files =
+            Files = (ModelFile[])
             [
                 new ModelFile
                 {

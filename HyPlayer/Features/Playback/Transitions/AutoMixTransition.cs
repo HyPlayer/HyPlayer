@@ -975,12 +975,13 @@ public sealed class AutoMixTransition : ITrackTransition, IDisposable
         }
 
         var renderer = session.Renderer;
-        _ = Task.Run(async () =>
+        _taskRunner.Forget(async () =>
         {
+            // Leave the renderer alive until graph callbacks already in flight have drained.
             await Task.Delay(100).ConfigureAwait(false);
-            graph.ReleaseMixRenderer(renderer);
-            engine.Dispose();
-        });
+            try { graph.ReleaseMixRenderer(renderer); }
+            finally { engine.Dispose(); }
+        }, "release completed automix renderer");
 
         if (session.Transitioning)
         {

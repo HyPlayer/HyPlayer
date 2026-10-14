@@ -203,7 +203,7 @@ public static class AutoMixPlanner
         {
             var gapless = new MixPlan { Technique = MixTechnique.Gapless, AExit = a.Duration, Overlap = 0, BEntry = 0, Reason = "album continuation" };
             var only = new MixCandidate(MixScoring.Template(MixShape.Gapless), "album", gapless, default);
-            return new MixDecision { Plan = gapless, Candidates = [only], Rejected = [], Chosen = 0, Previous = previous };
+            return new MixDecision { Plan = gapless, Candidates = (MixCandidate[])[only], Rejected = [], Chosen = 0, Previous = previous };
         }
 
         var fadeReason = Blends(scene);

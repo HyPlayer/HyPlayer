@@ -13,7 +13,6 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <PublishAot>true</PublishAot>
         <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
-        <NoWarn>IL2026;IL3050</NoWarn>
         <PublishProfile>win-$(Platform).pubxml</PublishProfile>
         <Platforms>ARM64;x64</Platforms>
         <Configurations>Debug;Release</Configurations>

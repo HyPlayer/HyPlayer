@@ -42,7 +42,12 @@ public sealed partial class HomePage : Page
     private void RefreshRequested(RefreshContainer sender, RefreshRequestedEventArgs args)
     {
         var def = args.GetDeferral();
-        ViewModel.GetDataAsync(true).ContinueWith(t => def.Complete()).SafeFireAndForget();
+        Ioc.Default.GetRequiredService<HyPlayer.Platform.Runtime.Background.IBackgroundTaskRunner>()
+            .Forget(async () =>
+            {
+                try { await ViewModel.GetDataAsync(true); }
+                finally { def.Complete(); }
+            }, "refresh home page");
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

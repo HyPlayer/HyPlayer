@@ -298,7 +298,8 @@ public sealed partial class Comments : Page
         _page++;
         PageSelect.Text = string.Empty;
         _commentLoaderTask = StartLoadComments(_sortType);
-        ScrollTop();
+        Ioc.Default.GetRequiredService<HyPlayer.Platform.Runtime.Background.IBackgroundTaskRunner>()
+            .Forget(ScrollTopAsync(), "scroll comments to top");
     }
 
     private void PrevPage_Click(object sender, RoutedEventArgs e)
@@ -306,7 +307,8 @@ public sealed partial class Comments : Page
         _page--;
         PageSelect.Text = string.Empty;
         _commentLoaderTask = StartLoadComments(_sortType);
-        ScrollTop();
+        Ioc.Default.GetRequiredService<HyPlayer.Platform.Runtime.Background.IBackgroundTaskRunner>()
+            .Forget(ScrollTopAsync(), "scroll comments to top");
     }
 
     private void SendComment_Click(object sender, RoutedEventArgs e)
@@ -336,10 +338,11 @@ public sealed partial class Comments : Page
 
         _page = page;
         _commentLoaderTask = StartLoadComments(_sortType);
-        ScrollTop();
+        Ioc.Default.GetRequiredService<HyPlayer.Platform.Runtime.Background.IBackgroundTaskRunner>()
+            .Forget(ScrollTopAsync(), "scroll comments to top");
     }
 
-    private async void ScrollTop()
+    private async Task ScrollTopAsync()
     {
         var delayedUiVersion = _delayedUiVersion;
         _suppressHotSwitchUntil = DateTime.UtcNow.AddSeconds(1.5);
@@ -360,7 +363,8 @@ public sealed partial class Comments : Page
 
     private void BackToTop_Click(object sender, RoutedEventArgs e)
     {
-        ScrollTop();
+        Ioc.Default.GetRequiredService<HyPlayer.Platform.Runtime.Background.IBackgroundTaskRunner>()
+            .Forget(ScrollTopAsync(), "scroll comments to top");
     }
 
     private void MainScroll_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)

@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.Platform.Runtime.Background;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
@@ -34,9 +36,12 @@ internal sealed class ListenTogetherManager
     private readonly PlaybackStateService _state;
 
     private int _heartbeatDefer = 5;
+    private int _heartbeatInProgress;
+    private readonly IBackgroundTaskRunner _taskRunner;
 
     private ListenTogetherManager()
     {
+        _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
         _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
         _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         _listenTogetherProvider = Ioc.Default.GetRequiredService<IListenTogetherProvidable>();
@@ -142,7 +147,7 @@ internal sealed class ListenTogetherManager
 
     private void OnSecondTick(object? sender, EventArgs e)
     {
-        HeartbeatTick();
+        _taskRunner.Forget(HeartbeatTickAsync(), "listen together heartbeat");
     }
 
     private void OnPlaybackStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -165,7 +170,7 @@ internal sealed class ListenTogetherManager
 
     private void OnPlaylistChanged()
     {
-        OnPlayListChanged(_state.LastQueueChangeIsShuffleTrigger);
+        _taskRunner.Forget(OnPlayListChangedAsync(_state.LastQueueChangeIsShuffleTrigger), "report listen together playlist");
     }
 
     // ---------------------------------------------------------------
@@ -186,7 +191,7 @@ internal sealed class ListenTogetherManager
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 Position = TimeSpan.Zero
             };
-            _ = _listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId, command);
+            _taskRunner.Forget(_listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId, command), "send listen together playback command");
         }
         catch
         {
@@ -208,7 +213,7 @@ internal sealed class ListenTogetherManager
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 Position = _state.Position
             };
-            _ = _listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId, command);
+            _taskRunner.Forget(_listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId, command), "send listen together playback command");
         }
         catch
         {
@@ -230,7 +235,7 @@ internal sealed class ListenTogetherManager
                 ClientSeq = ++CurrentRoomInfo.ClientSeq,
                 Position = _state.Position
             };
-            _ = _listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId, command);
+            _taskRunner.Forget(_listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId, command), "send listen together playback command");
         }
         catch
         {
@@ -243,7 +248,7 @@ internal sealed class ListenTogetherManager
         if (!IsInRoom || CurrentRoomInfo is null) return;
         try
         {
-            _ = _listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId,
+            _taskRunner.Forget(_listenTogetherProvider.SendListenTogetherPlaybackCommandAsync(CurrentRoomInfo.RoomId,
                 new ProviderListenTogetherPlaybackCommand
                 {
                     CommandId = "progress",
@@ -252,7 +257,7 @@ internal sealed class ListenTogetherManager
                     FormerItemId = CurrentProviderSongId,
                     TargetItemId = CurrentProviderSongId,
                     ClientSeq = ++CurrentRoomInfo.ClientSeq
-                });
+                }), "send listen together playback command");
         }
         catch
         {
@@ -260,7 +265,7 @@ internal sealed class ListenTogetherManager
         }
     }
 
-    private async void OnPlayListChanged(bool isShuffle = false)
+    private async Task OnPlayListChangedAsync(bool isShuffle = false)
     {
         if (!IsInRoom || CurrentRoomInfo is null) return;
         if (isShuffle) return;
@@ -276,7 +281,8 @@ internal sealed class ListenTogetherManager
                 AnchorItemId = CurrentProviderSongId
             };
 
-            _ = _listenTogetherProvider.ReportListenTogetherQueueAsync(CurrentRoomInfo.RoomId, report);
+            if (!IsInRoom || !ReferenceEquals(Instance, this) || CurrentRoomInfo is null) return;
+            await _listenTogetherProvider.ReportListenTogetherQueueAsync(CurrentRoomInfo.RoomId, report);
         }
         catch
         {
@@ -284,17 +290,18 @@ internal sealed class ListenTogetherManager
         }
     }
 
-    private async void HeartbeatTick()
+    private async Task HeartbeatTickAsync()
     {
-        if (!IsInRoom) return;
+        if (!IsInRoom || Interlocked.Exchange(ref _heartbeatInProgress, 1) != 0) return;
         try
         {
             _heartbeatDefer--;
             if (_heartbeatDefer > 0) return;
             _heartbeatDefer = 5;
 
-            var status =
-                await _listenTogetherProvider.GetListenTogetherStatusAsync(CurrentRoomInfo?.RoomId ?? string.Empty);
+            var roomId = CurrentRoomInfo?.RoomId ?? string.Empty;
+            var status = await _listenTogetherProvider.GetListenTogetherStatusAsync(roomId);
+            if (!IsInRoom || !ReferenceEquals(Instance, this) || CurrentRoomInfo?.RoomId != roomId) return;
             if (status is null)
             {
                 Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("获取一起听房间信息失败", "房间状态为空");
@@ -336,7 +343,11 @@ internal sealed class ListenTogetherManager
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            System.Diagnostics.Debug.WriteLine(e);
+        }
+        finally
+        {
+            Volatile.Write(ref _heartbeatInProgress, 0);
         }
     }
 

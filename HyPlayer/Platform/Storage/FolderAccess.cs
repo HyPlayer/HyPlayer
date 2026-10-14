@@ -1,7 +1,7 @@
 #nullable enable
 using System;
-using System.Collections.Concurrent;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 
@@ -11,28 +11,18 @@ public static class FolderAccess
 {
     private static readonly TimeSpan ProbeTimeout = TimeSpan.FromSeconds(2);
 
-    private static readonly ConcurrentDictionary<string, bool> AccessCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly AsyncFolderAccessCache AccessCache = new(CheckAsync, ProbeTimeout);
 
     public static bool IsUsable(string? path)
     {
-        if (string.IsNullOrEmpty(path)) return false;
-        if (AccessCache.TryGetValue(path, out var known)) return known;
-        var probe = ProbeAsync(path);
-        return probe.Wait(ProbeTimeout) && probe.Result;
+        return AccessCache.IsUsable(path);
     }
 
-    public static async Task<bool> ProbeAsync(string? path)
-    {
-        if (string.IsNullOrEmpty(path)) return false;
-        if (AccessCache.TryGetValue(path, out var known)) return known;
-        var usable = await CheckAsync(path).ConfigureAwait(false);
-        AccessCache[path] = usable;
-        return usable;
-    }
+    public static Task<bool> ProbeAsync(string? path) => AccessCache.ProbeAsync(path);
 
     public static void Forget(string? path)
     {
-        if (!string.IsNullOrEmpty(path)) AccessCache.TryRemove(path, out _);
+        AccessCache.Forget(path);
     }
 
     public static event Action<string>? AccessLost;
@@ -42,11 +32,13 @@ public static class FolderAccess
         if (string.IsNullOrEmpty(path) || !await ProbeAsync(path).ConfigureAwait(false)) return null;
         try
         {
-            return await StorageFolder.GetFolderFromPathAsync(path).AsTask().ConfigureAwait(false);
+            using var cancellation = new CancellationTokenSource(ProbeTimeout);
+            return await StorageFolder.GetFolderFromPathAsync(path).AsTask(cancellation.Token)
+                .WaitAsync(cancellation.Token).ConfigureAwait(false);
         }
         catch
         {
-            if (AccessCache.TryUpdate(path, false, true)) NotifyLost(path);
+            if (AccessCache.MarkUnusable(path)) NotifyLost(path);
             return null;
         }
     }
@@ -69,14 +61,14 @@ public static class FolderAccess
                    StringComparison.OrdinalIgnoreCase);
     }
 
-    private static async Task<bool> CheckAsync(string path)
+    private static async Task<bool> CheckAsync(string path, CancellationToken cancellationToken)
     {
         try
         {
             var packageRoot = Path.GetDirectoryName(ApplicationData.Current.LocalFolder.Path);
             if (IsUnder(path, packageRoot)) return true;
             if (IsUnder(path, Path.GetDirectoryName(packageRoot))) return false;
-            await StorageFolder.GetFolderFromPathAsync(path).AsTask().ConfigureAwait(false);
+            await StorageFolder.GetFolderFromPathAsync(path).AsTask(cancellationToken).ConfigureAwait(false);
             return true;
         }
         catch

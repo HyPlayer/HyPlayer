@@ -116,12 +116,13 @@ public static class RechunkedAudioSource
     {
         var opening = operation.GetResultRandomAccessStreamReference().OpenReadAsync().AsTask();
         Task<MediaSource?>? creating = null;
+        Task<bool>? probing = null;
         try
         {
             var deadline = Task.Delay(HeaderTimeout);
             if (await Task.WhenAny(opening, deadline) != opening) throw new TimeoutException("the download stream did not open in time");
             var stream = await opening;
-            var probing = HasShortFramesAsync(stream);
+            probing = HasShortFramesAsync(stream);
             if (await Task.WhenAny(probing, deadline) != probing) throw new TimeoutException("the FLAC header did not arrive in time");
             if (await probing)
             {
@@ -133,19 +134,12 @@ public static class RechunkedAudioSource
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"Progressive FLAC setup fell back: {ex.Message}");
         }
-        _ = opening.ContinueWith(
-            task =>
-            {
-                if (task.Status == TaskStatus.RanToCompletion) task.Result.Dispose();
-            },
-            TaskScheduler.Default);
-        _ = creating?.ContinueWith(
-            task =>
-            {
-                if (task.Status == TaskStatus.RanToCompletion) task.Result?.Dispose();
-            },
-            TaskScheduler.Default);
+        // Opening may already be complete while the decoder is still using its stream.
+        // Retire the stream only after every operation using it has settled.
+        new HyPlayer.Platform.Runtime.Background.BackgroundTaskRunner().Forget(
+            DeferredStreamCleanup.ReleaseAsync(opening, probing, creating), "retire timed-out FLAC stream");
         return null;
     }
 

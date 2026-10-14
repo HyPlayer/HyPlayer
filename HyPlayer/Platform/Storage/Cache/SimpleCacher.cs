@@ -105,7 +105,7 @@ public static class SimpleCacher
                     using var stream = await cacheFile.OpenStreamForReadAsync();
                     var rst = await JsonSerializer.DeserializeAsync<T>(
                         stream,
-                        JsonDefaults.Options,
+                        JsonDefaults.TypeInfo<T>(),
                         cancellationToken).ConfigureAwait(false);
                     return rst;
                 }
@@ -151,7 +151,7 @@ public static class SimpleCacher
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             using var stream = await file.OpenStreamForWriteAsync();
             stream.SetLength(0);
-            await JsonSerializer.SerializeAsync(stream, data, JsonDefaults.Options, cancellationToken)
+            await JsonSerializer.SerializeAsync(stream, data, JsonDefaults.TypeInfo<T>(), cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (NotSupportedException)

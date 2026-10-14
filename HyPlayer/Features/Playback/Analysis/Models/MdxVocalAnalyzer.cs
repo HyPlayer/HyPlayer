@@ -87,7 +87,7 @@ public sealed class MdxVocalAnalyzer : IVocalAnalyzer
             }
             ct.ThrowIfCancellationRequested();
             var input = new DenseTensor<float>(block.AsMemory(), [1, 4, DimF, DimT]);
-            using var results = session.Run([NamedOnnxValue.CreateFromTensor("input", input)]);
+            using var results = session.Run((NamedOnnxValue[])[NamedOnnxValue.CreateFromTensor("input", input)]);
             var tensor = results.First(r => r.Name == "output").AsTensor<float>();
             ReadOnlySpan<float> output = tensor is DenseTensor<float> dense ? dense.Buffer.Span : tensor.ToArray();
             var keepFrom = start == 0 ? 0 : Margin;

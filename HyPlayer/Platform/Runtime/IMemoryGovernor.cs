@@ -17,5 +17,9 @@ public interface IMemoryGovernor
 
     void OnExpandedPlayerVisibilityChanged(bool open);
 
-    Task<ulong> ReclaimAsync();
+    Task ReclaimAsync();
+
+    Task PauseAsync();
+
+    void Resume();
 }

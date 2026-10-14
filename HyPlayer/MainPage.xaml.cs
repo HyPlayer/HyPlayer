@@ -224,7 +224,8 @@ public sealed partial class MainPage : Page
         if (mode == PlaybackSurfaceMode.Expanded)
             PresentExpandedSurface();
         else
-            RestoreCompactSurface();
+            Ioc.Default.GetRequiredService<HyPlayer.Platform.Runtime.Background.IBackgroundTaskRunner>()
+                .Forget(RestoreCompactSurfaceAsync(), "restore compact player surface");
     }
 
     private void PresentExpandedSurface()
@@ -261,7 +262,7 @@ public sealed partial class MainPage : Page
         GridPlayBar.Background = null;
     }
 
-    private async void RestoreCompactSurface()
+    private async Task RestoreCompactSurfaceAsync()
     {
         CancelCollapseTransition();
         var version = _surfaceTransitionVersion;

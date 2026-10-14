@@ -34,7 +34,7 @@ public sealed class SKeyAnalyzer : IKeyAnalyzer
         {
             ct.ThrowIfCancellationRequested();
             var input = new DenseTensor<float>(mono.AsMemory(start, length), [1, length]);
-            using var results = lease.Session.Run([NamedOnnxValue.CreateFromTensor("audio", input)]);
+            using var results = lease.Session.Run((NamedOnnxValue[])[NamedOnnxValue.CreateFromTensor("audio", input)]);
             return results.First(r => r.Name == "scores").AsTensor<float>().ToArray();
         }, ct);
         if (scores.Length != 24) return null;

@@ -4,13 +4,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Platform.Runtime.Background;
 
 namespace HyPlayer.Features.Lyrics.Services;
 
 internal sealed class LyricLoad
 {
     private readonly object _sync = new();
-    private readonly CancellationTokenSource _cts = new();
+    private readonly OwnedCancellation _cancellation = new();
+    private volatile bool _cancelled;
     private Action<HyLyricInfo>? _publish;
     private HyLyricInfo? _latest;
     private int _attachVersion;
@@ -20,19 +22,22 @@ internal sealed class LyricLoad
     public LyricLoad(SingleSongBase song, Func<LyricLoad, CancellationToken, Task> resolve)
     {
         Song = song;
-        var token = _cts.Token;
-        Completion = Task.Run(() => RunAsync(resolve, token), token);
+        var token = _cancellation.Token;
+        // Always run the finally block, even if cancellation precedes worker startup.
+        Completion = Task.Run(() => RunAsync(resolve, token));
     }
 
     private async Task RunAsync(Func<LyricLoad, CancellationToken, Task> resolve, CancellationToken token)
     {
         try
         {
+            token.ThrowIfCancellationRequested();
             await resolve(this, token).ConfigureAwait(false);
         }
         finally
         {
-            if (!token.IsCancellationRequested) Settle();
+            try { if (!token.IsCancellationRequested) Settle(); }
+            finally { _cancellation.Complete(); }
         }
     }
 
@@ -51,7 +56,7 @@ internal sealed class LyricLoad
     public Task Completion { get; }
 
     public bool Reusable => !_degraded
-                            && !_cts.IsCancellationRequested
+                            && !_cancelled
                             && !Completion.IsFaulted
                             && !Completion.IsCanceled;
 
@@ -116,6 +121,7 @@ internal sealed class LyricLoad
             _attachVersion++;
         }
 
-        _cts.Cancel();
+        _cancelled = true;
+        _cancellation.Cancel();
     }
 }

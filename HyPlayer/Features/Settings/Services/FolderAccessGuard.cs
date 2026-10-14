@@ -24,6 +24,33 @@ public static class FolderAccessGuard
     private static int _watching;
     private static int _checking;
 
+    public static void RefreshPath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return;
+        Ioc.Default.GetRequiredService<IBackgroundTaskRunner>().Forget(
+            RefreshPathAsync(path), "refresh folder access");
+    }
+
+    public static async Task RefreshPathAsync(string path)
+    {
+        await FolderAccess.ProbeAsync(path).ConfigureAwait(false);
+        await Ioc.Default.GetRequiredService<IUIThreadDispatcher>().TryRunAsync(() =>
+        {
+            var download = Ioc.Default.GetRequiredService<DownloadSettings>();
+            var library = Ioc.Default.GetRequiredService<LocalLibrarySettings>();
+            var playback = Ioc.Default.GetRequiredService<PlaybackSettings>();
+            if (FolderAccess.IsSamePath(path, download.CustomDownloadDirectory))
+            {
+                download.NotifyDirectoryAccessChanged();
+                library.NotifyDownloadDirectoryChanged();
+            }
+            if (FolderAccess.IsSamePath(path, library.CustomSearchDirectory))
+                library.NotifyDirectoryAccessChanged();
+            if (FolderAccess.IsSamePath(path, playback.CustomCacheDirectory))
+                playback.NotifyDirectoryAccessChanged();
+        }).ConfigureAwait(false);
+    }
+
     public static async Task<bool> EnsureWritableAsync(StorageFolder folder, string what)
     {
         if (await CanWriteAsync(folder)) return true;
@@ -134,7 +161,9 @@ public static class FolderAccessGuard
 
     private static async Task AddIfLostAsync(List<string> lost, string name, string? customPath)
     {
-        if (customPath is null || await FolderAccess.ProbeAsync(customPath)) return;
+        if (customPath is null) return;
+        await RefreshPathAsync(customPath);
+        if (FolderAccess.IsUsable(customPath)) return;
         lost.Add($"• {name}：{customPath}");
     }
 }

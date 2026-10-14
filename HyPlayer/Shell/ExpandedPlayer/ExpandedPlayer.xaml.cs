@@ -391,7 +391,7 @@ public sealed partial class ExpandedPlayer : Page
                 break;
             case nameof(PlaybackStateService.CoverStream):
                 WakeLyricCanvas();
-                RefreshAlbumCover();
+                _taskRunner.Forget(RefreshAlbumCoverAsync(), "refresh expanded player cover");
                 break;
             case nameof(PlaybackStateService.LyricInfo):
             case nameof(PlaybackStateService.IsLyricPending):
@@ -1071,7 +1071,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         WakeLyricCanvas();
         OnSongChange();
-        RefreshAlbumCover();
+        _taskRunner.Forget(RefreshAlbumCoverAsync(), "refresh expanded player cover");
         if (!_lyricHasBeenLoaded) HyPlayList_OnLyricLoaded();
     }
 
@@ -1492,7 +1492,7 @@ public sealed partial class ExpandedPlayer : Page
             ViewModel.SyncFromState();
             if (_state.NowPlayingProviderItem != null)
                 OnSongChange();
-            RefreshAlbumCover();
+            _taskRunner.Forget(RefreshAlbumCoverAsync(), "refresh expanded player cover");
             ChangeWindowMode();
             _needsRedesign = true;
         }
@@ -1640,7 +1640,7 @@ public sealed partial class ExpandedPlayer : Page
         ImageResetPositionAni.Begin();
     }
 
-    public async void RefreshAlbumCover()
+    public async Task RefreshAlbumCoverAsync()
     {
         if (_isCleanedUp || _canvasResourcesReleased || _lifecycle.IsInBackground) return;
         var cover = _state.CoverStream;
@@ -1682,7 +1682,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void ReconcileAlbumCover()
     {
-        if (_coverColorGate.NeedsRefresh(_state.CoverStream, Stopwatch.GetTimestamp())) RefreshAlbumCover();
+        if (_coverColorGate.NeedsRefresh(_state.CoverStream, Stopwatch.GetTimestamp())) _taskRunner.Forget(RefreshAlbumCoverAsync(), "refresh expanded player cover");
     }
 
     private async Task<bool> ApplyAlbumCoverAsync(CoverColorTicket ticket, IRandomAccessStream source,

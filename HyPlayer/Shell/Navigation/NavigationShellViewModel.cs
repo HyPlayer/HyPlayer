@@ -155,9 +155,9 @@ public partial class NavigationShellViewModel : ObservableObject
 
     private void BuildMenuItems()
     {
-        _sections.AddRange([
+        _sections.AddRange((NavigationSection[])[
             new NavigationSection("discover", "发现",
-            [
+            (NavigationNode[])[
                 new NavigationNode
                 {
                     Key = "home", Title = "主页", Icon = new FontIcon { Glyph = "\uE80F" },
@@ -180,7 +180,7 @@ public partial class NavigationShellViewModel : ObservableObject
                 }
             ]),
             new NavigationSection("music", "音乐",
-            [
+            (NavigationNode[])[
                 new NavigationNode
                 {
                     Key = "local", Title = "离线音乐", Icon = new FontIcon { Glyph = "\uEC50" },
@@ -203,7 +203,7 @@ public partial class NavigationShellViewModel : ObservableObject
                 }
             ]),
             new NavigationSection(LibrarySectionKey, "资料库",
-            [
+            (NavigationNode[])[
                 new NavigationNode
                 {
                     Key = "create-playlist", Title = "创建歌单", Icon = new SymbolIcon { Symbol = Symbol.Add },
@@ -212,7 +212,7 @@ public partial class NavigationShellViewModel : ObservableObject
                 _libraryStatusNode
             ]),
             new NavigationSection("podcast", "播客",
-            [
+            (NavigationNode[])[
                 _podcastLikedNode,
                 _podcastCollectedNode,
                 _podcastCreatedNode,
@@ -532,7 +532,7 @@ public partial class NavigationShellViewModel : ObservableObject
                 .OfType<NavigationNode>());
 
             if (groupNode.Children.Count > 0)
-                AddProviderLibraryNodes([groupNode]);
+                AddProviderLibraryNodes((NavigationNode[])[groupNode]);
         }
     }
 

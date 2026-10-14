@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Windows.Storage;
 using HyPlayer.Platform.Storage;
+using HyPlayer.Features.Settings.Services;
 
 namespace HyPlayer.Domain.Settings;
 
@@ -20,10 +21,12 @@ public partial class LocalLibrarySettings(DownloadSettings downloadSettings) : S
             : downloadSettings.DownloadDirectory;
         set
         {
+            FolderAccess.Forget(CustomSearchDirectory);
             FolderAccess.Forget(value);
             if (!SetSettings(nameof(SearchDirectory), value))
                 OnPropertyChanged();
             OnPropertyChanged(nameof(SearchDirectoryIsCustom));
+            FolderAccessGuard.RefreshPath(value);
         }
     }
 
@@ -44,6 +47,8 @@ public partial class LocalLibrarySettings(DownloadSettings downloadSettings) : S
         OnPropertyChanged(nameof(SearchDirectory));
         OnPropertyChanged(nameof(SearchDirectoryIsCustom));
     }
+
+    internal void NotifyDirectoryAccessChanged() => NotifyDownloadDirectoryChanged();
 
     public List<string> ScanLocalFolders
     {

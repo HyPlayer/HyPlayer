@@ -18,6 +18,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Playback.Models;
 using HyPlayer.Platform.Network;
+using HyPlayer.Platform.Runtime.Background;
 
 namespace HyPlayer.Features.Settings.Services;
 
@@ -52,12 +53,22 @@ public static class ResourceSaver
     private static readonly List<(DateTime Time, bool Slow)> Requests = new();
     private static readonly object SlowLock = new();
 
+    private static readonly object LifecycleSync = new();
+    private static Task _stopping = Task.CompletedTask;
+    private static bool _resumeRequested;
     private static volatile bool _attached;
     private static bool _networkActive;
     private static bool _powerActive;
     private static bool _networkPrompted;
     private static bool _powerPrompted;
-    private static int _probing;
+    private static readonly ScheduledBackgroundWork ProbeWork = new();
+    private static readonly ScheduledBackgroundWork StartupWork = new();
+    private static readonly IBackgroundTaskRunner Runner = new BackgroundTaskRunner();
+    private static CancellationTokenSource? _lifetime;
+    private static Task _powerTask = Task.CompletedTask;
+    private static Task _networkTask = Task.CompletedTask;
+    private static int _powerQueued;
+    private static int _networkQueued;
     private static DateTime _lastSlow = DateTime.MinValue;
 
     private static PlaybackSettings Playback => Ioc.Default.GetRequiredService<PlaybackSettings>();
@@ -118,24 +129,103 @@ public static class ResourceSaver
 
     public static void Attach()
     {
+        lock (LifecycleSync)
+        {
+            if (_attached) return;
+            if (!_stopping.IsCompleted)
+            {
+                if (_resumeRequested) return;
+                _resumeRequested = true;
+                Runner.Forget(ResumeAfterStoppingAsync(_stopping), "resume resource saver");
+                return;
+            }
+            AttachCore();
+        }
+    }
+
+    private static void AttachCore()
+    {
         if (_attached) return;
         _attached = true;
-        PowerManager.EnergySaverStatusChanged += (_, _) => OnPowerChanged();
-        PowerManager.PowerSupplyStatusChanged += (_, _) => OnPowerChanged();
-        PowerManager.BatteryStatusChanged += (_, _) => OnPowerChanged();
-        Ioc.Default.GetRequiredService<IAppLifecycleStateService>().EnteredForeground += (_, _) => OnPowerChanged();
+        _lifetime = new CancellationTokenSource();
+        ProbeWork.Resume();
+        StartupWork.Resume();
+        PowerManager.EnergySaverStatusChanged += PowerStatusChanged;
+        PowerManager.PowerSupplyStatusChanged += PowerStatusChanged;
+        PowerManager.BatteryStatusChanged += PowerStatusChanged;
+        Ioc.Default.GetRequiredService<IAppLifecycleStateService>().EnteredForeground += ForegroundChanged;
 
         _networkActive = HasBackup(SaverKind.Network);
         _powerActive = HasBackup(SaverKind.Power);
         if (_networkActive) StartProbing();
         if (_networkActive) ReapplyRelaxedNetwork();
 
-        _ = Task.Run(async () =>
+        StartupWork.Schedule(TimeSpan.FromSeconds(12), _ =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(12));
             OnPowerChanged();
+            return Task.CompletedTask;
+        }, "initial power check");
+    }
+
+    private static void PowerStatusChanged(object sender, object args) => OnPowerChanged();
+    private static void ForegroundChanged(object? sender, EventArgs args) => OnPowerChanged();
+
+    public static Task StopAsync()
+    {
+        lock (LifecycleSync)
+        {
+            _resumeRequested = false;
+            if (!_attached) return _stopping;
+            _attached = false;
+            _stopping = StopCoreAsync(_lifetime);
+            return _stopping;
+        }
+    }
+
+    private static async Task StopCoreAsync(CancellationTokenSource? lifetime)
+    {
+        // Run cancellation outside LifecycleSync: WinRT and HTTP own token callbacks.
+        await Task.Yield();
+        PowerManager.EnergySaverStatusChanged -= PowerStatusChanged;
+        PowerManager.PowerSupplyStatusChanged -= PowerStatusChanged;
+        PowerManager.BatteryStatusChanged -= PowerStatusChanged;
+        Ioc.Default.GetRequiredService<IAppLifecycleStateService>().EnteredForeground -= ForegroundChanged;
+        try
+        {
+            lifetime?.Cancel();
+            await Task.WhenAll(ProbeWork.StopAsync(), StartupWork.StopAsync(), _powerTask, _networkTask).ConfigureAwait(false);
+        }
+        finally
+        {
+            lifetime?.Dispose();
+            lock (LifecycleSync)
+            {
+                if (ReferenceEquals(_lifetime, lifetime)) _lifetime = null;
+                _networkPrompted = false;
+                _powerPrompted = false;
+            }
+            lock (SlowLock) Requests.Clear();
+        }
+    }
+
+    private static async Task ResumeAfterStoppingAsync(Task stopping)
+    {
+        await Task.Yield();
+        try { await stopping.ConfigureAwait(false); }
+        catch (Exception exception) { Debug.WriteLine($"Resource saver stop failed: {exception}"); }
+        await Ioc.Default.GetRequiredService<IUIThreadDispatcher>().TryRunAsync(() =>
+        {
+            lock (LifecycleSync)
+            {
+                if (!_resumeRequested) return Task.CompletedTask;
+                _resumeRequested = false;
+                Attach();
+            }
+            return Task.CompletedTask;
         });
     }
+
+    public static void Resume() => Attach();
 
     public static void ReportLoad(TimeSpan elapsed)
     {
@@ -153,6 +243,8 @@ public static class ResourceSaver
         {
             var now = DateTime.UtcNow;
             Requests.RemoveAll(request => now - request.Time > QuietWindow);
+            // Bound bursts within the time window as well as aging old samples out.
+            if (Requests.Count == 256) Requests.RemoveAt(0);
             Requests.Add((now, slow));
             if (slow) _lastSlow = now;
             var slowCount = Requests.Count(request => request.Slow);
@@ -164,8 +256,16 @@ public static class ResourceSaver
 
     private static void SuspectWeakNetwork()
     {
-        if (_networkActive || _networkPrompted || !Playback.PromptWeakNetwork) return;
-        _ = RunOnUiAsync(PromptNetworkAsync);
+        if (!_attached || _networkActive || _networkPrompted || !Playback.PromptWeakNetwork) return;
+        if (Interlocked.Exchange(ref _networkQueued, 1) != 0) return;
+        _networkTask = PromptNetworkOnUiAsync();
+        Runner.Forget(_networkTask, "weak network prompt");
+    }
+
+    private static async Task PromptNetworkOnUiAsync()
+    {
+        try { await RunOnUiAsync(PromptNetworkAsync); }
+        finally { Volatile.Write(ref _networkQueued, 0); }
     }
 
     private static async Task PromptNetworkAsync()
@@ -218,7 +318,14 @@ public static class ResourceSaver
 
     private static void OnPowerChanged()
     {
-        _ = RunOnUiAsync(async () =>
+        if (!_attached || Interlocked.Exchange(ref _powerQueued, 1) != 0) return;
+        _powerTask = ApplyPowerChangeOnUiAsync();
+        Runner.Forget(_powerTask, "power saver change");
+    }
+
+    private static async Task ApplyPowerChangeOnUiAsync()
+    {
+            try { await RunOnUiAsync(async () =>
         {
             if (IsPowerSaving())
             {
@@ -231,7 +338,8 @@ public static class ResourceSaver
             _powerActive = false;
             if (Restore(SaverKind.Power))
                 Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("已恢复电源", "已还原节能模式下调整的设置");
-        });
+        }); }
+            finally { Volatile.Write(ref _powerQueued, 0); }
     }
 
     private static bool IsPowerSaving()
@@ -316,16 +424,16 @@ public static class ResourceSaver
 
     private static void StartProbing()
     {
-        if (Interlocked.Exchange(ref _probing, 1) == 1) return;
-        _ = Task.Run(async () =>
+        if (!_attached) return;
+        ProbeWork.Schedule(TimeSpan.Zero, async token =>
         {
             var good = 0;
             try
             {
                 while (true)
                 {
-                    await Task.Delay(ProbeInterval);
-                    var latency = await ProbeAsync();
+                    await Task.Delay(ProbeInterval, token).ConfigureAwait(false);
+                    var latency = await ProbeAsync(token).ConfigureAwait(false);
                     bool quiet;
                     lock (SlowLock) quiet = DateTime.UtcNow - _lastSlow > QuietWindow;
                     good = quiet && latency is { } elapsed && elapsed < TimeSpan.FromSeconds(1) ? good + 1 : 0;
@@ -344,19 +452,17 @@ public static class ResourceSaver
                     if (restored) return;
                 }
             }
-            finally
-            {
-                Interlocked.Exchange(ref _probing, 0);
-            }
-        });
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        }, "network recovery probes");
     }
 
-    private static async Task<TimeSpan?> ProbeAsync()
+    private static async Task<TimeSpan?> ProbeAsync(CancellationToken token)
     {
         try
         {
             var client = Ioc.Default.GetRequiredService<HttpClient>();
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token);
+            cts.CancelAfter(TimeSpan.FromSeconds(6));
             using var request = new HttpRequestMessage(HttpMethod.Head, "https://interface.music.163.com/");
             request.Options.Set(NetworkWatchHandler.ProbeKey, true);
             var started = Stopwatch.GetTimestamp();
@@ -364,6 +470,7 @@ public static class ResourceSaver
                 await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
             return Stopwatch.GetElapsedTime(started);
         }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
         catch
         {
             return null;
@@ -373,8 +480,9 @@ public static class ResourceSaver
     private static async Task<List<SaverOption>?> ShowDialogAsync(string title, string message,
         List<SaverOption> options, Action disablePrompt)
     {
-        if (options.Count == 0) return null;
-        await DialogGate.WaitAsync();
+        if (options.Count == 0 || !_attached || _lifetime is null) return null;
+        var token = _lifetime.Token;
+        await DialogGate.WaitAsync(token);
         try
         {
             var panel = new StackPanel { Spacing = 8, MaxWidth = 460 };
@@ -434,12 +542,13 @@ public static class ResourceSaver
             for (var attempt = 0;; attempt++)
                 try
                 {
-                    result = await dialog.ShowAsync();
+                    token.ThrowIfCancellationRequested();
+                    result = await dialog.ShowAsync().AsTask(token);
                     break;
                 }
-                catch when (attempt < 30)
+                catch when (attempt < 3 && !token.IsCancellationRequested)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    await Task.Delay(TimeSpan.FromSeconds(5), token);
                 }
 
             if (dontAsk.IsChecked == true) disablePrompt();
@@ -554,7 +663,8 @@ public static class ResourceSaver
     {
         try
         {
-            return await Ioc.Default.GetRequiredService<IUIThreadDispatcher>().TryRunAsync(action);
+            return await Ioc.Default.GetRequiredService<IUIThreadDispatcher>().TryRunAsync(() =>
+                _attached ? action() : Task.CompletedTask);
         }
         catch
         {

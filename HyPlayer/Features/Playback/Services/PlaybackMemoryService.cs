@@ -336,7 +336,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
 
     private async Task WriteStateAsync(PlaybackMemoryState state)
     {
-        var text = JsonSerializer.Serialize(state, JsonDefaults.Options);
+        var text = JsonDefaults.Serialize(state);
 
         await _ioLock.WaitAsync().ConfigureAwait(false);
         try
@@ -378,7 +378,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
 
             return string.IsNullOrWhiteSpace(text)
                 ? null
-                : JsonSerializer.Deserialize<PlaybackMemoryState>(text, JsonDefaults.Options);
+                : JsonDefaults.Deserialize<PlaybackMemoryState>(text);
         }
         catch
         {

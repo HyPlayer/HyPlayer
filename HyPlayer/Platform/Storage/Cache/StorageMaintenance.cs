@@ -9,6 +9,7 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Search;
 using HyPlayer.Application;
+using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Domain.Settings;
 
 namespace HyPlayer.Platform.Storage.Cache;
@@ -40,7 +41,7 @@ public static class StorageMaintenance
         new(Enum.GetNames<CacheType>(), StringComparer.OrdinalIgnoreCase);
 
     private static readonly SemaphoreSlim _trimLock = new(1, 1);
-    private static int _trimScheduled;
+    private static readonly ScheduledBackgroundWork TrimWork = new();
     private static DateTime _lastTrim = DateTime.MinValue;
 
     public static bool IsCacheFolderName(string name)
@@ -305,41 +306,33 @@ public static class StorageMaintenance
 
     public static void ScheduleTrim(TimeSpan? delay = null)
     {
-        if (Interlocked.Exchange(ref _trimScheduled, 1) == 1) return;
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var wait = delay ?? TimeSpan.FromSeconds(5);
-                var sinceLast = DateTime.UtcNow - _lastTrim;
-                if (sinceLast < TimeSpan.FromMinutes(1)) wait = TimeSpan.FromMinutes(1) - sinceLast;
-                await Task.Delay(wait).ConfigureAwait(false);
-                Volatile.Write(ref _trimScheduled, 0);
-                await TrimCacheAsync().ConfigureAwait(false);
-            }
-            catch
-            {
-                Volatile.Write(ref _trimScheduled, 0);
-            }
-        });
+        var wait = delay ?? TimeSpan.FromSeconds(5);
+        var sinceLast = DateTime.UtcNow - _lastTrim;
+        if (sinceLast < TimeSpan.FromMinutes(1)) wait = TimeSpan.FromMinutes(1) - sinceLast;
+        TrimWork.Schedule(wait, TrimCacheAsync, "trim storage cache");
     }
 
-    public static async Task TrimCacheAsync()
+    public static Task StopAsync() => TrimWork.StopAsync();
+
+    public static void Resume() => TrimWork.Resume();
+
+    public static async Task TrimCacheAsync(CancellationToken token = default)
     {
-        if (!await _trimLock.WaitAsync(0).ConfigureAwait(false)) return;
+        if (!await _trimLock.WaitAsync(0, token).ConfigureAwait(false)) return;
         try
         {
             _lastTrim = DateTime.UtcNow;
             var limit = (ulong)(AppDepository.Resolve<PlaybackSettings>().CacheLimitGB * 1024 * 1024 * 1024);
             if (limit == 0) return;
             var root = await GetCacheFolderAsync().ConfigureAwait(false);
-            var items = await CollectCacheAsync(root).ConfigureAwait(false);
+            var items = await CollectCacheAsync(root, ct: token).ConfigureAwait(false);
             ulong total = 0;
             foreach (var item in items) total += item.Size;
             if (total <= limit) return;
             var target = limit / 10 * 9;
             foreach (var item in items.OrderBy(i => i.Modified))
             {
+                token.ThrowIfCancellationRequested();
                 if (total <= target) break;
                 try
                 {
@@ -350,6 +343,10 @@ public static class StorageMaintenance
                 {
                 }
             }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {

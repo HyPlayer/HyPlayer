@@ -144,8 +144,7 @@ public static class StorageMigrationPrompt
         var token = cancellation.Token;
         try
         {
-            return await Task.Run(() =>
-                StorageMaintenance.MigrateAsync(source, destination, items, deleteOriginal, progress, token));
+            return await StorageMaintenance.MigrateAsync(source, destination, items, deleteOriginal, progress, token);
         }
         finally
         {

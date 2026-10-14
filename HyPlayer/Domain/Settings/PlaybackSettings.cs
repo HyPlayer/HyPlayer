@@ -150,11 +150,13 @@ public partial class PlaybackSettings : SettingsBase
         }
         set
         {
+            FolderAccess.Forget(CustomCacheDirectory);
             FolderAccess.Forget(value);
             if (!SetSettings(nameof(CacheDirectory), value))
                 OnPropertyChanged();
             OnPropertyChanged(nameof(CacheDirectoryIsCustom));
             SimpleCacher.Reset();
+            HyPlayer.Features.Settings.Services.FolderAccessGuard.RefreshPath(value);
         }
     }
 
@@ -167,6 +169,13 @@ public partial class PlaybackSettings : SettingsBase
         FolderAccess.Forget(CustomCacheDirectory);
         if (!SetSettings<string?>(nameof(CacheDirectory), null, nameof(CacheDirectory)))
             OnPropertyChanged(nameof(CacheDirectory));
+        OnPropertyChanged(nameof(CacheDirectoryIsCustom));
+        SimpleCacher.Reset();
+    }
+
+    internal void NotifyDirectoryAccessChanged()
+    {
+        OnPropertyChanged(nameof(CacheDirectory));
         OnPropertyChanged(nameof(CacheDirectoryIsCustom));
         SimpleCacher.Reset();
     }

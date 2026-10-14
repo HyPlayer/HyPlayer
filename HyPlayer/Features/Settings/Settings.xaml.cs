@@ -25,6 +25,7 @@ using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI;
 using HyPlayer.Application.Notifications;
+using HyPlayer.Application.Loading;
 using HyPlayer.Classes;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.History.Services;
@@ -714,9 +715,16 @@ public sealed partial class Settings : Page
     {
         var button = (Button)sender;
         button.IsEnabled = false;
-        var freed = await _memoryGovernor.ReclaimAsync();
-        RefreshMemoryUsage($"已释放 {FormatMemorySize(freed)}");
-        button.IsEnabled = true;
+        try
+        {
+            await _memoryGovernor.ReclaimAsync();
+            RefreshMemoryUsage("闲置资源清理完成");
+        }
+        catch (Exception ex)
+        {
+            Ioc.Default.GetRequiredService<INotificationService>().ShowFailure("闲置资源清理失败", ex);
+        }
+        finally { button.IsEnabled = true; }
     }
 
     private async void OpenLyricEffectSettings_Click(object sender, RoutedEventArgs e)

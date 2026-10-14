@@ -1,6 +1,6 @@
 #nullable enable
 using System;
-using System.Runtime;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,54 +8,15 @@ using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using HyPlayer.Domain.Settings;
-using HyPlayer.Features.Playback.Analysis;
+using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Features.Playback.Models;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Platform.Runtime;
 
-internal enum DeferredReclaim
-{
-    Wait,
-    Run,
-    Drop
-}
-
-internal static class ReclaimPolicy
-{
-    public const int SettledPolls = 2;
-
-    public static bool IsFull(bool manual, bool playing) => manual || !playing;
-
-    public static bool AllowsBackgroundCollect(bool realtimeCallbacks, bool transitioning) => !realtimeCallbacks && !transitioning;
-
-    public static DeferredReclaim Deferred(bool pending, int pollsWithoutPlayback, bool busy, bool inactive, bool overLimit)
-    {
-        if (!pending || pollsWithoutPlayback < SettledPolls || busy) return DeferredReclaim.Wait;
-        return inactive || overLimit ? DeferredReclaim.Run : DeferredReclaim.Drop;
-    }
-}
-
-internal sealed class NavigationReclaimGate
-{
-    private int _version;
-    private volatile bool _expandedPlayerOpen;
-
-    public bool AllowsNavigationReclaim => !_expandedPlayerOpen;
-
-    public int Begin() => Interlocked.Increment(ref _version);
-
-    public bool IsCurrent(int ticket) => ticket == Volatile.Read(ref _version);
-
-    public void SetExpandedPlayerOpen(bool open)
-    {
-        _expandedPlayerOpen = open;
-        Interlocked.Increment(ref _version);
-    }
-}
-
-public sealed class MemoryGovernor : IMemoryGovernor
+public sealed class MemoryGovernor : IMemoryGovernor, IDisposable, IAsyncDisposable
 {
     [StructLayout(LayoutKind.Sequential)]
     private struct ProcessMemoryCounters
@@ -92,49 +53,37 @@ public sealed class MemoryGovernor : IMemoryGovernor
     [DllImport("kernel32.dll")]
     private static extern unsafe int K32GetProcessMemoryInfo(nint process, ProcessMemoryCounters* counters, uint size);
 
-    [DllImport("kernel32.dll")]
-    private static extern int K32EmptyWorkingSet(nint process);
 
     [DllImport("kernel32.dll")]
     private static extern unsafe int GlobalMemoryStatusEx(MemoryStatus* status);
 
     private const ulong MB = 1024 * 1024;
-    private const ulong RegrowthBeforeRetry = 256 * MB;
-    private const ulong IneffectiveReclaim = 64 * MB;
-    private static readonly TimeSpan NavigationReclaimDelay = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(3);
-    private static readonly TimeSpan BaseCooldown = TimeSpan.FromMinutes(2);
-    private static readonly TimeSpan MaxCooldown = TimeSpan.FromMinutes(15);
-
+    private static readonly TimeSpan Cooldown = TimeSpan.FromMinutes(2);
     private readonly UISettings _settings;
     private readonly PlaybackStateService _playbackState;
     private readonly ModelManager _models;
     private readonly AudioGraphPlayer _player;
-
+    private readonly IBackgroundTaskRunner _tasks;
+    private readonly Lock _gate = new();
+    private readonly IdleResourceRelease _release;
     private Timer? _pollTimer;
-    private CancellationTokenSource? _inactiveCts;
     private Window? _window;
-    private int _reclaiming;
-    private DateTime _lastReclaim = DateTime.MinValue;
-    private TimeSpan _cooldown = BaseCooldown;
-    private ulong _workingSetAfterReclaim;
-    private volatile bool _windowInactive;
-    private volatile bool _appInBackground;
-    private volatile bool _fullReclaimPending;
-    private int _pollsWithoutPlayback;
-    private long _analysisCollected;
-    private readonly NavigationReclaimGate _navigationReclaim = new();
+    private DateTime _lastRelease = DateTime.MinValue;
+    private DateTime? _navigationDue, _inactiveDue;
+    private bool _windowInactive, _appInBackground, _expandedOpen, _paused, _disposed;
 
-    public MemoryGovernor(
-        UISettings settings,
-        PlaybackStateService playbackState,
-        ModelManager models,
-        AudioGraphPlayer player)
+    public MemoryGovernor(UISettings settings, PlaybackStateService playbackState, ModelManager models,
+        AudioGraphPlayer player, IBackgroundTaskRunner tasks)
     {
-        _settings = settings;
-        _playbackState = playbackState;
-        _models = models;
-        _player = player;
+        _settings = settings; _playbackState = playbackState; _models = models; _player = player; _tasks = tasks;
+        _release = new IdleResourceRelease(() =>
+        {
+            // ONNX disposal is synchronous and potentially expensive. Only unused sessions
+            // are released; the manager checks leases under its own lock.
+            _models.ReleaseIdleSessions();
+            SimpleCacher.Reset();
+        });
     }
 
     public unsafe ulong WorkingSetBytes
@@ -142,218 +91,157 @@ public sealed class MemoryGovernor : IMemoryGovernor
         get
         {
             var counters = new ProcessMemoryCounters { Size = (uint)sizeof(ProcessMemoryCounters) };
-            return K32GetProcessMemoryInfo(GetCurrentProcess(), &counters, counters.Size) != 0
-                ? counters.WorkingSetSize
-                : 0;
+            return K32GetProcessMemoryInfo(GetCurrentProcess(), &counters, counters.Size) != 0 ? counters.WorkingSetSize : 0;
         }
     }
 
-    private bool IsInactive => _windowInactive || _appInBackground;
-
     public void Attach(Window window)
     {
-        if (ReferenceEquals(_window, window)) return;
-        if (_window is not null) _window.Activated -= OnWindowActivated;
-        _window = window;
-        window.Activated += OnWindowActivated;
+        lock (_gate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            if (!ReferenceEquals(_window, window))
+            {
+                if (_window is not null) _window.Activated -= OnWindowActivated;
+                _window = window;
+                _window.Activated += OnWindowActivated;
+            }
+            ResumePolling();
+        }
+    }
+
+    private void ResumePolling()
+    {
+        _paused = false;
         _pollTimer ??= new Timer(_ => Evaluate(), null, PollInterval, PollInterval);
     }
 
     public void OnEnteredBackground()
     {
-        _appInBackground = true;
-        _navigationReclaim.Begin();
-        _ = Task.Run(Collect);
-        RestartInactiveTimer();
+        lock (_gate) { _appInBackground = true; RestartInactiveTimer(); }
     }
 
     public void OnLeavingBackground()
     {
-        _appInBackground = false;
-        if (!_windowInactive) CancelInactiveTimer();
+        lock (_gate)
+        {
+            if (_disposed) return;
+            _appInBackground = false;
+            if (!_windowInactive) _inactiveDue = null;
+            ResumePolling();
+        }
     }
 
     public void ScheduleNavigationReclaim()
     {
-        if (_navigationReclaim.AllowsNavigationReclaim) ScheduleCollect();
+        lock (_gate)
+            if (!_disposed && !_paused && !_expandedOpen) _navigationDue = DateTime.UtcNow.AddSeconds(2);
     }
 
     public void OnExpandedPlayerVisibilityChanged(bool open)
     {
-        _navigationReclaim.SetExpandedPlayerOpen(open);
-        if (!open) ScheduleCollect();
-    }
-
-    private void ScheduleCollect()
-    {
-        var ticket = _navigationReclaim.Begin();
-        _ = Task.Run(async () =>
+        lock (_gate)
         {
-            await Task.Delay(NavigationReclaimDelay);
-            if (!_navigationReclaim.IsCurrent(ticket)) return;
-            Collect();
-        });
-    }
-
-    private void Collect()
-    {
-        if (!ReclaimPolicy.AllowsBackgroundCollect(_player.RealtimeCallbacksActive, _playbackState.IsTransitioning))
-        {
-            ScheduleCollect();
-            return;
+            _expandedOpen = open;
+            _navigationDue = open ? null : DateTime.UtcNow.AddSeconds(2);
         }
-
-        GC.Collect(2, GCCollectionMode.Forced, blocking: false);
     }
 
-    public Task<ulong> ReclaimAsync() => Task.Run(() => Reclaim(true));
+    public Task ReclaimAsync()
+    {
+        lock (_gate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            _lastRelease = DateTime.UtcNow;
+            return _release.RunAsync();
+        }
+    }
 
     private void OnWindowActivated(object sender, WindowActivatedEventArgs e)
     {
-        _windowInactive = e.WindowActivationState == CoreWindowActivationState.Deactivated;
-        if (_windowInactive) RestartInactiveTimer();
-        else if (!_appInBackground) CancelInactiveTimer();
-    }
-
-    private void CancelInactiveTimer()
-    {
-        Interlocked.Exchange(ref _inactiveCts, null)?.Cancel();
+        lock (_gate)
+        {
+            _windowInactive = e.WindowActivationState == CoreWindowActivationState.Deactivated;
+            if (_windowInactive) RestartInactiveTimer();
+            else if (!_appInBackground) _inactiveDue = null;
+        }
     }
 
     private void RestartInactiveTimer()
     {
         var seconds = _settings.BackgroundReleaseSeconds;
-        var cts = new CancellationTokenSource();
-        Interlocked.Exchange(ref _inactiveCts, cts)?.Cancel();
-        if (seconds <= 0) return;
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(seconds), cts.Token);
-                while (IsBusy()) await Task.Delay(TimeSpan.FromSeconds(10), cts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-
-            if (IsInactive && CooldownElapsed()) Reclaim(false);
-        });
-    }
-
-    private bool CooldownElapsed() => DateTime.UtcNow - _lastReclaim >= _cooldown;
-
-    private bool IsBusy()
-    {
-        try
-        {
-            return _models.IsBusy || _player.RealtimeCallbacksActive || _playbackState.IsTransitioning;
-        }
-        catch
-        {
-            return false;
-        }
+        _inactiveDue = seconds > 0 ? DateTime.UtcNow.AddSeconds(seconds) : null;
     }
 
     private void Evaluate()
     {
         try
         {
-            _pollsWithoutPlayback = _playbackState.IsPlaying ? 0 : Math.Min(_pollsWithoutPlayback + 1, ReclaimPolicy.SettledPolls);
-            var limitMb = _settings.MemoryLimitMB;
-            var busy = IsBusy();
-            CollectAfterAnalysis(busy);
-            if (_fullReclaimPending)
+            lock (_gate)
             {
-                var overLimit = limitMb != 0 && WorkingSetBytes > Threshold(limitMb);
-                switch (ReclaimPolicy.Deferred(true, _pollsWithoutPlayback, busy, IsInactive, overLimit))
-                {
-                    case DeferredReclaim.Run:
-                        Reclaim(false);
-                        return;
-                    case DeferredReclaim.Drop:
-                        _fullReclaimPending = false;
-                        break;
-                }
+                if (_disposed || _paused || _models.IsBusy || _player.RealtimeCallbacksActive || _playbackState.IsTransitioning) return;
+                var now = DateTime.UtcNow;
+                if (now - _lastRelease < Cooldown) return;
+                var navigation = _navigationDue is { } nav && now >= nav;
+                var inactive = (_windowInactive || _appInBackground) && _inactiveDue is { } due && now >= due;
+                var limit = _settings.MemoryLimitMB;
+                if (!navigation && !inactive && (limit == 0 || WorkingSetBytes <= Threshold(limit))) return;
+                _navigationDue = null; _inactiveDue = null; _lastRelease = now;
+                _tasks.Forget(_release.RunAsync(), "release idle resources");
             }
-
-            if (limitMb == 0 || !CooldownElapsed() || busy) return;
-            var workingSet = WorkingSetBytes;
-            if (workingSet < _workingSetAfterReclaim + RegrowthBeforeRetry) return;
-            if (workingSet > Threshold(limitMb)) Reclaim(false);
         }
-        catch
-        {
-        }
+        catch (Exception ex) { Debug.WriteLine($"Idle resource evaluation failed: {ex}"); }
     }
 
-    private void CollectAfterAnalysis(bool busy)
+    private unsafe ulong Threshold(int limitMb)
     {
-        var completed = AnalysisWorker.CompletedCount;
-        if (completed == _analysisCollected || busy || AnalysisWorker.IsBusy) return;
-        _analysisCollected = completed;
-        GC.Collect(2, GCCollectionMode.Forced, blocking: false);
-    }
-
-    private ulong Threshold(int limitMb) => limitMb > 0 ? (ulong)limitMb * MB : AutoThreshold();
-
-    private unsafe ulong AutoThreshold()
-    {
+        if (limitMb > 0) return (ulong)limitMb * MB;
         var status = new MemoryStatus { Length = (uint)sizeof(MemoryStatus) };
         var known = GlobalMemoryStatusEx(&status) != 0 && status.TotalPhys > 0;
-        var systemTight = MemoryManager.AppMemoryUsageLevel >= AppMemoryUsageLevel.High ||
-                          known && (status.AvailPhys < status.TotalPhys / 8 || status.AvailPhys < 1536 * MB);
-        if (systemTight) return 384 * MB;
-        if (IsInactive) return 768 * MB;
-        var total = known ? status.TotalPhys : 8192 * MB;
-        return Math.Max(2048 * MB, total / 5);
+        var tight = MemoryManager.AppMemoryUsageLevel >= AppMemoryUsageLevel.High ||
+            known && (status.AvailPhys < status.TotalPhys / 8 || status.AvailPhys < 1536 * MB);
+        if (tight) return 384 * MB;
+        if (_windowInactive || _appInBackground) return 768 * MB;
+        return Math.Max(2048 * MB, (known ? status.TotalPhys : 8192 * MB) / 5);
     }
 
-    private ulong Reclaim(bool manual)
+    public async Task PauseAsync()
     {
-        if (Interlocked.Exchange(ref _reclaiming, 1) == 1) return 0;
-        var before = WorkingSetBytes;
-        ulong freed = 0;
-        var full = ReclaimPolicy.IsFull(manual, _playbackState.IsPlaying);
-        try
+        Timer? timer;
+        lock (_gate)
         {
-            try
-            {
-                _models.ReleaseIdleSessions();
-            }
-            catch
-            {
-            }
+            _paused = true; _navigationDue = null; _inactiveDue = null;
+            timer = _pollTimer; _pollTimer = null;
+        }
+        if (timer is not null) await timer.DisposeAsync().ConfigureAwait(false);
+        await _release.DrainAsync().ConfigureAwait(false);
+    }
 
-            if (full)
-            {
-                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-                GC.WaitForPendingFinalizers();
-                K32EmptyWorkingSet(GetCurrentProcess());
-            }
-            else if (ReclaimPolicy.AllowsBackgroundCollect(_player.RealtimeCallbacksActive, _playbackState.IsTransitioning))
-            {
-                GC.Collect(2, GCCollectionMode.Forced, blocking: false);
-            }
-        }
-        catch
+    public void Resume()
+    {
+        lock (_gate)
         {
+            if (_disposed) return;
+            ResumePolling();
+            if (_windowInactive || _appInBackground) RestartInactiveTimer();
         }
-        finally
-        {
-            var after = WorkingSetBytes;
-            freed = before > after ? before - after : 0;
-            _cooldown = freed < IneffectiveReclaim
-                ? TimeSpan.FromTicks(Math.Min(_cooldown.Ticks * 2, MaxCooldown.Ticks))
-                : BaseCooldown;
-            _workingSetAfterReclaim = after;
-            _lastReclaim = DateTime.UtcNow;
-            _fullReclaimPending = !full;
-            Volatile.Write(ref _reclaiming, 0);
-        }
+    }
 
-        return freed;
+    public void Dispose()
+    {
+        lock (_gate)
+        {
+            if (_disposed) return;
+            _disposed = true; _paused = true;
+            _pollTimer?.Dispose(); _pollTimer = null;
+            if (_window is not null) _window.Activated -= OnWindowActivated;
+            _window = null;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await PauseAsync().ConfigureAwait(false); }
+        finally { Dispose(); }
     }
 }

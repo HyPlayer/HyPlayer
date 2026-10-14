@@ -1,5 +1,8 @@
+#nullable enable
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using HyPlayer.Platform.Runtime.Background;
 using System.Threading;
 using System.Threading.Tasks;
 using HyPlayer.UWP.Chopin.Dsp;
@@ -9,14 +12,49 @@ namespace HyPlayer.Features.Playback.AutoMix;
 
 public static class AutoMixLog
 {
-    private static readonly ConcurrentQueue<string> Pending = new();
-    private static int _flushing;
+    private const int MaxPendingLines = 256;
+    private const int MaxLineLength = 2048;
+    private static readonly Queue<string> Pending = new();
+    private static readonly object Sync = new();
+    private static readonly IBackgroundTaskRunner Runner = new BackgroundTaskRunner();
+    private static Task _flushTask = Task.CompletedTask;
+    private static CancellationTokenSource? _delayCancellation;
+    private static bool _flushing;
+    private static bool _stopped;
 
     public static void Write(string message)
     {
-        Pending.Enqueue($"{DateTime.Now:HH:mm:ss.fff} {message}");
-        if (Interlocked.Exchange(ref _flushing, 1) == 1) return;
-        _ = Task.Run(FlushAsync);
+        lock (Sync)
+        {
+            if (_stopped) return;
+            if (Pending.Count == MaxPendingLines) Pending.Dequeue();
+            if (message.Length > MaxLineLength) message = message[..MaxLineLength];
+            Pending.Enqueue($"{DateTime.Now:HH:mm:ss.fff} {message}");
+            if (_flushing) return;
+            _flushing = true;
+            var cancellation = new CancellationTokenSource();
+            _delayCancellation = cancellation;
+            _flushTask = FlushAsync(cancellation);
+            Runner.Forget(_flushTask, "write automix log");
+        }
+    }
+
+    public static async Task StopAsync()
+    {
+        Task flushing;
+        lock (Sync)
+        {
+            _stopped = true;
+            _delayCancellation?.Cancel();
+            flushing = _flushTask;
+        }
+        try { await flushing.ConfigureAwait(false); }
+        catch { /* Failure is observed by Runner; logging never blocks shutdown with an exception. */ }
+    }
+
+    public static void Resume()
+    {
+        lock (Sync) _stopped = false;
     }
 
     public static void WriteSummary(AutoMixEngine engine, MixPumpStats stats) => Write(Describe(engine, stats));
@@ -47,26 +85,52 @@ public static class AutoMixLog
             $"mix thread: {engine.Stage}, {handOver}, {handBack}, starved {starvedQuanta} quanta ({starvedMs:0.0} ms), below low-water {stats.LowWaterWakes} of {stats.Wakes} wake-ups (empty {stats.EmptyWakes}), lead min {stats.MinLeadMs:0} ms / median {stats.MedianLeadMs:0} ms, longest wake gap {stats.MaxWakeGapMs:0.0} ms, audio-thread callbacks {stats.AudioThreadCallbacks}{(stats.Failed ? ", sink failed" : "")}{glide}");
     }
 
-    private static async Task FlushAsync()
+    private static async Task FlushAsync(CancellationTokenSource delayCancellation)
     {
+        await Task.Yield();
         try
         {
-            await Task.Delay(200);
+            try { await Task.Delay(200, delayCancellation.Token).ConfigureAwait(false); }
+            catch (OperationCanceledException) when (delayCancellation.IsCancellationRequested)
+            { /* Suspension expedites the final flush instead of losing pending messages. */ }
             var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("automix.log", CreationCollisionOption.OpenIfExists);
-            var properties = await file.GetBasicPropertiesAsync();
-            if (properties.Size > 512 * 1024)
-                file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("automix.log", CreationCollisionOption.ReplaceExisting);
-            var lines = new System.Text.StringBuilder();
-            while (Pending.TryDequeue(out var line)) lines.AppendLine(line);
-            if (lines.Length > 0) await FileIO.AppendTextAsync(file, lines.ToString());
+            while (true)
+            {
+                string batch;
+                lock (Sync)
+                {
+                    if (Pending.Count == 0)
+                    {
+                        _flushing = false;
+                        return;
+                    }
+                    var lines = new System.Text.StringBuilder();
+                    while (Pending.TryDequeue(out var line)) lines.AppendLine(line);
+                    batch = lines.ToString();
+                }
+                if ((await file.GetBasicPropertiesAsync()).Size > 512 * 1024)
+                    file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("automix.log", CreationCollisionOption.ReplaceExisting);
+                await FileIO.AppendTextAsync(file, batch);
+            }
         }
         catch
         {
+            // Diagnostics are best-effort: discard this bounded batch on storage failure.
+            // Retry only after a future Write, never recursively spin on a failed disk.
+            lock (Sync) Pending.Clear();
+            throw;
         }
         finally
         {
-            Interlocked.Exchange(ref _flushing, 0);
-            if (!Pending.IsEmpty && Interlocked.Exchange(ref _flushing, 1) == 0) _ = Task.Run(FlushAsync);
+            lock (Sync)
+            {
+                if (ReferenceEquals(_delayCancellation, delayCancellation))
+                {
+                    _delayCancellation = null;
+                    _flushing = false;
+                }
+                delayCancellation.Dispose();
+            }
         }
     }
 }

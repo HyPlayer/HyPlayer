@@ -238,7 +238,7 @@ public sealed class BeatThisAnalyzer : IBeatAnalyzer
                 }
                 input = new DenseTensor<float>(buffer.AsMemory(), [1, Chunk, Bins]);
             }
-            using var results = session.Run([NamedOnnxValue.CreateFromTensor("spect", input)]);
+            using var results = session.Run((NamedOnnxValue[])[NamedOnnxValue.CreateFromTensor("spect", input)]);
             var beatOut = results.First(r => r.Name == "beat").AsTensor<float>();
             var downOut = results.First(r => r.Name == "downbeat").AsTensor<float>();
             for (var t = Border; t < Chunk - Border; t++)

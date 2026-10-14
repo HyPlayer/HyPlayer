@@ -84,13 +84,16 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private ITrackTransition _activeTransition;
     private IPlaybackSource? _currentSource;
     private SingleSongBase? _loadedSong;
-    private bool _disposed;
+    private volatile bool _disposed;
+    private readonly Lock _disposeGate = new();
+    private TaskCompletionSource? _disposeCompletion;
+    private readonly List<Task> _ownedJobs = [];
     private bool _initialized;
     private long _lastScrobbledGeneration = -1;
-    private CancellationTokenSource? _deviceRefreshCts;
+    private OwnedCancellation? _deviceRefreshCts;
     private CancellationTokenSource? _lyricCts;
     private CancellationTokenSource? _playbackCts;
-    private CancellationTokenSource? _prefetchCts;
+    private OwnedCancellation? _prefetchCts;
     private long _playbackGeneration;
     private const long PrepareRetryDelayMilliseconds = 8000;
     private long _prepareRetryAfter;
@@ -807,10 +810,19 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
     private void ScheduleAudioDeviceRefresh()
     {
-        _deviceRefreshCts?.Cancel();
-        var cts = new CancellationTokenSource();
-        _deviceRefreshCts = cts;
-        _taskRunner.Forget(RefreshAudioDeviceAsync(cts.Token), "refresh audio render device");
+        OwnedCancellation? previous;
+        lock (_disposeGate)
+        {
+            if (_disposed) return;
+            previous = _deviceRefreshCts;
+            var cts = new OwnedCancellation();
+            _deviceRefreshCts = cts;
+            var task = RunOwnedJobAsync(cts, RefreshAudioDeviceAsync, false);
+            _ownedJobs.RemoveAll(static job => job.IsCompleted);
+            _ownedJobs.Add(task);
+            _taskRunner.Forget(task, "refresh audio render device");
+        }
+        CancelPrevious(previous);
     }
 
     private async Task RefreshAudioDeviceAsync(CancellationToken ct)
@@ -1154,15 +1166,43 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
     private void SchedulePrefetch(SingleSongBase? current)
     {
-        _prefetchCts?.Cancel();
+        OwnedCancellation? previous;
+        lock (_disposeGate)
+        {
+        if (_disposed) return;
+        previous = _prefetchCts;
+        _prefetchCts = null;
         if (current is null
             || _playCore.ActivePlayModeId is "sgl" or "ltg")
-            return;
-
-        var cts = new CancellationTokenSource();
+        {
+            // Cancellation is performed outside the lifecycle lock below.
+        }
+        else
+        {
+        var cts = new OwnedCancellation();
         _prefetchCts = cts;
         var prefetchAudio = _activeTransition.Id != "dir" && _playbackSettings.EnableCache;
-        _taskRunner.Forget(PrefetchNextAsync(current, prefetchAudio, cts.Token), "prefetch next track");
+        var task = RunOwnedJobAsync(cts, ct => PrefetchNextAsync(current, prefetchAudio, ct), true);
+        _ownedJobs.RemoveAll(static job => job.IsCompleted);
+        _ownedJobs.Add(task);
+        _taskRunner.Forget(task, "prefetch next track");
+        }
+        }
+        CancelPrevious(previous);
+    }
+
+    private async Task RunOwnedJobAsync(OwnedCancellation source, Func<CancellationToken, Task> run, bool prefetch)
+    {
+        try { await run(source.Token).ConfigureAwait(false); }
+        finally
+        {
+            lock (_disposeGate)
+            {
+                if (prefetch) { if (ReferenceEquals(_prefetchCts, source)) _prefetchCts = null; }
+                else if (ReferenceEquals(_deviceRefreshCts, source)) _deviceRefreshCts = null;
+                source.Complete();
+            }
+        }
     }
 
     private async Task PrefetchNextAsync(SingleSongBase current, bool prefetchAudio, CancellationToken ct)
@@ -1705,10 +1745,26 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     /// </summary>
     public void Dispose()
     {
-        DisposeAsync().AsTask().GetAwaiter().GetResult();
+        lock (_disposeGate) StopSynchronousResources();
+        CancelOwnedWork();
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
+    {
+        TaskCompletionSource completion;
+        lock (_disposeGate)
+        {
+            StopSynchronousResources();
+            if (_disposeCompletion is not null) return new ValueTask(_disposeCompletion.Task);
+            completion = _disposeCompletion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+        CancelOwnedWork();
+        // Completion is shared by all callers; the worker catches failures into the TCS.
+        _ = FinishDisposalAsync(completion);
+        return new ValueTask(completion.Task);
+    }
+
+    private void StopSynchronousResources()
     {
         if (_disposed)
             return;
@@ -1726,30 +1782,57 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
         if (_initialized)
             MediaDevice.DefaultAudioRenderDeviceChanged -= OnDefaultAudioRenderDeviceChanged;
-        _deviceRefreshCts?.Cancel();
-        _prefetchCts?.Cancel();
         _state.PropertyChanged -= OnPlaybackStatePropertyChanged;
         _smtc?.ButtonPressed -= SMTC_ButtonPressed;
         _smtc?.PlaybackPositionChangeRequested -= SMTC_PlaybackPositionChangeRequested;
 
-        await _transitionGate.WaitAsync().ConfigureAwait(false);
-        try
-        {
-            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
-        }
-        finally
-        {
-            _transitionGate.Release();
-        }
-
-        _playbackCts?.Cancel();
-        _playbackCts?.Dispose();
-        _lyricCts?.Cancel();
-        _lyricCts?.Dispose();
-        _autoSkipLock.Dispose();
-        _transitionGate.Dispose();
-        _initializeGate.Dispose();
     }
 
+    private void CancelOwnedWork()
+    {
+        // Cancellation callbacks run outside the lifecycle lock; completed sources
+        // may already have detached from their owning operation.
+        try { _deviceRefreshCts?.Cancel(); }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { _prefetchCts?.Cancel(); }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { _playbackCts?.Cancel(); }
+        catch (ObjectDisposedException) { }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+        try { _lyricCts?.Cancel(); }
+        catch (ObjectDisposedException) { }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex); }
+    }
+
+    private static void CancelPrevious(OwnedCancellation? source)
+    {
+        try { source?.Cancel(); }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Playback cancellation callback failed: {ex}"); }
+    }
+
+    private async Task FinishDisposalAsync(TaskCompletionSource completion)
+    {
+        Exception? failure = null;
+        try
+        {
+            Task[] jobs;
+            lock (_disposeGate) jobs = _ownedJobs.ToArray();
+            try { await Task.WhenAll(jobs).ConfigureAwait(false); }
+            catch (OperationCanceledException) { }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Background playback cleanup failed: {ex}"); }
+            await _transitionGate.WaitAsync().ConfigureAwait(false);
+            try { await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false); }
+            finally { _transitionGate.Release(); }
+        }
+        catch (Exception ex) { failure = ex; }
+        finally
+        {
+            _playbackCts?.Dispose();
+            _lyricCts?.Dispose();
+            // Managed gates stay valid for canceled callers unwinding their finally blocks.
+        }
+        if (failure is null) completion.TrySetResult();
+        else completion.TrySetException(failure);
+    }
     #endregion
 }
