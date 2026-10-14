@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../HyPlayer.UWP.Chopin/Dsp/TimeStretcher.cs" Link="TimeStretcher.cs" />
+    <Compile Include="../../HyPlayer.UWP.Chopin/Dsp/Signalsmith/*.cs" Link="Signalsmith/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

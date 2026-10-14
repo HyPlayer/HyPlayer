@@ -1,134 +1,80 @@
-﻿using System;
-using System.IO;
-using System.Runtime.InteropServices;
+using System;
+using HyPlayer.UWP.Chopin.Dsp.Signalsmith;
 
-namespace HyPlayer.UWP.Chopin.Dsp
+namespace HyPlayer.UWP.Chopin.Dsp;
+
+/// <summary>Managed Signalsmith time stretching and pitch shifting of interleaved PCM.</summary>
+public sealed class TimeStretcher : IDisposable
 {
-    public sealed unsafe class TimeStretcher : IDisposable
+    internal const double DefaultBlockSeconds = 0.12;
+    internal const double DefaultIntervalSeconds = 0.03;
+    internal const double CompactBlockSeconds = 0.07;
+    internal const double CompactIntervalSeconds = 0.0175;
+    private SignalsmithStretch _stretch;
+    private bool _disposed;
+    // Existing capability checks remain valid without a separately deployed DLL.
+    /// <summary>Whether the managed stretch backend is present; always true.</summary>
+    public static bool IsAvailable => true;
+    /// <summary>Whether pitch shifting is supported; always true.</summary>
+    public static bool CanTranspose => true;
+
+    /// <summary>Creates a processor with the upstream 120 ms block and 30 ms interval.</summary>
+    /// <param name="channels">Number of interleaved PCM channels.</param>
+    /// <param name="sampleRate">PCM sample rate in Hz.</param>
+    public TimeStretcher(int channels, int sampleRate) : this(channels, sampleRate, DefaultBlockSeconds, DefaultIntervalSeconds) { }
+
+    internal static (int Input, int Output) Latencies(int sampleRate, bool compact) =>
+        StretchStft.Latencies((int)(sampleRate * (compact ? CompactBlockSeconds : DefaultBlockSeconds)),
+            (int)(sampleRate * (compact ? CompactIntervalSeconds : DefaultIntervalSeconds)));
+
+    /// <summary>Creates a processor and preallocates its transform and history buffers.</summary>
+    /// <param name="channels">Number of interleaved PCM channels.</param>
+    /// <param name="sampleRate">PCM sample rate in Hz.</param>
+    /// <param name="blockSeconds">Analysis block length in seconds.</param>
+    /// <param name="intervalSeconds">Spectrum processing interval in seconds.</param>
+    public TimeStretcher(int channels, int sampleRate, double blockSeconds, double intervalSeconds)
     {
-        private static readonly object LoadLock = new();
-        private static volatile bool _loadAttempted;
-        private static delegate* unmanaged[Cdecl]<int, float, int, nint> _create;
-        private static delegate* unmanaged[Cdecl]<nint, void> _destroy;
-        private static delegate* unmanaged[Cdecl]<nint, void> _reset;
-        private static delegate* unmanaged[Cdecl]<nint, float, int> _outputSeekLength;
-        private static delegate* unmanaged[Cdecl]<nint, float*, int, void> _outputSeek;
-        private static delegate* unmanaged[Cdecl]<nint, float*, int, float*, int, void> _process;
-        private static delegate* unmanaged[Cdecl]<nint, float, void> _setTranspose;
-        private static delegate* unmanaged[Cdecl]<int, int, int, nint> _createSized;
-
-        private nint _handle;
-        private readonly int _channels;
-
-        public static bool IsAvailable
-        {
-            get
-            {
-                EnsureLoaded();
-                return _create != null;
-            }
-        }
-
-        private static void EnsureLoaded()
-        {
-            if (_loadAttempted) return;
-            lock (LoadLock)
-            {
-                if (_loadAttempted) return;
-                try
-                {
-                    Load();
-                }
-                finally
-                {
-                    _loadAttempted = true;
-                }
-            }
-        }
-
-        private static void Load()
-        {
-            var baseDir = AppContext.BaseDirectory;
-            var candidates = new[]
-            {
-                Path.Combine(baseDir, "hyp_stretch.dll"),
-                Path.Combine(Path.GetDirectoryName(baseDir.TrimEnd(Path.DirectorySeparatorChar)) ?? baseDir, "hyp_stretch.dll"),
-                "hyp_stretch.dll"
-            };
-            foreach (var candidate in candidates)
-            {
-                if (!NativeLibrary.TryLoad(candidate, out var library)) continue;
-                if (!NativeLibrary.TryGetExport(library, "hyp_stretch_create", out var create)) continue;
-                _destroy = (delegate* unmanaged[Cdecl]<nint, void>)NativeLibrary.GetExport(library, "hyp_stretch_destroy");
-                _reset = (delegate* unmanaged[Cdecl]<nint, void>)NativeLibrary.GetExport(library, "hyp_stretch_reset");
-                _outputSeekLength = (delegate* unmanaged[Cdecl]<nint, float, int>)NativeLibrary.GetExport(library, "hyp_stretch_output_seek_length");
-                _outputSeek = (delegate* unmanaged[Cdecl]<nint, float*, int, void>)NativeLibrary.GetExport(library, "hyp_stretch_output_seek");
-                _process = (delegate* unmanaged[Cdecl]<nint, float*, int, float*, int, void>)NativeLibrary.GetExport(library, "hyp_stretch_process");
-                if (NativeLibrary.TryGetExport(library, "hyp_stretch_set_transpose", out var transpose))
-                    _setTranspose = (delegate* unmanaged[Cdecl]<nint, float, void>)transpose;
-                if (NativeLibrary.TryGetExport(library, "hyp_stretch_create_sized", out var sized))
-                    _createSized = (delegate* unmanaged[Cdecl]<int, int, int, nint>)sized;
-                _create = (delegate* unmanaged[Cdecl]<int, float, int, nint>)create;
-                return;
-            }
-        }
-
-        public TimeStretcher(int channels, int sampleRate)
-        {
-            EnsureLoaded();
-            if (_create == null) throw new InvalidOperationException("Time stretch library is not available");
-            _channels = channels;
-            _handle = _create(channels, sampleRate, 0);
-        }
-
-        public TimeStretcher(int channels, int sampleRate, double blockSeconds, double intervalSeconds)
-        {
-            EnsureLoaded();
-            if (_create == null) throw new InvalidOperationException("Time stretch library is not available");
-            _channels = channels;
-            var block = (int)(sampleRate * blockSeconds);
-            var interval = (int)(sampleRate * intervalSeconds);
-            _handle = _createSized != null && block > 0 && interval > 0
-                ? _createSized(channels, block, interval)
-                : _create(channels, sampleRate, 0);
-        }
-
-        public int OutputSeekLength(double rate) => _outputSeekLength(_handle, (float)rate);
-
-        public void OutputSeek(ReadOnlySpan<float> interleaved)
-        {
-            fixed (float* input = interleaved)
-                _outputSeek(_handle, input, interleaved.Length / _channels);
-        }
-
-        public void Process(ReadOnlySpan<float> input, Span<float> output)
-        {
-            fixed (float* inPtr = input)
-            fixed (float* outPtr = output)
-                _process(_handle, inPtr, input.Length / _channels, outPtr, output.Length / _channels);
-        }
-
-        public void Reset() => _reset(_handle);
-
-        public static bool CanTranspose
-        {
-            get
-            {
-                EnsureLoaded();
-                return _create != null && _setTranspose != null;
-            }
-        }
-
-        public void SetTranspose(double factor)
-        {
-            if (_setTranspose != null) _setTranspose(_handle, (float)factor);
-        }
-
-        public void Dispose()
-        {
-            if (_handle == 0) return;
-            _destroy(_handle);
-            _handle = 0;
-        }
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(channels);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sampleRate);
+        if (!double.IsFinite(blockSeconds) || blockSeconds <= 0) throw new ArgumentOutOfRangeException(nameof(blockSeconds));
+        if (!double.IsFinite(intervalSeconds) || intervalSeconds <= 0) throw new ArgumentOutOfRangeException(nameof(intervalSeconds));
+        var block = checked((int)(sampleRate * blockSeconds));
+        var interval = checked((int)(sampleRate * intervalSeconds));
+        if (block < 4 || interval < 1 || interval > block) throw new ArgumentOutOfRangeException(nameof(intervalSeconds));
+        _stretch = new SignalsmithStretch(channels, block, interval);
     }
+
+    /// <summary>Returns input frames required to pre-roll output at the requested playback rate.</summary>
+    /// <param name="rate">Input frames per output frame; zero queries input latency alone.</param>
+    /// <returns>The required frame count, including analysis and synthesis latency.</returns>
+    public int OutputSeekLength(double rate)
+    {
+        ThrowIfDisposed();
+        if (!double.IsFinite(rate) || rate < 0) throw new ArgumentOutOfRangeException(nameof(rate));
+        return checked((int)(_stretch.InputLatency + (float)rate * _stretch.OutputLatency));
+    }
+    /// <summary>Resets and pre-rolls the supplied PCM so subsequent output starts at its beginning.</summary>
+    /// <param name="input">Interleaved pre-roll PCM; normally OutputSeekLength frames.</param>
+    public void OutputSeek(ReadOnlySpan<float> input) { ThrowIfDisposed(); _stretch.OutputSeek(input); }
+    /// <summary>Processes disjoint interleaved buffers without allocating; their frame ratio sets speed.</summary>
+    /// <param name="input">Input PCM containing complete frames.</param>
+    /// <param name="output">Output PCM buffer containing complete frames.</param>
+    public void Process(ReadOnlySpan<float> input, Span<float> output) { ThrowIfDisposed(); _stretch.Process(input, output); }
+    /// <summary>Clears audio history and phase state, preserving transpose configuration.</summary>
+    public void Reset() { ThrowIfDisposed(); _stretch.Reset(); }
+    /// <summary>Sets the frequency multiplier; first non-unity use reserves pitch workspace before processing.</summary>
+    /// <param name="factor">Positive frequency multiplier; one preserves pitch.</param>
+    public void SetTranspose(double factor)
+    {
+        ThrowIfDisposed();
+        if (!double.IsFinite(factor) || factor <= 0 || factor > float.MaxValue) throw new ArgumentOutOfRangeException(nameof(factor));
+        _stretch.Transpose = (float)factor;
+    }
+    /// <summary>Marks this worker-owned instance unusable; all storage is managed.</summary>
+    public void Dispose()
+    {
+        _disposed = true;
+        _stretch = null; // Release large managed history/FFT buffers even if the wrapper is retained.
+    }
+    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
 }

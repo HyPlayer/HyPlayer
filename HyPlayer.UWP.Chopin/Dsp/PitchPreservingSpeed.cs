@@ -4,8 +4,8 @@ namespace HyPlayer.UWP.Chopin.Dsp
 {
     public sealed class PitchPreservingSpeed : IDisposable
     {
-        public const double CompressBlockSeconds = 0.07;
-        public const double CompressIntervalSeconds = 0.0175;
+        public const double CompressBlockSeconds = TimeStretcher.CompactBlockSeconds;
+        public const double CompressIntervalSeconds = TimeStretcher.CompactIntervalSeconds;
 
         private readonly int _sampleRate;
         private readonly SpeedResampler _resampler;

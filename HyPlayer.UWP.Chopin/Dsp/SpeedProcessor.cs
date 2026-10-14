@@ -201,9 +201,9 @@ namespace HyPlayer.UWP.Chopin.Dsp
             var slot = kind == Kind.Fast ? 0 : 1;
             if (_latency[slot * 2] < 0)
             {
-                using var probe = StretchPath.Build(_rate, kind);
-                _latency[slot * 2] = probe.OutputSeekLength(0);
-                _latency[slot * 2 + 1] = probe.OutputSeekLength(1) - _latency[slot * 2];
+                var latency = TimeStretcher.Latencies(_rate, kind == Kind.Fast);
+                _latency[slot * 2] = latency.Input;
+                _latency[slot * 2 + 1] = latency.Output;
             }
 
             return _latency[slot * 2] + (int)Math.Ceiling(Speed * _latency[slot * 2 + 1]);
