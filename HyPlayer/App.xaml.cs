@@ -69,8 +69,6 @@ public sealed partial class App : Windows.UI.Xaml.Application
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
         InitializeComponent();
-        System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.SustainedLowLatency;
-        InteropCollectionBudget.Raise();
         InitializeServices();
         InitializeCommonServices();
         AppDepository.Resolve<IHistoryService>().InitializeHistoryTrack();

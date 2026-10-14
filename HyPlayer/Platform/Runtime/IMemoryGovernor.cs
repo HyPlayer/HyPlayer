@@ -5,8 +5,6 @@ namespace HyPlayer.Platform.Runtime;
 
 public interface IMemoryGovernor
 {
-    ulong WorkingSetBytes { get; }
-
     void Attach(Window window);
 
     void OnEnteredBackground();
@@ -16,8 +14,6 @@ public interface IMemoryGovernor
     void ScheduleNavigationReclaim();
 
     void OnExpandedPlayerVisibilityChanged(bool open);
-
-    Task ReclaimAsync();
 
     Task PauseAsync();
 

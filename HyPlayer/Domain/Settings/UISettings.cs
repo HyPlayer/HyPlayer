@@ -381,50 +381,6 @@ public partial class UISettings : SettingsBase
         set => SetSettings(nameof(EnableTileBackground), value);
     }
 
-    public static readonly int[] BackgroundReleasePresets = [30, 60, 300, 600, 0];
-
-    public int BackgroundReleaseSeconds
-    {
-        get => GetSettings(nameof(BackgroundReleaseSeconds), 60);
-        set
-        {
-            if (SetSettings(nameof(BackgroundReleaseSeconds), value))
-                OnPropertyChanged(nameof(BackgroundReleaseIndex));
-        }
-    }
-
-    public int BackgroundReleaseIndex
-    {
-        get => Math.Max(0, Array.IndexOf(BackgroundReleasePresets, BackgroundReleaseSeconds));
-        set
-        {
-            if (value >= 0 && value < BackgroundReleasePresets.Length)
-                BackgroundReleaseSeconds = BackgroundReleasePresets[value];
-        }
-    }
-
-    public static readonly int[] MemoryLimitPresets = [-1, 512, 1024, 2048, 3072, 4096, 0];
-
-    public int MemoryLimitMB
-    {
-        get => GetSettings(nameof(MemoryLimitMB), -1);
-        set
-        {
-            if (SetSettings(nameof(MemoryLimitMB), value))
-                OnPropertyChanged(nameof(MemoryLimitIndex));
-        }
-    }
-
-    public int MemoryLimitIndex
-    {
-        get => Math.Max(0, Array.IndexOf(MemoryLimitPresets, MemoryLimitMB));
-        set
-        {
-            if (value >= 0 && value < MemoryLimitPresets.Length)
-                MemoryLimitMB = MemoryLimitPresets[value];
-        }
-    }
-
     public ExpandedControlStyle ExpandedControlStyle
     {
         get => GetSettings(nameof(ExpandedControlStyle), ExpandedControlStyle.Apple);

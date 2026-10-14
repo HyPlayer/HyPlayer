@@ -252,7 +252,6 @@ public static class RechunkedAudioSource
     {
         private readonly Windows.Storage.Streams.Buffer _buffer;
         private readonly TypedEventHandler<MediaStreamSample, object> _processed;
-        private readonly int _pressure;
         private readonly DecodeAheadPump _pump;
         private MediaStreamSample? _sample;
 
@@ -260,8 +259,6 @@ public static class RechunkedAudioSource
         {
             _buffer = new Windows.Storage.Streams.Buffer((uint)capacity);
             Interlocked.Increment(ref DecodeBufferStatistics.Created);
-            GC.AddMemoryPressure(capacity);
-            _pressure = capacity;
             _pump = pump;
             _processed = (sender, args) =>
             {
@@ -288,11 +285,6 @@ public static class RechunkedAudioSource
             {
                 Marshal.Release(unknown);
             }
-        }
-
-        ~SampleChunk()
-        {
-            if (_pressure > 0) GC.RemoveMemoryPressure(_pressure);
         }
 
         public MediaStreamSample ToSample()

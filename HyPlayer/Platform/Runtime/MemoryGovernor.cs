@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using HyPlayer.Domain.Settings;
 using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Features.Playback.Models;
@@ -60,7 +59,7 @@ public sealed class MemoryGovernor : IMemoryGovernor, IDisposable, IAsyncDisposa
     private const ulong MB = 1024 * 1024;
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan Cooldown = TimeSpan.FromMinutes(2);
-    private readonly UISettings _settings;
+    private static readonly TimeSpan InactiveDelay = TimeSpan.FromSeconds(60);
     private readonly PlaybackStateService _playbackState;
     private readonly ModelManager _models;
     private readonly AudioGraphPlayer _player;
@@ -73,10 +72,10 @@ public sealed class MemoryGovernor : IMemoryGovernor, IDisposable, IAsyncDisposa
     private DateTime? _navigationDue, _inactiveDue;
     private bool _windowInactive, _appInBackground, _expandedOpen, _paused, _disposed;
 
-    public MemoryGovernor(UISettings settings, PlaybackStateService playbackState, ModelManager models,
+    public MemoryGovernor(PlaybackStateService playbackState, ModelManager models,
         AudioGraphPlayer player, IBackgroundTaskRunner tasks)
     {
-        _settings = settings; _playbackState = playbackState; _models = models; _player = player; _tasks = tasks;
+        _playbackState = playbackState; _models = models; _player = player; _tasks = tasks;
         _release = new IdleResourceRelease(() =>
         {
             // ONNX disposal is synchronous and potentially expensive. Only unused sessions
@@ -86,7 +85,7 @@ public sealed class MemoryGovernor : IMemoryGovernor, IDisposable, IAsyncDisposa
         });
     }
 
-    public unsafe ulong WorkingSetBytes
+    private unsafe ulong WorkingSetBytes
     {
         get
         {
@@ -147,16 +146,6 @@ public sealed class MemoryGovernor : IMemoryGovernor, IDisposable, IAsyncDisposa
         }
     }
 
-    public Task ReclaimAsync()
-    {
-        lock (_gate)
-        {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-            _lastRelease = DateTime.UtcNow;
-            return _release.RunAsync();
-        }
-    }
-
     private void OnWindowActivated(object sender, WindowActivatedEventArgs e)
     {
         lock (_gate)
@@ -169,8 +158,7 @@ public sealed class MemoryGovernor : IMemoryGovernor, IDisposable, IAsyncDisposa
 
     private void RestartInactiveTimer()
     {
-        var seconds = _settings.BackgroundReleaseSeconds;
-        _inactiveDue = seconds > 0 ? DateTime.UtcNow.AddSeconds(seconds) : null;
+        _inactiveDue = DateTime.UtcNow + InactiveDelay;
     }
 
     private void Evaluate()
@@ -184,8 +172,7 @@ public sealed class MemoryGovernor : IMemoryGovernor, IDisposable, IAsyncDisposa
                 if (now - _lastRelease < Cooldown) return;
                 var navigation = _navigationDue is { } nav && now >= nav;
                 var inactive = (_windowInactive || _appInBackground) && _inactiveDue is { } due && now >= due;
-                var limit = _settings.MemoryLimitMB;
-                if (!navigation && !inactive && (limit == 0 || WorkingSetBytes <= Threshold(limit))) return;
+                if (!navigation && !inactive && WorkingSetBytes <= Threshold()) return;
                 _navigationDue = null; _inactiveDue = null; _lastRelease = now;
                 _tasks.Forget(_release.RunAsync(), "release idle resources");
             }
@@ -193,9 +180,8 @@ public sealed class MemoryGovernor : IMemoryGovernor, IDisposable, IAsyncDisposa
         catch (Exception ex) { Debug.WriteLine($"Idle resource evaluation failed: {ex}"); }
     }
 
-    private unsafe ulong Threshold(int limitMb)
+    private unsafe ulong Threshold()
     {
-        if (limitMb > 0) return (ulong)limitMb * MB;
         var status = new MemoryStatus { Length = (uint)sizeof(MemoryStatus) };
         var known = GlobalMemoryStatusEx(&status) != 0 && status.TotalPhys > 0;
         var tight = MemoryManager.AppMemoryUsageLevel >= AppMemoryUsageLevel.High ||

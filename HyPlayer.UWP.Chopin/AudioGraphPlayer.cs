@@ -370,7 +370,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             lock (_callbackLock)
             {
                 var graph = _defaultPlayer;
-                RealtimeGcGuard.Set(graph != null && TransientCallbacksNeeded());
                 var target = graph != null && TransientCallbacksNeeded() ? graph : null;
                 if (!ReferenceEquals(target, _callbackGraph))
                 {
@@ -804,7 +803,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             CancelAllRamps();
             ShutdownMixRenderers(false);
             DetachCallbacks();
-            RealtimeGcGuard.Set(false);
             foreach (var corrector in _pitchCorrectors.Values) corrector.Dispose();
             _pitchCorrectors.Clear();
             foreach (var source in _decodedVoices.Keys.ToList()) DetachDecodedVoice(source);
