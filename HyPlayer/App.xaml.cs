@@ -110,6 +110,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
         var globalTimer = AppDepository.Resolve<IGlobalTimerService>();
         var teachingTip = AppDepository.Resolve<ITeachingTipService>();
         var playBarAutoHide = AppDepository.Resolve<IPlayBarAutoHideService>();
+        AppDepository.Resolve<ToastLyricService>();
         globalTimer.SecondTick += (_, _) =>
         {
             teachingTip.Roll();

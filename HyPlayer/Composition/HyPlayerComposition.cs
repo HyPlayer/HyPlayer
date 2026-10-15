@@ -339,6 +339,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<ILastFmService, LastFmService>();
         depository.AddSingleton<ITileService, TileService>();
         depository.AddSingleton<ILyricRenderSettingsService, LyricRenderSettingsService>();
+        depository.AddSingleton<ToastLyricService>();
     }
 
     private static void ConfigureShellServices(IDepository depository)

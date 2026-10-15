@@ -352,6 +352,13 @@
                                                 SpinButtonPlacementMode="Compact"
                                                 Value="{x:Bind Lyric.LyricLineSpacing, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard Header="使用通知桌面歌词" Description="开启后，点击播放栏的桌面歌词按钮显示或关闭通知歌词；关闭此选项后使用热词。">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                AutomationProperties.Name="使用通知桌面歌词"
+                                                IsOn="{x:Bind Lyric.UseToastLyrics, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard Header="开启时启动热词">
                                             <ToggleSwitch
                                                 MinWidth="10"

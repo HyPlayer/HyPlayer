@@ -11,6 +11,12 @@ public partial class LyricSettings : SettingsBase
 {
     protected override string SectionName => "lyric";
 
+    public bool UseToastLyrics
+    {
+        get => GetSettings(nameof(UseToastLyrics), false);
+        set => SetSettings(nameof(UseToastLyrics), value);
+    }
+
     /// <summary>Numeric render settings. Stored separately from legacy expression profiles.</summary>
     public string DirectRenderSettingsJson
     {

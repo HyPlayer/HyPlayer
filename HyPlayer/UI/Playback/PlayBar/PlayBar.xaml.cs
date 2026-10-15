@@ -737,6 +737,13 @@ DoubleAnimation verticalAnimation;
 
     private async void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
+        var toastLyrics = Ioc.Default.GetRequiredService<ToastLyricService>();
+        if (toastLyrics.IsEnabled || _lyricSettings.UseToastLyrics)
+        {
+            toastLyrics.Toggle();
+            return;
+        }
+
         // 当前未打开歌词
         var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
         if (await Launcher.QueryUriSupportAsync(uri, LaunchQuerySupportType.Uri,
@@ -746,7 +753,8 @@ DoubleAnimation verticalAnimation;
             {
                 Title = "关于桌面歌词",
                 Content =
-                    "目前 HyPlayer 已经适配「热词」，我们推荐使用「热词」来获得真正的桌面歌词体验，可以前往 Microsoft 商店安装 「热词」",
+                    "可以安装「热词」获得桌面歌词，也可以使用 Windows 通知显示歌词。",
+                SecondaryButtonText = "使用通知歌词",
                 CloseButtonText = "否",
                 PrimaryButtonText = "安装 「热词」"
             };
@@ -754,6 +762,11 @@ DoubleAnimation verticalAnimation;
             var res = await dlg.ShowAsync(ContentDialogPlacement.Popup);
             if (res == ContentDialogResult.Primary)
                 await Launcher.LaunchUriAsync(new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9"));
+            else if (res == ContentDialogResult.Secondary)
+            {
+                _lyricSettings.UseToastLyrics = true;
+                toastLyrics.Toggle();
+            }
 
             return;
         }
