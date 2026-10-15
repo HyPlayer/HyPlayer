@@ -18,6 +18,8 @@ public interface IPlaybackNotificationService
     /// </summary>
     Task RefreshCoverAsync(SingleSongBase providerItem);
 
+    void PreloadCover(SingleSongBase providerItem);
+
     /// <summary>
     ///     曲目播放结束时 Scrobble
     /// </summary>

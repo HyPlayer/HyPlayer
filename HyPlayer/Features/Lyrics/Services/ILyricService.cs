@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -26,6 +27,8 @@ public interface ILyricService
     /// </summary>
     Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default);
 
+    void PreloadLyrics(SingleSongBase providerItem);
+
     /// <summary>
     ///     导入本地歌词并写入当前播放歌曲的歌词状态/缓存。
     /// </summary>
@@ -36,4 +39,7 @@ public interface ILyricService
     ///     根据播放位置更新当前歌词行
     /// </summary>
     void Tick(TimeSpan position);
+
+    Task<IReadOnlyList<(double Start, double End)>> GetVocalRegionsAsync(SingleSongBase providerItem,
+        CancellationToken ct = default);
 }

@@ -39,6 +39,9 @@ public partial class PlaybackStateService : ObservableObject
     [ObservableProperty]
     public partial double Volume { get; set; }
 
+    [ObservableProperty]
+    public partial double PlaybackSpeed { get; set; } = 1d;
+
     /// <summary>当前播放策略 Id (seq/sgl/shf/shn/pfm/ltg)</summary>
     [ObservableProperty]
     public partial string ActiveStrategyId { get; set; } = "seq";
@@ -55,6 +58,9 @@ public partial class PlaybackStateService : ObservableObject
     [ObservableProperty]
     public partial HyLyricInfo LyricInfo { get; set; } = new();
 
+    [ObservableProperty]
+    public partial bool IsLyricPending { get; set; }
+
     /// <summary>当前歌词行索引</summary>
     [ObservableProperty]
     public partial int LyricIndex { get; set; }
@@ -66,6 +72,12 @@ public partial class PlaybackStateService : ObservableObject
     /// <summary>当前音质标签</summary>
     [ObservableProperty]
     public partial string QualityTag { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsTransitioning { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsLoadingTrack { get; set; }
 
     /// <summary>PlayCore 队列变化版本号，供 UI 刷新队列投影。</summary>
     [ObservableProperty]
@@ -87,8 +99,24 @@ public partial class PlaybackStateService : ObservableObject
     /// </summary>
     public void SetNowPlaying(SingleSongBase? providerItem)
     {
+        if (!IsSameSong(NowPlayingProviderItem, providerItem))
+        {
+            Position = TimeSpan.Zero;
+            Duration = TimeSpan.FromMilliseconds(Math.Max(0, providerItem?.Duration ?? 0));
+        }
+
         NowPlayingProviderItem = providerItem;
         NowPlayingSnapshot = PlaybackCurrentItemSnapshot.FromProvider(providerItem);
+    }
+
+    private static bool IsSameSong(SingleSongBase? left, SingleSongBase? right)
+    {
+        return ReferenceEquals(left, right)
+               || (left is not null
+                   && right is not null
+                   && left.ProviderId == right.ProviderId
+                   && left.TypeId == right.TypeId
+                   && left.ActualId == right.ActualId);
     }
 
     /// <summary>Clears mirrored now-playing state and resets the playlist index.</summary>

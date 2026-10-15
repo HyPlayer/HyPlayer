@@ -45,6 +45,13 @@ public sealed partial class ProvidableItemRowViewModel : ObservableObject
     public bool HasLineTwo => !string.IsNullOrWhiteSpace(LineTwo);
     public bool HasLineThree => !string.IsNullOrWhiteSpace(LineThree);
     public bool HasTranslation => !string.IsNullOrWhiteSpace(Translation);
+    public string AccessibleName => HasLineOne ? $"{Title} - {LineOne}" : Title;
+
+    public override string ToString()
+    {
+        return AccessibleName;
+    }
+
     public SingleSongBase? AsPlayableSong => Item as SingleSongBase;
     public Visibility CurrentVisible => IsCurrent ? Visibility.Visible : Visibility.Collapsed;
     public Visibility LineOneVisible => HasLineOne ? Visibility.Visible : Visibility.Collapsed;
@@ -89,4 +96,9 @@ public sealed partial class ProvidableItemRowGroup(IEnumerable<ProvidableItemRow
     : ObservableList<ProvidableItemRowViewModel>(items)
 {
     public string Key { get; set; } = string.Empty;
+
+    public override string ToString()
+    {
+        return Key;
+    }
 }

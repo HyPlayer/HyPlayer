@@ -58,6 +58,8 @@ public abstract record AppRoute
 
     public sealed record Playlist(string Id) : AppRoute;
 
+    public sealed record PodcastEpisodes(string Kind) : AppRoute;
+
     public sealed record Radio(string Id) : AppRoute;
 
     public sealed record Settings : AppRoute;

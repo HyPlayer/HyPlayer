@@ -12,12 +12,12 @@ public class SinRollingCalculator : LineRollingCalculator
     public override float CalculateCurrentY(float fromY, float targetY, RenderingLyricLine currentLine, RenderContext context)
     {
         var gap = currentLine.RuntimeIndex - context.CurrentLyricLineIndex;
-        var progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) * 1.0f / AnimationDuration, 0, 1);
+        var progress = Math.Clamp((float)(context.PreciseLyricTime - context.CurrentKeyframe) * 1.0f / AnimationDuration, 0, 1);
 
         if (!(fromY < targetY) && gap >= 0)
         {
             // 往下走, 用正弦函数
-            progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) * 1.0f / (AnimationDuration * ((float)Math.Log10(Math.Max(gap, 0.9)) + 1)), 0, 1);
+            progress = Math.Clamp((float)(context.PreciseLyricTime - context.CurrentKeyframe) * 1.0f / (AnimationDuration * ((float)Math.Log10(Math.Max(gap, 0.9)) + 1)), 0, 1);
         }
         return fromY + (targetY - fromY) * progress;
     }

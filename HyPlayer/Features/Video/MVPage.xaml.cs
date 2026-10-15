@@ -10,6 +10,7 @@ using Windows.Media.Core;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Features.Playback.Services;
@@ -41,6 +42,9 @@ public sealed partial class MVPage : Page
         Ioc.Default.GetRequiredService<IProviderSearchCategoryTypeIds>();
 
     private readonly List<RichMediaCardViewModel> _sources = new();
+
+    private readonly LoadState _videoLoad = new("视频", Ioc.Default.GetRequiredService<ILoadEnvironment>());
+
     private MediaSource _currentMediaSource;
     private bool _isUnloaded;
     private Task _relateiveLoaderTask;
@@ -57,6 +61,9 @@ public sealed partial class MVPage : Page
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
+        VideoLoadView.State = _videoLoad;
+        _videoLoad.PropertyChanged += (_, _) => LoadingControl.IsLoading = _videoLoad.IsVisible;
+        LoadingControl.IsLoading = _videoLoad.IsVisible;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -92,15 +99,25 @@ public sealed partial class MVPage : Page
         LoadComment();
     }
 
-    private async Task LoadRelateive()
+    private Task LoadRelateive()
     {
-        _cancellationToken.ThrowIfCancellationRequested();
-        var result = await _richMediaProvider.GetRichMediaFeedAsync($"song:{_songId}", 0, 10, _cancellationToken);
-        foreach (var item in result.Items) _sources.Add(await MapRichMediaToCardAsync(item));
-
-        RelativeList.ItemsSource = _sources;
-
-        RelativeList.SelectedIndex = 0;
+        _videoLoad.EmptyText = "没有找到相关视频";
+        return _videoLoad.RunAsync(async cancellationToken =>
+        {
+            var result = await _richMediaProvider.GetRichMediaFeedAsync($"song:{_songId}", 0, 10,
+                cancellationToken);
+            var cards = new List<RichMediaCardViewModel>();
+            foreach (var item in result.Items) cards.Add(await MapRichMediaToCardAsync(item));
+            return cards;
+        }, cards =>
+        {
+            _sources.Clear();
+            _sources.AddRange(cards);
+            RelativeList.ItemsSource = null;
+            RelativeList.ItemsSource = _sources;
+            if (_sources.Count > 0)
+                RelativeList.SelectedIndex = 0;
+        }, static cards => cards.Count == 0);
     }
 
     private void LoadComment()
@@ -116,6 +133,7 @@ public sealed partial class MVPage : Page
         base.OnNavigatedFrom(e);
         Bindings.StopTracking();
         _isUnloaded = true;
+        _videoLoad.Cancel();
         _cancellationTokenSource.Cancel();
         _videoLoadCancellationTokenSource.Cancel();
         ReleaseCurrentMediaSource();
@@ -150,49 +168,33 @@ public sealed partial class MVPage : Page
         _videoLoadCancellationTokenSource?.Dispose();
     }
 
-    private async Task LoadVideo(int loadVersion, CancellationToken cancellationToken)
+    private Task LoadVideo(int loadVersion, CancellationToken cancellationToken)
     {
-        try
+        var mvId = _mvId;
+        var quality = _mvQuality;
+        _videoLoad.EmptyText = "没有可播放的视频资源";
+        return _videoLoad.RunAsync(async loadToken =>
         {
-            var mvId = _mvId;
-            var quality = _mvQuality;
-            cancellationToken.ThrowIfCancellationRequested();
-            LoadingControl.IsLoading = true;
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(loadToken, cancellationToken);
             var resource = await _richMediaProvider.GetRichMediaResourceAsync(
                 mvId,
                 GetRichMediaTypeId(mvId),
                 quality,
-                cancellationToken);
-            var resourceResult = resource is null ? null : await resource.GetResourceAsync(ctk: cancellationToken);
-            if (resourceResult is not IResourceResultOf<Uri?> uriResource)
-            {
-                if (!IsCurrentVideoLoad(loadVersion, cancellationToken)) return;
-                _notification.ShowMessage("加载视频时出错", "视频资源为空");
-                return;
-            }
-
-            var uri = await uriResource.GetResourceAsync(cancellationToken);
-            if (!IsCurrentVideoLoad(loadVersion, cancellationToken)) return;
-            if (uri is null)
-            {
-                _notification.ShowMessage("加载视频时出错", "视频地址为空");
-                return;
-            }
+                linked.Token);
+            var resourceResult = resource is null ? null : await resource.GetResourceAsync(ctk: linked.Token);
+            return resourceResult is IResourceResultOf<Uri?> uriResource
+                ? await uriResource.GetResourceAsync(linked.Token)
+                : null;
+        }, uri =>
+        {
+            if (uri is null || !IsCurrentVideoLoad(loadVersion, cancellationToken)) return;
 
             ReleaseCurrentMediaSource();
             _currentMediaSource = MediaSource.CreateFromUri(uri);
             MediaPlayerElement.Source = _currentMediaSource;
             var mediaPlayer = MediaPlayerElement.MediaPlayer;
             mediaPlayer.Play();
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        finally
-        {
-            if (IsCurrentVideoLoad(loadVersion, cancellationToken))
-                LoadingControl.IsLoading = false;
-        }
+        }, static uri => uri is null);
     }
 
     private async Task LoadVideoInfo(int loadVersion, CancellationToken cancellationToken)
@@ -230,6 +232,11 @@ public sealed partial class MVPage : Page
         }
         catch (OperationCanceledException)
         {
+        }
+        catch (Exception exception)
+        {
+            if (IsCurrentVideoLoad(loadVersion, cancellationToken))
+                _notification.ShowFailure("加载视频信息失败", exception, cancellationToken);
         }
     }
 

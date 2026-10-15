@@ -9,6 +9,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
@@ -65,7 +66,7 @@ public sealed partial class SongListDetail : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("移除失败", ex.Message);
+            _notification.ShowFailure("移除失败", ex);
             return;
         }
 
@@ -77,7 +78,7 @@ public sealed partial class SongListDetail : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("歌曲已移除，但刷新歌单失败", ex.Message);
+            _notification.ShowFailure("歌曲已移除，但刷新歌单失败", ex);
         }
     }
 

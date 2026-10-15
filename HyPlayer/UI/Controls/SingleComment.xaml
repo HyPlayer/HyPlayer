@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:HyPlayer.UI.Lists"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:HyPlayer.UI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     d:DesignHeight="670"
@@ -132,6 +133,7 @@
                 <controls:CommentsList
                     Comments="{x:Bind _floorCommentsView, Mode=OneWay}"
                     IncrementalSource="{x:Bind _floorComments, Mode=OneWay}" />
+                <local:LoadStateView x:Name="FloorLoadView" RingSize="20" />
                 <Button
                     x:Name="LoadMore"
                     HorizontalAlignment="Stretch"

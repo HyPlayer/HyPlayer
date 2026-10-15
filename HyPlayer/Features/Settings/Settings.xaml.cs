@@ -23,7 +23,9 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI;
 using HyPlayer.Application.Notifications;
+using HyPlayer.Application.Loading;
 using HyPlayer.Classes;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.History.Services;
@@ -34,15 +36,22 @@ using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Tiles;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Shell;
+using HyPlayer.Shell.Input;
+using HyPlayer.Shell.Navigation;
 using HyPlayer.Shell.Navigation.Services;
+using HyPlayer.UI.Controls.Primitives;
 using HyPlayer.UI.Dialogs;
 using Kawazu;
 using LiteFM;
 using Microsoft.Graphics.Canvas.Text;
 using WinRT;
+using ItemsRepeater = Microsoft.UI.Xaml.Controls.ItemsRepeater;
 using Point = Windows.Foundation.Point;
+using SettingsExpander = CommunityToolkit.WinUI.Controls.SettingsExpander;
+using StackLayout = Microsoft.UI.Xaml.Controls.StackLayout;
 
 #endregion
 
@@ -88,10 +97,60 @@ public sealed partial class Settings : Page
         InitializeComponent();
     }
 
+    private readonly IKeyboardShortcutService _keyboardShortcuts =
+        Ioc.Default.GetRequiredService<IKeyboardShortcutService>();
+
+    public System.Collections.ObjectModel.ObservableCollection<KeyboardShortcutEntry> Shortcuts =>
+        _keyboardShortcuts.Entries;
+
+    private void ShortcutCapture_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: KeyboardShortcutEntry entry }) _keyboardShortcuts.BeginCapture(entry);
+    }
+
+    private void ShortcutClear_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: KeyboardShortcutEntry entry }) _keyboardShortcuts.Clear(entry);
+    }
+
+    private void ShortcutResetAll_Click(object sender, RoutedEventArgs e)
+    {
+        _keyboardShortcuts.ResetAll();
+    }
+
+    private readonly SidebarLayout _sidebarLayout = Ioc.Default.GetRequiredService<SidebarLayout>();
+
+    public System.Collections.ObjectModel.ObservableCollection<SidebarSection> SidebarSections =>
+        _sidebarLayout.Sections;
+
+    private void SidebarReset_Click(object sender, RoutedEventArgs e)
+    {
+        _sidebarLayout.ResetToDefault();
+    }
+
+    private readonly AppearanceCustomizer _appearance = Ioc.Default.GetRequiredService<AppearanceCustomizer>();
+
+    private async void PickBackgroundImage_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await _appearance.PickBackgroundAsync();
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("设置背景图失败", ex.Message);
+        }
+    }
+
+    private async void RemoveBackgroundImage_Click(object sender, RoutedEventArgs e)
+    {
+        await _appearance.RemoveBackgroundAsync();
+    }
+
     private void TransitionMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (TransitionMode.SelectedValue is not string transitionId
-            || transitionId is not ("dir" or "gap" or "xfd")
+            || transitionId is not ("dir" or "gap" or "xfd" or "fde" or "mix")
             || transitionId == Playback.TransitionId)
             return;
 
@@ -99,6 +158,23 @@ public sealed partial class Settings : Page
         _taskRunner.Forget(
             _playbackControl.SetTransitionAsync(transitionId),
             "change track transition");
+    }
+
+    private async Task RefreshCacheUsageAsync()
+    {
+        try
+        {
+            var used = await StorageMaintenance.GetCacheUsageAsync();
+            CacheLimitCard.Description = $"当前已使用 {StorageMaintenance.FormatSize(used)}";
+        }
+        catch
+        {
+        }
+    }
+
+    private void CacheLimitCard_Loaded(object sender, RoutedEventArgs e)
+    {
+        _ = RefreshCacheUsageAsync();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -132,8 +208,15 @@ public sealed partial class Settings : Page
 #if DEBUG
         VersionCode.Text += " Debug";
 #endif
-        FontBox.ItemsSource = GetAllFonts();
+        FontBox.ItemsSource = SystemFonts.Value;
+        UiFontBox.ItemsSource = UiFonts.Value;
     }
+
+    public static readonly Lazy<List<FontInfo>> SystemFonts =
+        new(GetAllFonts, System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+
+    private static readonly Lazy<List<FontInfo>> UiFonts =
+        new(() => [new FontInfo { Name = "默认", Value = string.Empty }, .. SystemFonts.Value]);
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
@@ -144,6 +227,34 @@ public sealed partial class Settings : Page
         // observed as dead by a later settings change.
         Bindings.StopTracking();
         FontBox.ItemsSource = null;
+        UiFontBox.ItemsSource = null;
+        _keyboardShortcuts.CancelCapture();
+    }
+
+    private void Pivot_OnPivotItemLoaded(Pivot sender, PivotItemEventArgs args)
+    {
+        var item = args.Item;
+        _ = Dispatcher.RunIdleAsync(_ =>
+        {
+            foreach (var expander in item.FindDescendants().OfType<SettingsExpander>())
+            {
+                expander.Expanded -= SettingsExpander_OnExpanded;
+                expander.Expanded += SettingsExpander_OnExpanded;
+                UseNonVirtualizingLayout(expander);
+            }
+        });
+    }
+
+    private void SettingsExpander_OnExpanded(object sender, EventArgs e)
+    {
+        UseNonVirtualizingLayout((DependencyObject)sender);
+    }
+
+    private static void UseNonVirtualizingLayout(DependencyObject root)
+    {
+        foreach (var repeater in root.FindDescendants().OfType<ItemsRepeater>())
+            if (repeater.Layout is StackLayout stackLayout)
+                repeater.Layout = new NonVirtualizingStackLayout { Spacing = stackLayout.Spacing };
     }
 
     private static List<FontInfo> GetAllFonts()
@@ -259,11 +370,34 @@ public sealed partial class Settings : Page
         };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
-        if (folder != null)
+        if (folder != null && await FolderAccessGuard.EnsureWritableAsync(folder, "下载的歌曲")
+            && await StorageMigrationPrompt.OfferAsync("下载的歌曲", await Download.GetDownloadDirectoryAsync(), folder,
+                StorageContentKind.Music))
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("downloadFolder", folder);
             Download.DownloadDirectory = folder.Path;
+            LocalLibrary.NotifyDownloadDirectoryChanged();
         }
+    }
+
+    private async void ButtonDownloadReset_OnClick(object sender, RoutedEventArgs e)
+    {
+        StorageFolder target;
+        try
+        {
+            target = await StorageFolder.GetFolderFromPathAsync(await Download.GetDefaultDownloadDirectoryAsync());
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("无法恢复默认下载路径", ex.Message);
+            return;
+        }
+
+        if (!await StorageMigrationPrompt.OfferAsync("下载的歌曲", await Download.GetDownloadDirectoryAsync(), target,
+                StorageContentKind.Music))
+            return;
+        Download.ResetDownloadDirectory();
+        LocalLibrary.NotifyDownloadDirectoryChanged();
     }
 
     private async void ButtonSearchingSelect_OnClick(object sender, RoutedEventArgs e)
@@ -274,11 +408,32 @@ public sealed partial class Settings : Page
         };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
-        if (folder != null)
+        if (folder != null && await FolderAccessGuard.EnsureWritableAsync(folder, "本地音乐索引")
+            && await StorageMigrationPrompt.OfferAsync("本地音乐", LocalLibrary.SearchDirectory, folder,
+                StorageContentKind.Music))
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("searchingFolder", folder);
             LocalLibrary.SearchDirectory = folder.Path;
         }
+    }
+
+    private async void ButtonSearchingReset_OnClick(object sender, RoutedEventArgs e)
+    {
+        StorageFolder target;
+        try
+        {
+            target = await StorageFolder.GetFolderFromPathAsync(await Download.GetDownloadDirectoryAsync());
+        }
+        catch (Exception ex)
+        {
+            _notification.ShowMessage("无法恢复默认搜索路径", ex.Message);
+            return;
+        }
+
+        if (!await StorageMigrationPrompt.OfferAsync("本地音乐", LocalLibrary.SearchDirectory, target,
+                StorageContentKind.Music))
+            return;
+        LocalLibrary.ResetSearchDirectory();
     }
 
 
@@ -335,11 +490,23 @@ public sealed partial class Settings : Page
         };
         folderPicker.FileTypeFilter.Add("*");
         var folder = await folderPicker.PickSingleFolderAsync();
-        if (folder != null)
+        if (folder != null && await FolderAccessGuard.EnsureWritableAsync(folder, "缓存")
+            && await StorageMigrationPrompt.OfferAsync("缓存", Playback.CacheDirectory, folder,
+                StorageContentKind.Cache))
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("cacheFolder", folder);
             Playback.CacheDirectory = folder.Path;
+            _ = RefreshCacheUsageAsync();
         }
+    }
+
+    private async void ButtonCacheReset_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (!await StorageMigrationPrompt.OfferAsync("缓存", Playback.CacheDirectory,
+                ApplicationData.Current.LocalCacheFolder, StorageContentKind.Cache))
+            return;
+        Playback.ResetCacheDirectory();
+        _ = RefreshCacheUsageAsync();
     }
 
     private void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -465,6 +632,30 @@ public sealed partial class Settings : Page
         Lyric.KaraokeLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
     }
 
+    private void ApplyNewAcrylic()
+    {
+        if (PreviewAcrylic is null || TintOpacitySlider is null || TintOpacityLuminositySlider is null) return;
+        var tintColor = (Windows.UI.Color)Windows.UI.Xaml.Application.Current.Resources["SystemRevealAltHighColor"];
+        PreviewAcrylic.Fill = new Microsoft.UI.Xaml.Media.AcrylicBrush
+        {
+            BackgroundSource = Microsoft.UI.Xaml.Media.AcrylicBackgroundSource.HostBackdrop,
+            TintColor = tintColor,
+            TintOpacity = TintOpacitySlider.Value,
+            TintLuminosityOpacity = TintOpacityLuminositySlider.Value,
+            FallbackColor = tintColor
+        };
+    }
+
+    private void TintOpacity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        ApplyNewAcrylic();
+    }
+
+    private void TintOpacityLuminosity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        ApplyNewAcrylic();
+    }
+
     private async void AboutRomaji_Click(object sender, RoutedEventArgs e)
     {
         await AboutRomajiDialog.ShowAsync();
@@ -483,11 +674,8 @@ public sealed partial class Settings : Page
     private async void BtnClearCache_Click(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ClearAllCacheAsync();
-        var folder = await StorageFolder.GetFolderFromPathAsync(Playback.CacheDirectory);
-        var files = await folder.GetFilesAsync();
-        foreach (var file in files)
-            if (file.FileType == ".flac" || file.FileType == ".mp3")
-                await file.DeleteAsync();
+        await StorageMaintenance.ClearAudioCacheAsync();
+        _ = RefreshCacheUsageAsync();
     }
 
     private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
@@ -509,6 +697,11 @@ public sealed partial class Settings : Page
     private async void OpenLyricEffectSettings_Click(object sender, RoutedEventArgs e)
     {
         await new LyricEffectSettingsDialog().ShowAsync();
+    }
+
+    private async void OpenAutoMixSettings_Click(object sender, RoutedEventArgs e)
+    {
+        await new AutoMixSettingsDialog().ShowAsync();
     }
 
     [GeneratedBindableCustomProperty]

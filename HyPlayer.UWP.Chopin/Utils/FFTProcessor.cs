@@ -14,6 +14,7 @@ namespace HyPlayer.UWP.Chopin.Utils
         public const int DisplayBandCount = 80;    // 最终显示的柱子数量
         public const int SpectrumBinCount = FftSize / 2;
         public const float SmoothingFactor = 0.85f; // 平滑系数 (0-1)，越高越平滑
+        public const int DisplayUpperFrequency = 16000;
 
 
         // --- 数据缓冲区 (全部预分配，避免GC) ---
@@ -33,6 +34,8 @@ namespace HyPlayer.UWP.Chopin.Utils
         private int _sampleRate = 48000;
         private long _version;
 
+        public const int MaxBlocksPerFeed = 16;
+
         public unsafe void ProcessFFT(AudioFrame frame, int sampleRate = 48000)
         {
             using (var buffer = frame.LockBuffer(AudioBufferAccessMode.Read))
@@ -40,46 +43,68 @@ namespace HyPlayer.UWP.Chopin.Utils
             {
                 // ReSharper disable once SuspiciousTypeConversion.Global
                 reference.GetBuffer(out var dataInBytes, out var capacity);
-                int totalSamples = (int)(capacity / sizeof(float));
-
-                int safeProcessingLimit = Math.Min(FftSize, totalSamples);
-                CurrentFftSize = safeProcessingLimit;
-                if (CurrentFftSize < 128) return;
-
-                Marshal.Copy((IntPtr)dataInBytes, _sampleBuffer, 0, safeProcessingLimit);
-
-                for (int i = 0; i < CurrentFftSize; i++)
-                {
-                    float sample = _sampleBuffer[i];
-                    if (!float.IsFinite(sample)) sample = 0f;
-
-                    float window = 0.5f * (1f - MathF.Cos(2f * MathF.PI * i / (CurrentFftSize - 1)));
-                    _fftBuffer[i] = new Complex(sample * window, 0d);
-                }
-
-                for (int i = CurrentFftSize; i < FftSize; i++)
-                {
-                    _fftBuffer[i] = Complex.Zero;
-                }
-
-                InPlaceFFT.Transform(_fftBuffer);
-
-                lock (_bufferLock)
-                {
-                    _sampleRate = Math.Max(1, sampleRate);
-                    for (var i = 0; i < SpectrumBinCount; i++)
-                    {
-                        var magnitude = (float)_fftBuffer[i].Magnitude;
-                        _fftMagnitudes[i] = magnitude / CurrentFftSize;
-
-                        float db = 20 * MathF.Log10(magnitude + 1e-9f) + 20;
-                        _linearMagnitudes[i] = float.IsFinite(db) ? MathF.Max(0, db) : 0f;
-                    }
-
-                    ProcessBandsLogarithmically();
-                    _version++;
-                }
+                ProcessFFT(new ReadOnlySpan<float>(dataInBytes, (int)(capacity / sizeof(float))), sampleRate);
             }
+        }
+
+        public int ProcessBlocks(ReadOnlySpan<float> samples, int blockSamples, int sampleRate)
+        {
+            if (blockSamples <= 0) blockSamples = samples.Length;
+            if (blockSamples <= 0) return 0;
+            var blocks = (samples.Length + blockSamples - 1) / blockSamples;
+            var first = Math.Max(0, blocks - MaxBlocksPerFeed);
+            var processed = 0;
+            for (var block = first; block < blocks; block++)
+            {
+                var start = block * blockSamples;
+                if (ProcessFFT(samples.Slice(start, Math.Min(blockSamples, samples.Length - start)), sampleRate))
+                    processed++;
+            }
+
+            return processed;
+        }
+
+        public bool ProcessFFT(ReadOnlySpan<float> samples, int sampleRate = 48000)
+        {
+            int safeProcessingLimit = Math.Min(FftSize, samples.Length);
+            CurrentFftSize = safeProcessingLimit;
+            if (CurrentFftSize < 128) return false;
+
+            samples.Slice(0, safeProcessingLimit).CopyTo(_sampleBuffer);
+
+            for (int i = 0; i < CurrentFftSize; i++)
+            {
+                float sample = _sampleBuffer[i];
+                if (!float.IsFinite(sample)) sample = 0f;
+
+                float window = 0.5f * (1f - MathF.Cos(2f * MathF.PI * i / (CurrentFftSize - 1)));
+                _fftBuffer[i] = new Complex(sample * window, 0d);
+            }
+
+            for (int i = CurrentFftSize; i < FftSize; i++)
+            {
+                _fftBuffer[i] = Complex.Zero;
+            }
+
+            InPlaceFFT.Transform(_fftBuffer);
+
+            lock (_bufferLock)
+            {
+                _sampleRate = Math.Max(1, sampleRate);
+                for (var i = 0; i < SpectrumBinCount; i++)
+                {
+                    var magnitude = (float)_fftBuffer[i].Magnitude;
+                    _fftMagnitudes[i] = magnitude / CurrentFftSize;
+
+                    float db = 20 * MathF.Log10(magnitude + 1e-9f) + 20;
+                    _linearMagnitudes[i] = float.IsFinite(db) ? MathF.Max(0, db) : 0f;
+                }
+
+                ProcessBandsLogarithmically();
+                _version++;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -119,13 +144,14 @@ namespace HyPlayer.UWP.Chopin.Utils
 
         private void ProcessBandsLogarithmically()
         {
-            double logBase = Math.Pow(SpectrumBinCount, 1.0 / DisplayBandCount);
+            int binLimit = Math.Clamp((int)((long)DisplayUpperFrequency * FftSize / _sampleRate), DisplayBandCount + 1, SpectrumBinCount);
+            double logBase = Math.Pow(binLimit, 1.0 / DisplayBandCount);
             int fftIndex = 1;
 
             for (int i = 0; i < DisplayBandCount; i++)
             {
                 int nextFftIndex = (int)Math.Pow(logBase, i + 1);
-                nextFftIndex = Math.Clamp(nextFftIndex, fftIndex + 1, _linearMagnitudes.Length);
+                nextFftIndex = Math.Clamp(nextFftIndex, fftIndex + 1, binLimit);
 
                 float maxMagnitudeInBand = 0;
                 // 找出当前频段区间内的最大值

@@ -91,21 +91,26 @@
                 Fill="{ThemeResource OpacityGradientBrush}"
                 Opacity="1" />
         </Grid>
-        <Grid
-            Name="GridPlayBar"
-            Height="120"
-            Margin="{x:Bind UISettings.PlayBarMargin, Mode=OneWay, Converter={StaticResource PlayBarMarginConverter}}"
-            VerticalAlignment="Bottom"
-            x:FieldModifier="public"
-            Background="{StaticResource SystemControlAcrylicElementMediumHighBrush}"
-            BorderBrush="{ThemeResource CardBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="{x:Bind UISettings.PlayBarMargin, Mode=OneWay, Converter={StaticResource PlayBarCornerRadiusConverter}}"
-            Opacity="1"
-            Visibility="Visible">
-            <controls2:PlayBar x:Name="PlaybackBar" />
+        <Grid Name="PlayBarHost">
+            <Grid
+                Name="GridPlayBar"
+                Height="120"
+                Margin="{x:Bind UISettings.PlayBarMargin, Mode=OneWay, Converter={StaticResource PlayBarMarginConverter}}"
+                VerticalAlignment="Bottom"
+                x:FieldModifier="public"
+                Background="{StaticResource SystemControlAcrylicElementMediumHighBrush}"
+                BorderBrush="{ThemeResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{x:Bind UISettings.PlayBarMargin, Mode=OneWay, Converter={StaticResource PlayBarCornerRadiusConverter}}"
+                Opacity="1"
+                Visibility="Visible">
+                <controls2:PlayBar x:Name="PlaybackBar" />
+                <Grid.RenderTransform>
+                    <TranslateTransform x:Name="PlayBarTrans" />
+                </Grid.RenderTransform>
+            </Grid>
             <Grid.RenderTransform>
-                <TranslateTransform x:Name="PlayBarTrans" />
+                <TranslateTransform x:Name="PlayBarHostOffset" />
             </Grid.RenderTransform>
         </Grid>
         <VisualStateManager.VisualStateGroups>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -95,9 +96,9 @@ public sealed class ReorderedContainer : LinerContainerBase
     {
         return source switch
         {
+            IProgressiveLoadingContainer progressive => (await ContainerItemLoader.LoadProgressivePagesAsync(
+                progressive, progressive.MaxProgressiveCount, ctk)).SelectMany(page => page).ToList(),
             LinerContainerBase liner => await liner.GetAllItemsAsync(ctk),
-            IProgressiveLoadingContainer progressive => (await progressive.GetProgressiveItemsListAsync(0,
-                progressive.MaxProgressiveCount, ctk)).Item2,
             UndeterminedContainerBase undetermined => await undetermined.GetNextItemsRangeAsync(ctk),
             _ => []
         };

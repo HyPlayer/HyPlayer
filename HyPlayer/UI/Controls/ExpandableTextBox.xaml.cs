@@ -23,6 +23,10 @@ public sealed partial class ExpandableTextBox : UserControl
         "TextWrapping", typeof(TextWrapping), typeof(ExpandableTextBox),
         new PropertyMetadata(default(TextWrapping)));
 
+    public static readonly DependencyProperty ExpandedMaxHeightProperty = DependencyProperty.Register(
+        "ExpandedMaxHeight", typeof(double), typeof(ExpandableTextBox),
+        new PropertyMetadata(double.PositiveInfinity));
+
 #pragma warning disable IDE1006 // Dependency property identifiers follow the XAML XxxProperty convention.
     private static readonly DependencyProperty ActualMaxLineProperty = DependencyProperty.Register(
         "ActualMaxLine", typeof(int), typeof(ExpandableTextBox), new PropertyMetadata(3));
@@ -34,6 +38,12 @@ public sealed partial class ExpandableTextBox : UserControl
     {
         InitializeComponent();
         ExpandButton.Visibility = Visibility.Collapsed;
+    }
+
+    public double ExpandedMaxHeight
+    {
+        get => (double)GetValue(ExpandedMaxHeightProperty);
+        set => SetValue(ExpandedMaxHeightProperty, value);
     }
 
     public string ButtonText

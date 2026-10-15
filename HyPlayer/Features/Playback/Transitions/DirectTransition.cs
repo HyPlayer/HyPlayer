@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,6 +16,16 @@ public sealed class DirectTransition : ITrackTransition
     public Task OnTrackCompletedAsync(TrackTransitionContext context, CancellationToken ct)
     {
         return context.Host.AdvanceDirectAsync(context, ct);
+    }
+
+    public Task OnSeekAsync(TrackTransitionContext context, TimeSpan target, CancellationToken ct)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task OnQueueChangedAsync(CancellationToken ct)
+    {
+        return Task.CompletedTask;
     }
 
     public Task CancelAsync(CancellationToken ct)

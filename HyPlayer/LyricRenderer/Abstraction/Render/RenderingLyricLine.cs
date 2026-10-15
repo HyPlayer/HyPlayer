@@ -1,6 +1,7 @@
 #nullable enable
 using ALRC.Abstraction;
 using HyPlayer.LyricRenderer.Animator;
+using HyPlayer.UI.Effects;
 using Microsoft.Graphics.Canvas.Effects;
 using Windows.Foundation;
 using Microsoft.Graphics.Canvas;
@@ -78,28 +79,88 @@ public abstract class RenderingLyricLine : IDisposable
     private LyricScalarTransition _blurTransition;
     private LyricScalarTransition _glowTransition;
     private LyricScalarTransition _angleTransition;
+    private RenderScalarTransition _opacityMotion;
+    private RenderScalarTransition _scaleMotion;
+    private RenderScalarTransition _blurMotion;
+    private CanvasRenderTarget? _blurCache;
+    private CanvasRenderTarget? _blurCacheNext;
+    private float _blurCacheAmount;
+    private float _blurCacheNextAmount;
+    private long _blurFadeStartTick;
+    private bool _blurLevelValid;
+    private bool _blurFading;
+    private CrossFadeEffect? _blurCrossFade;
+    private Transform2DEffect? _blurFadeFrom;
+    private Transform2DEffect? _blurFadeTo;
+
+    private const float BlurStep = 0.25f;
+    private const float MinimumCachedBlur = 0.3f;
+    private const float BlurFadeTicks = 300 * TimeSpan.TicksPerMillisecond;
 
     public virtual bool IsTextLine => false;
 
+    protected virtual float ContentTop => 0;
+
+    internal float RestDistance { get; set; }
+
     internal int LastFrameCommandListCount { get; private set; }
+
+    internal bool LastFrameUsedBlurCache { get; private set; }
+
+    internal int BlurCacheBuildCount { get; private set; }
+
+    internal float LastFrameOpacity { get; private set; }
+
+    internal float LastFrameScale { get; private set; }
+
+    internal float LastFrameBlur { get; private set; }
+
+    internal float LastFrameGlow { get; private set; }
+
+    private float OpacityTarget(LyricLineEffectSettings settings, float distance, bool scrolling)
+    {
+        if (settings.Preset == LyricLinePreset.None) return 1;
+        var target = IsActive ? 1 : Math.Clamp(settings.NearOpacity + (settings.FarOpacity - settings.NearOpacity) * distance, settings.FarOpacity, 1);
+        return settings.Preset == LyricLinePreset.Layered && scrolling ? Math.Max(target, 0.4f) : target;
+    }
+
+    private static float ScaleTarget(LyricLineEffectSettings settings, float distance, bool scrolling)
+    {
+        var target = settings.Preset != LyricLinePreset.None ? Math.Max(0.1f, 1 + (settings.DistantScale - 1) * distance) : 1;
+        return scrolling ? Math.Max(target, 0.8f) : target;
+    }
 
     /// <summary>Draws a line directly; only spatial image effects record its content.</summary>
     public bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
         LastFrameCommandListCount = 0;
+        LastFrameUsedBlurCache = false;
         var settings = context.Settings.Line;
+        var perLine = context.PerLineMotion;
+        var tick = context.RenderTick;
         var currentY = (uint)context.CurrentLyricLineIndex < (uint)context.RenderOffsets.Count
             ? context.RenderOffsets[context.CurrentLyricLineIndex].Y : offset.Y;
-        var distance = IsActive || context.ViewHeight <= 0 ? 0 : Math.Abs((currentY - offset.Y) / context.ViewHeight);
+        var distance = IsActive || context.ViewHeight <= 0 ? 0
+            : perLine ? RestDistance : Math.Abs((currentY - offset.Y) / context.ViewHeight);
         var time = context.CurrentLyricTime;
         var enabled = settings.Preset != LyricLinePreset.None;
-        var opacityTarget = IsActive ? 1 : Math.Clamp(settings.NearOpacity + (settings.FarOpacity - settings.NearOpacity) * distance, settings.FarOpacity, 1);
-        if (settings.Preset == LyricLinePreset.Layered && context.IsScrolling) opacityTarget = Math.Max(opacityTarget, 0.4f);
-        var opacity = _opacityTransition.Update(enabled ? opacityTarget : 1, time, IsActive ? 0 : 500, context.IsSeek);
-        var scaleTarget = enabled ? Math.Max(0.1f, 1 + (settings.DistantScale - 1) * distance) : 1;
-        if (context.IsScrolling) scaleTarget = Math.Max(scaleTarget, 0.8f);
-        var scale = _scaleTransition.Update(scaleTarget, time, 500, context.IsSeek);
-        var blur = _blurTransition.Update(enabled && !context.IsScrolling ? Math.Min(250, settings.MaximumBlur * distance) : 0, time, 500, context.IsSeek);
+        var opacityTarget = OpacityTarget(settings, distance, context.IsScrolling);
+        var opacity = perLine
+            ? _opacityMotion.Update(opacityTarget, tick, IsActive ? 300 : 400, context.IsSeek)
+            : _opacityTransition.Update(opacityTarget, time, IsActive ? 300 : 500, context.IsSeek);
+        var scaleTarget = ScaleTarget(settings, distance, context.IsScrolling);
+        var scale = perLine
+            ? _scaleMotion.Update(scaleTarget, tick, 450, context.IsSeek)
+            : _scaleTransition.Update(scaleTarget, time, 500, context.IsSeek);
+        var preview = context.PreviewFocus;
+        if (preview > 0 && context.ViewHeight > 0)
+        {
+            var previewDistance = Math.Max(0, Math.Abs(offset.Y + RenderingHeight / 2 - context.ViewHeight / 2) - RenderingHeight / 2) / context.ViewHeight;
+            opacity += (OpacityTarget(settings, previewDistance, context.IsScrolling) - opacity) * preview;
+            scale += (ScaleTarget(settings, previewDistance, context.IsScrolling) - scale) * preview;
+        }
+        var blurTarget = enabled && !context.IsScrolling ? Math.Min(250, settings.MaximumBlur * distance) * (1 - preview) : 0;
+        var blur = perLine ? 0 : _blurTransition.Update(blurTarget, time, 500, context.IsSeek);
         var glow = _glowTransition.Update(enabled && IsTextLine && IsActive ? settings.GlowOpacity : 0, time, 500, context.IsSeek);
         var relativeIndex = GroupIndex - (context.CurrentLyricLine?.GroupIndex ?? GroupIndex);
         var angle = _angleTransition.Update(settings.Preset == LyricLinePreset.Layered && !context.IsScrolling && !IsActive
@@ -116,18 +177,48 @@ public abstract class RenderingLyricLine : IDisposable
                 session.FillRoundedRectangle(0, 0, RenderingWidth, RenderingHeight, 6, 6, Color.FromArgb(10, 255, 255, 255));
 
             var hasStatic = TryGetStaticSourceImage(session, context, out var cached);
+            var cachedBlur = perLine && hasStatic && !(glow > 0.001f && settings.GlowRadius > 0) &&
+                             Math.Abs(angle) <= 0.001f &&
+                             DrawBlurLevels(session, context, cached, blurTarget, opacity);
+            if (perLine && !cachedBlur)
+            {
+                ReleaseBlurLevels();
+                blur = _blurMotion.Update(blurTarget, tick, 400, context.IsSeek);
+            }
+
+            LastFrameOpacity = opacity;
+            LastFrameScale = scale;
+            LastFrameBlur = blur;
+            LastFrameGlow = glow;
             var needsImage = blur > 0.001f || glow > 0.001f && settings.GlowRadius > 0 || Math.Abs(angle) > 0.001f;
             bool result;
-            if (needsImage)
+            if (cachedBlur || !hasStatic && !HasContent(context))
+            {
+                result = true;
+            }
+            else if (needsImage)
             {
                 ICanvasImage content;
                 if (hasStatic) { content = cached; result = true; }
+                else if (TryGetRecordedImage(session, context, out var prerecorded))
+                {
+                    content = prerecorded;
+                    result = true;
+                }
                 else
                 {
                     recorded = new CanvasCommandList(session);
                     LastFrameCommandListCount = 1;
-                    using var lineSession = recorded.CreateDrawingSession();
-                    result = RenderCore(lineSession, context);
+                    var lineSession = recorded.CreateDrawingSession();
+                    try
+                    {
+                        result = RenderCore(lineSession, context);
+                    }
+                    finally
+                    {
+                        lineSession?.Dispose();
+                    }
+
                     content = recorded;
                 }
                 if (glow > 0.001f && settings.GlowRadius > 0)
@@ -172,11 +263,18 @@ public abstract class RenderingLyricLine : IDisposable
             else
             {
                 // A layer supplies uniform line opacity without recording a command list.
-                using var layer = opacity < 0.9999f ? session.CreateLayer(opacity) : null;
-                result = RenderCore(session, context);
+                var layer = opacity < 0.9999f ? session.CreateLayer(opacity) : null;
+                try
+                {
+                    result = RenderCore(session, context);
+                }
+                finally
+                {
+                    layer?.Dispose();
+                }
             }
             if (settings.HoverBackground && ReactionState == ReactionState.Enter && !Hidden)
-                session.FillRoundedRectangle(0, 0, RenderingWidth + 2, RenderingHeight + 8, 6, 6, Color.FromArgb(10, 255, 255, 255));
+                session.FillRoundedRectangle(0, ContentTop, RenderingWidth + 2, RenderingHeight + 8 - ContentTop, 6, 6, Color.FromArgb(10, 255, 255, 255));
             if (settings.ProgressUnderline && IsActive)
             {
                 var progress = EndTime <= StartTime ? 1 : Math.Clamp((time - StartTime) / (float)(EndTime - StartTime), 0, 1);
@@ -199,8 +297,160 @@ public abstract class RenderingLyricLine : IDisposable
         }
     }
 
+    private bool DrawBlurLevels(CanvasDrawingSession session, RenderContext context, ICanvasImage content,
+        float blurTarget, float opacity)
+    {
+        var tick = context.RenderTick;
+        var target = MathF.Round(blurTarget / BlurStep) * BlurStep;
+        if (context.IsSeek) ReleaseBlurLevels();
+        if (_blurFading && (tick - _blurFadeStartTick >= BlurFadeTicks || tick < _blurFadeStartTick))
+        {
+            _blurCache?.Dispose();
+            _blurCache = _blurCacheNext;
+            _blurCacheAmount = _blurCacheNextAmount;
+            _blurCacheNext = null;
+            _blurFading = false;
+        }
+
+        if (!_blurLevelValid)
+        {
+            if (!TryCreateBlurLevel(session, context, content, target, out _blurCache)) return false;
+            _blurCacheAmount = target;
+            _blurLevelValid = true;
+        }
+        else if (!_blurFading && Math.Abs(target - _blurCacheAmount) >= BlurStep &&
+                 TryCreateBlurLevel(session, context, content, target, out _blurCacheNext))
+        {
+            _blurCacheNextAmount = target;
+            _blurFadeStartTick = tick;
+            _blurFading = true;
+        }
+
+        LastFrameUsedBlurCache = true;
+        if (!_blurFading)
+        {
+            DrawBlurLevel(session, content, _blurCache, _blurCacheAmount, opacity);
+            _blurMotion.Reset(_blurCacheAmount, tick);
+            return true;
+        }
+
+        var progress = Math.Clamp((tick - _blurFadeStartTick) / BlurFadeTicks, 0, 1);
+        var mix = progress * progress * (3 - 2 * progress);
+        var outset = BlurOutset(Math.Max(_blurCacheAmount, _blurCacheNextAmount));
+        _blurFadeFrom ??= new Transform2DEffect();
+        _blurFadeTo ??= new Transform2DEffect();
+        _blurCrossFade ??= new CrossFadeEffect();
+        try
+        {
+            SetBlurFadeSource(_blurFadeFrom, content, _blurCache, _blurCacheAmount);
+            SetBlurFadeSource(_blurFadeTo, content, _blurCacheNext, _blurCacheNextAmount);
+            _blurCrossFade.Source1 = _blurFadeFrom;
+            _blurCrossFade.Source2 = _blurFadeTo;
+            _blurCrossFade.CrossFade = mix;
+            session.DrawImage(_blurCrossFade, -outset, -outset,
+                new Rect(-outset, -outset, RenderingWidth + 2 * outset, RenderingHeight + 2 * outset), opacity);
+        }
+        finally
+        {
+            _blurFadeFrom.Source = null;
+            _blurFadeTo.Source = null;
+        }
+
+        _blurMotion.Reset(_blurCacheAmount + (_blurCacheNextAmount - _blurCacheAmount) * mix, tick);
+        return true;
+    }
+
+    private bool TryCreateBlurLevel(CanvasDrawingSession session, RenderContext context, ICanvasImage content,
+        float amount, out CanvasRenderTarget? cache)
+    {
+        cache = null;
+        if (amount < MinimumCachedBlur) return true;
+        if (context.BlurCacheBudget <= 0) return false;
+        var outset = BlurOutset(amount);
+        var width = RenderingWidth + 2 * outset;
+        var height = RenderingHeight + 2 * outset;
+        var dpi = session.Dpi;
+        var limit = session.Device.MaximumBitmapSizeInPixels;
+        if (!(width >= 1) || !(height >= 1) || width * dpi / 96 > limit || height * dpi / 96 > limit) return false;
+        context.BlurCacheBudget--;
+        BlurCacheBuildCount++;
+        var target = new CanvasRenderTarget(session, width, height, dpi);
+        try
+        {
+            var targetSession = target.CreateDrawingSession();
+            try
+            {
+                targetSession.Clear(Colors.Transparent);
+                _blur ??= new GaussianBlurEffect { BorderMode = EffectBorderMode.Soft };
+                _blur.Source = content;
+                _blur.BlurAmount = amount;
+                targetSession.DrawImage(_blur, 0, 0, new Rect(-outset, -outset, width, height));
+            }
+            finally
+            {
+                targetSession?.Dispose();
+            }
+        }
+        catch
+        {
+            target?.Dispose();
+            throw;
+        }
+        finally
+        {
+            if (_blur is not null) _blur.Source = null;
+        }
+
+        cache = target;
+        return true;
+    }
+
+    private void DrawBlurLevel(CanvasDrawingSession session, ICanvasImage content, CanvasRenderTarget? cache,
+        float amount, float weight)
+    {
+        if (cache is null)
+        {
+            session.DrawImage(content, 0, 0, new Rect(0, 0, RenderingWidth, RenderingHeight), weight);
+            return;
+        }
+
+        var outset = BlurOutset(amount);
+        session.DrawImage(cache, -outset, -outset,
+            new Rect(0, 0, RenderingWidth + 2 * outset, RenderingHeight + 2 * outset), weight);
+    }
+
+    private static void SetBlurFadeSource(Transform2DEffect effect, ICanvasImage content, CanvasRenderTarget? cache,
+        float amount)
+    {
+        var outset = cache is null ? 0 : BlurOutset(amount);
+        effect.Source = cache is null ? content : cache;
+        effect.TransformMatrix = Matrix3x2.CreateTranslation(-outset, -outset);
+    }
+
+    private static float BlurOutset(float amount) => MathF.Ceiling(amount * 3);
+
+    private void ReleaseBlurLevels()
+    {
+        _blurCache?.Dispose();
+        _blurCache = null;
+        _blurCacheNext?.Dispose();
+        _blurCacheNext = null;
+        _blurLevelValid = false;
+        _blurFading = false;
+        _blurCrossFade?.Dispose();
+        _blurCrossFade = null;
+        _blurFadeFrom?.Dispose();
+        _blurFadeFrom = null;
+        _blurFadeTo?.Dispose();
+        _blurFadeTo = null;
+    }
+
     protected void ReleaseDrawingResources()
     {
+        ReleaseBlurLevels();
+        _opacityMotion = default;
+        _scaleMotion = default;
+        _blurMotion = default;
         _blur?.Dispose(); _blur = null;
         _glow?.Dispose(); _glow = null;
         _perspective?.Dispose(); _perspective = null;
@@ -217,7 +467,18 @@ public abstract class RenderingLyricLine : IDisposable
     }
     protected abstract bool RenderCore(CanvasDrawingSession session, RenderContext context);
 
+    protected virtual bool HasContent(RenderContext context) => true;
+
     protected virtual bool TryGetStaticSourceImage(
+        CanvasDrawingSession session,
+        RenderContext context,
+        out ICanvasImage image)
+    {
+        image = null!;
+        return false;
+    }
+
+    protected virtual bool TryGetRecordedImage(
         CanvasDrawingSession session,
         RenderContext context,
         out ICanvasImage image)

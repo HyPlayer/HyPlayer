@@ -35,6 +35,7 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(The163KeyClass))]
     [JsonSerializable(typeof(List<string>))]
     [JsonSerializable(typeof(CurPlayingListHistoryState))]
+    [JsonSerializable(typeof(List<SongHistoryEntry>))]
     [JsonSerializable(typeof(PlaybackMemoryState))]
     [JsonSerializable(typeof(PlaybackItemIdentity))]
     [JsonSerializable(typeof(List<PlaybackItemIdentity>))]
@@ -47,6 +48,8 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(LatestApplicationUpdate))]
     [JsonSerializable(typeof(GitHubReleaseResponse))]
     [JsonSerializable(typeof(LyricRenderSettings))]
+    [JsonSerializable(typeof(HyPlayer.Features.Playback.Analysis.TrackAnalysis))]
+    [JsonSerializable(typeof(HyPlayer.Platform.Playback.MediaSources.CachedSongUrl))]
     public partial class JsonDefaultContext : JsonSerializerContext
     {
     }

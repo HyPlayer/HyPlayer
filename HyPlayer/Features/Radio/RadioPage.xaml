@@ -9,7 +9,9 @@
         <controls1:ContainerItemsView
             x:Name="SongContainer"
             Container="{x:Bind CurrentContainer, Mode=OneWay}"
+            EmptyText="电台里还没有节目"
             IsSearchEnabled="True"
+            LoadingText="正在加载节目…"
             QueueScope="{x:Bind CurrentQueueScope, Mode=OneWay}">
             <controls1:ContainerItemsView.ListHeader>
                 <controls:DockPanel

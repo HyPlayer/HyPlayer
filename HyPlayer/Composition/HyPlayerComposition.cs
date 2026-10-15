@@ -4,6 +4,7 @@ using Depository.Abstraction.Interfaces;
 using Depository.Abstraction.Interfaces.NotificationHub;
 using Depository.Extensions;
 using HyPlayer.Application.Diagnostics;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Application.Threading;
@@ -15,12 +16,19 @@ using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.Analysis;
+using HyPlayer.Features.Playback.Analysis.Models;
+using HyPlayer.Features.Playback.Models;
 using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Playback.Transitions;
+using HyPlayer.Features.Radio.Services;
+using HyPlayer.Features.Settings.Services;
 using HyPlayer.Features.Widgets.Services;
+using HyPlayer.Platform.Network;
 using HyPlayer.Platform.Playback.AudioServices;
 using HyPlayer.Platform.Playback.LocalProvider;
+using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
@@ -30,6 +38,7 @@ using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.AudioServices;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Playback;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Notifications;
 using HyPlayer.PlayCore.PlayListControllers;
@@ -81,7 +90,13 @@ internal static class HyPlayerComposition
         depository.AddSingleton<Setting>(legacySettings);
 
         var neteaseProvider = new NeteaseProvider.NeteaseProvider();
-        var client = neteaseProvider.ConfigureHttpClient(apiSettings.EnableProxy);
+        neteaseProvider.ConfigureHttpClient(apiSettings.EnableProxy);
+        var client = new HttpClient(
+            new NetworkWatchHandler(
+                NeteaseApi.NeteaseCloudMusicApiHandler.HttpClientHandler,
+                ResourceSaver.ReportRequest));
+        neteaseProvider.Handler.HttpClient = client;
+        PodcastListApi.Register(neteaseProvider.Handler.Option);
 
         ConfigureProviders(depository, neteaseProvider, client);
         ConfigurePlayCore(depository);
@@ -131,6 +146,16 @@ internal static class HyPlayerComposition
         depository.AddSingleton<ProviderBase>(localProvider);
         depository.AddSingleton<IMusicResourceProvidable>(localProvider);
 
+        depository.AddSingleton<NeteaseSongUrlResolver>();
+        depository.AddSingleton<IMediaSourceProvider, NeteaseStreamingProvider>();
+        depository.AddSingleton<IMediaSourceProvider, CachedNeteaseProvider>();
+        depository.AddSingleton<MediaSourceService>();
+        depository.Add(
+            typeof(IMediaSourceService),
+            typeof(MediaSourceService),
+            DependencyLifetime.Singleton,
+            implementationFactory: dep => dep.Resolve<MediaSourceService>());
+
         depository.AddSingleton<LastFMClient>(
             new LastFMClient(
                 new LastFMOptions { ApiKey = LastFMConstants.ApiKey, ApiSecret = LastFMConstants.Secret },
@@ -146,6 +171,16 @@ internal static class HyPlayerComposition
     private static void ConfigurePlayCore(IDepository depository)
     {
         depository.AddSingleton<INotificationHub, PlayCoreNotificationHub>();
+        depository.Add(
+            typeof(IPlaybackQualitySelector),
+            typeof(MediaSourceService),
+            DependencyLifetime.Singleton,
+            implementationFactory: dep => dep.Resolve<MediaSourceService>());
+        depository.Add(
+            typeof(IPlaybackResourceResolver),
+            typeof(MediaSourceService),
+            DependencyLifetime.Singleton,
+            implementationFactory: dep => dep.Resolve<MediaSourceService>());
         depository.AddSingleton<DefaultPlayListManager>();
         depository.Add(
             typeof(PlayListManagerBase),
@@ -235,11 +270,20 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IQueueSourceProvider, RadioQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, DailyRecommendQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, SingerHotQueueSourceProvider>();
+        depository.AddSingleton<IQueueSourceProvider, ArtistSongsQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, SingleSongQueueSourceProvider>();
         depository.AddSingleton<ILocalFileImportService, LocalFileImportService>();
         depository.AddSingleton<ITrackTransition, DirectTransition>();
         depository.AddSingleton<ITrackTransition, GaplessTransition>();
         depository.AddSingleton<ITrackTransition, CrossFadeTransition>();
+        depository.AddSingleton<ITrackTransition, FadeTransition>();
+        depository.AddSingleton<AutoMixSettings>(new AutoMixSettings());
+        depository.AddSingleton<ModelManager>();
+        depository.AddSingleton<IBeatAnalyzer, BeatThisAnalyzer>();
+        depository.AddSingleton<IKeyAnalyzer, SKeyAnalyzer>();
+        depository.AddSingleton<IVocalAnalyzer, MdxVocalAnalyzer>();
+        depository.AddSingleton<IAudioAnalysisService, AudioAnalysisService>();
+        depository.AddSingleton<ITrackTransition, AutoMixTransition>();
         depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
         depository.Add(
             typeof(INotificationSubscriber<PlaybackRequestFailedNotification>),
@@ -287,22 +331,29 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IDiagnosticsStateService, DiagnosticsStateService>();
         depository.AddSingleton<IGameBarWidgetService, GameBarWidgetService>();
         depository.AddSingleton<IGlobalTimerService, GlobalTimerService>();
+        depository.AddSingleton<IMemoryGovernor, MemoryGovernor>();
         depository.AddSingleton<ITeachingTipService, TeachingTipService>();
         depository.AddSingleton<IPlayBarAutoHideService, PlayBarAutoHideService>();
         depository.AddSingleton<IPlaylistCollectionChangeNotifier, PlaylistCollectionChangeNotifier>();
+        depository.AddSingleton<IPodcastLibraryService, PodcastLibraryService>();
         depository.AddSingleton<ILastFmService, LastFmService>();
         depository.AddSingleton<ITileService, TileService>();
         depository.AddSingleton<ILyricRenderSettingsService, LyricRenderSettingsService>();
+        depository.AddSingleton<ToastLyricService>();
     }
 
     private static void ConfigureShellServices(IDepository depository)
     {
+        depository.AddSingleton<SidebarLayout>();
+        depository.AddSingleton<AppearanceCustomizer>();
         depository.AddSingleton<NavigationShellViewModel>();
         depository.AddSingleton<IShellHostStateService, ShellHostStateService>();
+        depository.AddSingleton<ILoadEnvironment, ShellLoadEnvironment>();
         depository.AddSingleton<PlaybackSurfaceStore>();
         depository.AddSingleton<PlaybackShellStateMachine>();
         depository.AddSingleton<IPlaybackSurfaceCoordinator, PlaybackSurfaceCoordinator>();
         depository.AddSingleton<IGamepadShortcutService, GamepadShortcutService>();
+        depository.AddSingleton<IKeyboardShortcutService, KeyboardShortcutService>();
         depository.AddTransient<ShellSearchViewModel>();
         depository.AddSingleton<ShellLoginService>();
     }

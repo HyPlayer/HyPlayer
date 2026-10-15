@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
@@ -43,7 +44,7 @@ internal sealed class SingerHotQueueSourceProvider : IQueueSourceProvider
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("AppendNCSource时发生错误", ex.Message);
+            _notification.ShowFailure("加载歌手热门歌曲失败", ex);
         }
 
         return ProviderQueueSourceLoadResult.Failed;

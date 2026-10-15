@@ -1,0 +1,233 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.Media.Core;
+using Windows.Storage;
+using Windows.Storage.Streams;
+using HyPlayer.Domain.Settings;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.Platform.Downloads;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Playback;
+using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
+using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+
+namespace HyPlayer.Platform.Playback.MediaSources;
+
+public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySelector, IPlaybackResourceResolver
+{
+    private readonly PlaybackSettings _playbackSettings;
+    private readonly Dictionary<string, IMediaSourceProvider> _providers;
+    private readonly NeteaseSongUrlResolver _urlResolver;
+
+    public MediaSourceService(
+        IEnumerable<IMediaSourceProvider> providers,
+        NeteaseSongUrlResolver urlResolver,
+        PlaybackSettings playbackSettings)
+    {
+        _providers = providers?.ToDictionary(provider => provider.Id, StringComparer.Ordinal)
+                     ?? throw new ArgumentNullException(nameof(providers));
+        _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
+        _playbackSettings = playbackSettings ?? throw new ArgumentNullException(nameof(playbackSettings));
+    }
+
+    public async Task PrefetchAsync(SingleSongBase song, CancellationToken ct)
+    {
+        if (!IsNeteaseSong(song)
+            || !_providers.TryGetValue(SelectProviderId(), out var provider)
+            || provider is not IMediaPrefetchProvider prefetcher
+            || await DownloadedTrackIndex.TryGetAsync(NeteaseTrack.IdOf(song)).ConfigureAwait(false) is not null)
+            return;
+
+        var resolved = await _urlResolver.ResolveAsync(NeteaseTrack.IdOf(song), ct).ConfigureAwait(false);
+        if (resolved is null)
+            return;
+
+        await prefetcher
+            .PrefetchAsync(song, CreateResource(song, resolved, _playbackSettings.AudioRate), ct)
+            .ConfigureAwait(false);
+    }
+
+    public bool IsTransferring(SingleSongBase song)
+    {
+        foreach (var provider in _providers.Values)
+            if (provider is IMediaTransferProvider transfers && transfers.IsTransferring(song))
+                return true;
+
+        return false;
+    }
+
+    public void CancelTransfersExcept(SingleSongBase keep)
+    {
+        foreach (var provider in _providers.Values)
+            if (provider is IMediaTransferProvider transfers)
+                transfers.CancelTransfersExcept(keep);
+    }
+
+    public async Task<bool> CanSeekBeforePlaybackAsync(SingleSongBase song, CancellationToken ct)
+    {
+        if (!IsNeteaseSong(song)
+            || !_providers.TryGetValue(SelectProviderId(), out var provider)
+            || provider is not IMediaTransferProvider transfers)
+            return true;
+
+        if (await DownloadedTrackIndex.TryGetAsync(NeteaseTrack.IdOf(song)).ConfigureAwait(false) is not null)
+            return true;
+
+        if (transfers.IsTransferring(song))
+            return false;
+
+        ResolvedSongUrl? resolved;
+        try
+        {
+            resolved = await _urlResolver.ResolveAsync(NeteaseTrack.IdOf(song), ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return true;
+        }
+
+        return resolved is null
+               || await transfers
+                   .IsCachedAsync(song, CreateResource(song, resolved, _playbackSettings.AudioRate), ct)
+                   .ConfigureAwait(false);
+    }
+
+    public async Task<IRandomAccessStream?> OpenLocalAudioAsync(SingleSongBase song, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        if (song.ProviderId == LocalProvider.LocalProvider.ProviderIdValue)
+            return await OpenLocalSongAsync(song).ConfigureAwait(false);
+
+        if (!IsNeteaseSong(song))
+            return null;
+
+        if (await DownloadedTrackIndex.TryGetAsync(NeteaseTrack.IdOf(song)).ConfigureAwait(false) is { } downloaded)
+            return await downloaded.OpenReadAsync();
+
+        if (!_providers.TryGetValue(SelectProviderId(), out var provider)
+            || provider is not IMediaTransferProvider transfers
+            || transfers.IsTransferring(song))
+            return null;
+
+        var resolved = await _urlResolver.ResolveAsync(NeteaseTrack.IdOf(song), ct).ConfigureAwait(false);
+        if (resolved is null)
+            return null;
+
+        var cached = await transfers
+            .FindCachedFileAsync(song, CreateResource(song, resolved, _playbackSettings.AudioRate), ct)
+            .ConfigureAwait(false);
+        return cached is null ? null : await cached.OpenReadAsync();
+    }
+
+    private static async Task<IRandomAccessStream?> OpenLocalSongAsync(SingleSongBase song)
+    {
+        if (string.IsNullOrWhiteSpace(song.ActualId)
+            || !System.IO.Path.IsPathFullyQualified(song.ActualId))
+            return null;
+
+        if (song.TypeId == LocalProvider.LocalProvider.LocalNcmSongTypeId)
+            return LocalProvider.LocalProvider.TryOpenDecryptedNcm(song.ActualId);
+
+        var file = await StorageFile.GetFileFromPathAsync(song.ActualId);
+        return await file.OpenReadAsync();
+    }
+
+    public ResourceQualityTag? GetPlaybackQualityTag(SingleSongBase song)
+    {
+        return IsNeteaseSong(song) ? new NeteaseMusicQualityTag(_playbackSettings.AudioRate) : null;
+    }
+
+    public Task<MusicResourceBase?> ResolvePlaybackResourceAsync(
+        SingleSongBase song,
+        IMusicResourceProvidable provider,
+        ResourceQualityTag? qualityTag,
+        CancellationToken ctk = default)
+    {
+        return provider is NeteaseProvider.NeteaseProvider
+            ? ResolveAsync(song, qualityTag, ctk)
+            : provider.GetMusicResourceAsync(song, qualityTag, ctk);
+    }
+
+    private async Task<MusicResourceBase?> ResolveAsync(
+        SingleSongBase song,
+        ResourceQualityTag? qualityTag,
+        CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        if (IsNeteaseSong(song)
+            && await DownloadedTrackIndex.TryGetAsync(NeteaseTrack.IdOf(song)).ConfigureAwait(false) is { } downloaded)
+            return new LocalFileMediaResource(song, downloaded);
+
+        var requestedLevel = qualityTag is NeteaseMusicQualityTag tag && !string.IsNullOrWhiteSpace(tag.Quality)
+            ? tag.Quality
+            : _playbackSettings.AudioRate;
+        ResolvedSongUrl? resolved;
+        try
+        {
+            resolved = await _urlResolver
+                .ResolveAsync(NeteaseTrack.IdOf(song), requestedLevel, ct)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            if (_providers.TryGetValue(SelectProviderId(), out var provider)
+                && provider is IMediaOfflineProvider offline
+                && await offline.FindOfflineFileAsync(song).ConfigureAwait(false) is { } offlineFile)
+                return new LocalFileMediaResource(song, offlineFile);
+
+            return null;
+        }
+
+        return resolved is null ? null : CreateResource(song, resolved, requestedLevel);
+    }
+
+    public Task<MediaSource?> CreateMediaSourceAsync(
+        SingleSongBase song,
+        MusicResourceBase resource,
+        CancellationToken ct)
+    {
+        var providerId = SelectProviderId();
+        if (!_providers.TryGetValue(providerId, out var provider))
+            throw new NotSupportedException($"未找到 ProviderId='{providerId}' 对应的 IMediaSourceProvider");
+
+        return provider.CreateAsync(song, resource, ct);
+    }
+
+    private string SelectProviderId()
+    {
+        return _playbackSettings.EnableCache
+            ? CachedNeteaseProvider.ProviderId
+            : NeteaseStreamingProvider.ProviderId;
+    }
+
+    private static bool IsNeteaseSong(SingleSongBase song)
+    {
+        return song.ProviderId == "ncm" && !string.IsNullOrWhiteSpace(NeteaseTrack.IdOf(song));
+    }
+
+    private NeteaseMediaResource CreateResource(SingleSongBase song, ResolvedSongUrl resolved, string requestedLevel)
+    {
+        var songUrl = resolved.Item;
+        return new NeteaseMediaResource(song, this)
+        {
+            RequestedLevel = requestedLevel,
+            Md5 = songUrl.Md5,
+            Size = songUrl.Size,
+            BitRate = songUrl.BitRate,
+            EncodeType = songUrl.EncodeType,
+            Time = songUrl.Time,
+            MusicType = songUrl.Type,
+            ExtensionName = string.IsNullOrWhiteSpace(songUrl.Type) ? songUrl.EncodeType : songUrl.Type,
+            Level = songUrl.Level,
+            GainDb = songUrl.Gain,
+            Peak = songUrl.Peak,
+            ResourceName = song.Name,
+            HasContent = true,
+            Uri = resolved.Uri
+        };
+    }
+}

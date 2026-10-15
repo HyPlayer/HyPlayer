@@ -30,6 +30,13 @@ public sealed partial class PageFavorite : Page
         NavView.SelectedItem = NavView.MenuItems[0];
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        ItemContainer.ReleaseResources();
+        Bindings.StopTracking();
+    }
+
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         var item = args.SelectedItem.As<NavigationViewItem>();

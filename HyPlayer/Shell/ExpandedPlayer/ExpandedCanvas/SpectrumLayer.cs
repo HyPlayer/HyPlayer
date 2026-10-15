@@ -18,6 +18,7 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
     private readonly AudioGraphPlayer _player;
     private readonly ExpandedCanvasState _state;
     private readonly float[] _displayData = new float[FFTProcessor.DisplayBandCount];
+    private float _visibility;
 
     public SpectrumLayer(ExpandedCanvasState state, AudioGraphPlayer player)
     {
@@ -27,6 +28,7 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
 
     public string LayerName => "Spectrum";
     public int Order => 10;
+    public bool NeedsFrames => _state.ShowSpectrum && _visibility > 0f;
 
     /// <inheritdoc />
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
@@ -44,11 +46,20 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
         if (!_state.ShowSpectrum) return;
 
         var fft = _player.FFTProcessor;
-        if (fft is null || !fft.TryCopyDisplayData(_displayData)) return;
+        var hasData = fft is not null && fft.TryCopyDisplayData(_displayData);
+        var target = hasData && _player.GlobalPlaybackStatus == PlaybackStatus.Playing ? 1f : 0f;
+        var step = Math.Clamp((float)timing.ElapsedTime.TotalSeconds * 8f, 0f, 1f);
+        _visibility += (target - _visibility) * step;
+        if (_visibility < 0.004f)
+        {
+            _visibility = 0f;
+            return;
+        }
 
-        var width = (float)sender.Size.Width;
-        var height = (float)sender.Size.Height / 2f;
-        var remainHeight = (float)sender.Size.Height - height;
+        var size = _state.Viewport(sender.Size);
+        var width = (float)size.Width;
+        var height = (float)size.Height / 2f;
+        var remainHeight = (float)size.Height - height;
         var barWidth = width / FFTProcessor.DisplayBandCount;
         var scaleFactor = height / 80.0f;
 
@@ -56,7 +67,7 @@ public sealed class SpectrumLayer : IExpandedCanvasLayer
 
         for (var i = 0; i < FFTProcessor.DisplayBandCount; i++)
         {
-            var barHeight = Math.Clamp(_displayData[i] * scaleFactor, 0, height - 1);
+            var barHeight = Math.Clamp(_displayData[i] * scaleFactor, 0, height - 1) * _visibility;
             session.FillRectangle(
                 i * barWidth,
                 remainHeight + height - barHeight,

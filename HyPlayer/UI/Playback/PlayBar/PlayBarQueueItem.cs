@@ -30,6 +30,11 @@ public sealed partial class PlayBarQueueItem : ObservableObject
     public string ArtistText { get; }
     public SingleSongBase? ProviderItem { get; }
 
+    public override string ToString()
+    {
+        return string.IsNullOrWhiteSpace(ArtistText) ? Name : $"{Name} - {ArtistText}";
+    }
+
     public bool IsCurrent
     {
         get => _isCurrent;

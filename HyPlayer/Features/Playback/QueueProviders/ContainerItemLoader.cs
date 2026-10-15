@@ -27,22 +27,34 @@ internal static class ContainerItemLoader
         CancellationToken cancellationToken)
     {
         var items = new List<ProvidableItemBase>();
+        foreach (var page in await LoadProgressivePagesAsync(container, container.MaxProgressiveCount,
+                     cancellationToken))
+            items.AddRange(page);
+
+        return items;
+    }
+
+    public static async Task<List<List<ProvidableItemBase>>> LoadProgressivePagesAsync(
+        IProgressiveLoadingContainer container,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var pages = new List<List<ProvidableItemBase>>();
         var offset = 0;
-        var count = container.MaxProgressiveCount;
         var hasMore = true;
 
         while (hasMore)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var result = await container.GetProgressiveItemsListAsync(offset, count, cancellationToken);
+            var result = await container.GetProgressiveItemsListAsync(offset, pageSize, cancellationToken);
             hasMore = result.Item1;
-            if (result.Item2.Count == 0)
+            if (result.Item2 is not { Count: > 0 } page)
                 break;
 
-            items.AddRange(result.Item2);
-            offset += result.Item2.Count;
+            pages.Add(page);
+            offset += page.Count;
         }
 
-        return items;
+        return pages;
     }
 }
