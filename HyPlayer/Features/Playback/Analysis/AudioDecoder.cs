@@ -31,18 +31,24 @@ public static class AudioDecoder
 
     public static async Task<PcmBuffer> DecodeAsync(IRandomAccessStream source, uint sampleRate, uint channels, TimeSpan start, TimeSpan length, CancellationToken ct)
     {
-        if (sampleRate == 0) sampleRate = await GetNativeSampleRateAsync(source);
-        var transcoder = new MediaTranscoder { TrimStartTime = start, HardwareAccelerationEnabled = false };
-        if (length > TimeSpan.Zero) transcoder.TrimStopTime = start + length + StopMargin;
-        var profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.High);
-        profile.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channels, 32);
-        profile.Audio.Subtype = MediaEncodingSubtypes.Float;
-        profile.Video = null;
+        var nativeRate = await GetNativeSampleRateAsync(source);
+        if (sampleRate == 0) sampleRate = nativeRate;
         using var output = new InMemoryRandomAccessStream();
-        var input = source.CloneStream();
-        var prepared = await transcoder.PrepareStreamTranscodeAsync(input, output, profile).AsTask(ct);
-        if (!prepared.CanTranscode) throw new InvalidOperationException("Cannot decode audio: " + prepared.FailureReason);
-        await prepared.TranscodeAsync().AsTask(ct);
+        if (sampleRate == nativeRate)
+        {
+            await TranscodeAsync(source, output, nativeRate, channels, start, length, ct);
+        }
+        else
+        {
+            // Direct MP3 -> PCM conversion at a different rate can negotiate a mono
+            // decoder output, then duplicate it into the requested stereo channels.
+            // Decode at the source rate first; resample the resulting PCM separately.
+            // Dispose the intermediate stream before allocating the final sample array.
+            using var nativePcm = new InMemoryRandomAccessStream();
+            await TranscodeAsync(source, nativePcm, nativeRate, channels, start, length, ct);
+            nativePcm.Seek(0);
+            await TranscodeAsync(nativePcm, output, sampleRate, channels, TimeSpan.Zero, TimeSpan.Zero, ct);
+        }
         output.Seek(0);
         var header = new byte[(int)Math.Min(output.Size, 65536)];
         await ReadExactAsync(output, header, header.Length, ct);
@@ -62,6 +68,21 @@ public static class AudioDecoder
             filled += read;
         }
         return new PcmBuffer { Samples = samples, Channels = decodedChannels, SampleRate = rate, Start = start };
+    }
+
+    private static async Task TranscodeAsync(IRandomAccessStream source, IRandomAccessStream output,
+        uint sampleRate, uint channels, TimeSpan start, TimeSpan length, CancellationToken ct)
+    {
+        var transcoder = new MediaTranscoder { TrimStartTime = start, HardwareAccelerationEnabled = false };
+        if (length > TimeSpan.Zero) transcoder.TrimStopTime = start + length + StopMargin;
+        var profile = MediaEncodingProfile.CreateWav(AudioEncodingQuality.High);
+        profile.Audio = AudioEncodingProperties.CreatePcm(sampleRate, channels, 32);
+        profile.Audio.Subtype = MediaEncodingSubtypes.Float;
+        profile.Video = null;
+        using var input = source.CloneStream();
+        var prepared = await transcoder.PrepareStreamTranscodeAsync(input, output, profile).AsTask(ct);
+        if (!prepared.CanTranscode) throw new InvalidOperationException("Cannot decode audio: " + prepared.FailureReason);
+        await prepared.TranscodeAsync().AsTask(ct);
     }
 
     private static async Task<int> ReadExactAsync(IRandomAccessStream stream, byte[] destination, int count, CancellationToken ct)
