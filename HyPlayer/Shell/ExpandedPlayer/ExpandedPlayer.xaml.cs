@@ -150,6 +150,7 @@ public sealed partial class ExpandedPlayer : Page
     private bool _collapseButtonShown;
     private bool _isImmersive;
     private bool _lyricsSuppressed;
+    private bool _restoreLyricOnly;
     private bool _lyricAvailabilityApplied;
     private int _lyricPanelVersion;
     private float _lyricFadeFrom = 1;
@@ -498,6 +499,7 @@ public sealed partial class ExpandedPlayer : Page
     public void SingleViewModeToggle()
     {
         if (_windowMode == ExpandedWindowMode.Both) return;
+        if (_lyricsSuppressed && _windowMode == ExpandedWindowMode.CoverOnly) return;
         _windowMode = _windowMode == ExpandedWindowMode.LyricOnly
             ? ExpandedWindowMode.CoverOnly
             : ExpandedWindowMode.LyricOnly;
@@ -724,6 +726,15 @@ public sealed partial class ExpandedPlayer : Page
         var version = ++_lyricPanelVersion;
         if (suppress)
         {
+            // 仅歌词时没有可显示的歌词，先切到仅封面，歌词恢复后再切回
+            if (_windowMode == ExpandedWindowMode.LyricOnly)
+            {
+                _restoreLyricOnly = true;
+                _windowMode = ExpandedWindowMode.CoverOnly;
+                ChangeWindowMode();
+                return;
+            }
+
             if (_windowMode != ExpandedWindowMode.Both) return;
             if (!animate)
             {
@@ -736,9 +747,18 @@ public sealed partial class ExpandedPlayer : Page
             return;
         }
 
+        var restoreLyricOnly = _restoreLyricOnly;
+        _restoreLyricOnly = false;
         if (_windowMode != ExpandedWindowMode.CoverOnly || _isManualChangeMode ||
             _nowWidth <= ResponsiveBreakpointWidth)
         {
+            if (restoreLyricOnly && _windowMode == ExpandedWindowMode.CoverOnly)
+            {
+                _windowMode = ExpandedWindowMode.LyricOnly;
+                ChangeWindowMode();
+                return;
+            }
+
             StartLyricFade(1);
             return;
         }
@@ -1203,6 +1223,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (!_isRealClick) return;
         _isManualChangeMode = true;
+        _restoreLyricOnly = false;
         _lyricPanelVersion++;
         if (BtnToggleAlbum.IsChecked && BtnToggleLyric.IsChecked)
             _windowMode = ExpandedWindowMode.Both;
