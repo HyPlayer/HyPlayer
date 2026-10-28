@@ -562,6 +562,41 @@
                                 <controls3:SettingsExpander
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Stretch"
+                                    Description=""
+                                    Header="动态封面">
+                                    <controls3:SettingsExpander.HeaderIcon>
+                                        <FontIcon Glyph="&#xE714;" />
+                                    </controls3:SettingsExpander.HeaderIcon>
+                                    <controls3:SettingsExpander.Transitions>
+                                        <TransitionCollection>
+                                            <RepositionThemeTransition />
+                                        </TransitionCollection>
+                                    </controls3:SettingsExpander.Transitions>
+                                    <ToggleSwitch
+                                        MinWidth="10"
+                                        HorizontalAlignment="Right"
+                                        IsOn="{x:Bind Playback.DynamicCoverEnabled, Mode=TwoWay}"
+                                        Toggled="DynamicCoverToggle_Toggled" />
+                                    <controls3:SettingsExpander.Items>
+                                        <controls3:SettingsCard
+                                            Description="{x:Bind DynamicCover.AppleMusicStatus.Message, Mode=OneWay}"
+                                            Header="动态封面来源"
+                                            IsEnabled="{x:Bind Playback.DynamicCoverEnabled, Mode=OneWay}">
+                                            <ComboBox
+                                                MinWidth="180"
+                                                HorizontalAlignment="Right"
+                                                SelectedIndex="{x:Bind Playback.DynamicCoverSource, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                                <ComboBoxItem Content="自动" />
+                                                <ComboBoxItem Content="Apple Music" IsEnabled="{x:Bind DynamicCover.AppleMusicStatus.IsAvailable, Mode=OneWay}" />
+                                                <ComboBoxItem Content="网易云音乐" />
+                                            </ComboBox>
+                                        </controls3:SettingsCard>
+                                    </controls3:SettingsExpander.Items>
+                                </controls3:SettingsExpander>
+
+                                <controls3:SettingsExpander
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
                                     Header="启动与恢复"
                                     IsExpanded="True">
                                     <controls3:SettingsExpander.HeaderIcon>

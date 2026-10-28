@@ -28,6 +28,7 @@ using HyPlayer.Application.Notifications;
 using HyPlayer.Application.Loading;
 using HyPlayer.Classes;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Playback.DynamicCover;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.Services;
@@ -84,6 +85,7 @@ public sealed partial class Settings : Page
     private bool _isUpdatingControls;
 
     public PlaybackSettings Playback { get; } = Ioc.Default.GetRequiredService<PlaybackSettings>();
+    public IDynamicCoverService DynamicCover { get; } = Ioc.Default.GetRequiredService<IDynamicCoverService>();
     public UISettings UI { get; } = Ioc.Default.GetRequiredService<UISettings>();
     public ApiSettings Api { get; } = Ioc.Default.GetRequiredService<ApiSettings>();
     public LyricSettings Lyric { get; } = Ioc.Default.GetRequiredService<LyricSettings>();
@@ -172,7 +174,17 @@ public sealed partial class Settings : Page
         }
     }
 
-    private void CacheLimitCard_Loaded(object sender, RoutedEventArgs e)
+    private void DynamicCoverToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch { IsOn: true }) CheckAppleMusicDynamicCover();
+    }
+
+    private void CheckAppleMusicDynamicCover()
+    {
+        _taskRunner.Forget(DynamicCover.CheckAppleMusicAsync(), "check apple music dynamic cover");
+    }
+
+        private void CacheLimitCard_Loaded(object sender, RoutedEventArgs e)
     {
         _ = RefreshCacheUsageAsync();
     }
@@ -196,6 +208,7 @@ public sealed partial class Settings : Page
                     t?.As<ComboBoxItem>().Tag.ToString() == Download.DownloadAudioRate));
         }
 
+        if (Playback.DynamicCoverEnabled) CheckAppleMusicDynamicCover();
         TextBoxXREALIP.Text = Api.RealIp ?? "";
         var package = Package.Current;
         var packageId = package.Id;

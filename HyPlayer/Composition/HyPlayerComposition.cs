@@ -16,6 +16,7 @@ using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.DynamicCover;
 using HyPlayer.Features.Playback.Analysis;
 using HyPlayer.Features.Playback.Analysis.Models;
 using HyPlayer.Features.Playback.Models;
@@ -139,6 +140,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IUserLibraryNavigationProvidable>(neteaseProvider);
         depository.AddSingleton<IProviderSpecialContainerTypeIds>(neteaseProvider);
         depository.AddSingleton<IResourceQualityTagProvidable>(neteaseProvider);
+        depository.AddSingleton<IDynamicCoverProvidable>(neteaseProvider);
         depository.AddSingleton<IRichMediaProvidable>(neteaseProvider);
 
         var localProvider = new LocalProvider();
@@ -284,6 +286,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IVocalAnalyzer, MdxVocalAnalyzer>();
         depository.AddSingleton<IAudioAnalysisService, AudioAnalysisService>();
         depository.AddSingleton<ITrackTransition, AutoMixTransition>();
+        depository.AddSingleton<IDynamicCoverService, DynamicCoverService>();
         depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
         depository.Add(
             typeof(INotificationSubscriber<PlaybackRequestFailedNotification>),

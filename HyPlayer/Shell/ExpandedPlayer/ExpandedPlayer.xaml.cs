@@ -39,6 +39,7 @@ using HyPlayer.Features.Album;
 using HyPlayer.Features.Artist;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.DynamicCover;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction;
@@ -122,6 +123,7 @@ public sealed partial class ExpandedPlayer : Page
     private readonly WeakEventListener<ExpandedPlayer, object?, EventArgs> _secondTickListener;
     private readonly WeakEventListener<ExpandedPlayer, object?, SeekRequestedEventArgs> _seekRequestedListener;
     private readonly ExpandedPlayerShareSaveController? _shareSave;
+    private readonly ExpandedPlayerDynamicCover _dynamicCover;
     private readonly SpectrumLayer _spectrumLayer;
     private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs> _stateChangedListener;
     private readonly WeakEventListener<ExpandedPlayer, object?, PropertyChangedEventArgs> _lyricSettingsChangedListener;
@@ -195,6 +197,13 @@ public sealed partial class ExpandedPlayer : Page
         InitializeComponent();
         _lyricBox.EnableRenderThreadUpdates();
         ViewModel = Ioc.Default.GetRequiredService<ExpandedPlayerViewModel>();
+        _dynamicCover = new ExpandedPlayerDynamicCover(
+            ImageAlbum,
+            Ioc.Default.GetRequiredService<IDynamicCoverService>(),
+            _playbackSettings,
+            _taskRunner,
+            ReconcileAlbumCover);
+        _dynamicCover.Load(_state.NowPlayingProviderItem);
         _lyricBox.SetRenderSettings(_lyricRenderSettings.Current);
         _lyricRenderSettings.SettingsChanged += OnLyricEffectSettingsChanged;
         _canvasState.LyricBox = _lyricBox;
@@ -321,6 +330,8 @@ public sealed partial class ExpandedPlayer : Page
             () => TextBlockSongTitle.Text);
     }
 
+    private InMemoryRandomAccessStream? EffectiveCoverStream => _dynamicCover.Poster ?? _state.CoverStream;
+
     // Services accessed via ViewModel; shortcuts for code-behind convenience
     private PlayCoreBase _playCore => ViewModel.PlayCore;
     private IPlaybackControlService _control => ViewModel.Control;
@@ -385,6 +396,7 @@ public sealed partial class ExpandedPlayer : Page
                 _canvasState.TrackChangeTimestamp = Stopwatch.GetTimestamp();
                 WakeLyricCanvas();
                 OnSongChange();
+                _dynamicCover.Load(_state.NowPlayingProviderItem);
                 ReconcileAlbumCover();
                 break;
             case nameof(PlaybackStateService.IsTransitioning):
@@ -1032,6 +1044,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         ImageRotateTransform.CenterX = e.NewSize.Width / 2;
         ImageRotateTransform.CenterY = e.NewSize.Height / 2;
+        _dynamicCover.UpdateLayout();
         if (_appleControlsActive) SyncControlsWidth();
     }
 
@@ -1325,7 +1338,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private bool IsCurrentCover(CoverColorTicket ticket)
     {
-        return _coverColorGate.IsCurrent(ticket, _state.CoverStream);
+        return _coverColorGate.IsCurrent(ticket, EffectiveCoverStream);
     }
 
     private async Task<CoverColors?> ExtractCoverColorsAsync(IRandomAccessStream stream)
@@ -1498,6 +1511,7 @@ public sealed partial class ExpandedPlayer : Page
     {
         if (_uiSettings.AlbumRound) ImageAlbum.CornerRadius = new CornerRadius(300);
         ImageAlbum.BorderThickness = new Thickness(_uiSettings.AlbumBorderLength);
+        _dynamicCover.UpdateLayout();
         RestoreTitleBar();
         _lifecycle.IsInBackground = false;
         if (!_isCleanedUp && !_windowSizeSubscribed)
@@ -1664,7 +1678,7 @@ public sealed partial class ExpandedPlayer : Page
     public async Task RefreshAlbumCoverAsync()
     {
         if (_isCleanedUp || _canvasResourcesReleased || _lifecycle.IsInBackground) return;
-        var cover = _state.CoverStream;
+        var cover = EffectiveCoverStream;
         if (cover is null) return;
         IRandomAccessStream source;
         try
@@ -1697,13 +1711,13 @@ public sealed partial class ExpandedPlayer : Page
         {
             source.Dispose();
             _coverColorGate.Complete(ticket, applied);
-            if (!ReferenceEquals(ticket.Cover, _state.CoverStream)) ReconcileAlbumCover();
+            if (!ReferenceEquals(ticket.Cover, EffectiveCoverStream)) ReconcileAlbumCover();
         }
     }
 
     private void ReconcileAlbumCover()
     {
-        if (_coverColorGate.NeedsRefresh(_state.CoverStream, Stopwatch.GetTimestamp())) _taskRunner.Forget(RefreshAlbumCoverAsync(), "refresh expanded player cover");
+        if (_coverColorGate.NeedsRefresh(EffectiveCoverStream, Stopwatch.GetTimestamp())) _taskRunner.Forget(RefreshAlbumCoverAsync(), "refresh expanded player cover");
     }
 
     private async Task<bool> ApplyAlbumCoverAsync(CoverColorTicket ticket, IRandomAccessStream source,
@@ -1733,7 +1747,7 @@ public sealed partial class ExpandedPlayer : Page
         }
 
         if (_isCleanedUp || _canvasResourcesReleased ||
-            !_coverColorGate.TryApply(ticket, _state.CoverStream)) return false;
+            !_coverColorGate.TryApply(ticket, EffectiveCoverStream)) return false;
         if (colors is not null) ApplyCoverColors(colors);
         WakeLyricCanvas();
         if (_uiSettings.ExpandedPlayerBackgroundType != BackgroundType.LikeApple) return colors is not null;
@@ -1849,6 +1863,7 @@ public sealed partial class ExpandedPlayer : Page
 
         ViewModel.Cover = bitmap;
         _hasDisplayedCover = true;
+        _dynamicCover.OnCoverDisplayed(ticket.Cover);
         var fadeIn = compositor.CreateScalarKeyFrameAnimation();
         fadeIn.InsertKeyFrame(1f, 1f,
             compositor.CreateCubicBezierEasingFunction(new Vector2(0f, 0f), new Vector2(0.2f, 1f)));
@@ -2065,6 +2080,7 @@ public sealed partial class ExpandedPlayer : Page
         _escapeRequestedListener.Detach();
         _seekRequestedListener.Detach();
         ViewModel.Dispose();
+        _dynamicCover.Dispose();
         _lyricRenderSettings.SettingsChanged -= OnLyricEffectSettingsChanged;
         if (_windowSizeSubscribed)
         {

@@ -256,5 +256,6 @@ public enum CacheType
     UserDetail,
     UserPlaylist,
     RadioPrograms,
-    RadioInfo
+    RadioInfo,
+    DynamicCover
 }

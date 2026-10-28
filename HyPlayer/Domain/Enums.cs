@@ -61,6 +61,13 @@ public enum PlaybackFailureAction
     Stop = 1
 }
 
+public enum DynamicCoverSource
+{
+    Auto = 0,
+    AppleMusic = 1,
+    Netease = 2
+}
+
 public enum LyricAlignment
 {
     Left = 0,

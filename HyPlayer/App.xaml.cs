@@ -21,6 +21,7 @@ using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.DynamicCover;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Settings.Services;
 using HyPlayer.Features.Widgets.Services;
@@ -120,6 +121,8 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
     private static async Task InitializeThings()
     {
+        AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
+            AppDepository.Resolve<IDynamicCoverService>().ClearCacheAsync(), "clear dynamic cover cache");
         AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
             Task.Run(() => HyPlayer.Features.Settings.Settings.SystemFonts.Value), "enumerate system fonts");
         try
@@ -364,7 +367,8 @@ public sealed partial class App : Windows.UI.Xaml.Application
             AppDepository.Resolve<IPlaybackMemoryService>().SaveNowAsync(),
             AppDepository.Resolve<IMemoryGovernor>().PauseAsync(),
             DownloadedTrackIndex.StopAsync(), StorageMaintenance.StopAsync(),
-            HyPlayer.Features.Playback.AutoMix.AutoMixLog.StopAsync(), ResourceSaver.StopAsync());
+            HyPlayer.Features.Playback.AutoMix.AutoMixLog.StopAsync(), ResourceSaver.StopAsync(),
+            AppDepository.Resolve<IDynamicCoverService>().ClearCacheAsync());
         await _maintenancePause;
         AppDepository.Resolve<IGameBarWidgetService>().Widget?.Close();
         }

@@ -97,6 +97,18 @@ public partial class PlaybackSettings : SettingsBase
         set => SetSettings(nameof(PlaybackFailureAction), value);
     }
 
+    public bool DynamicCoverEnabled
+    {
+        get => GetSettings(nameof(DynamicCoverEnabled), false);
+        set => SetSettings(nameof(DynamicCoverEnabled), value);
+    }
+
+    public DynamicCoverSource DynamicCoverSource
+    {
+        get => GetSettings(nameof(DynamicCoverSource), DynamicCoverSource.Auto);
+        set => SetSettings(nameof(DynamicCoverSource), value);
+    }
+
     /// <summary>
     ///     Duration of crossfade in seconds.
     /// </summary>
