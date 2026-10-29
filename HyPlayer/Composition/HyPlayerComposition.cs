@@ -8,6 +8,7 @@ using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Application.Threading;
+using HyPlayer.Application.Sharing;
 using HyPlayer.Classes;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Account.Services;
@@ -325,6 +326,7 @@ internal static class HyPlayerComposition
 
     private static void ConfigureApplicationServices(IDepository depository)
     {
+        depository.AddSingleton<ShareRequestState>();
         depository.AddSingleton<IBackgroundTaskRunner, BackgroundTaskRunner>();
         depository.AddSingleton<IAuthSessionStore, AuthSessionStore>();
         depository.AddSingleton<IAuthService, AuthService>();

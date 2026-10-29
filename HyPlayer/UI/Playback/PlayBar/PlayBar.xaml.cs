@@ -23,6 +23,7 @@ using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
+using HyPlayer.Application.Sharing;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
@@ -78,6 +79,7 @@ public sealed partial class PlayBar
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly ShareRequestState _shareRequestState = Ioc.Default.GetRequiredService<ShareRequestState>();
     private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
     private readonly IPlaybackMemoryService _playbackMemory = Ioc.Default.GetRequiredService<IPlaybackMemoryService>();
 
@@ -811,6 +813,7 @@ DoubleAnimation verticalAnimation;
             return;
         }
 
+        _shareRequestState.Request(ShareRequestKind.Song);
         //展示系统的共享ui
         DataTransferManager.ShowShareUI();
     }
@@ -1013,6 +1016,8 @@ DoubleAnimation verticalAnimation;
 
     private void DataTransferManager_DataRequested(DataTransferManager sender, DataRequestedEventArgs args)
     {
+        if (_shareRequestState.RequestedKind != ShareRequestKind.Song) return;
+
         var dataPackage = new DataPackage();
         var providerItem = ViewModel.NowPlayingProviderItem;
         var songId = NeteaseTrack.IdOf(providerItem);
