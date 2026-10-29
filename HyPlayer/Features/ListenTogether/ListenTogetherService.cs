@@ -626,7 +626,7 @@ internal sealed partial class ListenTogetherService : ObservableObject, IListenT
         using (_restriction.Exemption())
         {
             await _control.SetTransitionAsync("dir").ConfigureAwait(false);
-            if (_state.ActiveStrategyId is not ("seq" or "sgl"))
+            if (_state.ActiveStrategyId is not ("seq" or "sgl" or "shn"))
                 await _control.SetPlayModeAsync("seq").ConfigureAwait(false);
         }
 
@@ -782,10 +782,10 @@ internal sealed partial class ListenTogetherService : ObservableObject, IListenT
     {
         var versionKey = ListenTogetherPlanner.VersionKey(room.Versions);
         if (!initial && versionKey == session.LastVersionKey) return;
-        var roomIds = room.PlayModeId == "shn" ? room.RandomItemIds : room.DisplayItemIds;
-        if (roomIds.Count > 0 && ListenTogetherPlanner.QueueKey(roomIds) != session.LastQueueKey)
+        var displayIds = room.DisplayItemIds;
+        if (displayIds.Count > 0 && ListenTogetherPlanner.QueueKey(displayIds) != session.LastQueueKey)
         {
-            var songs = await _provider.GetListenTogetherQueueSongsAsync(roomIds, ct).ConfigureAwait(false);
+            var songs = await _provider.GetListenTogetherQueueSongsAsync(displayIds, ct).ConfigureAwait(false);
             if (songs.Count > 0)
             {
                 await ReplaceLocalQueueAsync(songs, ct).ConfigureAwait(false);
@@ -795,15 +795,45 @@ internal sealed partial class ListenTogetherService : ObservableObject, IListenT
             session.LastQueueKey = ListenTogetherPlanner.QueueKey(await GetLocalQueueIdsAsync(ct).ConfigureAwait(false));
         }
 
-        var mode = room.PlayModeId == "sgl" ? "sgl" : "seq";
-        if (room.PlayModeId is not null && _state.ActiveStrategyId != mode)
+        if (room.PlayModeId == "shn")
         {
-            await _control.SetPlayModeAsync(mode, ct).ConfigureAwait(false);
-            if (!initial) ShowTip(mode == "sgl" ? "对方切换为单曲循环" : "对方切换为顺序播放");
+            await ApplyRemoteRandomOrderAsync(session, room.RandomItemIds.Count > 0 ? room.RandomItemIds : displayIds,
+                initial, ct).ConfigureAwait(false);
+        }
+        else if (room.PlayModeId is not null)
+        {
+            var mode = room.PlayModeId == "sgl" ? "sgl" : "seq";
+            if (_state.ActiveStrategyId != mode)
+            {
+                await _control.SetPlayModeAsync(mode, ct).ConfigureAwait(false);
+                if (!initial) ShowTip(mode == "sgl" ? "对方切换为单曲循环" : "对方切换为顺序播放");
+            }
+
+            session.LastRandomKey = null;
         }
 
         session.LastModeId = _state.ActiveStrategyId;
         session.LastVersionKey = versionKey;
+    }
+
+    private async Task ApplyRemoteRandomOrderAsync(Session session, IReadOnlyList<string> randomIds, bool initial,
+        CancellationToken ct)
+    {
+        var switching = _state.ActiveStrategyId != "shn";
+        if (!switching && ListenTogetherPlanner.QueueKey(randomIds) == session.LastRandomKey) return;
+        if (switching)
+        {
+            await _control.SetPlayModeAsync("shn", ct).ConfigureAwait(false);
+            if (!initial) ShowTip("对方开启了随机播放");
+        }
+
+        var local = await GetLocalQueueAsync(ct).ConfigureAwait(false);
+        var order = randomIds
+            .Select(id => local.FirstOrDefault(song => song.ActualId == id))
+            .OfType<SingleSongBase>()
+            .ToList();
+        await _playCore.ApplyRandomOrderAsync(order, ct).ConfigureAwait(false);
+        session.LastRandomKey = ListenTogetherPlanner.QueueKey(await GetLocalRandomOrderIdsAsync(ct).ConfigureAwait(false));
     }
 
     private async Task ReplaceLocalQueueAsync(List<SingleSongBase> songs, CancellationToken ct)
@@ -943,14 +973,14 @@ internal sealed partial class ListenTogetherService : ObservableObject, IListenT
 
     private async Task PublishLocalChangesAsync(Session session, bool publishPlayback, CancellationToken ct)
     {
-        if (_state.ActiveStrategyId is not ("seq" or "sgl"))
-        {
+        if (_state.ActiveStrategyId is not ("seq" or "sgl" or "shn"))
             await _control.SetPlayModeAsync("seq", ct).ConfigureAwait(false);
-            _notification.ShowMessage("一起听期间不支持随机播放", "已切换为顺序播放");
-        }
 
         var queueKey = ListenTogetherPlanner.QueueKey(await GetLocalQueueIdsAsync(ct).ConfigureAwait(false));
-        if (queueKey != session.LastQueueKey || _state.ActiveStrategyId != session.LastModeId)
+        var randomChanged = _state.ActiveStrategyId == "shn" &&
+                            ListenTogetherPlanner.QueueKey(await GetLocalRandomOrderIdsAsync(ct).ConfigureAwait(false)) !=
+                            session.LastRandomKey;
+        if (queueKey != session.LastQueueKey || _state.ActiveStrategyId != session.LastModeId || randomChanged)
             await ReportQueueAsync(session, ct).ConfigureAwait(false);
 
         if (!publishPlayback || _state.IsLoadingTrack || ReadLocal() is not { } current) return;
@@ -1020,14 +1050,18 @@ internal sealed partial class ListenTogetherService : ObservableObject, IListenT
         var queue = await GetLocalQueueAsync(ct).ConfigureAwait(false);
         var queueKey = ListenTogetherPlanner.QueueKey(queue.Select(song => song.ActualId!));
         var modeId = _state.ActiveStrategyId;
+        var randomQueue = modeId == "shn"
+            ? (await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false)).Where(IsRoomSong).ToList()
+            : null;
         if (queue.Count > 0)
         {
             var version = session.QueueVersion + 1;
             await _provider.ReportListenTogetherQueueAsync(session.RoomId, new ProviderListenTogetherQueueReport
             {
                 Queue = queue,
+                RandomQueue = randomQueue,
                 UserId = session.UserId,
-                PlayModeId = modeId == "sgl" ? "sgl" : "seq",
+                PlayModeId = modeId is "sgl" or "shn" ? modeId : "seq",
                 ClientSeq = (int)Math.Min(version, int.MaxValue),
                 AnchorPosition = -1,
                 AnchorItemId = string.Empty
@@ -1037,6 +1071,9 @@ internal sealed partial class ListenTogetherService : ObservableObject, IListenT
 
         session.LastQueueKey = queueKey;
         session.LastModeId = modeId;
+        session.LastRandomKey = randomQueue is null
+            ? null
+            : ListenTogetherPlanner.QueueKey(randomQueue.Select(song => song.ActualId!));
     }
 
     private async Task SendHeartbeatAsync(Session session, CancellationToken ct)
@@ -1186,6 +1223,12 @@ internal sealed partial class ListenTogetherService : ObservableObject, IListenT
         return (await _playCore.GetPlaylistAsync(ct).ConfigureAwait(false)).Where(IsRoomSong).ToList();
     }
 
+    private async Task<List<string>> GetLocalRandomOrderIdsAsync(CancellationToken ct)
+    {
+        return (await _playCore.GetOrderedPlaylistAsync(ct).ConfigureAwait(false)).Where(IsRoomSong)
+            .Select(song => song.ActualId!).ToList();
+    }
+
     private async Task<List<string>> GetLocalQueueIdsAsync(CancellationToken ct)
     {
         return (await GetLocalQueueAsync(ct).ConfigureAwait(false)).Select(song => song.ActualId!).ToList();
@@ -1292,6 +1335,7 @@ internal sealed partial class ListenTogetherService : ObservableObject, IListenT
         public long ClockOffsetMs { get; set; }
         public string? LastQueueKey { get; set; }
         public string? LastVersionKey { get; set; }
+        public string? LastRandomKey { get; set; }
         public string? LastModeId { get; set; }
         public long QueueVersion { get; set; }
         public long NextHeartbeatMs { get; set; }
