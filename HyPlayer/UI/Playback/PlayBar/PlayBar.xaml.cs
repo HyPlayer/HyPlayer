@@ -89,6 +89,10 @@ public sealed partial class PlayBar
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator =
         Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
 
+    private const double AdvancedOperationsMinWindowWidth = 1000;
+    private const double CompactWindowWidth = 860;
+    private readonly WideLayout _wideLayout;
+    private CompactLayout _appliedLayout = CompactLayout.Wide;
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private readonly IAppLifecycleStateService _lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
     private readonly IKeyboardShortcutService _keyboardShortcuts =
@@ -124,7 +128,13 @@ DoubleAnimation verticalAnimation;
     {
         PlayItems = ViewModel.PlaylistItems.ToNotifyCollectionChanged();
         InitializeComponent();
-        SizeChanged += (_, _) => UpdateProgressClearance();
+        _wideLayout = CaptureWideLayout();
+        SizeChanged += (_, _) =>
+        {
+            ApplyResponsiveControls();
+            UpdateAdvancedOperationsVisibility();
+            UpdateProgressClearance();
+        };
         SongInfoTag.SizeChanged += (_, _) => UpdateProgressClearance();
         SongInfoText.SizeChanged += (_, _) => UpdateProgressClearance();
         PlayProgress.SizeChanged += (_, _) => UpdateProgressClearance();
@@ -132,21 +142,75 @@ DoubleAnimation verticalAnimation;
 
     private void UpdateProgressClearance()
     {
-        if (!IsLoaded || SongInfoTag.ActualWidth <= 0 || PlayProgress.ActualWidth <= 0) return;
+        if (!IsLoaded || PlayProgress.ActualWidth <= 0) return;
         try
         {
-            var tag = SongInfoTag.TransformToVisual(this)
-                .TransformBounds(new Windows.Foundation.Rect(0, 0, SongInfoTag.ActualWidth, SongInfoTag.ActualHeight));
-            var progress = PlayProgress.TransformToVisual(this)
-                .TransformBounds(new Windows.Foundation.Rect(0, 0, PlayProgress.ActualWidth, PlayProgress.ActualHeight));
-            var overlapsVertically = tag.Bottom > progress.Top && tag.Top < progress.Bottom;
-            var clearance = overlapsVertically ? Math.Max(0, tag.Right + 14 - progress.Left) : 0;
+            var clearance = 0d;
+            if (SongInfoTag.ActualWidth > 0 && SongInfoTag.Visibility == Visibility.Visible &&
+                GridSongInfo.Visibility == Visibility.Visible &&
+                GridSongInfoContainer.Visibility == Visibility.Visible)
+            {
+                var tag = SongInfoTag.TransformToVisual(this)
+                    .TransformBounds(new Windows.Foundation.Rect(0, 0, SongInfoTag.ActualWidth, SongInfoTag.ActualHeight));
+                var progress = PlayProgress.TransformToVisual(this)
+                    .TransformBounds(new Windows.Foundation.Rect(0, 0, PlayProgress.ActualWidth, PlayProgress.ActualHeight));
+                var overlapsVertically = tag.Bottom > progress.Top && tag.Top < progress.Bottom;
+                clearance = overlapsVertically ? Math.Max(0, tag.Right + 14 - progress.Left) : 0;
+            }
+
             if (Math.Abs(PlayProgress.Padding.Left - clearance) > 0.5)
                 PlayProgress.Padding = new Thickness(clearance, 0, 0, 0);
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"Play bar progress clearance failed: {ex.Message}");
         }
+    }
+
+    private WideLayout CaptureWideLayout()
+    {
+        return new WideLayout(MainControlGrid.Margin, Grid.GetColumn(MainControlGrid), Grid.GetColumnSpan(MainControlGrid),
+            MainBtnsGrid.Margin, PlayProgress.Margin);
+    }
+
+    private void ApplyResponsiveControls()
+    {
+        var width = Window.Current?.Bounds.Width ?? ActualWidth;
+        var layout = width >= CompactWindowWidth
+            ? CompactLayout.Wide
+            : _surfaceStore.IsExpanded ? CompactLayout.Expanded : CompactLayout.Docked;
+        if (layout == _appliedLayout) return;
+        _appliedLayout = layout;
+        var extras = layout == CompactLayout.Wide ? Visibility.Visible : Visibility.Collapsed;
+        Btns.Visibility = extras;
+        BtnMore.Visibility = extras;
+        BtnPlayRollType.Visibility = extras;
+        if (layout == CompactLayout.Wide)
+        {
+            Grid.SetColumn(MainControlGrid, _wideLayout.MainColumn);
+            Grid.SetColumnSpan(MainControlGrid, _wideLayout.MainColumnSpan);
+            MainControlGrid.Margin = _wideLayout.MainMargin;
+            MainBtnsGrid.Margin = _wideLayout.ButtonsMargin;
+            PlayProgress.Margin = _wideLayout.ProgressMargin;
+        }
+        else
+        {
+            var expanded = layout == CompactLayout.Expanded;
+            Grid.SetColumn(MainControlGrid, expanded ? 0 : 1);
+            Grid.SetColumnSpan(MainControlGrid, expanded ? 4 : 3);
+            MainControlGrid.Margin = new Thickness(0);
+            MainBtnsGrid.Margin = new Thickness(0, 5, 0, 0);
+            PlayProgress.Margin = new Thickness(16, -5, 16, 0);
+        }
+
+        UpdateProgressClearance();
+    }
+
+    private void UpdateAdvancedOperationsVisibility()
+    {
+        var show = _surfaceStore.PlayBarProjection.ShowAdvancedOperations &&
+                   Window.Current?.Bounds.Width >= AdvancedOperationsMinWindowWidth;
+        GridSongAdvancedOperation.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void PlayBar_ActualThemeChanged(FrameworkElement sender, object args)
@@ -332,8 +396,9 @@ DoubleAnimation verticalAnimation;
             ButtonExpand.Visibility = projection.ShowExpandButton ? Visibility.Visible : Visibility.Collapsed;
             ButtonCollapse.Visibility = projection.ShowCollapseButton ? Visibility.Visible : Visibility.Collapsed;
             GridSongInfo.Visibility = projection.ShowSongInfo ? Visibility.Visible : Visibility.Collapsed;
-            GridSongAdvancedOperation.Visibility =
-                projection.ShowAdvancedOperations ? Visibility.Visible : Visibility.Collapsed;
+            ApplyResponsiveControls();
+            UpdateAdvancedOperationsVisibility();
+            UpdateProgressClearance();
             if (isExpanded)
                 PlayBarBackgroundFadeOut.Begin();
             else
@@ -1060,5 +1125,19 @@ DoubleAnimation verticalAnimation;
     private void RunOnUIThread(Action action)
     {
         _taskRunner.Forget(this.RunOnUIThreadAsync(action), "PlayBar UI update");
+    }
+
+    private readonly record struct WideLayout(
+        Thickness MainMargin,
+        int MainColumn,
+        int MainColumnSpan,
+        Thickness ButtonsMargin,
+        Thickness ProgressMargin);
+
+    private enum CompactLayout
+    {
+        Wide,
+        Docked,
+        Expanded
     }
 }

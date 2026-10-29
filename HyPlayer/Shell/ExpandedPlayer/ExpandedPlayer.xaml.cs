@@ -860,6 +860,8 @@ public sealed partial class ExpandedPlayer : Page
         {
             FindName(nameof(ApplePlaybackControls));
             ApplePlaybackControls?.ViewModel = ViewModel;
+            ApplePlaybackControls?.SizeChanged += (_, _) => UpdateMoreButtonPlacement();
+            MainGrid.SizeChanged += (_, _) => UpdateMoreButtonPlacement();
         }
 
         ApplePlaybackControls?.Visibility = apple ? Visibility.Visible : Visibility.Collapsed;
@@ -869,6 +871,27 @@ public sealed partial class ExpandedPlayer : Page
         UpdateAlbumSizeLimit();
         if (apple) SyncControlsWidth();
         if (changed) ApplyChromeState();
+        UpdateMoreButtonPlacement();
+    }
+
+    private void UpdateMoreButtonPlacement()
+    {
+        if (_isCleanedUp) return;
+        var bottom = MoreButtonBottomMargin;
+        if (_appleControlsActive &&
+            ApplePlaybackControls is { Visibility: Visibility.Visible, ActualWidth: > 0, ActualHeight: > 0 } controls &&
+            MainGrid.ActualWidth > 0)
+        {
+            var bounds = controls.TransformToVisual(MainGrid)
+                .TransformBounds(new Rect(0, 0, controls.ActualWidth, controls.ActualHeight));
+            var buttonLeft = MainGrid.ActualWidth - MoreBtn.Margin.Right - MoreBtn.Width;
+            var buttonTop = MainGrid.ActualHeight - MoreButtonBottomMargin - MoreBtn.Height;
+            if (bounds.Right > buttonLeft - MoreButtonClearance && bounds.Bottom > buttonTop - MoreButtonClearance)
+                bottom = Math.Max(bottom, MainGrid.ActualHeight - bounds.Top + MoreButtonClearance);
+        }
+
+        if (Math.Abs(MoreBtn.Margin.Bottom - bottom) > 0.5)
+            MoreBtn.Margin = new Thickness(MoreBtn.Margin.Left, MoreBtn.Margin.Top, MoreBtn.Margin.Right, bottom);
     }
 
     private void UpdateAlbumSizeLimit()
@@ -1039,6 +1062,9 @@ public sealed partial class ExpandedPlayer : Page
             ChangeWindowMode();
         }
     }
+
+    private const double MoreButtonBottomMargin = 50;
+    private const double MoreButtonClearance = 8;
 
     private void ImageAlbum_SizeChanged(object sender, SizeChangedEventArgs e)
     {
