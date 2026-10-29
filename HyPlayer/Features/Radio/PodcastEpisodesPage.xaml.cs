@@ -102,7 +102,8 @@ public sealed partial class PodcastEpisodesPage : Page
 
     private async void PlayAll_Click(object sender, RoutedEventArgs e)
     {
-        if (EpisodesContainer is not { } container) return;
+        if (EpisodesContainer is not { } container ||
+            !Ioc.Default.GetRequiredService<PlaybackRestriction>().Allows(PlaybackRequest.PlayPodcast)) return;
 
         _isPlayingAll = true;
         PlayAllButton.IsEnabled = false;

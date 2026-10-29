@@ -19,6 +19,7 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.ListenTogether;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.DynamicCover;
@@ -137,6 +138,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
             // ignored
         }
 
+        AppDepository.Resolve<IListenTogetherService>();
         if (AppDepository.Resolve<PlaybackSurfaceStore>().IsExpanded)
             AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
                 AppDepository.Resolve<IUIThreadDispatcher>().TryRunAsync(() =>
@@ -299,6 +301,13 @@ public sealed partial class App : Windows.UI.Xaml.Application
         // 本地播放
         else if (args is FileActivatedEventArgs)
         {
+            if (!AppDepository.Resolve<PlaybackRestriction>().Allows(PlaybackRequest.PlayLocal))
+            {
+                NavigateToRootPage();
+                Window.Current.Activate();
+                return;
+            }
+
             var playCore = AppDepository.Resolve<PlayCoreBase>();
             var localFileImport = AppDepository.Resolve<ILocalFileImportService>();
             var history = AppDepository.Resolve<IHistoryService>();

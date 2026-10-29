@@ -65,6 +65,7 @@ internal sealed class PersonalFM
             return;
         }
 
+        if (!Ioc.Default.GetRequiredService<PlaybackRestriction>().Allows(PlaybackRequest.PlayRadio)) return;
         DisposeInstance();
 
         var fm = new PersonalFM();

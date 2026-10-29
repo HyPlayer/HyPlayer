@@ -68,6 +68,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private readonly IReadOnlyList<IMusicResourceProvidable> _musicResourceProviders;
     private readonly INotificationService _notification;
     private readonly IPlaybackNotificationService _playbackNotification;
+    private readonly PlaybackRestriction _restriction;
     private readonly PlayCoreBase _playCore;
     private readonly INotificationHub _playCoreNotificationHub;
 
@@ -124,8 +125,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         ChopinAudioService audioService,
         IEnumerable<ITrackTransition> transitions,
         IMediaSourceService mediaSourceService,
-        INotificationService notification)
+        INotificationService notification,
+        PlaybackRestriction restriction)
     {
+        _restriction = restriction ?? throw new ArgumentNullException(nameof(restriction));
         _mediaSourceService = mediaSourceService ?? throw new ArgumentNullException(nameof(mediaSourceService));
         _notification = notification ?? throw new ArgumentNullException(nameof(notification));
         _player = player ?? throw new ArgumentNullException(nameof(player));
@@ -171,11 +174,13 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
     public async Task MoveNextAndPlayAsync(bool userInitiated)
     {
+        if (userInitiated && !_restriction.Allows(PlaybackRequest.SkipTrack)) return;
         await MoveNextAndPlayAsync(userInitiated, true).ConfigureAwait(false);
     }
 
     public async Task MovePreviousAndPlayAsync()
     {
+        if (!_restriction.Allows(PlaybackRequest.SkipTrack)) return;
         await _transitionGate.WaitAsync().ConfigureAwait(false);
         try
         {
@@ -229,12 +234,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 await PersonalFM.AppendMoreTracksAsync().ConfigureAwait(false);
         }
 
-        if (_playCore.ActivePlayModeId == "ltg" && ListenTogetherManager.Instance?.ServerNextIndex is { } serverIndex)
-        {
-            ListenTogetherManager.Instance.ServerNextIndex = null;
-            await _playCore.MovePointerToIndexAsync(serverIndex).ConfigureAwait(false);
-        }
-        else if (repeatSingleOnAutoAdvance
+        if (repeatSingleOnAutoAdvance
                  && _playCore.ActivePlayModeId == "sgl"
                  && _state.NowPlayingProviderItem is not null
                  && !userInitiated)
@@ -604,6 +604,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
     public async Task SetPlayModeAsync(string playModeId, CancellationToken ct = default)
     {
+        if (!_restriction.Allows(PlaybackRequest.ChangePlayMode)) return;
         await _transitionGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
@@ -704,6 +705,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     public void SetPlaybackSpeed(double speed)
     {
         speed = NormalizePlaybackSpeed(speed);
+        if (Math.Abs(speed - 1d) > 0.001 && !_restriction.Allows(PlaybackRequest.ChangeSpeed)) return;
         var changed = Math.Abs(_state.PlaybackSpeed - speed) > 0.001;
         _state.PlaybackSpeed = speed;
         _audioService.PlaybackSpeed = speed;
@@ -996,6 +998,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     /// <inheritdoc />
     public async Task SeekAsync(TimeSpan target)
     {
+        if (!_restriction.Allows(PlaybackRequest.Seek)) return;
         try
         {
             if (!await EnsureSeekableAsync().ConfigureAwait(false))
@@ -1041,6 +1044,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     /// <inheritdoc />
     public async Task LoadAndPlayAsync(SingleSongBase song, bool autoPlay = true, bool removeCurrentSongs = true)
     {
+        if (!_restriction.Allows(PlaybackRequest.PlayItems, song)) return;
         _playbackCts?.Cancel();
         _playbackCts?.Dispose();
         _playbackCts = new CancellationTokenSource();
@@ -1664,6 +1668,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 return;
 
             AnnouncePlaybackFailure(notification.Song, notification.Exception);
+            if (_restriction.HandlesPlaybackFailure(notification.Song))
+            {
+                _state.IsPlaying = false;
+                return;
+            }
+
             if (StopsOnPlaybackFailure)
             {
                 await StopFailedPlaybackAsync(notification.Song).ConfigureAwait(false);

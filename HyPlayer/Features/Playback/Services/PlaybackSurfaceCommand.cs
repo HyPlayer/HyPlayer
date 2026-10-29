@@ -14,7 +14,8 @@ public enum PlaybackSurfaceCommand
     AddToSongList,
     Download,
     OpenComments,
-    Share
+    Share,
+    OpenListenTogether
 }
 
 public sealed class PlaybackSurfaceCommandRequestedEventArgs(PlaybackSurfaceCommand command, object? anchor) : EventArgs

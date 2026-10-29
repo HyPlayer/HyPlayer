@@ -17,7 +17,8 @@ internal sealed class SongListQueueBuilder(
     IPlaybackControlService control,
     PlaybackStateService state,
     INotificationService notification,
-    IBackgroundTaskRunner taskRunner) : ISongListQueueBuilder
+    IBackgroundTaskRunner taskRunner,
+    PlaybackRestriction restriction) : ISongListQueueBuilder
 {
     private readonly object _queueBuildLock = new();
     private readonly SemaphoreSlim _queueMutationLock = new(1, 1);
@@ -29,7 +30,7 @@ internal sealed class SongListQueueBuilder(
     public async Task BuildAndPlayAsync(SingleSongBase clickedSong, SongListQueueScope scope,
         IReadOnlyList<SingleSongBase> visibleSongs)
     {
-        if (visibleSongs.Count == 0) return;
+        if (visibleSongs.Count == 0 || !restriction.Allows(PlaybackRequest.PlayItems, clickedSong)) return;
 
         await _queueRequestLock.WaitAsync().ConfigureAwait(false);
         try

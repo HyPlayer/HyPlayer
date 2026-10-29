@@ -48,6 +48,8 @@ public abstract record AppRoute
 
     public sealed record LikedSongs : AppRoute;
 
+    public sealed record ListenTogether : AppRoute;
+
     public sealed record LocalMusic : AppRoute;
 
     public sealed record Me(string? UserId = null) : AppRoute;

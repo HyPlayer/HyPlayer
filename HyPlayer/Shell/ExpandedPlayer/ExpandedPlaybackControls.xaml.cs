@@ -396,6 +396,11 @@ public sealed partial class ExpandedPlaybackControls : UserControl
         _surfaceStore.RequestCommand(PlaybackSurfaceCommand.OpenDesktopLyrics);
     }
 
+    private void ItemListenTogether_Click(object sender, RoutedEventArgs e)
+    {
+        _surfaceStore.RequestCommand(PlaybackSurfaceCommand.OpenListenTogether);
+    }
+
     private void ItemSubscribe_Click(object sender, RoutedEventArgs e)
     {
         _surfaceStore.RequestCommand(PlaybackSurfaceCommand.AddToSongList);

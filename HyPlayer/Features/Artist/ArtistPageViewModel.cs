@@ -29,6 +29,7 @@ public partial class ArtistPageViewModel : ObservableObject
     private readonly IProvidableItemProvidable _itemProvider;
     private readonly IProviderKnownTypeIds _knownTypeIds;
     private readonly IPlaybackControlService _control;
+    private readonly PlaybackRestriction _restriction;
     private readonly IAppNavigator _navigator;
     private readonly INotificationService _notification;
     private readonly IPlaybackQueueLoader _queueLoader;
@@ -47,8 +48,10 @@ public partial class ArtistPageViewModel : ObservableObject
         IAppNavigator navigator,
         IPlaybackQueueLoader queueLoader,
         IPlaybackControlService control,
-        ILoadEnvironment loadEnvironment)
+        ILoadEnvironment loadEnvironment,
+        PlaybackRestriction restriction)
     {
+        _restriction = restriction;
         ArtistLoad = new LoadState("歌手信息", loadEnvironment) { EmptyText = "没有找到这位歌手" };
         HotSongsLoad = new LoadState("热门歌曲", loadEnvironment) { EmptyText = "还没有热门歌曲" };
         _itemProvider = itemProvider;
@@ -73,7 +76,8 @@ public partial class ArtistPageViewModel : ObservableObject
     [RelayCommand]
     private async Task PlayAllSongsAsync()
     {
-        if (IsPlayingAll || _providerArtist?.ActualId is not { Length: > 0 } artistId) return;
+        if (IsPlayingAll || _providerArtist?.ActualId is not { Length: > 0 } artistId ||
+            !_restriction.Allows(PlaybackRequest.PlayItems)) return;
 
         IsPlayingAll = true;
         try

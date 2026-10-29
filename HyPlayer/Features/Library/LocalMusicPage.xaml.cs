@@ -42,6 +42,7 @@ public sealed partial class LocalMusicPage : Page
         Ioc.Default.GetRequiredService<ILocalFileImportService>();
 
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+    private readonly PlaybackRestriction _restriction = Ioc.Default.GetRequiredService<PlaybackRestriction>();
     private readonly LocalLibrarySettings _setting = Ioc.Default.GetRequiredService<LocalLibrarySettings>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
@@ -109,6 +110,7 @@ public sealed partial class LocalMusicPage : Page
 
     private async void Playall_Click(object sender, RoutedEventArgs e)
     {
+        if (!_restriction.Allows(PlaybackRequest.PlayLocal)) return;
         await _control.StopAsync();
         await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(ViewModel.LocalItems.Cast<SingleSongBase>().ToList());
@@ -217,7 +219,7 @@ public sealed partial class LocalMusicPage : Page
 
     private async void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ListBoxLocalMusicContainer.SelectedItem == null) return;
+        if (ListBoxLocalMusicContainer.SelectedItem == null || !_restriction.Allows(PlaybackRequest.PlayLocal)) return;
         await _control.StopAsync();
         await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(ViewModel.LocalItems.Cast<SingleSongBase>().ToList());
@@ -242,6 +244,7 @@ public sealed partial class LocalMusicPage : Page
 
     private async Task PickAndAppendLocalFilesAsync()
     {
+        if (!_restriction.Allows(PlaybackRequest.PlayLocal)) return;
         var items = await _localFileImport.PickLocalFilesAsync();
         if (items.Count == 0)
             return;

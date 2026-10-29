@@ -107,6 +107,7 @@ public sealed partial class ContainerItemsView : UserControl
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+    private readonly PlaybackRestriction _restriction = Ioc.Default.GetRequiredService<PlaybackRestriction>();
     private readonly ISongListQueueBuilder _queueBuilder = Ioc.Default.GetRequiredService<ISongListQueueBuilder>();
     private readonly UISettings _setting = Ioc.Default.GetRequiredService<UISettings>();
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
@@ -252,7 +253,7 @@ public sealed partial class ContainerItemsView : UserControl
         }
 
         var songs = LoadedProviderSongs.ToList();
-        if (songs.Count == 0) return;
+        if (songs.Count == 0 || !_restriction.Allows(PlaybackRequest.PlayItems, songs)) return;
 
         await _control.StopAsync();
         await _control.ClearQueueAsync();
@@ -269,7 +270,7 @@ public sealed partial class ContainerItemsView : UserControl
         }
 
         var songs = LoadedProviderSongs.ToList();
-        if (songs.Count > 0)
+        if (songs.Count > 0 && _restriction.Allows(PlaybackRequest.PlayItems, songs))
             await _playCore.InsertSongRangeAsync(songs);
     }
 
@@ -734,6 +735,7 @@ public sealed partial class ContainerItemsView : UserControl
         if (!TryGetSelectedRow(out var row)) return;
         if (row.AsPlayableSong is { } song)
         {
+            if (!_restriction.Allows(PlaybackRequest.PlayItems, song)) return;
             await _playCore.InsertSongAsync(song);
             await _playCore.MovePointerToAsync(song);
             if (_playCore.CurrentSong is { } currentSong)
@@ -748,7 +750,7 @@ public sealed partial class ContainerItemsView : UserControl
     private void FlyoutItemAddToPlaylist_Click(object sender, RoutedEventArgs e)
     {
         var songs = GetSelectedRows().Select(row => row.AsPlayableSong).OfType<SingleSongBase>().ToList();
-        if (songs.Count == 0) return;
+        if (songs.Count == 0 || !_restriction.Allows(PlaybackRequest.PlayItems, songs)) return;
 
         _ = _playCore.InsertSongRangeAsync(songs, _state.NowPlayingIndex + 1);
         if (_state.ActiveStrategyId == "shn")

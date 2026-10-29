@@ -24,6 +24,7 @@ using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Album;
@@ -90,6 +91,7 @@ public sealed partial class PlayBar
         Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
 
     private const double AdvancedOperationsMinWindowWidth = 1000;
+    private const double ListenTogetherButtonMinWindowWidth = 1000;
     private const double CompactWindowWidth = 860;
     private readonly WideLayout _wideLayout;
     private CompactLayout _appliedLayout = CompactLayout.Wide;
@@ -176,6 +178,8 @@ DoubleAnimation verticalAnimation;
     private void ApplyResponsiveControls()
     {
         var width = Window.Current?.Bounds.Width ?? ActualWidth;
+        BtnListenTogether.Visibility = width < ListenTogetherButtonMinWindowWidth ? Visibility.Collapsed : Visibility.Visible;
+        Btns.Columns = BtnListenTogether.Visibility == Visibility.Visible ? 4 : 3;
         var layout = width >= CompactWindowWidth
             ? CompactLayout.Wide
             : _surfaceStore.IsExpanded ? CompactLayout.Expanded : CompactLayout.Docked;
@@ -338,6 +342,9 @@ DoubleAnimation verticalAnimation;
                 break;
             case PlaybackSurfaceCommand.Share:
                 Btn_Share_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.OpenListenTogether:
+                BtnListenTogether_Click(this, null);
                 break;
         }
     }
@@ -659,6 +666,13 @@ DoubleAnimation verticalAnimation;
         RequestCompactPlayer();
     }
 
+    private void BtnListenTogether_Click(object sender, RoutedEventArgs e)
+    {
+        if (_surfaceStore.IsExpanded) RequestCompactPlayer();
+        _taskRunner.Forget(Ioc.Default.GetRequiredService<IAppNavigator>().NavigateAsync(new AppRoute.ListenTogether()),
+            "open listen together page");
+    }
+
     private void RequestCompactPlayer()
     {
         // Delegate frame-level operations (animation, visibility, navigation, background, border) to coordinator;
@@ -678,6 +692,7 @@ DoubleAnimation verticalAnimation;
 
     private async Task PickAndAppendLocalFilesAsync()
     {
+        if (!Ioc.Default.GetRequiredService<PlaybackRestriction>().Allows(PlaybackRequest.PlayLocal)) return;
         var items = await _localFileImport.PickLocalFilesAsync();
         if (items.Count == 0)
             return;

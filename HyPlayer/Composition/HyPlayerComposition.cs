@@ -16,6 +16,7 @@ using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.ListenTogether;
 using HyPlayer.Features.Playback.DynamicCover;
 using HyPlayer.Features.Playback.Analysis;
 using HyPlayer.Features.Playback.Analysis.Models;
@@ -141,6 +142,9 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IProviderSpecialContainerTypeIds>(neteaseProvider);
         depository.AddSingleton<IResourceQualityTagProvidable>(neteaseProvider);
         depository.AddSingleton<IDynamicCoverProvidable>(neteaseProvider);
+        depository.AddSingleton<IListenTogetherProvidable>(neteaseProvider);
+        depository.AddSingleton<IListenTogetherSyncProvidable>(neteaseProvider);
+        depository.AddSingleton<IMultiListenTogetherProvidable>(neteaseProvider);
         depository.AddSingleton<IRichMediaProvidable>(neteaseProvider);
 
         var localProvider = new LocalProvider();
@@ -267,6 +271,7 @@ internal static class HyPlayerComposition
     private static void ConfigurePlaybackServices(IDepository depository)
     {
         depository.AddSingleton<PlaybackStateService>();
+        depository.AddSingleton<PlaybackRestriction>();
         depository.AddSingleton<IQueueSourceProvider, PlaylistQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, AlbumQueueSourceProvider>();
         depository.AddSingleton<IQueueSourceProvider, RadioQueueSourceProvider>();
@@ -287,6 +292,8 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IAudioAnalysisService, AudioAnalysisService>();
         depository.AddSingleton<ITrackTransition, AutoMixTransition>();
         depository.AddSingleton<IDynamicCoverService, DynamicCoverService>();
+        depository.AddSingleton<IListenTogetherPrompt, ListenTogetherPrompt>();
+        depository.AddSingleton<IListenTogetherService, ListenTogetherService>();
         depository.AddSingleton<IPlaybackControlService, PlaybackControlService>();
         depository.Add(
             typeof(INotificationSubscriber<PlaybackRequestFailedNotification>),

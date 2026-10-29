@@ -109,6 +109,30 @@ public partial class PlaybackSettings : SettingsBase
         set => SetSettings(nameof(DynamicCoverSource), value);
     }
 
+    public bool ListenTogetherAutoResume
+    {
+        get => GetSettings(nameof(ListenTogetherAutoResume), true);
+        set => SetSettings(nameof(ListenTogetherAutoResume), value);
+    }
+
+    public bool ListenTogetherDetectOngoing
+    {
+        get => GetSettings(nameof(ListenTogetherDetectOngoing), true);
+        set => SetSettings(nameof(ListenTogetherDetectOngoing), value);
+    }
+
+    public bool ListenTogetherRemoteTips
+    {
+        get => GetSettings(nameof(ListenTogetherRemoteTips), false);
+        set => SetSettings(nameof(ListenTogetherRemoteTips), value);
+    }
+
+    public string ListenTogetherLocalRoomId
+    {
+        get => GetSettings(nameof(ListenTogetherLocalRoomId), string.Empty);
+        set => SetSettings(nameof(ListenTogetherLocalRoomId), value);
+    }
+
     /// <summary>
     ///     Duration of crossfade in seconds.
     /// </summary>

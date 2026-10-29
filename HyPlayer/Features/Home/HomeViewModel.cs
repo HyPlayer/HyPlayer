@@ -31,6 +31,7 @@ public partial class HomeViewModel : ObservableObject
     private readonly IProviderSpecialContainerTypeIds _specialContainerTypeIds;
     private readonly PlayCoreBase _playCore;
     private readonly IPlaybackControlService _control;
+    private readonly PlaybackRestriction _restriction;
     private readonly INavigationService _navigation;
     private readonly IAppNavigator _appNavigator;
     private readonly IUserLibraryStateService _userLibraryState;
@@ -58,8 +59,10 @@ public partial class HomeViewModel : ObservableObject
         INavigationService navigation,
         IAppNavigator appNavigator,
         IUserLibraryStateService userLibraryState,
-        ILoadEnvironment loadEnvironment)
+        ILoadEnvironment loadEnvironment,
+        PlaybackRestriction restriction)
     {
+        _restriction = restriction;
         ToplistLoad = new LoadState("排行榜", loadEnvironment) { EmptyText = "暂时没有排行榜" };
         OfficialLoad = new LoadState("官方歌单", loadEnvironment) { EmptyText = "暂时没有官方歌单" };
         RecommendedPlaylistLoad = new LoadState("推荐歌单", loadEnvironment)
@@ -256,6 +259,7 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand]
     private async Task OnPlayAllRecommendedSongsClickedAsync()
     {
+        if (!_restriction.Allows(PlaybackRequest.PlayItems, _recommendedProviderSongs)) return;
         await _control.StopAsync();
         await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(_recommendedProviderSongs);

@@ -37,6 +37,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
     private readonly IProvidableItemRangeProvidable _itemRangeProvider;
     private readonly ILocalFileImportService _localFileImport;
     private readonly INotificationService _notification;
+    private readonly PlaybackRestriction _restriction;
 
     private readonly PlayCoreBase _playCore;
     private readonly IPlaybackQueueLoader _queueLoader;
@@ -61,8 +62,10 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
         IProvidableItemRangeProvidable itemRangeProvider,
         ILocalFileImportService localFileImport,
         IHistoryService history,
-        INotificationService notification)
+        INotificationService notification,
+        PlaybackRestriction restriction)
     {
+        _restriction = restriction;
         _playCore = playCore;
         _state = state;
         _playbackSettings = playbackSettings;
@@ -105,7 +108,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
             if (memory is null)
                 memory = await ReadLegacyStateAsync().ConfigureAwait(false);
 
-            if (memory is null)
+            if (memory is null || _restriction.IsActive)
                 return;
 
             await RestoreStateAsync(memory).ConfigureAwait(false);

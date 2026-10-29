@@ -90,6 +90,8 @@ internal class Api
             return;
         }
 
+        if (!Ioc.Default.GetRequiredService<PlaybackRestriction>().Allows(PlaybackRequest.PlayRadio)) return;
+
         try
         {
             var seedPlaylist =

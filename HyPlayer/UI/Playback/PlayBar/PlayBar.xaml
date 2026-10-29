@@ -1126,7 +1126,7 @@
                 Margin="50,0,0,0"
                 HorizontalAlignment="Right"
                 ColumnSpacing="20"
-                Columns="3"
+                Columns="4"
                 CornerRadius="20">
                 <ToggleButton
                     x:Name="ButtonDesktopLyrics"
@@ -1166,6 +1166,20 @@
                         Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}"
                         Glyph="&#xE15D;" />
                     <!--  E198  -->
+                </Button>
+                <Button
+                    x:Name="BtnListenTogether"
+                    AutomationProperties.Name="一起听"
+                    ToolTipService.ToolTip="一起听"
+                    Width="40"
+                    Height="40"
+                    Padding="-5"
+                    HorizontalAlignment="Center"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Click="BtnListenTogether_Click"
+                    CornerRadius="20">
+                    <FontIcon Foreground="{x:Bind ViewModel.PlaybackAccentBrush, Mode=OneWay}" Glyph="&#xE716;" />
                 </Button>
                 <Button
                     x:Name="ButtonPlayList"
@@ -1325,6 +1339,11 @@
                         <MenuFlyoutItem IsEnabled="False" Text="{x:Bind Mode=OneWay, Path=TbSongName.Text}" />
                         <MenuFlyoutItem IsEnabled="False" Text="{x:Bind Mode=OneWay, Path=TbSingerName.Content}" />
                         <MenuFlyoutSeparator />
+                        <MenuFlyoutItem Click="BtnListenTogether_Click" Text="一起听">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE716;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
                         <MenuFlyoutItem
                             x:Name="BtnFlyoutLike"
                             Click="BtnLike_OnClick"

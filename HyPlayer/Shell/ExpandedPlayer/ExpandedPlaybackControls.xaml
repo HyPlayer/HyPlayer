@@ -191,6 +191,11 @@
                                 <FontIcon Glyph="&#xE7F4;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
+                        <MenuFlyoutItem Click="ItemListenTogether_Click" Text="一起听">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE716;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
                         <MenuFlyoutItem
                             x:Name="ItemSubscribe"
