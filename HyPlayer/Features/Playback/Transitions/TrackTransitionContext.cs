@@ -15,6 +15,7 @@ public sealed class TrackTransitionContext
     public required bool CanPreload { get; init; }
     public required double PlaybackRate { get; init; }
     public required TimeSpan CrossFadeDuration { get; init; }
+    public SingleSongBase? Song { get; init; }
 }
 
 public sealed class TransitionPreparedTrack
@@ -23,6 +24,7 @@ public sealed class TransitionPreparedTrack
     public required PreparedPlaybackTicket Ticket { get; init; }
     public required long Generation { get; init; }
     public required IPlaybackSource Source { get; init; }
+    public IPlaybackSource? IncomingSource { get; init; }
     public required int CurrentIndex { get; init; }
     public required int QueueRevision { get; init; }
 }

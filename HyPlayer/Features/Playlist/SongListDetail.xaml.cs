@@ -9,7 +9,9 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
+using HyPlayer.Application.Sharing;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.UI.Lists;
@@ -32,6 +34,7 @@ public sealed partial class SongListDetail : Page
 
     private readonly DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly ShareRequestState _shareRequestState = Ioc.Default.GetRequiredService<ShareRequestState>();
     private bool _dataRequestedSubscribed;
 
     public SongListDetail()
@@ -65,7 +68,7 @@ public sealed partial class SongListDetail : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("移除失败", ex.Message);
+            _notification.ShowFailure("移除失败", ex);
             return;
         }
 
@@ -77,7 +80,7 @@ public sealed partial class SongListDetail : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("歌曲已移除，但刷新歌单失败", ex.Message);
+            _notification.ShowFailure("歌曲已移除，但刷新歌单失败", ex);
         }
     }
 
@@ -101,6 +104,8 @@ public sealed partial class SongListDetail : Page
 
     private void DataTransferManagerOnDataRequested(DataTransferManager sender, DataRequestedEventArgs args)
     {
+        if (_shareRequestState.RequestedKind != ShareRequestKind.Playlist) return;
+
         var dp = new DataPackage();
         dp.Properties.Title = ViewModel.PlayList?.Name;
         dp.SetWebLink(new Uri("https://music.163.com/#/playlist?id=" + ViewModel.PlayList?.ActualId));
@@ -150,6 +155,7 @@ public sealed partial class SongListDetail : Page
 
     private void BtnShare_Clicked(object sender, RoutedEventArgs e)
     {
+        _shareRequestState.Request(ShareRequestKind.Playlist);
         DataTransferManager.ShowShareUI();
     }
 

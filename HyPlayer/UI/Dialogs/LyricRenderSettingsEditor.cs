@@ -3,6 +3,7 @@ using HyPlayer.LyricRenderer;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
+using HyPlayer.LyricRenderer.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using Windows.UI;
@@ -69,7 +70,16 @@ internal sealed class LyricSettingsPreview : IDisposable
         _view.SetLyricLines(
         [
             new TextRenderingLyricLine { Text = "沿着光亮缓缓向前", Transliteration = "yan zhe guang liang huan huan xiang qian", StartTime = 0, EndTime = 3000, KeyFrames = [0, 3000] },
-            new TextRenderingLyricLine { Text = "Keep moving into the light", Translation = "继续向光亮前行", StartTime = 3000, EndTime = 6000, KeyFrames = [3000, 6000] },
+            new TextRenderingLyricLine
+            {
+                Text = "Keep moving into the light", Translation = "继续向光亮前行", StartTime = 3000, EndTime = 6000, KeyFrames = [3000, 6000],
+                Tokens =
+                [
+                    new LyricTextToken("Keep ", 3000, 3300, null), new LyricTextToken("moving ", 3300, 3700, null),
+                    new LyricTextToken("into ", 3700, 4000, null), new LyricTextToken("the ", 4000, 4200, null),
+                    new LyricTextToken("light", 4200, 6000, null)
+                ]
+            },
             new TextRenderingLyricLine { Text = "这一行很长，用来观察换行后的羽化扫词和柔和抬升", StartTime = 6000, EndTime = 9000, KeyFrames = [6000, 9000] }
         ]);
     }

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Windows.Storage;
@@ -11,16 +12,26 @@ namespace HyPlayer.Domain.Settings;
 /// </summary>
 public abstract partial class SettingsBase : ObservableObject
 {
+    private static readonly object MissingValue = new();
+
+    private static readonly ConcurrentDictionary<string, object> Cache = new();
+
     protected abstract string SectionName { get; }
 
     protected string GetStorageKey(string propertyName) => $"{SectionName}.{propertyName}";
+
+    private static object ReadStored(string storageKey) =>
+        Cache.GetOrAdd(storageKey, static key =>
+            ApplicationData.Current.LocalSettings.Values.TryGetValue(key, out var stored) && stored is not null
+                ? stored
+                : MissingValue);
 
     protected T GetSettings<T>(string propertyName, T defaultValue)
     {
         try
         {
-            if (!ApplicationData.Current.LocalSettings.Values.TryGetValue(GetStorageKey(propertyName),
-                    out var value) || value is null)
+            var value = ReadStored(GetStorageKey(propertyName));
+            if (ReferenceEquals(value, MissingValue))
                 return defaultValue;
 
             if (value is T typedValue)
@@ -45,8 +56,8 @@ public abstract partial class SettingsBase : ObservableObject
     {
         try
         {
-            if (ApplicationData.Current.LocalSettings.Values.TryGetValue(GetStorageKey(propertyName), out var stored)
-                && stored is not null)
+            var stored = ReadStored(GetStorageKey(propertyName));
+            if (!ReferenceEquals(stored, MissingValue))
             {
                 if (stored is T typed)
                 {
@@ -77,7 +88,8 @@ public abstract partial class SettingsBase : ObservableObject
         var storageKey = GetStorageKey(propertyName);
         object? storedValue = value is Enum ? Convert.ToInt32(value) : value;
 
-        if (values.TryGetValue(storageKey, out var currentValue)
+        var currentValue = ReadStored(storageKey);
+        if (!ReferenceEquals(currentValue, MissingValue)
             && EqualityComparer<object?>.Default.Equals(currentValue, storedValue))
             return false;
 
@@ -85,6 +97,8 @@ public abstract partial class SettingsBase : ObservableObject
             values.Remove(storageKey);
         else
             values[storageKey] = storedValue;
+
+        Cache[storageKey] = storedValue ?? MissingValue;
 
         OnPropertyChanged(notifyingPropertyName);
         return true;

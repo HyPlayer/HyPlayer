@@ -40,14 +40,14 @@ namespace HyPlayer.LyricRenderer.RollingCalculators
             if (!(fromY < targetY) && gap >= 0)
             {
                 var theoryDuration = ((float)duration /* * (Math.Log10(Math.Max(gap, 0.9)) + 1)*/);
-                progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryDuration, 0, 1);
+                progress = Math.Clamp((float)(context.PreciseLyricTime - context.CurrentKeyframe) / theoryDuration, 0, 1);
                 progress = 1 - progress;
                 progress = (float)f(progress);
                 progress = 1 - progress;
             }
             else
             {
-                progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) * 1.0f / 300, 0, 1);
+                progress = Math.Clamp((float)(context.PreciseLyricTime - context.CurrentKeyframe) * 1.0f / 300, 0, 1);
             }
             return fromY + (targetY - fromY) * progress;
         }

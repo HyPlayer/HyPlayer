@@ -2,6 +2,8 @@ using System;
 using Windows.Storage;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Features.Playback.Services;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 
 namespace HyPlayer.Domain.Settings;
@@ -47,15 +49,89 @@ public partial class PlaybackSettings : SettingsBase
         get => GetSettings(nameof(TransitionId), "dir");
         set
         {
-            if (value is not ("dir" or "gap" or "xfd"))
+            if (value is not ("dir" or "gap" or "xfd" or "fde" or "mix"))
                 throw new ArgumentOutOfRangeException(nameof(value));
 
             if (SetSettings(nameof(TransitionId), value))
+            {
                 OnPropertyChanged(nameof(IsCrossFadeTransition));
+                OnPropertyChanged(nameof(TransitionUsesDuration));
+                OnPropertyChanged(nameof(IsAutoMixTransition));
+            }
         }
     }
 
     public bool IsCrossFadeTransition => TransitionId == "xfd";
+
+    public bool TransitionUsesDuration => TransitionId is "xfd" or "fde" or "mix";
+
+    public bool IsAutoMixTransition => TransitionId == "mix";
+
+    public bool PlaybackFade
+    {
+        get => GetSettings(nameof(PlaybackFade), true);
+        set => SetSettings(nameof(PlaybackFade), value);
+    }
+
+    public bool SpeedChangesPitch
+    {
+        get => GetSettings(nameof(SpeedChangesPitch), false);
+        set => SetSettings(nameof(SpeedChangesPitch), value);
+    }
+
+    public bool AutoPlayOnLaunch
+    {
+        get => GetSettings(nameof(AutoPlayOnLaunch), false);
+        set => SetSettings(nameof(AutoPlayOnLaunch), value);
+    }
+
+    public bool RememberPlaybackPosition
+    {
+        get => GetSettings(nameof(RememberPlaybackPosition), true);
+        set => SetSettings(nameof(RememberPlaybackPosition), value);
+    }
+
+    public PlaybackFailureAction PlaybackFailureAction
+    {
+        get => GetSettings(nameof(PlaybackFailureAction), PlaybackFailureAction.SkipToNext);
+        set => SetSettings(nameof(PlaybackFailureAction), value);
+    }
+
+    public bool DynamicCoverEnabled
+    {
+        get => GetSettings(nameof(DynamicCoverEnabled), false);
+        set => SetSettings(nameof(DynamicCoverEnabled), value);
+    }
+
+    public DynamicCoverSource DynamicCoverSource
+    {
+        get => GetSettings(nameof(DynamicCoverSource), DynamicCoverSource.Auto);
+        set => SetSettings(nameof(DynamicCoverSource), value);
+    }
+
+    public bool ListenTogetherAutoResume
+    {
+        get => GetSettings(nameof(ListenTogetherAutoResume), true);
+        set => SetSettings(nameof(ListenTogetherAutoResume), value);
+    }
+
+    public bool ListenTogetherDetectOngoing
+    {
+        get => GetSettings(nameof(ListenTogetherDetectOngoing), true);
+        set => SetSettings(nameof(ListenTogetherDetectOngoing), value);
+    }
+
+    public bool ListenTogetherRemoteTips
+    {
+        get => GetSettings(nameof(ListenTogetherRemoteTips), false);
+        set => SetSettings(nameof(ListenTogetherRemoteTips), value);
+    }
+
+    public string ListenTogetherLocalRoomId
+    {
+        get => GetSettings(nameof(ListenTogetherLocalRoomId), string.Empty);
+        set => SetSettings(nameof(ListenTogetherLocalRoomId), value);
+    }
 
     /// <summary>
     ///     Duration of crossfade in seconds.
@@ -63,7 +139,7 @@ public partial class PlaybackSettings : SettingsBase
     public double CrossFadeTime
     {
         get => GetSettings(nameof(CrossFadeTime), 3d);
-        set => SetSettings(nameof(CrossFadeTime), Math.Clamp(value, 3d, 10d));
+        set => SetSettings(nameof(CrossFadeTime), Math.Clamp(value, 2d, 10d));
     }
 
     /// <summary>
@@ -99,15 +175,97 @@ public partial class PlaybackSettings : SettingsBase
         {
             try
             {
-                return GetSettings(nameof(CacheDirectory), ApplicationData.Current.LocalCacheFolder.Path);
+                return CustomCacheDirectory is { } custom && FolderAccess.IsUsable(custom)
+                    ? custom
+                    : ApplicationData.Current.LocalCacheFolder.Path;
             }
             catch
             {
                 return ApplicationData.Current.LocalCacheFolder.Path;
             }
         }
-        set => SetSettings(nameof(CacheDirectory), value);
+        set
+        {
+            FolderAccess.Forget(CustomCacheDirectory);
+            FolderAccess.Forget(value);
+            if (!SetSettings(nameof(CacheDirectory), value))
+                OnPropertyChanged();
+            OnPropertyChanged(nameof(CacheDirectoryIsCustom));
+            SimpleCacher.Reset();
+            HyPlayer.Features.Settings.Services.FolderAccessGuard.RefreshPath(value);
+        }
     }
+
+    public bool CacheDirectoryIsCustom =>
+        CustomCacheDirectory is { } custom && FolderAccess.IsUsable(custom) &&
+        !FolderAccess.IsSamePath(custom, ApplicationData.Current.LocalCacheFolder.Path);
+
+    public void ResetCacheDirectory()
+    {
+        FolderAccess.Forget(CustomCacheDirectory);
+        if (!SetSettings<string?>(nameof(CacheDirectory), null, nameof(CacheDirectory)))
+            OnPropertyChanged(nameof(CacheDirectory));
+        OnPropertyChanged(nameof(CacheDirectoryIsCustom));
+        SimpleCacher.Reset();
+    }
+
+    internal void NotifyDirectoryAccessChanged()
+    {
+        OnPropertyChanged(nameof(CacheDirectory));
+        OnPropertyChanged(nameof(CacheDirectoryIsCustom));
+        SimpleCacher.Reset();
+    }
+
+    public string? CustomCacheDirectory =>
+        TryGetSettings<string>(nameof(CacheDirectory), out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : null;
+
+    public static readonly double[] CacheLimitPresets = [1, 5, 10, 15, 20];
+
+    public double CacheLimitGB
+    {
+        get => GetSettings(nameof(CacheLimitGB), 5d);
+        set
+        {
+            if (double.IsNaN(value))
+                return;
+
+            if (SetSettings(nameof(CacheLimitGB), Math.Clamp(value, 0.5, 4096)))
+                StorageMaintenance.ScheduleTrim(TimeSpan.FromSeconds(2));
+        }
+    }
+
+    public bool CacheLimitCustom
+    {
+        get => GetSettings(nameof(CacheLimitCustom), false);
+        set => SetSettings(nameof(CacheLimitCustom), value);
+    }
+
+    public int CacheLimitIndex
+    {
+        get
+        {
+            if (CacheLimitCustom)
+                return CacheLimitPresets.Length;
+
+            var index = Array.IndexOf(CacheLimitPresets, CacheLimitGB);
+            return index < 0 ? CacheLimitPresets.Length : index;
+        }
+        set
+        {
+            if (value < 0 || value > CacheLimitPresets.Length)
+                return;
+
+            CacheLimitCustom = value == CacheLimitPresets.Length;
+            if (value < CacheLimitPresets.Length)
+                CacheLimitGB = CacheLimitPresets[value];
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CacheLimitIsCustom));
+        }
+    }
+
+    public bool CacheLimitIsCustom => CacheLimitIndex == CacheLimitPresets.Length;
 
     /// <summary>
     ///     Audio render device identifier.
@@ -118,7 +276,7 @@ public partial class PlaybackSettings : SettingsBase
         set
         {
             if (SetSettings("audio-render-device", value, nameof(AudioRenderDevice)))
-                _ = Ioc.Default.GetRequiredService<IPlaybackControlService>().InitializeAsync();
+                _ = Ioc.Default.GetRequiredService<IPlaybackControlService>().ApplyAudioDeviceAsync();
         }
     }
 
@@ -165,6 +323,30 @@ public partial class PlaybackSettings : SettingsBase
     {
         get => GetSettings(nameof(ActiveStrategyId), "seq");
         set => SetSettings(nameof(ActiveStrategyId), value);
+    }
+
+    public bool PromptWeakNetwork
+    {
+        get => GetSettings(nameof(PromptWeakNetwork), true);
+        set => SetSettings(nameof(PromptWeakNetwork), value);
+    }
+
+    public bool PromptPowerSaving
+    {
+        get => GetSettings(nameof(PromptPowerSaving), true);
+        set => SetSettings(nameof(PromptPowerSaving), value);
+    }
+
+    public string WeakNetworkBackup
+    {
+        get => GetSettings(nameof(WeakNetworkBackup), string.Empty);
+        set => SetSettings(nameof(WeakNetworkBackup), value);
+    }
+
+    public string PowerSavingBackup
+    {
+        get => GetSettings(nameof(PowerSavingBackup), string.Empty);
+        set => SetSettings(nameof(PowerSavingBackup), value);
     }
 
     // TODO(settings-applier): PlaybackSettings still applies several playback side effects directly

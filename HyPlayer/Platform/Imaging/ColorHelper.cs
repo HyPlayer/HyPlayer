@@ -54,7 +54,8 @@ public static class ColorHelper
 
     public static async Task<List<Vector3>> ExtractPaletteFromStream(
         IRandomAccessStream stream,
-        ColorGeneratorType generatorType = ColorGeneratorType.Auto)
+        ColorGeneratorType generatorType = ColorGeneratorType.Auto,
+        bool useLab = true)
     {
         if (generatorType == ColorGeneratorType.PattleCNN)
         {
@@ -69,16 +70,19 @@ public static class ColorHelper
             }
         }
 
-        return await ExtractClassicPaletteFromStream(stream);
+        return await ExtractClassicPaletteFromStream(stream, useLab);
     }
 
-    private static async Task<List<Vector3>> ExtractClassicPaletteFromStream(IRandomAccessStream stream)
+    private static async Task<List<Vector3>> ExtractClassicPaletteFromStream(IRandomAccessStream stream, bool useLab)
     {
         var decoder = await BitmapDecoder.CreateAsync(stream);
         var colors = await ImageDecoder.GetPixelColor(decoder);
         var inputs = colors.Select(t => new ArgbColor(t)).ToList();
         if (inputs.Count == 0) return [Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero];
-        var quantized = Quantizer.Quantize(inputs, 32).Colors;
+        var quantized = useLab
+            ? Quantizer.Quantize(inputs, 32).Colors
+            : new WsMeansQuantizer { UseLab = false }
+                .Quantize(inputs, 32, new WuQuantizer().Quantize(inputs, 32).Colors.Keys.ToList()).Colors;
         var selector = new HctColorSelector();
         var scored = selector.SelectColors(quantized)
             .Select(t => new Vector3(t.Red, t.Green, t.Blue))

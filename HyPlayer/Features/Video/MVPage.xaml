@@ -43,13 +43,7 @@
         </ScrollViewer.Resources>
         <StackPanel Orientation="Vertical">
             <frieren:Loading x:Name="LoadingControl" IsLoading="True">
-                <StackPanel Padding="12" Orientation="Horizontal">
-                    <ProgressRing Margin="0,0,12,0" IsActive="True" />
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        Foreground="White"
-                        Text="加载中" />
-                </StackPanel>
+                <controls1:LoadStateView x:Name="VideoLoadView" RequestedTheme="Dark" />
                 <frieren:Loading.Background>
                     <AcrylicBrush
                         BackgroundSource="Backdrop"

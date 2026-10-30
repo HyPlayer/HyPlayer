@@ -22,6 +22,9 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.LocalMusic;
+using HyPlayer.NeteaseProvider.Models;
+using HyPlayer.Platform.Downloads;
+using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Storage.Audio;
 using HyPlayer.Platform.Xaml;
@@ -29,6 +32,7 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Lyric;
+using HyPlayer.PlayCore.Abstraction.Models.Resources;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 using Microsoft.Toolkit.Uwp.Helpers;
 using TagLib;
@@ -64,6 +68,7 @@ public sealed partial class DownloadObject : ObservableObject
     private readonly SingleSongBase _providerSong;
     private readonly IResourceQualityTagProvidable _qualityTagProvider;
     private readonly DownloadSettings _downloadSettings;
+    private readonly ApiSettings _apiSettings;
     private readonly LyricSettings _lyricSettings;
     private readonly IUIThreadDispatcher _uiThreadDispatcher;
     private int _downloadBitrate;
@@ -94,6 +99,7 @@ public sealed partial class DownloadObject : ObservableObject
         INotificationService notification,
         IUIThreadDispatcher uiThreadDispatcher,
         DownloadSettings downloadSettings,
+        ApiSettings apiSettings,
         LyricSettings lyricSettings,
         HttpClient httpClient,
         ILyricProvidable lyricProvider,
@@ -104,6 +110,7 @@ public sealed partial class DownloadObject : ObservableObject
         _notification = notification;
         _uiThreadDispatcher = uiThreadDispatcher;
         _downloadSettings = downloadSettings;
+        _apiSettings = apiSettings;
         _lyricSettings = lyricSettings;
         _httpClient = httpClient;
         _lyricProvider = lyricProvider;
@@ -119,7 +126,7 @@ public sealed partial class DownloadObject : ObservableObject
         var trackMetadata = song as IHasTrackMetadata;
         _downloadTrackId = trackMetadata?.TrackNumber ?? 0;
         _downloadCdName = trackMetadata?.DiscName;
-        _downloadSongId = song.ActualId ?? string.Empty;
+        _downloadSongId = NeteaseTrack.IdOf(song) ?? string.Empty;
         _downloadAlbumId = string.IsNullOrWhiteSpace(song.Album?.ActualId)
             ? null
             : song.ProviderId + ":" + song.Album.ActualId;
@@ -143,6 +150,11 @@ public sealed partial class DownloadObject : ObservableObject
     public string SongName { get; }
 
     public string ArtistText => string.Join(';', _downloadArtistNames);
+
+    public override string ToString()
+    {
+        return string.IsNullOrWhiteSpace(ArtistText) ? SongName : $"{SongName} - {ArtistText}";
+    }
 
     public string AlbumName { get; }
 
@@ -251,7 +263,7 @@ public sealed partial class DownloadObject : ObservableObject
         {
             try
             {
-                if (_lyricSettings.DownloadLyric)
+                if (_lyricSettings.DownloadLyric && _providerSong is not NeteaseRadioProgram)
                     await DownloadLyric().ConfigureAwait(false);
                 if (_downloadSettings.WriteDownloadFileInfo)
                     await WriteInfoToFile().ConfigureAwait(false);
@@ -259,6 +271,8 @@ public sealed partial class DownloadObject : ObservableObject
                     Status = DownloadStatus.Error;
                 else if (!_removed)
                 {
+                    if (_providerSong.ProviderId == "ncm")
+                        await DownloadedTrackIndex.RecordAsync(_downloadSongId, ResultFile).ConfigureAwait(false);
                     Status = DownloadStatus.Finished;
                     await _uiThreadDispatcher.TryRunAsync(() =>
                     {
@@ -297,7 +311,7 @@ public sealed partial class DownloadObject : ObservableObject
                 using var streamAbstraction = await UwpStorageFileAbstraction.OpenAsync(ResultFile, writable: true);
                 using var file = TagLibHelper.Create(streamAbstraction, "." + _downloadFormat);
                 if (_downloadSettings.Write163Info)
-                    The163KeyHelper.TrySetMusicInfo(file.Tag, _providerSong, _downloadBitrate, _downloadFormat);
+                    The163KeyHelper.TrySetMusicInfo(file.Tag, NeteaseTrack.Of(_providerSong), _downloadBitrate, _downloadFormat);
                 //写相关信息
                 file.Tag.Album = AlbumName;
                 file.Tag.Performers = _downloadArtistNames;
@@ -555,7 +569,7 @@ public sealed partial class DownloadObject : ObservableObject
                 return;
             }
 
-            var musicResource = await musicResourceProvider.GetMusicResourceAsync(_providerSong, qualityTag);
+            var musicResource = await musicResourceProvider.GetMusicResourceAsync(NeteaseTrack.Of(_providerSong), qualityTag);
 
             if (musicResource?.Uri is null)
             {
@@ -566,6 +580,18 @@ public sealed partial class DownloadObject : ObservableObject
                     HasError = true;
                     HasPaused = true;
                     Progress = 100;
+                });
+                return;
+            }
+
+            if (ShouldSkipTrial(musicResource, _apiSettings.JumpVipSongDownloading))
+            {
+                Status = DownloadStatus.Paused;
+                _ = _uiThreadDispatcher.TryRunAsync(() =>
+                {
+                    HasPaused = true;
+                    Progress = 100;
+                    Message = "VIP 试听歌曲, 跳过";
                 });
                 return;
             }
@@ -689,6 +715,11 @@ public sealed partial class DownloadObject : ObservableObject
         return result is IResourceResultOf<Uri?> uriResult
             ? (await uriResult.GetResourceAsync())?.ToString()
             : null;
+    }
+
+    internal static bool ShouldSkipTrial(MusicResourceBase resource, bool skipTrials)
+    {
+        return skipTrials && resource is IAudioTrialMetadata { IsTrial: true };
     }
 
     private static async Task<string?> GetLyricTextAsync(IEnumerable<RawLyricInfo> lyrics, LyricType type, bool word)

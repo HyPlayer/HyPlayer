@@ -9,4 +9,5 @@ public class ElasticEaseRollingCalculator : EaseRollingCalculator
         new LineRollingElasticEase { EasingMode = EasingMode.EaseOut };
     protected override long AnimationDuration { get; set; } = 1300;
     protected override double MaxEasingPercent { get; set; } = 0.9;
+    protected override float OnsetProgress => 0.1f;
 }

@@ -5,6 +5,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Features.Playlist;
@@ -41,7 +42,12 @@ public sealed partial class HomePage : Page
     private void RefreshRequested(RefreshContainer sender, RefreshRequestedEventArgs args)
     {
         var def = args.GetDeferral();
-        ViewModel.GetDataAsync(true).ContinueWith(t => def.Complete()).SafeFireAndForget();
+        Ioc.Default.GetRequiredService<HyPlayer.Platform.Runtime.Background.IBackgroundTaskRunner>()
+            .Forget(async () =>
+            {
+                try { await ViewModel.GetDataAsync(true); }
+                finally { def.Complete(); }
+            }, "refresh home page");
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -49,6 +55,12 @@ public sealed partial class HomePage : Page
         base.OnNavigatedTo(e);
 
         ViewModel.GetDataAsync().SafeFireAndForget();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        ViewModel.Cancel();
     }
 
     private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
@@ -72,7 +84,7 @@ public sealed partial class HomePage : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("公开歌单失败", ex.Message);
+            _notification.ShowFailure("公开歌单失败", ex);
         }
     }
 
@@ -89,8 +101,14 @@ public sealed partial class HomePage : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("删除歌单失败", ex.Message);
+            _notification.ShowFailure("删除歌单失败", ex);
         }
+    }
+
+    private void CardList_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is HomeContainerCardViewModel playlist)
+            _navigation.Navigate(typeof(SongListDetail), playlist.Container);
     }
 
     private void Card_Tapped(object sender, TappedRoutedEventArgs e)

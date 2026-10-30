@@ -119,12 +119,33 @@ public static class RetryPolicies
             ex.Message.Contains("API 请求失败"))
         .WaitAndRetryAsync(
             3,
-            attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)), // 指数退避
+            attempt => TimeSpan.FromMilliseconds(attempt switch { 1 => 300, 2 => 800, _ => 1500 }),
             (exception, timespan, retryCount, context) =>
             {
                 Debug.WriteLine(
                     $"URL 获取重试 {retryCount}: {exception.Message}, 等待 {timespan.TotalSeconds} 秒");
             });
+
+    private static volatile bool _relaxedNetwork;
+
+    public static bool RelaxedNetwork
+    {
+        get => _relaxedNetwork;
+        set => _relaxedNetwork = value;
+    }
+
+    public static AsyncRetryPolicy UrlFetch => RelaxedNetwork ? RelaxedUrlFetchPolicy : UrlFetchPolicy;
+
+    public static AsyncRetryPolicy RelaxedUrlFetchPolicy { get; } = Policy
+        .Handle<Exception>(ex =>
+            ex is HttpRequestException ||
+            ex is TaskCanceledException ||
+            ex is TimeoutException ||
+            ex.Message.Contains("下载链接获取失败") ||
+            ex.Message.Contains("API 请求失败"))
+        .WaitAndRetryAsync(
+            6,
+            attempt => TimeSpan.FromMilliseconds(Math.Min(6000, 500 * Math.Pow(2, attempt - 1))));
 
     /// <summary>
     ///     NCM 文件加载重试策略

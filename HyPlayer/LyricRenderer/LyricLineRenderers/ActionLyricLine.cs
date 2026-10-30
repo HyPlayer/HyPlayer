@@ -4,6 +4,7 @@ using Windows.UI.Text;
 using Windows.UI.Xaml;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
+using HyPlayer.UI.Effects;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 
@@ -16,20 +17,62 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     // 新增：用于记录文本排版的实际起始 X 坐标
     private float _renderStartX;
+    private float _topPadding;
 
     private ICanvasImage _staticPersistCache;
+    private CanvasCommandList _lineCache;
     private CanvasTextFormat _textFormat;
     private CanvasTextLayout _textLayout;
 
     public string Text { get; set; }
     public string ActionUri { get; set; }
 
+    protected override float ContentTop => _topPadding;
 
     protected override bool RenderCore(CanvasDrawingSession session, RenderContext context)
     {
         if (_textLayout is null) return true;
-        session.DrawImage(_staticPersistCache, 0, 0);
+        session.DrawImage(_staticPersistCache, 0, _topPadding);
         return true;
+    }
+
+    protected override bool TryGetRecordedImage(
+        CanvasDrawingSession session,
+        RenderContext context,
+        out ICanvasImage image)
+    {
+        if (_textLayout is null || _staticPersistCache is null)
+        {
+            image = null!;
+            return false;
+        }
+
+        if (_lineCache is null)
+        {
+            var cache = new CanvasCommandList(session);
+            var cacheSession = cache.CreateDrawingSession();
+            try
+            {
+                cacheSession.DrawImage(_staticPersistCache, 0, _topPadding);
+            }
+            finally
+            {
+                cacheSession?.Dispose();
+            }
+
+            _lineCache = cache;
+        }
+
+        image = _lineCache;
+        return true;
+    }
+
+    protected override void OnRenderingChanged(bool rendering)
+    {
+        if (rendering) return;
+        ReleaseDrawingResources();
+        _lineCache?.Dispose();
+        _lineCache = null;
     }
 
     protected override void OnKeyFrameCore(CanvasDrawingSession session, RenderContext context)
@@ -41,14 +84,16 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     public override void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context)
     {
-        _canvasWidth = context.ItemWidth;
-        _canvasHeight = context.ViewHeight;
         OnTypographyChanged(session, context);
     }
 
     public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
     {
+        _canvasWidth = context.ItemWidth;
+        _canvasHeight = context.ViewHeight;
         ReleaseDrawingResources();
+        _lineCache?.Dispose();
+        _lineCache = null;
         _textFormat?.Dispose();
         _textLayout?.Dispose();
         _staticPersistCache?.Dispose();
@@ -76,7 +121,8 @@ public partial class ActionLyricLine : RenderingLyricLine
             Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
         _renderStartX = (float)_textLayout.LayoutBounds.X;
 
-        RenderingHeight = (float)(_textLayout?.LayoutBounds.Height ?? 0);
+        _topPadding = TypographySelector(t => t?.LyricFontSize, context)!.Value * 0.5f;
+        RenderingHeight = (float)(_textLayout?.LayoutBounds.Height ?? 0) + _topPadding;
         RenderingWidth = (float)(_textLayout?.LayoutBounds.Width ?? 0) + 32; // 加上 32 作为左右各 16 的 Padding 留白
 
         CanvasDrawingSession pstDs;
@@ -89,7 +135,7 @@ public partial class ActionLyricLine : RenderingLyricLine
         else
         {
             var staticPersistCacheTarget =
-                new CanvasRenderTarget(session, RenderingWidth, RenderingHeight, context.Dpi);
+                new CanvasRenderTarget(session, RenderingWidth, RenderingHeight - _topPadding, context.Dpi);
             _staticPersistCache = staticPersistCacheTarget;
             pstDs = staticPersistCacheTarget.CreateDrawingSession();
         }
@@ -105,6 +151,8 @@ public partial class ActionLyricLine : RenderingLyricLine
 
     public override void Dispose()
     {
+        _lineCache?.Dispose();
+        _lineCache = null;
         _textFormat?.Dispose();
         _textLayout?.Dispose();
         _staticPersistCache?.Dispose();

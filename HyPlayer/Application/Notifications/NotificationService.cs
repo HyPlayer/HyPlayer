@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using HyPlayer.Application.Threading;
 using HyPlayer.UI.TeachingTips;
 using Microsoft.UI.Xaml.Controls;
@@ -22,7 +22,18 @@ public class NotificationService : INotificationService
     /// <inheritdoc />
     public void ShowMessage(string title, string? message = null)
     {
-        _teachingTip.Items.Enqueue(new KeyValuePair<string, string?>(title, message));
+        Show(new TeachingTipItem(title, message));
+    }
+
+    /// <inheritdoc />
+    public void ShowAction(string title, string? message, string actionText, Action action)
+    {
+        Show(new TeachingTipItem(title, message, actionText, action));
+    }
+
+    private void Show(TeachingTipItem item)
+    {
+        _teachingTip.Items.Enqueue(item);
         _ = _uiThreadDispatcher.TryRunAsync(() =>
         {
             var tip = _teachingTip.Tip as TeachingTip;

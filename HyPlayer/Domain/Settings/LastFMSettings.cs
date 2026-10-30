@@ -21,8 +21,7 @@ public partial class LastFMSettings : SettingsBase
         {
             try
             {
-                return JsonSerializer.Deserialize<LastFMSession>(GetSettings(nameof(LastFMSession), "{}"),
-                    JsonDefaults.Options) ?? new LastFMSession();
+                return JsonDefaults.Deserialize<LastFMSession>(GetSettings(nameof(LastFMSession), "{}")) ?? new LastFMSession();
             }
             catch
             {
@@ -31,7 +30,7 @@ public partial class LastFMSettings : SettingsBase
         }
         set
         {
-            var serialized = value == null ? null : JsonSerializer.Serialize(value, JsonDefaults.Options);
+            var serialized = value == null ? null : JsonDefaults.Serialize(value);
             SetSettings(nameof(LastFMSession), serialized, nameof(LastFMSession));
         }
     }

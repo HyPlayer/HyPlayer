@@ -12,6 +12,7 @@
     <Grid>
         <ListView
             x:Name="CommentsContainer"
+            ContainerContentChanging="CommentsContainer_ContainerContentChanging"
             DataFetchSize="1"
             HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Stretch"

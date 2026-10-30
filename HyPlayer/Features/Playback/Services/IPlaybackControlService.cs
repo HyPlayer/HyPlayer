@@ -27,6 +27,8 @@ public interface IPlaybackControlService
     /// </summary>
     void SetAudioGainEnabled(bool enabled);
 
+    void SetPlaybackSpeed(double speed);
+
     event EventHandler<SeekRequestedEventArgs>? SeekRequested;
 
     Task SetTransitionAsync(string transitionId, CancellationToken ct = default);
@@ -76,4 +78,6 @@ public interface IPlaybackControlService
     ///     初始化播放器（AudioGraph 等底层资源）
     /// </summary>
     Task InitializeAsync();
+
+    Task ApplyAudioDeviceAsync();
 }

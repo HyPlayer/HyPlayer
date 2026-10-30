@@ -6,7 +6,7 @@ namespace HyPlayer.Playback.Tests;
 public sealed class FocusedLineRevealTimelineTests
 {
     [Test]
-    public void Timeline_ShouldPassTimedEdgesWithoutReversing()
+    public void Timeline_ShouldHoldAtWordGapsAndAdvanceWithoutReversing()
     {
         var timeline = FocusedLineRevealTimeline.Create(
         new[]
@@ -17,7 +17,9 @@ public sealed class FocusedLineRevealTimelineTests
 
         AssertNear(timeline.Sample(0).Position, 10);
         AssertNear(timeline.Sample(300).Position, 40);
-        AssertNear(timeline.Sample(450).Position, 50);
+        AssertNear(timeline.Sample(375).Position, 40);
+        AssertNear(timeline.Sample(450).Position, 40);
+        AssertNear(timeline.Sample(675).Position, 65);
         AssertNear(timeline.Sample(900).Position, 90);
 
         var previous = timeline.Sample(0).Progress;
@@ -31,7 +33,7 @@ public sealed class FocusedLineRevealTimelineTests
     }
 
     [Test]
-    public void Timeline_ShouldEaseLineEndpointsButNotRestartAtWordBoundary()
+    public void Timeline_ShouldAdvanceLinearlyWithoutRestartingAtWordBoundary()
     {
         var timeline = FocusedLineRevealTimeline.Create(
         new[]
@@ -40,13 +42,14 @@ public sealed class FocusedLineRevealTimelineTests
             new FocusedLineRevealSpan(250, 500, 50, 100)
         }, 0, 100, false);
 
-        var firstFrame = timeline.Sample(1000 / 60).Progress;
+        var firstFrame = timeline.Sample(1000d / 60).Progress;
         var beforeBoundary = timeline.Sample(249).Position;
         var atBoundary = timeline.Sample(250).Position;
         var afterBoundary = timeline.Sample(251).Position;
 
-        if (firstFrame >= 0.02f)
-            throw new InvalidOperationException($"视觉行首帧推进到 {firstFrame:P1}，起步仍然过快。");
+        AssertNear(firstFrame, 1f / 30);
+        AssertNear(timeline.Sample(125).Position, 25);
+        AssertNear(timeline.Sample(375).Position, 75);
         if (Math.Abs(atBoundary - 50) > 0.001f ||
             Math.Abs(atBoundary - beforeBoundary) > 0.5f ||
             Math.Abs(afterBoundary - atBoundary) > 0.5f)

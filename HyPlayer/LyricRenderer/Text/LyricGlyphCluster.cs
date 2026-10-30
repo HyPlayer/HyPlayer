@@ -31,4 +31,5 @@ public sealed class LyricGlyphCluster
     public int VisualLineClusterCount { get; set; }
     public int VisualLineStartClusterIndex { get; set; }
     public int VisualLineEndClusterIndexExclusive { get; set; }
+    public bool ContinuesRun { get; set; }
 }

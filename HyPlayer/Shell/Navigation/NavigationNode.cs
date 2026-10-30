@@ -16,11 +16,14 @@ public sealed partial class NavigationNode : ObservableObject
 
     [ObservableProperty] public partial IconElement? Icon { get; set; }
 
+    public string? Key { get; init; }
     public AppRoute? Route { get; set; }
     public AppNavigationAction? Action { get; set; }
     public bool IsHeader { get; set; }
     public bool IsSeparator { get; set; }
+    public bool IsStatus { get; init; }
     public bool SelectsOnInvoked { get; set; } = true;
+    public bool IsExpanded { get; init; }
 
     [ObservableProperty] public partial bool IsVisible { get; set; } = true;
 

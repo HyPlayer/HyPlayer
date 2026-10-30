@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,6 +33,15 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
     private readonly object _lifetimeGate = new();
     private int _resourceVersion;
     private bool _disposed;
+    private int _renderWidth;
+    private int _renderHeight;
+    private int _pendingWidth;
+    private int _pendingHeight;
+    private long _pendingSizeTimestamp;
+    private long _renderSizeTimestamp;
+
+    private const long SurfaceQuietTicks = 150 * TimeSpan.TicksPerMillisecond;
+    private const long SurfaceRepeatTicks = 300 * TimeSpan.TicksPerMillisecond;
 
     public LikeAppleBackgroundLayer(ExpandedCanvasState state, AudioGraphPlayer player)
     {
@@ -41,6 +51,7 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
 
     public string LayerName => "LikeAppleBackground";
     public int Order => 0;
+    public bool NeedsFrames => _state.BackgroundType == BackgroundType.LikeApple;
 
     public void CreateResources(CanvasAnimatedControl sender, CanvasCreateResourcesEventArgs args)
     {
@@ -149,21 +160,57 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
             _isVisible = true;
         }
 
-        if (sender.Size.Width <= 0 || sender.Size.Height <= 0)
+        Size size = _state.Viewport(sender.Size);
+        if (size.Width <= 0 || size.Height <= 0)
         {
             _frame = null;
             return;
         }
 
-        int pixelWidth = sender.ConvertDipsToPixels((float)sender.Size.Width, CanvasDpiRounding.Round);
-        int pixelHeight = sender.ConvertDipsToPixels((float)sender.Size.Height, CanvasDpiRounding.Round);
-        _frame = renderer.Render(pixelWidth, pixelHeight, _state.IsPlaying);
+        int pixelWidth = sender.ConvertDipsToPixels((float)size.Width, CanvasDpiRounding.Round);
+        int pixelHeight = sender.ConvertDipsToPixels((float)size.Height, CanvasDpiRounding.Round);
+        long now = Stopwatch.GetTimestamp();
+        if (pixelWidth != _pendingWidth || pixelHeight != _pendingHeight)
+        {
+            _pendingWidth = pixelWidth;
+            _pendingHeight = pixelHeight;
+            _pendingSizeTimestamp = now;
+        }
+
+        if ((pixelWidth != _renderWidth || pixelHeight != _renderHeight) &&
+            (_renderWidth <= 0 || _renderHeight <= 0 ||
+             Stopwatch.GetElapsedTime(_pendingSizeTimestamp, now).Ticks >= SurfaceQuietTicks ||
+             Stopwatch.GetElapsedTime(_renderSizeTimestamp, now).Ticks >= SurfaceRepeatTicks))
+        {
+            _renderWidth = pixelWidth;
+            _renderHeight = pixelHeight;
+            _renderSizeTimestamp = now;
+        }
+
+        _frame = renderer.Render(_renderWidth, _renderHeight, _state.IsPlaying);
     }
 
     public void Draw(ICanvasAnimatedControl sender, CanvasDrawingSession session, CanvasTimingInformation timing)
     {
-        if (_state.BackgroundType == BackgroundType.LikeApple && _frame is not null)
-            session.DrawImage(_frame, new Rect(0, 0, sender.Size.Width, sender.Size.Height));
+        CanvasRenderTarget? frame = _frame;
+        if (_state.BackgroundType != BackgroundType.LikeApple || frame is null) return;
+        Size canvas = sender.Size;
+        Size viewport = _state.Viewport(canvas);
+        session.DrawImage(frame, new Rect(0, 0, viewport.Width, viewport.Height));
+        double right = canvas.Width - viewport.Width;
+        double bottom = canvas.Height - viewport.Height;
+        if (right <= 0 && bottom <= 0) return;
+        Size source = frame.Size;
+        double pixel = 96 / frame.Dpi;
+        if (right > 0)
+            session.DrawImage(frame, new Rect(viewport.Width, 0, right, viewport.Height),
+                new Rect(source.Width - pixel, 0, pixel, source.Height));
+        if (bottom > 0)
+            session.DrawImage(frame, new Rect(0, viewport.Height, viewport.Width, bottom),
+                new Rect(0, source.Height - pixel, source.Width, pixel));
+        if (right > 0 && bottom > 0)
+            session.DrawImage(frame, new Rect(viewport.Width, viewport.Height, right, bottom),
+                new Rect(source.Width - pixel, source.Height - pixel, pixel, pixel));
     }
 
     public async Task SetArtworkAsync(IRandomAccessStream stream)
@@ -271,6 +318,8 @@ public sealed partial class LikeAppleBackgroundLayer : IExpandedCanvasLayer, IDi
             _resourceVersion++;
             Interlocked.Increment(ref _artworkRequestVersion);
             _frame = null;
+            _renderWidth = 0;
+            _renderHeight = 0;
             _renderer?.Dispose();
             _renderer = null;
             _isVisible = false;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
@@ -313,6 +314,7 @@ public sealed partial class WidgetPage : Page
             RollingCalculator.LyricifyRollingCalculator => new LyricifyRollingCalculator(),
             RollingCalculator.SyncRollingCalculator => new SyncRollingCalculator(),
             RollingCalculator.CircleEaseRollingCalculator => new CircleEaseRollingCalculator(),
+            RollingCalculator.PerLineSpringRollingCalculator => new PerLineSpringRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         _lyricBox.Context.Effects.TransliterationScanning = _setting.LyricRenderTransliterationScanning;
@@ -348,13 +350,18 @@ public sealed partial class WidgetPage : Page
         _lyricEventsRegistered = false;
     }
 
+    private readonly LyricClock _lyricClock = new();
+    private readonly LyricTrackGuard _lyricTrackGuard = new();
+
     private void LyricBox_OnBeforeRender(LyricRenderView view)
     {
-        if (_player.PrimaryAudioInputNode == null) return;
         _lyricBox.Context.IsPlaying = _state.IsPlaying;
-        long position = 0;
-        if (_player.PrimaryAudioInputNode != null)
-            position = (long)_player.PrimaryAudioInputNode.Position.TotalMilliseconds;
+        if (_lyricTrackGuard.Holds(_state.NowPlayingProviderItem, Stopwatch.GetTimestamp())) return;
+        var node = _player.PrimaryAudioInputNode;
+        if (node == null) return;
+        var seek = _positionChangedBySeeking;
+        var position = _lyricClock.Next(node, _player.GetPosition(node).TotalMilliseconds,
+            _player.GlobalPlaybackStatus == PlaybackStatus.Playing, _player.GetSpeed(node), seek);
         if (position < _lyricBox.Context.CurrentLyricTime)
         {
             _lyricBox.Context.CurrentLyricTime = position;
@@ -365,7 +372,7 @@ public sealed partial class WidgetPage : Page
             _lyricBox.Context.CurrentLyricTime = position;
         }
 
-        _lyricBox.Context.IsSeek = _positionChangedBySeeking;
+        _lyricBox.Context.IsSeek = seek;
         _positionChangedBySeeking = false;
     }
 
@@ -410,6 +417,7 @@ public sealed partial class WidgetPage : Page
                 alrcLyricInfo.SongMetadata,
                 _setting.OptimizeLyric));
         _lyricBox.ReflowTime(0);
+        _lyricTrackGuard.Adopt(_state.NowPlayingProviderItem);
         _ = Dispatcher.RunAsync(
             CoreDispatcherPriority.Normal,
             () => { _lyricBox.Redesign((float)LyricView.ActualWidth, (float)LyricView.ActualHeight, LyricView.Dpi); });

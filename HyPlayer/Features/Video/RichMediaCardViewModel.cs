@@ -6,4 +6,9 @@ public sealed class RichMediaCardViewModel
     public string? Name { get; init; }
     public string Description { get; init; } = string.Empty;
     public string CoverUrl { get; init; } = string.Empty;
+
+    public override string ToString()
+    {
+        return Name ?? string.Empty;
+    }
 }
