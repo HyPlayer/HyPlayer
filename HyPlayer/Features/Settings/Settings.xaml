@@ -670,7 +670,7 @@
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Stretch"
                                     Description="需要重启 HyPlayer"
-                                    Header="颜色设置"
+                                    Header="外观设置"
                                     IsExpanded="True">
                                     <controls3:SettingsExpander.HeaderIcon>
                                         <FontIcon Glyph="&#xE790;" />
@@ -687,6 +687,15 @@
                                                 <ComboBoxItem Content="亮色" />
                                                 <ComboBoxItem Content="暗色" />
                                             </ComboBox>
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="除歌词外的界面文字；重启 HyPlayer 后生效" Header="界面字体">
+                                            <ComboBox
+                                                x:Name="AppFontBox"
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                DisplayMemberPath="Name"
+                                                DropDownClosed="AppFontBox_DropDownClosed"
+                                                SelectionChanged="AppFontBox_SelectionChanged" />
                                         </controls3:SettingsCard>
                                     </controls3:SettingsExpander.Items>
                                 </controls3:SettingsExpander>
