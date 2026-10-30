@@ -23,8 +23,16 @@ internal static partial class AppleMusicMatcher
 {
     private const int MinimumSongScore = 7;
 
+    private static readonly string[] NeutralMarkers =
+    [
+        "feat", "ft.", "deluxe", "edition", "remaster", "expanded", "bonus", "explicit", "clean", "anniversary"
+    ];
+
     [GeneratedRegex(@"\s*[\(\[（【][^\)\]）】]*[\)\]）】]")]
     private static partial Regex BracketRegex();
+
+    [GeneratedRegex(@"[\(\[（【](?<content>[^\)\]）】]*)[\)\]）】]")]
+    private static partial Regex BracketContentRegex();
 
     [GeneratedRegex(@"\s+-\s+(single|ep)$")]
     private static partial Regex ReleaseSuffixRegex();
@@ -49,8 +57,23 @@ internal static partial class AppleMusicMatcher
         return WhitespaceRegex().Replace(BracketRegex().Replace(text, string.Empty), " ").Trim();
     }
 
+    public static IReadOnlySet<string> VersionMarkers(string? value)
+    {
+        return BracketContentRegex().Matches(Normalize(value))
+            .Select(match => match.Groups["content"].Value.Trim())
+            .Where(content => content.Length > 0 && content is not ("single" or "ep") && !content.StartsWith("with ") &&
+                              !NeutralMarkers.Any(content.Contains))
+            .ToHashSet();
+    }
+
+    public static bool SameVersion(string? left, string? right)
+    {
+        return VersionMarkers(left).SetEquals(VersionMarkers(right));
+    }
+
     public static int ScoreSong(DynamicCoverQuery query, AppleMusicSongCandidate candidate)
     {
+        if (!SameVersion(query.Title, candidate.Name)) return -1;
         int score;
         if (Normalize(query.Title) == Normalize(candidate.Name)) score = 4;
         else if (Core(query.Title).Length > 0 && Core(query.Title) == Core(candidate.Name)) score = 2;
@@ -97,7 +120,9 @@ internal static partial class AppleMusicMatcher
     {
         var animated = albums.Where(album => !string.IsNullOrEmpty(album.VideoUrl)).ToList();
         var albumName = Core(query.AlbumName);
-        if (albumName.Length > 0 && animated.FirstOrDefault(album => Core(album.Name) == albumName) is { } named)
+        if (albumName.Length > 0 &&
+            animated.FirstOrDefault(album => Core(album.Name) == albumName && SameVersion(query.AlbumName, album.Name)) is
+                { } named)
             return named;
         var songAlbumName = Core(matchedSongAlbumName);
         return songAlbumName.Length > 0 ? animated.FirstOrDefault(album => Core(album.Name) == songAlbumName) : null;
