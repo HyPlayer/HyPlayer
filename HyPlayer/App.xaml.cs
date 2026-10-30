@@ -27,6 +27,7 @@ using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.Storage.Cache;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.Shell.Playback;
 using HyPlayer.UI.Playback.PlayBar;
@@ -188,6 +189,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
                 Window.Current.Content = _rootFrame;
             }
 
+            ApplyUiFont();
             _rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
             if (AppDepository.Resolve<IPlaybackSurfaceCoordinator>().IsExpanded) return;
@@ -215,6 +217,15 @@ public sealed partial class App : Windows.UI.Xaml.Application
         }
     }
 
+    private static void ApplyUiFont()
+    {
+        var fontService = AppDepository.Resolve<IAppFontService>();
+        fontService.Apply(AppDepository.Resolve<UISettings>().AppFontFamily);
+        fontService.ApplyToCurrentWindow();
+        // The frame has no content yet; ScheduleTreeApply repeats the walk once layout and data are there.
+        fontService.ScheduleTreeApply(Window.Current?.Content as DependencyObject);
+    }
+
     private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         AppDepository.Resolve<IDiagnosticsStateService>().AddError(e.Exception.ToString());
@@ -234,6 +245,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
     private async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
     {
         base.OnActivated(args);
+        ApplyUiFont();
 
         _rootFrame = Window.Current.Content?.As<Frame>();
         if (_rootFrame == null)
@@ -301,6 +313,11 @@ public sealed partial class App : Windows.UI.Xaml.Application
     private void NavigateToRootPage(IActivatedEventArgs args = null)
     {
         _rootFrame.Navigate(typeof(MainPage), args?.As<LaunchActivatedEventArgs>()?.Arguments);
+        // Pages created later inherit the font from the window content; the tree walk also covers text
+        // that keeps the framework font because of a built-in style.
+        var fontService = AppDepository.Resolve<IAppFontService>();
+        fontService.ApplyToCurrentWindow();
+        fontService.ScheduleTreeApply(_rootFrame);
     }
 
     /// <summary>

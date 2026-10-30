@@ -15,6 +15,17 @@
                 <ResourceDictionary Source="/Resources/ListView.xaml" />
                 <ResourceDictionary Source="/Resources/NavigationView.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!--  UI font selected in settings. AppFontService replaces this entry on startup;
+                  XamlAutoFontFamily keeps the system default font.  -->
+            <FontFamily x:Key="AppFontFamily">XamlAutoFontFamily</FontFamily>
+            <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{ThemeResource AppFontFamily}" />
+            </Style>
+            <Style TargetType="RichTextBlock">
+                <Setter Property="FontFamily" Value="{ThemeResource AppFontFamily}" />
+            </Style>
+
             <Style x:Key="BaseStyle" TargetType="controls:ImageEx">
                 <Setter Property="IsCacheEnabled" Value="False" />
             </Style>
@@ -24,9 +35,21 @@
             <Color x:Key="SubtleFillColorTertiary">#0AFFFFFF</Color>
 
             <classes:NegationBoolToVisibilityConverter x:Key="NegationBoolToVisibilityConverter" />
+            <!--  Theme dictionaries stay writable at runtime (a dictionary with a Source cannot be edited), so  -->
+            <!--  AppFontService can point ContentControlThemeFontFamily at the font selected in settings.       -->
             <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Dark" Source="/Resources/Dark.xaml" />
-                <ResourceDictionary x:Key="Light" Source="/Resources/Light.xaml" />
+                <ResourceDictionary x:Key="Dark">
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceDictionary Source="/Resources/Dark.xaml" />
+                        <ResourceDictionary Source="/Resources/ThemeFont.xaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceDictionary Source="/Resources/Light.xaml" />
+                        <ResourceDictionary Source="/Resources/ThemeFont.xaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </Application.Resources>

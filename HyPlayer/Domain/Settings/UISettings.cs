@@ -22,6 +22,16 @@ public partial class UISettings : SettingsBase
     }
 
     /// <summary>
+    ///     Font family used by the application UI. Empty means the system default font.
+    ///     Takes effect the next time the application starts.
+    /// </summary>
+    public string AppFontFamily
+    {
+        get => GetSettings(nameof(AppFontFamily), string.Empty);
+        set => SetSettings(nameof(AppFontFamily), value ?? string.Empty);
+    }
+
+    /// <summary>
     ///     Whether expand animation is enabled.
     /// </summary>
     public bool ExpandAnimation
