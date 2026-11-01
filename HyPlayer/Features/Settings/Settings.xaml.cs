@@ -34,6 +34,7 @@ using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.Platform.SystemServices;
 using HyPlayer.Platform.Tiles;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.Shell;
 using HyPlayer.Shell.Navigation.Services;
@@ -128,11 +129,21 @@ public sealed partial class Settings : Page
             $"Version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}  (#{BuildInfo.CommitSha[..7]}@{BuildInfo.BuildBranchId})";
         var deviceInfo = new EasClientDeviceInformation();
         DeviceInfo.Text = deviceInfo.Id.ToString();
+
+        var appFonts = GetAppFonts();
+        FontBox.ItemsSource = GetAllFonts();
+        AppFontBox.ItemsSource = appFonts;
+        if (!string.IsNullOrEmpty(UI.AppFontFamily) && appFonts.All(font => font.Value != UI.AppFontFamily))
+            // The configured UI font is not installed anymore; fall back to the system default.
+            UI.AppFontFamily = string.Empty;
+        // The default entry uses an empty value, which SelectedValue does not restore reliably.
+        var selectedAppFont = appFonts.FindIndex(font => font.Value == UI.AppFontFamily);
+        AppFontBox.SelectedIndex = selectedAppFont < 0 ? 0 : selectedAppFont;
+
         _isUpdatingControls = false;
 #if DEBUG
         VersionCode.Text += " Debug";
 #endif
-        FontBox.ItemsSource = GetAllFonts();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -144,6 +155,7 @@ public sealed partial class Settings : Page
         // observed as dead by a later settings change.
         Bindings.StopTracking();
         FontBox.ItemsSource = null;
+        AppFontBox.ItemsSource = null;
     }
 
     private static List<FontInfo> GetAllFonts()
@@ -159,6 +171,18 @@ public sealed partial class Settings : Page
             });
 
         return [.. models.OrderBy(t => t.Name)];
+    }
+
+    /// <summary>
+    ///     UI font candidates. The first entry restores the font the application ships with.
+    /// </summary>
+    private static List<FontInfo> GetAppFonts()
+    {
+        return
+        [
+            new FontInfo { Name = "默认（跟随系统）", Value = string.Empty },
+            .. GetAllFonts()
+        ];
     }
 
     private async Task GetRomaji()
@@ -356,6 +380,45 @@ public sealed partial class Settings : Page
     private async void RestartBtn_Click(object sender, RoutedEventArgs e)
     {
         await CoreApplication.RequestRestartAsync("ChangeThemeRestart");
+    }
+
+    private void AppFontBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isUpdatingControls || AppFontBox.SelectedItem is not FontInfo selectedFont)
+            return;
+        if (string.Equals(selectedFont.Value, UI.AppFontFamily, StringComparison.Ordinal))
+            return;
+
+        UI.AppFontFamily = selectedFont.Value;
+    }
+
+    private async void AppFontBox_DropDownClosed(object sender, object e)
+    {
+        // Application resources are consumed when an element is created, so a running app keeps the old font.
+        if (string.Equals(UI.AppFontFamily, Ioc.Default.GetRequiredService<IAppFontService>().AppliedFontFamily,
+                StringComparison.Ordinal))
+            return;
+
+        var dialog = new ContentDialog
+        {
+            Title = "界面字体已更改",
+            Content = "除歌词外的界面文字将在 HyPlayer 重启后使用新的字体。",
+            PrimaryButtonText = "立即重启",
+            CloseButtonText = "稍后",
+            DefaultButton = ContentDialogButton.Primary
+        };
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        try
+        {
+            await CoreApplication.RequestRestartAsync("ChangeAppFont");
+        }
+        catch
+        {
+            // 无法自动重启时，字体仍会在下次启动时生效
+        }
     }
 
     private async void HotLyricOnStartUp_Checked(object sender, RoutedEventArgs e)
