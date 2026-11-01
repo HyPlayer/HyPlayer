@@ -283,6 +283,7 @@ internal static class HyPlayerComposition
         depository.AddSingleton<IHistoryService, HistoryService>();
         depository.AddSingleton<IDownloadService, DownloadService>();
         depository.AddSingleton<IDisplayKeepAwakeService, DisplayKeepAwakeService>();
+        depository.AddSingleton<IAppFontService, AppFontService>();
         depository.AddSingleton<IKawazuStateService, KawazuStateService>();
         depository.AddSingleton<IDiagnosticsStateService, DiagnosticsStateService>();
         depository.AddSingleton<IGameBarWidgetService, GameBarWidgetService>();

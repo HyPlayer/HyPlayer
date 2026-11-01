@@ -11,6 +11,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Settings.Services;
 using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.Shell.Input;
 using HyPlayer.Shell.Login;
 using HyPlayer.Shell.Navigation;
@@ -62,6 +63,11 @@ public sealed partial class BasePage : Page
         _gamepad.Attach(Window.Current.CoreWindow);
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
+
+        // Keep the UI font in sync with pages and list content created after the initial walk.
+        var fontService = Ioc.Default.GetRequiredService<IAppFontService>();
+        BaseFrame.Navigated += (_, _) => fontService.ScheduleTreeApply(BaseFrame);
+        fontService.ScheduleTreeApply(BaseFrame);
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
