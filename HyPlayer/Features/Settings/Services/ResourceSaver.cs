@@ -111,6 +111,14 @@ public static class ResourceSaver
         BoolChange(nameof(LyricSettings.EnableAmllTtmlDb), () => Lyric.EnableAmllTtmlDb,
             value => Lyric.EnableAmllTtmlDb = value, false);
 
+    private static SettingChange KugouChange =>
+        BoolChange(nameof(LyricSettings.EnableKugou), () => Lyric.EnableKugou,
+            value => Lyric.EnableKugou = value, false);
+
+    private static SettingChange LrclibChange =>
+        BoolChange(nameof(LyricSettings.EnableLrclib), () => Lyric.EnableLrclib,
+            value => Lyric.EnableLrclib = value, false);
+
     private static SettingChange ShowSpectrumChange =>
         BoolChange(nameof(PlaybackSettings.ShowSpectrum), () => Playback.ShowSpectrum,
             value => Playback.ShowSpectrum = value, false);
@@ -314,8 +322,8 @@ public static class ResourceSaver
             });
         if (Api.GreedilyLoadPlayContainerItems)
             options.Add(new SaverOption { Title = "关闭歌单贪婪加载", Changes = [GreedyLoadChange] });
-        if (Lyric.EnableAmllTtmlDb)
-            options.Add(new SaverOption { Title = "暂停从 AMLL 歌词库获取逐字歌词", Changes = [AmllChange] });
+        if (Lyric.EnableAmllTtmlDb || Lyric.EnableKugou || Lyric.EnableLrclib)
+            options.Add(new SaverOption { Title = "暂停第三方歌词来源", Changes = [AmllChange, KugouChange, LrclibChange] });
         if (!RetryPolicies.RelaxedNetwork)
             options.Add(new SaverOption
             {
@@ -661,7 +669,7 @@ public static class ResourceSaver
     {
         SettingChange[] changes =
         [
-            NoImageChange, GreedyLoadChange, AmllChange, ShowSpectrumChange, EnableFftChange, AlbumBreathChange,
+            NoImageChange, GreedyLoadChange, AmllChange, KugouChange, LrclibChange, ShowSpectrumChange, EnableFftChange, AlbumBreathChange,
             PlaybarBreathChange
         ];
         var map = new Dictionary<string, SettingChange>();

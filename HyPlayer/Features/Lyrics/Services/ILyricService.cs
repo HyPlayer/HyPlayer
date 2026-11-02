@@ -42,4 +42,13 @@ public interface ILyricService
 
     Task<IReadOnlyList<(double Start, double End)>> GetVocalRegionsAsync(SingleSongBase providerItem,
         CancellationToken ct = default);
+
+    LyricSourceKind? CurrentLyricSource { get; }
+
+    LyricSourceKind GetLyricSourceChoice(SingleSongBase song);
+
+    Task<IReadOnlyList<LyricSourceOption>> GetLyricSourceOptionsAsync(SingleSongBase song,
+        CancellationToken ct = default);
+
+    Task SelectLyricSourceAsync(SingleSongBase song, LyricSourceKind kind, CancellationToken ct = default);
 }

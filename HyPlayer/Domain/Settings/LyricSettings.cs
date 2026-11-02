@@ -219,6 +219,50 @@ public partial class LyricSettings : SettingsBase
         set => SetSettings(nameof(AmllTtmlMirrorUrl), value);
     }
 
+    public bool EnableKugou
+    {
+        get => GetSettings(nameof(EnableKugou), false);
+        set => SetSettings(nameof(EnableKugou), value);
+    }
+
+    public bool EnableLrclib
+    {
+        get => GetSettings(nameof(EnableLrclib), false);
+        set => SetSettings(nameof(EnableLrclib), value);
+    }
+
+    public const string DefaultLrclibUrl = "https://lrclib.net";
+
+    public string LrclibUrl
+    {
+        get => GetSettings(nameof(LrclibUrl), DefaultLrclibUrl);
+        set => SetSettings(nameof(LrclibUrl), value);
+    }
+
+    public bool ThirdPartyLyricsForSongs
+    {
+        get => GetSettings(nameof(ThirdPartyLyricsForSongs), true);
+        set => SetSettings(nameof(ThirdPartyLyricsForSongs), value);
+    }
+
+    public bool ThirdPartyLyricsForCloud
+    {
+        get => GetSettings(nameof(ThirdPartyLyricsForCloud), true);
+        set => SetSettings(nameof(ThirdPartyLyricsForCloud), value);
+    }
+
+    public bool ThirdPartyLyricsForLocal
+    {
+        get => GetSettings(nameof(ThirdPartyLyricsForLocal), true);
+        set => SetSettings(nameof(ThirdPartyLyricsForLocal), value);
+    }
+
+    public bool ThirdPartyLyricsForPrograms
+    {
+        get => GetSettings(nameof(ThirdPartyLyricsForPrograms), true);
+        set => SetSettings(nameof(ThirdPartyLyricsForPrograms), value);
+    }
+
     /// <summary>
     ///     Whether lyric render focus highlighting is enabled.
     /// </summary>

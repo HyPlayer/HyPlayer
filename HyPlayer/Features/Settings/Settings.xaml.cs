@@ -717,6 +717,11 @@ public sealed partial class Settings : Page
         await new AutoMixSettingsDialog().ShowAsync();
     }
 
+    private async void OpenThirdPartyLyricSources_Click(object sender, RoutedEventArgs e)
+    {
+        await new ThirdPartyLyricSourcesDialog().ShowAsync();
+    }
+
     [GeneratedBindableCustomProperty]
     public partial class FontInfo
     {

@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
+using static HyPlayer.Domain.Music.TrackTitleMatching;
 
 namespace HyPlayer.Features.Playback.DynamicCover;
 
@@ -19,57 +18,9 @@ internal sealed record AppleMusicSongCandidate(
 
 internal sealed record AppleMusicAlbumCandidate(string Id, string Name, string? VideoUrl, string? PreviewUrl);
 
-internal static partial class AppleMusicMatcher
+internal static class AppleMusicMatcher
 {
     private const int MinimumSongScore = 7;
-
-    private static readonly string[] NeutralMarkers =
-    [
-        "feat", "ft.", "deluxe", "edition", "remaster", "expanded", "bonus", "explicit", "clean", "anniversary"
-    ];
-
-    [GeneratedRegex(@"\s*[\(\[（【][^\)\]）】]*[\)\]）】]")]
-    private static partial Regex BracketRegex();
-
-    [GeneratedRegex(@"[\(\[（【](?<content>[^\)\]）】]*)[\)\]）】]")]
-    private static partial Regex BracketContentRegex();
-
-    [GeneratedRegex(@"\s+-\s+(single|ep)$")]
-    private static partial Regex ReleaseSuffixRegex();
-
-    [GeneratedRegex(@"\s+")]
-    private static partial Regex WhitespaceRegex();
-
-    public static string Normalize(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
-        var text = value.Normalize(NormalizationForm.FormKC).ToLowerInvariant()
-            .Replace('’', '\'')
-            .Replace('‘', '\'')
-            .Replace('“', '"')
-            .Replace('”', '"');
-        return WhitespaceRegex().Replace(text, " ").Trim();
-    }
-
-    public static string Core(string? value)
-    {
-        var text = ReleaseSuffixRegex().Replace(Normalize(value), string.Empty);
-        return WhitespaceRegex().Replace(BracketRegex().Replace(text, string.Empty), " ").Trim();
-    }
-
-    public static IReadOnlySet<string> VersionMarkers(string? value)
-    {
-        return BracketContentRegex().Matches(Normalize(value))
-            .Select(match => match.Groups["content"].Value.Trim())
-            .Where(content => content.Length > 0 && content is not ("single" or "ep") && !content.StartsWith("with ") &&
-                              !NeutralMarkers.Any(content.Contains))
-            .ToHashSet();
-    }
-
-    public static bool SameVersion(string? left, string? right)
-    {
-        return VersionMarkers(left).SetEquals(VersionMarkers(right));
-    }
 
     public static int ScoreSong(DynamicCoverQuery query, AppleMusicSongCandidate candidate)
     {

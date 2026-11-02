@@ -53,6 +53,7 @@ using HyPlayer.Platform.Xaml;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Platform.Playback.LocalProvider;
 using HyPlayer.Shell.ExpandedPlayer.ExpandedCanvas;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
@@ -1324,6 +1325,100 @@ public sealed partial class ExpandedPlayer : Page
         storyboard.Children.Add(offset);
         _lyricPreviewHintStoryboard = storyboard;
         storyboard.Begin();
+    }
+
+    private CancellationTokenSource? _lyricSourceCts;
+
+    private IEnumerable<(Microsoft.UI.Xaml.Controls.RadioMenuFlyoutItem Item, LyricSourceKind Kind)> LyricSourceItems()
+    {
+        yield return (LyricSourceOwn, LyricSourceKind.Own);
+        yield return (LyricSourceAmll, LyricSourceKind.Amll);
+        yield return (LyricSourceKugou, LyricSourceKind.Kugou);
+        yield return (LyricSourceLrclib, LyricSourceKind.Lrclib);
+    }
+
+    private static string LyricSourceName(LyricSourceKind kind, SingleSongBase song)
+    {
+        return kind switch
+        {
+            LyricSourceKind.Own => song is LocalSong ? "本地文件" : "网易云",
+            LyricSourceKind.Amll => "AMLL TTML Database",
+            LyricSourceKind.Kugou => "酷狗音乐",
+            LyricSourceKind.Lrclib => "LRCLIB",
+            _ => "自动"
+        };
+    }
+
+    private async void MoreFlyout_Opening(object sender, object e)
+    {
+        _lyricSourceCts?.Cancel();
+        _lyricSourceCts?.Dispose();
+        _lyricSourceCts = null;
+        if (_state.NowPlayingProviderItem is not { } song)
+        {
+            LyricSourceMenu.IsEnabled = false;
+            return;
+        }
+
+        var cts = new CancellationTokenSource();
+        _lyricSourceCts = cts;
+        LyricSourceMenu.IsEnabled = true;
+        var choice = _lyricService.GetLyricSourceChoice(song);
+        LyricSourceAuto.IsChecked = choice == LyricSourceKind.Auto;
+        LyricSourceAuto.Text = _lyricService.CurrentLyricSource is { } current && choice == LyricSourceKind.Auto
+            ? $"自动（当前：{LyricSourceName(current, song)}）"
+            : "自动";
+        foreach (var (item, kind) in LyricSourceItems())
+        {
+            item.IsChecked = choice == kind;
+            item.IsEnabled = false;
+            item.Text = $"{LyricSourceName(kind, song)}（检查中…）";
+        }
+
+        IReadOnlyList<LyricSourceOption> options;
+        try
+        {
+            options = await _lyricService.GetLyricSourceOptionsAsync(song, cts.Token);
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Lyric source check failed: {ex.Message}");
+            options = [];
+        }
+
+        if (cts.IsCancellationRequested || !ReferenceEquals(song, _state.NowPlayingProviderItem)) return;
+        foreach (var (item, kind) in LyricSourceItems())
+        {
+            var option = options.FirstOrDefault(o => o.Kind == kind);
+            item.IsEnabled = option is { State: LyricSourceState.Available };
+            item.Text = LyricSourceName(kind, song) + option switch
+            {
+                { State: LyricSourceState.Available, WordLevel: true } => "（逐字）",
+                { State: LyricSourceState.Available } => "（逐行）",
+                { State: LyricSourceState.Disabled } => "（未启用）",
+                _ => "（无歌词）"
+            };
+        }
+    }
+
+    private async void LyricSource_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string tag } ||
+            !Enum.TryParse<LyricSourceKind>(tag, out var kind) ||
+            _state.NowPlayingProviderItem is not { } song)
+            return;
+        try
+        {
+            await _lyricService.SelectLyricSourceAsync(song, kind);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Debug.WriteLine($"Lyric source switch failed: {ex.Message}");
+        }
     }
 
     private async void BtnLoadLocalLyric(object sender, RoutedEventArgs e)

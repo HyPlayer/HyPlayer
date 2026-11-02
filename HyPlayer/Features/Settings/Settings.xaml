@@ -206,18 +206,11 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind Lyric.KaraokeLyric, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Header="使用 AMLL TTML Database">
-                                            <ToggleSwitch
-                                                MinWidth="10"
-                                                HorizontalAlignment="Right"
-                                                IsOn="{x:Bind Lyric.EnableAmllTtmlDb, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard
-                                            Description=" [NCM_ID] 为网易云音乐 ID 占位符，默认使用国内源，请求不到时自动尝试备用源"
-                                            Header="AMLL TTML 镜像地址"
-                                            Visibility="{x:Bind Lyric.EnableAmllTtmlDb, Mode=OneWay}">
-                                            <TextBox HorizontalAlignment="Left" Text="{x:Bind Lyric.AmllTtmlMirrorUrl, Mode=TwoWay}" />
-                                        </controls3:SettingsCard>
+                                            Click="OpenThirdPartyLyricSources_Click"
+                                            Description=""
+                                            Header="使用第三方歌词来源"
+                                            IsClickEnabled="True" />
                                         <controls3:SettingsCard Header="歌词主色调">
                                             <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind UI.LyricColor, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
                                                 <ComboBoxItem Content="自动" />
@@ -1785,7 +1778,7 @@
                                 <controls3:SettingsCard Description="将会在第二次请求时加速请求, 离线时从本地缓存获取" Header="开启请求数据缓存">
                                     <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind Api.EnableApiCache, Mode=TwoWay}" />
                                 </controls3:SettingsCard>
-                                <controls3:SettingsCard Header="开启播放音频缓存">
+                                <controls3:SettingsCard Header="开启播放音频缓存 (关闭后仅FLAC仍会随切随删)">
                                     <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind Playback.EnableCache, Mode=TwoWay}" />
                                 </controls3:SettingsCard>
                                 <controls3:SettingsCard Header="本地文件扫描渐进式加载 (Progressive Loading)">

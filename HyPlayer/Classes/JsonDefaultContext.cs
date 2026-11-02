@@ -50,6 +50,11 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(LyricRenderSettings))]
     [JsonSerializable(typeof(HyPlayer.Features.Playback.Analysis.TrackAnalysis))]
     [JsonSerializable(typeof(HyPlayer.Platform.Playback.MediaSources.CachedSongUrl))]
+    [JsonSerializable(typeof(HyPlayer.Features.Lyrics.Services.ThirdParty.AmllSearchResponse))]
+    [JsonSerializable(typeof(HyPlayer.Features.Lyrics.Services.ThirdParty.AmllGetResponse))]
+    [JsonSerializable(typeof(HyPlayer.Features.Lyrics.Services.ThirdParty.LrclibRecord))]
+    [JsonSerializable(typeof(HyPlayer.Features.Lyrics.Services.ThirdParty.KugouSearchResponse))]
+    [JsonSerializable(typeof(HyPlayer.Features.Lyrics.Services.ThirdParty.KugouDownloadResponse))]
     public partial class JsonDefaultContext : JsonSerializerContext
     {
     }

@@ -17,6 +17,7 @@ using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Lyrics.Services.ThirdParty;
 using HyPlayer.Features.ListenTogether;
 using HyPlayer.Features.Playback.DynamicCover;
 using HyPlayer.Features.Playback.Analysis;
@@ -319,6 +320,8 @@ internal static class HyPlayerComposition
             DependencyLifetime.Singleton,
             implementationFactory: dep => dep.Resolve<PlayCoreStateSynchronizer>());
         depository.AddSingleton<ISongListQueueBuilder, SongListQueueBuilder>();
+        depository.AddSingleton<ThirdPartyLyricSources>();
+        depository.AddSingleton<LyricSourcePreferences>();
         depository.AddSingleton<ILyricService, LyricService>();
         depository.AddSingleton<IPlaybackNotificationService, PlaybackNotificationService>();
         depository.AddSingleton<IPlaybackMemoryService, PlaybackMemoryService>();

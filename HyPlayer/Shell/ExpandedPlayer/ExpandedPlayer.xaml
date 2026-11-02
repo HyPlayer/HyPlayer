@@ -460,7 +460,7 @@
                 Style="{StaticResource ButtonRevealStyle}"
                 ToolTipService.ToolTip="更多">
                 <Button.Flyout>
-                    <MenuFlyout>
+                    <MenuFlyout Opening="MoreFlyout_Opening">
                         <ToggleMenuFlyoutItem
                             Name="ToggleButtonTranslation"
                             HorizontalContentAlignment="Left"
@@ -540,6 +540,42 @@
                             HorizontalContentAlignment="Left"
                             Click="BtnLoadLocalLyric"
                             Text="加载本地歌词" />
+                        <MenuFlyoutSubItem x:Name="LyricSourceMenu" Text="歌词来源">
+                            <MenuFlyoutSubItem.Icon>
+                                <FontIcon Glyph="&#xE8D6;" />
+                            </MenuFlyoutSubItem.Icon>
+                            <muxc:RadioMenuFlyoutItem
+                                x:Name="LyricSourceAuto"
+                                Click="LyricSource_Click"
+                                GroupName="LyricSource"
+                                Tag="Auto"
+                                Text="自动" />
+                            <MenuFlyoutSeparator />
+                            <muxc:RadioMenuFlyoutItem
+                                x:Name="LyricSourceOwn"
+                                Click="LyricSource_Click"
+                                GroupName="LyricSource"
+                                Tag="Own"
+                                Text="网易云" />
+                            <muxc:RadioMenuFlyoutItem
+                                x:Name="LyricSourceAmll"
+                                Click="LyricSource_Click"
+                                GroupName="LyricSource"
+                                Tag="Amll"
+                                Text="AMLL TTML Database" />
+                            <muxc:RadioMenuFlyoutItem
+                                x:Name="LyricSourceKugou"
+                                Click="LyricSource_Click"
+                                GroupName="LyricSource"
+                                Tag="Kugou"
+                                Text="酷狗音乐" />
+                            <muxc:RadioMenuFlyoutItem
+                                x:Name="LyricSourceLrclib"
+                                Click="LyricSource_Click"
+                                GroupName="LyricSource"
+                                Tag="Lrclib"
+                                Text="LRCLIB" />
+                        </MenuFlyoutSubItem>
                         <MenuFlyoutSeparator />
                         <MenuFlyoutItem
                             HorizontalContentAlignment="Left"
