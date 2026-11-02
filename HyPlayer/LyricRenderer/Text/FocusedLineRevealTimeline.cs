@@ -16,9 +16,11 @@ internal readonly record struct FocusedLineRevealSample(float Progress, float Po
 internal sealed class FocusedLineRevealTimeline
 {
     private const float SpatialTolerance = 0.0001f;
+    internal const double SmoothingWindowMs = 200;
 
     private readonly long[] _times;
     private readonly float[] _progress;
+    private readonly double[] _area;
     private readonly FocusedLineRevealSpan[] _spans;
 
     private FocusedLineRevealTimeline(
@@ -35,6 +37,10 @@ internal sealed class FocusedLineRevealTimeline
         IsRightToLeft = isRightToLeft;
         _times = times;
         _progress = progress;
+        _area = new double[times.Length];
+        for (var index = 1; index < times.Length; index++)
+            _area[index] = _area[index - 1] +
+                           (times[index] - times[index - 1]) * (progress[index - 1] + progress[index]) / 2d;
         _spans = spans;
         IsSpatiallyMonotone = isSpatiallyMonotone;
     }
@@ -112,6 +118,34 @@ internal sealed class FocusedLineRevealTimeline
 
         var t = (timeMs - times[lower]) / (times[upper] - times[lower]);
         return ToSample((float)(_progress[lower] + (_progress[upper] - _progress[lower]) * t));
+    }
+
+    public FocusedLineRevealSample SampleSmooth(double timeMs)
+    {
+        const double half = SmoothingWindowMs / 2;
+        var progress = (Integral(timeMs + half) - Integral(timeMs - half)) / SmoothingWindowMs;
+        return ToSample((float)progress);
+    }
+
+    private double Integral(double timeMs)
+    {
+        var times = _times;
+        if (timeMs <= times[0]) return (timeMs - times[0]) * _progress[0];
+        var last = times.Length - 1;
+        if (timeMs >= times[last]) return _area[last] + (timeMs - times[last]) * _progress[last];
+
+        var lower = 0;
+        var upper = last;
+        while (upper - lower > 1)
+        {
+            var middle = (lower + upper) >> 1;
+            if (times[middle] <= timeMs) lower = middle;
+            else upper = middle;
+        }
+
+        var elapsed = timeMs - times[lower];
+        var at = _progress[lower] + (_progress[upper] - _progress[lower]) * elapsed / (times[upper] - times[lower]);
+        return _area[lower] + elapsed * (_progress[lower] + at) / 2;
     }
 
     public FocusedLineRevealSample SampleSpan(FocusedLineRevealSpan span, double timeMs)

@@ -87,7 +87,7 @@ public sealed class FocusedLyricTextRenderer : IDisposable
         {
             var timeline = line.Timeline;
             var sampleTime = AdjustLineRevealTime(time, timeline.StartTimeMs, timeline.EndTimeMs, settings.RevealTimeOffsetMs);
-            var sample = timeline.Sample(sampleTime);
+            var sample = timeline.SampleSmooth(sampleTime);
             for (var index = line.Start; index < line.End; index++)
             {
                 if (transformed)
