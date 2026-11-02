@@ -90,6 +90,21 @@ public partial class LyricSettings : SettingsBase
         set => SetSettings(nameof(OptimizeLyric), value);
     }
 
+    public double InterludeBarSeconds
+    {
+        get => Math.Clamp(GetSettings(nameof(InterludeBarSeconds), 5d), 1d, 60d);
+        set
+        {
+            if (double.IsNaN(value)) return;
+            SetSettings(nameof(InterludeBarSeconds), Math.Clamp(Math.Round(value, 1), 1d, 60d));
+        }
+    }
+
+    public long GetInterludeBarThresholdMs()
+    {
+        return OptimizeLyric ? (long)Math.Round(InterludeBarSeconds * 1000) : 0;
+    }
+
     /// <summary>
     ///     Whether lyric drop shadow is enabled.
     /// </summary>

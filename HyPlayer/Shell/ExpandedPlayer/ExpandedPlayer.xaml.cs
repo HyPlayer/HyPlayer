@@ -418,6 +418,8 @@ public sealed partial class ExpandedPlayer : Page
     private void OnLyricSettingsPropertyChanged(string? propertyName)
     {
         if (propertyName == nameof(LyricSettings.LyricLineSpacing)) ApplyLyricLineSpacing();
+        if (propertyName is nameof(LyricSettings.OptimizeLyric) or nameof(LyricSettings.InterludeBarSeconds))
+            LoadLyricsBox();
         if (propertyName is nameof(LyricSettings.IsolationFullThrottle) or nameof(LyricSettings.IsolationFPS))
             ConfigureFramePacing();
     }
@@ -1104,13 +1106,15 @@ public sealed partial class ExpandedPlayer : Page
                     Utils.ConvertToALRC(lyricInfo.Lyrics, duration),
                     lyricInfo.LyricMetadata,
                     lyricInfo.SongMetadata,
-                    _lyricSettings.OptimizeLyric));
+                    _lyricSettings.OptimizeLyric,
+                    _lyricSettings.GetInterludeBarThresholdMs()));
             else
                 _lyricBox.SetLyricLines(LrcConverter.Convert(
                     alrcLyricInfo.ALRC,
                     alrcLyricInfo.LyricMetadata,
                     alrcLyricInfo.SongMetadata,
-                    _lyricSettings.OptimizeLyric));
+                    _lyricSettings.OptimizeLyric,
+                    _lyricSettings.GetInterludeBarThresholdMs()));
             _lyricBox.ChangeAlignment(_uiSettings.LyricAlignment switch
             {
                 LyricAlignment.Center => TextAlignment.Center,
@@ -1437,7 +1441,8 @@ public sealed partial class ExpandedPlayer : Page
             if (lyricInfo?.PureLyricInfo is HyALRCLyricInfo alrcLyricInfo)
                 _lyricBox.SetLyricLines(LrcConverter.Convert(
                     alrcLyricInfo.ALRC,
-                    optimizeLyric: _lyricSettings.OptimizeLyric));
+                    optimizeLyric: _lyricSettings.OptimizeLyric,
+                    interludeThresholdMs: _lyricSettings.GetInterludeBarThresholdMs()));
             else
                 LoadLyricsBox();
         }

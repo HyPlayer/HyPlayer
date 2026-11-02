@@ -409,13 +409,15 @@ public sealed partial class WidgetPage : Page
                     _player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0),
                 _state.LyricInfo.LyricMetadata,
                 _state.LyricInfo.SongMetadata,
-                _setting.OptimizeLyric));
+                _setting.OptimizeLyric,
+                _setting.GetInterludeBarThresholdMs()));
         else
             _lyricBox.SetLyricLines(LrcConverter.Convert(
                 alrcLyricInfo.ALRC,
                 alrcLyricInfo.LyricMetadata,
                 alrcLyricInfo.SongMetadata,
-                _setting.OptimizeLyric));
+                _setting.OptimizeLyric,
+                _setting.GetInterludeBarThresholdMs()));
         _lyricBox.ReflowTime(0);
         _lyricTrackGuard.Adopt(_state.NowPlayingProviderItem);
         _ = Dispatcher.RunAsync(

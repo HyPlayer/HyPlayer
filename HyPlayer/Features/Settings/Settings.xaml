@@ -377,6 +377,20 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind Lyric.OptimizeLyric, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard
+                                            Description="当间奏为多少秒时，则插入等待条"
+                                            Header="间奏等待条"
+                                            Visibility="{x:Bind Lyric.OptimizeLyric, Mode=OneWay}">
+                                            <controls:NumberBox
+                                                MinWidth="100"
+                                                HorizontalAlignment="Right"
+                                                LargeChange="5"
+                                                Maximum="60"
+                                                Minimum="1"
+                                                SmallChange="1"
+                                                SpinButtonPlacementMode="Compact"
+                                                Value="{x:Bind Lyric.InterludeBarSeconds, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
                                     </controls3:SettingsExpander.Items>
                                 </controls3:SettingsExpander>
                                 <controls3:SettingsExpander
