@@ -796,27 +796,48 @@ public sealed partial class LyricService(
             ? FetchLrclibAsync(query!, ct)
             : Task.FromResult(ThirdPartyCandidate.None);
         var candidates = await Task.WhenAll(amllTask, kugouTask, lrclibTask);
-
-        HyLyricInfo? fallback = null;
-        foreach (var candidate in candidates)
+        bool[] searched =
+        [
+            thirdPartyLyrics.AmllEnabled && amllNameSearch && query is not null,
+            searchOthers && thirdPartyLyrics.KugouEnabled,
+            searchOthers && kind == OwnLyricKind.Missing && thirdPartyLyrics.LrclibEnabled
+        ];
+        LyricSourceKind[] sources = [LyricSourceKind.Amll, LyricSourceKind.Kugou, LyricSourceKind.Lrclib];
+        var accepted = new HyLyricInfo?[candidates.Length];
+        var results = new List<(LyricSourceKind, HyLyricInfo?)>();
+        for (var i = 0; i < candidates.Length; i++)
         {
-            if (await AcceptCandidateAsync(item, candidate, query) is not { } converted) continue;
-            if (LyricWordTiming.IsWordLevel(converted.PureLyricInfo))
-            {
-                PublishThirdPartyLyrics(item, converted, load, ct);
-                return;
-            }
-
-            fallback ??= converted;
+            accepted[i] = await AcceptCandidateAsync(item, candidates[i], query);
+            if (accepted[i] is not null || (searched[i] && !candidates[i].Failed))
+                results.Add((sources[i], accepted[i]));
         }
 
-        if (kind == OwnLyricKind.Missing && fallback is not null)
+        RecordSourceResults(item, results);
+
+        var chosen = accepted.FirstOrDefault(info => info is not null && LyricWordTiming.IsWordLevel(info.PureLyricInfo))
+                     ?? (kind == OwnLyricKind.Missing ? accepted.FirstOrDefault(info => info is not null) : null);
+        if (chosen is not null)
         {
-            PublishThirdPartyLyrics(item, fallback, load, ct);
+            PublishThirdPartyLyrics(item, chosen, load, ct);
             return;
         }
 
         if (canSearch && !candidates.Any(c => c.Failed)) thirdPartyLyrics.MarkMissing(item);
+    }
+
+    private void RecordSourceResults(SingleSongBase item, IEnumerable<(LyricSourceKind Kind, HyLyricInfo? Info)> results)
+    {
+        var key = SourceKey(item);
+        lock (_sourceSync)
+        {
+            if (_probeKey != key)
+            {
+                _probeKey = key;
+                _probeResults = [];
+            }
+
+            foreach (var (kind, info) in results) _probeResults[kind] = info;
+        }
     }
 
     private async Task<ThirdPartyCandidate> FetchAmllAsync(SingleSongBase item, LyricLookup lookup, bool nameSearch,
@@ -851,9 +872,9 @@ public sealed partial class LyricService(
     private (string Key, HyLyricInfo Info)? _ownLyric;
     private string? _probeKey;
     private Dictionary<LyricSourceKind, HyLyricInfo?> _probeResults = [];
-
-    private static readonly LyricSourceKind[] SelectableSources =
-        [LyricSourceKind.Own, LyricSourceKind.Amll, LyricSourceKind.Kugou, LyricSourceKind.Lrclib];
+    private string? _lookupKey;
+    private Task<LyricLookup>? _lookupTask;
+    private readonly SemaphoreSlim _sourceConvertGate = new(1, 1);
 
     private static string SourceKey(SingleSongBase item)
     {
@@ -895,6 +916,7 @@ public sealed partial class LyricService(
         if (choice == LyricSourceKind.Own) return;
         if (choice != LyricSourceKind.Auto && await FetchSourceAsync(item, choice, ct) is { } chosen)
         {
+            RecordSourceResults(item, [(choice, chosen)]);
             PublishThirdPartyLyrics(item, chosen, load, ct);
             return;
         }
@@ -954,42 +976,58 @@ public sealed partial class LyricService(
 
     public LyricSourceKind? CurrentLyricSource => SourceOf(state.LyricInfo);
 
-    public async Task<IReadOnlyList<LyricSourceOption>> GetLyricSourceOptionsAsync(SingleSongBase song,
+    public async Task<LyricSourceOption> CheckLyricSourceAsync(SingleSongBase song, LyricSourceKind kind,
         CancellationToken ct = default)
     {
+        if (!IsSourceEnabled(kind)) return new LyricSourceOption(kind, LyricSourceState.Disabled, false);
         var key = SourceKey(song);
-        Dictionary<LyricSourceKind, HyLyricInfo?> known;
         lock (_sourceSync)
         {
-            known = _probeKey == key ? new Dictionary<LyricSourceKind, HyLyricInfo?>(_probeResults) : [];
+            if (_probeKey == key && _probeResults.TryGetValue(kind, out var known)) return ToOption(kind, known);
         }
 
-        var missing = SelectableSources
-            .Where(kind => kind != LyricSourceKind.Own && IsSourceEnabled(kind) && !known.ContainsKey(kind))
-            .ToList();
-        if (missing.Count > 0)
+        HyLyricInfo? info;
+        if (kind == LyricSourceKind.Own)
         {
-            var lookup = await BuildLyricLookupAsync(song);
-            var candidates = await Task.WhenAll(missing.Select(kind => FetchCandidateAsync(song, kind, lookup, ct)));
-            for (var i = 0; i < missing.Count; i++)
-                known[missing[i]] = await AcceptCandidateAsync(song, candidates[i], lookup.Query);
+            info = await LoadOwnLyricAsync(song, ct);
+        }
+        else
+        {
+            var lookup = await GetSourceLookupAsync(song);
+            var candidate = await FetchCandidateAsync(song, kind, lookup, ct);
+            await _sourceConvertGate.WaitAsync(ct);
+            try
+            {
+                info = await AcceptCandidateAsync(song, candidate, lookup.Query);
+            }
+            finally
+            {
+                _sourceConvertGate.Release();
+            }
+
+            if (info is null && candidate.Failed) return ToOption(kind, null);
         }
 
-        if (!known.ContainsKey(LyricSourceKind.Own)) known[LyricSourceKind.Own] = await LoadOwnLyricAsync(song, ct);
+        RecordSourceResults(song, [(kind, info)]);
+        return ToOption(kind, info);
+    }
 
+    private static LyricSourceOption ToOption(LyricSourceKind kind, HyLyricInfo? info)
+    {
+        return info is null
+            ? new LyricSourceOption(kind, LyricSourceState.Unavailable, false)
+            : new LyricSourceOption(kind, LyricSourceState.Available, LyricWordTiming.IsWordLevel(info.PureLyricInfo));
+    }
+
+    private Task<LyricLookup> GetSourceLookupAsync(SingleSongBase song)
+    {
+        var key = SourceKey(song);
         lock (_sourceSync)
         {
-            _probeKey = key;
-            _probeResults = known;
+            if (_lookupKey == key && _lookupTask is { } pending) return pending;
+            _lookupKey = key;
+            return _lookupTask = BuildLyricLookupAsync(song);
         }
-
-        return SelectableSources.Select(kind =>
-        {
-            if (!IsSourceEnabled(kind)) return new LyricSourceOption(kind, LyricSourceState.Disabled, false);
-            return known.TryGetValue(kind, out var info) && info is not null
-                ? new LyricSourceOption(kind, LyricSourceState.Available, LyricWordTiming.IsWordLevel(info.PureLyricInfo))
-                : new LyricSourceOption(kind, LyricSourceState.Unavailable, false);
-        }).ToList();
     }
 
     public async Task SelectLyricSourceAsync(SingleSongBase song, LyricSourceKind kind, CancellationToken ct = default)

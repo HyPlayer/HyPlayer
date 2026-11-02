@@ -1372,41 +1372,45 @@ public sealed partial class ExpandedPlayer : Page
         LyricSourceAuto.Text = _lyricService.CurrentLyricSource is { } current && choice == LyricSourceKind.Auto
             ? $"自动（当前：{LyricSourceName(current, song)}）"
             : "自动";
+        var checks = new List<Task>();
         foreach (var (item, kind) in LyricSourceItems())
         {
             item.IsChecked = choice == kind;
             item.IsEnabled = false;
             item.Text = $"{LyricSourceName(kind, song)}（检查中…）";
+            checks.Add(UpdateLyricSourceItemAsync(item, kind, song, cts.Token));
         }
 
-        IReadOnlyList<LyricSourceOption> options;
+        await Task.WhenAll(checks);
+    }
+
+    private async Task UpdateLyricSourceItemAsync(Microsoft.UI.Xaml.Controls.RadioMenuFlyoutItem item,
+        LyricSourceKind kind, SingleSongBase song, CancellationToken ct)
+    {
+        LyricSourceOption option;
         try
         {
-            options = await _lyricService.GetLyricSourceOptionsAsync(song, cts.Token);
+            option = await _lyricService.CheckLyricSourceAsync(song, kind, ct);
         }
-        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
             return;
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Lyric source check failed: {ex.Message}");
-            options = [];
+            option = new LyricSourceOption(kind, LyricSourceState.Unavailable, false);
         }
 
-        if (cts.IsCancellationRequested || !ReferenceEquals(song, _state.NowPlayingProviderItem)) return;
-        foreach (var (item, kind) in LyricSourceItems())
+        if (ct.IsCancellationRequested || !ReferenceEquals(song, _state.NowPlayingProviderItem)) return;
+        item.IsEnabled = option.State == LyricSourceState.Available;
+        item.Text = LyricSourceName(kind, song) + option switch
         {
-            var option = options.FirstOrDefault(o => o.Kind == kind);
-            item.IsEnabled = option is { State: LyricSourceState.Available };
-            item.Text = LyricSourceName(kind, song) + option switch
-            {
-                { State: LyricSourceState.Available, WordLevel: true } => "（逐字）",
-                { State: LyricSourceState.Available } => "（逐行）",
-                { State: LyricSourceState.Disabled } => "（未启用）",
-                _ => "（无歌词）"
-            };
-        }
+            { State: LyricSourceState.Available, WordLevel: true } => "（逐字）",
+            { State: LyricSourceState.Available } => "（逐行）",
+            { State: LyricSourceState.Disabled } => "（未启用）",
+            _ => "（无歌词）"
+        };
     }
 
     private async void LyricSource_Click(object sender, RoutedEventArgs e)

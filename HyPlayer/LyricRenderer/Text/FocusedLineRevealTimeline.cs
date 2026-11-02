@@ -122,8 +122,11 @@ internal sealed class FocusedLineRevealTimeline
 
     public FocusedLineRevealSample SampleSmooth(double timeMs)
     {
-        const double half = SmoothingWindowMs / 2;
-        var progress = (Integral(timeMs + half) - Integral(timeMs - half)) / SmoothingWindowMs;
+        var start = _times[0];
+        var end = _times[^1];
+        if (timeMs <= start || timeMs >= end) return Sample(timeMs);
+        var half = Math.Min(SmoothingWindowMs / 2, Math.Min(timeMs - start, end - timeMs));
+        var progress = (Integral(timeMs + half) - Integral(timeMs - half)) / (2 * half);
         return ToSample((float)progress);
     }
 

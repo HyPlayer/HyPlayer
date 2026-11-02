@@ -47,7 +47,7 @@ public interface ILyricService
 
     LyricSourceKind GetLyricSourceChoice(SingleSongBase song);
 
-    Task<IReadOnlyList<LyricSourceOption>> GetLyricSourceOptionsAsync(SingleSongBase song,
+    Task<LyricSourceOption> CheckLyricSourceAsync(SingleSongBase song, LyricSourceKind kind,
         CancellationToken ct = default);
 
     Task SelectLyricSourceAsync(SingleSongBase song, LyricSourceKind kind, CancellationToken ct = default);
