@@ -99,7 +99,7 @@ public partial class PlaybackSettings : SettingsBase
 
     public bool DynamicCoverEnabled
     {
-        get => GetSettings(nameof(DynamicCoverEnabled), false);
+        get => GetSettings(nameof(DynamicCoverEnabled), true);
         set => SetSettings(nameof(DynamicCoverEnabled), value);
     }
 
