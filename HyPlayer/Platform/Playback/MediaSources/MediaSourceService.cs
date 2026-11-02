@@ -190,7 +190,9 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
         MusicResourceBase resource,
         CancellationToken ct)
     {
-        var providerId = SelectProviderId();
+        var providerId = !_playbackSettings.EnableCache && IsFlac(resource)
+            ? CachedNeteaseProvider.ProviderId
+            : SelectProviderId();
         if (!_providers.TryGetValue(providerId, out var provider))
             throw new NotSupportedException($"未找到 ProviderId='{providerId}' 对应的 IMediaSourceProvider");
 
@@ -202,6 +204,12 @@ public sealed class MediaSourceService : IMediaSourceService, IPlaybackQualitySe
         return _playbackSettings.EnableCache
             ? CachedNeteaseProvider.ProviderId
             : NeteaseStreamingProvider.ProviderId;
+    }
+
+    private static bool IsFlac(MusicResourceBase resource)
+    {
+        return resource is NeteaseMediaResource { ExtensionName: { } extension } &&
+               string.Equals(extension.TrimStart('.'), "flac", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsNeteaseSong(SingleSongBase song)

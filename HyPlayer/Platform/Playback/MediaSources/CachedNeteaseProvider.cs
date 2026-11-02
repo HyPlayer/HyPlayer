@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
+using HyPlayer.Domain.Settings;
 using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Network;
 using HyPlayer.Platform.Runtime.Background;
@@ -21,6 +25,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
 {
     public const string ProviderId = "nca";
     private const string CacheFileNameFormat = "{0}.{1}";
+    private const string StreamBufferFolderName = "StreamBuffer";
 
     private static readonly ConcurrentDictionary<string, bool> _randomAccessSupportByHost =
         new(StringComparer.OrdinalIgnoreCase);
@@ -31,15 +36,20 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
     private readonly ConcurrentDictionary<string, DownloadOperation> _downloadOperations = new();
     private readonly HttpClient _httpClient;
     private readonly IBackgroundTaskRunner _taskRunner;
+    private readonly PlaybackSettings _playbackSettings;
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _transferCancellations = new();
 
     public CachedNeteaseProvider(
         HttpClient httpClient,
-        IBackgroundTaskRunner taskRunner)
+        IBackgroundTaskRunner taskRunner,
+        PlaybackSettings playbackSettings)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _taskRunner = taskRunner ?? throw new ArgumentNullException(nameof(taskRunner));
+        _playbackSettings = playbackSettings ?? throw new ArgumentNullException(nameof(playbackSettings));
     }
+
+    private bool UsesStreamBuffer => !_playbackSettings.EnableCache;
 
     public string Id => ProviderId;
 
@@ -106,6 +116,44 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
             {
             }
         }
+
+        _taskRunner.Forget(ClearStreamBufferAsync(NeteaseTrack.IdOf(keep)), "clear streaming buffer");
+    }
+
+    private async Task ClearStreamBufferAsync(string keepId)
+    {
+        if (await ApplicationData.Current.TemporaryFolder.TryGetItemAsync(StreamBufferFolderName) is not StorageFolder
+            folder)
+            return;
+
+        foreach (var file in await folder.GetFilesAsync())
+        {
+            if (!ShouldClearBufferFile(file.Name, keepId, _downloadOperations.Keys))
+                continue;
+
+            try
+            {
+                await file.DeleteAsync(StorageDeleteOption.PermanentDelete);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                Debug.WriteLine($"Streaming buffer file {file.Name} kept for now: {ex.Message}");
+            }
+        }
+    }
+
+    internal static bool ShouldClearBufferFile(string fileName, string keepId, IEnumerable<string> activeIds)
+    {
+        var id = Path.GetFileNameWithoutExtension(fileName);
+        return id != keepId && !activeIds.Contains(id);
+    }
+
+    private async Task<StorageFolder> GetStorageFolderAsync()
+    {
+        return UsesStreamBuffer
+            ? await ApplicationData.Current.TemporaryFolder.CreateFolderAsync(StreamBufferFolderName,
+                CreationCollisionOption.OpenIfExists)
+            : await StorageMaintenance.GetCacheFolderAsync();
     }
 
     public async Task<bool> IsCachedAsync(SingleSongBase song, MusicResourceBase resource, CancellationToken ct)
@@ -201,7 +249,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
 
     private async Task<StorageFile> CreateCacheFileAsync(SingleSongBase song, MusicResourceBase resource)
     {
-        var cacheFolder = await StorageMaintenance.GetCacheFolderAsync();
+        var cacheFolder = await GetStorageFolderAsync();
         var fileName = string.Format(CacheFileNameFormat, NeteaseTrack.IdOf(song), GetExtension(resource));
         return await cacheFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
     }
@@ -217,7 +265,7 @@ public sealed class CachedNeteaseProvider : IMediaSourceProvider, IMediaPrefetch
             if (_downloadOperations.ContainsKey(NeteaseTrack.IdOf(song)))
                 return null;
 
-            var cacheFolder = await StorageMaintenance.GetCacheFolderAsync();
+            var cacheFolder = await GetStorageFolderAsync();
             var fileName = string.Format(CacheFileNameFormat, NeteaseTrack.IdOf(song), GetExtension(resource));
             if (await cacheFolder.TryGetItemAsync(fileName) is not StorageFile cacheFile)
                 return null;

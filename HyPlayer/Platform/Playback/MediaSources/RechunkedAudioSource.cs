@@ -24,6 +24,7 @@ public static class RechunkedAudioSource
     private const int DecodeAheadChunks = 10;
     private static readonly TimeSpan BufferLead = TimeSpan.FromMilliseconds(400);
     private static readonly TimeSpan HeaderTimeout = TimeSpan.FromSeconds(20);
+    private static readonly TimeSpan SizePollInterval = TimeSpan.FromMilliseconds(50);
 
     private static readonly Guid MajorTypeKey = new("48eba18e-f8c9-4687-bf11-0a74c9f96a8f");
     private static readonly Guid SubtypeKey = new("f7e34c9a-42e8-4714-b74b-cb29d72c35e5");
@@ -58,8 +59,11 @@ public static class RechunkedAudioSource
             if (_initialized != 0) return _initialized > 0;
             try
             {
-                if (!NativeLibrary.TryLoad("mfplat.dll", out var plat) || !NativeLibrary.TryLoad("mfreadwrite.dll", out var readwrite))
+                var assembly = typeof(RechunkedAudioSource).Assembly;
+                if (!NativeLibrary.TryLoad("mfplat.dll", assembly, DllImportSearchPath.System32, out var plat) ||
+                    !NativeLibrary.TryLoad("mfreadwrite.dll", assembly, DllImportSearchPath.System32, out var readwrite))
                 {
+                    Debug.WriteLine("Rechunked audio source unavailable: Media Foundation libraries could not be loaded");
                     _initialized = -1;
                     return false;
                 }
@@ -69,8 +73,9 @@ public static class RechunkedAudioSource
                 _createReader = (delegate* unmanaged[Stdcall]<void*, void*, void**, int>)NativeLibrary.GetExport(readwrite, "MFCreateSourceReaderFromByteStream");
                 _initialized = _startup(MfVersion, 0) >= 0 ? 1 : -1;
             }
-            catch
+            catch (Exception ex) when (ex is EntryPointNotFoundException or DllNotFoundException or BadImageFormatException)
             {
+                Debug.WriteLine($"Rechunked audio source unavailable: {ex.Message}");
                 _initialized = -1;
             }
             return _initialized > 0;
@@ -116,17 +121,25 @@ public static class RechunkedAudioSource
     {
         var opening = operation.GetResultRandomAccessStreamReference().OpenReadAsync().AsTask();
         Task<MediaSource?>? creating = null;
-        Task<bool>? probing = null;
+        Task<FlacFrameLocator?>? probing = null;
         try
         {
             var deadline = Task.Delay(HeaderTimeout);
             if (await Task.WhenAny(opening, deadline) != opening) throw new TimeoutException("the download stream did not open in time");
             var stream = await opening;
-            probing = HasShortFramesAsync(stream);
-            if (await Task.WhenAny(probing, deadline) != probing) throw new TimeoutException("the FLAC header did not arrive in time");
-            if (await probing)
+            while (!FlacFrameLocator.HasKnownSize(stream))
             {
-                creating = Task.Run(() => Create(stream, null, true));
+                if (await Task.WhenAny(Task.Delay(SizePollInterval), deadline) == deadline)
+                    throw new TimeoutException("the download size did not arrive in time");
+            }
+
+            probing = FlacFrameLocator.OpenAsync(stream);
+            if (await Task.WhenAny(probing, deadline) != probing) throw new TimeoutException("the FLAC header did not arrive in time");
+            if (await probing is { } locator &&
+                (!locator.HasSeekTable || locator.MaxBlockSize / (double)locator.SampleRate < MinimumFrameSeconds))
+            {
+                var frameLocator = locator.HasSeekTable ? null : locator;
+                creating = Task.Run(() => Create(stream, frameLocator, true));
                 if (await Task.WhenAny(creating, deadline) != creating) throw new TimeoutException("the FLAC metadata did not arrive in time");
                 if (await creating is { } source) return source;
                 throw new InvalidOperationException("the stream could not be opened for decoding");

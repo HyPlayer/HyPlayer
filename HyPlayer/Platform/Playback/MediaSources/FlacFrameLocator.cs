@@ -35,10 +35,16 @@ public sealed class FlacFrameLocator
     public long TotalSamples { get; }
     public bool HasSeekTable { get; }
 
+    public static bool HasKnownSize(IRandomAccessStream stream)
+    {
+        return stream.Size is > 0 and < long.MaxValue;
+    }
+
     public static async Task<FlacFrameLocator?> OpenAsync(IRandomAccessStream stream)
     {
         try
         {
+            if (!HasKnownSize(stream)) return null;
             var size = (long)stream.Size;
             var head = await ReadAsync(stream, 0, 42);
             if (head.Length < 42 || head[0] != (byte)'f' || head[1] != (byte)'L' || head[2] != (byte)'a' || head[3] != (byte)'C') return null;
@@ -62,8 +68,9 @@ public sealed class FlacFrameLocator
                 if ((header[0] & 0x80) != 0) return new FlacFrameLocator(stream, offset, size, rate, minBlock, maxBlock, total, hasSeekTable);
             }
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"FLAC frame locator unavailable: {ex.Message}");
         }
         return null;
     }
@@ -252,11 +259,19 @@ public sealed class FlacFrameLocator
     private static async Task<byte[]> ReadAsync(IRandomAccessStream stream, long offset, int count)
     {
         var bytes = new byte[count];
-        using var input = stream.GetInputStreamAt((ulong)offset);
-        var result = await input.ReadAsync(bytes.AsBuffer(), (uint)count, InputStreamOptions.None);
-        var read = (int)result.Length;
-        if (read > 0) result.CopyTo(0, bytes, 0, read);
-        return read == count ? bytes : bytes.AsSpan(0, read).ToArray();
+        var filled = 0;
+        while (filled < count)
+        {
+            using var input = stream.GetInputStreamAt((ulong)(offset + filled));
+            var result = await input.ReadAsync(bytes.AsBuffer(filled, count - filled), (uint)(count - filled),
+                InputStreamOptions.None);
+            var read = (int)result.Length;
+            if (read <= 0) break;
+            result.CopyTo(0, bytes, filled, read);
+            filled += read;
+        }
+
+        return filled == count ? bytes : bytes.AsSpan(0, filled).ToArray();
     }
 
     private static byte[] BuildCrc8()
