@@ -206,6 +206,13 @@
                                                 HorizontalAlignment="Right"
                                                 IsOn="{x:Bind Lyric.KaraokeLyric, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard Description="" Header="非逐字歌词时关闭扫光">
+                                            <ToggleSwitch
+                                                x:Name="UntimedSweepToggle"
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                Toggled="UntimedSweepToggle_Toggled" />
+                                        </controls3:SettingsCard>
                                         <controls3:SettingsCard
                                             Click="OpenThirdPartyLyricSources_Click"
                                             Description=""

@@ -30,9 +30,11 @@ using HyPlayer.Classes;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Playback.DynamicCover;
 using HyPlayer.Features.History.Services;
+using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Settings.Services;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage.Cache;
 using HyPlayer.Platform.SystemServices;
@@ -92,6 +94,9 @@ public sealed partial class Settings : Page
     public LastFMSettings LastFM { get; } = Ioc.Default.GetRequiredService<LastFMSettings>();
     public DownloadSettings Download { get; } = Ioc.Default.GetRequiredService<DownloadSettings>();
     public LocalLibrarySettings LocalLibrary { get; } = Ioc.Default.GetRequiredService<LocalLibrarySettings>();
+
+    private readonly ILyricRenderSettingsService _lyricRenderSettings =
+        Ioc.Default.GetRequiredService<ILyricRenderSettingsService>();
 
     public Settings()
     {
@@ -217,6 +222,7 @@ public sealed partial class Settings : Page
             $"Version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}  (#{BuildInfo.CommitSha[..7]}@{BuildInfo.BuildBranchId})";
         var deviceInfo = new EasClientDeviceInformation();
         DeviceInfo.Text = deviceInfo.Id.ToString();
+        UntimedSweepToggle.IsOn = IsUntimedSweepDisabled();
         _isUpdatingControls = false;
 #if DEBUG
         VersionCode.Text += " Debug";
@@ -732,6 +738,31 @@ public sealed partial class Settings : Page
     private async void OpenFocusedLyricEffectSettings_Click(object sender, RoutedEventArgs e)
     {
         await new HyPlayer.UI.Dialogs.FocusedLyricEffectSettingsDialog().ShowAsync();
+        _isUpdatingControls = true;
+        UntimedSweepToggle.IsOn = IsUntimedSweepDisabled();
+        _isUpdatingControls = false;
+    }
+
+    private bool IsUntimedSweepDisabled()
+    {
+        var focused = _lyricRenderSettings.Current.Focused;
+        return focused.UntimedHighlight != UntimedHighlightMode.InferWords &&
+               focused.UntimedLift != UntimedLiftMode.InferWords;
+    }
+
+    private void UntimedSweepToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_isUpdatingControls || UntimedSweepToggle.IsOn == IsUntimedSweepDisabled()) return;
+        var current = _lyricRenderSettings.Current;
+        var disabled = UntimedSweepToggle.IsOn;
+        _lyricRenderSettings.Commit(current with
+        {
+            Focused = current.Focused with
+            {
+                UntimedHighlight = disabled ? UntimedHighlightMode.WholeLine : UntimedHighlightMode.InferWords,
+                UntimedLift = disabled ? UntimedLiftMode.DoNotLift : UntimedLiftMode.InferWords
+            }
+        });
     }
 
 }
