@@ -303,6 +303,7 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         var slot = new VideoSlot(_compositor);
         slot.Player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
         slot.Player.PlaybackSession.NaturalVideoSizeChanged += OnNaturalVideoSizeChanged;
+        slot.Player.MediaOpened += OnMediaOpened;
         slot.Player.MediaFailed += OnMediaFailed;
         slot.Player.MediaEnded += OnMediaEnded;
         return slot;
@@ -313,6 +314,7 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         if (slot is null) return;
         slot.Player.PlaybackSession.PlaybackStateChanged -= OnPlaybackStateChanged;
         slot.Player.PlaybackSession.NaturalVideoSizeChanged -= OnNaturalVideoSizeChanged;
+        slot.Player.MediaOpened -= OnMediaOpened;
         slot.Player.MediaFailed -= OnMediaFailed;
         slot.Player.MediaEnded -= OnMediaEnded;
         slot.Dispose();
@@ -331,7 +333,7 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
     private void OnLoopTimerTick(DispatcherQueueTimer sender, object args)
     {
         if (_disposed || !_crossfade || _fadeBatch is not null || _active is null || _standby is null ||
-            _overlay is null)
+            _overlay is null || !_standby.SurfaceReady)
             return;
         var session = _active.Player.PlaybackSession;
         if (session.PlaybackState != MediaPlaybackState.Playing ||
@@ -388,13 +390,30 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
     private void OnNaturalVideoSizeChanged(MediaPlaybackSession sender, object args)
     {
         var size = SurfaceSizeFor(sender.NaturalVideoWidth, sender.NaturalVideoHeight);
-        if (size is not { } surfaceSize) return;
+        if (size is null) return;
         var player = sender.MediaPlayer;
         var generation = Volatile.Read(ref _generation);
-        _dispatcher.TryEnqueue(() =>
-        {
-            if (!_disposed && generation == _generation) player.SetSurfaceSize(surfaceSize);
-        });
+        _dispatcher.TryEnqueue(() => ApplySurfaceSize(generation, player, size));
+    }
+
+    private void OnMediaOpened(MediaPlayer sender, object args)
+    {
+        var session = sender.PlaybackSession;
+        var size = SurfaceSizeFor(session.NaturalVideoWidth, session.NaturalVideoHeight);
+        var generation = Volatile.Read(ref _generation);
+        _dispatcher.TryEnqueue(() => ApplySurfaceSize(generation, sender, size));
+    }
+
+    private void ApplySurfaceSize(int generation, MediaPlayer player, Size? size)
+    {
+        if (_disposed || generation != _generation) return;
+        var slot = ReferenceEquals(_active?.Player, player) ? _active
+            : ReferenceEquals(_standby?.Player, player) ? _standby
+            : null;
+        if (slot?.Source is null) return;
+        if (size is { } surfaceSize) player.SetSurfaceSize(surfaceSize);
+        slot.SurfaceReady = true;
+        ShowVideo(generation);
     }
 
     internal static Size? SurfaceSizeFor(uint width, uint height)
@@ -419,7 +438,10 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
 
     private void ShowVideo(int generation)
     {
-        if (_disposed || generation != _generation || _videoShown || _visual is null || _active?.Source is null) return;
+        if (_disposed || generation != _generation || _videoShown || _visual is null || _active?.Source is null ||
+            !_active.SurfaceReady ||
+            _active.Player.PlaybackSession.PlaybackState != MediaPlaybackState.Playing)
+            return;
         _videoShown = true;
         var fade = _compositor.CreateScalarKeyFrameAnimation();
         fade.InsertKeyFrame(1f, 1f);
@@ -482,10 +504,12 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         public MediaPlayerSurface Surface { get; }
         public CompositionSurfaceBrush Brush { get; }
         public MediaSource? Source { get; private set; }
+        public bool SurfaceReady { get; set; }
 
         public void Load(StorageFile file, bool loop)
         {
             Unload();
+            SurfaceReady = false;
             Player.IsLoopingEnabled = loop;
             Source = MediaSource.CreateFromStorageFile(file);
             Player.Source = Source;
