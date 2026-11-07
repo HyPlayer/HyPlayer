@@ -8,6 +8,7 @@ using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Playback.DynamicCover;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using Windows.Foundation;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
@@ -24,6 +25,8 @@ namespace HyPlayer.Shell.ExpandedPlayer;
 
 internal sealed class ExpandedPlayerDynamicCover : IDisposable
 {
+    internal const double MaxSurfaceEdge = 1440;
+
     private readonly Control _host;
     private readonly IDynamicCoverService _service;
     private readonly PlaybackSettings _settings;
@@ -116,6 +119,7 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         if (_player is not null)
         {
             _player.PlaybackSession.PlaybackStateChanged -= OnPlaybackStateChanged;
+            _player.PlaybackSession.NaturalVideoSizeChanged -= OnNaturalVideoSizeChanged;
             _player.MediaFailed -= OnMediaFailed;
         }
 
@@ -270,6 +274,7 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         };
         player.CommandManager.IsEnabled = false;
         player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
+        player.PlaybackSession.NaturalVideoSizeChanged += OnNaturalVideoSizeChanged;
         player.MediaFailed += OnMediaFailed;
         _player = player;
         _surface = player.GetSurface(_compositor);
@@ -287,6 +292,24 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         if (sender.PlaybackState != MediaPlaybackState.Playing) return;
         var generation = Volatile.Read(ref _generation);
         _dispatcher.TryEnqueue(() => ShowVideo(generation));
+    }
+
+    private void OnNaturalVideoSizeChanged(MediaPlaybackSession sender, object args)
+    {
+        var size = SurfaceSizeFor(sender.NaturalVideoWidth, sender.NaturalVideoHeight);
+        if (size is not { } surfaceSize) return;
+        var generation = Volatile.Read(ref _generation);
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (!_disposed && generation == _generation) _player?.SetSurfaceSize(surfaceSize);
+        });
+    }
+
+    internal static Size? SurfaceSizeFor(uint width, uint height)
+    {
+        if (width == 0 || height == 0) return null;
+        var scale = Math.Min(1, MaxSurfaceEdge / Math.Max(width, height));
+        return new Size(Math.Max(1, Math.Round(width * scale)), Math.Max(1, Math.Round(height * scale)));
     }
 
     private void ShowVideo(int generation)
