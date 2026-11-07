@@ -109,6 +109,12 @@ public partial class PlaybackSettings : SettingsBase
         set => SetSettings(nameof(DynamicCoverSource), value);
     }
 
+    public bool DynamicCoverLoopCrossfade
+    {
+        get => GetSettings(nameof(DynamicCoverLoopCrossfade), false);
+        set => SetSettings(nameof(DynamicCoverLoopCrossfade), value);
+    }
+
     public bool ListenTogetherAutoResume
     {
         get => GetSettings(nameof(ListenTogetherAutoResume), true);

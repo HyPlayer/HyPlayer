@@ -18,7 +18,7 @@ using Windows.Storage.Streams;
 
 namespace HyPlayer.Features.Playback.DynamicCover;
 
-public sealed record DynamicCoverVideo(StorageFile File, string? PreviewImageUrl);
+public sealed record DynamicCoverVideo(StorageFile File, string? PreviewImageUrl, DynamicCoverSource Source);
 
 public interface IDynamicCoverService
 {
@@ -213,7 +213,7 @@ internal sealed class DynamicCoverService : IDynamicCoverService
                 var file = await DownloadHlsAsync(new Uri(videoUrl), $"am_{album.Id}.mp4", ct).ConfigureAwait(false);
                 await MarkAppleMusicAsync(null).ConfigureAwait(false);
                 if (file is null) return (false, null);
-                return (true, new DynamicCoverVideo(file, PreviewUrl(album.PreviewUrl)));
+                return (true, new DynamicCoverVideo(file, PreviewUrl(album.PreviewUrl), DynamicCoverSource.AppleMusic));
             }
 
             await MarkAppleMusicAsync(null).ConfigureAwait(false);
@@ -251,7 +251,7 @@ internal sealed class DynamicCoverService : IDynamicCoverService
         try
         {
             var file = await DownloadFilesAsync([url], $"ncm_{song.ActualId}.mp4", ct).ConfigureAwait(false);
-            return file is null ? (false, null) : (true, new DynamicCoverVideo(file, null));
+            return file is null ? (false, null) : (true, new DynamicCoverVideo(file, null, DynamicCoverSource.Netease));
         }
         catch (Exception ex) when (ex is HttpRequestException or IOException ||
                                    ex is OperationCanceledException && !ct.IsCancellationRequested)

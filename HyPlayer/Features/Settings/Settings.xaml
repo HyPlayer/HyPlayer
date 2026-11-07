@@ -605,6 +605,15 @@
                                                 <ComboBoxItem Content="网易云音乐" />
                                             </ComboBox>
                                         </controls3:SettingsCard>
+                                        <controls3:SettingsCard
+                                            Description="在渲染过渡时可能会造成轻微的性能占用"
+                                            Header="动态封面循环过渡"
+                                            IsEnabled="{x:Bind Playback.DynamicCoverEnabled, Mode=OneWay}">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind Playback.DynamicCoverLoopCrossfade, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
                                     </controls3:SettingsExpander.Items>
                                 </controls3:SettingsExpander>
 

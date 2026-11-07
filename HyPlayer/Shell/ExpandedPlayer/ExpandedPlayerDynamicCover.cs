@@ -26,6 +26,9 @@ namespace HyPlayer.Shell.ExpandedPlayer;
 internal sealed class ExpandedPlayerDynamicCover : IDisposable
 {
     internal const double MaxSurfaceEdge = 1440;
+    internal static readonly TimeSpan CrossfadeDuration = TimeSpan.FromMilliseconds(800);
+    internal static readonly TimeSpan LoopCheckInterval = TimeSpan.FromMilliseconds(100);
+    internal static readonly TimeSpan MinimumCrossfadeLoop = TimeSpan.FromSeconds(3);
 
     private readonly Control _host;
     private readonly IDynamicCoverService _service;
@@ -38,15 +41,17 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
     private LoadOperation? _loading;
     private SingleSongBase? _song;
     private string? _songKey;
-    private StorageFile? _pendingVideo;
-    private MediaPlayer? _player;
-    private MediaPlayerSurface? _surface;
-    private CompositionSurfaceBrush? _brush;
+    private DynamicCoverVideo? _pendingVideo;
+    private VideoSlot? _active;
+    private VideoSlot? _standby;
     private CompositionRoundedRectangleGeometry? _clipGeometry;
     private CompositionGeometricClip? _clip;
     private SpriteVisual? _visual;
-    private MediaSource? _source;
+    private SpriteVisual? _overlay;
+    private DispatcherQueueTimer? _loopTimer;
+    private CompositionScopedBatch? _fadeBatch;
     private int _generation;
+    private bool _crossfade;
     private bool _videoAttached;
     private bool _videoShown;
     private bool _windowVisible;
@@ -116,25 +121,25 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         Window.Current.VisibilityChanged -= OnWindowVisibilityChanged;
         if (_target is not null) _target.SizeChanged -= OnTargetSizeChanged;
         _target = null;
-        if (_player is not null)
+        if (_loopTimer is not null)
         {
-            _player.PlaybackSession.PlaybackStateChanged -= OnPlaybackStateChanged;
-            _player.PlaybackSession.NaturalVideoSizeChanged -= OnNaturalVideoSizeChanged;
-            _player.MediaFailed -= OnMediaFailed;
+            _loopTimer.Stop();
+            _loopTimer.Tick -= OnLoopTimerTick;
+            _loopTimer = null;
         }
 
+        DisposeSlot(_active);
+        DisposeSlot(_standby);
+        _active = null;
+        _standby = null;
+        _overlay?.Dispose();
         _visual?.Dispose();
         _clip?.Dispose();
         _clipGeometry?.Dispose();
-        _brush?.Dispose();
-        _surface?.Dispose();
-        _player?.Dispose();
+        _overlay = null;
         _visual = null;
         _clip = null;
         _clipGeometry = null;
-        _brush = null;
-        _surface = null;
-        _player = null;
     }
 
     private void Restart()
@@ -167,7 +172,7 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
             poster = await _service.CreatePosterAsync(video, ct).ConfigureAwait(false);
             if (poster is null) return;
             var accepted = poster;
-            if (_dispatcher.TryEnqueue(() => Apply(generation, accepted, video.File))) poster = null;
+            if (_dispatcher.TryEnqueue(() => Apply(generation, accepted, video))) poster = null;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -179,7 +184,7 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         }
     }
 
-    private void Apply(int generation, InMemoryRandomAccessStream poster, StorageFile video)
+    private void Apply(int generation, InMemoryRandomAccessStream poster, DynamicCoverVideo video)
     {
         if (_disposed || generation != _generation)
         {
@@ -205,36 +210,53 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         return poster is not null;
     }
 
-    private void StartVideo(StorageFile video)
+    private void StartVideo(DynamicCoverVideo video)
     {
         var target = FindTarget();
         if (target is null) return;
-        EnsurePlayer();
-        _source = MediaSource.CreateFromStorageFile(video);
-        _player!.Source = _source;
-        _visual!.Opacity = 0;
+        EnsureVisuals();
+        _crossfade = _settings.DynamicCoverLoopCrossfade && video.Source == DynamicCoverSource.Netease;
+        _active ??= CreateSlot();
+        _active.Load(video.File, !_crossfade);
+        _visual!.Brush = _active.Brush;
+        if (_crossfade)
+        {
+            _standby ??= CreateSlot();
+            _standby.Load(video.File, false);
+            _overlay!.StopAnimation("Opacity");
+            _overlay.Opacity = 0;
+            _overlay.Brush = _standby.Brush;
+            EnsureLoopTimer().Start();
+        }
+
+        _visual.Opacity = 0;
         _videoShown = false;
         ElementCompositionPreview.SetElementChildVisual(target, _visual);
         _videoAttached = true;
         UpdateLayout();
-        if (_windowVisible) _player.Play();
+        if (_windowVisible) _active.Player.Play();
     }
 
     private void StopVideo()
     {
         _videoShown = false;
+        _loopTimer?.Stop();
+        CancelCrossfade();
+        _crossfade = false;
         if (_videoAttached && _target is not null)
             ElementCompositionPreview.SetElementChildVisual(_target, null);
         _videoAttached = false;
+        _active?.Unload();
+        _standby?.Unload();
+    }
 
-        if (_player is not null)
-        {
-            _player.Pause();
-            _player.Source = null;
-        }
-
-        _source?.Dispose();
-        _source = null;
+    private void CancelCrossfade()
+    {
+        _fadeBatch?.Dispose();
+        _fadeBatch = null;
+        if (_overlay is null) return;
+        _overlay.StopAnimation("Opacity");
+        _overlay.Opacity = 0;
     }
 
     private FrameworkElement? FindTarget()
@@ -263,28 +285,97 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         UpdateLayout();
     }
 
-    private void EnsurePlayer()
+    private void EnsureVisuals()
     {
-        if (_player is not null) return;
-        var player = new MediaPlayer
-        {
-            AutoPlay = false,
-            IsLoopingEnabled = true,
-            IsMuted = true
-        };
-        player.CommandManager.IsEnabled = false;
-        player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
-        player.PlaybackSession.NaturalVideoSizeChanged += OnNaturalVideoSizeChanged;
-        player.MediaFailed += OnMediaFailed;
-        _player = player;
-        _surface = player.GetSurface(_compositor);
-        _brush = _compositor.CreateSurfaceBrush(_surface.CompositionSurface);
-        _brush.Stretch = CompositionStretch.UniformToFill;
+        if (_visual is not null) return;
         _clipGeometry = _compositor.CreateRoundedRectangleGeometry();
         _clip = _compositor.CreateGeometricClip(_clipGeometry);
         _visual = _compositor.CreateSpriteVisual();
-        _visual.Brush = _brush;
         _visual.Clip = _clip;
+        _overlay = _compositor.CreateSpriteVisual();
+        _overlay.RelativeSizeAdjustment = Vector2.One;
+        _overlay.Opacity = 0;
+        _visual.Children.InsertAtTop(_overlay);
+    }
+
+    private VideoSlot CreateSlot()
+    {
+        var slot = new VideoSlot(_compositor);
+        slot.Player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
+        slot.Player.PlaybackSession.NaturalVideoSizeChanged += OnNaturalVideoSizeChanged;
+        slot.Player.MediaFailed += OnMediaFailed;
+        slot.Player.MediaEnded += OnMediaEnded;
+        return slot;
+    }
+
+    private void DisposeSlot(VideoSlot? slot)
+    {
+        if (slot is null) return;
+        slot.Player.PlaybackSession.PlaybackStateChanged -= OnPlaybackStateChanged;
+        slot.Player.PlaybackSession.NaturalVideoSizeChanged -= OnNaturalVideoSizeChanged;
+        slot.Player.MediaFailed -= OnMediaFailed;
+        slot.Player.MediaEnded -= OnMediaEnded;
+        slot.Dispose();
+    }
+
+    private DispatcherQueueTimer EnsureLoopTimer()
+    {
+        if (_loopTimer is not null) return _loopTimer;
+        _loopTimer = _dispatcher.CreateTimer();
+        _loopTimer.Interval = LoopCheckInterval;
+        _loopTimer.IsRepeating = true;
+        _loopTimer.Tick += OnLoopTimerTick;
+        return _loopTimer;
+    }
+
+    private void OnLoopTimerTick(DispatcherQueueTimer sender, object args)
+    {
+        if (_disposed || !_crossfade || _fadeBatch is not null || _active is null || _standby is null ||
+            _overlay is null)
+            return;
+        var session = _active.Player.PlaybackSession;
+        if (session.PlaybackState != MediaPlaybackState.Playing ||
+            !ShouldStartCrossfade(session.Position, session.NaturalDuration))
+            return;
+        BeginCrossfade(_standby, _overlay);
+    }
+
+    internal static bool ShouldStartCrossfade(TimeSpan position, TimeSpan duration)
+    {
+        return duration >= MinimumCrossfadeLoop &&
+               duration - position <= CrossfadeDuration + LoopCheckInterval;
+    }
+
+    private void BeginCrossfade(VideoSlot standby, SpriteVisual overlay)
+    {
+        standby.Player.PlaybackSession.Position = TimeSpan.Zero;
+        standby.Player.Play();
+        var batch = _compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
+        var fade = _compositor.CreateScalarKeyFrameAnimation();
+        fade.InsertKeyFrame(0f, 0f);
+        fade.InsertKeyFrame(1f, 1f);
+        fade.Duration = CrossfadeDuration;
+        overlay.StartAnimation("Opacity", fade);
+        batch.End();
+        _fadeBatch = batch;
+        var generation = _generation;
+        batch.Completed += (_, _) => CompleteCrossfade(generation, batch);
+    }
+
+    private void CompleteCrossfade(int generation, CompositionScopedBatch batch)
+    {
+        if (_disposed || generation != _generation || !ReferenceEquals(batch, _fadeBatch) ||
+            _active is null || _standby is null || _visual is null || _overlay is null)
+            return;
+        _fadeBatch = null;
+        batch.Dispose();
+        (_active, _standby) = (_standby, _active);
+        _visual.Brush = _active.Brush;
+        _overlay.StopAnimation("Opacity");
+        _overlay.Opacity = 0;
+        _overlay.Brush = _standby.Brush;
+        _standby.Player.Pause();
+        _standby.Player.PlaybackSession.Position = TimeSpan.Zero;
     }
 
     private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
@@ -298,10 +389,11 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
     {
         var size = SurfaceSizeFor(sender.NaturalVideoWidth, sender.NaturalVideoHeight);
         if (size is not { } surfaceSize) return;
+        var player = sender.MediaPlayer;
         var generation = Volatile.Read(ref _generation);
         _dispatcher.TryEnqueue(() =>
         {
-            if (!_disposed && generation == _generation) _player?.SetSurfaceSize(surfaceSize);
+            if (!_disposed && generation == _generation) player.SetSurfaceSize(surfaceSize);
         });
     }
 
@@ -312,9 +404,22 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         return new Size(Math.Max(1, Math.Round(width * scale)), Math.Max(1, Math.Round(height * scale)));
     }
 
+    private void OnMediaEnded(MediaPlayer sender, object args)
+    {
+        var generation = Volatile.Read(ref _generation);
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (_disposed || generation != _generation || !_crossfade || _fadeBatch is not null ||
+                !ReferenceEquals(sender, _active?.Player))
+                return;
+            sender.PlaybackSession.Position = TimeSpan.Zero;
+            if (_windowVisible) sender.Play();
+        });
+    }
+
     private void ShowVideo(int generation)
     {
-        if (_disposed || generation != _generation || _videoShown || _visual is null || _source is null) return;
+        if (_disposed || generation != _generation || _videoShown || _visual is null || _active?.Source is null) return;
         _videoShown = true;
         var fade = _compositor.CreateScalarKeyFrameAnimation();
         fade.InsertKeyFrame(1f, 1f);
@@ -335,18 +440,72 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
     private void OnWindowVisibilityChanged(object sender, VisibilityChangedEventArgs e)
     {
         _windowVisible = e.Visible;
-        if (_player is null || _source is null) return;
-        if (e.Visible) _player.Play();
-        else _player.Pause();
+        if (_active?.Source is null) return;
+        if (e.Visible)
+        {
+            _active.Player.Play();
+            if (_fadeBatch is not null) _standby?.Player.Play();
+        }
+        else
+        {
+            _active.Player.Pause();
+            if (_fadeBatch is not null) _standby?.Player.Pause();
+        }
     }
 
     private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is not (nameof(PlaybackSettings.DynamicCoverEnabled)
-            or nameof(PlaybackSettings.DynamicCoverSource)))
+            or nameof(PlaybackSettings.DynamicCoverSource)
+            or nameof(PlaybackSettings.DynamicCoverLoopCrossfade)))
             return;
         if (_dispatcher.HasThreadAccess) Restart();
         else _dispatcher.TryEnqueue(Restart);
+    }
+
+    private sealed class VideoSlot : IDisposable
+    {
+        public VideoSlot(Compositor compositor)
+        {
+            Player = new MediaPlayer
+            {
+                AutoPlay = false,
+                IsMuted = true
+            };
+            Player.CommandManager.IsEnabled = false;
+            Surface = Player.GetSurface(compositor);
+            Brush = compositor.CreateSurfaceBrush(Surface.CompositionSurface);
+            Brush.Stretch = CompositionStretch.UniformToFill;
+        }
+
+        public MediaPlayer Player { get; }
+        public MediaPlayerSurface Surface { get; }
+        public CompositionSurfaceBrush Brush { get; }
+        public MediaSource? Source { get; private set; }
+
+        public void Load(StorageFile file, bool loop)
+        {
+            Unload();
+            Player.IsLoopingEnabled = loop;
+            Source = MediaSource.CreateFromStorageFile(file);
+            Player.Source = Source;
+        }
+
+        public void Unload()
+        {
+            Player.Pause();
+            Player.Source = null;
+            Source?.Dispose();
+            Source = null;
+        }
+
+        public void Dispose()
+        {
+            Unload();
+            Brush.Dispose();
+            Surface.Dispose();
+            Player.Dispose();
+        }
     }
 
     private sealed class LoadOperation
