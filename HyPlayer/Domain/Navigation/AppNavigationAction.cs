@@ -4,5 +4,7 @@ public enum AppNavigationAction
 {
     CreatePlaylist,
     HeartBeat,
-    PersonalFM
+    PersonalFM,
+    ReloadLibrary,
+    ReloadPodcasts
 }

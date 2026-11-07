@@ -3,6 +3,7 @@
 using System;
 using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 
@@ -31,7 +32,7 @@ public sealed partial class CreateSonglistDialog : ContentDialog
         }
         catch (Exception ex)
         {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("创建失败", ex.Message);
+            Ioc.Default.GetRequiredService<INotificationService>().ShowFailure("创建失败", ex);
         }
     }
 

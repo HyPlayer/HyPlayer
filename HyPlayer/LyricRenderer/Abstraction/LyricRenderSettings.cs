@@ -66,6 +66,7 @@ public sealed record FocusedTextSettings
     public GlyphLiftUnit LiftUnit { get; init; } = GlyphLiftUnit.Auto;
     public GlyphLiftMotion LiftMotion { get; init; } = GlyphLiftMotion.Hold;
     public UntimedLiftMode UntimedLift { get; init; } = UntimedLiftMode.InferWords;
+    public bool LongNoteEmphasis { get; init; } = true;
 
     public bool InferWords => UntimedHighlight == UntimedHighlightMode.InferWords ||
                               LiftEnabled && UntimedLift == UntimedLiftMode.InferWords;

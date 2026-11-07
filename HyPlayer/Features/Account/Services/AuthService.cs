@@ -92,22 +92,38 @@ public class AuthService : IAuthService
     }
 
     /// <inheritdoc />
-    public async Task<AuthResult> TryLoadSavedLoginAsync()
+    public async Task<SavedLoginResult> TryLoadSavedLoginAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             var sessionValues = _authSessionStore.Load();
             if (sessionValues.Count == 0 && !_additionalConfigurationProvider.HasAdditionalConfiguration)
-                return new AuthResult(false);
+                return new SavedLoginResult(SavedLoginStatus.NoSavedSession);
 
             if (sessionValues.Count > 0)
                 await _authenticationProvider.ImportSessionAsync(sessionValues);
-            return await CompleteLoginAsync(false);
+            var (result, serverAnswered) = await CompleteLoginCoreAsync(false, cancellationToken);
+            if (result.IsSuccess)
+                return new SavedLoginResult(SavedLoginStatus.Succeeded);
+
+            return new SavedLoginResult(
+                ClassifySavedLoginFailure(
+                    sessionValues.Count > 0, serverAnswered, cancellationToken.IsCancellationRequested),
+                result.ErrorMessage);
         }
         catch (Exception ex)
         {
-            return new AuthResult(false, ex.Message);
+            return new SavedLoginResult(SavedLoginStatus.Unreachable, ex.Message);
         }
+    }
+
+    internal static SavedLoginStatus ClassifySavedLoginFailure(
+        bool hasSavedSession,
+        bool serverAnswered,
+        bool cancelled)
+    {
+        if (!serverAnswered || cancelled) return SavedLoginStatus.Unreachable;
+        return hasSavedSession ? SavedLoginStatus.Rejected : SavedLoginStatus.NoSavedSession;
     }
 
     /// <inheritdoc />
@@ -187,23 +203,35 @@ public class AuthService : IAuthService
     /// <inheritdoc />
     public async Task<AuthResult> CompleteLoginAsync(bool clearLoginCache)
     {
+        return (await CompleteLoginCoreAsync(clearLoginCache, CancellationToken.None)).Result;
+    }
+
+    private async Task<(AuthResult Result, bool ServerAnswered)> CompleteLoginCoreAsync(
+        bool clearLoginCache,
+        CancellationToken cancellationToken)
+    {
         if (clearLoginCache)
             await SimpleCacher.ClearCacheAsync(CacheType.Login);
 
+        var serverAnswered = false;
         var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userStatus", async () =>
         {
-            var statusResult = await _authenticationProvider.GetSessionInfoAsync();
+            var probe = NetworkAnswerProbe.Begin();
+            var statusResult = await _authenticationProvider.GetSessionInfoAsync(cancellationToken);
+            serverAnswered = probe.Answered;
             if (!statusResult.IsAuthenticated)
                 return null;
             return statusResult;
         }, forceRefresh: clearLoginCache || _additionalConfigurationProvider.HasAdditionalConfiguration);
 
         if (result is not { IsAuthenticated: true })
-            return new AuthResult(false);
+            return (new AuthResult(false), serverAnswered);
 
+        cancellationToken.ThrowIfCancellationRequested();
         _authSessionStore.Save(await _authenticationProvider.ExportSessionAsync());
 
-        var providerUser = await TryGetCurrentProviderUserAsync(result);
+        var providerUser = await TryGetCurrentProviderUserAsync(result, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         CurrentUser = providerUser is not null
             ? providerUser
             : new ProviderSessionPerson(_knownTypeIds.UserTypeId)
@@ -219,7 +247,7 @@ public class AuthService : IAuthService
         _playlistCollectionChangeNotifier.NotifyChanged();
         NotifyLoginCompleted();
 
-        return new AuthResult(true);
+        return (new AuthResult(true), serverAnswered);
     }
 
     /// <inheritdoc />
@@ -331,11 +359,14 @@ public class AuthService : IAuthService
             : providerItemId;
     }
 
-    private async Task<PersonBase?> TryGetCurrentProviderUserAsync(ProviderSessionInfo session)
+    private async Task<PersonBase?> TryGetCurrentProviderUserAsync(
+        ProviderSessionInfo session,
+        CancellationToken cancellationToken)
     {
         return string.IsNullOrWhiteSpace(session.UserId)
             ? null
-            : await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.UserTypeId + session.UserId) as PersonBase;
+            : await _itemProvider.GetProvidableItemByIdAsync(
+                _knownTypeIds.UserTypeId + session.UserId, cancellationToken) as PersonBase;
     }
 
     private static int MapQrStatusCode(ProviderQrLoginStatus status)

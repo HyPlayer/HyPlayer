@@ -174,12 +174,10 @@ internal sealed unsafe partial class LikeAppleRenderPipeline : IDisposable
 
     public void PrepareFrame()
     {
-        _context.VSSetConstantBuffers(0, 1, [_frameConstantBuffer]);
-        _context.PSSetConstantBuffers(0, 1, [_frameConstantBuffer]);
-        _context.PSSetSamplers(
-            0,
-            2,
-            [_linearClampSampler, _linearZeroBorderSampler]);
+        _context.VSSetConstantBuffer(0, _frameConstantBuffer);
+        _context.PSSetConstantBuffer(0, _frameConstantBuffer);
+        _context.PSSetSampler(0, _linearClampSampler);
+        _context.PSSetSampler(1, _linearZeroBorderSampler);
         _context.RSSetState(_rasterizerState);
     }
 
@@ -419,13 +417,12 @@ internal sealed unsafe partial class LikeAppleRenderPipeline : IDisposable
                 null);
             return;
         }
-        _context.OMSetRenderTargets(1, [renderTarget], null);
+        _context.OMSetRenderTargets(renderTarget, null);
     }
 
     private void SetViewport(int width, int height)
     {
-        var viewport = new Viewport(width, height);
-        _context.RSSetViewports([viewport]);
+        _context.RSSetViewport(new Viewport(width, height));
     }
 
     private void BindVertexBuffer(ID3D11Buffer buffer, int stride)
@@ -433,12 +430,15 @@ internal sealed unsafe partial class LikeAppleRenderPipeline : IDisposable
         _context.IASetVertexBuffer(0, buffer, (uint)stride);
     }
 
-    private void BindPixelShaderResources(params ID3D11ShaderResourceView[] resources)
+    private void BindPixelShaderResources(ID3D11ShaderResourceView resource)
     {
-        for (uint index = 0; index < (uint)resources.Length; index++)
-        {
-            _context.PSSetShaderResource(index, resources[index]);
-        }
+        _context.PSSetShaderResource(0, resource);
+    }
+
+    private void BindPixelShaderResources(ID3D11ShaderResourceView first, ID3D11ShaderResourceView second)
+    {
+        _context.PSSetShaderResource(0, first);
+        _context.PSSetShaderResource(1, second);
     }
 
     private void UnbindPixelShaderResources(int count)

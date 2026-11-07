@@ -16,7 +16,10 @@
             x:Name="SongContainer"
             Grid.Row="1"
             Margin="20,30,0,0"
-            Container="{x:Bind ViewModel.Album, Mode=OneWay}">
+            Container="{x:Bind ViewModel.Album, Mode=OneWay}"
+            ContainerLoad="{x:Bind ViewModel.PageLoad}"
+            EmptyText="专辑里还没有歌曲"
+            LoadingText="正在加载歌曲…">
             <controls1:ContainerItemsView.ListHeader>
                 <controls:DockPanel
                     x:Name="GridPersonalInformation"
@@ -73,7 +76,11 @@
                                 Text="{x:Bind ViewModel.PublishTime, Mode=OneWay, Converter={StaticResource DateConverter}}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="15">
-                            <Button Click="PlayAll_Click" Style="{ThemeResource AccentButtonStyle}">
+                            <Button
+                                AutomationProperties.Name="播放全部"
+                                Click="PlayAll_Click"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                ToolTipService.ToolTip="播放全部">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
                                         x:Name="IconPlay"

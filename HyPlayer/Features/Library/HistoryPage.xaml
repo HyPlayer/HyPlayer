@@ -42,7 +42,8 @@
             x:Name="ItemsList"
             Grid.Row="2"
             Margin="20,0,20,0"
-            Container="{x:Bind HistoryContainer, Mode=OneWay}" />
+            Container="{x:Bind HistoryContainer, Mode=OneWay}"
+            LoadingText="正在加载歌曲…" />
     </Grid>
 
 

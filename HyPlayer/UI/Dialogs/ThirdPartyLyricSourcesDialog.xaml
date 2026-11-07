@@ -1,0 +1,83 @@
+<ContentDialog
+    x:Class="HyPlayer.UI.Dialogs.ThirdPartyLyricSourcesDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls3="using:CommunityToolkit.WinUI.Controls"
+    Title="第三方歌词来源"
+    CloseButtonText="关闭"
+    DefaultButton="Close">
+    <ContentDialog.Resources>
+        <x:Double x:Key="ContentDialogMaxWidth">720</x:Double>
+    </ContentDialog.Resources>
+    <ScrollViewer
+        Width="640"
+        MaxHeight="600"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,16,0" Spacing="4">
+            <TextBlock
+                Margin="0,0,0,4"
+                FontWeight="SemiBold"
+                Text="AMLL TTML Database" />
+            <controls3:SettingsCard Description="" Header="使用 AMLL TTML Database">
+                <ToggleSwitch
+                    MinWidth="10"
+                    HorizontalAlignment="Right"
+                    IsOn="{x:Bind Lyric.EnableAmllTtmlDb, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+            <controls3:SettingsCard
+                Description="[NCM_ID] 为网易云音乐 ID 占位符，默认使用国内源，请求不到时自动尝试备用源"
+                Header="镜像地址"
+                Visibility="{x:Bind Lyric.EnableAmllTtmlDb, Mode=OneWay}">
+                <TextBox
+                    MinWidth="280"
+                    HorizontalAlignment="Left"
+                    Text="{x:Bind Lyric.AmllTtmlMirrorUrl, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+
+            <TextBlock
+                Margin="0,16,0,4"
+                FontWeight="SemiBold"
+                Text="酷狗音乐" />
+            <controls3:SettingsCard Description="仅在 AMLL 没有结果时使用，包含翻译和罗马音" Header="使用酷狗音乐歌词">
+                <ToggleSwitch
+                    MinWidth="10"
+                    HorizontalAlignment="Right"
+                    IsOn="{x:Bind Lyric.EnableKugou, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+
+            <TextBlock
+                Margin="0,16,0,4"
+                FontWeight="SemiBold"
+                Text="LRCLIB" />
+            <controls3:SettingsCard Description="仅在 AMLL 和酷狗音乐都没有结果时使用" Header="使用 LRCLIB">
+                <ToggleSwitch
+                    MinWidth="10"
+                    HorizontalAlignment="Right"
+                    IsOn="{x:Bind Lyric.EnableLrclib, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+            <controls3:SettingsCard
+                Description="可填写自建的 LRCLIB 服务地址"
+                Header="服务地址"
+                Visibility="{x:Bind Lyric.EnableLrclib, Mode=OneWay}">
+                <TextBox
+                    MinWidth="280"
+                    HorizontalAlignment="Left"
+                    Text="{x:Bind Lyric.LrclibUrl, Mode=TwoWay}" />
+            </controls3:SettingsCard>
+
+            <TextBlock
+                Margin="0,16,0,4"
+                FontWeight="SemiBold"
+                Text="适用范围" />
+            <controls3:SettingsCard Description="" Header="在以下情况可用">
+                <StackPanel HorizontalAlignment="Right" Spacing="2">
+                    <CheckBox Content="播放普通歌曲时" IsChecked="{x:Bind Lyric.ThirdPartyLyricsForSongs, Mode=TwoWay}" />
+                    <CheckBox Content="播放音乐网盘歌曲时" IsChecked="{x:Bind Lyric.ThirdPartyLyricsForCloud, Mode=TwoWay}" />
+                    <CheckBox Content="播放本地歌曲时" IsChecked="{x:Bind Lyric.ThirdPartyLyricsForLocal, Mode=TwoWay}" />
+                    <CheckBox Content="播放播客时" IsChecked="{x:Bind Lyric.ThirdPartyLyricsForPrograms, Mode=TwoWay}" />
+                </StackPanel>
+            </controls3:SettingsCard>
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

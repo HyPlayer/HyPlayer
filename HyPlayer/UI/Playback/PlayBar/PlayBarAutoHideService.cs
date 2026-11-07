@@ -1,21 +1,29 @@
 using System;
+using HyPlayer.Domain;
 using HyPlayer.Domain.Settings;
+using HyPlayer.Features.Playback.Services;
 
 namespace HyPlayer.UI.Playback.PlayBar;
 
 public sealed class PlayBarAutoHideService : IPlayBarAutoHideService
 {
     private readonly UISettings _setting;
+    private readonly PlaybackSurfaceStore _surfaceStore;
 
-    public PlayBarAutoHideService(UISettings setting)
+    public PlayBarAutoHideService(UISettings setting, PlaybackSurfaceStore surfaceStore)
     {
         _setting = setting;
+        _surfaceStore = surfaceStore;
     }
 
     public event EventHandler<PlayBarVisibilityChangedEventArgs>? VisibilityChanged;
 
     public int SecondCounter { get; set; }
     public bool IsVisible { get; set; } = true;
+
+    public bool IsActive => _surfaceStore.IsExpanded
+        ? _setting.ExpandedControlStyle == ExpandedControlStyle.HyPlayer && _setting.ExpandedAutoCollapsePlaybar
+        : _setting.AutoHidePlaybar;
 
     public void Tick()
     {

@@ -26,4 +26,9 @@ public class SimpleListItem
                       StaticSource.PicSizeSimpleLinerListItem);
 
     public int DisplayOrder => Order + 1;
+
+    public override string ToString()
+    {
+        return Title ?? string.Empty;
+    }
 }

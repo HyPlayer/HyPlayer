@@ -11,6 +11,12 @@ public partial class LyricSettings : SettingsBase
 {
     protected override string SectionName => "lyric";
 
+    public bool UseToastLyrics
+    {
+        get => GetSettings(nameof(UseToastLyrics), false);
+        set => SetSettings(nameof(UseToastLyrics), value);
+    }
+
     /// <summary>Numeric render settings. Stored separately from legacy expression profiles.</summary>
     public string DirectRenderSettingsJson
     {
@@ -31,6 +37,12 @@ public partial class LyricSettings : SettingsBase
     {
         get => GetSettings(nameof(LyricRomajiSource), RomajiSource.None);
         set => SetSettings(nameof(LyricRomajiSource), (int)value);
+    }
+
+    public bool KaraokeLyric
+    {
+        get => GetSettings(nameof(KaraokeLyric), true);
+        set => SetSettings(nameof(KaraokeLyric), value);
     }
 
     /// <summary>
@@ -76,6 +88,21 @@ public partial class LyricSettings : SettingsBase
     {
         get => GetSettings(nameof(OptimizeLyric), false);
         set => SetSettings(nameof(OptimizeLyric), value);
+    }
+
+    public double InterludeBarSeconds
+    {
+        get => Math.Clamp(GetSettings(nameof(InterludeBarSeconds), 5d), 1d, 60d);
+        set
+        {
+            if (double.IsNaN(value)) return;
+            SetSettings(nameof(InterludeBarSeconds), Math.Clamp(Math.Round(value, 1), 1d, 60d));
+        }
+    }
+
+    public long GetInterludeBarThresholdMs()
+    {
+        return OptimizeLyric ? (long)Math.Round(InterludeBarSeconds * 1000) : 0;
     }
 
     /// <summary>
@@ -195,14 +222,60 @@ public partial class LyricSettings : SettingsBase
         set => SetSettings(nameof(EnableAmllTtmlDb), value);
     }
 
+    public const string DefaultAmllTtmlMirrorUrl =
+        "https://amll-ttml-db.gbclstudio.cn/ncm-lyrics/[NCM_ID].ttml";
+
     /// <summary>
     ///     AMLL TTML mirror URL.
     /// </summary>
     public string AmllTtmlMirrorUrl
     {
-        get => GetSettings(nameof(AmllTtmlMirrorUrl),
-            "https://gcore.jsdelivr.net/gh/amll-dev/amll-ttml-db@main/ncm-lyrics/[NCM_ID].ttml");
+        get => GetSettings(nameof(AmllTtmlMirrorUrl), DefaultAmllTtmlMirrorUrl);
         set => SetSettings(nameof(AmllTtmlMirrorUrl), value);
+    }
+
+    public bool EnableKugou
+    {
+        get => GetSettings(nameof(EnableKugou), false);
+        set => SetSettings(nameof(EnableKugou), value);
+    }
+
+    public bool EnableLrclib
+    {
+        get => GetSettings(nameof(EnableLrclib), false);
+        set => SetSettings(nameof(EnableLrclib), value);
+    }
+
+    public const string DefaultLrclibUrl = "https://lrclib.net";
+
+    public string LrclibUrl
+    {
+        get => GetSettings(nameof(LrclibUrl), DefaultLrclibUrl);
+        set => SetSettings(nameof(LrclibUrl), value);
+    }
+
+    public bool ThirdPartyLyricsForSongs
+    {
+        get => GetSettings(nameof(ThirdPartyLyricsForSongs), true);
+        set => SetSettings(nameof(ThirdPartyLyricsForSongs), value);
+    }
+
+    public bool ThirdPartyLyricsForCloud
+    {
+        get => GetSettings(nameof(ThirdPartyLyricsForCloud), true);
+        set => SetSettings(nameof(ThirdPartyLyricsForCloud), value);
+    }
+
+    public bool ThirdPartyLyricsForLocal
+    {
+        get => GetSettings(nameof(ThirdPartyLyricsForLocal), true);
+        set => SetSettings(nameof(ThirdPartyLyricsForLocal), value);
+    }
+
+    public bool ThirdPartyLyricsForPrograms
+    {
+        get => GetSettings(nameof(ThirdPartyLyricsForPrograms), true);
+        set => SetSettings(nameof(ThirdPartyLyricsForPrograms), value);
     }
 
     /// <summary>
@@ -403,5 +476,27 @@ public partial class LyricSettings : SettingsBase
     {
         get => GetSettings(nameof(IsolationLightWave), false);
         set => SetSettings(nameof(IsolationLightWave), value);
+    }
+
+    public bool AutoHideLyricPanel
+    {
+        get => GetSettings(nameof(AutoHideLyricPanel), true);
+        set => SetSettings(nameof(AutoHideLyricPanel), value);
+    }
+
+    public double AutoHideLyricPanelLines
+    {
+        get => Math.Max(GetSettings(nameof(AutoHideLyricPanelLines), 3d), 0d);
+        set
+        {
+            if (double.IsNaN(value)) return;
+            SetSettings(nameof(AutoHideLyricPanelLines), Math.Max(Math.Round(value), 0d));
+        }
+    }
+
+    public bool ImpressionistLABSpace
+    {
+        get => GetSettings(nameof(ImpressionistLABSpace), true);
+        set => SetSettings(nameof(ImpressionistLABSpace), value);
     }
 }

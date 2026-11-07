@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Platform.Storage.Audio;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
@@ -31,7 +32,7 @@ internal class CloudUpload
         }
         catch (Exception ex)
         {
-            notification.ShowMessage($"上传失败: {file.DisplayName}", ex.Message);
+            notification.ShowFailure($"上传失败: {file.DisplayName}", ex);
         }
     }
 

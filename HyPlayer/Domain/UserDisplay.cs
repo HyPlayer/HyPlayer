@@ -11,9 +11,13 @@ public record class UserDisplay(CommentUserInfo User, bool NoImage)
             if (NoImage)
                 return new Uri("ms-appx:///Assets/icon.png");
 
-            return Uri.TryCreate(User.AvatarUrl, UriKind.Absolute, out var avatarUri)
-                ? avatarUri
-                : null;
+            if (!Uri.TryCreate(User.AvatarUrl, UriKind.Absolute, out var avatarUri))
+                return null;
+
+            return avatarUri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                   && string.IsNullOrEmpty(avatarUri.Query)
+                ? new Uri($"{avatarUri}?param={StaticSource.PicSizeCommentUserAvatar}")
+                : avatarUri;
         }
     }
 }

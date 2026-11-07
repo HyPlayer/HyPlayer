@@ -271,6 +271,7 @@ public sealed class SongListQueueBuilderTests
         public Task SetTransitionAsync(string transitionId, CancellationToken ct = default) => Task.CompletedTask;
         public Task SetPlayModeAsync(string playModeId, CancellationToken ct = default) => Task.CompletedTask;
         public void SetAudioGainEnabled(bool enabled) { }
+        public void SetPlaybackSpeed(double speed) { }
 
         public Task ClearQueueAsync(CancellationToken ct = default)
         {
@@ -329,6 +330,7 @@ public sealed class SongListQueueBuilderTests
         public Task MoveNextAndPlayAsync(bool userInitiated) => Task.CompletedTask;
         public Task MovePreviousAndPlayAsync() => Task.CompletedTask;
         public Task InitializeAsync() => Task.CompletedTask;
+        public Task ApplyAudioDeviceAsync() => Task.CompletedTask;
 
         private static bool SameSong(SingleSongBase? left, SingleSongBase? right) =>
             ReferenceEquals(left, right)
@@ -352,6 +354,7 @@ public sealed class SongListQueueBuilderTests
     {
         public List<(string Title, string? Message)> Messages { get; } = [];
         public void ShowMessage(string title, string? message = null) => Messages.Add((title, message));
+        public void ShowAction(string title, string? message, string actionText, Action action) => Messages.Add((title, message));
     }
 
     private sealed class FakePlayCore : PlayCoreBase

@@ -7,6 +7,7 @@
     xmlns:controls1="using:HyPlayer.UI.Lists"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
@@ -45,14 +46,18 @@
             Container="{x:Bind ViewModel.PlayList, Mode=OneWay}"
             ExtraItemActions="{x:Bind ItemActions}"
             GreedyLoad="{x:Bind ViewModel.GreedyLoad, Mode=OneWay}"
+            ContainerLoad="{x:Bind ViewModel.PageLoad}"
+            EmptyText="歌单里还没有歌曲"
             IsMySongList="{x:Bind ViewModel.IsMySongList, Mode=OneWay}"
-            IsSearchEnabled="True">
+            IsSearchEnabled="True"
+            LoadingText="正在加载歌曲…">
             <controls1:ContainerItemsView.ListHeader>
                 <Grid Margin="0,0,0,-75">
                     <Border
                         x:Name="RectangleImageBack"
                         Grid.Column="0"
-                        Grid.ColumnSpan="2">
+                        Grid.ColumnSpan="2"
+                        x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ListHeaderAcrylicBlur}">
                         <Border.Background>
                             <LinearGradientBrush Opacity="0.5" StartPoint="0,0" EndPoint="0,1">
                                 <GradientStop x:Name="AlbumColor" Offset="0" Color="{x:Bind ViewModel.AlbumColor, Mode=OneWay}" />
@@ -129,16 +134,17 @@
                                         <TextBlock x:Name="LikeBtnText" Text="{x:Bind ViewModel.Subscribed, Mode=OneWay, Converter={StaticResource BoolToLikeStringConverter}}" />
                                     </StackPanel>
                                 </Button>
-                                <Button Margin="0,6,0,0" Click="PlayAll_Click">
+                                <Button
+                                    Margin="0,6,0,0"
+                                    AutomationProperties.Name="播放全部"
+                                    Click="PlayAll_Click"
+                                    ToolTipService.ToolTip="播放全部">
                                     <StackPanel Orientation="Horizontal">
                                         <FontIcon
                                             x:Name="IconPlay"
                                             FontSize="12"
                                             Glyph="&#xF5B0;" />
-                                        <TextBlock
-                                            Margin="8,0,0,0"
-                                            Text="播放"
-                                            ToolTipService.ToolTip="播放全部" />
+                                        <TextBlock Margin="8,0,0,0" Text="播放" />
                                     </StackPanel>
                                 </Button>
                                 <Button
