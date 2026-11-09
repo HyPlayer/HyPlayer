@@ -38,6 +38,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private readonly Timer _positionTimer = new() { AutoReset = true, Interval = 100 };
         private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
         private TimeSpan _lastPosition = TimeSpan.Zero;
+        private volatile bool _autoUpdateSmtcTimeline = true;
+        private int _smtcTimelineUpdating;
         private string _currentDeviceId = string.Empty;
         private double _volume = 1;
         private bool _muted;
@@ -115,6 +117,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 if (ReferenceEquals(source, _primaryPlaybackSource)) return;
                 _primaryPlaybackSource = source;
                 OnPrimaryPlaybackSourceChanged?.Invoke(source);
+                UpdateSmtcTimeline();
             }
         }
 
@@ -133,6 +136,11 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public int ConnectedPlaybackSourceCount => _audioInputNodes.Count;
         public ISMTCManager SMTCManager { get; set; }
+        public bool AutoUpdateSmtcTimeline
+        {
+            get => _autoUpdateSmtcTimeline;
+            set => _autoUpdateSmtcTimeline = value;
+        }
         public bool EnableFFTProcessing
         {
             get => _enableFftProcessing;
@@ -965,24 +973,46 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
 
             Route(source, node, n => n.Seek(target), v => v.Seek(target), r => r.Position = target);
-            if (GlobalPlaybackStatus is PlaybackStatus.Playing || !ReferenceEquals(playbackSource, PrimaryPlaybackSource))
+            if (!ReferenceEquals(playbackSource, PrimaryPlaybackSource))
                 return;
 
             _lastPosition = target;
-            OnIdlePositionChanged?.Invoke(target);
+            if (GlobalPlaybackStatus is not PlaybackStatus.Playing)
+                OnIdlePositionChanged?.Invoke(target);
             PublishTimeline(target, SafeDuration(node));
+        }
+
+        public void UpdateSmtcTimeline()
+        {
+            if (_disposedValue || _primaryPlaybackSource is not { } source ||
+                !_audioInputNodes.TryGetValue(source, out var track)) return;
+
+            PublishTimeline(PositionOf(source, track), SafeDuration(track));
         }
 
         private void PublishTimeline(TimeSpan position, TimeSpan duration)
         {
-            SMTCManager?.OnPositionChange(new SystemMediaTransportControlsTimelineProperties
+            // A slow system call must not let timer callbacks accumulate more SMTC calls.
+            if (_disposedValue || Interlocked.CompareExchange(ref _smtcTimelineUpdating, 1, 0) != 0) return;
+            try
             {
-                Position = position,
-                StartTime = TimeSpan.Zero,
-                MinSeekTime = TimeSpan.Zero,
-                EndTime = duration,
-                MaxSeekTime = duration
-            });
+                SMTCManager?.OnPositionChange(new SystemMediaTransportControlsTimelineProperties
+                {
+                    Position = position,
+                    StartTime = TimeSpan.Zero,
+                    MinSeekTime = TimeSpan.Zero,
+                    EndTime = duration,
+                    MaxSeekTime = duration
+                });
+            }
+            catch (Exception ex) when (ex is COMException or ObjectDisposedException)
+            {
+                Trace.WriteLine(ex);
+            }
+            finally
+            {
+                Volatile.Write(ref _smtcTimelineUpdating, 0);
+            }
         }
         #endregion
 
@@ -1841,7 +1871,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             OnPositionChanged?.Invoke(position.Value);
 
             // 更新系统媒体传输控制
-            PublishTimeline(position.Value, SafeDuration(track));
+            if (AutoUpdateSmtcTimeline)
+                PublishTimeline(position.Value, SafeDuration(track));
         }
 
         private void OnVoiceCompleted(DecodedVoice voice)
@@ -1873,6 +1904,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
 
             GlobalPlaybackStatus = status;
+            UpdateSmtcTimeline();
             SMTCManager?.UpdatePlaybackStatus(status);
             OnGlobalPlaybackStatusChanged?.Invoke(status);
         }

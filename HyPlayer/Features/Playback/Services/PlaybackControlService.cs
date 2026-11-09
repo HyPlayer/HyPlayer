@@ -23,6 +23,7 @@ using HyPlayer.NeteaseProvider.Models;
 using HyPlayer.Platform.Network;
 using HyPlayer.Platform.Playback.AudioServices;
 using HyPlayer.Platform.Playback.MediaSources;
+using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
@@ -76,6 +77,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private readonly PlaybackSettings _playbackSettings;
     private readonly LastFMSettings _lastFmSettings;
     private readonly SmtcPlaybackCommandDispatcher _smtcCommandDispatcher;
+    private readonly SmtcTimelineSynchronizer? _smtcTimelineSynchronizer;
+    private readonly IGlobalTimerService _globalTimer;
     private readonly PlaybackStateService _state;
     private readonly IBackgroundTaskRunner _taskRunner;
     private readonly SemaphoreSlim _transitionGate = new(1, 1);
@@ -126,8 +129,10 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         IEnumerable<ITrackTransition> transitions,
         IMediaSourceService mediaSourceService,
         INotificationService notification,
-        PlaybackRestriction restriction)
+        PlaybackRestriction restriction,
+        IGlobalTimerService globalTimer)
     {
+        _globalTimer = globalTimer ?? throw new ArgumentNullException(nameof(globalTimer));
         _restriction = restriction ?? throw new ArgumentNullException(nameof(restriction));
         _mediaSourceService = mediaSourceService ?? throw new ArgumentNullException(nameof(mediaSourceService));
         _notification = notification ?? throw new ArgumentNullException(nameof(notification));
@@ -159,6 +164,13 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
         if (_player is AudioGraphPlayer graphPlayer)
         {
+            graphPlayer.AutoUpdateSmtcTimeline = !_playbackSettings.LowPrecisionSmtcTimelineSync;
+            _smtcTimelineSynchronizer = new SmtcTimelineSynchronizer(
+                () => !_disposed && _playbackSettings.LowPrecisionSmtcTimelineSync &&
+                      graphPlayer.GlobalPlaybackStatus == PlaybackStatus.Playing,
+                graphPlayer.UpdateSmtcTimeline);
+            _globalTimer.SecondTick += OnGlobalTimerSecondTick;
+            _playbackSettings.PropertyChanged += OnPlaybackSettingsPropertyChanged;
             graphPlayer.OnTrackReachesEnd += OnTrackReachesEnd;
             graphPlayer.OnGlobalPlaybackStatusChanged += OnGlobalPlaybackStatusChanged;
             graphPlayer.OnPositionChanged += OnPositionChanged;
@@ -1087,6 +1099,19 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
     #region Player Event Handlers
 
+    private void OnGlobalTimerSecondTick(object? sender, EventArgs e)
+    {
+        if (!_disposed && _smtcTimelineSynchronizer is { } synchronizer)
+            _taskRunner.Forget(synchronizer.OnSecondTickAsync(), "synchronize SMTC timeline");
+    }
+
+    private void OnPlaybackSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PlaybackSettings.LowPrecisionSmtcTimelineSync) &&
+            _player is AudioGraphPlayer graphPlayer)
+            graphPlayer.AutoUpdateSmtcTimeline = !_playbackSettings.LowPrecisionSmtcTimelineSync;
+    }
+
     /// <summary>
     ///     播放位置更新回调
     /// </summary>
@@ -1800,6 +1825,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             return;
 
         _disposed = true;
+        _globalTimer.SecondTick -= OnGlobalTimerSecondTick;
+        _playbackSettings.PropertyChanged -= OnPlaybackSettingsPropertyChanged;
         if (_player is AudioGraphPlayer graphPlayer)
         {
             graphPlayer.OnTrackReachesEnd -= OnTrackReachesEnd;

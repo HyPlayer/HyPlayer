@@ -79,6 +79,12 @@ public partial class PlaybackSettings : SettingsBase
         set => SetSettings(nameof(SpeedChangesPitch), value);
     }
 
+    public bool LowPrecisionSmtcTimelineSync
+    {
+        get => GetSettings(nameof(LowPrecisionSmtcTimelineSync), false);
+        set => SetSettings(nameof(LowPrecisionSmtcTimelineSync), value);
+    }
+
     public bool AutoPlayOnLaunch
     {
         get => GetSettings(nameof(AutoPlayOnLaunch), false);

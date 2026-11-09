@@ -1731,6 +1731,15 @@
                                     Message="如无特别说明, 请勿随意修改此选项卡内容"
                                     Severity="Warning" />
 
+                                <controls3:SettingsCard
+                                    Description="使用全局时钟每 5 秒同步系统媒体控件的播放进度，降低同步频率；更改后立即生效"
+                                    Header="低精度 SMTC 时间同步">
+                                    <CheckBox
+                                        Margin="0,0,-100,0"
+                                        AutomationProperties.Name="低精度 SMTC 时间同步"
+                                        IsChecked="{x:Bind Playback.LowPrecisionSmtcTimelineSync, Mode=TwoWay}" />
+                                </controls3:SettingsCard>
+
                                 <controls3:SettingsCard Description="置空不设置" Header="X-Real-IP">
                                     <controls3:SettingsCard.Content>
                                         <StackPanel Orientation="Horizontal">
