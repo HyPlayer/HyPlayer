@@ -2,9 +2,11 @@
     x:Class="HyPlayer.Features.Artist.ArtistPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:controls1="using:HyPlayer.UI.Lists"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hyplayer="using:HyPlayer.Platform.Xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.Media"
     xmlns:ui="using:CommunityToolkit.WinUI"
@@ -39,7 +41,8 @@
                     <Rectangle
                         x:Name="RectangleImageBack"
                         Grid.RowSpan="2"
-                        Margin="-32">
+                        Margin="-32"
+                        x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ListHeaderAcrylicBlur}">
                         <Rectangle.Fill>
                             <ImageBrush
                                 x:Name="ImageRect1"
@@ -51,6 +54,7 @@
                         x:Name="RectangleImageBackAcrylic"
                         Grid.RowSpan="2"
                         Margin="-32"
+                        x:Load="{x:Bind hyplayer:XamlHelpers.UISettings.ListHeaderAcrylicBlur}"
                         Fill="{ThemeResource SystemControlAcrylicElementBrush}" />
                     <controls:DockPanel
                         x:Name="GridPersonalInformation"
@@ -85,6 +89,21 @@
                                 Style="{StaticResource TitleTextBlockStyle}"
                                 Text="{x:Bind ViewModel.Artist.Name, Mode=OneWay}"
                                 TextWrapping="Wrap" />
+                            <Button
+                                Margin="0,12,0,0"
+                                AutomationProperties.Name="播放全部歌曲"
+                                Command="{x:Bind ViewModel.PlayAllSongsCommand}"
+                                Style="{StaticResource AccentButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE768;" />
+                                    <TextBlock Text="播放全部" />
+                                    <muxc:ProgressRing
+                                        Width="14"
+                                        Height="14"
+                                        IsActive="{x:Bind ViewModel.IsPlayingAll, Mode=OneWay}"
+                                        Visibility="{x:Bind ViewModel.IsPlayingAll, Mode=OneWay}" />
+                                </StackPanel>
+                            </Button>
 
                             <StackPanel.RenderTransform>
                                 <ScaleTransform x:Name="UserInfoScale" CenterY="125" />
@@ -98,6 +117,7 @@
                         Margin="0,12,0,0"
                         FontSize="15"
                         Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                        ExpandedMaxHeight="280"
                         MaxLines="2"
                         Selectable="True"
                         Text="{x:Bind ViewModel.Artist.Description, Mode=OneWay}"
@@ -123,21 +143,36 @@
                 IsTabStop="False"
                 SelectedIndex="{x:Bind ViewModel.CurrentPivotIndex, Mode=TwoWay}">
                 <PivotItem Header="热门50首">
-                    <controls1:ContainerItemsView x:Name="HotSongContainer" Container="{x:Bind ViewModel.HotSongsContainer, Mode=OneWay}">
+                    <controls1:ContainerItemsView
+                        x:Name="HotSongContainer"
+                        Container="{x:Bind ViewModel.HotSongsContainer, Mode=OneWay}"
+                        ContainerLoad="{x:Bind ViewModel.HotSongsLoad}"
+                        EmptyText="还没有热门歌曲"
+                        LoadingText="正在加载歌曲…">
                         <controls1:ContainerItemsView.ListHeader>
                             <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:ContainerItemsView.ListHeader>
                     </controls1:ContainerItemsView>
                 </PivotItem>
                 <PivotItem Header="全部歌曲">
-                    <controls1:ContainerItemsView x:Name="AllSongContainer" Container="{x:Bind ViewModel.AllSongsContainer, Mode=OneWay}">
+                    <controls1:ContainerItemsView
+                        x:Name="AllSongContainer"
+                        Container="{x:Bind ViewModel.AllSongsContainer, Mode=OneWay}"
+                        ContainerLoad="{x:Bind ViewModel.ArtistLoad}"
+                        EmptyText="还没有歌曲"
+                        LoadingText="正在加载歌曲…">
                         <controls1:ContainerItemsView.ListHeader>
                             <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:ContainerItemsView.ListHeader>
                     </controls1:ContainerItemsView>
                 </PivotItem>
                 <PivotItem Header="专辑">
-                    <controls1:ContainerItemsView x:Name="AlbumContainer" Container="{x:Bind ViewModel.AlbumsContainer, Mode=OneWay}">
+                    <controls1:ContainerItemsView
+                        x:Name="AlbumContainer"
+                        Container="{x:Bind ViewModel.AlbumsContainer, Mode=OneWay}"
+                        ContainerLoad="{x:Bind ViewModel.ArtistLoad}"
+                        EmptyText="还没有专辑"
+                        LoadingText="正在加载专辑…">
                         <controls1:ContainerItemsView.ListHeader>
                             <Rectangle Height="{x:Bind ArtistPivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:ContainerItemsView.ListHeader>

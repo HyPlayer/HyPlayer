@@ -9,6 +9,11 @@ public class LyricShareItem
     public string Text { get; set; }
     public TimeSpan Time { get; set; }
     public LyricShareItemType Type { get; set; }
+
+    public override string ToString()
+    {
+        return Text ?? string.Empty;
+    }
 }
 
 public enum LyricShareItemType

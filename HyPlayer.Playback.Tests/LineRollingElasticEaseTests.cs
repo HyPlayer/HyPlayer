@@ -8,12 +8,15 @@ namespace HyPlayer.Playback.Tests;
 public sealed class LineRollingElasticEaseTests
 {
     [Test]
-    public void LineRolling_ShouldKeepHistoricalPointSevenAmplitude()
+    [Arguments(EasingMode.EaseIn)]
+    [Arguments(EasingMode.EaseOut)]
+    [Arguments(EasingMode.EaseInOut)]
+    public void LineRolling_ShouldStartAndEndAtExactEndpoints(EasingMode mode)
     {
-        var rolling = new LineRollingElasticEase { EasingMode = EasingMode.EaseOut };
-        var effect = new CustomElasticEase { EasingMode = EasingMode.EaseOut };
+        var rolling = new LineRollingElasticEase { EasingMode = mode };
+        var effect = new CustomElasticEase { EasingMode = mode };
 
-        AssertClose(0.3, rolling.Ease(0));
+        AssertClose(0, rolling.Ease(0));
         AssertClose(1, rolling.Ease(1));
         AssertClose(0, effect.Ease(0));
         AssertClose(1, effect.Ease(1));

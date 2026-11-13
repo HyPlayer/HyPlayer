@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using Windows.Storage;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Features.Settings.Services;
 
 namespace HyPlayer.Domain.Settings;
 
@@ -7,11 +9,46 @@ public partial class LocalLibrarySettings(DownloadSettings downloadSettings) : S
 {
     protected override string SectionName => "library";
 
+    public string? CustomSearchDirectory =>
+        TryGetSettings<string>(nameof(SearchDirectory), out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : null;
+
     public string SearchDirectory
     {
-        get => GetSettings(nameof(SearchDirectory), downloadSettings.DownloadDirectory);
-        set => SetSettings(nameof(SearchDirectory), value);
+        get => CustomSearchDirectory is { } custom && FolderAccess.IsUsable(custom)
+            ? custom
+            : downloadSettings.DownloadDirectory;
+        set
+        {
+            FolderAccess.Forget(CustomSearchDirectory);
+            FolderAccess.Forget(value);
+            if (!SetSettings(nameof(SearchDirectory), value))
+                OnPropertyChanged();
+            OnPropertyChanged(nameof(SearchDirectoryIsCustom));
+            FolderAccessGuard.RefreshPath(value);
+        }
     }
+
+    public bool SearchDirectoryIsCustom =>
+        CustomSearchDirectory is { } custom && FolderAccess.IsUsable(custom) &&
+        !FolderAccess.IsSamePath(custom, downloadSettings.DownloadDirectory);
+
+    public void ResetSearchDirectory()
+    {
+        FolderAccess.Forget(CustomSearchDirectory);
+        if (!SetSettings<string?>(nameof(SearchDirectory), null, nameof(SearchDirectory)))
+            OnPropertyChanged(nameof(SearchDirectory));
+        OnPropertyChanged(nameof(SearchDirectoryIsCustom));
+    }
+
+    public void NotifyDownloadDirectoryChanged()
+    {
+        OnPropertyChanged(nameof(SearchDirectory));
+        OnPropertyChanged(nameof(SearchDirectoryIsCustom));
+    }
+
+    internal void NotifyDirectoryAccessChanged() => NotifyDownloadDirectoryChanged();
 
     public List<string> ScanLocalFolders
     {

@@ -1,11 +1,15 @@
 using System;
 using System.Threading.Tasks;
 using Windows.Storage;
+using HyPlayer.Platform.Storage;
+using HyPlayer.Features.Settings.Services;
 
 namespace HyPlayer.Domain.Settings;
 
 public partial class DownloadSettings : SettingsBase
 {
+    private static string? _defaultDownloadDirectory;
+
     protected override string SectionName => "download";
 
     public bool WriteDownloadFileInfo
@@ -26,28 +30,81 @@ public partial class DownloadSettings : SettingsBase
         set => SetSettings(nameof(DownloadNameOccupySolution), value);
     }
 
+    public string? CustomDownloadDirectory =>
+        TryGetSettings<string>(nameof(DownloadDirectory), out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value
+            : null;
+
     public string DownloadDirectory
     {
-        get => TryGetSettings<string>(nameof(DownloadDirectory), out var value)
-            ? value!
-            : ApplicationData.Current.LocalCacheFolder.Path;
-        set => SetSettings(nameof(DownloadDirectory), value);
+        get => CustomDownloadDirectory is { } custom && FolderAccess.IsUsable(custom)
+            ? custom
+            : _defaultDownloadDirectory ?? ApplicationData.Current.LocalCacheFolder.Path;
+        set
+        {
+            FolderAccess.Forget(CustomDownloadDirectory);
+            FolderAccess.Forget(value);
+            if (!SetSettings(nameof(DownloadDirectory), value))
+                OnPropertyChanged();
+            OnPropertyChanged(nameof(DownloadDirectoryIsCustom));
+            FolderAccessGuard.RefreshPath(value);
+        }
     }
 
-    public async Task<string> GetDownloadDirectoryAsync()
+    public bool DownloadDirectoryIsCustom =>
+        CustomDownloadDirectory is { } custom && FolderAccess.IsUsable(custom) &&
+        !FolderAccess.IsSamePath(custom, _defaultDownloadDirectory);
+
+    public void ResetDownloadDirectory()
     {
-        if (TryGetSettings<string>(nameof(DownloadDirectory), out var value) && !string.IsNullOrWhiteSpace(value))
-            return value!;
+        FolderAccess.Forget(CustomDownloadDirectory);
+        if (!SetSettings<string?>(nameof(DownloadDirectory), null, nameof(DownloadDirectory)))
+            OnPropertyChanged(nameof(DownloadDirectory));
+        OnPropertyChanged(nameof(DownloadDirectoryIsCustom));
+    }
+
+    internal void NotifyDirectoryAccessChanged()
+    {
+        OnPropertyChanged(nameof(DownloadDirectory));
+        OnPropertyChanged(nameof(DownloadDirectoryIsCustom));
+    }
+
+    public async Task EnsureDefaultDownloadDirectoryAsync()
+    {
+        if (_defaultDownloadDirectory is not null)
+            return;
+
+        await GetDefaultDownloadDirectoryAsync();
+        if (_defaultDownloadDirectory is null)
+            return;
+
+        OnPropertyChanged(nameof(DownloadDirectory));
+        OnPropertyChanged(nameof(DownloadDirectoryIsCustom));
+    }
+
+    public async Task<string> GetDefaultDownloadDirectoryAsync()
+    {
+        if (_defaultDownloadDirectory is { } known)
+            return known;
 
         try
         {
-            return (await KnownFolders.MusicLibrary.CreateFolderAsync(
+            return _defaultDownloadDirectory = (await KnownFolders.MusicLibrary.CreateFolderAsync(
                 nameof(HyPlayer), CreationCollisionOption.OpenIfExists)).Path;
         }
         catch
         {
             return ApplicationData.Current.LocalCacheFolder.Path;
         }
+    }
+
+    public async Task<string> GetDownloadDirectoryAsync()
+    {
+        if (CustomDownloadDirectory is { } custom && await FolderAccess.ProbeAsync(custom) &&
+            FolderAccess.IsSamePath(custom, CustomDownloadDirectory))
+            return custom;
+
+        return await GetDefaultDownloadDirectoryAsync();
     }
 
     public string DownloadFileName
@@ -60,6 +117,12 @@ public partial class DownloadSettings : SettingsBase
     {
         get => GetSettings(nameof(DownloadAudioRate), "hires");
         set => SetSettings(nameof(DownloadAudioRate), value);
+    }
+
+    public bool PreferDownloadedFile
+    {
+        get => GetSettings(nameof(PreferDownloadedFile), true);
+        set => SetSettings(nameof(PreferDownloadedFile), value);
     }
 
     public int MaxDownloadCount

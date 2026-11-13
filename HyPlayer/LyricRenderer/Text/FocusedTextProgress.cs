@@ -56,18 +56,18 @@ public static class FocusedTextProgress
     }
 
     public static float GetTimedProgress(
-        long timeMs,
+        double timeMs,
         long startMs,
         long endMs,
         float startOffsetMs,
         float finishDurationMs,
         GlyphLiftMotion motion)
     {
-        var liftStart = startMs - startOffsetMs;
-        var liftEnd = endMs + finishDurationMs;
+        var liftStart = startMs - (double)startOffsetMs;
+        var liftEnd = endMs + (double)finishDurationMs;
         if (liftEnd <= liftStart)
             return motion == GlyphLiftMotion.Hold && timeMs >= liftStart ? 1 : 0;
-        return Math.Clamp((timeMs - liftStart) / (liftEnd - liftStart), 0, 1);
+        return (float)Math.Clamp((timeMs - liftStart) / (liftEnd - liftStart), 0, 1);
     }
 
     public static float GetRevealProgress(

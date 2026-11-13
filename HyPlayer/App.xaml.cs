@@ -19,11 +19,16 @@ using HyPlayer.Domain;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Features.LastFM.Services;
+using HyPlayer.Features.ListenTogether;
 using HyPlayer.Features.Lyrics.Effects;
 using HyPlayer.Features.Lyrics.Services;
+using HyPlayer.Features.Playback.DynamicCover;
 using HyPlayer.Features.Playback.Services;
+using HyPlayer.Features.Settings.Services;
 using HyPlayer.Features.Widgets.Services;
 using HyPlayer.Platform.Runtime;
+using HyPlayer.Platform.Downloads;
+using HyPlayer.Platform.Playback.LocalProvider;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.Platform.Storage.Cache;
@@ -34,9 +39,11 @@ using HyPlayer.UI.TeachingTips;
 using Kawazu;
 using Microsoft.Gaming.XboxGameBar;
 using WinRT;
+using ControlsResourcesVersion = Microsoft.UI.Xaml.Controls.ControlsResourcesVersion;
 using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 using WidgetPage = HyPlayer.Features.Widgets.WidgetPage;
 using WidgetSettingsPage = HyPlayer.Features.Widgets.WidgetSettingsPage;
+using XamlControlsResources = Microsoft.UI.Xaml.Controls.XamlControlsResources;
 
 #endregion
 
@@ -48,6 +55,7 @@ namespace HyPlayer;
 public sealed partial class App : Windows.UI.Xaml.Application
 {
     private bool _playbackMemoryRestoreRequested;
+    private Task _maintenancePause = Task.CompletedTask;
 
     /// <summary>
     ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
@@ -58,6 +66,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
     public App()
     {
         Suspending += OnSuspending;
+        Resuming += OnResuming;
         UnhandledException += App_UnhandledException;
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
@@ -66,7 +75,20 @@ public sealed partial class App : Windows.UI.Xaml.Application
         InitializeCommonServices();
         AppDepository.Resolve<IHistoryService>().InitializeHistoryTrack();
         _ = AppDepository.Resolve<IPlaybackMemoryService>().InitializeAsync();
+        DownloadedTrackIndex.ScheduleScan(TimeSpan.FromSeconds(40));
+        StorageMaintenance.ScheduleTrim(TimeSpan.FromSeconds(30));
         var uiSettings = AppDepository.Resolve<UISettings>();
+        if (uiSettings.XboxHidePointer)
+        {
+            RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
+            FocusVisualKind = FocusVisualKind.Reveal;
+        }
+
+        if (uiSettings.IsOldThemeEnabled)
+            foreach (var dictionary in Resources.MergedDictionaries)
+                if (dictionary is XamlControlsResources controlsResources)
+                    controlsResources.ControlsResourcesVersion = ControlsResourcesVersion.Version1;
+
         if (uiSettings.ThemeRequest != ThemeRequest.Auto)
             RequestedTheme = uiSettings.ThemeRequest == ThemeRequest.Light
                 ? ApplicationTheme.Light
@@ -90,6 +112,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
         var globalTimer = AppDepository.Resolve<IGlobalTimerService>();
         var teachingTip = AppDepository.Resolve<ITeachingTipService>();
         var playBarAutoHide = AppDepository.Resolve<IPlayBarAutoHideService>();
+        AppDepository.Resolve<ToastLyricService>();
         globalTimer.SecondTick += (_, _) =>
         {
             teachingTip.Roll();
@@ -99,6 +122,10 @@ public sealed partial class App : Windows.UI.Xaml.Application
 
     private static async Task InitializeThings()
     {
+        AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
+            AppDepository.Resolve<IDynamicCoverService>().ClearCacheAsync(), "clear dynamic cover cache");
+        AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
+            Task.Run(() => HyPlayer.Features.Settings.Settings.SystemFonts.Value), "enumerate system fonts");
         try
         {
             await SimpleCacher.InitializeAsync();
@@ -111,6 +138,7 @@ public sealed partial class App : Windows.UI.Xaml.Application
             // ignored
         }
 
+        AppDepository.Resolve<IListenTogetherService>();
         if (AppDepository.Resolve<PlaybackSurfaceStore>().IsExpanded)
             AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
                 AppDepository.Resolve<IUIThreadDispatcher>().TryRunAsync(() =>
@@ -128,11 +156,14 @@ public sealed partial class App : Windows.UI.Xaml.Application
             lifecycle.IsInBackground = false;
             lifecycle.NotifyEnteredForeground();
         }
+
+        AppDepository.Resolve<IMemoryGovernor>().OnLeavingBackground();
     }
 
     private void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
     {
         AppDepository.Resolve<IAppLifecycleStateService>().IsInBackground = true;
+        AppDepository.Resolve<IMemoryGovernor>().OnEnteredBackground();
     }
 
     protected override void OnActivated(IActivatedEventArgs args)
@@ -246,7 +277,11 @@ public sealed partial class App : Windows.UI.Xaml.Application
             }
 
             Window.Current.Content = _rootFrame;
+            AppDepository.Resolve<HyPlayer.Platform.Xaml.AppearanceCustomizer>().ApplyFont();
         }
+
+        AppDepository.Resolve<IMemoryGovernor>().Attach(Window.Current);
+        ResourceSaver.Attach();
 
         // 直接启动
         if (args is LaunchActivatedEventArgs)
@@ -266,6 +301,13 @@ public sealed partial class App : Windows.UI.Xaml.Application
         // 本地播放
         else if (args is FileActivatedEventArgs)
         {
+            if (!AppDepository.Resolve<PlaybackRestriction>().Allows(PlaybackRequest.PlayLocal))
+            {
+                NavigateToRootPage();
+                Window.Current.Activate();
+                return;
+            }
+
             var playCore = AppDepository.Resolve<PlayCoreBase>();
             var localFileImport = AppDepository.Resolve<ILocalFileImportService>();
             var history = AppDepository.Resolve<IHistoryService>();
@@ -277,23 +319,28 @@ public sealed partial class App : Windows.UI.Xaml.Application
             NavigateToRootPage();
             Window.Current.Activate();
             var control = AppDepository.Resolve<IPlaybackControlService>();
-            AppDepository.Resolve<IBackgroundTaskRunner>().Forget(
-                control.InitializeAsync(),
-                "initialize player for file activation");
+            await control.InitializeAsync();
+            await control.StopAsync();
+            await control.ClearQueueAsync();
+            LocalSong firstOpened = null;
             foreach (var storageItem in (args?.As<FileActivatedEventArgs>()).Files)
             {
-                var file = (StorageFile)storageItem;
+                if (storageItem is not StorageFile file) continue;
                 await localFileImport.RegisterFutureAccessAsync(file);
                 var item = await localFileImport.LoadStorageFileAsync(file);
                 await playCore.InsertSongAsync(item);
+                firstOpened ??= item;
             }
 
             playCore.PlaySourceId = "local";
-            if ((await playCore.GetPlaylistAsync()).Count > 0)
+            if (firstOpened is not null)
             {
-                await playCore.MovePointerToIndexAsync(0);
+                await playCore.MovePointerToAsync(firstOpened);
                 if (playCore.CurrentSong is { } song)
+                {
                     await control.LoadAndPlayAsync(song, removeCurrentSongs: false);
+                    AppDepository.Resolve<IPlaybackSurfaceCoordinator>().Expand();
+                }
             }
         }
     }
@@ -323,8 +370,42 @@ public sealed partial class App : Windows.UI.Xaml.Application
     private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
-        await AppDepository.Resolve<IPlaybackMemoryService>().SaveNowAsync();
+        try
+        {
+        _maintenancePause = Task.WhenAll(
+            AppDepository.Resolve<IPlaybackMemoryService>().SaveNowAsync(),
+            AppDepository.Resolve<IMemoryGovernor>().PauseAsync(),
+            DownloadedTrackIndex.StopAsync(), StorageMaintenance.StopAsync(),
+            HyPlayer.Features.Playback.AutoMix.AutoMixLog.StopAsync(), ResourceSaver.StopAsync(),
+            AppDepository.Resolve<IDynamicCoverService>().ClearCacheAsync());
+        await _maintenancePause;
         AppDepository.Resolve<IGameBarWidgetService>().Widget?.Close();
-        deferral.Complete();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Application suspension cleanup failed: {ex}");
+        }
+        finally { deferral.Complete(); }
+    }
+
+    private async void OnResuming(object sender, object args)
+    {
+        try { await ResumeMaintenanceAsync(); }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Application maintenance resume failed: {ex}"); }
+    }
+
+    private async Task ResumeMaintenanceAsync()
+    {
+        // An interrupted suspension can still have native I/O unwinding. Do not
+        // replace its lifetime until all owners have finished their StopAsync.
+        try { await _maintenancePause; }
+        catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Previous maintenance stop failed: {ex}"); }
+        AppDepository.Resolve<IMemoryGovernor>().Resume();
+        DownloadedTrackIndex.Resume();
+        StorageMaintenance.Resume();
+        DownloadedTrackIndex.ScheduleScan(TimeSpan.FromSeconds(40));
+        StorageMaintenance.ScheduleTrim(TimeSpan.FromSeconds(30));
+        HyPlayer.Features.Playback.AutoMix.AutoMixLog.Resume();
+        ResourceSaver.Resume();
     }
 }

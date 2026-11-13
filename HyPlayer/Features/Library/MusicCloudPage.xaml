@@ -40,9 +40,11 @@
             x:Name="SongContainer"
             Grid.Row="1"
             Container="{x:Bind CloudContainer, Mode=OneWay}"
+            EmptyText="云盘里还没有歌曲"
             ExtraItemActions="{x:Bind ItemActions, Mode=OneWay}"
             GreedyLoad="{x:Bind GreedyLoad, Mode=OneWay}"
-            IsSearchEnabled="True" />
+            IsSearchEnabled="True"
+            LoadingText="正在加载歌曲…" />
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>

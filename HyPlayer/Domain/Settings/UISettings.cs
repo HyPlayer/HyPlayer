@@ -266,6 +266,64 @@ public partial class UISettings : SettingsBase
         set => SetSettings(nameof(GestureMode), (int)value);
     }
 
+    public bool KeyboardShortcutsEnabled
+    {
+        get => GetSettings(nameof(KeyboardShortcutsEnabled), true);
+        set => SetSettings(nameof(KeyboardShortcutsEnabled), value);
+    }
+
+    public string KeyboardShortcutBindings
+    {
+        get => GetSettings(nameof(KeyboardShortcutBindings), string.Empty);
+        set => SetSettings(nameof(KeyboardShortcutBindings), value);
+    }
+
+    public string SidebarLayout
+    {
+        get => GetSettings(nameof(SidebarLayout), string.Empty);
+        set => SetSettings(nameof(SidebarLayout), value);
+    }
+
+    public string CustomUiFontFamily
+    {
+        get => GetSettings(nameof(CustomUiFontFamily), string.Empty);
+        set => SetSettings(nameof(CustomUiFontFamily), value ?? string.Empty);
+    }
+
+    public string BackgroundImagePath
+    {
+        get => GetSettings(nameof(BackgroundImagePath), string.Empty);
+        set
+        {
+            if (SetSettings(nameof(BackgroundImagePath), value ?? string.Empty))
+                OnPropertyChanged(nameof(HasCustomBackground));
+        }
+    }
+
+    public bool HasCustomBackground => !string.IsNullOrEmpty(BackgroundImagePath);
+
+    public double BackgroundImageOpacity
+    {
+        get => GetSettings(nameof(BackgroundImageOpacity), 35d);
+        set => SetSettings(nameof(BackgroundImageOpacity), value);
+    }
+
+    public double BackgroundImageBlur
+    {
+        get => GetSettings(nameof(BackgroundImageBlur), 0d);
+        set => SetSettings(nameof(BackgroundImageBlur), value);
+    }
+
+    public int BackgroundImageStretch
+    {
+        get => GetSettings(nameof(BackgroundImageStretch), 0);
+        set
+        {
+            if (value >= 0)
+                SetSettings(nameof(BackgroundImageStretch), value);
+        }
+    }
+
     /// <summary>
     ///     Whether animation adapts to BPM.
     /// </summary>
@@ -322,4 +380,110 @@ public partial class UISettings : SettingsBase
         get => GetSettings(nameof(EnableTileBackground), false);
         set => SetSettings(nameof(EnableTileBackground), value);
     }
+
+    public ExpandedControlStyle ExpandedControlStyle
+    {
+        get => GetSettings(nameof(ExpandedControlStyle), ExpandedControlStyle.Apple);
+        set => SetSettings(nameof(ExpandedControlStyle), (int)value);
+    }
+
+    public bool ExpandedAutoCollapsePlaybar
+    {
+        get => GetSettings(nameof(ExpandedAutoCollapsePlaybar), true);
+        set => SetSettings(nameof(ExpandedAutoCollapsePlaybar), value);
+    }
+
+    public bool HidePlaybarOnHome
+    {
+        get => GetSettings(nameof(HidePlaybarOnHome), false);
+        set => SetSettings(nameof(HidePlaybarOnHome), value);
+    }
+
+    public bool PlaybarProgressiveBlur
+    {
+        get => GetSettings(nameof(PlaybarProgressiveBlur), true);
+        set => SetSettings(nameof(PlaybarProgressiveBlur), value);
+    }
+
+    public bool XboxHidePointer
+    {
+        get => GetSettings(nameof(XboxHidePointer), false);
+        set => SetSettings(nameof(XboxHidePointer), value);
+    }
+
+    public bool IsOldThemeEnabled
+    {
+        get => GetSettings(nameof(IsOldThemeEnabled), false);
+        set => SetSettings(nameof(IsOldThemeEnabled), value);
+    }
+
+    public bool ListHeaderAcrylicBlur
+    {
+        get => GetSettings(nameof(ListHeaderAcrylicBlur), true);
+        set => SetSettings(nameof(ListHeaderAcrylicBlur), value);
+    }
+
+    public bool ItemOfListBackgroundAcrylicBlur
+    {
+        get => GetSettings(nameof(ItemOfListBackgroundAcrylicBlur), false);
+        set => SetSettings(nameof(ItemOfListBackgroundAcrylicBlur), value);
+    }
+
+    public bool PlaybarBackgroundAcrylic
+    {
+        get => GetSettings(nameof(PlaybarBackgroundAcrylic), false);
+        set => SetSettings(nameof(PlaybarBackgroundAcrylic), value);
+    }
+
+    public bool PlaybarBackgroundBreath
+    {
+        get => GetSettings(nameof(PlaybarBackgroundBreath), false);
+        set => SetSettings(nameof(PlaybarBackgroundBreath), value);
+    }
+
+    public bool PlaybarBackgroundElay
+    {
+        get => GetSettings(nameof(PlaybarBackgroundElay), false);
+        set => SetSettings(nameof(PlaybarBackgroundElay), value);
+    }
+
+    public bool PlaybarButtonsTransparent
+    {
+        get => GetSettings(nameof(PlaybarButtonsTransparent), true);
+        set => SetSettings(nameof(PlaybarButtonsTransparent), value);
+    }
+
+    public bool PlayButtonAccentColor
+    {
+        get => GetSettings(nameof(PlayButtonAccentColor), false);
+        set => SetSettings(nameof(PlayButtonAccentColor), value);
+    }
+
+    public bool AcrylicBackgroundStatus
+    {
+        get => GetSettings(nameof(AcrylicBackgroundStatus), false);
+        set => SetSettings(nameof(AcrylicBackgroundStatus), value);
+    }
+
+    public bool CustomAcrylic
+    {
+        get => GetSettings(nameof(CustomAcrylic), false);
+        set => SetSettings(nameof(CustomAcrylic), value);
+    }
+
+    public double CustomTintOpacity
+    {
+        get => CustomAcrylic ? GetSettings(nameof(CustomTintOpacity), 3d) : 0d;
+        set => SetSettings(nameof(CustomTintOpacity), value);
+    }
+
+    public double CustomTintLuminosityOpacity
+    {
+        get => CustomAcrylic ? GetSettings(nameof(CustomTintLuminosityOpacity), 3d) : 0d;
+        set => SetSettings(nameof(CustomTintLuminosityOpacity), value);
+    }
+
+    public static bool AcrylicAvailability =>
+        new Windows.UI.ViewManagement.UISettings().AdvancedEffectsEnabled &&
+        Windows.UI.Composition.CompositionCapabilities.GetForCurrentView().AreEffectsFast();
 }

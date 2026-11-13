@@ -52,6 +52,7 @@
             Padding="0"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
+            AutomationProperties.Name="查看图片版权信息"
             Background="#99000000"
             Click="OnCopyrightClick"
             CornerRadius="14"

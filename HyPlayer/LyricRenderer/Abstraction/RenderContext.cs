@@ -38,7 +38,29 @@ public class RenderContext
     /// <summary>
     ///     播放时间 单位毫秒
     /// </summary>
-    public long CurrentLyricTime { get; set; }
+    public long CurrentLyricTime
+    {
+        get => _currentLyricTime;
+        set
+        {
+            _currentLyricTime = value;
+            _lyricTimeFraction = 0;
+        }
+    }
+
+    public double PreciseLyricTime
+    {
+        get => _currentLyricTime + _lyricTimeFraction;
+        set
+        {
+            var whole = System.Math.Floor(value);
+            _currentLyricTime = (long)whole;
+            _lyricTimeFraction = value - whole;
+        }
+    }
+
+    private long _currentLyricTime;
+    private double _lyricTimeFraction;
 
     /// <summary>
     ///     渲染时间刻 单位微秒
@@ -70,6 +92,8 @@ public class RenderContext
     ///     上一关键帧的偏移快照
     /// </summary>
     public List<LineRenderOffset> SnapshotRenderOffsets { get; } = new();
+
+    internal double SnapshotLyricTime { get; set; }
 
     /// <summary>
     ///     歌词滚动的缓动计算器
@@ -156,4 +180,10 @@ public class RenderContext
     ///     DPI
     /// </summary>
     public float Dpi { get; set; } = 96f;
+
+    internal bool PerLineMotion { get; set; }
+
+    internal float PreviewFocus { get; set; }
+
+    internal int BlurCacheBudget { get; set; }
 }

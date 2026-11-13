@@ -18,6 +18,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <TextBlock
+            x:Name="TitleText"
             Grid.Row="0"
             Margin="0,-5,0,20"
             CharacterSpacing="90"
@@ -61,13 +62,9 @@
                     <hycontrol:ContainerItemsView
                         x:Name="SearchResultContainer"
                         Margin="0,30,0,0"
-                        Container="{x:Bind CurrentResultContainer, Mode=OneWay}" />
-                    <TextBlock
-                        x:Name="TBNoRes"
-                        Margin="0,100,0,0"
-                        HorizontalAlignment="Center"
-                        FontSize=" 18"
-                        Text="没有搜索到相关内容" />
+                        Container="{x:Bind CurrentResultContainer, Mode=OneWay}"
+                        EmptyText="没有搜索到相关内容"
+                        LoadingText="正在搜索…" />
                 </Grid>
             </Grid>
         </NavigationView>

@@ -5,6 +5,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:animations="using:CommunityToolkit.WinUI.Animations"
+    xmlns:behaviors="using:HyPlayer.UI.Behaviors"
     xmlns:home="using:HyPlayer.Features.Home"
     xmlns:communityBehaviors="using:CommunityToolkit.WinUI.Behaviors"
     xmlns:controls="using:HyPlayer.UI.Controls"
@@ -23,6 +24,7 @@
                 x:Name="Card"
                 Width="256"
                 Height="128"
+                AutomationProperties.Name="{x:Bind Name}"
                 Margin="2,10"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -106,6 +108,8 @@
                 x:Name="Card"
                 Width="256"
                 Height="128"
+                AutomationProperties.AccessibilityView="Raw"
+                AutomationProperties.Name="{x:Bind Name}"
                 Margin="2,10"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -189,6 +193,7 @@
                 Height="352"
                 Margin="2,10"
                 HorizontalAlignment="Center"
+                AutomationProperties.Name="{x:Bind AccessibleName}"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
@@ -293,6 +298,7 @@
                                     Width="125"
                                     Height="60"
                                     Padding="16"
+                                    AutomationProperties.Name="心动模式"
                                     Command="{x:Bind ViewModel.HeartBeatModeClickedCommand, Mode=OneWay}"
                                     CornerRadius="6">
                                     <StackPanel Orientation="Horizontal" Spacing="12">
@@ -307,7 +313,8 @@
                                     Width="125"
                                     Height="60"
                                     Padding="16"
-                                    Command="{x:Bind ViewModel.LikedClickedCommand, Mode=OneWay}"
+                                    AutomationProperties.Name="每日推荐"
+                                    Command="{x:Bind ViewModel.DailyRecommendClickedCommand, Mode=OneWay}"
                                     CornerRadius="6">
                                     <StackPanel Orientation="Horizontal" Spacing="12">
                                         <FontIcon FontSize="22" Glyph="&#xE163;" />
@@ -321,6 +328,7 @@
                                     Width="125"
                                     Height="60"
                                     Padding="16"
+                                    AutomationProperties.Name="私人电台"
                                     Command="{x:Bind ViewModel.PersonalFmClickedCommand, Mode=OneWay}"
                                     CornerRadius="6">
                                     <StackPanel Orientation="Horizontal" Spacing="12">
@@ -366,6 +374,9 @@
                                     </StackPanel>
                                     <ListView
                                         Grid.Row="1"
+                                        IsItemClickEnabled="True"
+                                        ItemClick="CardList_ItemClick"
+                                        behaviors:HorizontalWheelScroll.IsAnimated="True"
                                         ItemTemplate="{StaticResource ToplistCardTemplate}"
                                         ItemsSource="{x:Bind ViewModel.OfficialPlaylists, Mode=OneWay}"
                                         ScrollViewer.HorizontalScrollBarVisibility="Visible"
@@ -376,6 +387,10 @@
                                             </ItemsPanelTemplate>
                                         </ListView.ItemsPanel>
                                     </ListView>
+                                    <controls:LoadStateView
+                                        Grid.Row="1"
+                                        MinHeight="148"
+                                        State="{x:Bind ViewModel.OfficialLoad}" />
                                 </Grid>
                                 <Grid Grid.Row="1" Margin="8,16">
                                     <Grid.RowDefinitions>
@@ -394,6 +409,9 @@
                                     </StackPanel>
                                     <ListView
                                         Grid.Row="1"
+                                        IsItemClickEnabled="True"
+                                        ItemClick="CardList_ItemClick"
+                                        behaviors:HorizontalWheelScroll.IsAnimated="True"
                                         ItemTemplate="{StaticResource ToplistCardTemplate}"
                                         ItemsSource="{x:Bind ViewModel.RecommendedPlaylist, Mode=OneWay}"
                                         ScrollViewer.HorizontalScrollBarVisibility="Visible"
@@ -404,6 +422,10 @@
                                             </ItemsPanelTemplate>
                                         </ListView.ItemsPanel>
                                     </ListView>
+                                    <controls:LoadStateView
+                                        Grid.Row="1"
+                                        MinHeight="148"
+                                        State="{x:Bind ViewModel.RecommendedPlaylistLoad}" />
                                 </Grid>
                             </Grid>
 
@@ -433,10 +455,12 @@
                                         VerticalAlignment="Center"
                                         HorizontalContentAlignment="Center"
                                         VerticalContentAlignment="Center"
+                                        AutomationProperties.Name="全部播放"
                                         Command="{x:Bind ViewModel.PlayAllRecommendedSongsClickedCommand}"
                                         CommandParameter="{x:Bind ViewModel.RecommendedSongItems}"
                                         CornerRadius="14"
-                                        Style="{ThemeResource AccentButtonStyle}">
+                                        Style="{ThemeResource AccentButtonStyle}"
+                                        ToolTipService.ToolTip="播放全部推荐单曲">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <FontIcon
                                                 FontFamily="Segoe Fluent Icons"
@@ -465,6 +489,11 @@
                                         SelectedPageIndex="{x:Bind RecommendedSongsFlipView.SelectedIndex, Mode=OneWay}" />
 
                                 </StackPanel>
+                                <controls:LoadStateView
+                                    Grid.Row="1"
+                                    Height="380"
+                                    VerticalAlignment="Top"
+                                    State="{x:Bind ViewModel.RecommendedSongsLoad}" />
                             </Grid>
                         </Grid>
                         <Grid Grid.Row="2" Margin="8,16">
@@ -484,6 +513,9 @@
                             </StackPanel>
                             <ListView
                                 Grid.Row="1"
+                                IsItemClickEnabled="True"
+                                ItemClick="CardList_ItemClick"
+                                behaviors:HorizontalWheelScroll.IsAnimated="True"
                                 ItemTemplate="{StaticResource ToplistCardTemplate}"
                                 ItemsSource="{x:Bind ViewModel.ToplistPlaylist, Mode=OneWay}"
                                 ScrollViewer.HorizontalScrollBarVisibility="Visible"
@@ -494,6 +526,10 @@
                                     </ItemsPanelTemplate>
                                 </ListView.ItemsPanel>
                             </ListView>
+                            <controls:LoadStateView
+                                Grid.Row="1"
+                                MinHeight="148"
+                                State="{x:Bind ViewModel.ToplistLoad}" />
                         </Grid>
                     </Grid>
                 </Grid>

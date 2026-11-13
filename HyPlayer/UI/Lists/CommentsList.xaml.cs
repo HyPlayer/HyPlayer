@@ -1,5 +1,6 @@
 using System;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Automation;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
@@ -32,6 +33,16 @@ public sealed partial class CommentsList : UserControl
 
     public ScrollViewer CommentPresentScrollViewer =>
         (VisualTreeHelper.GetChild(CommentsContainer, 0)?.As<Border>()).Child?.As<ScrollViewer>();
+
+    private void CommentsContainer_ContainerContentChanging(
+        ListViewBase sender,
+        ContainerContentChangingEventArgs args)
+    {
+        if (args.InRecycleQueue)
+            return;
+
+        AutomationProperties.SetName(args.ItemContainer, CommentAccessibleName.Format(args.Item as CommentBase));
+    }
 
     private async void IncrementalLoadSentinel_EffectiveViewportChanged(
         FrameworkElement sender,

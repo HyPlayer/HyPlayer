@@ -12,6 +12,7 @@ using Windows.System.Profile;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Automation;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
@@ -22,7 +23,9 @@ using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Application.Diagnostics;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
+using HyPlayer.Application.Sharing;
 using HyPlayer.Domain.Comments;
+using HyPlayer.Domain.Navigation;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Account.Services;
 using HyPlayer.Features.Album;
@@ -34,12 +37,14 @@ using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Services;
 using ObservableCollections;
 using HyPlayer.Features.User;
+using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Runtime.Background;
 using HyPlayer.Platform.Storage;
 using HyPlayer.PlayCore.Abstraction;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Shell.Input;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.Shell.Playback;
 using HyPlayer.UI.Dialogs;
@@ -74,6 +79,7 @@ public sealed partial class PlayBar
     private readonly PlaybackStateService _state = Ioc.Default.GetRequiredService<PlaybackStateService>();
     private readonly IAuthService _auth = Ioc.Default.GetRequiredService<IAuthService>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
+    private readonly ShareRequestState _shareRequestState = Ioc.Default.GetRequiredService<ShareRequestState>();
     private readonly IHistoryService _history = Ioc.Default.GetRequiredService<IHistoryService>();
     private readonly IPlaybackMemoryService _playbackMemory = Ioc.Default.GetRequiredService<IPlaybackMemoryService>();
 
@@ -86,17 +92,27 @@ public sealed partial class PlayBar
     private readonly IPlaybackSurfaceCoordinator _surfaceCoordinator =
         Ioc.Default.GetRequiredService<IPlaybackSurfaceCoordinator>();
 
+    private const double AdvancedOperationsMinWindowWidth = 1000;
+    private const double ListenTogetherButtonMinWindowWidth = 1000;
+    private const double CompactWindowWidth = 860;
+    private readonly WideLayout _wideLayout;
+    private CompactLayout _appliedLayout = CompactLayout.Wide;
     private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private readonly IAppLifecycleStateService _lifecycle = Ioc.Default.GetRequiredService<IAppLifecycleStateService>();
+    private readonly IKeyboardShortcutService _keyboardShortcuts =
+        Ioc.Default.GetRequiredService<IKeyboardShortcutService>();
     private WeakEventListener<PlayBar, object?, EventArgs>? _enteredForegroundListener;
     private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _stateChangedListener;
     private WeakEventListener<PlayBar, object?, PropertyChangedEventArgs>? _surfaceStoreChangedListener;
+    private WeakEventListener<PlayBar, object?, PlaybackSurfaceCommandRequestedEventArgs>? _surfaceCommandListener;
     private WeakEventListener<PlayBar, object?, SongLikeStatusChangedEventArgs>? _songLikeStatusChangedListener;
     private WeakEventListener<PlayBar, object?, EventArgs>? _loginCompletedListener;
+    private WeakEventListener<PlayBar, object?, EventArgs>? _muteChangedListener;
     private DataTransferManager? _dataTransferManager;
 
     private SolidColorBrush _backgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding;
+    private bool _playBarStyleApplied;
     private TimeSpan _startingTimeSpan = TimeSpan.Zero;
     public HyPlayer.Domain.Settings.UISettings UISettings { get; } =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
@@ -116,6 +132,91 @@ DoubleAnimation verticalAnimation;
     {
         PlayItems = ViewModel.PlaylistItems.ToNotifyCollectionChanged();
         InitializeComponent();
+        _wideLayout = CaptureWideLayout();
+        SizeChanged += (_, _) =>
+        {
+            ApplyResponsiveControls();
+            UpdateAdvancedOperationsVisibility();
+            UpdateProgressClearance();
+        };
+        SongInfoTag.SizeChanged += (_, _) => UpdateProgressClearance();
+        SongInfoText.SizeChanged += (_, _) => UpdateProgressClearance();
+        PlayProgress.SizeChanged += (_, _) => UpdateProgressClearance();
+    }
+
+    private void UpdateProgressClearance()
+    {
+        if (!IsLoaded || PlayProgress.ActualWidth <= 0) return;
+        try
+        {
+            var clearance = 0d;
+            if (SongInfoTag.ActualWidth > 0 && SongInfoTag.Visibility == Visibility.Visible &&
+                GridSongInfo.Visibility == Visibility.Visible &&
+                GridSongInfoContainer.Visibility == Visibility.Visible)
+            {
+                var tag = SongInfoTag.TransformToVisual(this)
+                    .TransformBounds(new Windows.Foundation.Rect(0, 0, SongInfoTag.ActualWidth, SongInfoTag.ActualHeight));
+                var progress = PlayProgress.TransformToVisual(this)
+                    .TransformBounds(new Windows.Foundation.Rect(0, 0, PlayProgress.ActualWidth, PlayProgress.ActualHeight));
+                var overlapsVertically = tag.Bottom > progress.Top && tag.Top < progress.Bottom;
+                clearance = overlapsVertically ? Math.Max(0, tag.Right + 14 - progress.Left) : 0;
+            }
+
+            if (Math.Abs(PlayProgress.Padding.Left - clearance) > 0.5)
+                PlayProgress.Padding = new Thickness(clearance, 0, 0, 0);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Play bar progress clearance failed: {ex.Message}");
+        }
+    }
+
+    private WideLayout CaptureWideLayout()
+    {
+        return new WideLayout(MainControlGrid.Margin, Grid.GetColumn(MainControlGrid), Grid.GetColumnSpan(MainControlGrid),
+            MainBtnsGrid.Margin, PlayProgress.Margin);
+    }
+
+    private void ApplyResponsiveControls()
+    {
+        var width = Window.Current?.Bounds.Width ?? ActualWidth;
+        BtnListenTogether.Visibility = width < ListenTogetherButtonMinWindowWidth ? Visibility.Collapsed : Visibility.Visible;
+        Btns.Columns = BtnListenTogether.Visibility == Visibility.Visible ? 4 : 3;
+        var layout = width >= CompactWindowWidth
+            ? CompactLayout.Wide
+            : _surfaceStore.IsExpanded ? CompactLayout.Expanded : CompactLayout.Docked;
+        if (layout == _appliedLayout) return;
+        _appliedLayout = layout;
+        var extras = layout == CompactLayout.Wide ? Visibility.Visible : Visibility.Collapsed;
+        Btns.Visibility = extras;
+        BtnMore.Visibility = extras;
+        BtnPlayRollType.Visibility = extras;
+        if (layout == CompactLayout.Wide)
+        {
+            Grid.SetColumn(MainControlGrid, _wideLayout.MainColumn);
+            Grid.SetColumnSpan(MainControlGrid, _wideLayout.MainColumnSpan);
+            MainControlGrid.Margin = _wideLayout.MainMargin;
+            MainBtnsGrid.Margin = _wideLayout.ButtonsMargin;
+            PlayProgress.Margin = _wideLayout.ProgressMargin;
+        }
+        else
+        {
+            var expanded = layout == CompactLayout.Expanded;
+            Grid.SetColumn(MainControlGrid, expanded ? 0 : 1);
+            Grid.SetColumnSpan(MainControlGrid, expanded ? 4 : 3);
+            MainControlGrid.Margin = new Thickness(0);
+            MainBtnsGrid.Margin = new Thickness(0, 5, 0, 0);
+            PlayProgress.Margin = new Thickness(16, -5, 16, 0);
+        }
+
+        UpdateProgressClearance();
+    }
+
+    private void UpdateAdvancedOperationsVisibility()
+    {
+        var show = _surfaceStore.PlayBarProjection.ShowAdvancedOperations &&
+                   Window.Current?.Bounds.Width >= AdvancedOperationsMinWindowWidth;
+        GridSongAdvancedOperation.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void PlayBar_ActualThemeChanged(FrameworkElement sender, object args)
@@ -135,7 +236,129 @@ DoubleAnimation verticalAnimation;
             case nameof(PlaybackStateService.CoverStream):
                 RefreshPlayBarCover(_state.NowPlayingProviderItem);
                 break;
+            case nameof(PlaybackStateService.Volume):
+                RunOnUIThread(SyncVolumeSlider);
+                break;
+            case nameof(PlaybackStateService.IsTransitioning):
+                RunOnUIThread(RefreshTransitionEffect);
+                break;
+            case nameof(PlaybackStateService.IsPlaying):
+                RunOnUIThread(RefreshBackgroundBreath);
+                break;
+            case nameof(PlaybackStateService.IsInFm):
+            case nameof(PlaybackStateService.ActiveStrategyId):
+                RunOnUIThread(() =>
+                {
+                    ViewModel.SyncFromState();
+                    RefreshPlayModeDisplay();
+                });
+                break;
         }
+    }
+
+    private Brush? GetBarBackground(bool acrylic)
+    {
+        return acrylic
+            ? Windows.UI.Xaml.Application.Current.Resources["SystemControlAcrylicWindowBrush"]?.As<Brush>()
+            : null;
+    }
+
+    private void RefreshBackgroundBreath()
+    {
+        if (_state.IsPlaying && UISettings.PlaybarBackgroundBreath)
+            PlayBarBackgroundAni.Begin();
+        else
+            PlayBarBackgroundAni.Stop();
+    }
+
+    private void ApplyPlayBarStyle()
+    {
+        if (_playBarStyleApplied) return;
+        _playBarStyleApplied = true;
+        if (!UISettings.PlaybarButtonsTransparent)
+        {
+            BtnPlayRollType.Background = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));
+            BtnPreviousSong.Background = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));
+            BtnPlayStateChange.Background = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));
+            BtnNextSong.Background = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));
+            BtnLike.Background = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));
+        }
+
+        if (UISettings.PlayButtonAccentColor)
+        {
+            BtnPlayStateChange.Background = Resources["SolidPlayButtonColor"]?.As<Brush>();
+            PlayStateIcon.Foreground = Resources["SolidPlayButtonIconColor"]?.As<Brush>();
+        }
+        else
+        {
+            PlayBarBackgroundAni.Children.RemoveAt(2);
+        }
+
+        if (!UISettings.PlaybarBackgroundElay) return;
+        PointerEntered += (_, _) =>
+        {
+            if (_surfaceStore.IsExpanded && UISettings.PlaybarBackgroundElay)
+                GridThis.Background = _backgroundElayBrush;
+        };
+        PointerExited += (_, _) => { GridThis.Background = new SolidColorBrush(Colors.Transparent); };
+    }
+
+    private void OnSurfaceCommandRequested(PlaybackSurfaceCommandRequestedEventArgs args)
+    {
+        switch (args.Command)
+        {
+            case PlaybackSurfaceCommand.TogglePlayback:
+                BtnPlayStateChange_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.MovePrevious:
+                BtnPreviousSong_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.MoveNext:
+                BtnNextSong_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.ChangePlayMode:
+                BtnPlayRollType_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.ToggleLike:
+                BtnLike_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.ShowQueue:
+                if (args.Anchor is FrameworkElement anchor)
+                {
+                    ButtonPlayList.Flyout?.ShowAt(anchor);
+                    ButtonPlayList_OnClick(this, null);
+                }
+
+                break;
+            case PlaybackSurfaceCommand.OpenDesktopLyrics:
+                ToggleButton_Click(this, null);
+                break;
+            case PlaybackSurfaceCommand.AddToSongList:
+                Btn_Sub_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.Download:
+                Btn_Down_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.OpenComments:
+                Btn_Comment_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.Share:
+                Btn_Share_OnClick(this, null);
+                break;
+            case PlaybackSurfaceCommand.OpenListenTogether:
+                BtnListenTogether_Click(this, null);
+                break;
+        }
+    }
+
+    private HyPlayer.UI.Controls.Primitives.PlayBarTransitionEffect _transitionEffect;
+
+    private void RefreshTransitionEffect()
+    {
+        if (!IsLoaded) return;
+        _transitionEffect ??= new HyPlayer.UI.Controls.Primitives.PlayBarTransitionEffect(
+            SliderProgress, SongInfoTag, TbSongTag, TbTransitionTag, TransitionTagGlowHost);
+        _transitionEffect.SetActive(_state.IsTransitioning);
     }
 
     private void OnSurfaceStorePropertyChanged(PlaybackSurfaceStore store, string? propertyName)
@@ -147,9 +370,15 @@ DoubleAnimation verticalAnimation;
                 break;
             case nameof(PlaybackSurfaceStore.Theme):
                 if (store.IsExpanded)
+                {
                     ApplyPlaybackTheme(store.Theme);
+                    if (UISettings.PlaybarBackgroundElay) SetPlayBarIdleBackground(store.Theme.IdleBrush);
+                }
                 else
+                {
                     ApplyCompactPlaybackTheme();
+                }
+
                 break;
         }
     }
@@ -176,8 +405,13 @@ DoubleAnimation verticalAnimation;
             ButtonExpand.Visibility = projection.ShowExpandButton ? Visibility.Visible : Visibility.Collapsed;
             ButtonCollapse.Visibility = projection.ShowCollapseButton ? Visibility.Visible : Visibility.Collapsed;
             GridSongInfo.Visibility = projection.ShowSongInfo ? Visibility.Visible : Visibility.Collapsed;
-            GridSongAdvancedOperation.Visibility =
-                projection.ShowAdvancedOperations ? Visibility.Visible : Visibility.Collapsed;
+            ApplyResponsiveControls();
+            UpdateAdvancedOperationsVisibility();
+            UpdateProgressClearance();
+            if (isExpanded)
+                PlayBarBackgroundFadeOut.Begin();
+            else
+                PlayBarBackgroundFadeIn.Begin();
 
             if (!isExpanded)
                 ApplyCompactPlaybackTheme();
@@ -272,7 +506,7 @@ DoubleAnimation verticalAnimation;
             SliderProgress.Minimum = 0;
             // Maximum/value/current time are provided by PlayBarViewModel x:Bind.
         });
-        var songId = providerItem.ActualId;
+        var songId = NeteaseTrack.IdOf(providerItem);
         var isLiked = !string.IsNullOrEmpty(songId) && _auth.LikedSongs.Contains(songId);
         if (snapshot?.IsLocal != true)
         {
@@ -289,7 +523,10 @@ DoubleAnimation verticalAnimation;
                     : "\uE006";
             });
             if (!string.IsNullOrEmpty(songId))
+            {
                 _history.AddNCSongHistory(songId);
+                _taskRunner.Forget(_history.RememberSongAsync(songId, providerItem), "remember played song");
+            }
         }
 
         /*
@@ -311,7 +548,12 @@ DoubleAnimation verticalAnimation;
 
     private void RefreshPlayModeDisplay()
     {
-        if (_state.IsInFm)
+        var inFm = _state.IsInFm;
+        var previousText = inFm ? "退出私人 FM" : "上一首";
+        AutomationProperties.SetName(BtnPreviousSong, previousText);
+        ToolTipService.SetToolTip(BtnPreviousSong, previousText);
+        AutomationProperties.SetName(BtnPlayRollType, inFm ? "我不喜欢" : "播放顺序");
+        if (inFm)
         {
             IconPrevious.Glyph = "\uE7E8";
             IconPlayType.Glyph = "\uE107";
@@ -359,6 +601,18 @@ DoubleAnimation verticalAnimation;
     private void BtnMute_OnCllick(object sender, RoutedEventArgs e)
     {
         _player.IsMuted = !_player.IsMuted;
+        RefreshMuteGlyphs();
+    }
+
+    private void SyncVolumeSlider()
+    {
+        var value = Math.Round(_state.Volume * 100);
+        if (Math.Abs(SliderAudioRate.Value - value) >= 1)
+            SliderAudioRate.Value = value;
+    }
+
+    private void RefreshMuteGlyphs()
+    {
         BtnMuteIcon.Glyph = _player.IsMuted ? "\uE198" : "\uE15D";
         FlyoutBtnMuteIcon.Glyph = _player.IsMuted ? "\uE198" : "\uE15D";
         BtnVolIcon.Glyph = _player.IsMuted ? "\uE198" : "\uE15D";
@@ -414,6 +668,13 @@ DoubleAnimation verticalAnimation;
         RequestCompactPlayer();
     }
 
+    private void BtnListenTogether_Click(object sender, RoutedEventArgs e)
+    {
+        if (_surfaceStore.IsExpanded) RequestCompactPlayer();
+        _taskRunner.Forget(Ioc.Default.GetRequiredService<IAppNavigator>().NavigateAsync(new AppRoute.ListenTogether()),
+            "open listen together page");
+    }
+
     private void RequestCompactPlayer()
     {
         // Delegate frame-level operations (animation, visibility, navigation, background, border) to coordinator;
@@ -433,6 +694,7 @@ DoubleAnimation verticalAnimation;
 
     private async Task PickAndAppendLocalFilesAsync()
     {
+        if (!Ioc.Default.GetRequiredService<PlaybackRestriction>().Allows(PlaybackRequest.PlayLocal)) return;
         var items = await _localFileImport.PickLocalFilesAsync();
         if (items.Count == 0)
             return;
@@ -523,7 +785,7 @@ DoubleAnimation verticalAnimation;
 
     private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
     {
-        var songId = ViewModel.NowPlayingProviderItem?.ActualId;
+        var songId = NeteaseTrack.IdOf(ViewModel.NowPlayingProviderItem);
         if (!string.IsNullOrEmpty(songId))
             await new SongListSelect(songId).ShowAsync();
     }
@@ -551,12 +813,20 @@ DoubleAnimation verticalAnimation;
             return;
         }
 
+        _shareRequestState.Request(ShareRequestKind.Song);
         //展示系统的共享ui
         DataTransferManager.ShowShareUI();
     }
 
     private async void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
+        var toastLyrics = Ioc.Default.GetRequiredService<ToastLyricService>();
+        if (toastLyrics.IsEnabled || _lyricSettings.UseToastLyrics)
+        {
+            toastLyrics.Toggle();
+            return;
+        }
+
         // 当前未打开歌词
         var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
         if (await Launcher.QueryUriSupportAsync(uri, LaunchQuerySupportType.Uri,
@@ -566,7 +836,8 @@ DoubleAnimation verticalAnimation;
             {
                 Title = "关于桌面歌词",
                 Content =
-                    "目前 HyPlayer 已经适配「热词」，我们推荐使用「热词」来获得真正的桌面歌词体验，可以前往 Microsoft 商店安装 「热词」",
+                    "可以安装「热词」获得桌面歌词，也可以使用 Windows 通知显示歌词。",
+                SecondaryButtonText = "使用通知歌词",
                 CloseButtonText = "否",
                 PrimaryButtonText = "安装 「热词」"
             };
@@ -574,6 +845,11 @@ DoubleAnimation verticalAnimation;
             var res = await dlg.ShowAsync(ContentDialogPlacement.Popup);
             if (res == ContentDialogResult.Primary)
                 await Launcher.LaunchUriAsync(new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9"));
+            else if (res == ContentDialogResult.Secondary)
+            {
+                _lyricSettings.UseToastLyrics = true;
+                toastLyrics.Toggle();
+            }
 
             return;
         }
@@ -640,6 +916,9 @@ DoubleAnimation verticalAnimation;
         ActualThemeChanged -= PlayBar_ActualThemeChanged;
         ActualThemeChanged += PlayBar_ActualThemeChanged;
         InitializedAni.Begin();
+        PlayBarBackgroundFadeIn.Begin();
+        ApplyPlayBarStyle();
+        RefreshBackgroundBreath();
         if (!_surfaceStore.IsExpanded)
             ApplyCompactPlaybackTheme();
 
@@ -647,9 +926,11 @@ DoubleAnimation verticalAnimation;
         SliderAudioRate.Value = _playbackSettings.Volume;
         ViewModel.SyncFromState();
         RefreshPlayModeDisplay();
+        RefreshTransitionEffect();
         _enteredForegroundListener?.Detach();
         _stateChangedListener?.Detach();
         _surfaceStoreChangedListener?.Detach();
+        _surfaceCommandListener?.Detach();
         _songLikeStatusChangedListener?.Detach();
         _loginCompletedListener?.Detach();
         _enteredForegroundListener = new WeakEventListener<PlayBar, object?, EventArgs>(this)
@@ -671,6 +952,13 @@ DoubleAnimation verticalAnimation;
             OnDetachAction = weakEventListener => { _surfaceStore.PropertyChanged -= weakEventListener.OnEvent; }
         };
         _surfaceStore.PropertyChanged += _surfaceStoreChangedListener.OnEvent;
+        _surfaceCommandListener =
+            new WeakEventListener<PlayBar, object?, PlaybackSurfaceCommandRequestedEventArgs>(this)
+            {
+                OnEventAction = static (instance, _, args) => instance.OnSurfaceCommandRequested(args),
+                OnDetachAction = weakEventListener => { _surfaceStore.CommandRequested -= weakEventListener.OnEvent; }
+            };
+        _surfaceStore.CommandRequested += _surfaceCommandListener.OnEvent;
         _songLikeStatusChangedListener = new WeakEventListener<PlayBar, object?, SongLikeStatusChangedEventArgs>(this)
         {
             OnEventAction = static (instance, _, args) => instance.HyPlayList_OnSongLikeStatusChange(args.IsLiked),
@@ -683,6 +971,13 @@ DoubleAnimation verticalAnimation;
             OnDetachAction = weakEventListener => { _auth.LoginCompleted -= weakEventListener.OnEvent; }
         };
         _auth.LoginCompleted += _loginCompletedListener.OnEvent;
+        _muteChangedListener?.Detach();
+        _muteChangedListener = new WeakEventListener<PlayBar, object?, EventArgs>(this)
+        {
+            OnEventAction = static (instance, _, _) => instance.RunOnUIThread(instance.RefreshMuteGlyphs),
+            OnDetachAction = weakEventListener => { _keyboardShortcuts.MuteChanged -= weakEventListener.OnEvent; }
+        };
+        _keyboardShortcuts.MuteChanged += _muteChangedListener.OnEvent;
         if (_surfaceStore.HasPendingExpandedIntent)
             TryExpandPendingSurface();
         else if (_surfaceCoordinator.IsExpanded)
@@ -721,9 +1016,11 @@ DoubleAnimation verticalAnimation;
 
     private void DataTransferManager_DataRequested(DataTransferManager sender, DataRequestedEventArgs args)
     {
+        if (_shareRequestState.RequestedKind != ShareRequestKind.Song) return;
+
         var dataPackage = new DataPackage();
         var providerItem = ViewModel.NowPlayingProviderItem;
-        var songId = providerItem?.ActualId;
+        var songId = NeteaseTrack.IdOf(providerItem);
         if (string.IsNullOrEmpty(songId)) return;
         dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" + songId));
         dataPackage.Properties.Title = providerItem?.Name ?? string.Empty;
@@ -735,7 +1032,7 @@ DoubleAnimation verticalAnimation;
         request.Data = dataPackage;
     }
 
-    public async void RefreshPlayBarCover(SingleSongBase? providerItem)
+    public void RefreshPlayBarCover(SingleSongBase? providerItem)
     {
         if (ViewModel.CoverStream == null) return;
         _taskRunner.Forget(this.RunOnUIThreadAsync(async () =>
@@ -837,8 +1134,10 @@ DoubleAnimation verticalAnimation;
         _enteredForegroundListener?.Detach();
         _stateChangedListener?.Detach();
         _surfaceStoreChangedListener?.Detach();
+        _surfaceCommandListener?.Detach();
         _songLikeStatusChangedListener?.Detach();
         _loginCompletedListener?.Detach();
+        _muteChangedListener?.Detach();
         if (_dataTransferManager is not null)
             _dataTransferManager.DataRequested -= DataTransferManager_DataRequested;
     }
@@ -846,5 +1145,19 @@ DoubleAnimation verticalAnimation;
     private void RunOnUIThread(Action action)
     {
         _taskRunner.Forget(this.RunOnUIThreadAsync(action), "PlayBar UI update");
+    }
+
+    private readonly record struct WideLayout(
+        Thickness MainMargin,
+        int MainColumn,
+        int MainColumnSpan,
+        Thickness ButtonsMargin,
+        Thickness ProgressMargin);
+
+    private enum CompactLayout
+    {
+        Wide,
+        Docked,
+        Expanded
     }
 }

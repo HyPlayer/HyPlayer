@@ -6,6 +6,7 @@
     xmlns:frieren="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:downloads="using:HyPlayer.Features.Downloads.Services"
+    xmlns:hycontrols="using:HyPlayer.UI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     NavigationCacheMode="Disabled"
@@ -129,6 +130,7 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+        <hycontrols:LoadStateView x:Name="EmptyState" Grid.Row="1" />
     </Grid>
 
 

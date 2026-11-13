@@ -129,6 +129,7 @@ public sealed class LocalFileImportService : ILocalFileImportService
             CreatorList = artists.Select(t => t.Name ?? string.Empty).ToList(),
             Artists = artists,
             Name = mi.MusicName,
+            NeteaseId = mi.MusicId > 0 ? mi.MusicId.ToString() : null,
             StorageFile = sf,
             TrackNumber = (int)tagFile.Tag.Track,
             CdName = "01",
@@ -162,6 +163,7 @@ public sealed class LocalFileImportService : ILocalFileImportService
             CreatorList = artists.Select(t => t.Name ?? string.Empty).ToList(),
             Artists = artists,
             Name = info.MusicName,
+            NeteaseId = info.MusicId > 0 ? info.MusicId.ToString() : null,
             InfoTag = file.Provider.DisplayName + " NCM",
             Available = true
         };

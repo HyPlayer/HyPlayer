@@ -30,6 +30,8 @@ public sealed class ChopinAudioService :
     private readonly PlaybackSettings _setting;
     private readonly List<ChopinAudioTicket> _tickets = [];
     private readonly object _ticketSyncRoot = new();
+    private ChopinAudioTicket? _lastPreparedTicket;
+    private long _pendingFadeInTicks;
 
     public ChopinAudioService(IPlayer player, PlaybackSettings setting)
     {
@@ -38,6 +40,8 @@ public sealed class ChopinAudioService :
     }
 
     public override string Id => "hyplayer.chopin";
+
+    public double PlaybackSpeed { get; set; } = 1d;
 
     public override string Name => "HyPlayer Chopin AudioService";
 
@@ -122,7 +126,7 @@ public sealed class ChopinAudioService :
         if (ticket is ChopinAudioTicket chopinTicket)
         {
             _player.PlayPlaybackSource(chopinTicket.PlaybackSource);
-            _player.PlayAll();
+            _player.PlayAll(TimeSpan.FromTicks(Interlocked.Exchange(ref _pendingFadeInTicks, 0)));
             chopinTicket.Status = AudioTicketStatus.Playing;
         }
 
@@ -133,19 +137,108 @@ public sealed class ChopinAudioService :
     {
         ctk.ThrowIfCancellationRequested();
         if (ticket is ChopinAudioTicket chopinTicket)
-            _player.SetPlaybackSourceSpeed(playbackSpeed, chopinTicket.PlaybackSource);
+            ApplyPlaybackSpeed(chopinTicket.PlaybackSource, playbackSpeed);
 
         return Task.CompletedTask;
+    }
+
+    public void ApplyPlaybackSpeed(IPlaybackSource source, double playbackSpeed)
+    {
+        if (_player is AudioGraphPlayer graphPlayer)
+            graphPlayer.SetUserPlaybackSpeed(playbackSpeed, source, !_setting.SpeedChangesPitch);
+        else
+            _player.SetPlaybackSourceSpeed(playbackSpeed, source);
+    }
+
+    public void ApplyPlaybackSpeedToAll(double playbackSpeed)
+    {
+        List<IPlaybackSource> sources;
+        lock (_ticketSyncRoot)
+        {
+            sources = new List<IPlaybackSource>(_tickets.Count + 1);
+            foreach (var ticket in _tickets)
+                sources.Add(ticket.PlaybackSource);
+        }
+
+        if (_player.PrimaryPlaybackSource is { } primary && !sources.Contains(primary))
+            sources.Add(primary);
+
+        foreach (var source in sources)
+        {
+            try
+            {
+                ApplyPlaybackSpeed(source, playbackSpeed);
+            }
+            catch (ArgumentException)
+            {
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+        }
     }
 
     public async Task<AudioTicketBase> GetPreparedAudioTicketAsync(
         MusicResourceBase musicResource,
         CancellationToken ctk = default)
     {
-        return await CreateAudioTicketAsync(
+        var ticket = await CreateAudioTicketAsync(
             musicResource,
             false,
             ctk: ctk).ConfigureAwait(false);
+        if (!ctk.IsCancellationRequested)
+            Volatile.Write(ref _lastPreparedTicket, ticket);
+        return ticket;
+    }
+
+    public IPlaybackSource? TakeLastPreparedSource()
+    {
+        return Interlocked.Exchange(ref _lastPreparedTicket, null)?.PlaybackSource;
+    }
+
+    public void FadeInNextPlay(TimeSpan duration)
+    {
+        Interlocked.Exchange(ref _pendingFadeInTicks, Math.Max(0, duration.Ticks));
+    }
+
+    public Task<bool> RampVolumeAsync(IPlaybackSource source, double volume, TimeSpan duration)
+    {
+        try
+        {
+            var ramp = _player.RampPlaybackSourceVolumeAsync(source, volume, duration);
+            lock (_ticketSyncRoot)
+            {
+                foreach (var ticket in _tickets)
+                    if (ReferenceEquals(ticket.PlaybackSource, source))
+                        ticket.Volume = volume;
+            }
+
+            return ramp;
+        }
+        catch (ArgumentException)
+        {
+            return Task.FromResult(false);
+        }
+        catch (ObjectDisposedException)
+        {
+            return Task.FromResult(false);
+        }
+    }
+
+    public double GetVolume(IPlaybackSource source)
+    {
+        try
+        {
+            return _player.GetPlaybackSourceOutputVolume(source);
+        }
+        catch (ArgumentException)
+        {
+            return 1d;
+        }
+        catch (ObjectDisposedException)
+        {
+            return 1d;
+        }
     }
 
     public Task SetPrimaryAudioTicketAsync(AudioTicketBase ticket, CancellationToken ctk = default)
@@ -210,14 +303,15 @@ public sealed class ChopinAudioService :
             }
 
             ctk.ThrowIfCancellationRequested();
-
             await _player.ConnectPlaybackSourceAsync(source, new PlaybackOptions
             {
                 AutoPlay = false,
                 SetAsPrimarySource = setAsPrimarySource,
                 Volume = targetVolume,
-                AudioGain = audioGain
-            });
+                AudioGain = audioGain,
+                Speed = PlaybackSpeed,
+                PreservePitch = !_setting.SpeedChangesPitch
+            }, ctk);
 
             var ticket = new ChopinAudioTicket
             {
@@ -238,7 +332,19 @@ public sealed class ChopinAudioService :
         }
         catch
         {
-            source?.Dispose();
+            if (source is not null)
+            {
+                try
+                {
+                    _player.DisconnectPlaybackSource(source);
+                }
+                catch
+                {
+                }
+
+                source.Dispose();
+            }
+
             throw;
         }
     }

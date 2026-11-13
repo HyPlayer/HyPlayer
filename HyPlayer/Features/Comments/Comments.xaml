@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hycontrols="using:HyPlayer.UI.Lists"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:uiControls="using:HyPlayer.UI.Controls"
     NavigationCacheMode="Disabled"
     Unloaded="Page_Unloaded"
     mc:Ignorable="d">
@@ -57,6 +58,10 @@
                     <TranslateTransform x:Name="HotCommentsAnimateTranslateTransform" />
                 </hycontrols:CommentsList.RenderTransform>
             </hycontrols:CommentsList>
+            <uiControls:LoadStateView
+                x:Name="HotLoadView"
+                Margin="0,80,0,0"
+                VerticalAlignment="Top" />
         </Grid>
         <Grid
             x:Name="AllCommentsContainer"
@@ -91,6 +96,10 @@
                     <TranslateTransform x:Name="MainCommentsAnimateTranslateTransform" />
                 </hycontrols:CommentsList.RenderTransform>
             </hycontrols:CommentsList>
+            <uiControls:LoadStateView
+                x:Name="NormalLoadView"
+                Margin="0,80,0,0"
+                VerticalAlignment="Top" />
 
             <StackPanel
                 Margin="135"

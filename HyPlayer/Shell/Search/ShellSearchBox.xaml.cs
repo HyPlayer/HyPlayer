@@ -17,6 +17,11 @@ public sealed partial class ShellSearchBox : UserControl
         InitializeComponent();
     }
 
+    internal bool FocusSearch()
+    {
+        return SearchAutoSuggestBox.Focus(FocusState.Programmatic);
+    }
+
     private async void SearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
         if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;

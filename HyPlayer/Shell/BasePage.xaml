@@ -8,10 +8,26 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:pages="using:HyPlayer.Shell.Search"
     xmlns:shellAccount="using:HyPlayer.Shell.Account"
-    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="{x:Bind _setting.AcrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource ReversedBooleanConverter}}"
+    Background="{x:Bind GetWindowBackground(_setting.AcrylicBackgroundStatus), Mode=OneWay}"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Grid>
+        <Image
+            x:Name="CustomBackgroundImage"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsHitTestVisible="False"
+            Visibility="Collapsed" />
+        <Rectangle
+            x:Name="CustomBackgroundBlur"
+            xmlns:media="using:CommunityToolkit.WinUI.Media"
+            IsHitTestVisible="False"
+            Visibility="Collapsed">
+            <Rectangle.Fill>
+                <media:BackdropBlurBrush x:Name="CustomBackgroundBlurBrush" Amount="0" />
+            </Rectangle.Fill>
+        </Rectangle>
         <Grid x:Name="MainGrid">
             <Grid.RowDefinitions>
                 <RowDefinition Height="48" />
@@ -20,6 +36,7 @@
             <muxc:TeachingTip
                 x:Name="TheTeachingTip"
                 Title="一个弹窗, 两个弹窗, 三个弹窗, 四个弹窗...zzzzzz"
+                ActionButtonClick="TheTeachingTip_OnActionButtonClick"
                 CloseButtonClick="TheTeachingTip_OnCloseButtonClick"
                 IsLightDismissEnabled="False"
                 PreferredPlacement="TopRight" />
@@ -61,7 +78,7 @@
                 PaneDisplayMode="Auto"
                 Style="{StaticResource LeftNavViewDefaultStyle}">
                 <muxc:NavigationView.PaneFooter>
-                    <Grid Height="120" />
+                    <Grid Height="120" Visibility="{x:Bind _surfaceStore.IsPlayBarSpaceReserved, Mode=OneWay}" />
                 </muxc:NavigationView.PaneFooter>
                 <Grid>
                     <Frame

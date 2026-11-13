@@ -14,7 +14,7 @@
             Margin="24,24,24,0"
             FontSize="40"
             FontWeight="Bold"
-            Text="收藏歌曲" />
+            Text="我的收藏" />
         <Grid Margin="5,64,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -39,7 +39,10 @@
                 x:Name="ItemContainer"
                 Grid.Row="1"
                 Margin="-15,0,0,0"
-                Container="{x:Bind ViewModel.ContentContainer, Mode=OneWay}" />
+                Container="{x:Bind ViewModel.ContentContainer, Mode=OneWay}"
+                ContainerLoad="{x:Bind ViewModel.Load}"
+                EmptyText="这里还没有收藏"
+                LoadingText="正在加载收藏…" />
         </Grid>
     </Grid>
 
