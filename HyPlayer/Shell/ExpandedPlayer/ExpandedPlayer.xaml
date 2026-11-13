@@ -381,6 +381,7 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <controls1:AutoScrollView
+                        x:Name="SongTitleScrollView"
                         Grid.Row="0"
                         HorizontalAlignment="Center"
                         IsPlaying="True">

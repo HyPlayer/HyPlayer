@@ -1179,7 +1179,7 @@ public sealed partial class ExpandedPlayer : Page
         try
         {
             //anim3?.TryStart(TextBlockSinger);
-            anim1?.TryStart(TextBlockSongTitle);
+            anim1?.TryStart(SongTitleScrollView);
             anim2?.TryStart(ImageAlbum);
         }
         catch (Exception ex)
@@ -1191,7 +1191,7 @@ public sealed partial class ExpandedPlayer : Page
     internal ConnectedAnimationBatch PrepareCollapseAnimations(PlayBar destination)
     {
         var batch = new ConnectedAnimationBatch();
-        batch.Prepare("SongTitle", TextBlockSongTitle, destination.GetCollapseAnimationTarget("SongTitle"));
+        batch.Prepare("SongTitle", SongTitleScrollView, destination.GetCollapseAnimationTarget("SongTitle"));
         batch.Prepare("SongImg", ImageAlbum, destination.GetCollapseAnimationTarget("SongImg"));
         batch.Prepare("SongArtist", SingerHyperlinkBtn, destination.GetCollapseAnimationTarget("SongArtist"));
         batch.Prepare("SongAlbum", AlbumHyperlinkBtn, destination.GetCollapseAnimationTarget("SongAlbum"));
