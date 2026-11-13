@@ -194,8 +194,8 @@ namespace HyPlayer.LyricRenderer
             float sublineTransliterationSize = 0)
         {
             if (sublineLyricSize <= 0) sublineLyricSize = lyricSize / 2;
-            if (sublineTranslationSize <= 0) sublineTranslationSize = lyricSize / 2;
-            if (sublineTransliterationSize <= 0) sublineTransliterationSize = lyricSize / 2;
+            if (sublineTranslationSize <= 0) sublineTranslationSize = translationSize / 2;
+            if (sublineTransliterationSize <= 0) sublineTransliterationSize = transliterationSize / 2;
             var sizes = new LyricFontSizes(lyricSize, translationSize, transliterationSize, sublineLyricSize,
                 sublineTranslationSize, sublineTransliterationSize);
             if (sizes == (_requestedFontSizes ?? AppliedFontSizes())) return;

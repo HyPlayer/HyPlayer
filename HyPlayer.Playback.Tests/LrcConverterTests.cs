@@ -142,7 +142,7 @@ public sealed class LrcConverterTests
     }
 
     [Test]
-    public void ZeroSublineSizes_ShouldUseHalfOfMainLyricSize()
+    public void ZeroSublineSizes_ShouldUseHalfOfMatchingMainFontSize()
     {
         var renderer = new LyricRenderView();
 
@@ -150,10 +150,10 @@ public sealed class LrcConverterTests
 
         Ensure(renderer.Context.SublineTypography.LyricFontSize == 20,
             "A zero subline lyric size must use half of the main lyric size.");
-        Ensure(renderer.Context.SublineTypography.TranslationFontSize == 20,
-            "A zero subline translation size must use half of the main lyric size.");
-        Ensure(renderer.Context.SublineTypography.TransliterationFontSize == 20,
-            "A zero subline transliteration size must use half of the main lyric size.");
+        Ensure(renderer.Context.SublineTypography.TranslationFontSize == 8,
+            "A zero subline translation size must use half of the main translation size.");
+        Ensure(renderer.Context.SublineTypography.TransliterationFontSize == 7,
+            "A zero subline transliteration size must use half of the main transliteration size.");
     }
 
     private static ALRCFile File(params ALRCLine[] lines) => new()

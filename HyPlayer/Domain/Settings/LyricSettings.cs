@@ -169,7 +169,7 @@ public partial class LyricSettings : SettingsBase
     }
 
     /// <summary>
-    ///     Font size of translations on sublines. Zero uses half of the main lyric font size.
+    ///     Font size of translations on sublines. Zero uses half of the main translation font size.
     /// </summary>
     public int SublineTranslationSize
     {
@@ -178,7 +178,7 @@ public partial class LyricSettings : SettingsBase
     }
 
     /// <summary>
-    ///     Font size of transliterations on sublines. Zero uses half of the main lyric font size.
+    ///     Font size of transliterations on sublines. Zero uses half of the main transliteration font size.
     /// </summary>
     public int SublineRomajiSize
     {

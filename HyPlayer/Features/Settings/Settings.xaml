@@ -157,7 +157,7 @@
                                                 SpinButtonPlacementMode="Compact"
                                                 Value="{x:Bind Lyric.SublineLyricSize, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="0为主歌词大小的一半" Header="附属行翻译大小">
+                                        <controls3:SettingsCard Description="0为主翻译大小的一半" Header="附属行翻译大小">
                                             <controls:NumberBox
                                                 MinWidth="100"
                                                 HorizontalAlignment="Right"
@@ -167,7 +167,7 @@
                                                 SpinButtonPlacementMode="Compact"
                                                 Value="{x:Bind Lyric.SublineTranslationSize, Mode=TwoWay}" />
                                         </controls3:SettingsCard>
-                                        <controls3:SettingsCard Description="0为主歌词大小的一半" Header="附属行音译大小">
+                                        <controls3:SettingsCard Description="0为主音译大小的一半" Header="附属行音译大小">
                                             <controls:NumberBox
                                                 MinWidth="100"
                                                 HorizontalAlignment="Right"
