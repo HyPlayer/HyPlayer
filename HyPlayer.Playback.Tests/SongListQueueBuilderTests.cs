@@ -34,7 +34,14 @@ public sealed class SongListQueueBuilderTests
         var control = new FakePlaybackControl(playCore, state);
         var notification = new FakeNotificationService();
         var runner = new FakeBackgroundTaskRunner();
-        var builder = new SongListQueueBuilder(playCore, loader, control, state, notification, runner);
+        var builder = new SongListQueueBuilder(
+            playCore,
+            loader,
+            control,
+            state,
+            notification,
+            runner,
+            new PlaybackRestriction(notification));
 
         await builder.BuildAndPlayAsync(
             albumCurrent,
@@ -68,13 +75,15 @@ public sealed class SongListQueueBuilderTests
         };
         var control = new FakePlaybackControl(playCore, state);
         var runner = new FakeBackgroundTaskRunner();
+        var notification = new FakeNotificationService();
         var builder = new SongListQueueBuilder(
             playCore,
             loader,
             control,
             state,
-            new FakeNotificationService(),
-            runner);
+            notification,
+            runner,
+            new PlaybackRestriction(notification));
         var scope = SongListQueueScope.Playlist("playlist");
 
         await builder.BuildAndPlayAsync(current, scope, new SingleSongBase[] { current });
@@ -108,7 +117,8 @@ public sealed class SongListQueueBuilderTests
             control,
             state,
             notification,
-            new FakeBackgroundTaskRunner());
+            new FakeBackgroundTaskRunner(),
+            new PlaybackRestriction(notification));
 
         await builder.BuildAndPlayAsync(
             current,
@@ -136,13 +146,15 @@ public sealed class SongListQueueBuilderTests
             new SingleSongBase[] { first, second }));
         var control = new FakePlaybackControl(playCore, state) { MirrorPlayingOnLoad = false };
         var runner = new FakeBackgroundTaskRunner();
+        var notification = new FakeNotificationService();
         var builder = new SongListQueueBuilder(
             playCore,
             loader,
             control,
             state,
-            new FakeNotificationService(),
-            runner);
+            notification,
+            runner,
+            new PlaybackRestriction(notification));
 
         await builder.BuildAndPlayAsync(
             first,

@@ -96,7 +96,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     private long _lastScrobbledGeneration = -1;
     private OwnedCancellation? _deviceRefreshCts;
     private CancellationTokenSource? _lyricCts;
-    private CancellationTokenSource? _playbackCts;
+    private OwnedCancellation? _playbackCts;
     private OwnedCancellation? _prefetchCts;
     private long _playbackGeneration;
     private const long PrepareRetryDelayMilliseconds = 8000;
@@ -187,39 +187,68 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     public async Task MoveNextAndPlayAsync(bool userInitiated)
     {
         if (userInitiated && !_restriction.Allows(PlaybackRequest.SkipTrack)) return;
-        await MoveNextAndPlayAsync(userInitiated, true).ConfigureAwait(false);
+        var operation = BeginPlaybackOperation();
+        try
+        {
+            await MoveNextAndPlayAsync(
+                    userInitiated,
+                    true,
+                    operation.Token)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (operation.Token.IsCancellationRequested)
+        {
+        }
+        finally
+        {
+            CompletePlaybackOperation(operation);
+        }
     }
 
     public async Task MovePreviousAndPlayAsync()
     {
         if (!_restriction.Allows(PlaybackRequest.SkipTrack)) return;
-        await _transitionGate.WaitAsync().ConfigureAwait(false);
+        var operation = BeginPlaybackOperation();
         try
         {
-            await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
-            if ((await _playCore.GetPlaylistAsync().ConfigureAwait(false)).Count == 0)
-                return;
+            await _transitionGate.WaitAsync(operation.Token).ConfigureAwait(false);
+            try
+            {
+                await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+                if ((await _playCore.GetPlaylistAsync(operation.Token).ConfigureAwait(false)).Count == 0)
+                    return;
 
-            await _playCore.MovePreviousAsync().ConfigureAwait(false);
-            if (_playCore.CurrentSong is { } song)
-                await LoadAndPlayCoreAsync(song, true, false, CancellationToken.None, true).ConfigureAwait(false);
+                await _playCore.MovePreviousAsync(operation.Token).ConfigureAwait(false);
+                if (_playCore.CurrentSong is { } song)
+                    await LoadAndPlayCoreAsync(song, true, false, operation.Token, true).ConfigureAwait(false);
+            }
+            finally
+            {
+                _transitionGate.Release();
+            }
+        }
+        catch (OperationCanceledException) when (operation.Token.IsCancellationRequested)
+        {
         }
         finally
         {
-            _transitionGate.Release();
+            CompletePlaybackOperation(operation);
         }
     }
 
-    private async Task MoveNextAndPlayAsync(bool userInitiated, bool repeatSingleOnAutoAdvance)
+    private async Task MoveNextAndPlayAsync(
+        bool userInitiated,
+        bool repeatSingleOnAutoAdvance,
+        CancellationToken ct)
     {
-        await _transitionGate.WaitAsync().ConfigureAwait(false);
+        await _transitionGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
             await MoveNextAndPlayCoreAsync(
                     userInitiated,
                     repeatSingleOnAutoAdvance,
-                    CancellationToken.None)
+                    ct)
                 .ConfigureAwait(false);
         }
         finally
@@ -233,7 +262,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         bool repeatSingleOnAutoAdvance,
         CancellationToken ct)
     {
-        var queue = await _playCore.GetPlaylistAsync().ConfigureAwait(false);
+        var queue = await _playCore.GetPlaylistAsync(ct).ConfigureAwait(false);
         if (queue.Count == 0)
             return;
 
@@ -241,9 +270,13 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         {
             var currentIndex = _state.NowPlayingIndex >= 0
                 ? _state.NowPlayingIndex
-                : await _playCore.GetCurrentIndexAsync().ConfigureAwait(false);
+                : await _playCore.GetCurrentIndexAsync(ct).ConfigureAwait(false);
             if (currentIndex + 1 >= queue.Count)
+            {
+                ct.ThrowIfCancellationRequested();
                 await PersonalFM.AppendMoreTracksAsync().ConfigureAwait(false);
+                ct.ThrowIfCancellationRequested();
+            }
         }
 
         if (repeatSingleOnAutoAdvance
@@ -257,7 +290,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         else
         {
             var previous = _playCore.CurrentSong;
-            await _playCore.MoveNextAsync().ConfigureAwait(false);
+            await _playCore.MoveNextAsync(ct).ConfigureAwait(false);
             if (queue.Count == 1
                 && _state.NowPlayingProviderItem is not null
                 && _playCore.CurrentPlayingTicket is not null
@@ -978,6 +1011,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     /// <inheritdoc />
     public async Task StopAsync(CancellationToken ct = default)
     {
+        CancelPlaybackOperation();
         await _transitionGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
@@ -1057,10 +1091,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     public async Task LoadAndPlayAsync(SingleSongBase song, bool autoPlay = true, bool removeCurrentSongs = true)
     {
         if (!_restriction.Allows(PlaybackRequest.PlayItems, song)) return;
-        _playbackCts?.Cancel();
-        _playbackCts?.Dispose();
-        _playbackCts = new CancellationTokenSource();
-        var ct = _playbackCts.Token;
+        var operation = BeginPlaybackOperation();
+        var ct = operation.Token;
 
         try
         {
@@ -1079,6 +1111,46 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         catch (OperationCanceledException)
         {
         }
+        finally
+        {
+            CompletePlaybackOperation(operation);
+        }
+    }
+
+    private OwnedCancellation BeginPlaybackOperation()
+    {
+        OwnedCancellation? previous;
+        OwnedCancellation current;
+        lock (_disposeGate)
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(PlaybackControlService));
+
+            previous = _playbackCts;
+            current = new OwnedCancellation();
+            _playbackCts = current;
+        }
+
+        CancelPrevious(previous);
+        return current;
+    }
+
+    private void CompletePlaybackOperation(OwnedCancellation operation)
+    {
+        lock (_disposeGate)
+        {
+            if (ReferenceEquals(_playbackCts, operation))
+                _playbackCts = null;
+        }
+
+        operation.Complete();
+    }
+
+    private void CancelPlaybackOperation()
+    {
+        OwnedCancellation? current;
+        lock (_disposeGate) current = _playbackCts;
+        CancelPrevious(current);
     }
 
     private async Task SetCurrentSongAsync(SingleSongBase song, CancellationToken ct)
@@ -1382,7 +1454,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
     {
         fade = fade && _playbackSettings.PlaybackFade;
         if (fade)
-            await FadeOutCurrentAsync().ConfigureAwait(false);
+            await FadeOutCurrentAsync(ct).ConfigureAwait(false);
 
         if (removeCurrentSongs)
             await StopCoreAsync(ct).ConfigureAwait(false);
@@ -1406,7 +1478,8 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            await PublishOpenFailureAsync(song, ex).ConfigureAwait(false);
+            if (!ct.IsCancellationRequested)
+                await PublishOpenFailureAsync(song, ex, ct).ConfigureAwait(false);
             return;
         }
         finally
@@ -1416,9 +1489,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
 
         if (!loaded)
         {
-            await HandleLoadTimeoutAsync(song, timeout).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
+            await HandleLoadTimeoutAsync(song, timeout, ct).ConfigureAwait(false);
             return;
         }
+
+        ct.ThrowIfCancellationRequested();
 
         if (song.ProviderId != LocalPlaybackProvider.ProviderIdValue)
             ResourceSaver.ReportLoad(Stopwatch.GetElapsedTime(loadStarted));
@@ -1427,8 +1503,12 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         CaptureCurrentPlaybackIdentity();
     }
 
-    private async Task PublishOpenFailureAsync(SingleSongBase song, Exception ex)
+    private async Task PublishOpenFailureAsync(
+        SingleSongBase song,
+        Exception ex,
+        CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         _currentSource = null;
         _playbackGeneration++;
         _state.IsPlaying = false;
@@ -1439,7 +1519,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
                 Reason = ex.Message,
                 Exception = ex
             },
-            CancellationToken.None).ConfigureAwait(false);
+            ct).ConfigureAwait(false);
     }
 
     private void BeginTrackLoading()
@@ -1519,10 +1599,15 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         }
     }
 
-    private async Task HandleLoadTimeoutAsync(SingleSongBase song, TimeSpan timeout)
+    private async Task HandleLoadTimeoutAsync(
+        SingleSongBase song,
+        TimeSpan timeout,
+        CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         _loadTimedOut = true;
         await StopCoreAsync(CancellationToken.None).ConfigureAwait(false);
+        ct.ThrowIfCancellationRequested();
         ResourceSaver.ReportLoad(timeout);
         _notification.ShowMessage(
             "加载超时",
@@ -1618,14 +1703,16 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         await _activeTransition.CancelAsync(CancellationToken.None).ConfigureAwait(false);
     }
 
-    private async Task FadeOutCurrentAsync()
+    private async Task FadeOutCurrentAsync(CancellationToken ct = default)
     {
         if (_player.PrimaryPlaybackSource is not { } current
             || _player.GlobalPlaybackStatus != PlaybackStatus.Playing)
             return;
 
         var fadeOut = _audioService.RampVolumeAsync(current, 0, _switchFadeOut);
-        await Task.WhenAny(fadeOut, Task.Delay(_switchFadeOutLimit)).ConfigureAwait(false);
+        var timeout = Task.Delay(_switchFadeOutLimit, ct);
+        await Task.WhenAny(fadeOut, timeout).ConfigureAwait(false);
+        ct.ThrowIfCancellationRequested();
     }
 
     private bool IsCurrentGeneration(IPlaybackSource source, long generation)
@@ -1715,7 +1802,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
             var skipLimit = new PlaybackFailureSkipLimit(queue.Count);
             while (skipLimit.CanSkip(queue.Count))
             {
-                await MoveNextAndPlayAsync(false, false).ConfigureAwait(false);
+                await MoveNextAndPlayAsync(false, false, CancellationToken.None).ConfigureAwait(false);
 
                 if (_playCore.CurrentPlayingTicket is not null || _loadTimedOut)
                     return;
@@ -1884,7 +1971,7 @@ public sealed partial class PlaybackControlService : IPlaybackControlService,
         catch (Exception ex) { failure = ex; }
         finally
         {
-            _playbackCts?.Dispose();
+            _playbackCts?.Complete();
             _lyricCts?.Dispose();
             // Managed gates stay valid for canceled callers unwinding their finally blocks.
         }
