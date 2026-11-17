@@ -110,8 +110,15 @@ public sealed partial class SingleComment : UserControl
 
     private void FloorComments_LoadingStarted()
     {
+        LoadMore.Visibility = Visibility.Collapsed;
         if (_floorComments.Count == 0 && _floorLoad is { } load)
-            _floorAttempt = load.Begin(ResetAndLoadFloorCommentsAsync, out _);
+            _floorAttempt = load.Begin(RetryFloorCommentsAsync, out _);
+    }
+
+    private async Task RetryFloorCommentsAsync()
+    {
+        if (!_isLoaded || _floorComments.IsLoading) return;
+        await _floorComments.RetryAsync();
     }
 
     private void FloorComments_LoadCompleted()
@@ -203,7 +210,7 @@ public sealed partial class SingleComment : UserControl
 
     private void LoadMore_Click(object sender, RoutedEventArgs e)
     {
-        _ = ResetAndLoadFloorCommentsAsync();
+        _ = RetryFloorCommentsAsync();
     }
 
 
@@ -351,7 +358,7 @@ public sealed partial class SingleComment : UserControl
                 return [];
 
             var count = Math.Clamp(pageSize, 1, 20);
-            var result = await SimpleCacher.GetOrCreateCacheAsync(
+            var result = await SimpleCacher.GetOrCreateCacheOrThrowAsync(
                 CacheType.Comments,
                 $"{mainComment.ProvidableItemId}_{mainComment.ActualId}_{_offset}_{_pageToken}_{count}",
                 () => _pageToken is not null && commentProvider is IProvidableItemCommentPageTokenProvidable tokenProvider
@@ -373,6 +380,8 @@ public sealed partial class SingleComment : UserControl
 
             cancellationToken.ThrowIfCancellationRequested();
             var items = result?.Items ?? [];
+            if (items.Count == 0)
+                LoadRequestProbe.Current?.ThrowIfFailed();
             foreach (var comment in items)
             {
                 comment.ProvidableItemId = mainComment.ProvidableItemId;

@@ -18,6 +18,22 @@ namespace HyPlayer.Playback.Tests;
 public sealed class SongListQueueBuilderTests
 {
     [Test]
+    public async Task Queue_read_failure_is_not_reported_as_a_successful_empty_snapshot()
+    {
+        var playCore = new FakePlayCore([], -1)
+        {
+            QueueReader = () => throw new InvalidOperationException("Queue read failed.")
+        };
+        var failed = false;
+        try { await PlayCoreQueueSnapshot.GetPlaylistAsync(playCore); }
+        catch (InvalidOperationException) { failed = true; }
+        if (!failed) throw new InvalidOperationException("A failed read must preserve the displayed queue, not supply an empty snapshot.");
+        playCore.QueueReader = null;
+        if ((await PlayCoreQueueSnapshot.GetPlaylistAsync(playCore)).Count != 0)
+            throw new InvalidOperationException("A successfully read empty queue must still be represented as empty.");
+    }
+
+    [Test]
     public async Task Seamless_source_change_replaces_queue_and_keeps_current_song()
     {
         var first = new FakeSong("first");
@@ -384,6 +400,7 @@ public sealed class SongListQueueBuilderTests
 
         public List<SingleSongBase> Queue { get; private set; }
         public int CurrentIndex { get; private set; }
+        public Func<Task<List<SingleSongBase>>>? QueueReader { get; set; }
 
         public void ClearQueue()
         {
@@ -445,7 +462,7 @@ public sealed class SongListQueueBuilderTests
         public override Task SetRandomAsync(bool isRandom, CancellationToken ctk = default) => Task.CompletedTask;
         public override Task ReRandomAsync(CancellationToken ctk = default) => Task.CompletedTask;
         public override Task SetPlayModeAsync(string playModeId, CancellationToken ctk = default) => Task.CompletedTask;
-        public override Task<List<SingleSongBase>> GetPlaylistAsync(CancellationToken ctk = default) => Task.FromResult(Queue.ToList());
+        public override Task<List<SingleSongBase>> GetPlaylistAsync(CancellationToken ctk = default) => QueueReader?.Invoke() ?? Task.FromResult(Queue.ToList());
         public override Task<List<SingleSongBase>> GetOrderedPlaylistAsync(CancellationToken ctk = default) => Task.FromResult(Queue.ToList());
         public override Task<int> GetCurrentIndexAsync(CancellationToken ctk = default) => Task.FromResult(CurrentIndex);
         public override Task<SingleSongBase?> GetSongAtAsync(int index, CancellationToken ctk = default) =>

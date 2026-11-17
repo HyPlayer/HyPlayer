@@ -42,8 +42,10 @@ public static class ContainerIncrementalPageSource
                 return [];
 
             var requestedCount = Math.Clamp(container.MaxProgressiveCount, 1, maximumPageSize);
-            var (hasMore, items) = await container.GetProgressiveItemsListAsync(
-                _offset, requestedCount, cancellationToken);
+            var (hasMore, items) = await LoadRequestProbe.GuardAsync(
+                () => container.GetProgressiveItemsListAsync(_offset, requestedCount, cancellationToken),
+                static result => result.Item2 is not { Count: > 0 });
+            cancellationToken.ThrowIfCancellationRequested();
             items ??= [];
             _offset += items.Count;
             _hasMore = hasMore && items.Count > 0;
@@ -64,7 +66,10 @@ public static class ContainerIncrementalPageSource
             if (!_hasMore)
                 return [];
 
-            var items = await container.GetNextItemsRangeAsync(cancellationToken) ?? [];
+            var items = await LoadRequestProbe.GuardAsync(
+                () => container.GetNextItemsRangeAsync(cancellationToken),
+                static result => result is not { Count: > 0 }) ?? [];
+            cancellationToken.ThrowIfCancellationRequested();
             _hasMore = items.Count > 0;
             return items;
         }
@@ -89,20 +94,29 @@ public sealed class MappingIncrementalSource<TSource, TTarget>(
     Func<TSource, int, CancellationToken, Task<TTarget>> mapAsync) : IIncrementalSource<TTarget>
 {
     private int _mappedCount;
+    private TSource[]? _pendingPage;
+    private int _pendingPageIndex;
 
     public async Task<IEnumerable<TTarget>> GetPagedItemsAsync(
         int pageIndex,
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var page = await source.GetPagedItemsAsync(pageIndex, pageSize, cancellationToken);
+        if (_pendingPage is null || _pendingPageIndex != pageIndex)
+        {
+            _pendingPage = (await source.GetPagedItemsAsync(pageIndex, pageSize, cancellationToken)).ToArray();
+            _pendingPageIndex = pageIndex;
+        }
         var mapped = new List<TTarget>();
-        foreach (var item in page)
+        foreach (var item in _pendingPage)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            mapped.Add(await mapAsync(item, _mappedCount++, cancellationToken));
+            mapped.Add(await mapAsync(item, _mappedCount + mapped.Count, cancellationToken));
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+        _mappedCount += mapped.Count;
+        _pendingPage = null;
         return mapped;
     }
 }
@@ -152,18 +166,22 @@ public sealed partial class SwitchingIncrementalSource<T> : IIncrementalSource<T
             cancellationToken,
             sourceCancellation);
         var probe = LoadRequestProbe.Begin();
-        IEnumerable<T> items;
+        T[] items;
         try
         {
-            items = await source.GetPagedItemsAsync(pageIndex, pageSize, linkedCancellation.Token);
+            items = (await source.GetPagedItemsAsync(pageIndex, pageSize, linkedCancellation.Token)).ToArray();
         }
         catch (OperationCanceledException exception) when (!linkedCancellation.IsCancellationRequested)
         {
             throw new TimeoutException(exception.Message, exception);
         }
+        catch (Exception) when (linkedCancellation.IsCancellationRequested)
+        {
+            throw new OperationCanceledException(linkedCancellation.Token);
+        }
 
         linkedCancellation.Token.ThrowIfCancellationRequested();
-        if (!items.Any())
+        if (items.Length == 0)
             probe.ThrowIfFailed();
 
         lock (_gate)

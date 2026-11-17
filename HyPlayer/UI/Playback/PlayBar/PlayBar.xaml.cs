@@ -383,16 +383,6 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    private void OnPlaylistChanged()
-    {
-        RunOnUIThread(() =>
-        {
-            if (ViewModel.QueueCount == 0)
-                HyPlayListOnOnSongRemoveAll();
-            PlayListTitle.Text = ViewModel.GetPlaylistTitle();
-        });
-    }
-
     private void OnPlaybackSurfaceModeChanged(PlaybackSurfaceMode mode)
     {
         // Projection from the centralized PlaybackSurfaceStore provides derived visibility booleans.
@@ -458,15 +448,6 @@ DoubleAnimation verticalAnimation;
         "SongAlbum" => TbAlbumName,
         _ => throw new ArgumentOutOfRangeException(nameof(key))
     };
-
-    private void HyPlayListOnOnSongRemoveAll()
-    {
-        RunOnUIThread(() =>
-        {
-            ViewModel.PlaylistItems.Clear();
-            PlayListTitle.Text = "播放列表";
-        });
-    }
 
     public void SetPlayBarIdleBackground(SolidColorBrush colorBrush)
     {

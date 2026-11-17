@@ -15,6 +15,8 @@ namespace HyPlayer.UI.Lists;
 public sealed partial class ContainerItemsViewState : ObservableObject, IDisposable
 {
     private bool _isDisposed;
+    private string _filterText = string.Empty;
+    private readonly Dictionary<string, ProvidableItemRowGroup> _groups = new(StringComparer.Ordinal);
     private readonly ISynchronizedView<ProvidableItemRowViewModel, ProvidableItemRowViewModel> _rowsViewSource;
     private readonly ISynchronizedView<ProvidableItemRowGroup, ProvidableItemRowGroup> _groupedItemsViewSource;
 
@@ -48,6 +50,7 @@ public sealed partial class ContainerItemsViewState : ObservableObject, IDisposa
     public partial bool CanRetry { get; set; }
 
     [ObservableProperty] public partial bool MultiSelect { get; set; }
+    [ObservableProperty] public partial bool IsGrouped { get; set; }
 
     [ObservableProperty] public partial object? ActiveItemsSource { get; set; }
 
@@ -71,10 +74,57 @@ public sealed partial class ContainerItemsViewState : ObservableObject, IDisposa
 
     public void ApplyFilter(string filterText)
     {
-        if (string.IsNullOrWhiteSpace(filterText))
+        filterText = string.IsNullOrWhiteSpace(filterText) ? string.Empty : filterText;
+        if (string.Equals(_filterText, filterText, StringComparison.Ordinal))
+            return;
+
+        _filterText = filterText;
+        if (filterText.Length == 0)
             _rowsViewSource.ResetFilter();
         else
             _rowsViewSource.AttachFilter(row => row.MatchesFilter(filterText));
+    }
+
+    partial void OnIsGroupedChanged(bool value) => RebuildGroups();
+
+    private void ClearGroups()
+    {
+        foreach (var group in GroupedItems)
+            group.Dispose();
+        _groups.Clear();
+        GroupedItems.Clear();
+    }
+
+    private void RebuildGroups()
+    {
+        ClearGroups();
+        if (!IsGrouped) return;
+        foreach (var row in RowsView)
+            AddToGroup(row);
+    }
+
+    private void AddToGroup(ProvidableItemRowViewModel row)
+    {
+        var key = string.IsNullOrWhiteSpace(row.GroupKey) ? string.Empty : row.GroupKey;
+        if (_groups.TryGetValue(key, out var group))
+        {
+            group.Rows.Add(row);
+            return;
+        }
+
+        group = new ProvidableItemRowGroup(key, new[] { row });
+        _groups.Add(key, group);
+        var index = 0;
+        while (index < GroupedItems.Count && string.Compare(GroupedItems[index].Key, key, StringComparison.CurrentCulture) < 0)
+            index++;
+        GroupedItems.Insert(index, group);
+        UpdateGroupHeaders();
+    }
+
+    private void UpdateGroupHeaders()
+    {
+        foreach (var group in GroupedItems)
+            group.ShowHeader = GroupedItems.Count > 1 && group.Key.Length > 0;
     }
 
     public void Dispose()
@@ -93,6 +143,7 @@ public sealed partial class ContainerItemsViewState : ObservableObject, IDisposa
             return;
 
         RowsView.CollectionChanged -= RowsView_CollectionChanged;
+        ClearGroups();
         MoreLoad.PropertyChanged -= MoreLoad_PropertyChanged;
         Load.Cancel();
         MoreLoad.Cancel();
@@ -104,6 +155,30 @@ public sealed partial class ContainerItemsViewState : ObservableObject, IDisposa
 
     private void RowsView_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        if (IsGrouped)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                foreach (ProvidableItemRowViewModel row in e.NewItems!)
+                    AddToGroup(row);
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach (ProvidableItemRowViewModel row in e.OldItems!)
+                {
+                    var key = string.IsNullOrWhiteSpace(row.GroupKey) ? string.Empty : row.GroupKey;
+                    if (!_groups.TryGetValue(key, out var group)) continue;
+                    group.Rows.Remove(row);
+                    if (group.Rows.Count != 0) continue;
+                    _groups.Remove(key);
+                    GroupedItems.Remove(group);
+                    group.Dispose();
+                }
+                UpdateGroupHeaders();
+            }
+            else
+                RebuildGroups();
+        }
         OnPropertyChanged(nameof(IsLoadingMore));
         OnPropertyChanged(nameof(LoadingMoreText));
         OnPropertyChanged(nameof(CanLoadMore));

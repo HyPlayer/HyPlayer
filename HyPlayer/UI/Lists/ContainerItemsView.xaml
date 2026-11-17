@@ -20,6 +20,7 @@
         <CollectionViewSource
             x:Name="GroupedItemsViewSource"
             IsSourceGrouped="True"
+            ItemsPath="Items"
             Source="{x:Bind State.GroupedItemsView, Mode=OneWay}" />
     </UserControl.Resources>
     <Grid>
@@ -154,7 +155,7 @@
                 <GroupStyle>
                     <GroupStyle.HeaderTemplate>
                         <DataTemplate x:DataType="lists:ProvidableItemRowGroup">
-                            <Border AutomationProperties.Name="{x:Bind Key}">
+                            <Border AutomationProperties.Name="{x:Bind Key}" Visibility="{x:Bind ShowHeader, Mode=OneWay}">
                                 <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="{x:Bind Key}" />
                             </Border>
                         </DataTemplate>

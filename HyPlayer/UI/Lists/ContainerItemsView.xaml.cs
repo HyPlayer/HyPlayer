@@ -120,6 +120,7 @@ public sealed partial class ContainerItemsView : UserControl
     private bool _isViewLoaded;
     private int _moreAttempt;
     private int _rowsAttempt;
+    private int _rowsCountAtLoadStart;
     private LoadState? _subscribedContainerLoad;
     private ProvidableItemRowViewModel? _queuedClick;
     private CancellationTokenSource? _eagerLoadCts;
@@ -443,8 +444,8 @@ public sealed partial class ContainerItemsView : UserControl
                     _displayResolver.CreateRowAsync(item, index, cancellationToken));
         _rowsSource.Reset(mappedSource);
         _rows.Clear();
-        GroupedItems.Clear();
-        State.ActiveItemsSource = State.RowsView;
+        State.IsGrouped = ShouldGroupByDisc();
+        State.ActiveItemsSource = State.IsGrouped ? GroupedItemsViewSource.View : State.RowsView;
         QueueScope = BuildQueueScope(Container);
         LoadFirstPageAsync().SafeFireAndForget();
     }
@@ -471,21 +472,14 @@ public sealed partial class ContainerItemsView : UserControl
         if (_isReleased || _rows.IsLoading)
             return;
 
-        var source = ContainerIncrementalPageSource.Create(Container, DefaultPageSize);
-        var mappedSource = source is null
-            ? null
-            : new MappingIncrementalSource<ProvidableItemBase, ProvidableItemRowViewModel>(
-                source,
-                (item, index, cancellationToken) =>
-                    _displayResolver.CreateRowAsync(item, index, cancellationToken));
-        _rowsSource.Reset(mappedSource);
-        _rows.Clear();
-        await _rows.RefreshAsync();
+        await _rows.RetryAsync();
+        RestartEagerLoading();
     }
 
     private void RowsLoadingStarted()
     {
         State.CanRetry = false;
+        _rowsCountAtLoadStart = Rows.Count;
         _isRowsLoadSuperseded = false;
         if (Rows.Count == 0)
         {
@@ -502,12 +496,11 @@ public sealed partial class ContainerItemsView : UserControl
 
     private void RowsLoadCompleted()
     {
-        RefreshVisibleRows();
-        QueueScope = BuildQueueScope(Container);
         SyncLoadState();
         if (_isRowsLoadSuperseded)
             return;
 
+        UpdateCurrentItem(_state.NowPlayingProviderItem, _rowsCountAtLoadStart);
         State.MoreLoad.Complete(_moreAttempt, true);
         if (!State.Load.IsLoading)
             return;
@@ -534,30 +527,6 @@ public sealed partial class ContainerItemsView : UserControl
     {
         var filterText = FilterBox?.Text ?? string.Empty;
         State.ApplyFilter(filterText);
-
-        RebuildGroups();
-        UpdateCurrentItem(_state.NowPlayingProviderItem);
-    }
-
-    private void RebuildGroups()
-    {
-        GroupedItems.Clear();
-        State.ActiveItemsSource = State.RowsView;
-        if (!ShouldGroupByDisc())
-            return;
-
-        var grouped = VisibleRows
-            .Where(row => !string.IsNullOrWhiteSpace(row.GroupKey))
-            .GroupBy(row => row.GroupKey)
-            .OrderBy(group => group.Key)
-            .ToList();
-        if (grouped.Count <= 1)
-            return;
-
-        GroupedItems.AddRange(grouped.Select(group =>
-            new ProvidableItemRowGroup(group) { Key = group.Key }));
-
-        State.ActiveItemsSource = GroupedItemsViewSource.View;
     }
 
     private bool ShouldGroupByDisc()
@@ -565,13 +534,16 @@ public sealed partial class ContainerItemsView : UserControl
         return Container?.TypeId == _knownTypeIds.AlbumTypeId;
     }
 
-    private void UpdateCurrentItem(SingleSongBase? providerItem)
+    private void UpdateCurrentItem(SingleSongBase? providerItem, int startIndex = 0)
     {
-        foreach (var row in Rows)
+        for (var i = startIndex; i < Rows.Count; i++)
+        {
+            var row = Rows[i];
             row.IsCurrent = providerItem is not null
                             && row.Item.ProviderId == providerItem.ProviderId
                             && row.Item.TypeId == providerItem.TypeId
                             && row.Item.ActualId == providerItem.ActualId;
+        }
     }
 
     private void FilterBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)

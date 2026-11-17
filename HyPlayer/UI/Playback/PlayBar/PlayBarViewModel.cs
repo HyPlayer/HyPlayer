@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.WinUI.Helpers;
 using HyPlayer.Application.Notifications;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Threading;
 using HyPlayer.Domain.Lyrics;
 using HyPlayer.Domain.Settings;
@@ -29,6 +30,8 @@ namespace HyPlayer.UI.Playback.PlayBar;
 public partial class PlayBarViewModel : ObservableObject
 {
     private int _playlistRefreshVersion;
+    private readonly Lock _playlistRefreshGate = new();
+    private Task? _playlistRefreshTask;
     private int _trackLoadingVersion;
     private long _lastNotifiedSecond = -1;
     private readonly IAuthService _authService;
@@ -125,6 +128,7 @@ public partial class PlayBarViewModel : ObservableObject
     // ── Playlist service pass-through ──
 
     public int QueueCount { get; private set; }
+    public string PlaylistTitle => GetPlaylistTitle();
 
     public int NowPlayingIndex => _state.NowPlayingIndex;
     public string PlaySourceId => _playCore.PlaySourceId;
@@ -431,31 +435,65 @@ public partial class PlayBarViewModel : ObservableObject
         _taskRunner.Forget(RefreshPlaylistItemsAsync(), "refresh PlayCore queue");
     }
 
-    internal async Task RefreshPlaylistItemsAsync()
+    internal Task RefreshPlaylistItemsAsync()
     {
-        var version = Interlocked.Increment(ref _playlistRefreshVersion);
-        var revision = _state.QueueRevision;
-        var shuffled = ActiveStrategyId == "shn" && _uiSettings.DisplayShuffledList;
-        var queue = (await PlayCoreQueueSnapshot.GetPlaylistAsync(_playCore)).ToArray();
-        var ordered = shuffled
-            ? (await PlayCoreQueueSnapshot.GetOrderedPlaylistAsync(_playCore)).ToArray()
-            : null;
-        var snapshots = await Task.Run(() => PlayCoreQueueSnapshot.Build(queue, ordered));
-        await _uiThreadDispatcher.TryRunAsync(async () =>
+        lock (_playlistRefreshGate)
         {
-            if (version != Volatile.Read(ref _playlistRefreshVersion) || revision != _state.QueueRevision) return;
-            PlaylistItems.Clear();
-            CurrentPlaylistItem = null;
-            QueueCount = queue.Length;
-            OnPropertyChanged(nameof(QueueCount));
-            for (var i = 0; i < snapshots.Length; i++)
+            _playlistRefreshVersion++;
+            return _playlistRefreshTask ??= RefreshPlaylistLoopAsync();
+        }
+    }
+
+    private async Task RefreshPlaylistLoopAsync()
+    {
+        // Publish the shared task before a synchronous dispatcher can complete it.
+        await Task.Yield();
+        while (true)
+        {
+            var version = Volatile.Read(ref _playlistRefreshVersion);
+            var revision = _state.QueueRevision;
+            bool IsCurrent() => version == Volatile.Read(ref _playlistRefreshVersion) && revision == _state.QueueRevision;
+            try
             {
-                if (version != Volatile.Read(ref _playlistRefreshVersion) || revision != _state.QueueRevision) return;
-                PlaylistItems.Add(PlayBarQueueItem.FromSnapshot(snapshots[i], NowPlayingProviderItem));
-                if ((i + 1) % 32 == 0) await Task.Yield();
+                var shuffled = ActiveStrategyId == "shn" && _uiSettings.DisplayShuffledList;
+                var queue = (await PlayCoreQueueSnapshot.GetPlaylistAsync(_playCore)).ToArray();
+                var ordered = shuffled
+                    ? (await PlayCoreQueueSnapshot.GetOrderedPlaylistAsync(_playCore)).ToArray()
+                    : null;
+                var snapshots = await Task.Run(() => PlayCoreQueueSnapshot.Build(queue, ordered));
+                PlayBarQueueItem[] existing = [];
+                if (IsCurrent() && await _uiThreadDispatcher.TryRunAsync(() => existing = PlaylistItems.ToArray()))
+                {
+                    var desired = await Task.Run(() => PlayBarQueueReconciler.Match(existing, snapshots));
+                    await _uiThreadDispatcher.TryRunAsync(async () =>
+                    {
+                        if (!IsCurrent()) return;
+                        var applied = await PlayBarQueueReconciler.ApplyAsync(
+                            PlaylistItems, snapshots, desired, () => NowPlayingProviderItem, IsCurrent);
+                        if (!applied) return;
+                        if (QueueCount != queue.Length)
+                        {
+                            QueueCount = queue.Length;
+                            OnPropertyChanged(nameof(QueueCount));
+                        }
+                        OnPropertyChanged(nameof(PlaylistTitle));
+                        UpdateCurrentPlaylistItem();
+                    });
+                }
             }
-            UpdateCurrentPlaylistItem();
-        });
+            catch (Exception exception)
+            {
+                if (IsCurrent())
+                    await _uiThreadDispatcher.TryRunAsync(() => _notification.ShowFailure("加载播放队列失败", exception));
+            }
+
+            lock (_playlistRefreshGate)
+            {
+                if (version != _playlistRefreshVersion) continue;
+                _playlistRefreshTask = null;
+                return;
+            }
+        }
     }
 
     private void UpdateCurrentPlaylistItem()

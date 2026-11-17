@@ -92,10 +92,21 @@ public sealed partial class ProvidableItemRowViewModel : ObservableObject
     }
 }
 
-public sealed partial class ProvidableItemRowGroup(IEnumerable<ProvidableItemRowViewModel> items)
-    : ObservableList<ProvidableItemRowViewModel>(items)
+public sealed partial class ProvidableItemRowGroup : ObservableObject, IDisposable
 {
-    public string Key { get; set; } = string.Empty;
+    public ProvidableItemRowGroup(string key, IEnumerable<ProvidableItemRowViewModel> items)
+    {
+        Key = key;
+        Rows = new ObservableList<ProvidableItemRowViewModel>(items);
+        Items = Rows.ToNotifyCollectionChanged();
+    }
+
+    public string Key { get; }
+    public ObservableList<ProvidableItemRowViewModel> Rows { get; }
+    public NotifyCollectionChangedSynchronizedViewList<ProvidableItemRowViewModel> Items { get; }
+    [ObservableProperty] public partial bool ShowHeader { get; set; }
+
+    public void Dispose() => Items.Dispose();
 
     public override string ToString()
     {

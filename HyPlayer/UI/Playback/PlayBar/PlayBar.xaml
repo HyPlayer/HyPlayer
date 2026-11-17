@@ -1213,7 +1213,7 @@
                                         FontWeight="Bold"
                                         HorizontalTextAlignment="Center"
                                         IsDoubleTapEnabled="True"
-                                        Text="播放列表" />
+                                        Text="{x:Bind ViewModel.PlaylistTitle, Mode=OneWay}" />
                                     <Button
                                         Margin="5,-5,10,5"
                                         controls:DockPanel.Dock="Right"
@@ -1242,17 +1242,17 @@
                                                 <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
                                                     <StackPanel Width="345" Orientation="Vertical">
                                                         <StackPanel Orientation="Horizontal">
-                                                            <TextBlock FontWeight="Bold" Text="{x:Bind Name}" />
+                                                            <TextBlock FontWeight="Bold" Text="{x:Bind Name, Mode=OneWay}" />
                                                             <TextBlock Foreground="Gray"
-                                                                       Visibility="{x:Bind Translation, Converter={StaticResource EmptyStringToVisibilityConverter}}">
+                                                                       Visibility="{x:Bind Translation, Mode=OneWay, Converter={StaticResource EmptyStringToVisibilityConverter}}">
                                                                 <Run Text=" (" />
-                                                                <Run Text="{x:Bind Translation}" />
+                                                                <Run Text="{x:Bind Translation, Mode=OneWay}" />
                                                                 <Run Text=")" />
                                                             </TextBlock>
                                                         </StackPanel>
                                                         <TextBlock
                                                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                                            Text="{x:Bind ArtistText}" />
+                                                            Text="{x:Bind ArtistText, Mode=OneWay}" />
                                                     </StackPanel>
                                                     <Button
                                                         Width="24"
