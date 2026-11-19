@@ -31,6 +31,8 @@ public sealed class LocalSong : SingleSongBase, IHasTranslation
 
     public bool IsNcm { get; init; }
 
+    public string? NeteaseId { get; init; }
+
     public IReadOnlyList<PersonBase>? Artists { get; init; }
 
     public string ArtistText => CreatorList is { Count: > 0 } creators

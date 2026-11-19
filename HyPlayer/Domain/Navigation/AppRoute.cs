@@ -48,6 +48,8 @@ public abstract record AppRoute
 
     public sealed record LikedSongs : AppRoute;
 
+    public sealed record ListenTogether : AppRoute;
+
     public sealed record LocalMusic : AppRoute;
 
     public sealed record Me(string? UserId = null) : AppRoute;
@@ -57,6 +59,8 @@ public abstract record AppRoute
     public sealed record MV(string Id) : AppRoute;
 
     public sealed record Playlist(string Id) : AppRoute;
+
+    public sealed record PodcastEpisodes(string Kind) : AppRoute;
 
     public sealed record Radio(string Id) : AppRoute;
 

@@ -10,6 +10,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Features.History.Services;
 using HyPlayer.Platform.Xaml;
@@ -85,6 +86,7 @@ public sealed partial class Search : Page
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        SearchResultContainer.ReleaseResources();
         Bindings.StopTracking();
         if (_loadResultTask != null && !_loadResultTask.IsCompleted)
             try
@@ -113,7 +115,6 @@ public sealed partial class Search : Page
             return;
         }
 
-        TBNoRes.Visibility = Visibility.Collapsed;
         _history.AddSearchHistory(_searchText);
 
         CurrentResultContainer = null;
@@ -123,8 +124,7 @@ public sealed partial class Search : Page
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            _notification.ShowFailure("搜索失败", ex, _cancellationToken);
         }
     }
 
@@ -175,13 +175,7 @@ public sealed partial class Search : Page
             _searchContainers[cacheKey] = container;
         }
 
-        var result = await GetPagedItemsAsync(container, offset, count, cancellationToken);
-        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-        {
-            if (offset == 0)
-                TBNoRes.Visibility = result.Items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        });
-        return result;
+        return await GetPagedItemsAsync(container, offset, count, cancellationToken);
     }
 
     private void ResetSearchCachesIfKeywordChanged()
@@ -225,6 +219,12 @@ public sealed partial class Search : Page
     private void NavigationView_OnSelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
+        TitleText.Text = (sender.SelectedItem as NavigationViewItem)?.Content as string switch
+        {
+            null or "单曲" => "搜索歌曲",
+            "MV" => "搜索 MV",
+            var category => $"搜索{category}"
+        };
         _loadResultTask = LoadResult();
     }
 
@@ -288,7 +288,7 @@ public sealed partial class Search : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            LoadFailureNotifier.Record("搜索建议", ex, token);
         }
     }
 

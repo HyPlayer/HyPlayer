@@ -24,6 +24,12 @@ public enum ExpandedWindowMode
     LyricOnly = 2
 }
 
+public enum ExpandedControlStyle
+{
+    Apple = 0,
+    HyPlayer = 1
+}
+
 public enum UpdateSource
 {
     MicrosoftStore = 0,
@@ -47,6 +53,19 @@ public enum OccupySolution
     ReWrite = 1,
     AppendID = 2,
     UpdateInfo = 3
+}
+
+public enum PlaybackFailureAction
+{
+    SkipToNext = 0,
+    Stop = 1
+}
+
+public enum DynamicCoverSource
+{
+    Auto = 0,
+    AppleMusic = 1,
+    Netease = 2
 }
 
 public enum LyricAlignment
@@ -85,7 +104,8 @@ public enum RollingCalculator
     SinRollingCalculator = 1,
     LyricifyRollingCalculator = 2,
     SyncRollingCalculator = 3,
-    CircleEaseRollingCalculator = 4
+    CircleEaseRollingCalculator = 4,
+    PerLineSpringRollingCalculator = 5
 }
 
 public enum LyricScanStyle

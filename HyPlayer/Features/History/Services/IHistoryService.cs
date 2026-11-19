@@ -8,6 +8,7 @@ public interface IHistoryService
 {
     void InitializeHistoryTrack();
     void AddNCSongHistory(string songId);
+    Task RememberSongAsync(string songId, SingleSongBase song);
     void AddSearchHistory(string text);
     void AddSonglistHistory(string playlistId);
     Task SetCurrentPlayingListHistoryAsync(List<string> songIds, int currentIndex);

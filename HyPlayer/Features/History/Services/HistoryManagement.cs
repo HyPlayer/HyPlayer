@@ -7,6 +7,14 @@ namespace HyPlayer.Features.History.Services;
 
 public sealed record CurPlayingListHistoryState(List<string> SongIds, int CurrentIndex);
 
+public sealed record SongHistoryEntry(
+    string Id,
+    string Name,
+    List<string> Artists,
+    string? Album,
+    string? CoverUrl,
+    long Duration);
+
 public class HistoryManagement
 {
     public static void InitializeHistoryTrack()

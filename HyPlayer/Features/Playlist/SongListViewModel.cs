@@ -8,6 +8,7 @@ using Windows.UI;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Domain.Comments;
@@ -45,8 +46,10 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         INotificationService notification,
         INavigationService navigation,
         IUserLibraryStateService userLibraryState,
-        HttpClient httpClient)
+        HttpClient httpClient,
+        ILoadEnvironment loadEnvironment)
     {
+        PageLoad = new LoadState("歌单", loadEnvironment) { EmptyText = "没有找到这个歌单" };
         _itemProvider = itemProvider;
         _knownTypeIds = knownTypeIds;
         _containerItemManagement = containerItemManagement;
@@ -58,6 +61,8 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         _httpClient = httpClient;
     }
 
+    public LoadState PageLoad { get; }
+
     [ObservableProperty] public partial ContainerBase PlayList { get; set; }
 
     [ObservableProperty] public partial bool IsDailyRecommend { get; set; }
@@ -65,8 +70,6 @@ public partial class SongListViewModel : ObservableObject, IDisposable
     [ObservableProperty] public partial bool IntelligenceModeVisible { get; set; }
 
     [ObservableProperty] public partial bool IsMySongList { get; set; }
-
-    [ObservableProperty] public partial bool IsLoading { get; set; }
 
     [ObservableProperty] public partial bool GreedyLoad { get; set; }
 
@@ -93,6 +96,7 @@ public partial class SongListViewModel : ObservableObject, IDisposable
     private string _loadedPlaylistId;
 
     private ContainerBase _playlistContainer;
+    private ContainerBase _deferredContainer;
 
     public void Dispose()
     {
@@ -104,11 +108,23 @@ public partial class SongListViewModel : ObservableObject, IDisposable
     public Task LoadPageData(ContainerBase playlist)
     {
         _playlistContainer = playlist;
-        PlayList = playlist;
+        _deferredContainer = playlist;
+        if (!IsDailyRecommend)
+            PlayList = playlist;
         return LoadPageData(playlist.ActualId);
     }
 
-    public async Task LoadPageData(string playlistId, bool loadPlaylist = false)
+    public Task LoadPageData(string playlistId, bool loadPlaylist = false)
+    {
+        PageLoad.RequiresAccount = IsDailyRecommend;
+        return PageLoad.RunAsync(async cancellationToken =>
+        {
+            await LoadPageDataCore(playlistId, loadPlaylist, cancellationToken);
+            return PlayList is not null;
+        });
+    }
+
+    private async Task LoadPageDataCore(string playlistId, bool loadPlaylist, CancellationToken cancellationToken)
     {
         var playlistChanged = !string.Equals(_loadedPlaylistId, playlistId, StringComparison.Ordinal)
                               || _loadedDailyRecommend != IsDailyRecommend;
@@ -127,12 +143,9 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         if (loadPlaylist && (playlistChanged || PlayList?.ActualId != playlistId ||
                              _playlistContainer?.ActualId != playlistId))
         {
-            _playlistContainer = await LoadProviderPlaylistAsync(playlistId);
+            _playlistContainer = await LoadProviderPlaylistAsync(playlistId, cancellationToken);
             if (_playlistContainer is null)
-            {
-                _notification.ShowMessage("加载歌单出错", "未找到歌单信息");
                 return;
-            }
 
             PlayList = _playlistContainer;
             _loadedPlaylistDetail = false;
@@ -160,12 +173,9 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         if (_loadedPlaylistDetail)
             return;
 
-        _playlistContainer ??= PlayList;
+        _playlistContainer ??= PlayList ?? _deferredContainer;
         if (_playlistContainer is null)
-        {
-            _notification.ShowMessage("加载歌单出错", "未找到歌单信息");
             return;
-        }
 
         PlayList = _playlistContainer;
         if (IsLikedMusicPlaylist(_playlistContainer))
@@ -182,15 +192,23 @@ public partial class SongListViewModel : ObservableObject, IDisposable
 
     public async Task LoadAlbumImage(CancellationToken cancellationToken)
     {
-        if (CoverUri is null) return;
-        using var result = await _httpClient.GetAsync(CoverUri, cancellationToken);
-        if (result.IsSuccessStatusCode)
+        if (CoverUri is not { IsAbsoluteUri: true } coverUri ||
+            (coverUri.Scheme != Uri.UriSchemeHttp && coverUri.Scheme != Uri.UriSchemeHttps)) return;
+        try
         {
-            using var stream = await result.Content.ReadAsStreamAsync(cancellationToken);
-            using var inputStream = stream.AsRandomAccessStream();
-            var imageMainColor = await ColorHelper.ExtractThemeColorFromStream(inputStream, _uiSettings.ColorGeneratorType);
-            cancellationToken.ThrowIfCancellationRequested();
-            AlbumColor = imageMainColor;
+            using var result = await _httpClient.GetAsync(coverUri, cancellationToken);
+            if (result.IsSuccessStatusCode)
+            {
+                using var stream = await result.Content.ReadAsStreamAsync(cancellationToken);
+                using var inputStream = stream.AsRandomAccessStream();
+                var imageMainColor =
+                    await ColorHelper.ExtractThemeColorFromStream(inputStream, _uiSettings.ColorGeneratorType);
+                cancellationToken.ThrowIfCancellationRequested();
+                AlbumColor = imageMainColor;
+            }
+        }
+        catch
+        {
         }
     }
 
@@ -258,7 +276,7 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("刷新歌单失败", ex.Message);
+            _notification.ShowFailure("刷新歌单失败", ex);
         }
     }
 
@@ -285,7 +303,7 @@ public partial class SongListViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("操作失败", ex.Message);
+            _notification.ShowFailure("操作失败", ex);
         }
     }
 
@@ -296,10 +314,13 @@ public partial class SongListViewModel : ObservableObject, IDisposable
             _navigation.Navigate(typeof(Me), CreatorId);
     }
 
-    private async Task<ContainerBase?> LoadProviderPlaylistAsync(string playlistId)
+    private async Task<ContainerBase?> LoadProviderPlaylistAsync(string playlistId,
+        CancellationToken cancellationToken = default)
     {
-        return await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.PlaylistTypeId + playlistId) as
-            ContainerBase;
+        return await LoadRequestProbe.GuardAsync(
+            () => _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.PlaylistTypeId + playlistId,
+                cancellationToken),
+            static item => item is not ContainerBase) as ContainerBase;
     }
 
     private async Task LoadCreatorAsync(ContainerBase container)

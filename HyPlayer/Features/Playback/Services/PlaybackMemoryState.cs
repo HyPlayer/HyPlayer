@@ -19,4 +19,6 @@ public sealed record PlaybackMemoryState(
     int CurrentIndex,
     long PositionMilliseconds,
     string? ActiveStrategyId,
-    DateTimeOffset SavedAt);
+    DateTimeOffset SavedAt,
+    string? QualityTag = null,
+    string? QualityRequest = null);

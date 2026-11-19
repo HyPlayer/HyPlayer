@@ -19,6 +19,8 @@ internal static class XamlHelpers
     /// </summary>
     public static Setting Setting => Ioc.Default.GetRequiredService<Setting>();
 
+    public static UISettings UISettings => Ioc.Default.GetRequiredService<UISettings>();
+
     /// <summary>
     ///     LoopbackCommand内插字符串，自动补全FamilyName
     /// </summary>

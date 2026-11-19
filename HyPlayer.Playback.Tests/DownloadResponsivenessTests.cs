@@ -38,7 +38,7 @@ public sealed class DownloadResponsivenessTests
 
     private static DownloadObject CreateDownload(IUIThreadDispatcher dispatcher) =>
         new(new TestSong(), new SilentNotification(), dispatcher,
-            new DownloadSettings(), new LyricSettings(), null!, null!, [], null!,
+            new DownloadSettings(), new ApiSettings(), new LyricSettings(), null!, null!, [], null!,
             new DiagnosticsStateService());
 
     [Test]
@@ -82,6 +82,7 @@ public sealed class DownloadResponsivenessTests
     private sealed class SilentNotification : INotificationService
     {
         public void ShowMessage(string title, string? message = null) { }
+        public void ShowAction(string title, string? message, string actionText, Action action) { }
     }
 
     private sealed class BlockingDispatcher : IUIThreadDispatcher, IDisposable

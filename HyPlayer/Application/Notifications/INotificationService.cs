@@ -1,3 +1,5 @@
+using System;
+
 namespace HyPlayer.Application.Notifications;
 
 /// <summary>
@@ -7,4 +9,7 @@ public interface INotificationService
 {
     /// <summary>显示 TeachingTip 消息</summary>
     void ShowMessage(string title, string? message = null);
+
+    /// <summary>显示带操作按钮的 TeachingTip 消息</summary>
+    void ShowAction(string title, string? message, string actionText, Action action);
 }

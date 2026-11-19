@@ -8,7 +8,7 @@ namespace HyPlayer.Features.Playback.Transitions;
 public sealed class GaplessTransition : ITrackTransition
 {
     private static readonly TimeSpan _preloadWindow = TimeSpan.FromSeconds(30);
-    private TransitionPreparedTrack? _prepared;
+    private readonly NextTrackPreloader _preloader = new(false);
     private PreparedPlaybackPromotion? _promotion;
 
     public string Id => "gap";
@@ -21,26 +21,7 @@ public sealed class GaplessTransition : ITrackTransition
             return;
         }
 
-        if (_prepared is not null
-            || !context.CanPreload
-            || context.Duration < _preloadWindow
-            || context.Duration - context.Position > _preloadWindow)
-            return;
-
-        var prepared = await context.Host.PrepareNextAsync(context, ct).ConfigureAwait(false);
-        if (prepared is null)
-            return;
-
-        _prepared = prepared;
-        try
-        {
-            await prepared.Ticket.SetPlaybackRateAsync(context.PlaybackRate, ct).ConfigureAwait(false);
-        }
-        catch
-        {
-            await ReleasePreparedAsync(prepared).ConfigureAwait(false);
-            throw;
-        }
+        await _preloader.PrepareAsync(context, _preloadWindow, ct).ConfigureAwait(false);
     }
 
     public async Task OnTrackCompletedAsync(TrackTransitionContext context, CancellationToken ct)
@@ -51,7 +32,8 @@ public sealed class GaplessTransition : ITrackTransition
             return;
         }
 
-        var prepared = _prepared;
+        var prepared = _preloader.Take();
+        _preloader.CancelLoading();
         if (prepared is not null)
         {
             try
@@ -60,12 +42,12 @@ public sealed class GaplessTransition : ITrackTransition
             }
             catch (OperationCanceledException)
             {
-                await ReleasePreparedAsync(prepared).ConfigureAwait(false);
+                await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
                 throw;
             }
             catch
             {
-                await ReleasePreparedAsync(prepared).ConfigureAwait(false);
+                await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
                 await context.Host.AdvanceDirectAsync(context, ct).ConfigureAwait(false);
                 return;
             }
@@ -77,43 +59,45 @@ public sealed class GaplessTransition : ITrackTransition
             }
             catch (OperationCanceledException)
             {
-                await ReleasePreparedAsync(prepared).ConfigureAwait(false);
+                await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
                 throw;
             }
             catch
             {
-                await ReleasePreparedAsync(prepared).ConfigureAwait(false);
+                await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
                 await context.Host.AdvanceDirectAsync(context, ct).ConfigureAwait(false);
                 return;
             }
 
             if (promotion is not null)
             {
-                _prepared = null;
                 _promotion = promotion;
                 await SettlePromotionAsync().ConfigureAwait(false);
                 return;
             }
 
-            await ReleasePreparedAsync(prepared).ConfigureAwait(false);
+            await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
         }
 
         await context.Host.AdvanceDirectAsync(context, ct).ConfigureAwait(false);
     }
 
+    public async Task OnSeekAsync(TrackTransitionContext context, TimeSpan target, CancellationToken ct)
+    {
+        await SettlePromotionAsync().ConfigureAwait(false);
+        if (target < context.Duration - _preloadWindow)
+            await _preloader.DiscardAsync().ConfigureAwait(false);
+    }
+
+    public Task OnQueueChangedAsync(CancellationToken ct)
+    {
+        return CancelAsync(ct);
+    }
+
     public async Task CancelAsync(CancellationToken ct)
     {
         await SettlePromotionAsync().ConfigureAwait(false);
-
-        if (_prepared is { } prepared)
-            await ReleasePreparedAsync(prepared).ConfigureAwait(false);
-    }
-
-    private async Task ReleasePreparedAsync(TransitionPreparedTrack prepared)
-    {
-        await prepared.Ticket.DisposeAsync().ConfigureAwait(false);
-        if (ReferenceEquals(_prepared, prepared))
-            _prepared = null;
+        await _preloader.DiscardAsync().ConfigureAwait(false);
     }
 
     private async Task SettlePromotionAsync()

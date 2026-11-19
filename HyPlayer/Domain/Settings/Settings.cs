@@ -353,7 +353,7 @@ namespace HyPlayer.Domain.Settings
 #nullable enable
         public event PropertyChangedEventHandler? PropertyChanged;
 #nullable restore
-        public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        public void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
             try
             {

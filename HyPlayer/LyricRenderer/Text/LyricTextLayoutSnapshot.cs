@@ -26,6 +26,8 @@ public sealed partial class LyricTextLayoutSnapshot : IDisposable
     public required ICanvasImage DefaultTextPersistCache { get; init; }
     public ICanvasImage? DefaultTransliterationPersistCache { get; init; }
     public ICanvasImage? DefaultTranslationPersistCache { get; init; }
+    public bool HasStaticContent { get; init; } = true;
+    public float? LayoutDrawOffsetX { get; init; }
     public required Rect SizePixelRect { get; init; }
     public required float TextRenderActualTop { get; init; }
     public required float TranslationRenderActualTop { get; init; }
@@ -33,11 +35,14 @@ public sealed partial class LyricTextLayoutSnapshot : IDisposable
     public required float RenderingWidth { get; init; }
     public required float RenderingHeight { get; init; }
     public required float ScalingCenterX { get; init; }
+    public float StableMinimumWidth { get; init; } = float.PositiveInfinity;
     public required Windows.UI.Color IdleColor { get; init; }
     public required Windows.UI.Color FocusingColor { get; init; }
     public required IReadOnlyList<LyricGlyphCluster> LyricGlyphClusters { get; init; }
     public required IReadOnlyList<LyricGlyphCluster> TransliterationGlyphClusters { get; init; }
     public required IReadOnlyList<LyricGlyphCluster> TranslationGlyphClusters { get; init; }
+
+    public bool KeepsLayoutAt(float requestedWidth) => requestedWidth >= StableMinimumWidth;
 
     public void Dispose()
     {

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media;
 
@@ -44,5 +45,38 @@ internal static class SmtcTrackIdentity
             return null;
 
         return $"{providerId.ToUpperInvariant()}-{actualId}";
+    }
+}
+
+internal sealed class SmtcTimelineSynchronizer(Func<bool> isEnabled, Action synchronize)
+{
+    private int _seconds;
+    private int _updating;
+
+    public async Task OnSecondTickAsync()
+    {
+        if (!isEnabled())
+        {
+            Interlocked.Exchange(ref _seconds, 0);
+            return;
+        }
+
+        if (Interlocked.Increment(ref _seconds) % 5 != 0 ||
+            Interlocked.CompareExchange(ref _updating, 1, 0) != 0)
+            return;
+
+        try
+        {
+            // Keep a slow SMTC call off the shared clock, without queueing more work.
+            await Task.Run(() =>
+            {
+                if (isEnabled())
+                    synchronize();
+            }).ConfigureAwait(false);
+        }
+        finally
+        {
+            Volatile.Write(ref _updating, 0);
+        }
     }
 }

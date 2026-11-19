@@ -3,6 +3,7 @@ using System;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.Media.Audio;
+using Windows.Media.Devices;
 using Windows.Media.Render;
 
 namespace HyPlayer.UWP.Chopin.Abstractions.Models
@@ -13,6 +14,22 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public double OutputVolume { get; set; } = 1d;
         public bool AutoFallback { get; set; } = false;
         public bool EnableFFTProcessing { get; set; } = false;
+
+        public string ResolvedDeviceId
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(DefaultDeviceId)) return DefaultDeviceId;
+                try
+                {
+                    return MediaDevice.GetDefaultAudioRenderId(AudioDeviceRole.Default) ?? string.Empty;
+                }
+                catch
+                {
+                    return string.Empty;
+                }
+            }
+        }
         private AudioGraphSettings _settings;
         public async Task<AudioGraphSettings> GetAudioGraphSettingsAsync()
         {
@@ -23,6 +40,17 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (string.IsNullOrEmpty(DefaultDeviceId))
             {
                 var result = new AudioGraphSettings(AudioRenderCategory.Media);
+                var defaultId = ResolvedDeviceId;
+                if (!string.IsNullOrEmpty(defaultId))
+                {
+                    try
+                    {
+                        result.PrimaryRenderDevice = await DeviceInformation.CreateFromIdAsync(defaultId);
+                    }
+                    catch
+                    {
+                    }
+                }
                 _settings = result;
                 return result;
             }

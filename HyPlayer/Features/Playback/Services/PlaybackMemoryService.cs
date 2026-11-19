@@ -7,10 +7,12 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.History.Services;
+using HyPlayer.Platform.Playback.MediaSources;
 using HyPlayer.Platform.Serialization;
 using HyPlayer.Platform.Storage;
 using HyPlayer.PlayCore.Abstraction;
@@ -28,12 +30,14 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
     private const int SaveDebounceMilliseconds = 1500;
     private const int SavePositionStepMilliseconds = 5000;
     private const int EndPositionResetThresholdMilliseconds = 5000;
+    private const int StartPositionResetThresholdMilliseconds = 3000;
     private readonly IPlaybackControlService _control;
     private readonly IHistoryService _history;
     private readonly SemaphoreSlim _ioLock = new(1, 1);
     private readonly IProvidableItemRangeProvidable _itemRangeProvider;
     private readonly ILocalFileImportService _localFileImport;
     private readonly INotificationService _notification;
+    private readonly PlaybackRestriction _restriction;
 
     private readonly PlayCoreBase _playCore;
     private readonly IPlaybackQueueLoader _queueLoader;
@@ -42,6 +46,9 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
     private readonly PlaybackStateService _state;
     private bool _initialized;
     private int _lastSavedPositionBucket = -1;
+    private PlaybackItemIdentity? _qualityItem;
+    private string? _qualityRequest;
+    private string? _qualityTag;
     private bool _restoring;
     private CancellationTokenSource? _saveDebounceCts;
 
@@ -55,8 +62,10 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
         IProvidableItemRangeProvidable itemRangeProvider,
         ILocalFileImportService localFileImport,
         IHistoryService history,
-        INotificationService notification)
+        INotificationService notification,
+        PlaybackRestriction restriction)
     {
+        _restriction = restriction;
         _playCore = playCore;
         _state = state;
         _playbackSettings = playbackSettings;
@@ -99,14 +108,14 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
             if (memory is null)
                 memory = await ReadLegacyStateAsync().ConfigureAwait(false);
 
-            if (memory is null)
+            if (memory is null || _restriction.IsActive)
                 return;
 
             await RestoreStateAsync(memory).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("恢复播放列表失败", ex.Message);
+            _notification.ShowFailure("恢复播放列表失败", ex);
         }
         finally
         {
@@ -178,10 +187,22 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
 
         await _control.LoadAndPlayAsync(currentSong, false, false).ConfigureAwait(false);
         await _playCore.MovePointerToIndexAsync(index).ConfigureAwait(false);
+        if (GetRestorableQualityTag(memory, currentSong, _playbackSettings.AudioRate) is { } qualityTag)
+        {
+            _qualityItem = memory.CurrentItem;
+            _qualityTag = qualityTag;
+            _qualityRequest = memory.QualityRequest;
+            _state.QualityTag = qualityTag;
+        }
 
-        var restorePosition = GetRestorePosition(memory.PositionMilliseconds, currentSong.Duration);
+        var restorePosition = _playbackSettings.RememberPlaybackPosition
+            ? GetRestorePosition(memory.PositionMilliseconds, currentSong.Duration)
+            : TimeSpan.Zero;
         if (restorePosition > TimeSpan.Zero)
             await _control.SeekAsync(restorePosition).ConfigureAwait(false);
+
+        if (_playbackSettings.AutoPlayOnLaunch)
+            _control.Play();
     }
 
     private async Task<bool> TryRestoreQueueFromSourceAsync(PlaybackMemoryState memory)
@@ -268,6 +289,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
         var currentIndex = _state.NowPlayingIndex >= 0
             ? _state.NowPlayingIndex
             : await _playCore.GetCurrentIndexAsync().ConfigureAwait(false);
+        var rememberQuality = RefreshRememberedQuality(currentItem);
         var state = new PlaybackMemoryState(
             StateVersion,
             string.IsNullOrWhiteSpace(_playCore.PlaySourceId) ? null : _playCore.PlaySourceId,
@@ -278,14 +300,46 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
             currentIndex,
             Math.Max(0, (long)_state.Position.TotalMilliseconds),
             string.IsNullOrWhiteSpace(_state.ActiveStrategyId) ? null : _state.ActiveStrategyId,
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            rememberQuality ? _qualityTag : null,
+            rememberQuality ? _qualityRequest : null);
 
         await WriteStateAsync(state).ConfigureAwait(false);
     }
 
+    private bool RefreshRememberedQuality(SingleSongBase? currentItem)
+    {
+        if (currentItem is null)
+            return false;
+
+        if (_playCore.CurrentPlayingTicket?.MusicResource is NeteaseMediaResource resource
+            && PlaybackQualityLevel.Of(resource) is { Length: > 0 } level
+            && Matches(currentItem, CreateIdentity(resource.Song)))
+        {
+            _qualityItem = CreateIdentity(resource.Song);
+            _qualityTag = level;
+            _qualityRequest = resource.RequestedLevel;
+        }
+
+        return _qualityItem is not null && Matches(currentItem, _qualityItem);
+    }
+
+    internal static string? GetRestorableQualityTag(
+        PlaybackMemoryState memory,
+        SingleSongBase currentSong,
+        string audioRate)
+    {
+        return !string.IsNullOrEmpty(memory.QualityTag)
+               && memory.CurrentItem is { } rememberedItem
+               && Matches(currentSong, rememberedItem)
+               && string.Equals(memory.QualityRequest, audioRate, StringComparison.Ordinal)
+            ? memory.QualityTag
+            : null;
+    }
+
     private async Task WriteStateAsync(PlaybackMemoryState state)
     {
-        var text = JsonSerializer.Serialize(state, JsonDefaults.Options);
+        var text = JsonDefaults.Serialize(state);
 
         await _ioLock.WaitAsync().ConfigureAwait(false);
         try
@@ -327,7 +381,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
 
             return string.IsNullOrWhiteSpace(text)
                 ? null
-                : JsonSerializer.Deserialize<PlaybackMemoryState>(text, JsonDefaults.Options);
+                : JsonDefaults.Deserialize<PlaybackMemoryState>(text);
         }
         catch
         {
@@ -448,7 +502,7 @@ public sealed partial class PlaybackMemoryService : IPlaybackMemoryService, IDis
 
     private static TimeSpan GetRestorePosition(long positionMilliseconds, long durationMilliseconds)
     {
-        if (positionMilliseconds <= 0)
+        if (positionMilliseconds <= StartPositionResetThresholdMilliseconds)
             return TimeSpan.Zero;
 
         if (durationMilliseconds > 0

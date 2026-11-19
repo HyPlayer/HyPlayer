@@ -9,6 +9,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Netease.Legacy;
@@ -37,6 +38,12 @@ public sealed partial class MusicCloudPage : Page
     private readonly IContainerItemManagementProvidable _containerItemManagement =
         Ioc.Default.GetRequiredService<IContainerItemManagementProvidable>();
 
+    private readonly LoadState _load = new("云盘", Ioc.Default.GetRequiredService<ILoadEnvironment>())
+    {
+        EmptyText = "没有找到云盘",
+        RequiresAccount = true
+    };
+
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly ApiSettings _setting = Ioc.Default.GetRequiredService<ApiSettings>();
 
@@ -56,6 +63,7 @@ public sealed partial class MusicCloudPage : Page
             }
         ];
         InitializeComponent();
+        SongContainer.ContainerLoad = _load;
     }
 
     public ContainerBase CloudContainer
@@ -119,14 +127,13 @@ public sealed partial class MusicCloudPage : Page
         await LoadCloudContainerAsync();
     }
 
-    private async Task<bool> LoadCloudContainerAsync()
+    private Task LoadCloudContainerAsync()
     {
-        if (await _userLibraryProvider.GetCurrentUserLibraryContainerAsync(_userLibraryTypeIds.CloudLibraryTypeId,
-                _cancellationTokenSource?.Token ?? CancellationToken.None) is not ContainerBase container)
-            return false;
-
-        CloudContainer = container;
-        return true;
+        return _load.RunAsync(
+            cancellationToken => _userLibraryProvider.GetCurrentUserLibraryContainerAsync(
+                _userLibraryTypeIds.CloudLibraryTypeId, cancellationToken),
+            container => CloudContainer = container,
+            static container => container is null);
     }
 
     private async Task DeleteCloudItemAsync(ProvidableItemRowViewModel row)
@@ -141,7 +148,7 @@ public sealed partial class MusicCloudPage : Page
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("删除云盘歌曲失败", ex.Message);
+            _notification.ShowFailure("删除云盘歌曲失败", ex);
             return;
         }
 
@@ -149,12 +156,11 @@ public sealed partial class MusicCloudPage : Page
         try
         {
             await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
-            if (!await LoadCloudContainerAsync())
-                _notification.ShowMessage("刷新云盘失败", "服务端未返回云盘信息");
+            await LoadCloudContainerAsync();
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("歌曲已删除，但刷新云盘失败", ex.Message);
+            _notification.ShowFailure("歌曲已删除，但刷新云盘失败", ex);
         }
     }
 }

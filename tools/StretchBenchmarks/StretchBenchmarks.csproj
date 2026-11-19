@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../HyPlayer.UWP.Chopin/Dsp/SpeedProcessor.cs" Link="SpeedProcessor.cs" />
+    <Compile Include="../../HyPlayer.UWP.Chopin/Dsp/SpeedResampler.cs" Link="SpeedResampler.cs" />
+    <Compile Include="../../HyPlayer.UWP.Chopin/Dsp/PeakLimiter.cs" Link="PeakLimiter.cs" />
+    <Compile Include="../../HyPlayer.UWP.Chopin/Dsp/PitchPreservingSpeed.cs" Link="PitchPreservingSpeed.cs" />
+    <Compile Include="../../HyPlayer.UWP.Chopin/Dsp/TimeStretcher.cs" Link="TimeStretcher.cs" />
+    <Compile Include="../../HyPlayer.UWP.Chopin/Dsp/Signalsmith/*.cs" Link="Signalsmith/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

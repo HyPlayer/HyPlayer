@@ -18,6 +18,22 @@ namespace HyPlayer.Playback.Tests;
 public sealed class SongListQueueBuilderTests
 {
     [Test]
+    public async Task Queue_read_failure_is_not_reported_as_a_successful_empty_snapshot()
+    {
+        var playCore = new FakePlayCore([], -1)
+        {
+            QueueReader = () => throw new InvalidOperationException("Queue read failed.")
+        };
+        var failed = false;
+        try { await PlayCoreQueueSnapshot.GetPlaylistAsync(playCore); }
+        catch (InvalidOperationException) { failed = true; }
+        if (!failed) throw new InvalidOperationException("A failed read must preserve the displayed queue, not supply an empty snapshot.");
+        playCore.QueueReader = null;
+        if ((await PlayCoreQueueSnapshot.GetPlaylistAsync(playCore)).Count != 0)
+            throw new InvalidOperationException("A successfully read empty queue must still be represented as empty.");
+    }
+
+    [Test]
     public async Task Seamless_source_change_replaces_queue_and_keeps_current_song()
     {
         var first = new FakeSong("first");
@@ -34,7 +50,14 @@ public sealed class SongListQueueBuilderTests
         var control = new FakePlaybackControl(playCore, state);
         var notification = new FakeNotificationService();
         var runner = new FakeBackgroundTaskRunner();
-        var builder = new SongListQueueBuilder(playCore, loader, control, state, notification, runner);
+        var builder = new SongListQueueBuilder(
+            playCore,
+            loader,
+            control,
+            state,
+            notification,
+            runner,
+            new PlaybackRestriction(notification));
 
         await builder.BuildAndPlayAsync(
             albumCurrent,
@@ -68,13 +91,15 @@ public sealed class SongListQueueBuilderTests
         };
         var control = new FakePlaybackControl(playCore, state);
         var runner = new FakeBackgroundTaskRunner();
+        var notification = new FakeNotificationService();
         var builder = new SongListQueueBuilder(
             playCore,
             loader,
             control,
             state,
-            new FakeNotificationService(),
-            runner);
+            notification,
+            runner,
+            new PlaybackRestriction(notification));
         var scope = SongListQueueScope.Playlist("playlist");
 
         await builder.BuildAndPlayAsync(current, scope, new SingleSongBase[] { current });
@@ -108,7 +133,8 @@ public sealed class SongListQueueBuilderTests
             control,
             state,
             notification,
-            new FakeBackgroundTaskRunner());
+            new FakeBackgroundTaskRunner(),
+            new PlaybackRestriction(notification));
 
         await builder.BuildAndPlayAsync(
             current,
@@ -136,13 +162,15 @@ public sealed class SongListQueueBuilderTests
             new SingleSongBase[] { first, second }));
         var control = new FakePlaybackControl(playCore, state) { MirrorPlayingOnLoad = false };
         var runner = new FakeBackgroundTaskRunner();
+        var notification = new FakeNotificationService();
         var builder = new SongListQueueBuilder(
             playCore,
             loader,
             control,
             state,
-            new FakeNotificationService(),
-            runner);
+            notification,
+            runner,
+            new PlaybackRestriction(notification));
 
         await builder.BuildAndPlayAsync(
             first,
@@ -271,6 +299,7 @@ public sealed class SongListQueueBuilderTests
         public Task SetTransitionAsync(string transitionId, CancellationToken ct = default) => Task.CompletedTask;
         public Task SetPlayModeAsync(string playModeId, CancellationToken ct = default) => Task.CompletedTask;
         public void SetAudioGainEnabled(bool enabled) { }
+        public void SetPlaybackSpeed(double speed) { }
 
         public Task ClearQueueAsync(CancellationToken ct = default)
         {
@@ -329,6 +358,7 @@ public sealed class SongListQueueBuilderTests
         public Task MoveNextAndPlayAsync(bool userInitiated) => Task.CompletedTask;
         public Task MovePreviousAndPlayAsync() => Task.CompletedTask;
         public Task InitializeAsync() => Task.CompletedTask;
+        public Task ApplyAudioDeviceAsync() => Task.CompletedTask;
 
         private static bool SameSong(SingleSongBase? left, SingleSongBase? right) =>
             ReferenceEquals(left, right)
@@ -352,6 +382,7 @@ public sealed class SongListQueueBuilderTests
     {
         public List<(string Title, string? Message)> Messages { get; } = [];
         public void ShowMessage(string title, string? message = null) => Messages.Add((title, message));
+        public void ShowAction(string title, string? message, string actionText, Action action) => Messages.Add((title, message));
     }
 
     private sealed class FakePlayCore : PlayCoreBase
@@ -369,6 +400,7 @@ public sealed class SongListQueueBuilderTests
 
         public List<SingleSongBase> Queue { get; private set; }
         public int CurrentIndex { get; private set; }
+        public Func<Task<List<SingleSongBase>>>? QueueReader { get; set; }
 
         public void ClearQueue()
         {
@@ -430,7 +462,7 @@ public sealed class SongListQueueBuilderTests
         public override Task SetRandomAsync(bool isRandom, CancellationToken ctk = default) => Task.CompletedTask;
         public override Task ReRandomAsync(CancellationToken ctk = default) => Task.CompletedTask;
         public override Task SetPlayModeAsync(string playModeId, CancellationToken ctk = default) => Task.CompletedTask;
-        public override Task<List<SingleSongBase>> GetPlaylistAsync(CancellationToken ctk = default) => Task.FromResult(Queue.ToList());
+        public override Task<List<SingleSongBase>> GetPlaylistAsync(CancellationToken ctk = default) => QueueReader?.Invoke() ?? Task.FromResult(Queue.ToList());
         public override Task<List<SingleSongBase>> GetOrderedPlaylistAsync(CancellationToken ctk = default) => Task.FromResult(Queue.ToList());
         public override Task<int> GetCurrentIndexAsync(CancellationToken ctk = default) => Task.FromResult(CurrentIndex);
         public override Task<SingleSongBase?> GetSongAtAsync(int index, CancellationToken ctk = default) =>

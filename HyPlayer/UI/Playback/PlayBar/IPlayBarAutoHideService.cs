@@ -6,6 +6,7 @@ public interface IPlayBarAutoHideService
 {
     int SecondCounter { get; set; }
     bool IsVisible { get; set; }
+    bool IsActive { get; }
     event EventHandler<PlayBarVisibilityChangedEventArgs>? VisibilityChanged;
     void Tick();
     void Show();

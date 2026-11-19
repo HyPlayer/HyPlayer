@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Application.State;
 using HyPlayer.Domain.Music;
@@ -17,6 +18,7 @@ using HyPlayer.Features.Album;
 using HyPlayer.Features.Artist;
 using HyPlayer.Features.Home;
 using HyPlayer.Features.Library;
+using HyPlayer.Features.ListenTogether;
 using HyPlayer.Features.Netease.Legacy;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Playlist;
@@ -58,6 +60,7 @@ public sealed partial class AppNavigator : IAppNavigator
     private readonly INotificationService _notification;
     private readonly PlayCoreBase _playCore;
     private readonly IPlaybackQueueLoader _queueLoader;
+    private readonly PlaybackRestriction _restriction;
     private readonly IUserLibraryStateService _userLibraryState;
     private NavigationView? _navigationView;
     private Frame? _rootFrame;
@@ -69,8 +72,10 @@ public sealed partial class AppNavigator : IAppNavigator
         IPlaybackControlService control,
         IAuthService auth,
         IUserLibraryStateService userLibraryState,
-        INotificationService notification)
+        INotificationService notification,
+        PlaybackRestriction restriction)
     {
+        _restriction = restriction;
         _navigation = navigation;
         _playCore = playCore;
         _queueLoader = queueLoader;
@@ -135,11 +140,14 @@ public sealed partial class AppNavigator : IAppNavigator
             AppRoute.History => NavigatePage(typeof(HistoryPage)),
             AppRoute.Home => NavigatePage(typeof(HomePage)),
             AppRoute.LikedSongs => LikedSongsPage(),
+            AppRoute.ListenTogether => NavigatePage(typeof(ListenTogetherPage)),
             AppRoute.LocalMusic => NavigatePage(typeof(LocalMusicPage)),
             AppRoute.Me me => NavigatePage(typeof(Me), me.UserId),
             AppRoute.MusicCloud => NavigatePage(typeof(MusicCloudPage)),
             AppRoute.MV mv => NavigatePage(typeof(MVPage), mv.Id),
             AppRoute.Playlist playlist => NavigatePage(typeof(SongListDetail), playlist.Id),
+            AppRoute.PodcastEpisodes podcastEpisodes => NavigatePage(typeof(PodcastEpisodesPage),
+                podcastEpisodes.Kind),
             AppRoute.Radio radio => NavigatePage(typeof(RadioPage), radio.Id),
             AppRoute.Settings => NavigatePage(typeof(Settings)),
             AppRoute.Song song => PlaySongAsync(song.Id),
@@ -159,12 +167,15 @@ public sealed partial class AppNavigator : IAppNavigator
         if (pageType == typeof(HistoryPage)) return new AppRoute.History();
         if (pageType == typeof(PageFavorite)) return new AppRoute.Favorite();
         if (pageType == typeof(MusicCloudPage)) return new AppRoute.MusicCloud();
+        if (pageType == typeof(ListenTogetherPage)) return new AppRoute.ListenTogether();
         if (pageType == typeof(Settings)) return new AppRoute.Settings();
         if (pageType == typeof(Me)) return new AppRoute.Me();
         if (pageType == typeof(AlbumPage)) return new AppRoute.Album(parameter?.ToString() ?? "");
         if (pageType == typeof(ArtistPage)) return new AppRoute.Artist(parameter?.ToString() ?? "");
         if (pageType == typeof(MVPage)) return new AppRoute.MV(parameter?.ToString() ?? "");
         if (pageType == typeof(RadioPage)) return new AppRoute.Radio(parameter?.ToString() ?? "");
+        if (pageType == typeof(PodcastEpisodesPage))
+            return new AppRoute.PodcastEpisodes(parameter?.ToString() ?? "");
         if (pageType == typeof(SongListDetail))
         {
             var playlistId = parameter switch
@@ -189,6 +200,7 @@ public sealed partial class AppNavigator : IAppNavigator
 
     public async Task PlayAsync(MusicResource resource)
     {
+        if (!_restriction.Allows(resource)) return;
         await _control.StopAsync();
         await _control.ClearQueueAsync();
         await AppendAsync(resource);
@@ -197,6 +209,7 @@ public sealed partial class AppNavigator : IAppNavigator
 
     public async Task AppendAsync(MusicResource resource)
     {
+        if (!_restriction.Allows(resource)) return;
         SetPlaybackSource(resource);
         await _queueLoader.AppendNcSourceAsync(_playCore.PlaySourceId);
     }
@@ -376,7 +389,7 @@ public sealed partial class AppNavigator : IAppNavigator
         }
         else
         {
-            var item = new NavigationViewItem { Tag = node };
+            var item = new NavigationViewItem { Tag = node, IsExpanded = node.IsExpanded };
             UpdateNavigationViewItem(item, node);
             AddNavigationNodes(item.MenuItems, node.Children);
             navigationObject = item;
@@ -391,11 +404,14 @@ public sealed partial class AppNavigator : IAppNavigator
 
     private void UpdateNavigationObject(NavigationNode node)
     {
-        if (!_navigationObjects.TryGetValue(node, out var navigationObject)) return;
+        RunOnNavigationViewThread(() =>
+        {
+            if (!_navigationObjects.TryGetValue(node, out var navigationObject)) return;
 
-        if (navigationObject is NavigationViewItemHeader header)
-            header.Content = node.Title;
-        else if (navigationObject is NavigationViewItem item) UpdateNavigationViewItem(item, node);
+            if (navigationObject is NavigationViewItemHeader header)
+                header.Content = node.Title;
+            else if (navigationObject is NavigationViewItem item) UpdateNavigationViewItem(item, node);
+        });
     }
 
     private void ApplyChildCollectionChanges(NavigationNode node, NotifyCollectionChangedEventArgs e)
@@ -560,14 +576,20 @@ public sealed partial class AppNavigator : IAppNavigator
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("导航失败", ex.Message);
+            _notification.ShowFailure("导航失败", ex);
         }
     }
 
-    private static void InvokeAction(AppNavigationAction action)
+    private void InvokeAction(AppNavigationAction action)
     {
         switch (action)
         {
+            case AppNavigationAction.ReloadLibrary:
+                _ = _shellViewModel?.RefreshPlaylistsAsync();
+                break;
+            case AppNavigationAction.ReloadPodcasts:
+                _ = _shellViewModel?.RefreshPodcastsAsync();
+                break;
             case AppNavigationAction.CreatePlaylist:
                 _ = new CreateSonglistDialog().ShowAsync();
                 break;

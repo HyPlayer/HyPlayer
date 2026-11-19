@@ -10,10 +10,12 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Music;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Downloads.Services;
+using HyPlayer.Features.Playback.QueueProviders;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.User;
 using HyPlayer.PlayCore.Abstraction.Interfaces.PlayListContainer;
@@ -46,6 +48,12 @@ public sealed partial class RadioPage : Page
         Ioc.Default.GetRequiredService<IProvidableItemProvidable>();
 
     private readonly IProviderKnownTypeIds _knownTypeIds = Ioc.Default.GetRequiredService<IProviderKnownTypeIds>();
+
+    private readonly LoadState _load = new("电台", Ioc.Default.GetRequiredService<ILoadEnvironment>())
+    {
+        EmptyText = "没有找到这个电台"
+    };
+
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
     private readonly IPlaybackQueueLoader _queueLoader = Ioc.Default.GetRequiredService<IPlaybackQueueLoader>();
@@ -63,6 +71,7 @@ public sealed partial class RadioPage : Page
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
+        SongContainer.ContainerLoad = _load;
     }
 
     public ContainerBase CurrentContainer
@@ -86,31 +95,30 @@ public sealed partial class RadioPage : Page
         Bindings.StopTracking();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (e.Parameter is string rid)
+        _ = _load.RunAsync(cancellationToken => LoadRadioChannelAsync(e.Parameter, cancellationToken));
+    }
+
+    private async Task<bool> LoadRadioChannelAsync(object parameter, CancellationToken cancellationToken)
+    {
+        if (parameter is string rid)
         {
-            _radioChannel = await GetRadioChannelAsync(rid);
+            _radioChannel = await GetRadioChannelAsync(rid, cancellationToken);
             if (_radioChannel is null)
-            {
-                _notification.ShowMessage("获取电台信息失败", "未知错误");
-                return;
-            }
+                return false;
         }
 
-        if (e.Parameter is ContainerBase radio) _radioChannel = radio;
+        if (parameter is ContainerBase radio) _radioChannel = radio;
 
         _progressiveRadioChannel = _radioChannel as IProgressiveLoadingContainer;
         if (_progressiveRadioChannel is null)
-        {
-            _notification.ShowMessage("获取电台信息失败", "提供程序未返回可分页电台容器");
-            return;
-        }
+            return false;
 
         TextBoxRadioName.Text = _radioChannel.Name;
         var creators = _radioChannel is IHasCreators creatorsProvider
-            ? await creatorsProvider.GetCreatorsAsync(_cancellationToken)
+            ? await creatorsProvider.GetCreatorsAsync(cancellationToken)
             : null;
         _host = creators?.FirstOrDefault();
         TextBoxDJ.Content = _host?.Name;
@@ -133,6 +141,7 @@ public sealed partial class RadioPage : Page
         CurrentQueueScope = SongListQueueScope.Radio(_radioChannel.ActualId);
         CurrentContainer = _radioChannel;
         SongContainer.GreedyLoad = _apiSettings.GreedilyLoadPlayContainerItems;
+        return true;
     }
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
@@ -155,28 +164,43 @@ public sealed partial class RadioPage : Page
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        var programs = _asc
-            ? await LoadAscendingProgramsAsync()
-            : await LoadAllProgramsAsync();
-        await _queueLoader.AppendSongsAsync(programs);
+        if (await LoadProgramsForActionAsync() is { } programs)
+            await _queueLoader.AppendSongsAsync(programs);
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        var programs = _asc
-            ? await LoadAscendingProgramsAsync()
-            : await LoadAllProgramsAsync();
-
-        DownloadManager.AddDownload(programs);
+        if (await LoadProgramsForActionAsync() is { } programs)
+            DownloadManager.AddDownload(programs);
     }
 
-    private async Task<ContainerBase> GetRadioChannelAsync(string radioId)
+    private async Task<List<SingleSongBase>> LoadProgramsForActionAsync()
+    {
+        if (_progressiveRadioChannel is null)
+            return null;
+
+        try
+        {
+            return _asc
+                ? await LoadAscendingProgramsAsync()
+                : await LoadAllProgramsAsync();
+        }
+        catch (Exception exception)
+        {
+            _notification.ShowFailure("加载节目失败", exception, _cancellationToken);
+            return null;
+        }
+    }
+
+    private async Task<ContainerBase> GetRadioChannelAsync(string radioId, CancellationToken cancellationToken)
     {
         if (_knownTypeIds.RadioChannelTypeId is null)
             return null;
 
-        return await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.RadioChannelTypeId + radioId,
-            _cancellationToken) as ContainerBase;
+        return await LoadRequestProbe.GuardAsync(
+            () => _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.RadioChannelTypeId + radioId,
+                cancellationToken),
+            static item => item is not ContainerBase) as ContainerBase;
     }
 
     private async Task<List<SingleSongBase>> LoadAscendingProgramsAsync()
@@ -193,11 +217,9 @@ public sealed partial class RadioPage : Page
     {
         if (_allPrograms is not null) return _allPrograms;
 
-        var programs = _radioChannel is LinerContainerBase liner
-            ? await liner.GetAllItemsAsync(_cancellationToken)
-            : (await _progressiveRadioChannel.GetProgressiveItemsListAsync(0,
-                _progressiveRadioChannel.MaxProgressiveCount, _cancellationToken)).Item2;
-        _allPrograms = programs.OfType<SingleSongBase>().ToList();
+        var pages = await ContainerItemLoader.LoadProgressivePagesAsync(_progressiveRadioChannel,
+            _progressiveRadioChannel.MaxProgressiveCount, _cancellationToken);
+        _allPrograms = pages.SelectMany(page => page).OfType<SingleSongBase>().ToList();
         return _allPrograms;
     }
 

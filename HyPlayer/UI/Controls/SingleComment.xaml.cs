@@ -9,6 +9,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain;
 using HyPlayer.Domain.Settings;
@@ -19,6 +20,8 @@ using HyPlayer.PlayCore.Abstraction.Interfaces.ProvidableItem;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
+using HyPlayer.Shell.Login;
+using HyPlayer.Shell.Navigation;
 using HyPlayer.Shell.Navigation.Services;
 using HyPlayer.UI.Lists.IncrementalLoading;
 using ObservableCollections;
@@ -46,14 +49,18 @@ public sealed partial class SingleComment : UserControl
     private readonly IncrementalLoadingCollection<SwitchingIncrementalSource<CommentBase>, CommentBase> _floorComments;
     private readonly NotifyCollectionChangedSynchronizedViewList<CommentBase> _floorCommentsView;
     private int _commentLoadVersion;
+    private int _floorAttempt;
+    private LoadState? _floorLoad;
     private bool _isLoaded;
 
     public SingleComment()
     {
         _floorComments = new IncrementalLoadingCollection<SwitchingIncrementalSource<CommentBase>, CommentBase>(
             _floorCommentSource,
-            itemsPerPage: 20,
-            onError: FloorComments_LoadFailed);
+            20,
+            FloorComments_LoadingStarted,
+            FloorComments_LoadCompleted,
+            FloorComments_LoadFailed);
         _floorCommentsView = _floorComments.ToNotifyCollectionChanged();
         InitializeComponent();
     }
@@ -88,15 +95,47 @@ public sealed partial class SingleComment : UserControl
             itemId,
             typeId));
         LoadMore.Visibility = Visibility.Collapsed;
+        if (_floorLoad is null)
+        {
+            _floorLoad = new LoadState("回复", Ioc.Default.GetRequiredService<ILoadEnvironment>())
+            {
+                EmptyText = "还没有回复"
+            };
+            FloorLoadView.State = _floorLoad;
+        }
+
         _floorComments.Clear();
         await _floorComments.RefreshAsync();
     }
 
+    private void FloorComments_LoadingStarted()
+    {
+        LoadMore.Visibility = Visibility.Collapsed;
+        if (_floorComments.Count == 0 && _floorLoad is { } load)
+            _floorAttempt = load.Begin(RetryFloorCommentsAsync, out _);
+    }
+
+    private async Task RetryFloorCommentsAsync()
+    {
+        if (!_isLoaded || _floorComments.IsLoading) return;
+        await _floorComments.RetryAsync();
+    }
+
+    private void FloorComments_LoadCompleted()
+    {
+        _floorLoad?.Complete(_floorAttempt, _floorComments.Count > 0);
+    }
+
     private void FloorComments_LoadFailed(Exception exception)
     {
+        if (_floorComments.Count == 0 && _floorLoad is { IsLoading: true } load)
+        {
+            load.Fail(_floorAttempt, exception);
+            return;
+        }
+
         LoadMore.Visibility = Visibility.Visible;
-        Ioc.Default.GetRequiredService<INotificationService>()
-            .ShowMessage("加载回复失败", exception.Message);
+        Ioc.Default.GetRequiredService<INotificationService>().ShowFailure("加载回复失败", exception);
     }
 
     private async void Like_Click(object sender, RoutedEventArgs e)
@@ -118,7 +157,7 @@ public sealed partial class SingleComment : UserControl
         }
         catch (Exception ex)
         {
-            Ioc.Default.GetRequiredService<INotificationService>().ShowMessage("点赞失败", ex.Message);
+            Ioc.Default.GetRequiredService<INotificationService>().ShowFailure("点赞失败", ex);
             return;
         }
 
@@ -163,14 +202,15 @@ public sealed partial class SingleComment : UserControl
         }
         else
         {
-            var dlg = new MessageDialog("请先登录");
+            var autoLoginState = Ioc.Default.GetRequiredService<NavigationShellViewModel>().AutoLoginState;
+            var dlg = new MessageDialog(autoLoginState == AutoLoginState.None ? "请先登录" : "登录尚未完成，请稍候再试");
             await dlg.ShowAsync();
         }
     }
 
     private void LoadMore_Click(object sender, RoutedEventArgs e)
     {
-        _ = ResetAndLoadFloorCommentsAsync();
+        _ = RetryFloorCommentsAsync();
     }
 
 
@@ -185,6 +225,7 @@ public sealed partial class SingleComment : UserControl
     {
         _isLoaded = false;
         _commentLoadVersion++;
+        _floorLoad?.Cancel();
         _floorCommentSource.Reset(null);
         _floorComments.Clear();
     }
@@ -198,6 +239,7 @@ public sealed partial class SingleComment : UserControl
     private void FloorCommentsExpander_Collapsed(Expander sender,
         ExpanderCollapsedEventArgs args)
     {
+        _floorLoad?.Cancel();
         _floorCommentSource.Reset(null);
         _floorComments.Clear();
     }
@@ -224,6 +266,7 @@ public sealed partial class SingleComment : UserControl
     private void ApplyMainComment(CommentBase? comment)
     {
         var version = ++_commentLoadVersion;
+        _floorLoad?.Cancel();
         _floorCommentSource.Reset(null);
         _floorComments.Clear();
         FloorCommentsExpander.IsExpanded = false;
@@ -302,6 +345,8 @@ public sealed partial class SingleComment : UserControl
     {
         private int _offset;
 
+        private string? _pageToken;
+
         private bool _hasMore = true;
 
         public async Task<IEnumerable<CommentBase>> GetPagedItemsAsync(
@@ -313,20 +358,30 @@ public sealed partial class SingleComment : UserControl
                 return [];
 
             var count = Math.Clamp(pageSize, 1, 20);
-            var result = await SimpleCacher.GetOrCreateCacheAsync(
+            var result = await SimpleCacher.GetOrCreateCacheOrThrowAsync(
                 CacheType.Comments,
-                $"{mainComment.ProvidableItemId}_{mainComment.ActualId}_{_offset}_{count}",
-                () => commentProvider.GetThreadedCommentsAsync(
-                    itemId,
-                    typeId,
-                    mainComment.ActualId,
-                    _offset,
-                    count,
-                    cancellationToken),
+                $"{mainComment.ProvidableItemId}_{mainComment.ActualId}_{_offset}_{_pageToken}_{count}",
+                () => _pageToken is not null && commentProvider is IProvidableItemCommentPageTokenProvidable tokenProvider
+                    ? tokenProvider.GetThreadedCommentsPageAsync(
+                        itemId,
+                        typeId,
+                        mainComment.ActualId,
+                        _pageToken,
+                        count,
+                        cancellationToken)
+                    : commentProvider.GetThreadedCommentsAsync(
+                        itemId,
+                        typeId,
+                        mainComment.ActualId,
+                        _offset,
+                        count,
+                        cancellationToken),
                 TimeSpan.FromMinutes(5));
 
             cancellationToken.ThrowIfCancellationRequested();
             var items = result?.Items ?? [];
+            if (items.Count == 0)
+                LoadRequestProbe.Current?.ThrowIfFailed();
             foreach (var comment in items)
             {
                 comment.ProvidableItemId = mainComment.ProvidableItemId;
@@ -334,6 +389,7 @@ public sealed partial class SingleComment : UserControl
             }
 
             _offset = result?.NextOffset ?? _offset + items.Count;
+            _pageToken = result?.NextOffset is null ? result?.NextPageToken : null;
             _hasMore = result?.HasMore is true && items.Count > 0;
             return items;
         }

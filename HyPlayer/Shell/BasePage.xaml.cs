@@ -5,12 +5,15 @@ using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.Features.Settings.Services;
+using HyPlayer.Platform.Runtime;
 using HyPlayer.Platform.Runtime.Background;
+using HyPlayer.Platform.Xaml;
 using HyPlayer.Shell.Input;
 using HyPlayer.Shell.Login;
 using HyPlayer.Shell.Navigation;
@@ -39,18 +42,24 @@ public sealed partial class BasePage : Page
         Ioc.Default.GetRequiredService<NavigationShellViewModel>();
 
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
+    private readonly AppearanceCustomizer _appearance = Ioc.Default.GetRequiredService<AppearanceCustomizer>();
     private readonly IGamepadShortcutService _gamepad =
         Ioc.Default.GetRequiredService<IGamepadShortcutService>();
+    private readonly IKeyboardShortcutService _keyboardShortcuts =
+        Ioc.Default.GetRequiredService<IKeyboardShortcutService>();
+    private readonly IMemoryGovernor _memoryGovernor = Ioc.Default.GetRequiredService<IMemoryGovernor>();
     private readonly IPlaybackControlService _playback = Ioc.Default.GetRequiredService<IPlaybackControlService>();
     private readonly HyPlayer.Domain.Settings.UISettings _setting =
         Ioc.Default.GetRequiredService<HyPlayer.Domain.Settings.UISettings>();
     private readonly IShellHostStateService _shellHost = Ioc.Default.GetRequiredService<IShellHostStateService>();
+    private readonly PlaybackSurfaceStore _surfaceStore = Ioc.Default.GetRequiredService<PlaybackSurfaceStore>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly ITeachingTipService _teachingTip = Ioc.Default.GetRequiredService<ITeachingTipService>();
 
     public BasePage()
     {
         InitializeComponent();
+        if (!Windows.ApplicationModel.Package.Current.Id.Name.EndsWith(".Dev")) AppTitleBar.Subtitle = string.Empty;
         _shellHost.AppTitleBar = AppTitleBar;
         _teachingTip.Tip = TheTeachingTip;
 
@@ -60,8 +69,27 @@ public sealed partial class BasePage : Page
         _navigator.AttachNavigationView(NavMain, BaseFrame, _navigationShell);
         _navigationShell.UpdateAccountStatus();
         _gamepad.Attach(Window.Current.CoreWindow);
+        _keyboardShortcuts.Attach(Window.Current.CoreWindow);
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
+        _setting.PropertyChanged += OnAppearanceSettingChanged;
+        _appearance.ApplyBackground(CustomBackgroundImage, CustomBackgroundBlur, CustomBackgroundBlurBrush);
+    }
+
+    private void OnAppearanceSettingChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(HyPlayer.Domain.Settings.UISettings.CustomUiFontFamily):
+                _appearance.ApplyFont();
+                break;
+            case nameof(HyPlayer.Domain.Settings.UISettings.BackgroundImagePath):
+            case nameof(HyPlayer.Domain.Settings.UISettings.BackgroundImageOpacity):
+            case nameof(HyPlayer.Domain.Settings.UISettings.BackgroundImageBlur):
+            case nameof(HyPlayer.Domain.Settings.UISettings.BackgroundImageStretch):
+                _appearance.ApplyBackground(CustomBackgroundImage, CustomBackgroundBlur, CustomBackgroundBlurBrush);
+                break;
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -70,8 +98,10 @@ public sealed partial class BasePage : Page
         Bindings.StopTracking();
         _navigator.DetachNavigationView(NavMain);
         _gamepad.Detach(Window.Current.CoreWindow);
+        _keyboardShortcuts.Detach(Window.Current.CoreWindow);
         Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
+        _setting.PropertyChanged -= OnAppearanceSettingChanged;
         _shellHost.ClearReference(AppTitleBar);
         if (ReferenceEquals(_teachingTip.Tip, TheTeachingTip))
             _teachingTip.Tip = null;
@@ -88,7 +118,26 @@ public sealed partial class BasePage : Page
     private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
     {
         if (args.VirtualKey == VirtualKey.Escape)
+        {
+            if (_surfaceStore.IsExpanded && _surfaceStore.RequestEscape()) return;
             CollapseExpandedPlayerIfNeeded();
+        }
+    }
+
+    private Brush? GetWindowBackground(bool acrylic)
+    {
+        if (!acrylic) return null;
+        if (!_setting.CustomAcrylic)
+            return Windows.UI.Xaml.Application.Current.Resources["NormalWindowBackgroundAcrylic"] as Brush;
+        var tintColor = (Windows.UI.Color)Windows.UI.Xaml.Application.Current.Resources["SystemRevealAltHighColor"];
+        return new AcrylicBrush
+        {
+            BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
+            TintColor = tintColor,
+            TintOpacity = _setting.CustomTintOpacity,
+            TintLuminosityOpacity = _setting.CustomTintLuminosityOpacity,
+            FallbackColor = tintColor
+        };
     }
 
     private bool CollapseExpandedPlayerIfNeeded()
@@ -114,11 +163,18 @@ public sealed partial class BasePage : Page
                 DefaultButton = ContentDialogButton.Primary
             };
             dialog.CloseButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
+            dialog.PrimaryButtonClick += (_, _) => _setting.DisablePopUp = true;
             _ = dialog.ShowAsync();
         }
 
         _ = UpdateManager.PopupVersionCheck(true);
+        _taskRunner.Forget(FolderAccessGuard.CheckSavedFoldersAsync(), "check saved folder access");
         _ = _loginService.TryLoadSavedLoginAsync();
+    }
+
+    private void TheTeachingTip_OnActionButtonClick(TeachingTip sender, object args)
+    {
+        _teachingTip.InvokeAction();
     }
 
     private void TheTeachingTip_OnCloseButtonClick(TeachingTip sender, object args)
@@ -129,6 +185,7 @@ public sealed partial class BasePage : Page
     private void BaseFrame_Navigated(object sender, NavigationEventArgs e)
     {
         _navigator.SyncNavigationViewSelection(e.SourcePageType, e.Parameter);
+        _memoryGovernor.ScheduleNavigationReclaim();
     }
 
     // ── TitleBar button handlers ──

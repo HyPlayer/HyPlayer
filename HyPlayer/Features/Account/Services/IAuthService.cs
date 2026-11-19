@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using HyPlayer.Features.Playback.Services;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -30,7 +31,7 @@ public interface IAuthService
     Task ImportRuntimeCookiesAsync(IReadOnlyDictionary<string, string> cookies);
 
     /// <summary>尝试使用已保存 Cookie 恢复登录。</summary>
-    Task<AuthResult> TryLoadSavedLoginAsync();
+    Task<SavedLoginResult> TryLoadSavedLoginAsync(CancellationToken cancellationToken = default);
 
     /// <summary>使用手机号或邮箱登录。</summary>
     Task<AuthResult> LoginWithPasswordAsync(string account, string password);

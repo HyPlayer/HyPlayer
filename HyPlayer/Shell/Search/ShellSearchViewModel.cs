@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using HyPlayer.Application.Notifications;
+using HyPlayer.Application.Loading;
 using HyPlayer.PlayCore.Abstraction.Interfaces.Provider;
 using HyPlayer.PlayCore.Abstraction.Models;
 using HyPlayer.PlayCore.Abstraction.Models.Containers;
@@ -14,19 +14,16 @@ namespace HyPlayer.Shell.Search;
 public sealed class ShellSearchViewModel
 {
     private readonly INavigationService _navigation;
-    private readonly INotificationService _notification;
     private readonly ISearchSuggestionProvidable _suggestionProvider;
     private string _lastSuggestionKeyword = string.Empty;
     private IReadOnlyList<string>? _lastSuggestions;
     private long _suggestionVersion;
 
     public ShellSearchViewModel(ISearchSuggestionProvidable suggestionProvider,
-        INavigationService navigation,
-        INotificationService notification)
+        INavigationService navigation)
     {
         _suggestionProvider = suggestionProvider;
         _navigation = navigation;
-        _notification = notification;
     }
 
     public async Task<IReadOnlyList<string>?> GetSuggestionsAsync(string keyword, CancellationToken cancellationToken = default)
@@ -55,7 +52,7 @@ public sealed class ShellSearchViewModel
         }
         catch (Exception ex)
         {
-            _notification.ShowMessage("获取推荐词失败", ex.Message);
+            LoadFailureNotifier.Record("搜索建议", ex, cancellationToken);
         }
 
         return null;

@@ -111,6 +111,8 @@ public sealed partial class TestPage : Page
 
     private async void TestGCLeak_Click(object sender, RoutedEventArgs e)
     {
+        if (!CanCollectForDiagnostics()) return;
+        _controlsReferences.Clear();
         var leakCheckFrame = new Frame
         {
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
@@ -126,15 +128,15 @@ public sealed partial class TestPage : Page
             _controlsReferences.Add(
                 new KeyValuePair<string, WeakReference<FrameworkElement>>(type.Name,
                     new WeakReference<FrameworkElement>(page)));
-            GC.Collect();
+            if (CanCollectForDiagnostics()) GC.Collect();
             await Task.Delay(5000);
         }
 
         MainStackPanel.Children.Remove(leakCheckFrame);
         _notification.ShowMessage("正在生成报告", "等待 GC 处理中");
-        GC.Collect();
+        if (CanCollectForDiagnostics()) GC.Collect();
         await Task.Delay(5000);
-        GC.Collect();
+        if (CanCollectForDiagnostics()) GC.Collect();
         var resultSb = new StringBuilder();
         foreach (var (name, reference) in _controlsReferences)
             resultSb.AppendLine(name + ": " + (reference.TryGetTarget(out _) ? "Alive" : "Collected"));
@@ -171,7 +173,7 @@ public sealed partial class TestPage : Page
     {
         var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
         var playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
-        var info = JsonSerializer.Serialize(new DumpInfo
+        var info = JsonDefaults.Serialize(new DumpInfo
         {
             CurrentSong = state.NowPlayingSnapshot,
             CurrentPlaySource = playCore.PlaySourceId,
@@ -190,7 +192,7 @@ public sealed partial class TestPage : Page
             IsInBackground = Ioc.Default.GetRequiredService<IAppLifecycleStateService>().IsInBackground,
             ErrorMessageList =
                 [.. Ioc.Default.GetRequiredService<IDiagnosticsStateService>().ErrorMessages.TakeLast(15)]
-        }, JsonDefaults.Options);
+        });
         var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("dump-" +
             DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid() + ".txt");
         await FileIO.WriteTextAsync(file, info);
@@ -204,7 +206,16 @@ public sealed partial class TestPage : Page
 
     private void ForceGC_Click(object sender, RoutedEventArgs e)
     {
-        GC.Collect();
+        if (CanCollectForDiagnostics()) GC.Collect();
+    }
+
+    private bool CanCollectForDiagnostics()
+    {
+        var state = Ioc.Default.GetRequiredService<PlaybackStateService>();
+        var player = Ioc.Default.GetRequiredService<HyPlayer.UWP.Chopin.Abstractions.Models.AudioGraphPlayer>();
+        if (!state.IsPlaying && !state.IsTransitioning && !player.RealtimeCallbacksActive) return true;
+        _notification.ShowMessage("请先停止播放", "GC 诊断会暂停托管线程，请在播放器空闲时运行。");
+        return false;
     }
 
     private void SaveApiAdditionalParameters_OnClick(object sender, RoutedEventArgs e)

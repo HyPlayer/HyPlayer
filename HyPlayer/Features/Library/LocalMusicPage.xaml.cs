@@ -11,6 +11,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Downloads;
 using HyPlayer.Features.Netease.Legacy;
@@ -41,11 +42,17 @@ public sealed partial class LocalMusicPage : Page
         Ioc.Default.GetRequiredService<ILocalFileImportService>();
 
     private readonly PlayCoreBase _playCore = Ioc.Default.GetRequiredService<PlayCoreBase>();
+    private readonly PlaybackRestriction _restriction = Ioc.Default.GetRequiredService<PlaybackRestriction>();
     private readonly LocalLibrarySettings _setting = Ioc.Default.GetRequiredService<LocalLibrarySettings>();
     private readonly IBackgroundTaskRunner _taskRunner = Ioc.Default.GetRequiredService<IBackgroundTaskRunner>();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private Task _currentFileScanTask;
     private bool _isNavigatedAway;
+
+    private readonly LoadState _localLoad = new("本地歌曲")
+    {
+        EmptyText = "还没有本地歌曲，点击「开始扫描」查找音乐库里的歌曲"
+    };
 
     public LocalMusicPageViewModel ViewModel { get; } = new();
 
@@ -53,6 +60,15 @@ public sealed partial class LocalMusicPage : Page
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
+        LocalEmptyState.State = _localLoad;
+    }
+
+    private void RefreshLocalEmptyState()
+    {
+        if (ViewModel.LocalItems.Count == 0)
+            _localLoad.ShowEmpty();
+        else
+            _localLoad.ShowLoaded();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -77,14 +93,24 @@ public sealed partial class LocalMusicPage : Page
         }
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         DownloadPageFrame.Navigate(typeof(DownloadPage));
+        var cached = await LocalMusicCache.LoadAsync();
+        if (_isNavigatedAway || _currentFileScanTask is not null) return;
+        if (cached is { Count: > 0 } && ViewModel.LocalItems.Count == 0)
+        {
+            ViewModel.LocalItems.AddRange(cached);
+            ViewModel.NotificationText = $"共 {cached.Count} 首音乐（上次扫描的结果，点击“开始扫描”可刷新）";
+        }
+
+        RefreshLocalEmptyState();
     }
 
     private async void Playall_Click(object sender, RoutedEventArgs e)
     {
+        if (!_restriction.Allows(PlaybackRequest.PlayLocal)) return;
         await _control.StopAsync();
         await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(ViewModel.LocalItems.Cast<SingleSongBase>().ToList());
@@ -106,6 +132,7 @@ public sealed partial class LocalMusicPage : Page
         ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
         ViewModel.NotificationText = "正在扫描...";
         ViewModel.LocalItems.Clear();
+        _localLoad.ShowLoaded();
         FileLoadingIndicateRing.Visibility = Visibility.Visible;
         FileLoadingIndicateRing.IsActive = true;
         try
@@ -169,6 +196,7 @@ public sealed partial class LocalMusicPage : Page
             }
             _cancellationToken.ThrowIfCancellationRequested();
             ViewModel.NotificationText = "扫描完成, 共 " + ViewModel.LocalItems.Count + " 首音乐";
+            _taskRunner.Forget(LocalMusicCache.SaveAsync(ViewModel.LocalItems.ToList()), "save local music cache");
         }
         catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
         {
@@ -183,6 +211,7 @@ public sealed partial class LocalMusicPage : Page
             {
                 FileLoadingIndicateRing.IsActive = false;
                 FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
+                RefreshLocalEmptyState();
                 ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
             }
         }
@@ -190,7 +219,7 @@ public sealed partial class LocalMusicPage : Page
 
     private async void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ListBoxLocalMusicContainer.SelectedItem == null) return;
+        if (ListBoxLocalMusicContainer.SelectedItem == null || !_restriction.Allows(PlaybackRequest.PlayLocal)) return;
         await _control.StopAsync();
         await _control.ClearQueueAsync();
         await _playCore.InsertSongRangeAsync(ViewModel.LocalItems.Cast<SingleSongBase>().ToList());
@@ -215,6 +244,7 @@ public sealed partial class LocalMusicPage : Page
 
     private async Task PickAndAppendLocalFilesAsync()
     {
+        if (!_restriction.Allows(PlaybackRequest.PlayLocal)) return;
         var items = await _localFileImport.PickLocalFilesAsync();
         if (items.Count == 0)
             return;

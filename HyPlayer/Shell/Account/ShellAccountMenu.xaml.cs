@@ -1,3 +1,4 @@
+using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
@@ -35,6 +36,11 @@ public sealed partial class ShellAccountMenu : UserControl
         await _navigator.NavigateAsync(new AppRoute.Me());
     }
 
+    private async void Relogin_Click(object sender, RoutedEventArgs e)
+    {
+        await _loginService.ShowReloginDialogAsync();
+    }
+
     private async void OpenSettings_Click(object sender, RoutedEventArgs e)
     {
         await _navigator.NavigateAsync(new AppRoute.Settings());
@@ -42,6 +48,23 @@ public sealed partial class ShellAccountMenu : UserControl
 
     private async void SignOut_Click(object sender, RoutedEventArgs e)
     {
+        var dialog = new ContentDialog
+        {
+            Title = "退出登录",
+            Content = "确定要退出当前账号吗？",
+            PrimaryButtonText = "退出登录",
+            CloseButtonText = "取消",
+            DefaultButton = ContentDialogButton.Close
+        };
+        try
+        {
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        }
+        catch
+        {
+            return;
+        }
+
         await _loginService.LogoutAsync();
     }
 }

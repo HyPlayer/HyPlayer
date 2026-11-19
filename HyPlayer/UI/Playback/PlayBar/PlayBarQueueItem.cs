@@ -24,11 +24,26 @@ public sealed partial class PlayBarQueueItem : ObservableObject
         _isCurrent = isCurrent;
     }
 
-    public int QueueIndex { get; }
-    public string Name { get; }
-    public string Translation { get; }
-    public string ArtistText { get; }
-    public SingleSongBase? ProviderItem { get; }
+    [ObservableProperty] public partial int QueueIndex { get; private set; }
+    [ObservableProperty] public partial string Name { get; private set; }
+    [ObservableProperty] public partial string Translation { get; private set; }
+    [ObservableProperty] public partial string ArtistText { get; private set; }
+    [ObservableProperty] public partial SingleSongBase? ProviderItem { get; private set; }
+
+    internal void Update(PlaybackQueueItemSnapshot snapshot, SingleSongBase? nowPlayingItem)
+    {
+        QueueIndex = snapshot.QueueIndex;
+        Name = snapshot.Name;
+        Translation = snapshot.Translation;
+        ArtistText = snapshot.ArtistText;
+        ProviderItem = snapshot.ProviderItem;
+        IsCurrent = IsSameSong(snapshot.ProviderItem, nowPlayingItem);
+    }
+
+    public override string ToString()
+    {
+        return string.IsNullOrWhiteSpace(ArtistText) ? Name : $"{Name} - {ArtistText}";
+    }
 
     public bool IsCurrent
     {

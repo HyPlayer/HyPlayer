@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HyPlayer.Application.Loading;
 using HyPlayer.Application.Notifications;
 using HyPlayer.Domain.Comments;
 using HyPlayer.Domain.Settings;
@@ -37,8 +38,10 @@ public partial class AlbumPageViewModel : ObservableObject
         UISettings setting,
         INotificationService notification,
         INavigationService navigation,
-        IBackgroundTaskRunner taskRunner)
+        IBackgroundTaskRunner taskRunner,
+        ILoadEnvironment loadEnvironment)
     {
+        PageLoad = new LoadState("专辑", loadEnvironment) { EmptyText = "没有找到这张专辑" };
         _itemProvider = itemProvider;
         _knownTypeIds = knownTypeIds;
         _containerItemManagement = containerItemManagement;
@@ -47,6 +50,8 @@ public partial class AlbumPageViewModel : ObservableObject
         _navigation = navigation;
         _taskRunner = taskRunner;
     }
+
+    public LoadState PageLoad { get; }
 
     [ObservableProperty] public partial AlbumBase Album { get; set; }
 
@@ -70,19 +75,19 @@ public partial class AlbumPageViewModel : ObservableObject
         if (album is not null) Subscribed = album is IHasLibraryState { IsInCurrentUserLibrary: true };
     }
 
-    public async Task LoadAlbumInfo(string albumId)
+    public Task LoadAlbumInfo(string albumId)
     {
-        try
+        return PageLoad.RunAsync(async cancellationToken =>
         {
-            var providerAlbum = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, albumId, async () =>
-                await LoadProviderAlbumAsync(albumId));
+            var providerAlbum = await SimpleCacher.GetOrCreateCacheOrThrowAsync(CacheType.AlbumInfo, albumId,
+                async () => await LoadProviderAlbumAsync(albumId), cancellationToken: cancellationToken);
 
-            if (providerAlbum is null) return;
+            if (providerAlbum is null) return false;
 
             Album = providerAlbum;
             if (!_setting.NoImage && await GetCoverUriAsync(Album) is { } coverUri)
                 SourceImage = new BitmapImage(coverUri);
-            else SourceImage = new BitmapImage(new Uri("/Assets/icon.png"));
+            else SourceImage = new BitmapImage(new Uri("ms-appx:///Assets/icon.png"));
 
             var artists = providerAlbum is IHasCreators creatorsProvider
                 ? await creatorsProvider.GetCreatorsAsync()
@@ -98,11 +103,8 @@ public partial class AlbumPageViewModel : ObservableObject
             PublishTime = providerAlbum is IHasPublishTime publishTimeProvider
                 ? publishTimeProvider.PublishTime
                 : 0;
-        }
-        catch (Exception ex)
-        {
-            _notification.ShowMessage(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
+            return true;
+        });
     }
 
     [RelayCommand]
@@ -127,7 +129,7 @@ public partial class AlbumPageViewModel : ObservableObject
 
     private async Task<AlbumBase> LoadProviderAlbumAsync(string albumId)
     {
-        if (_providerAlbumTask is not null && _providerAlbumTaskId == albumId)
+        if (_providerAlbumTask is { IsFaulted: false, IsCanceled: false } && _providerAlbumTaskId == albumId)
             return await _providerAlbumTask;
 
         _providerAlbumTaskId = albumId;
@@ -137,11 +139,9 @@ public partial class AlbumPageViewModel : ObservableObject
 
     private async Task<AlbumBase> LoadProviderAlbumCoreAsync(string albumId)
     {
-        if (await _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.AlbumTypeId + albumId) is AlbumBase album)
-            return album;
-
-        _notification.ShowMessage("获取专辑信息失败", "未能从提供程序加载专辑");
-        return null;
+        return await LoadRequestProbe.GuardAsync(
+            () => _itemProvider.GetProvidableItemByIdAsync(_knownTypeIds.AlbumTypeId + albumId),
+            static item => item is not AlbumBase) as AlbumBase;
     }
 
     private static async Task<Uri?> GetCoverUriAsync(AlbumBase album)

@@ -19,7 +19,10 @@ internal sealed class LineRollingElasticEase : EaseFunctionBase
     {
         var exponential = (Math.Exp(Springiness * normalizedTime) - 1) /
                           (Math.Exp(Springiness) - 1);
-        return Amplitude * exponential *
+        var squared = normalizedTime * normalizedTime;
+        var fourth = squared * squared;
+        var amplitude = Amplitude + (1 - Amplitude) * fourth * fourth;
+        return amplitude * exponential *
                Math.Sin((Math.PI * 2 * Oscillations + Math.PI * 0.5) * normalizedTime);
     }
 }

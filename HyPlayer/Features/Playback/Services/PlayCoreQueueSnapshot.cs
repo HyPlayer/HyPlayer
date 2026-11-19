@@ -11,14 +11,12 @@ internal static class PlayCoreQueueSnapshot
 {
     public static async Task<IReadOnlyList<SingleSongBase>> GetPlaylistAsync(PlayCoreBase playCore)
     {
-        try { return await playCore.GetPlaylistAsync().ConfigureAwait(false); }
-        catch { return []; }
+        return await playCore.GetPlaylistAsync().ConfigureAwait(false);
     }
 
     public static async Task<IReadOnlyList<SingleSongBase>> GetOrderedPlaylistAsync(PlayCoreBase playCore)
     {
-        try { return await playCore.GetOrderedPlaylistAsync().ConfigureAwait(false); }
-        catch { return await GetPlaylistAsync(playCore).ConfigureAwait(false); }
+        return await playCore.GetOrderedPlaylistAsync().ConfigureAwait(false);
     }
 
     internal static PlaybackQueueItemSnapshot[] Build(

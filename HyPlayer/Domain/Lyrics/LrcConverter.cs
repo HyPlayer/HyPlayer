@@ -25,7 +25,6 @@ public static class LrcConverter
 
     public static readonly List<ILyricEnhancer<bool>> LyricEnhancers =
     [
-        new BreathLineEnhancer(),
         new NearbyLineAlignmentEnhancer(),
         new SublineAlignmentEnhancer()
     ];
@@ -34,7 +33,8 @@ public static class LrcConverter
         ALRCFile alrc,
         List<LyricInfoMetadata>? lyricMetadata = null,
         List<LyricInfoMetadata>? songMetadata = null,
-        bool optimizeLyric = false)
+        bool optimizeLyric = false,
+        long interludeThresholdMs = 0)
     {
         ArgumentNullException.ThrowIfNull(alrc);
         if (optimizeLyric)
@@ -45,7 +45,9 @@ public static class LrcConverter
 
         var styles = BuildStyleTable(alrc);
         var resolved = ResolveLines(alrc);
-        var grouped = GroupLines(resolved);
+        var grouped = interludeThresholdMs > 0
+            ? InsertInterludes(GroupLines(resolved), interludeThresholdMs)
+            : GroupLines(resolved);
         var result = new List<RenderingLyricLine>(grouped.Count + (lyricMetadata?.Count ?? 0));
 
         foreach (var item in grouped)
@@ -130,6 +132,95 @@ public static class LrcConverter
             }
         }
         return result;
+    }
+
+    private static List<ResolvedLine> InsertInterludes(List<ResolvedLine> grouped, long thresholdMs)
+    {
+        var groups = new List<List<ResolvedLine>>();
+        foreach (var line in grouped)
+        {
+            if (groups.Count == 0 || groups[^1][0].GroupIndex != line.GroupIndex) groups.Add([]);
+            groups[^1].Add(line);
+        }
+
+        var result = new List<ResolvedLine>(grouped.Count + 4);
+        var groupIndex = 0;
+        if (groups.Count > 0 && !IsSilent(groups[0]) && groups[0][0].GroupStart >= thresholdMs)
+        {
+            var introEnd = groups[0][0].GroupStart;
+            result.Add(new ResolvedLine(new ALRCLine { Start = 0, End = introEnd, RawText = string.Empty }, -1, 0, introEnd)
+            {
+                GroupIndex = groupIndex++,
+                GroupStart = 0,
+                GroupEnd = introEnd
+            });
+        }
+
+        for (var index = 0; index < groups.Count; index++)
+        {
+            var members = groups[index];
+            long? interludeStart = null;
+            long interludeEnd = 0;
+            if (index + 1 < groups.Count && SungEnd(members) is { } sungEnd && !IsSilent(groups[index + 1]))
+            {
+                interludeEnd = groups[index + 1][0].GroupStart;
+                if (interludeEnd - sungEnd >= thresholdMs) interludeStart = sungEnd;
+            }
+
+            foreach (var member in members)
+            {
+                result.Add(interludeStart is { } cut
+                    ? member with
+                    {
+                        GroupIndex = groupIndex,
+                        End = Math.Min(member.End, cut),
+                        GroupEnd = Math.Min(member.GroupEnd, cut)
+                    }
+                    : member with { GroupIndex = groupIndex });
+            }
+
+            groupIndex++;
+            if (interludeStart is not { } start) continue;
+            var interlude = new ALRCLine { Start = start, End = interludeEnd, RawText = string.Empty };
+            result.Add(new ResolvedLine(interlude, -1, start, interludeEnd)
+            {
+                GroupIndex = groupIndex++,
+                GroupStart = start,
+                GroupEnd = interludeEnd
+            });
+        }
+
+        return result;
+    }
+
+    private static long? SungEnd(IReadOnlyList<ResolvedLine> members)
+    {
+        if (IsSilent(members)) return null;
+        long? end = null;
+        foreach (var member in members)
+        {
+            var words = member.Line.Words;
+            long last;
+            if (words is { Count: > 0 })
+                last = words.Max(word => word.End);
+            else if (string.IsNullOrWhiteSpace(member.Line.RawText))
+                continue;
+            else if (member.Line.End is { } lineEnd)
+                last = lineEnd;
+            else
+                return null;
+
+            end = end is { } current ? Math.Max(current, last) : last;
+        }
+
+        return end;
+    }
+
+    private static bool IsSilent(IReadOnlyList<ResolvedLine> members)
+    {
+        return members.All(member =>
+            string.IsNullOrWhiteSpace(member.Line.RawText) &&
+            (member.Line.Words is not { Count: > 0 } words || words.All(word => string.IsNullOrWhiteSpace(word.Word))));
     }
 
     private static int ResolveRoot(

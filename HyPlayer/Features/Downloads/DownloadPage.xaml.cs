@@ -1,10 +1,13 @@
 #region
 
 using System;
+using System.Collections.Specialized;
 using Windows.System;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Application.Loading;
 using HyPlayer.Domain.Settings;
 using HyPlayer.Features.Downloads.Services;
 using WinRT;
@@ -22,10 +25,45 @@ public sealed partial class DownloadPage : Page
 {
     private readonly IDownloadService _downloadService = Ioc.Default.GetRequiredService<IDownloadService>();
     private readonly DownloadSettings _setting = Ioc.Default.GetRequiredService<DownloadSettings>();
+    private readonly LoadState _load = new("下载任务") { EmptyText = "还没有下载任务" };
 
     public DownloadPage()
     {
         InitializeComponent();
+        EmptyState.State = _load;
+        Loaded += DownloadPage_Loaded;
+        Unloaded += DownloadPage_Unloaded;
+    }
+
+    private void DownloadPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        ((INotifyCollectionChanged)DownloadManager.DownloadListsView).CollectionChanged += Downloads_CollectionChanged;
+        RefreshEmptyState();
+    }
+
+    private void DownloadPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        ((INotifyCollectionChanged)DownloadManager.DownloadListsView).CollectionChanged -= Downloads_CollectionChanged;
+    }
+
+    private void Downloads_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (Dispatcher.HasThreadAccess)
+            RefreshEmptyState();
+        else
+            _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, RefreshEmptyState);
+    }
+
+    private void RefreshEmptyState()
+    {
+        var isEmpty = DownloadManager.DownloadLists.Count == 0;
+        if (isEmpty == _load.IsEmpty && (isEmpty || _load.IsLoaded))
+            return;
+
+        if (isEmpty)
+            _load.ShowEmpty();
+        else
+            _load.ShowLoaded();
     }
 
     private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
