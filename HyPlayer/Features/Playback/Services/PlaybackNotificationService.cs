@@ -87,9 +87,14 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
     }
 
     /// <inheritdoc />
-    public async Task RefreshCoverAsync(SingleSongBase providerItem)
+    public async Task RefreshCoverAsync(SingleSongBase providerItem, bool forceRefresh = false)
     {
-        var requestVersion = Interlocked.Increment(ref _coverRequestVersion);
+        int requestVersion;
+        lock (_coverPublishGate)
+        {
+            if (_uiSettings.NoImage || !ReferenceEquals(providerItem, _state.NowPlayingProviderItem)) return;
+            requestVersion = Interlocked.Increment(ref _coverRequestVersion);
+        }
         InMemoryRandomAccessStream newStream = null;
         try
         {
@@ -98,7 +103,7 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
             if (preload is not null && preload.Matches(providerItem))
             {
                 Interlocked.CompareExchange(ref _preloadedCover, null, preload);
-                bytes = await preload.Bytes;
+                if (!forceRefresh) bytes = await preload.Bytes;
             }
 
             bytes ??= await DownloadCoverAsync(providerItem);
@@ -113,7 +118,8 @@ public sealed class PlaybackNotificationService : IPlaybackNotificationService
             var newRef = RandomAccessStreamReference.CreateFromStream(newStream);
             lock (_coverPublishGate)
             {
-                if (requestVersion != Volatile.Read(ref _coverRequestVersion)) return;
+                if (requestVersion != Volatile.Read(ref _coverRequestVersion) || _uiSettings.NoImage ||
+                    !ReferenceEquals(providerItem, _state.NowPlayingProviderItem)) return;
                 _state.CoverStreamReference = newRef;
                 _state.CoverStream = newStream;
                 newStream = null;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Windows.Storage;
 using HyPlayer.PlayCore.Abstraction.Models.SingleItems;
 
@@ -25,10 +26,17 @@ public sealed record LyricSourceOption(LyricSourceKind Kind, LyricSourceState St
 public sealed class LyricSourcePreferences
 {
     private const string ContainerName = "LyricSourceChoices";
+    private readonly IDictionary<string, object>? _values;
+
+    public LyricSourcePreferences() { }
+
+    internal LyricSourcePreferences(IDictionary<string, object> values) => _values = values;
+
+    private IDictionary<string, object> Values => _values ?? Container().Values;
 
     public LyricSourceKind Get(SingleSongBase item)
     {
-        return Container().Values.TryGetValue(Key(item), out var value) && value is string text &&
+        return Values.TryGetValue(Key(item), out var value) && value is string text &&
                Enum.TryParse<LyricSourceKind>(text, out var kind)
             ? kind
             : LyricSourceKind.Auto;
@@ -36,7 +44,7 @@ public sealed class LyricSourcePreferences
 
     public void Set(SingleSongBase item, LyricSourceKind kind)
     {
-        var values = Container().Values;
+        var values = Values;
         if (kind == LyricSourceKind.Auto) values.Remove(Key(item));
         else values[Key(item)] = kind.ToString();
     }

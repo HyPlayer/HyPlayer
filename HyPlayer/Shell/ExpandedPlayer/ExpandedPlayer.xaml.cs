@@ -113,6 +113,8 @@ public sealed partial class ExpandedPlayer : Page
     private readonly INavigationService _navigation = Ioc.Default.GetRequiredService<INavigationService>();
     private readonly IAppNavigator _navigator = Ioc.Default.GetRequiredService<IAppNavigator>();
     private readonly INotificationService _notification = Ioc.Default.GetRequiredService<INotificationService>();
+    private readonly IPlaybackNotificationService _coverNotifications =
+        Ioc.Default.GetRequiredService<IPlaybackNotificationService>();
 
     private readonly IPlayBarAutoHideService _playBarAutoHide =
         Ioc.Default.GetRequiredService<IPlayBarAutoHideService>();
@@ -1358,7 +1360,10 @@ public sealed partial class ExpandedPlayer : Page
         _lyricSourceCts?.Cancel();
         _lyricSourceCts?.Dispose();
         _lyricSourceCts = null;
-        if (_state.NowPlayingProviderItem is not { } song)
+        var song = _state.NowPlayingProviderItem;
+        ReloadCoverItem.IsEnabled = song is not null && !_uiSettings.NoImage;
+        ReloadLyricsItem.IsEnabled = song is not null;
+        if (song is null)
         {
             LyricSourceMenu.IsEnabled = false;
             return;
@@ -1382,6 +1387,29 @@ public sealed partial class ExpandedPlayer : Page
         }
 
         await Task.WhenAll(checks);
+    }
+
+    private void ReloadCover_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isCleanedUp || _uiSettings.NoImage || _state.NowPlayingProviderItem is not { } song) return;
+        _taskRunner.Forget(ReloadCoverAsync(song), "reload expanded player cover and background");
+    }
+
+    private async Task ReloadCoverAsync(SingleSongBase song)
+    {
+        var previous = EffectiveCoverStream;
+        _dynamicCover.Load(song, forceRefresh: true);
+        await _coverNotifications.RefreshCoverAsync(song, forceRefresh: true);
+        if (!_isCleanedUp && ReferenceEquals(song, _state.NowPlayingProviderItem) &&
+            ReferenceEquals(previous, EffectiveCoverStream))
+            await RefreshAlbumCoverAsync();
+    }
+
+    private void ReloadLyrics_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isCleanedUp || _state.NowPlayingProviderItem is not { } song) return;
+        _lyricSourceCts?.Cancel();
+        _taskRunner.Forget(_lyricService.ReloadLyricsAsync(song), "reload expanded player lyrics");
     }
 
     private async Task UpdateLyricSourceItemAsync(Microsoft.UI.Xaml.Controls.RadioMenuFlyoutItem item,

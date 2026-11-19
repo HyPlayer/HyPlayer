@@ -23,7 +23,8 @@ public sealed record DynamicCoverVideo(StorageFile File, string? PreviewImageUrl
 public interface IDynamicCoverService
 {
     AppleMusicCoverStatus AppleMusicStatus { get; }
-    Task<DynamicCoverVideo?> ResolveAsync(SingleSongBase song, DynamicCoverSource source, CancellationToken ct);
+    Task<DynamicCoverVideo?> ResolveAsync(SingleSongBase song, DynamicCoverSource source, CancellationToken ct,
+        bool forceRefresh = false);
     Task<InMemoryRandomAccessStream?> CreatePosterAsync(DynamicCoverVideo video, CancellationToken ct);
     Task CheckAppleMusicAsync(CancellationToken ct = default);
     Task ClearCacheAsync();
@@ -66,7 +67,8 @@ internal sealed class DynamicCoverService : IDynamicCoverService
 
     public AppleMusicCoverStatus AppleMusicStatus { get; } = new();
 
-    public async Task<DynamicCoverVideo?> ResolveAsync(SingleSongBase song, DynamicCoverSource source, CancellationToken ct)
+    public async Task<DynamicCoverVideo?> ResolveAsync(SingleSongBase song, DynamicCoverSource source, CancellationToken ct,
+        bool forceRefresh = false)
     {
         if (song.ProviderId != "ncm" || string.IsNullOrEmpty(song.ActualId)) return null;
         DynamicCoverSource[] order = source switch
@@ -75,12 +77,33 @@ internal sealed class DynamicCoverService : IDynamicCoverService
             DynamicCoverSource.Netease => [DynamicCoverSource.Netease],
             _ => [DynamicCoverSource.AppleMusic, DynamicCoverSource.Netease]
         };
+        string Key(DynamicCoverSource candidate) =>
+            (candidate == DynamicCoverSource.AppleMusic ? "am:" : "ncm:") + song.ActualId;
+
+        if (forceRefresh)
+        {
+            foreach (var candidate in order)
+            {
+                var key = Key(candidate);
+                DynamicCoverVideo? known;
+                lock (_sync) _resolved.TryGetValue(key, out known);
+                if (known is null) continue;
+                if (await IsUsableAsync(known.File, ct).ConfigureAwait(false)) return known;
+                lock (_sync)
+                {
+                    if (!_resolved.TryGetValue(key, out var current) || !ReferenceEquals(current, known)) continue;
+                    _resolved.Remove(key);
+                    _videoOrder.Remove(key);
+                }
+            }
+        }
+
         foreach (var candidate in order)
         {
-            var key = (candidate == DynamicCoverSource.AppleMusic ? "am:" : "ncm:") + song.ActualId;
+            var key = Key(candidate);
             lock (_sync)
             {
-                if (_resolved.TryGetValue(key, out var known))
+                if (!forceRefresh && _resolved.TryGetValue(key, out var known))
                 {
                     if (known is not null) return known;
                     continue;
@@ -91,6 +114,7 @@ internal sealed class DynamicCoverService : IDynamicCoverService
             var (found, video) = candidate == DynamicCoverSource.AppleMusic
                 ? await ResolveAppleMusicAsync(song, ct).ConfigureAwait(false)
                 : await ResolveNeteaseAsync(song, ct).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
             if (!found) continue;
             foreach (var evicted in Remember(key, video, version))
                 await TryDeleteAsync(evicted).ConfigureAwait(false);
@@ -272,13 +296,26 @@ internal sealed class DynamicCoverService : IDynamicCoverService
         return files.Count == 0 ? null : await DownloadFilesAsync(files, fileName, ct).ConfigureAwait(false);
     }
 
+    private static async Task<bool> IsUsableAsync(StorageFile file, CancellationToken ct)
+    {
+        try
+        {
+            return (await file.GetBasicPropertiesAsync().AsTask(ct).ConfigureAwait(false)).Size > 0;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
     private async Task<StorageFile?> DownloadFilesAsync(IReadOnlyList<Uri> parts, string fileName, CancellationToken ct)
     {
         await _folderGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             var folder = await GetFolderAsync().ConfigureAwait(false);
-            if (await folder.TryGetItemAsync(fileName) is StorageFile existing) return existing;
+            if (await folder.TryGetItemAsync(fileName) is StorageFile existing &&
+                await IsUsableAsync(existing, ct).ConfigureAwait(false)) return existing;
             var temp = await folder.CreateFileAsync(fileName + ".part", CreationCollisionOption.ReplaceExisting);
             try
             {
@@ -295,6 +332,7 @@ internal sealed class DynamicCoverService : IDynamicCoverService
                     }
                 }
 
+                ct.ThrowIfCancellationRequested();
                 await temp.RenameAsync(fileName, NameCollisionOption.ReplaceExisting);
                 return temp;
             }

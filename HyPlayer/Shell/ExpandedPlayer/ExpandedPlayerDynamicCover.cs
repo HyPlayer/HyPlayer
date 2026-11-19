@@ -78,20 +78,20 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
 
     public InMemoryRandomAccessStream? Poster { get; private set; }
 
-    public void Load(SingleSongBase? song)
+    public void Load(SingleSongBase? song, bool forceRefresh = false)
     {
         if (!_dispatcher.HasThreadAccess)
         {
-            _dispatcher.TryEnqueue(() => Load(song));
+            _dispatcher.TryEnqueue(() => Load(song, forceRefresh));
             return;
         }
 
         if (_disposed) return;
         var key = song?.ItemId;
-        if (key is not null && key == _songKey) return;
+        if (!forceRefresh && key is not null && key == _songKey) return;
         _song = song;
         _songKey = key;
-        Restart();
+        Restart(forceRefresh);
     }
 
     public void OnCoverDisplayed(object cover)
@@ -142,7 +142,7 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         _clipGeometry = null;
     }
 
-    private void Restart()
+    private void Restart(bool forceRefresh = false)
     {
         if (_disposed) return;
         var hadPoster = Reset();
@@ -150,7 +150,7 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         {
             var loading = new LoadOperation();
             _loading = loading;
-            _taskRunner.Forget(LoadAsync(song, _settings.DynamicCoverSource, _generation, loading),
+            _taskRunner.Forget(LoadAsync(song, _settings.DynamicCoverSource, _generation, loading, forceRefresh),
                 "load dynamic cover");
         }
 
@@ -161,13 +161,14 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
         SingleSongBase song,
         DynamicCoverSource source,
         int generation,
-        LoadOperation loading)
+        LoadOperation loading,
+        bool forceRefresh)
     {
         InMemoryRandomAccessStream? poster = null;
         var ct = loading.Token;
         try
         {
-            var video = await _service.ResolveAsync(song, source, ct).ConfigureAwait(false);
+            var video = await _service.ResolveAsync(song, source, ct, forceRefresh).ConfigureAwait(false);
             if (video is null) return;
             poster = await _service.CreatePosterAsync(video, ct).ConfigureAwait(false);
             if (poster is null) return;
@@ -482,7 +483,7 @@ internal sealed class ExpandedPlayerDynamicCover : IDisposable
             or nameof(PlaybackSettings.DynamicCoverLoopCrossfade)))
             return;
         if (_dispatcher.HasThreadAccess) Restart();
-        else _dispatcher.TryEnqueue(Restart);
+        else _dispatcher.TryEnqueue(() => Restart());
     }
 
     private sealed class VideoSlot : IDisposable

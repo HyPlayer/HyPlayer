@@ -55,13 +55,21 @@ public sealed partial class LyricService(
     private LyricLoad? _preloadedLoad;
 
     /// <inheritdoc />
-    public async Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default)
+    public Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default) =>
+        LoadLyricsAsync(providerItem, false, ct);
+
+    public Task ReloadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default) =>
+        LoadLyricsAsync(providerItem, true, ct);
+
+    private async Task LoadLyricsAsync(SingleSongBase providerItem, bool forceRefresh, CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
         LyricLoad load;
         int version;
         lock (_loadSync)
         {
-            if (_currentLoad is { } current && !(current.Reusable && current.Matches(providerItem)))
+            if (forceRefresh && !ReferenceEquals(state.NowPlayingProviderItem, providerItem)) return;
+            if (_currentLoad is { } current && (forceRefresh || !current.Reusable || !current.Matches(providerItem)))
             {
                 current.Cancel();
                 _currentLoad = null;
@@ -70,12 +78,20 @@ public sealed partial class LyricService(
             if (_currentLoad is null && _preloadedLoad is { } preloaded && preloaded.Matches(providerItem))
             {
                 _preloadedLoad = null;
-                if (preloaded.Reusable) _currentLoad = preloaded;
+                if (!forceRefresh && preloaded.Reusable) _currentLoad = preloaded;
                 else preloaded.Cancel();
             }
 
-            load = _currentLoad ??= StartLoad(providerItem);
-            version = load.Attach(PublishLyrics, PublishPendingLyrics);
+            if (forceRefresh) ForgetSourceResults(providerItem);
+            load = _currentLoad ??= StartLoad(providerItem, forceRefresh);
+            bool IsCurrent() => state.NowPlayingProviderItem is { } song && load.Matches(song);
+            version = load.Attach(info =>
+            {
+                if (IsCurrent()) PublishLyrics(info);
+            }, () =>
+            {
+                if (IsCurrent()) PublishPendingLyrics();
+            });
         }
 
         try
@@ -104,9 +120,9 @@ public sealed partial class LyricService(
         }
     }
 
-    private LyricLoad StartLoad(SingleSongBase providerItem)
+    private LyricLoad StartLoad(SingleSongBase providerItem, bool forceRefresh = false)
     {
-        var load = new LyricLoad(providerItem, (owner, token) => ResolveLyricsAsync(providerItem, owner, token));
+        var load = new LyricLoad(providerItem, (owner, token) => ResolveLyricsAsync(providerItem, owner, forceRefresh, token));
         taskRunner.Forget(load.Completion, "resolve lyrics");
         return load;
     }
@@ -117,6 +133,7 @@ public sealed partial class LyricService(
         {
             state.LyricInfo = lyricInfo;
             state.LyricIndex = 0;
+            Tick(state.Position);
         }
 
         state.IsLyricPending = false;
@@ -144,18 +161,25 @@ public sealed partial class LyricService(
 
     private sealed record ProviderLyric(PureLyricInfo Info, bool Missing);
 
-    private async Task ResolveLyricsAsync(SingleSongBase providerItem, LyricLoad load, CancellationToken ct)
+    private async Task ResolveLyricsAsync(SingleSongBase providerItem, LyricLoad load, bool forceRefresh, CancellationToken ct)
     {
+        if (forceRefresh)
+        {
+            var lookup = await GetSourceLookupAsync(providerItem);
+            ct.ThrowIfCancellationRequested();
+            thirdPartyLyrics.ForgetMissing(providerItem, lookup.NeteaseId);
+        }
+
         if (providerItem is LocalSong localSong)
         {
-            await ResolveLocalLyricsAsync(localSong, load, ct);
+            await ResolveLocalLyricsAsync(localSong, load, forceRefresh, ct);
             return;
         }
 
         var cacheId = providerItem.ActualId;
         var canUseHyLyricInfoCache = providerItem is not NeteaseRadioProgram && !string.IsNullOrWhiteSpace(cacheId);
-        var forceRefreshHyLyricInfoCache = false;
-        if (canUseHyLyricInfoCache)
+        var forceRefreshHyLyricInfoCache = forceRefresh;
+        if (!forceRefresh && canUseHyLyricInfoCache)
         {
             var cachedState = await TryReportCachedLyricsAsync(providerItem, load, ct);
             if (cachedState == CachedLyricState.Reported) return;
@@ -165,24 +189,28 @@ public sealed partial class LyricService(
         var providerLyric = await LoadProviderLyricAsync(providerItem, ct, load);
         var lyricInfo = await ConvertPureLyricInfoAsync(providerLyric.Info, GetArtistText(providerItem));
 
+        ct.ThrowIfCancellationRequested();
         load.Report(lyricInfo);
 
         if (canUseHyLyricInfoCache && HasCacheableLyrics(lyricInfo, providerItem))
-            taskRunner.Forget(SimpleCacher.GetOrCreateCacheAsync(
-                    CacheType.HyLyricInfo, cacheId,
-                    () => Task.FromResult(lyricInfo),
-                    forceRefresh: forceRefreshHyLyricInfoCache,
-                    cancellationToken: ct),
-                "cache provider lyric info");
+        {
+            var cacheWrite = SimpleCacher.GetOrCreateCacheAsync(
+                CacheType.HyLyricInfo, cacheId, () => Task.FromResult(lyricInfo),
+                forceRefresh: forceRefreshHyLyricInfoCache, cancellationToken: ct);
+            if (forceRefresh) await cacheWrite;
+            else taskRunner.Forget(cacheWrite, "cache provider lyric info");
+        }
 
+        ct.ThrowIfCancellationRequested();
         var own = providerLyric.Missing ? null : lyricInfo;
         RememberOwnLyric(providerItem, own);
         await ApplyLyricSourcesAsync(providerItem, own, load, ct);
     }
 
-    private async Task ResolveLocalLyricsAsync(LocalSong localSong, LyricLoad load, CancellationToken ct)
+    private async Task ResolveLocalLyricsAsync(LocalSong localSong, LyricLoad load, bool forceRefresh, CancellationToken ct)
     {
         var localLyric = await ConvertPureLyricInfoAsync(await LoadLocalLyricAsync(localSong), GetArtistText(localSong));
+        ct.ThrowIfCancellationRequested();
         if (HasDisplayableLyrics(localLyric, localSong))
         {
             load.Report(localLyric);
@@ -191,7 +219,7 @@ public sealed partial class LyricService(
             return;
         }
 
-        if (!string.IsNullOrWhiteSpace(localSong.ActualId) &&
+        if (!forceRefresh && !string.IsNullOrWhiteSpace(localSong.ActualId) &&
             await TryReportCachedLyricsAsync(localSong, load, ct) == CachedLyricState.Reported)
             return;
 
@@ -812,6 +840,7 @@ public sealed partial class LyricService(
                 results.Add((sources[i], accepted[i]));
         }
 
+        ct.ThrowIfCancellationRequested();
         RecordSourceResults(item, results);
 
         var chosen = accepted.FirstOrDefault(info => info is not null && LyricWordTiming.IsWordLevel(info.PureLyricInfo))
@@ -876,6 +905,17 @@ public sealed partial class LyricService(
     private Task<LyricLookup>? _lookupTask;
     private readonly SemaphoreSlim _sourceConvertGate = new(1, 1);
 
+    private void ForgetSourceResults(SingleSongBase song)
+    {
+        var key = SourceKey(song);
+        lock (_sourceSync)
+        {
+            if (_probeKey == key) _probeResults.Clear();
+            if (_ownLyric?.Key == key) _ownLyric = null;
+            if (_lookupKey == key) _lookupTask = null;
+        }
+    }
+
     private static string SourceKey(SingleSongBase item)
     {
         return $"{item.ProviderId}:{item.TypeId}:{item.ActualId}";
@@ -916,6 +956,7 @@ public sealed partial class LyricService(
         if (choice == LyricSourceKind.Own) return;
         if (choice != LyricSourceKind.Auto && await FetchSourceAsync(item, choice, ct) is { } chosen)
         {
+            ct.ThrowIfCancellationRequested();
             RecordSourceResults(item, [(choice, chosen)]);
             PublishThirdPartyLyrics(item, chosen, load, ct);
             return;
@@ -1008,6 +1049,7 @@ public sealed partial class LyricService(
             if (info is null && candidate.Failed) return ToOption(kind, null);
         }
 
+        ct.ThrowIfCancellationRequested();
         RecordSourceResults(song, [(kind, info)]);
         return ToOption(kind, info);
     }

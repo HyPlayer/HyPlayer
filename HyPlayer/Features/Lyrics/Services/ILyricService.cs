@@ -27,6 +27,8 @@ public interface ILyricService
     /// </summary>
     Task LoadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default);
 
+    Task ReloadLyricsAsync(SingleSongBase providerItem, CancellationToken ct = default);
+
     void PreloadLyrics(SingleSongBase providerItem);
 
     /// <summary>

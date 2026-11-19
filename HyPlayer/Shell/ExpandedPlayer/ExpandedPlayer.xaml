@@ -534,6 +534,15 @@
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />
                         <MenuFlyoutItem
+                            x:Name="ReloadCoverItem"
+                            Click="ReloadCover_Click"
+                            Text="重载封面与背景渲染" />
+                        <MenuFlyoutItem
+                            x:Name="ReloadLyricsItem"
+                            Click="ReloadLyrics_Click"
+                            Text="重载歌词" />
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem
                             HorizontalContentAlignment="Left"
                             Click="BtnCopyLyricClicked"
                             Text="复制歌词" />

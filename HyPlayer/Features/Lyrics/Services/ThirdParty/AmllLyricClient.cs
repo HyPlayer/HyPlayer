@@ -35,6 +35,11 @@ internal sealed class AmllLyricClient(HttpClient httpClient, LyricSettings setti
         }
     }
 
+    public void ForgetMissing(string id)
+    {
+        lock (_missingIds) _missingIds.Remove(id);
+    }
+
     public async Task<string?> FetchByNcmIdAsync(string id, CancellationToken ct)
     {
         var mirrors = new List<string> { setting.AmllTtmlMirrorUrl };

@@ -16,7 +16,7 @@ public interface IPlaybackNotificationService
     /// <summary>
     ///     刷新封面
     /// </summary>
-    Task RefreshCoverAsync(SingleSongBase providerItem);
+    Task RefreshCoverAsync(SingleSongBase providerItem, bool forceRefresh = false);
 
     void PreloadCover(SingleSongBase providerItem);
 

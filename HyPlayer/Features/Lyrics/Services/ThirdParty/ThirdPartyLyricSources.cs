@@ -95,6 +95,12 @@ public sealed class ThirdPartyLyricSources
         }
     }
 
+    internal void ForgetMissing(SingleSongBase item, string? neteaseId)
+    {
+        lock (_missingSongs) _missingSongs.Remove(SongKey(item));
+        if (neteaseId is not null) _amll.ForgetMissing(neteaseId);
+    }
+
     private bool IsKnownMissing(SingleSongBase item)
     {
         lock (_missingSongs)
